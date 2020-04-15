@@ -1,0 +1,10 @@
+#ifndef _SILAN_SDRAM_REGS_H_
+#define _SILAN_SDRAM_REGS_H_
+
+#include "ap1508.h"
+
+#define SDRAM_CFG_REG0      __REG32(PCFG_SF2_ADDR_BASE + 0x000)
+#define SDRAM_CFG_REG1      __REG32(PCFG_SF2_ADDR_BASE + 0x004)
+#define SDRAM_CFG_REG2      __REG32(PCFG_SF2_ADDR_BASE + 0x008)
+
+#endif

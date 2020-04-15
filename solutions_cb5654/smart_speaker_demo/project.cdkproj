@@ -1,0 +1,253 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Project Name="smart_speaker_demo" Version="1">
+  <Description>Smart Speaker Demo</Description>
+  <MonitorProgress>
+    <FlashOperate>586</FlashOperate>
+    <DebugLaunch>42</DebugLaunch>
+  </MonitorProgress>
+  <Chips>
+    <Chip ID="csi_sc5654" Version="V7.2.2" IsBasic="false"/>
+  </Chips>
+  <Boards>
+    <Board ID="cb5654" Version="V7.2.2" IsBasic="false"/>
+  </Boards>
+  <Packages>
+    <Package ID="aos" Version="V7.2.2" IsBasic="false"/>
+    <Package ID="aos_hal" Version="V7.2.2" IsBasic="false"/>
+    <Package ID="aui_aliyunnls" Version="V7.2.2" IsBasic="false"/>
+    <Package ID="av" Version="V7.2.2" IsBasic="false"/>
+    <Package ID="pvmp3dec" Version="V7.2.2" IsBasic="false"/>
+    <Package ID="fdk_aac" Version="V7.2.2" IsBasic="false"/>
+    <Package ID="speexdsp" Version="V7.2.2" IsBasic="false"/>
+    <Package ID="cjson" Version="V7.2.2" IsBasic="false"/>
+    <Package ID="clock_alarm" Version="V7.2.2" IsBasic="false"/>
+    <Package ID="console" Version="V7.2.2" IsBasic="false"/>
+    <Package ID="csi" Version="V7.2.2" IsBasic="false"/>
+    <Package ID="drivers" Version="V7.2.2" IsBasic="false"/>
+    <Package ID="drv_sdmmc" Version="V7.2.2" IsBasic="false"/>
+    <Package ID="drv_snd_sc5654" Version="V7.2.2" IsBasic="false"/>
+    <Package ID="drv_wifi_rtl8723ds" Version="V7.2.2" IsBasic="false"/>
+    <Package ID="drv_leds" Version="V7.2.2" IsBasic="false"/>
+    <Package ID="fatfs" Version="V7.2.2" IsBasic="false"/>
+    <Package ID="fota" Version="V7.2.2" IsBasic="false"/>
+    <Package ID="ipc" Version="V7.2.2" IsBasic="false"/>
+    <Package ID="kv" Version="V7.2.2" IsBasic="false"/>
+    <Package ID="lwip" Version="V7.2.2" IsBasic="false"/>
+    <Package ID="ntp" Version="V7.2.2" IsBasic="false"/>
+    <Package ID="mbedtls" Version="V7.2.2" IsBasic="false"/>
+    <Package ID="mic" Version="V7.2.2" IsBasic="false"/>
+    <Package ID="minialsa" Version="V7.2.2" IsBasic="false"/>
+    <Package ID="minilibc" Version="V7.2.2" IsBasic="false"/>
+    <Package ID="netmgr" Version="V7.2.2" IsBasic="false"/>
+    <Package ID="posix" Version="V7.2.2" IsBasic="false"/>
+    <Package ID="record" Version="V7.2.2" IsBasic="false"/>
+    <Package ID="rhino" Version="V7.2.2" IsBasic="false"/>
+    <Package ID="vfs" Version="V7.2.2" IsBasic="false"/>
+    <Package ID="voice" Version="V7.2.2" IsBasic="false"/>
+    <Package ID="webclient" Version="V7.2.2" IsBasic="false"/>
+    <Package ID="websocket" Version="V7.2.2" IsBasic="false"/>
+    <Package ID="adc_button" Version="V7.2.2" IsBasic="false"/>
+    <Package ID="wifi_provisioning" Version="V7.2.2" IsBasic="false"/>
+    <Package ID="smartliving" Version="V7.2.2" IsBasic="false"/>
+    <Package ID="fct" Version="V7.2.2" IsBasic="false"/>
+    <Package ID="httpclient" Version="V7.2.2" IsBasic="false"/>
+    <Package ID="transport" Version="V7.2.2" IsBasic="false"/>
+    <Package ID="yoc_sc5654" Version="V7.2.2" IsBasic="false"/>
+    <Package ID="voice_mit" Version="V7.2.2" IsBasic="false"/>
+  </Packages>
+  <MergedToYaml>yes</MergedToYaml>
+  <Dependencies Name="BuildSet"/>
+  <DebugSessions>
+    <watchExpressions/>
+    <memoryExpressions/>
+    <statistics/>
+    <peripheralTabs/>
+    <WatchDisplayFormat/>
+    <LocalDisplayFormat/>
+    <debugLayout/>
+    <memoryTabColSizeExpressions/>
+  </DebugSessions>
+  <BuildConfigs>
+    <BuildConfig Name="BuildSet">
+      <Target>
+        <ROMBank Selected="1">
+          <ROM1>
+            <InUse>yes</InUse>
+            <Start>0x20000000</Start>
+            <Size>0x1000</Size>
+          </ROM1>
+          <ROM2>
+            <InUse>no</InUse>
+            <Start/>
+            <Size/>
+          </ROM2>
+          <ROM3>
+            <InUse>no</InUse>
+            <Start/>
+            <Size/>
+          </ROM3>
+          <ROM4>
+            <InUse>no</InUse>
+            <Start/>
+            <Size/>
+          </ROM4>
+          <ROM5>
+            <InUse>no</InUse>
+            <Start/>
+            <Size/>
+          </ROM5>
+        </ROMBank>
+        <RAMBank>
+          <RAM1>
+            <InUse>no</InUse>
+            <Start>0x20001000</Start>
+            <Size>0x1000</Size>
+            <Init>yes</Init>
+          </RAM1>
+          <RAM2>
+            <InUse>no</InUse>
+            <Start/>
+            <Size/>
+            <Init>yes</Init>
+          </RAM2>
+          <RAM3>
+            <InUse>no</InUse>
+            <Start/>
+            <Size/>
+            <Init>yes</Init>
+          </RAM3>
+          <RAM4>
+            <InUse>no</InUse>
+            <Start/>
+            <Size/>
+            <Init>yes</Init>
+          </RAM4>
+          <RAM5>
+            <InUse>no</InUse>
+            <Start/>
+            <Size/>
+            <Init>yes</Init>
+          </RAM5>
+        </RAMBank>
+        <CPU>ck803ef</CPU>
+        <UseMiniLib>yes</UseMiniLib>
+        <Endian>little</Endian>
+        <UseHardFloat>no</UseHardFloat>
+        <UseEnhancedLRW>no</UseEnhancedLRW>
+        <UseContinueBuild>no</UseContinueBuild>
+        <UseSemiHost>no</UseSemiHost>
+      </Target>
+      <Output>
+        <OutputName>$(ProjectName)</OutputName>
+        <Type>Executable</Type>
+        <CreateHexFile>yes</CreateHexFile>
+        <CreateBinFile>no</CreateBinFile>
+        <Preprocessor>no</Preprocessor>
+        <Disassmeble>no</Disassmeble>
+        <CallGraph>no</CallGraph>
+        <GenMap>no</GenMap>
+      </Output>
+      <User>
+        <BeforeCompile>
+          <RunUserProg>no</RunUserProg>
+          <UserProgName/>
+        </BeforeCompile>
+        <BeforeMake>
+          <RunUserProg>yes</RunUserProg>
+          <UserProgName>"$(ProjectPath)script/pre_build.sh"</UserProgName>
+        </BeforeMake>
+        <AfterMake>
+          <RunUserProg>yes</RunUserProg>
+          <UserProgName>"$(ProjectPath)script/aft_build.sh"</UserProgName>
+        </AfterMake>
+      </User>
+      <Compiler>
+        <Define/>
+        <Undefine/>
+        <Optim>Optimize size (-Os)</Optim>
+        <DebugLevel>Default (-g)</DebugLevel>
+        <IncludePath/>
+        <OtherFlags/>
+        <Verbose>no</Verbose>
+        <Ansi>no</Ansi>
+        <Syntax>no</Syntax>
+        <Pedantic>no</Pedantic>
+        <PedanticErr>no</PedanticErr>
+        <InhibitWarn>no</InhibitWarn>
+        <AllWarn>yes</AllWarn>
+        <WarnErr>no</WarnErr>
+        <OneElfS>no</OneElfS>
+        <Fstrict>no</Fstrict>
+      </Compiler>
+      <Asm>
+        <Define/>
+        <Undefine/>
+        <IncludePath/>
+        <OtherFlags/>
+        <DebugLevel>gdwarf2</DebugLevel>
+      </Asm>
+      <Linker>
+        <Garbage>yes</Garbage>
+        <LDFile/>
+        <LibName/>
+        <LibPath/>
+        <OtherFlags/>
+        <AutoLDFile>no</AutoLDFile>
+        <LinkType>whole-archive</LinkType>
+      </Linker>
+      <Debug>
+        <LoadApplicationAtStartup>no</LoadApplicationAtStartup>
+        <Connector>ICE</Connector>
+        <StopAt>no</StopAt>
+        <StopAtText>main</StopAtText>
+        <InitFile>$(ProjectPath)script/cdkgdbinit</InitFile>
+        <AutoRun>no</AutoRun>
+        <ResetType>Hard Reset</ResetType>
+        <SoftResetVal/>
+        <ResetAfterLoad>no</ResetAfterLoad>
+        <Dumpcore>no</Dumpcore>
+        <DumpcoreText>$(ProjectPath)$(ProjectName).cdkcore</DumpcoreText>
+        <ConfigICE>
+          <IP>localhost</IP>
+          <PORT>1025</PORT>
+          <CPUNumber>0</CPUNumber>
+          <Clock>12000</Clock>
+          <Delay>10</Delay>
+          <WaitReset>500</WaitReset>
+          <DDC>yes</DDC>
+          <TRST>no</TRST>
+          <DebugPrint>no</DebugPrint>
+          <Connect>Normal</Connect>
+          <ResetType>Soft Reset</ResetType>
+          <SoftResetVal>0</SoftResetVal>
+          <RTOSType>Bare Metal</RTOSType>
+          <DownloadToFlash>yes</DownloadToFlash>
+          <ResetAfterConnect>no</ResetAfterConnect>
+          <GDBName/>
+          <GDBServerType>Local</GDBServerType>
+          <OtherFlags/>
+        </ConfigICE>
+        <ConfigSIM>
+          <SIMTarget>soccfg/cskyv2/rhea802.xml</SIMTarget>
+          <OtherFlags/>
+          <NoGraphic>yes</NoGraphic>
+          <Log>no</Log>
+          <SimTrace>no</SimTrace>
+        </ConfigSIM>
+      </Debug>
+      <Flash>
+        <InitFile>$(ProjectPath)script/flash.init</InitFile>
+        <Erase>Erase Sectors</Erase>
+        <Algorithms Path="">SC5654A_SPIFlash_CDK.elf</Algorithms>
+        <Program>yes</Program>
+        <Verify>yes</Verify>
+        <ResetAndRun>no</ResetAndRun>
+        <ResetType>Soft Reset</ResetType>
+        <SoftResetVal/>
+        <External>no</External>
+        <Command/>
+        <Arguments/>
+      </Flash>
+    </BuildConfig>
+  </BuildConfigs>
+</Project>

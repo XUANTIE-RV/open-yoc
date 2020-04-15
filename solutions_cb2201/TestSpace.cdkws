@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CDK_Workspace Name="TestSpace" Database="">
+  <Project Name="alimqtt_sensor_data_to_cloud_demo" Path="alimqtt_sensor_data_to_cloud_demo/project.cdkproj" Active="No"/>
+  <Project Name="dht11_sensor_demo" Path="dht11_sensor_demo/project.cdkproj" Active="No"/>
+  <Project Name="gprs_gnss" Path="gprs_gnss/project.cdkproj" Active="No"/>
+  <Project Name="led_blink_demo" Path="led_blink_demo/project.cdkproj" Active="Yes"/>
+  <BuildMatrix>
+    <WorkspaceConfiguration Name="Debug" Selected="yes">
+      <Environment/>
+      <Project Name="alimqtt_sensor_data_to_cloud_demo" ConfigName="BuildSet"/>
+      <Project Name="dht11_sensor_demo" ConfigName="BuildSet"/>
+      <Project Name="gprs_gnss" ConfigName="BuildSet"/>
+      <Project Name="led_blink_demo" ConfigName="BuildSet"/>
+    </WorkspaceConfiguration>
+  </BuildMatrix>
+</CDK_Workspace>

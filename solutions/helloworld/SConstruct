@@ -1,0 +1,10 @@
+#! /bin/env python
+
+from yoctools import Make
+
+defconfig = Make()
+
+Export('defconfig')
+
+defconfig.build_components()
+defconfig.build_image('generated/data')

@@ -1,0 +1,227 @@
+
+## 第一部分： 基础信息
+name: av                                            # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
+description: av是一个轻量级的多媒体AV框架，方便用户在此基础上复用与扩展 # <必选项> 建议至少20字以上
+type: common                                        # <可选项> 组件类型，为：solution, chip, board, common，缺省值 common
+
+tag: 多媒体播放器                                   # <可选项> 组件分类，缺省值： ''
+keywords:                                           # <可选项> 标签，会影响到组件被搜索的效果，合理的标签很重要
+  - base
+yoc_version: ['v7.2', 'v7.3']
+license: Apache license v2.0                        # <可选项> 源代码的许可证，要确保所有代码、文件的许可证不冲突。如：MIT，Apache license v2.0，BSD
+
+## 第二部分：依赖信息
+#           指定该组件依赖的组件及版本，版本支持条件比较，支持：>=v1.0, >v1.0, ==v1.0, <=v1.0, <v1.0, v1.0
+#           未指定条件时，默认为 ==，如 v1.0 与 ==v1.0
+# depends:                                 # <可选项> 该组件依赖其他的组件，合理的依赖才能保证组件能编译、使用
+#   - minilibc: v7.2.0
+#   - aos: >=v7.2.0
+depends:
+  - csi: V7.2.2
+  - rhino: V7.2.2
+  - minilibc: V7.2.2
+  - aos: V7.2.2
+  - pvmp3dec: V7.2.2
+  - speexdsp: V7.2.2
+
+## 第四部分：编译连接信息
+# build_config:                            # <可选项> 编译配置项
+#   include:                               # <可选项> 编译时，影响编译器的-I 参数 ,全局有效
+#     - src                                #        include 只能是该软件包下的目录，不能使用外部目录
+#   internal_include:                      # <可选项> 编译时，影响编译器的-I 参数 ,组件内有效
+#     - include
+#   cflag: ''                              # <可选项> C 编译器所需要要的编译参数
+#   cxxflag: ''                            # <可选项> CXX 编译器所需要要的编译参数
+#   asmflag: ''                            # <可选项> 汇编器所需要要参数
+#   define:                                # <可选项> 宏定义, 增加编译器的-D 选项,如：
+#     XXX: 1                               #   -DXXX=1
+#     AAA: 1                               #   -DAAA
+#     STR: "abc"                           #   -DSTR="abc"
+#   libs:                                  # 该组件中支持的二进制静态库,如：libxxx.a, libyyy.a
+#     - xxx                                #   -lxxx
+#     - yyy                                #   -lyyy
+#   libpath:                               # 指定静态库所在的路径（相对于该组件路径）
+#     - libs                               #   -Llibs
+build_config:
+  cflag: >
+    -Wno-nonnull-compare -Wno-unused-function -Wno-unused-but-set-variable
+  define:
+    - AEF_DEBUG=0
+    - TMALL_PATCH=0
+    - AV_USING_TLS
+  include:
+    - include
+  internal_include:
+    - include/icore
+  libpath:
+    - swresample
+    - aef/<cpu>
+
+# source_file:                             # <可选项> 指定参与编译的源代码文件，支持通配符，采用相对路径
+#   - src/*.c                              # 例：组件 src 目录下所有的扩展名为 c 的源代码文件
+source_file:
+  - "avutil/misc.c"
+  - "avutil/path.c"
+  - "avutil/sf.c"
+  - "avutil/straight_fifo.c"
+  - "avutil/lc_fifo.c"
+  - "avutil/named_fifo.c"
+  - "avutil/named_straightfifo.c"
+  - "avutil/dict.c"
+  - "avutil/socket_rw.c"
+  - "avutil/url_parse.c"
+  - "avutil/url_encode.c"
+  - "avutil/byte_rw.c"
+  - "avutil/bio.c"
+  - "avutil/dync_buf.c"
+  - "avutil/mem_block.c"
+  - "avutil/vol_scale.c"
+  - "avutil/web.c"
+  - "avutil/web_url.c"
+  - "avutil/avframe.c"
+  - "avutil/avpacket.c"
+  - "avcodec/ad.c"
+  - "avcodec/ad_pvmp3.c"
+  - "avcodec/ad_pcm.c"
+  - "avcodec/ad_adpcm.c"
+  - "avcodec/ad_flac.c"
+  - "avcodec/ad_amrnb.c"
+  - "avcodec/ad_amrwb.c"
+  - "avcodec/avcodec_all.c"
+  - "avcodec/ad_ipc.c"
+  #- "avcodec/ad_tmall.c"
+
+  - "avformat/demux.c"
+  - "avformat/demux_wav.c"
+  - "avformat/demux_mp3.c"
+  - "avformat/demux_mp4.c"
+  - "avformat/demux_adts.c"
+  - "avformat/demux_flac.c"
+  - "avformat/demux_asf.c"
+  - "avformat/demux_amr.c"
+  - "avformat/demux_rawaudio.c"
+  - "avformat/avformat_utils.c"
+  - "avformat/mp3_rw.c"
+  - "avformat/adts_rw.c"
+  - "avformat/flac_rw.c"
+  - "avformat/asf_rw.c"
+  - "avformat/riff_rw.c"
+  - "avformat/amr_rw.c"
+  - "avformat/avformat_all.c"
+
+  - "output/ao.c"
+  - "output/ao_alsa.c"
+  - "output/output_all.c"
+  - "output/ao_ipc.c"
+
+  - "stream/stream.c"
+  - "stream/stream_mem.c"
+  - "stream/stream_file.c"
+  - "stream/stream_http.c"
+  - "stream/stream_http_api.c"
+  - "stream/stream_fifo.c"
+  - "stream/stream_all.c"
+
+  - "avfilter/avfilter.c"
+  - "avfilter/avfilter_eq.c"
+  - "avfilter/avfilter_swr.c"
+  - "avfilter/avfilter_aef.c"
+  - "avfilter/avfilter_vol.c"
+
+  - "swresample/swresample.c"
+  - "swresample/aformat_conv.c"
+  - "swresample/pcm_convert.c"
+  - "swresample/resample.c"
+  - "swresample/resample_ipc.c"
+    #- "swresample/resample_soxr.c"
+  - "swresample/resample_speex.c"
+  - "swresample/resample_silan.c"
+  - "swresample/resample_all.c"
+
+  - "aef/eq.c"
+  - "aef/eq_ipc.c"
+  - "aef/eq_sona.c"
+  - "aef/eq_all.c"
+  - "aef/aef.c"
+  - "aef/aef_ipc.c"
+  - "aef/aef_sona.c"
+  - "aef/aef_all.c"
+  - "icore/icore_msg.c"
+  - "icore/aeficore/aeficore.c"
+  - "icore/ffticore/ffticore.c"
+  - "icore/resicore/resicore.c"
+  - "icore/eqicore/eqicore.c"
+  - "icore/aoicore/aoicore.c"
+  - "icore/adicore/adicore.c"
+  - "icore/mcaicore/mcaicore.c"
+  - "tfft/fft.c"
+  - "tfft/fft_ipc.c"
+  - "tfft/fft_speex.c"
+  - "tfft/fft_all.c"
+  - "mca/mca.c"
+  - "mca/cmca.c"
+  - "mca/mca_ipc.c"
+  - "mca/mca_local.c"
+  - "mca/mca_all.c"
+  - "player/player.c"
+  - "media/media.c"
+
+## 第五部分：配置信息
+# def_config:                              # 组件的可配置项
+#   CONFIG_DEBUG: y
+#   CONFIG_PARAM_NOT_CHECK: y
+#   CONFIG_CLI: y
+
+## 第六部分：安装信息
+# install:
+#   - dest: include/                       # 安装的目的路径 dest是相当路径，通常是相对于YoC SDK 安装目录
+#     source:                              # 安装源列表
+#      - src/*.h                           # 支持通配符，相对路径
+install:
+  - dest: "include/avutil"
+    source:
+      - "include/avutil/*.h"
+  - dest: "include/avcodec"
+    source:
+      - "include/avcodec/*.h"
+  - dest: "include/avformat"
+    source:
+      - "include/avformat/*.h"
+  - dest: "include/output"
+    source:
+      - "include/output/*.h"
+  - dest: "include/stream"
+    source:
+      - "include/stream/*.h"
+  - dest: "include/swresample"
+    source:
+      - "include/swresample/*.h"
+  - dest: "include/avfilter"
+    source:
+      - "include/avfilter/*.h"
+  - dest: "include/aef"
+    source:
+      - "include/aef/*.h"
+  - dest: "include/mca"
+    source:
+      - "include/mca/*.h"
+  - dest: "include/icore"
+    source:
+      - "include/icore/*.h"
+  - dest: "include"
+    source:
+      - "include/*.h"
+  - dest: "lib"
+    source:
+      - "swresample/libresample.a"
+      - "aef/<cpu>/libSonaAef_c.a"
+      - "aef/<cpu>/libSonaAef_mca.a"
+
+## 第七部分：导出部分
+# export:
+#   - dest: "<SOLUTION_PATH>/generated/data" # 安装的目的路径 dest是相当路径
+#     source:                                # 安装源列表
+#       - "bootimgs/boot"
+#       - "bootimgs/tee"
+#       - "bootimgs/mtb"
+#       - "configs/config.yaml"

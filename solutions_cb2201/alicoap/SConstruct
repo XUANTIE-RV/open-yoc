@@ -1,0 +1,8 @@
+#! /bin/env python
+from yoctools.make import Make
+
+defconfig = Make()
+
+Export('defconfig')
+
+defconfig.build_components()

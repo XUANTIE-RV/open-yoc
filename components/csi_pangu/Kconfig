@@ -1,0 +1,21 @@
+choice
+       prompt  "sub chip"
+       help
+          select the sub chip type
+
+config CHIP_YUNVOICE2_CPU0
+       bool "yunvoice2 cpu0"
+       help
+         select the yunvoice2 cpu0
+
+config CHIP_YUNVOICE2_CPU1
+       bool "yunvoice2 cpu1"
+       help
+         select the yunvoice2 cpu1
+
+config CHIP_YUNVOICE2_CPU2
+       bool "yunvoice2 cpu2"
+       help
+         select the yunvoice2 cpu2
+
+endchoice

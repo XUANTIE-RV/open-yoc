@@ -1,0 +1,421 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Project Name="chip_test_pangu" Version="1">
+  <Description>aos event</Description>
+  <MonitorProgress>
+    <FlashOperate>1654</FlashOperate>
+    <DebugLaunch>52</DebugLaunch>
+  </MonitorProgress>
+  <UIControl>
+    <Debug>
+      <DisableSIMConnector>no</DisableSIMConnector>
+      <FrozenDownloadInFlash>no</FrozenDownloadInFlash>
+    </Debug>
+  </UIControl>
+  <Dependencies/>
+  <Chips>
+    <Chip ID="csi_pangu" Version="V7.2.2" IsBasic="false"/>
+  </Chips>
+  <Boards>
+    <Board ID="pangu_cpu0" Version="V7.2.2" IsBasic="false"/>
+  </Boards>
+  <Packages>
+    <Package ID="csi" Version="V7.2.2" IsBasic="false"/>
+    <Package ID="rhino" Version="V7.2.2" IsBasic="false"/>
+    <Package ID="minilibc" Version="V7.2.2" IsBasic="false"/>
+    <Package ID="aos" Version="V7.2.2" IsBasic="false"/>
+    <Package ID="console" Version="V7.2.2" IsBasic="false"/>
+    <Package ID="netmgr" Version="V7.2.2" IsBasic="false"/>
+    <Package ID="drivers" Version="V7.2.2" IsBasic="false"/>
+    <Package ID="drv_wifi_rtl8723ds" Version="V7.2.2" IsBasic="false"/>
+    <Package ID="drv_sdmmc" Version="V7.2.2" IsBasic="false"/>
+    <Package ID="drv_snd_pangu" Version="V7.2.2" IsBasic="false"/>
+    <Package ID="minialsa" Version="V7.2.2" IsBasic="false"/>
+    <Package ID="ipc" Version="V7.2.2" IsBasic="false"/>
+    <Package ID="posix" Version="V7.2.2" IsBasic="false"/>
+    <Package ID="ntp" Version="V7.2.2" IsBasic="false"/>
+    <Package ID="fota" Version="V7.2.2" IsBasic="false"/>
+    <Package ID="lwip" Version="V7.2.2" IsBasic="false"/>
+    <Package ID="aui_cloud" Version="V7.2.2" IsBasic="false"/>
+    <Package ID="voice" Version="V7.2.2" IsBasic="false"/>
+    <Package ID="record" Version="V7.2.2" IsBasic="false"/>
+    <Package ID="webclient" Version="V7.2.2" IsBasic="false"/>
+    <Package ID="websocket" Version="V7.2.2" IsBasic="false"/>
+    <Package ID="mic" Version="V7.2.2" IsBasic="false"/>
+    <Package ID="player" Version="V7.2.2" IsBasic="false"/>
+    <Package ID="av" Version="V7.2.2" IsBasic="false"/>
+    <Package ID="pvmp3dec" Version="V7.2.2" IsBasic="false"/>
+    <Package ID="itmall" Version="V7.2.2" IsBasic="false"/>
+    <Package ID="adicore" Version="V7.2.2" IsBasic="false"/>
+    <Package ID="eqicore" Version="V7.2.2" IsBasic="false"/>
+    <Package ID="resicore" Version="V7.2.2" IsBasic="false"/>
+    <Package ID="kv" Version="V7.2.2" IsBasic="false"/>
+    <Package ID="cjson" Version="V7.2.2" IsBasic="false"/>
+    <Package ID="button" Version="V7.2.2" IsBasic="false"/>
+    <Package ID="mbedtls" Version="V7.2.2" IsBasic="false"/>
+    <Package ID="vfs" Version="V7.2.2" IsBasic="false"/>
+  </Packages>
+  <VirtualDirectory Name="app">
+    <VirtualDirectory Name="include">
+      <File Name="app/include/app_config.h">
+        <FileOption/>
+      </File>
+      <File Name="app/include/app_init.h">
+        <FileOption/>
+      </File>
+      <File Name="app/include/csi_config.h">
+        <FileOption/>
+      </File>
+      <File Name="app/include/wiz_config.h">
+        <FileOption/>
+      </File>
+      <File Name="app/include/yoc_config.h">
+        <FileOption/>
+      </File>
+      <File Name="app/src/app_led.h">
+        <FileOption/>
+      </File>
+      <File Name="app/src/app_main.h">
+        <FileOption/>
+      </File>
+      <File Name="app/src/audio/audio_res.h">
+        <FileOption/>
+      </File>
+      <File Name="app/src/wifipair/ap/ap_pair.h">
+        <FileOption/>
+      </File>
+      <File Name="app/src/wifipair/ap/index_html.h">
+        <FileOption/>
+      </File>
+      <File Name="app/src/wifipair/pair_broadcast.h">
+        <FileOption/>
+      </File>
+    </VirtualDirectory>
+    <VirtualDirectory Name="src">
+      <File Name="app/src/app_button.c">
+        <FileOption/>
+      </File>
+      <File Name="app/src/app_led.c">
+        <FileOption/>
+      </File>
+      <File Name="app/src/app_led_demo.c">
+        <FileOption/>
+      </File>
+      <File Name="app/src/app_main.c">
+        <FileOption/>
+      </File>
+      <File Name="app/src/app_net.c">
+        <FileOption/>
+      </File>
+      <File Name="app/src/app_player.c">
+        <FileOption/>
+      </File>
+      <File Name="app/src/app_rtc.c">
+        <FileOption/>
+      </File>
+      <File Name="app/src/audio/audio_res.c">
+        <FileOption/>
+      </File>
+      <File Name="app/src/audio/hello.mp3.c">
+        <FileOption/>
+      </File>
+      <File Name="app/src/audio/net_cfg_config.mp3.c">
+        <FileOption/>
+      </File>
+      <File Name="app/src/audio/net_cfg_conn.mp3.c">
+        <FileOption/>
+      </File>
+      <File Name="app/src/audio/net_cfg_fail.mp3.c">
+        <FileOption/>
+      </File>
+      <File Name="app/src/audio/net_cfg_start.mp3.c">
+        <FileOption/>
+      </File>
+      <File Name="app/src/audio/net_cfg_switch.mp3.c">
+        <FileOption/>
+      </File>
+      <File Name="app/src/audio/net_cfg_timeout.mp3.c">
+        <FileOption/>
+      </File>
+      <File Name="app/src/audio/net_fail.mp3.c">
+        <FileOption/>
+      </File>
+      <File Name="app/src/audio/net_succ.mp3.c">
+        <FileOption/>
+      </File>
+      <File Name="app/src/audio/ok.mp3.c">
+        <FileOption/>
+      </File>
+      <File Name="app/src/audio/play_err.mp3.c">
+        <FileOption/>
+      </File>
+      <File Name="app/src/audio/sorry.mp3.c">
+        <FileOption/>
+      </File>
+      <File Name="app/src/audio/sorry2.mp3.c">
+        <FileOption/>
+      </File>
+      <File Name="app/src/audio/starting.mp3.c">
+        <FileOption/>
+      </File>
+      <File Name="app/src/cli_apps.c">
+        <FileOption/>
+      </File>
+      <File Name="app/src/cli_auitalk.c">
+        <FileOption/>
+      </File>
+      <File Name="app/src/cmd_proc_baidu_asr.c">
+        <FileOption/>
+      </File>
+      <File Name="app/src/cmd_proc_music_url.c">
+        <FileOption/>
+      </File>
+      <File Name="app/src/cmd_proc_proxy_ws_asr.c">
+        <FileOption/>
+      </File>
+      <File Name="app/src/cmd_proc_text_cmd.c">
+        <FileOption/>
+      </File>
+      <File Name="app/src/cmd_proc_xf_asr.c">
+        <FileOption/>
+      </File>
+      <File Name="app/src/cmd_proc_xunfei_cmd.c">
+        <FileOption/>
+      </File>
+      <File Name="app/src/cmd_proc_xunfei_music.c">
+        <FileOption/>
+      </File>
+      <File Name="app/src/cmd_proc_xunfei_story.c">
+        <FileOption/>
+      </File>
+      <File Name="app/src/cmd_proc_xunfei_tts.c">
+        <FileOption/>
+      </File>
+      <File Name="app/src/cop_fota.c">
+        <FileOption/>
+      </File>
+      <File Name="app/src/init/cli_cmd.c">
+        <FileOption/>
+      </File>
+      <File Name="app/src/init/init.c">
+        <FileOption/>
+      </File>
+      <File Name="app/src/iperf.c">
+        <FileOption/>
+      </File>
+      <File Name="app/src/nlp_json_parse.c">
+        <FileOption/>
+      </File>
+      <File Name="app/src/wifipair/ap/ap_pair.c">
+        <FileOption/>
+      </File>
+      <File Name="app/src/wifipair/pair_broadcast.c">
+        <FileOption/>
+      </File>
+    </VirtualDirectory>
+  </VirtualDirectory>
+  <VirtualDirectory Name="script">
+    <File Name="script/aft_build.sh">
+      <FileOption/>
+    </File>
+    <File Name="script/flash.init">
+      <FileOption/>
+    </File>
+    <File Name="script/gdbinit">
+      <FileOption/>
+    </File>
+    <File Name="script/pre_build.sh">
+      <FileOption/>
+    </File>
+  </VirtualDirectory>
+  <DebugSessions>
+    <watchExpressions/>
+    <memoryExpressions>;;;</memoryExpressions>
+    <statistics>;;MHZ</statistics>
+    <peripheralTabs/>
+    <WatchDisplayFormat>0</WatchDisplayFormat>
+    <LocalDisplayFormat>0</LocalDisplayFormat>
+    <debugLayout/>
+    <memoryTabColSizeExpressions>100:8;100:8;100:8;100:8;</memoryTabColSizeExpressions>
+  </DebugSessions>
+  <BuildConfigs>
+    <BuildConfig Name="BuildSet">
+      <Target>
+        <ROMBank Selected="1">
+          <ROM1>
+            <InUse>yes</InUse>
+            <Start>0x20000000</Start>
+            <Size>0x1000</Size>
+          </ROM1>
+          <ROM2>
+            <InUse>no</InUse>
+            <Start/>
+            <Size/>
+          </ROM2>
+          <ROM3>
+            <InUse>no</InUse>
+            <Start/>
+            <Size/>
+          </ROM3>
+          <ROM4>
+            <InUse>no</InUse>
+            <Start/>
+            <Size/>
+          </ROM4>
+          <ROM5>
+            <InUse>no</InUse>
+            <Start/>
+            <Size/>
+          </ROM5>
+        </ROMBank>
+        <RAMBank>
+          <RAM1>
+            <InUse>no</InUse>
+            <Start>0x20001000</Start>
+            <Size>0x1000</Size>
+            <Init>yes</Init>
+          </RAM1>
+          <RAM2>
+            <InUse>no</InUse>
+            <Start/>
+            <Size/>
+            <Init>yes</Init>
+          </RAM2>
+          <RAM3>
+            <InUse>no</InUse>
+            <Start/>
+            <Size/>
+            <Init>yes</Init>
+          </RAM3>
+          <RAM4>
+            <InUse>no</InUse>
+            <Start/>
+            <Size/>
+            <Init>yes</Init>
+          </RAM4>
+          <RAM5>
+            <InUse>no</InUse>
+            <Start/>
+            <Size/>
+            <Init>yes</Init>
+          </RAM5>
+        </RAMBank>
+        <CPU>ck804ef</CPU>
+        <UseMiniLib>yes</UseMiniLib>
+        <Endian>little</Endian>
+        <UseHardFloat>yes</UseHardFloat>
+        <UseEnhancedLRW>no</UseEnhancedLRW>
+        <UseContinueBuild>no</UseContinueBuild>
+        <UseSemiHost>no</UseSemiHost>
+      </Target>
+      <Output>
+        <OutputName>$(ProjectName)</OutputName>
+        <Type>Executable</Type>
+        <CreateHexFile>yes</CreateHexFile>
+        <CreateBinFile>no</CreateBinFile>
+        <Preprocessor>no</Preprocessor>
+        <Disasm>no</Disasm>
+        <CallGraph>no</CallGraph>
+        <Map>no</Map>
+      </Output>
+      <User>
+        <BeforeCompile>
+          <RunUserProg>no</RunUserProg>
+          <UserProgName/>
+        </BeforeCompile>
+        <BeforeMake>
+          <RunUserProg>yes</RunUserProg>
+          <UserProgName>"$(ProjectPath)script/pre_build.sh"</UserProgName>
+        </BeforeMake>
+        <AfterMake>
+          <RunUserProg>yes</RunUserProg>
+          <UserProgName>"$(ProjectPath)script/aft_build.sh"</UserProgName>
+        </AfterMake>
+      </User>
+      <Compiler>
+        <Define>CDK_PROJECT=1;CONFIG_DEBUG=1;CONFIG_ARCH_CSKY=1;CONFIG_PARAM_NOT_CHECK=1;CONFIG_CLI=1;CONFIG_NETMGR_WIFI=1;CONFIG_KV_SMART=1;CONFIG_SOFTWDT=1;CONFIG_AT=1;CONFIG_NTP=1;CONFIG_USING_TLS=1;CONFIG_TCPIP=1;CONFIG_WIFI_RTL8723DS=1;CONFIG_NON_ADDRESS_FLASH=1;CONFIG_SOFTWDT=1;CONFIG_KERNEL_WORKQUEUE=1;CONFIG_SYSTICK_HZ=1000;CONFIG_CPU_CK804EF=1;CONFIG_CHIP_VENDOR_CSKY=1;CONFIG_CHIP_PANGU=1;CONFIG_CHIP_PANGU_CPU0=1;CONFIG_HAVE_VIC=1;CONFIG_KERNEL_RHINO=1;CONFIG_ARCH_INTERRUPTSTACK=4096</Define>
+        <Undefine/>
+        <Optim>Optimize (-Og)</Optim>
+        <DebugLevel>Default (-g)</DebugLevel>
+        <IncludePath>$(ProjectPath)/app/include;$(ProjectPath)/app/src;$(ProjectPath)/app/src/audio;$(ProjectPath)/app/src/init;$(ProjectPath)/app/src/wifipair;$(ProjectPath)/app/src/wifipair/ap</IncludePath>
+        <OtherFlags>-ffunction-sections -fdata-sections -Wno-address -Wno-unused-but-set-variable -mhard-float</OtherFlags>
+        <Verbose>no</Verbose>
+        <Ansi>no</Ansi>
+        <Syntax>no</Syntax>
+        <Pedantic>no</Pedantic>
+        <PedanticErr>no</PedanticErr>
+        <InhibitWarn>no</InhibitWarn>
+        <AllWarn>yes</AllWarn>
+        <WarnErr>no</WarnErr>
+        <OneElfS>no</OneElfS>
+        <Fstrict>no</Fstrict>
+      </Compiler>
+      <Asm>
+        <Define>CONFIG_ARCH_INTERRUPTSTACK=4096</Define>
+        <Undefine/>
+        <IncludePath>$(ProjectPath)/app/include</IncludePath>
+        <OtherFlags>-nostdlib -mistack -Wpointer-arith -Wundef -Wall -Wl,-EL -mhard-float</OtherFlags>
+        <DebugLevel>gdwarf2</DebugLevel>
+      </Asm>
+      <Linker>
+        <Garbage>yes</Garbage>
+        <LDFile>$(ProjectPath)/gcc_eflash.ld</LDFile>
+        <LibName>m</LibName>
+        <LibPath/>
+        <OtherFlags>-Wl,-zmax-page-size=1024 -mhard-float</OtherFlags>
+        <AutoLDFile>no</AutoLDFile>
+      </Linker>
+      <Debug>
+        <LoadApplicationAtStartup>no</LoadApplicationAtStartup>
+        <Connector>Remote ICE</Connector>
+        <StopAt>no</StopAt>
+        <StopAtText>main</StopAtText>
+        <InitFile>$(ProjectPath)/script/gdbinit</InitFile>
+        <AutoRun>no</AutoRun>
+        <ResetType>Hard Reset</ResetType>
+        <SoftResetVal/>
+        <ResetAfterLoad>no</ResetAfterLoad>
+        <Dumpcore>no</Dumpcore>
+        <DumpcoreText>$(ProjectPath)/$(ProjectName).cdkcore</DumpcoreText>
+        <ConfigICE>
+          <IP>localhost</IP>
+          <PORT>1025</PORT>
+          <Clock>12000</Clock>
+          <Delay>10</Delay>
+          <WaitReset>300</WaitReset>
+          <DDC>yes</DDC>
+          <TRST>no</TRST>
+          <DebugPrint>no</DebugPrint>
+          <Connect>Normal</Connect>
+          <ResetType>Soft Reset</ResetType>
+          <SoftResetVal>0</SoftResetVal>
+          <RTOSType>Bare Metal</RTOSType>
+          <DownloadToFlash>yes</DownloadToFlash>
+          <ResetAfterConnect>no</ResetAfterConnect>
+          <GDBName/>
+          <GDBServerType>Local</GDBServerType>
+          <OtherFlags/>
+        </ConfigICE>
+        <ConfigSIM>
+          <SIMTarget>soccfg/cskyv2/rhea802.xml</SIMTarget>
+          <OtherFlags/>
+          <NoGraphic>yes</NoGraphic>
+          <Log>no</Log>
+          <SimTrace>no</SimTrace>
+        </ConfigSIM>
+      </Debug>
+      <Flash>
+        <InitFile>$(ProjectPath)/script/flash.init</InitFile>
+        <Erase>Erase Sectors</Erase>
+        <Algorithms Path="">PanGu_CK804EF_QSPIFlash_CDK.elf</Algorithms>
+        <Program>yes</Program>
+        <Verify>yes</Verify>
+        <ResetAndRun>no</ResetAndRun>
+        <ResetType>Soft Reset</ResetType>
+        <SoftResetVal/>
+        <External>no</External>
+        <Command/>
+        <Arguments/>
+      </Flash>
+    </BuildConfig>
+  </BuildConfigs>
+</Project>

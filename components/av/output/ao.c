@@ -1,0 +1,621 @@
+/*
+ * Copyright (C) 2018-2020 Alibaba Group Holding Limited
+ */
+
+#include "output/ao.h"
+
+#define TAG    "ao"
+
+//#define AO_DEBUG
+#ifdef AO_DEBUG
+char *g_dump_data;
+int g_dump_size;
+#define AO_DUMP_SIZE (1*1024*1024)
+#endif
+
+static struct {
+#define AO_OPS_MAX (2)
+    int                 cnt;
+    const struct ao_ops *ops[AO_OPS_MAX];
+    struct {
+        int                 open_ref;
+        int                 start_ref;
+        void                *priv;
+        aos_mutex_t         lock;
+    } refs;
+#define ao_ref_lock()       (aos_mutex_lock(&g_aoers.refs.lock, AOS_WAIT_FOREVER))
+#define ao_ref_unlock()     (aos_mutex_unlock(&g_aoers.refs.lock))
+
+#define ao_ref_open_get()   (g_aoers.refs.open_ref)
+#define ao_ref_open_inc()   (g_aoers.refs.open_ref++)
+#define ao_ref_open_dec()   (g_aoers.refs.open_ref--)
+
+#define ao_ref_start_get()  (g_aoers.refs.start_ref)
+#define ao_ref_start_inc()  (g_aoers.refs.start_ref++)
+#define ao_ref_start_dec()  (g_aoers.refs.start_ref--)
+
+#define ao_ref_priv_get()   (g_aoers.refs.priv)
+#define ao_ref_priv_set(p)  (g_aoers.refs.priv = (p))
+
+#define ao_ref_dump()       do { LOGD(TAG, "ao ref: openref = %2d, startref = %2d, fun = %s", ao_ref_open_get(), ao_ref_start_get(), __FUNCTION__); } while(0)
+} g_aoers;
+
+static int _ao_init()
+{
+    static int inited = 0;
+
+    if (!inited) {
+        aos_mutex_new(&g_aoers.refs.lock);
+#if TMALL_PATCH
+#if 0
+        avf_register_swr();
+        //avf_register_eq();
+        avf_register_aef();
+        avf_register_vol();
+
+        aefx_register_sona();
+        //aefx_register_ipc();
+#endif
+#endif
+        inited = 1;
+    }
+
+    return inited ? 0 : -1;
+}
+
+static const struct ao_ops* _get_ao_ops_by_name(const char* name)
+{
+    int i;
+
+    for (i = 0; i < g_aoers.cnt; i++) {
+        if (strcmp(g_aoers.ops[i]->name, name) == 0) {
+            return g_aoers.ops[i];
+        }
+    }
+
+    LOGE(TAG, "get ao ops err, name = %s\n", name);
+
+    return NULL;
+}
+
+/**
+ * @brief  regist ao ops
+ * @param  [in] ops
+ * @return 0/-1
+ */
+int ao_ops_register(const struct ao_ops *ops)
+{
+    int i;
+
+    _ao_init();
+    if (ops && (g_aoers.cnt < AO_OPS_MAX)) {
+        for (i = 0; i < g_aoers.cnt; i++) {
+            if (strcmp(ops->name, g_aoers.ops[i]->name) == 0) {
+                /* replicate  */
+                break;
+            }
+        }
+
+        if (i == g_aoers.cnt) {
+            g_aoers.ops[g_aoers.cnt] = ops;
+            g_aoers.cnt++;
+        }
+        return 0;
+    }
+
+    LOGE(TAG, "ao ops regist fail\n");
+    return -1;
+}
+
+static avfilter_t* _ao_eqx_new(ao_cls_t *o, sf_t eq_sf)
+{
+    int rc;
+    int i;
+    size_t size;
+    eq_avfp_t eqp;
+    eq_seten_t eqen;
+    eq_setpa_t eqpa;
+    avfilter_t *avf_eq;
+
+    eqp.sf          = eq_sf;
+    eqp.eq_segments = o->eq_segments;
+    avf_eq = avf_eq_open("eq", &eqp);
+    CHECK_RET_TAG_WITH_RET(avf_eq, NULL);
+
+    size = sizeof(eq_setpa_t);
+    for (i = 0; i < o->eq_segments; i++) {
+        if (o->eq_params[i].type != EQF_TYPE_UNKNOWN) {
+            eqpa.segid = i;
+            memcpy(&eqpa.param, (void*)&o->eq_params[i], sizeof(eqfp_t));
+            rc = avf_control(avf_eq, AVF_CMD_EQ_SET_PARAM, (void*)&eqpa, &size);
+            CHECK_RET_TAG_WITH_GOTO(rc == 0, err);
+        }
+    }
+    size        = sizeof(eq_seten_t);
+    eqen.enable = o->eq_en;
+    rc          = avf_control(avf_eq, AVF_CMD_EQ_SET_ENABLE, (void*)&eqen, &size);
+    CHECK_RET_TAG_WITH_GOTO(rc == 0, err);
+
+    return avf_eq;
+err:
+    avf_close(avf_eq);
+    return NULL;
+}
+
+static int _ao_open(ao_cls_t *o)
+{
+    int rc;
+    swr_avfp_t swrp;
+    sf_t osf, s16sf;
+    avfilter_t *avfc     = NULL;
+    avfilter_t *avf_swr1 = NULL, *avf_swr2 = NULL;
+    avfilter_t *avf_eq   = NULL, *avf_aef = NULL, *avf_vol = NULL;
+
+#ifdef AO_DEBUG
+    if (!g_dump_data)
+        g_dump_data = aos_malloc(AO_DUMP_SIZE);
+    g_dump_size = 0;
+#endif
+
+    if (o->resample_rate) {
+        osf = sf_make_channel(2) | sf_make_rate(o->resample_rate) | sf_make_bit(16) | sf_make_signed(1);
+    } else {
+        osf = sf_make_channel(2) | sf_make_rate(sf_get_rate(o->ori_sf)) | sf_make_bit(16) | sf_make_signed(1);
+    }
+
+    if (o->eq_params || o->vol_en || o->aef_conf || AEF_DEBUG) {
+        s16sf = sf_make_channel(1) | sf_make_rate(sf_get_rate(osf)) | sf_make_bit(16) | sf_make_signed(1);
+        if (s16sf != o->ori_sf) {
+            /* swr first */
+            swrp.osf = s16sf;
+            swrp.isf = o->ori_sf;
+            avf_swr1 = avf_swr_open("swr1", &swrp);
+            CHECK_RET_TAG_WITH_GOTO(avf_swr1, err);
+            avfc = avfc ? avfc : avf_swr1;
+        }
+
+        /* FIXME: soft vol need before eq/aef */
+        if (o->vol_en) {
+            avf_vol = avf_vol_open("vol", o->vol_index);
+            CHECK_RET_TAG_WITH_GOTO(avf_vol, err);
+
+            if (avfc)
+                avf_link_tail(avfc, avf_vol);
+            else
+                avfc = avf_vol;
+        }
+
+        if (o->eq_params) {
+            avf_eq = _ao_eqx_new(o, s16sf);
+            CHECK_RET_TAG_WITH_GOTO(avf_eq, err);
+            if (avfc)
+                avf_link_tail(avfc, avf_eq);
+            else
+                avfc = avf_eq;
+        }
+
+        if (o->aef_conf || AEF_DEBUG) {
+            aef_avfp_t aefp;
+            memset(&aefp, 0, sizeof(aef_avfp_t));
+
+            aefp.sf           = s16sf;
+            aefp.conf         = o->aef_conf;
+            aefp.conf_size    = o->aef_conf_size;
+            aefp.nsamples_max = POST_PROC_SAMPLES_MAX;
+            avf_aef = avf_aef_open("aef", &aefp);
+            CHECK_RET_TAG_WITH_GOTO(avf_aef, err);
+            if (avfc)
+                avf_link_tail(avfc, avf_aef);
+            else
+                avfc = avf_aef;
+        }
+
+        /* last step: ch1 to ch2 */
+        swrp.osf = osf;
+        swrp.isf = s16sf;
+        avf_swr2 = avf_swr_open("swr2", &swrp);
+        CHECK_RET_TAG_WITH_GOTO(avf_swr2, err);
+        if (avfc)
+            avf_link_tail(avfc, avf_swr2);
+        else
+            avfc = avf_swr2;
+    } else {
+        if (o->ori_sf != osf) {
+            /* swr only */
+            swrp.osf = osf;
+            swrp.isf = o->ori_sf;
+            avf_swr1 = avf_swr_open("swr", &swrp);
+            CHECK_RET_TAG_WITH_GOTO(avf_swr1, err);
+            avfc = avfc ? avfc : avf_swr1;
+        }
+    }
+
+    ao_ref_lock();
+    if (ao_ref_open_get() == 0) {
+        rc = o->ops->open ? o->ops->open(o, osf) : -1;
+        if (rc < 0) {
+            ao_ref_unlock();
+            LOGE(TAG, "ao open failed\n");
+            goto err;
+        }
+        ao_ref_priv_set(o->priv);
+    } else {
+        o->priv = ao_ref_priv_get();
+    }
+    ao_ref_open_inc();
+    ao_ref_dump();
+    ao_ref_unlock();
+    o->sf      = osf;
+    o->avfc    = avfc;
+    o->avf_vol = avf_vol;
+    o->avf_eq  = o->eq_params ? avf_eq : NULL;
+
+    return 0;
+err:
+    avf_close(avf_eq);
+    avf_close(avf_aef);
+    avf_close(avf_vol);
+    avf_close(avf_swr1);
+    avf_close(avf_swr2);
+    return -1;
+}
+/**
+ * @brief  open/create a audio out by name
+ * @param  [in] aoh
+ * @return NULL on error
+ */
+ao_cls_t* ao_open(const aoh_t *aoh)
+{
+    int rc;
+    ao_cls_t *o      = NULL;
+    avframe_t *frame = NULL;
+
+    CHECK_PARAM(aoh && aoh->name, NULL);
+    _ao_init();
+    o = aos_zalloc(sizeof(ao_cls_t));
+    CHECK_RET_TAG_WITH_RET(o, NULL);
+
+    if (aoh->eq_segments && aoh->aef_conf && aoh->aef_conf_size) {
+        LOGE(TAG, "param faild, eq & aef can't both enabled");
+        goto err;
+    }
+    if (aoh->eq_segments) {
+        o->eq_params = aos_zalloc(sizeof(eqfp_t) * aoh->eq_segments);
+        CHECK_RET_TAG_WITH_GOTO(o->eq_params, err);
+    }
+    if (aoh->aef_conf && aoh->aef_conf_size) {
+        o->aef_conf = aos_malloc(aoh->aef_conf_size);
+        CHECK_RET_TAG_WITH_GOTO(o->aef_conf, err);
+        memcpy(o->aef_conf, aoh->aef_conf, aoh->aef_conf_size);
+        o->aef_conf_size = aoh->aef_conf_size;
+    }
+
+    frame = avframe_alloc();
+    CHECK_RET_TAG_WITH_GOTO(frame, err);
+
+    o->ops = _get_ao_ops_by_name(aoh->name);
+    if (NULL == o->ops) {
+        LOGE(TAG, "ao ops get failed, name = %s\n", aoh->name);
+        goto err;
+    }
+    o->oframe        = frame;
+    o->ori_sf        = aoh->sf;
+    o->resample_rate = aoh->resample_rate;
+    o->eq_segments   = aoh->eq_segments;
+    o->period_ms     = aoh->period_ms ? aoh->period_ms : AO_ONE_PERIOD_MS;
+    o->period_num    = aoh->period_num ? aoh->period_num : AO_TOTAL_PERIOD_NUM;
+#if TMALL_PATCH
+    o->vol_en        = 1;
+#else
+    o->vol_en        = aoh->vol_en;
+#endif
+    o->vol_index     = aoh->vol_index;
+
+    rc = _ao_open(o);
+    CHECK_RET_TAG_WITH_GOTO(rc == 0, err);
+    LOGI(TAG, "ori rate = %d, ao rate = %d", sf_get_rate(o->ori_sf), sf_get_rate(o->sf));
+    aos_mutex_new(&o->lock);
+
+    return o;
+err:
+    if (o) {
+        aos_free(o->eq_params);
+        aos_free(o->aef_conf);
+        aos_free(o);
+    }
+    avframe_free(&frame);
+    return NULL;
+}
+
+/**
+ * @brief  control the ao
+ * @param  [in] o
+ * @param  [in] cmd : command, see AO_CMD_XX
+ * @param  [in] arg
+ * @param  [in/out] arg_size
+ * @return
+ */
+int ao_control(ao_cls_t *o, int cmd, void *arg, size_t *arg_size)
+{
+    //FIXME:
+    int rc = -1;
+    size_t size;
+
+    CHECK_PARAM(o, -1);
+    aos_mutex_lock(&o->lock, AOS_WAIT_FOREVER);
+    switch (cmd) {
+    case AO_CMD_EQ_ENABLE: {
+        oeq_seten_t *val = arg;
+        CHECK_RET_TAG_WITH_RET(val, -1);
+        if (o->avf_eq) {
+            eq_seten_t para;
+
+            size = sizeof(para);
+            para.enable = val->enable;
+            rc = avf_control(o->avf_eq, AVF_CMD_EQ_SET_ENABLE, (void*)&para, &size);
+        } else {
+            rc = 0;
+        }
+        o->eq_en = (rc == 0) ? val->enable : o->eq_en;
+    }
+    break;
+    case AO_CMD_EQ_SET_PARAM: {
+        oeq_setpa_t *val = arg;
+        CHECK_RET_TAG_WITH_RET(val, -1);
+        if (!((val->segid < o->eq_segments) && o->eq_params)) {
+            LOGE(TAG, "param faild. segid = %u, eq_segments = %u", val->segid, o->eq_segments);
+            break;
+        }
+
+        if (o->avf_eq) {
+            eq_setpa_t para;
+            size       = sizeof(para);
+            para.segid = val->segid;
+            memcpy(&para.param, &val->param, sizeof(eqfp_t));
+            rc = avf_control(o->avf_eq, AVF_CMD_EQ_SET_PARAM, (void*)&para, &size);
+        } else {
+            rc = 0;
+        }
+        if (rc == 0) {
+            memcpy(&o->eq_params[val->segid], &val->param, sizeof(eqfp_t));
+        }
+    }
+    break;
+    case AO_CMD_VOL_SET: {
+        ovol_set_t *val = arg;
+        CHECK_RET_TAG_WITH_RET(val, -1);
+        if (o->vol_en) {
+            vol_set_t para;
+
+            size = sizeof(para);
+            para.vol_index = val->vol_index;
+            rc = avf_control(o->avf_vol, AVF_CMD_VOL_SET, (void*)&para, &size);
+            o->vol_index = (rc == 0) ? val->vol_index : o->vol_index;
+        } else {
+            rc = 0;
+        }
+    }
+    break;
+    default:
+        break;
+    }
+    aos_mutex_unlock(&o->lock);
+
+    return rc;
+}
+
+
+/**
+ * @brief  start audio out
+ * @param  [in] o
+ * @return 0/-1
+ */
+int ao_start(ao_cls_t *o)
+{
+    int rc = 0;
+
+    CHECK_PARAM(o, -1);
+
+    o->interrupt = 0;
+    aos_mutex_lock(&o->lock, AOS_WAIT_FOREVER);
+    if (!o->start) {
+        ao_ref_lock();
+        if (ao_ref_start_get() == 0) {
+            rc = o->ops->start ? o->ops->start(o) : -1;
+            if (rc == 0) {
+                o->start = 1;
+            } else {
+                LOGE(TAG, "ao start failed, rc = %d", rc);
+            }
+        } else {
+            o->start = 1;
+        }
+        ao_ref_start_inc();
+        ao_ref_dump();
+        ao_ref_unlock();
+    }
+    aos_mutex_unlock(&o->lock);
+
+    return rc;
+}
+
+/**
+ * @brief  stop audio out
+ * @param  [in] o
+ * @return 0/-1
+ */
+int ao_stop(ao_cls_t *o)
+
+{
+    int ret = 0;
+
+    CHECK_PARAM(o, -1);
+
+    o->interrupt = 1;
+    aos_mutex_lock(&o->lock, AOS_WAIT_FOREVER);
+    if (o->start) {
+        ao_ref_lock();
+        ao_ref_start_dec();
+        if (ao_ref_start_get() == 0) {
+            ret = o->ops->stop ? o->ops->stop(o) : -1;
+            if (ret == 0) {
+                o->start = 0;
+            } else {
+                LOGE(TAG, "ao stop failed, ret = %d", ret);
+            }
+        } else {
+            o->start = 0;
+        }
+        ao_ref_dump();
+        ao_ref_unlock();
+    }
+    aos_mutex_unlock(&o->lock);
+
+    return ret;
+}
+
+static int _pcm_filter(ao_cls_t *o, const uint8_t *pcm, size_t pcm_size, uint8_t **dst, size_t *size)
+{
+    int rc;
+
+    if (o->avfc) {
+        avframe_t frame;
+
+        *dst  = NULL;
+        *size = 0;
+        memset(&frame, 0, sizeof(avframe_t));
+        frame.type        = AVMEDIA_TYPE_AUDIO;
+        frame.data[0]     = (uint8_t*)pcm;
+        frame.linesize[0] = pcm_size;
+        frame.sf          = o->ori_sf;
+        frame.nb_samples  = pcm_size / sf_get_frame_size(o->ori_sf);
+        rc = avf_filter_frame(o->avfc, (const avframe_t*)&frame, o->oframe);
+        CHECK_RET_TAG_WITH_RET(rc >= 0, -1);
+        *dst  = o->oframe->data[0];
+        *size = o->oframe->linesize[0];
+    } else {
+        *dst  = (uint8_t*)pcm;
+        *size = pcm_size;
+    }
+
+    return 0;
+}
+
+/**
+ * @brief  write data to audio out
+ * @param  [in] o
+ * @param  [in] buf
+ * @param  [in] count
+ * @return -1 when err
+ */
+int ao_write(ao_cls_t *o, const uint8_t *buf, size_t count)
+{
+    int ret = -1;
+    size_t pcm_size = 0;
+    uint8_t *pcm = NULL;
+
+    if (!(o && buf && count)) {
+        LOGE(TAG, "param err, %s\n", __FUNCTION__);
+        return -1;
+    }
+
+    aos_mutex_lock(&o->lock, AOS_WAIT_FOREVER);
+    if (o->start) {
+        ret = _pcm_filter(o, buf, count, &pcm, &pcm_size);
+        if (ret < 0) {
+            LOGE(TAG, "pcm convert fail, ret = %d", ret);
+            goto quit;
+        }
+        if (!(pcm && pcm_size)) {
+            //FIXME: inner filter need more data
+            ret = count;
+            goto quit;
+        }
+#ifdef AO_DEBUG
+        if ((g_dump_size + pcm_size < AO_DUMP_SIZE) && g_dump_data) {
+            memcpy(g_dump_data+g_dump_size, pcm, pcm_size);
+            g_dump_size += pcm_size;
+        }
+#endif
+        ao_ref_lock();
+        if (ao_ref_start_get() > 0) {
+            ret = o->ops->write ? o->ops->write(o, pcm, pcm_size) : -1;
+            ret = (ret == pcm_size) ? count : ret;
+        }
+        ao_ref_unlock();
+    } else {
+        ret = 0;
+        LOGI(TAG, "ao is not start yet!");
+    }
+quit:
+    aos_mutex_unlock(&o->lock);
+
+    return ret;
+}
+
+/**
+ * @brief  drain out the tail pcm
+ * @param  [in] o
+ * @return 0/-1
+ */
+int ao_drain(ao_cls_t *o)
+{
+    int ret = -1;
+
+    CHECK_PARAM(o, -1);
+
+    aos_mutex_lock(&o->lock, AOS_WAIT_FOREVER);
+    if (o->start) {
+        ao_ref_lock();
+        if (ao_ref_start_get() > 0) {
+            if (o->ops->drain)
+                ret = o->ops->drain(o);
+        }
+        ao_ref_dump();
+        ao_ref_unlock();
+    } else {
+        ret = 0;
+        LOGI(TAG, "ao is not start yet!");
+    }
+    aos_mutex_unlock(&o->lock);
+
+    return ret;
+}
+
+/**
+ * @brief  close/destroy a audio out
+ * @param  [in] o
+ * @return 0/-1
+ */
+int ao_close(ao_cls_t *o)
+{
+    int ret = -1;
+
+    CHECK_PARAM(o, -1);
+    o->interrupt = 1;
+    ao_stop(o);
+    aos_mutex_lock(&o->lock, AOS_WAIT_FOREVER);
+    ao_ref_lock();
+    ao_ref_open_dec();
+    if (ao_ref_open_get() == 0) {
+        if (o->ops->close)
+            ret = o->ops->close(o);
+
+        ao_ref_priv_set(NULL);
+    }
+    ao_ref_dump();
+    ao_ref_unlock();
+    aos_mutex_unlock(&o->lock);
+
+    avf_chain_close(o->avfc);
+    avframe_free(&o->oframe);
+    aos_mutex_free(&o->lock);
+    aos_free(o->eq_params);
+    aos_free(o->aef_conf);
+    aos_free(o);
+
+    return ret;
+}
+
+
+

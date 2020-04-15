@@ -1,0 +1,122 @@
+solution:
+  board_name: cb5654
+  ld_script: gcc_flash.ld
+type: solution
+name: smart_speaker_demo
+yoc_version: 7.2
+description: 智能音箱例程
+keywords:
+  - sc5654
+author: feimi
+license: Apache license v2.0
+depends:
+  - aos: V7.2.2
+  - aos_hal: V7.2.2
+  - aui_aliyunnls: V7.2.2
+  - av: V7.2.2
+  - pvmp3dec: V7.2.2
+  - speexdsp: V7.2.2
+  - cb5654: V7.2.2
+  - csi_sc5654: V7.2.2
+  - cjson: V7.2.2
+  - clock_alarm: V7.2.2
+  - console: V7.2.2
+  - csi: V7.2.2
+  - drivers: V7.2.2
+  - drv_sdmmc: V7.2.2
+  - drv_snd_sc5654: V7.2.2
+  - drv_wifi_rtl8723ds: V7.2.2
+  - drv_leds: V7.2.2
+  - fatfs: V7.2.2
+  - fota: V7.2.2
+  - ipc: V7.2.2
+  - kv: V7.2.2
+  - lwip: V7.2.2
+  - ntp: V7.2.2
+  - mbedtls: V7.2.2
+  - mic: V7.2.2
+  - minialsa: V7.2.2
+  - minilibc: V7.2.2
+  - netmgr: V7.2.2
+  - posix: V7.2.2
+  - record: V7.2.2
+  - rhino: V7.2.2
+  - vfs: V7.2.2
+  - voice: V7.2.2
+  - webclient: V7.2.2
+  - websocket: V7.2.2
+  - adc_button: V7.2.2
+  - wifi_provisioning: V7.2.2
+  - smartliving: V7.2.2
+  - fct: V7.2.2
+  - httpclient: V7.2.2
+  - transport: V7.2.2
+  - yoc_sc5654: V7.2.2
+  - voice_mit: V7.2.2
+defconfig:
+  CONFIG_ARCH_INTERRUPTSTACK: 4096
+  CONFIG_CLI: 1
+  CONFIG_CPU: ck803ef
+  CONFIG_CPU_CK803EF: 1
+  CONFIG_DEBUG: 1
+  CONFIG_KERNEL_RHINO: 1
+  CONFIG_KERNEL_TIMER_MSG_NUM: 30
+  CONFIG_KERNEL_TIMER_STACK_SIZE: 2048
+  CONFIG_KV_SMART: 1
+  CONFIG_NON_ADDRESS_FLASH: 1
+  CONFIG_PARAM_NOT_CHECK: 1
+  CONFIG_SOFTWDT: 1
+  CONFIG_SYSTICK_HZ: 1000
+  CONFIG_TCPIP: 1
+  CONFIG_USING_TLS: 1
+  CONFIG_VENDOR_NAME: silan
+  CONFIG_RESAMPLER_SILAN: 1
+  CONFIG_RESAMPLER_SPEEX: 0
+  CONFIG_RESAMPLER_IPC: 0
+  CONFIG_AEFXER_SONA: 0
+  CONFIG_AEFXER_IPC: 0
+  CONFIG_DECODER_PCM: 1
+  CONFIG_DECODER_PVMP3: 1
+  CONFIG_DECODER_FLAC: 0
+  CONFIG_DECODER_ADPCM_MS: 0
+  CONFIG_DECODER_AMRNB: 0
+  CONFIG_DECODER_AMRWB: 0
+  CONFIG_DECODER_IPC: 0
+build_config:
+  internal_include:
+    - ""
+  include:
+    - include
+    - app/include
+    - app/src
+    - app/src/audio
+    - app/src/aui_cloud
+    - app/src/wifi_prov_ack
+    - app/src/led
+  cflag: -Os  -g  -Wall  -ffunction-sections -fdata-sections -mhard-float  -Wl,-zmax-page-size=1024 -Wno-address -Wno-unused-but-set-variable -Wno-main -Wno-unused-function
+  cxxflag: -Os  -g  -Wall  -ffunction-sections -fdata-sections -mhard-float  -Wl,-zmax-page-size=1024 -Wno-address -Wno-unused-but-set-variable -Wno-main -Wno-unused-function
+  asmflag: ""
+  ldflag: -Wl,-zmax-page-size=1024 -mhard-float -Wl,-ckmap="yoc.map"
+  define:
+    - ""
+  libs:
+    - m
+    - resample
+  libpath: ~
+source_file:
+  - app/src/*.c
+  - app/src/audio/*.c
+  - app/src/vad/*.c
+  - app/src/aui_cloud/aliyunnls/*.c
+  - app/src/wifi_prov_ack/*.c
+  - app/src/led/*.c
+  - app/src/voice_debug/t-head/*.c ? <CONFIG_THEAD_DSP>
+  - app/src/voice_debug/mit/*.c ? <CONFIG_MIT_DSP>
+  - app/src/voice_debug/huwen/*.c ? <CONFIG_HUWEN_DSP>
+  - app/src/fct/mit/*.c ?<BOARD_MIT_V2>
+  - app/src/fct/org/*.c ?<BOARD_CB5654>
+link_config:
+  path: ~
+  library: ~
+hidden: false
+homepage: https://occ.t-head.cn

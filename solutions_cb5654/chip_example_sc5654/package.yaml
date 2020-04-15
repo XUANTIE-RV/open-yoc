@@ -1,0 +1,73 @@
+solution:
+  board_name: cb5654
+  ld_script: ""
+type: solution
+name: chip_example_sc5654
+yoc_version: 7.2
+description: 系统API及驱动示例
+keywords:
+  - sc5654
+  - cb5654
+  - solution
+author: feimi
+license: Apache license v2.0
+depends:
+  - aos: V7.2.2
+  - aos_hal: V7.2.2
+  - cb5654: V7.2.2
+  - csi_sc5654: V7.2.2
+  - console: V7.2.2
+  - csi: V7.2.2
+  - drivers: V7.2.2
+  - drv_sdmmc: V7.2.2
+  - fatfs: V7.2.2
+  - kv: V7.2.2
+  - minilibc: V7.2.2
+  - posix: V7.2.2
+  - rhino: V7.2.2
+  - vfs: V7.2.2
+defconfig:
+  CONFIG_ARCH_INTERRUPTSTACK: 4096
+  CONFIG_BOARD_NAME: cb5654
+  CONFIG_CHIP_NAME: sc5654
+  CONFIG_CHIP_SC5654: 1
+  CONFIG_CLI: 1
+  CONFIG_CPU: ck803ef
+  CONFIG_CPU_CK803EF: 1
+  CONFIG_DEBUG: 1
+  CONFIG_KERNEL_RHINO: 1
+  CONFIG_KERNEL_TIMER_MSG_NUM: 30
+  CONFIG_KERNEL_TIMER_STACK_SIZE: 2048
+  CONFIG_KV_SMART: 1
+  CONFIG_NON_ADDRESS_FLASH: 1
+  CONFIG_PARAM_NOT_CHECK: 1
+  CONFIG_SOFTWDT: 1
+  CONFIG_SYSTICK_HZ: 1000
+  CONFIG_VENDOR_NAME: silan
+build_config:
+  internal_include:
+    - ""
+  include:
+    - include
+    - app/include
+    - app/src/aos_demo
+    - app/src/drivers_demo
+  cflag: -Os  -g  -Wall  -ffunction-sections -fdata-sections -mhard-float  -Wl,-zmax-page-size=1024 -Wno-address -Wno-unused-but-set-variable -Wno-main -Wno-unused-function
+  cxxflag: -Os  -g  -Wall  -ffunction-sections -fdata-sections -mhard-float  -Wl,-zmax-page-size=1024 -Wno-address -Wno-unused-but-set-variable -Wno-main -Wno-unused-function
+  asmflag: ""
+  ldflag: -Wl,-zmax-page-size=1024 -mhard-float -Wl,-ckmap="yoc.map"
+  define:
+    - ""
+  libs:
+    - m
+  libpath:
+    - ""
+source_file:
+  - app/src/*.c
+  - app/src/aos_demo/*.c
+  - app/src/drivers_demo/*.c
+link_config:
+  path: ~
+  library: ~
+hidden: false
+homepage: https://occ.t-head.cn

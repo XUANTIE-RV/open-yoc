@@ -1,0 +1,51 @@
+name: helloworld
+version: v7.2-dev
+description: YoC helloworld SDK
+
+type: solution
+yoc_version: V7.2.2
+
+solution:
+  cpu_id: cpu0
+  board_name: board_dummy
+  # cpu_name: CK805EF
+  # vendor_name: csky
+  # chip_name: 'chip_ch2201'
+  # ld_script: configs/gcc_eflash.ld.S
+
+depends:                                       # 该组件依赖其他的组件
+  - csi: V7.2.2
+  - rhino: V7.2.2
+  - minilibc: V7.2.2
+  - aos: V7.2.2
+  - console: V7.2.2
+  - csi_pangu: V7.2.2
+  - netmgr: V7.2.2
+  - drivers: V7.2.2
+  - pangu_cpu0: V7.2.2
+  - minialsa: V7.2.2
+  - ipc: V7.2.2
+  - lwip: V7.2.2
+  # - yunio: V7.2.2
+  # - aliot: V7.2.2
+  # - onenet: V7.2.2
+  # - lwm2m: V7.2.2
+
+# 编译参数
+build_config:
+  include:
+    - app/include
+
+  ldflag: -Wl,-ckmap="yoc.map" -Wl,-zmax-page-size=1024
+
+# 源文件
+source_file:
+  - app/src/init/cli_cmd.c
+  - app/src/init/init.c
+  - app/src/main.c
+
+defconfig:
+  CONFIG_ARCH_INTERRUPTSTACK: 1024
+  CONFIG_CLI: 1
+  CONFIG_DEBUG: 1
+  CONFIG_KERNEL_RHINO: 1

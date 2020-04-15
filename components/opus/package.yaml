@@ -1,0 +1,221 @@
+
+## 第一部分： 基础信息
+name: opus                                          # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
+description: Opus是一个完全开放的、免费的、多功能的音频编解码器。 它在交互式的语音和音乐在互联网中的传输方面有着无与伦比的优势，但是同样致力于存储和流媒体应用程序。它是由互联网工程任务组(IETF)制定的标准，标准格式为RFC 6716，由Skype的SILK编解码器和Xiph.Org的CELT编解码器合并发展而来，号称音频编解码器中的瑞士军刀 # <必选项> 建议至少20字以上
+type: common                                        # <可选项> 组件类型，为：solution, chip, board, common，缺省值 common
+
+tag: 多媒体播放器                                   # <可选项> 组件分类，缺省值： ''
+keywords:                                           # <可选项> 标签，会影响到组件被搜索的效果，合理的标签很重要
+  - opus
+  - audio decoder & encoder
+  - media
+yoc_version: ['v7.2', 'v7.3']
+author:                                             # <可选项> 原作者信息
+  name: jingzhishen
+  email: jingzhishen@126.com
+license: Xiph.Org                                   # <可选项> 源代码的许可证，要确保所有代码、文件的许可证不冲突。如：MIT，Apache license v2.0，BSD
+
+## 第二部分：依赖信息
+#           指定该组件依赖的组件及版本，版本支持条件比较，支持：>=v1.0, >v1.0, ==v1.0, <=v1.0, <v1.0, v1.0
+#           未指定条件时，默认为 ==，如 v1.0 与 ==v1.0
+# depends:                                 # <可选项> 该组件依赖其他的组件，合理的依赖才能保证组件能编译、使用
+#   - minilibc: v7.2.0
+#   - aos: >=v7.2.0
+depends:
+  - csi: V7.2.2
+  - rhino: V7.2.2
+  - minilibc: V7.2.2
+  - aos: V7.2.2
+
+## 第四部分：编译连接信息
+# build_config:                            # <可选项> 编译配置项
+#   include:                               # <可选项> 编译时，影响编译器的-I 参数 ,全局有效
+#     - src                                #        include 只能是该软件包下的目录，不能使用外部目录
+#   internal_include:                      # <可选项> 编译时，影响编译器的-I 参数 ,组件内有效
+#     - include
+#   cflag: ''                              # <可选项> C 编译器所需要要的编译参数
+#   cxxflag: ''                            # <可选项> CXX 编译器所需要要的编译参数
+#   asmflag: ''                            # <可选项> 汇编器所需要要参数
+#   define:                                # <可选项> 宏定义, 增加编译器的-D 选项,如：
+#     XXX: 1                               #   -DXXX=1
+#     AAA: 1                               #   -DAAA
+#     STR: "abc"                           #   -DSTR="abc"
+#   libs:                                  # 该组件中支持的二进制静态库,如：libxxx.a, libyyy.a
+#     - xxx                                #   -lxxx
+#     - yyy                                #   -lyyy
+#   libpath:                               # 指定静态库所在的路径（相对于该组件路径）
+#     - libs                               #   -Llibs
+build_config:
+  cflag: ' -Wall -O2  -Wno-unused-function'
+  define:
+    - HAVE_CONFIG_H
+    - FIXED_POINT
+    - OPUS_CSKY_ASM
+  include:
+    - include
+  internal_include:
+    - .
+    - celt
+    - silk
+    - silk/float
+    - silk/fixed
+
+# source_file:                             # <可选项> 指定参与编译的源代码文件，支持通配符，采用相对路径
+#   - src/*.c                              # 例：组件 src 目录下所有的扩展名为 c 的源代码文件
+source_file:
+  - "celt/bands.c"
+  - "celt/celt.c"
+  - "celt/celt_encoder.c"
+  - "celt/celt_decoder.c"
+  - "celt/cwrs.c"
+  - "celt/entcode.c"
+  - "celt/entdec.c"
+  - "celt/entenc.c"
+  - "celt/kiss_fft.c"
+  - "celt/laplace.c"
+  - "celt/mathops.c"
+  - "celt/mdct.c"
+  - "celt/modes.c"
+  - "celt/pitch.c"
+  - "celt/celt_lpc.c"
+  - "celt/quant_bands.c"
+  - "celt/rate.c"
+  - "celt/vq.c"
+  - "silk/CNG.c"
+  - "silk/code_signs.c"
+  - "silk/init_decoder.c"
+  - "silk/decode_core.c"
+  - "silk/decode_frame.c"
+  - "silk/decode_parameters.c"
+  - "silk/decode_indices.c"
+  - "silk/decode_pulses.c"
+  - "silk/decoder_set_fs.c"
+  - "silk/dec_API.c"
+  - "silk/enc_API.c"
+  - "silk/encode_indices.c"
+  - "silk/encode_pulses.c"
+  - "silk/gain_quant.c"
+  - "silk/interpolate.c"
+  - "silk/LP_variable_cutoff.c"
+  - "silk/NLSF_decode.c"
+  - "silk/NSQ.c"
+  - "silk/NSQ_del_dec.c"
+  - "silk/PLC.c"
+  - "silk/shell_coder.c"
+  - "silk/tables_gain.c"
+  - "silk/tables_LTP.c"
+  - "silk/tables_NLSF_CB_NB_MB.c"
+  - "silk/tables_NLSF_CB_WB.c"
+  - "silk/tables_other.c"
+  - "silk/tables_pitch_lag.c"
+  - "silk/tables_pulses_per_block.c"
+  - "silk/VAD.c"
+  - "silk/control_audio_bandwidth.c"
+  - "silk/quant_LTP_gains.c"
+  - "silk/VQ_WMat_EC.c"
+  - "silk/HP_variable_cutoff.c"
+  - "silk/NLSF_encode.c"
+  - "silk/NLSF_VQ.c"
+  - "silk/NLSF_unpack.c"
+  - "silk/NLSF_del_dec_quant.c"
+  - "silk/process_NLSFs.c"
+  - "silk/stereo_LR_to_MS.c"
+  - "silk/stereo_MS_to_LR.c"
+  - "silk/check_control_input.c"
+  - "silk/control_SNR.c"
+  - "silk/init_encoder.c"
+  - "silk/control_codec.c"
+  - "silk/A2NLSF.c"
+  - "silk/ana_filt_bank_1.c"
+  - "silk/biquad_alt.c"
+  - "silk/bwexpander_32.c"
+  - "silk/bwexpander.c"
+  - "silk/debug.c"
+  - "silk/decode_pitch.c"
+  - "silk/inner_prod_aligned.c"
+  - "silk/lin2log.c"
+  - "silk/log2lin.c"
+  - "silk/LPC_analysis_filter.c"
+  - "silk/LPC_inv_pred_gain.c"
+  - "silk/table_LSF_cos.c"
+  - "silk/NLSF2A.c"
+  - "silk/NLSF_stabilize.c"
+  - "silk/NLSF_VQ_weights_laroia.c"
+  - "silk/pitch_est_tables.c"
+  - "silk/resampler.c"
+  - "silk/resampler_down2_3.c"
+  - "silk/resampler_down2.c"
+  - "silk/resampler_private_AR2.c"
+  - "silk/resampler_private_down_FIR.c"
+  - "silk/resampler_private_IIR_FIR.c"
+  - "silk/resampler_private_up2_HQ.c"
+  - "silk/resampler_rom.c"
+  - "silk/sigm_Q15.c"
+  - "silk/sort.c"
+  - "silk/sum_sqr_shift.c"
+  - "silk/stereo_decode_pred.c"
+  - "silk/stereo_encode_pred.c"
+  - "silk/stereo_find_predictor.c"
+  - "silk/stereo_quant_pred.c"
+  - "silk/LPC_fit.c"
+  - "src/opus.c"
+  - "src/opus_decoder.c"
+  - "src/opus_encoder.c"
+  - "src/opus_multistream.c"
+  - "src/opus_multistream_encoder.c"
+  - "src/opus_multistream_decoder.c"
+  - "src/repacketizer.c"
+  - "src/opus_projection_encoder.c"
+  - "src/opus_projection_decoder.c"
+  - "src/mapping_matrix.c"
+  - "src/analysis.c"
+  - "src/mlp.c"
+  - "src/mlp_data.c"
+  - "silk/fixed/LTP_analysis_filter_FIX.c"
+  - "silk/fixed/LTP_scale_ctrl_FIX.c"
+  - "silk/fixed/corrMatrix_FIX.c"
+  - "silk/fixed/encode_frame_FIX.c"
+  - "silk/fixed/find_LPC_FIX.c"
+  - "silk/fixed/find_LTP_FIX.c"
+  - "silk/fixed/find_pitch_lags_FIX.c"
+  - "silk/fixed/find_pred_coefs_FIX.c"
+  - "silk/fixed/noise_shape_analysis_FIX.c"
+  - "silk/fixed/process_gains_FIX.c"
+  - "silk/fixed/regularize_correlations_FIX.c"
+  - "silk/fixed/residual_energy16_FIX.c"
+  - "silk/fixed/residual_energy_FIX.c"
+  - "silk/fixed/warped_autocorrelation_FIX.c"
+  - "silk/fixed/apply_sine_window_FIX.c"
+  - "silk/fixed/autocorr_FIX.c"
+  - "silk/fixed/burg_modified_FIX.c"
+  - "silk/fixed/k2a_FIX.c"
+  - "silk/fixed/k2a_Q16_FIX.c"
+  - "silk/fixed/pitch_analysis_core_FIX.c"
+  - "silk/fixed/vector_ops_FIX.c"
+  - "silk/fixed/schur64_FIX.c"
+  - "silk/fixed/schur_FIX.c"
+
+## 第五部分：配置信息
+# def_config:                              # 组件的可配置项
+#   CONFIG_DEBUG: y
+#   CONFIG_PARAM_NOT_CHECK: y
+#   CONFIG_CLI: y
+
+## 第六部分：安装信息
+# install:
+#   - dest: include/                       # 安装的目的路径 dest是相当路径，通常是相对于YoC SDK 安装目录
+#     source:                              # 安装源列表
+#      - src/*.h                           # 支持通配符，相对路径
+install:
+  - dest: "include/"
+    source:
+      - "include/*.h"
+
+## 第七部分：导出部分
+# export:
+#   - dest: "<SOLUTION_PATH>/generated/data" # 安装的目的路径 dest是相当路径
+#     source:                                # 安装源列表
+#       - "bootimgs/boot"
+#       - "bootimgs/tee"
+#       - "bootimgs/mtb"
+#       - "configs/config.yaml"
