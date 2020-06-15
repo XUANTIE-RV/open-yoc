@@ -3,7 +3,7 @@ solution:
   ld_script: ""
 type: solution
 name: chip_example_sc5654
-yoc_version: 7.2
+version: v7.3.0                                     # <必选项> 组件版本号
 description: 系统API及驱动示例
 keywords:
   - sc5654
@@ -12,21 +12,21 @@ keywords:
 author: feimi
 license: Apache license v2.0
 depends:
-  - aos: V7.2.2
-  - aos_hal: V7.2.2
-  - cb5654: V7.2.2
-  - csi_sc5654: V7.2.2
-  - console: V7.2.2
-  - csi: V7.2.2
-  - drivers: V7.2.2
-  - drv_sdmmc: V7.2.2
-  - fatfs: V7.2.2
-  - kv: V7.2.2
-  - minilibc: V7.2.2
-  - posix: V7.2.2
-  - rhino: V7.2.2
-  - vfs: V7.2.2
-defconfig:
+  - aos: V7.3.0
+  - aos_hal: V7.3.0
+  - cb5654: V7.3.0
+  - csi_sc5654: V7.3.0
+  - console: V7.3.0
+  - csi: V7.3.0
+  - drivers: V7.3.0
+  - drv_sdmmc: V7.3.0
+  - fatfs: V7.3.0
+  - kv: V7.3.0
+  - minilibc: V7.3.0
+  - posix: V7.3.0
+  - rhino: V7.3.0
+  - vfs: V7.3.0
+def_config:
   CONFIG_ARCH_INTERRUPTSTACK: 4096
   CONFIG_BOARD_NAME: cb5654
   CONFIG_CHIP_NAME: sc5654

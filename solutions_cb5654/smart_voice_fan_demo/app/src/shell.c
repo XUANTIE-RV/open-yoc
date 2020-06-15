@@ -17,7 +17,7 @@ char *shell_param[SHELL_LINE_MAX_LEN] = {0}; /* store the param recved (include 
 
 extern int shell_fputc(int ch);
 extern int shell_fgetc(char *ch);
-extern void drv_reboot(void);
+extern void drv_reboot(int cmd);
 extern int get_wakeup_cnt(void);
 
 static int shell_get_char(char *recv_ch)
@@ -165,7 +165,7 @@ static void sys_cmd_fun(int argc, char*argv[]) /* cmd func */
     }
 
     if (0 == strcmp(argv[1], "reboot")) {
-        drv_reboot();
+        drv_reboot(0);
         return;
     } else if (0 == strcmp(argv[1], "sleep")) {
         if (argc == 3 && argv[2]) {

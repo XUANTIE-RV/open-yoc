@@ -39,7 +39,7 @@
 #if LWIP_DNS && LWIP_SOCKET
 
 #include "lwip/arch.h"
-#include "arpa/inet.h"
+#include "lwip/inet.h"
 #include "lwip/sockets.h"
 
 #ifdef __cplusplus
@@ -70,6 +70,11 @@ extern "C" {
 #define EAI_FAIL        202
 #define EAI_MEMORY      203
 #define EAI_FAMILY      204
+#define EAI_BADFLAGS    205
+#define EAI_AGAIN       206
+#define EAI_SOCKTYPE    207
+#define EAI_SYSTEM      208
+#define EAI_OVERFLOW    209
 
 #define HOST_NOT_FOUND  210
 #define NO_DATA         211

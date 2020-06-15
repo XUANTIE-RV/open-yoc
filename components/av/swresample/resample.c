@@ -22,6 +22,7 @@ int resx_ops_register(const struct resx_ops *ops)
         return -1;
     }
     _res_ops = (struct resx_ops*)ops;
+    LOGD(TAG, "regist resampler, name = %s", _res_ops->name);
 
     return 0;
 }

@@ -1,1 +1,3 @@
-# XXX Chip CSI driver
+# 概述
+
+语音AI的芯片SDK套件，包含网络、音播播放器、AUI框架等组件

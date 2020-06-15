@@ -12,12 +12,12 @@
  ******************************************************************************/
 
 #include <stdint.h>
-#include <csi_config.h>
 #include <soc.h>
 #include <sys_freq.h>
 #include "yun_pmu.h"
 
 int g_system_clock = SYSTEM_CLOCK;
+extern int32_t drv_get_cpu_id(void);
 
 int32_t drv_get_sys_freq(void)
 {
@@ -86,4 +86,9 @@ int32_t drv_get_timer_freq(int32_t idx)
 int32_t drv_get_cpu_freq(int32_t idx)
 {
     return yun_get_cpu_freq(idx);
+}
+
+uint32_t drv_get_cur_cpu_freq(void)
+{
+    return drv_get_cpu_freq(drv_get_cpu_id());
 }

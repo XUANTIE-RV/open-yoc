@@ -1,4 +1,3 @@
-#include <yoc_config.h>
 #include <yoc/atserver.h>
 #include <at_cmd.h>
 

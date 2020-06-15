@@ -176,13 +176,13 @@ static uint8_t mems_is_data_ready(aos_dev_t *dev)
     uint8_t status  = 0;
     /* read int status reg */
 
-    int ret = iic_send(dev, config->slave_addr, &addr, 1);
+    int ret = iic_master_send(dev, config->slave_addr, &addr, 1, AOS_WAIT_FOREVER);
 
     if (ret < 0) {
         return 0;
     }
 
-    ret = iic_recv(dev, config->slave_addr, &status, 1);
+    ret = iic_master_recv(dev, config->slave_addr, &status, 1, AOS_WAIT_FOREVER);
 
     if (ret < 0) {
         return 0;
@@ -195,13 +195,13 @@ static int mems_readreg(aos_dev_t *dev, uint8_t write_cmd, uint8_t *rxbuf)
 {
     iic_config_t *config = (iic_config_t *)dev->config;
 
-    int ret = iic_send(dev, config->slave_addr, &write_cmd, 1);
+    int ret = iic_master_send(dev, config->slave_addr, &write_cmd, 1, AOS_WAIT_FOREVER);
 
     if (ret < 0) {
         return -1;
     }
 
-    ret = iic_recv(dev, config->slave_addr, rxbuf, 1);
+    ret = iic_master_recv(dev, config->slave_addr, rxbuf, 1, AOS_WAIT_FOREVER);
 
     if (ret < 0) {
         return -1;
@@ -219,7 +219,7 @@ static int mems_writereg(aos_dev_t *dev, uint8_t write_cmd, uint8_t txbuf)
     buf[0] = write_cmd;
     buf[1] = txbuf;
 
-    ret = iic_send(dev, config->slave_addr, buf, 2);
+    ret = iic_master_send(dev, config->slave_addr, buf, 2, AOS_WAIT_FOREVER);
 
     if (ret == 2) {
         return 0;
@@ -232,13 +232,13 @@ static int mems_readnreg(aos_dev_t *dev, uint8_t write_cmd, uint8_t *rxbuf, int 
 {
     iic_config_t *config = (iic_config_t *)dev->config;
 
-    int ret = iic_send(dev, config->slave_addr, &write_cmd, 1);
+    int ret = iic_master_send(dev, config->slave_addr, &write_cmd, 1, AOS_WAIT_FOREVER);
 
     if (ret < 0) {
         return -1;
     }
 
-    ret = iic_recv(dev, config->slave_addr, rxbuf, nbyte);
+    ret = iic_master_recv(dev, config->slave_addr, rxbuf, nbyte, AOS_WAIT_FOREVER);
 
     if (ret < 0) {
         return -1;

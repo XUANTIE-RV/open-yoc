@@ -941,7 +941,8 @@ status_t SDIF_InternalDMAConfig(SDIF_TYPE *base, sdif_dma_config_t *config, cons
     }
 
     /* FIXME: maybe not idle here */
-    while (base->IDSTS >> SDIF_IDSTS_FSM_SHIFT);
+    while (base->IDSTS >> SDIF_IDSTS_FSM_SHIFT) {}
+    memset(tempDMADesBuffer, 0, config->dma_des_buffer_len * sizeof(uint32_t));
 
     /*config the bus mode*/
     if (config->enable_fix_burst_len) {
@@ -1105,7 +1106,7 @@ status_t SDIF_TransferBlocking(SDIF_TYPE *base, sdif_dma_config_t *dmaConfig, sd
             csi_dcache_clean_range((uint32_t *)data->tx_data_buffer, data->block_size * data->block_count);
         }
 
-        csi_dcache_clean_range(dmaConfig->dma_des_buffer_start_addr, dmaConfig->dma_des_buffer_len);
+        csi_dcache_clean_invalid_range(dmaConfig->dma_des_buffer_start_addr, dmaConfig->dma_des_buffer_len * sizeof(uint32_t));
 
         // csi_dcache_clean_invalid();
         /* use internal DMA interface */
@@ -1185,7 +1186,7 @@ status_t SDIF_TransferNonBlocking(SDIF_TYPE *base,
             csi_dcache_clean_range((uint32_t *)data->tx_data_buffer, data->block_size * data->block_count);
         }
 
-        csi_dcache_clean_range(dmaConfig->dma_des_buffer_start_addr, dmaConfig->dma_des_buffer_len);
+        csi_dcache_clean_invalid_range(dmaConfig->dma_des_buffer_start_addr, dmaConfig->dma_des_buffer_len * sizeof(uint32_t));
 
         // csi_dcache_clean_invalid();
         /* use internal DMA interface */

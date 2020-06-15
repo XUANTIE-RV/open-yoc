@@ -39,7 +39,7 @@
 #if LWIP_DNS && LWIP_SOCKET
 
 #include "lwip/arch.h"
-#include "arpa/inet.h"
+#include "lwip/inet.h"
 #include "lwip/sockets.h"
 
 #ifdef __cplusplus

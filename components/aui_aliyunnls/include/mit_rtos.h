@@ -69,24 +69,50 @@ typedef enum {
 	kMitRtosAlg2MicFloatThead2ed = 6,
 }MitRtosAlgType;
 
+typedef enum {
+	kMitRtosVoiceFilterTypeDisable = 0, //关闭此功能
+	kMitRtosVoiceFilterTypeDelPlay = 1, //删除播放过程语音
+	kMitRtosVoiceFilterTypeDelLeng = 2, //删除固定长度
+	kMitRtosVoiceFilterTypeVad     = 3  //通过VAD过滤
+}MitRtosVoiceFilterType;
+
+typedef struct {
+	float vad_speech_noise_thres_sp;//起点阈值 取值范围 [-1, 1],精度一位小数
+	float vad_speech_noise_thres_ep;//尾点阈值 取值范围 [-1, 1],精度一位小数
+}MitRtosVadThres;
+
 /* 定义MIT_RTOS模块初始化配置信息*/
 typedef struct {
-	mit_rtos_listener * listener; //回调参数
+	mit_rtos_listener * listener; //回调参数。默认NULL
 
-	MitRtosAlgType alg_type; //模块算法选择。固定选择 kMitRtosAlg2MicFixed (3)
+	MitRtosAlgType alg_type; //模块算法选择。默认kMitRtosAlg2MicFloat 
 	
-	char task_enable ;       //use new task to run SDK. reserved
-	char kws_alwayson_enable;//唤醒检测保持运行。识别状态也进行唤醒检测。
+	char task_enable ;       //use new task to run SDK. reserved。 默认0
+	char kws_alwayson_enable;//唤醒检测保持运行。识别状态也进行唤醒检测。默认1
 	
-	char fe_enable;          //是否使能AFE子模块
-	char kws_enable;         //是否使能kws子模块
-	char vad_enable;         //是否使能VAD子模块
+	char fe_enable;          //是否使能AFE子模块。默认1
+	char kws_enable;         //是否使能kws子模块。默认1
+	char vad_enable;         //是否使能VAD子模块。默认1
 	
-	char wwv_enable;         //是否使能唤醒二次确认联动功能	0不需要二次确认、1需要二次确认(相关门限使用算法预置参数)
-	short local_threshold;    //reserved 唤醒本地门限，    百分比 []0- 100]。引擎内部使用
-	short wwv_threshold;      //reserved 唤醒二次确认门限，百分比[]0-100]. 实际kws引擎内部未使用，外层封装时控制
+	char wwv_enable;         //是否使能唤醒二次确认联动功能	0不需要二次确认、1需要二次确认(相关门限使用算法预置参数).默认0
+	short local_threshold;    //reserved 唤醒本地门限，    百分比 [0- 100]。引擎内部使用
+	short wwv_threshold;      //reserved 唤醒二次确认门限，百分比[0-100]. 实际kws引擎内部未使用，外层封装时控制
 
-	char need_data_after_vad;//process时是否需要外传语音数据给调用方。 如果不需要保存算法处理后数据，则可以设置为0 关闭此功能。
+	char need_data_after_vad;//process时是否需要外传语音数据给调用方。 如果不需要保存算法处理后数据，则可以设置为0 关闭此功能。默认1
+
+	int vad_endpoint_delay;//单位ms。  默认200
+	int vad_silencetimeout;//单位ms  。默认5000
+	int vad_voicetimeout;  //单位ms  。默认10000
+	//float vad_speech_noise_thres;//语音到安静的阈值,取值范围 [-1, 1],精度一位小数
+
+	int vad_kws_strategy;     //VAD动态设置参数。 设置0 使用统一阈值，kws.thres_sp; 其他参数 预留
+	MitRtosVadThres kws_thres;//唤醒模块的阈值。 
+	MitRtosVadThres asr_thres;//识别模块的阈值。
+	
+	MitRtosVoiceFilterType voice_filter_type; //int 数值。默认DelLeng
+	
+	int vad_endpoint_ignore_enable;//开关变量0/1  。默认0
+	int log_in_asr_enable;         //asr过程中，打印相关log信息。起尾点、数据结束、关键位置等信息
 } MitRtosConfig;
 
 /*打印给定配置参数的相关信息。用于调试log查看
@@ -96,6 +122,7 @@ typedef struct {
   	无
 */
 void mit_rtos_config_print(MitRtosConfig * config);
+void mit_rtos_config_default(MitRtosConfig * config);
 
 /*定义VAD事件*/
 typedef enum {
@@ -248,6 +275,14 @@ typedef struct {
     失败返回负值。
 */
 int mit_rtos_get_voice(mit_rtos_voice_data *voice_data);
+
+/*针对唤醒后播放提示音的场景，通过此接口设置提示音播报的状态 、on时硬件延迟(ms) 、当前录音缓存数据长度(ms)*/
+typedef enum {
+	kMitRtosPlayOn=2,//正在播报提示音
+	kMitRtosPlayOff, //播放已经停止。
+}MitRotsPlayState;
+int mit_rtos_set_playstate(MitRotsPlayState play_state , int hw_delay, int record_buffer_len);
+
 
 #ifdef __cplusplus 
 }

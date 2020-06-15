@@ -74,6 +74,9 @@ struct uart_rpmsg_priv_s
  * Private Function Prototypes
  ****************************************************************************/
 
+#ifndef CONFIG_SERIAL_USE_VFS
+static int  uart_rpmsg_early_init(struct serial_dev_s *dev);
+#endif
 static int  uart_rpmsg_setup(struct serial_dev_s *dev);
 static void uart_rpmsg_shutdown(struct serial_dev_s *dev);
 static int  uart_rpmsg_attach(struct serial_dev_s *dev);
@@ -101,6 +104,9 @@ static int  uart_rpmsg_ept_cb(struct rpmsg_endpoint *ept, void *data,
 
 static const struct serial_ops_s g_uart_rpmsg_ops =
 {
+#ifndef CONFIG_SERIAL_USE_VFS
+    .earlyinit     = uart_rpmsg_early_init,
+#endif
     .setup         = uart_rpmsg_setup,
     .shutdown      = uart_rpmsg_shutdown,
     .attach        = uart_rpmsg_attach,
@@ -125,6 +131,16 @@ static const struct serial_ops_s g_uart_rpmsg_ops =
 /****************************************************************************
  * Private Functions
  ****************************************************************************/
+
+#ifndef CONFIG_SERIAL_USE_VFS
+static int uart_rpmsg_early_init(struct serial_dev_s *dev)
+{
+    return rpmsg_register_callback((void*)dev,
+                                   uart_rpmsg_device_created,
+                                   uart_rpmsg_device_destroy,
+                                   NULL);
+}
+#endif
 
 static int uart_rpmsg_setup(struct serial_dev_s *dev)
 {
@@ -411,6 +427,7 @@ static int uart_rpmsg_ept_cb(struct rpmsg_endpoint *ept, void *data,
  * Public Funtions
  ****************************************************************************/
 
+#ifdef CONFIG_SERIAL_USE_VFS
 int uart_rpmsg_init(const char *cpuname, const char *devname,
                     int buf_size, bool isconsole)
 {
@@ -474,4 +491,39 @@ fail:
 
     return ret;
 }
+#else
+int uart_rpmsg_init(const char *cpuname, const char *devname,
+                    int uart_idx, int buf_size, bool isconsole)
+{
+    struct uart_rpmsg_priv_s *priv;
+    struct serial_dev_config_s config;
+    char dev_name[32];
+    int ret = -ENOMEM;
+
+    priv = aos_zalloc(sizeof(struct uart_rpmsg_priv_s));
+    if (!priv) {
+        return ret;
+    }
+
+    priv->cpuname = cpuname;
+    priv->devname = devname;
+
+    sprintf(dev_name, "%s%s", UART_RPMSG_DEV_PREFIX, devname);
+
+    config.path = dev_name;
+    config.ops = &g_uart_rpmsg_ops;
+    config.priv = priv;
+    config.buf_size = buf_size;
+    config.uart_idx = uart_idx;
+    config.isconsole = isconsole;
+    serial_register(&config);
+
+    if (isconsole) {
+        config.path = UART_RPMSG_DEV_CONSOLE;
+        serial_register(&config);
+    }
+
+    return OK;
+}
+#endif
 

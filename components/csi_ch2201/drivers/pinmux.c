@@ -9,7 +9,6 @@
  * @date     02. June 2017
  ******************************************************************************/
 
-#include <csi_config.h>
 #include <stdint.h>
 #include <stddef.h>
 #include <drv/gpio.h>

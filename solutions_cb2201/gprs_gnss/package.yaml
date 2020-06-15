@@ -3,30 +3,30 @@ solution:
   ld_script: ""
 type: solution
 name: gprs_gnss
-yoc_version: 7.2
-description: 基于cb2201的alimqtt上云示例
+version: v7.3.0                                     # <必选项> 组件版本号
+description: 基于cb2201的 gprs gnss 定位信息上传方案示例
 keywords:
   - cb2201
   - solution
 author: feimi
 license: Apache license v2.0
 depends:
-  - aos: V7.2.2
-  - at: V7.2.2
-  - cb2201: V7.2.2
-  - csi_ch2201: V7.2.2
-  - console: V7.2.2
-  - csi: V7.2.2
-  - drivers: V7.2.2
-  - drv_gprs_gnss_m6313: V7.2.2
-  - ers: V7.2.2
-  - kv: V7.2.2
-  - minilibc: V7.2.2
-  - netmgr: V7.2.2
-  - rhino: V7.2.2
-  - sal: V7.2.2
-  - yunio: V7.2.2
-defconfig:
+  - aos: V7.3.0
+  - at: V7.3.0
+  - cb2201: V7.3.0
+  - csi_ch2201: V7.3.0
+  - console: V7.3.0
+  - csi: V7.3.0
+  - drivers: V7.3.0
+  - drv_gprs_gnss_m6313: V7.3.0
+  - ers: V7.3.0
+  - kv: V7.3.0
+  - minilibc: V7.3.0
+  - netmgr: V7.3.0
+  - rhino: V7.3.0
+  - sal: V7.3.0
+  - yunio: V7.3.0
+def_config:
   CONFIG_CHIP_CH2201: 1
   CONFIG_TCPIP: 1
   CONFIG_CHIP_NAME: ch2201

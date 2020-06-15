@@ -2,7 +2,6 @@
  * Copyright (C) 2019-2020 Alibaba Group Holding Limited
  */
 
-#include <yoc_config.h>
 #if defined(CONFIG_CHIP_ZX297100)
 #include <stdio.h>
 #include <stdlib.h>

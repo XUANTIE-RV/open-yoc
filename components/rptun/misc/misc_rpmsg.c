@@ -16,7 +16,7 @@
 #include <fcntl.h>
 #include <string.h>
 #include <sys/ioctl.h>
-// #include <addrenv.h>
+#include <addrenv.h>
 #include <aos/kernel.h>
 #include <aos/log.h>
 #include <enviro.h>
@@ -262,7 +262,7 @@ static int misc_retent_add_handler(struct rpmsg_endpoint *ept,
     }
 
     blk->blkid = msg->blkid;
-    // blk->base  = (uintptr_t)up_addrenv_pa_to_va(msg->base);
+    blk->base  = (uintptr_t)up_addrenv_pa_to_va(msg->base);
     blk->size  = msg->size;
     blk->dma   = msg->dma;
     blk->flush = true;

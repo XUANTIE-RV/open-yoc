@@ -221,14 +221,14 @@ union sockaddr_aligned {
     } while (0)
 
 /** The global array of available sockets */
-extern struct sal_sock sockets[NUM_SOCKETS];
+static struct sal_sock sockets[NUM_SOCKETS];
 /** The global array of available events */
-extern struct sal_event events[NUM_EVENTS];
+static struct sal_event events[NUM_EVENTS];
 /** The global list of tasks waiting for select */
-extern struct sal_select_cb *select_cb_list;
+static struct sal_select_cb *select_cb_list;
 /** This counter is increased from sal_select when the list is changed
     and checked in event_callback to see if it has changed. */
-extern volatile int select_cb_ctr;
+static volatile int select_cb_ctr;
 
 /* From http://www.iana.org/assignments/port-numbers:
    "The Dynamic and/or Private Ports are those from 49152 through 65535" */
@@ -2757,7 +2757,7 @@ int sal_getsockopt(int s, int level, int optname,
                     /* only overwrite ERR_OK or temporary errors */
                     if (((sock->err == 0) || (sock->err == EINPROGRESS)) &&
                         (sock->conn != NULL)) {
-                        sock_set_errno(sock, err_to_errno(sock->conn->last_err));
+                        sock_set_errno(sock, err_to_errno(sock->conn->pending_err));
                     }
 
                     *(int *)optval = (sock->err == 0xFF ? (int) - 1 : (int)sock->err);

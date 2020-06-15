@@ -38,7 +38,6 @@
 
 /* LOG_LEVEL: 0: Err; 1: Err&Warn; 2: Err&Warn&Info; 3: Err&Warn&Info&Debug */
 #define LOG_LEVEL 0
-// #include <yoc_config.h>
 #include <aos/log.h>
 
 static char *TAG = "mmc";

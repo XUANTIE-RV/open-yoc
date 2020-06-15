@@ -1101,7 +1101,6 @@ static int _demux_mp4_read_packet(demux_cls_t *o, avpacket_t *pkt)
     struct mp4_priv *priv = o->priv;
 
     if (priv->cur_sample >= priv->nb_indexes) {
-        o->eof = 1;
         return 0;
     }
 

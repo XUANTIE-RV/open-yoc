@@ -34,17 +34,26 @@ int stream_register_http();
 int stream_register_fifo();
 
 /**
+ * @brief  regist stream for crypto
+ * @return 0/-1
+ */
+int stream_register_crypto();
+
+/**
  * @brief  regist all streamer
  * @return 0/-1
  */
 static inline int stream_register_all()
 {
-    stream_register_mem();
-    stream_register_file();
-    stream_register_http();
-    stream_register_fifo();
+    int rc = 0;
 
-    return 0;
+    rc |= stream_register_mem();
+    rc |= stream_register_file();
+    rc |= stream_register_http();
+    rc |= stream_register_fifo();
+    rc |= stream_register_crypto();
+
+    return rc;
 }
 
 __END_DECLS__

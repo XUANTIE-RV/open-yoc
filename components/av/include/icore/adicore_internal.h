@@ -32,18 +32,19 @@ enum {
 };
 
 typedef struct {
-    adih_t    ash;      // req
+    avcodec_id_t  id;
+    adi_conf_t    adi_cnf;      // req
 
-    void      *ad;      // resp: ad_cls_t
-    sf_t      sf;       // resp:
+    void          *ad;          // resp: ad_cls_t
+    sf_t          sf;           // resp:
 } adicore_open_t;
 
 typedef struct {
-    void      *ad;      // ad_cls_t
+    void          *ad;          // ad_cls_t
 } adicore_reset_t;
 
 typedef struct {
-    void      *ad;      // ad_cls_t
+    void          *ad;          // ad_cls_t
 } adicore_close_t;
 
 typedef struct {

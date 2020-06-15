@@ -62,6 +62,10 @@ iot_t *iot_new_alimqtt(iot_alimqtt_config_t *config)
         return NULL;
     }
 
+    if (config == NULL) {
+        return NULL;
+    }
+
     // usrv task init
     alimqtt_usrv_init();
 
@@ -183,6 +187,7 @@ static int alimqtt_channel_send(iot_channel_t *ch)
         ret = alimqtt_usrv_send(g_pub_topic, str, ret);
     } else {
         LOGD("IOT", "nothing to send");
+        ret = -1;
     }
 
     return ret;

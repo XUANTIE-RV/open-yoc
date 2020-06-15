@@ -1,13 +1,13 @@
 
 ## 第一部分： 基础信息
 name: av                                            # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
-description: av是一个轻量级的多媒体AV框架，方便用户在此基础上复用与扩展 # <必选项> 建议至少20字以上
-type: common                                        # <可选项> 组件类型，为：solution, chip, board, common，缺省值 common
+version: v7.3.0                                     # <必选项> 组件版本号
+description: av是一个轻量级的多媒体组件，主要包含AV基础框架、播放器和音频服务三部分。 # <必选项> 建议至少20字以上
+type: common                                        # <必选项> 组件类型，为：solution, chip, board, common
 
 tag: 多媒体播放器                                   # <可选项> 组件分类，缺省值： ''
 keywords:                                           # <可选项> 标签，会影响到组件被搜索的效果，合理的标签很重要
   - base
-yoc_version: ['v7.2', 'v7.3']
 license: Apache license v2.0                        # <可选项> 源代码的许可证，要确保所有代码、文件的许可证不冲突。如：MIT，Apache license v2.0，BSD
 
 ## 第二部分：依赖信息
@@ -17,12 +17,14 @@ license: Apache license v2.0                        # <可选项> 源代码的�
 #   - minilibc: v7.2.0
 #   - aos: >=v7.2.0
 depends:
-  - csi: V7.2.2
-  - rhino: V7.2.2
-  - minilibc: V7.2.2
-  - aos: V7.2.2
-  - pvmp3dec: V7.2.2
-  - speexdsp: V7.2.2
+  - csi: V7.3.0
+  - rhino: V7.3.0
+  - aos: V7.3.0
+  - flac: V7.3.0
+  - amrnb: V7.3.0
+  - amrwb: V7.3.0
+  - pvmp3dec: V7.3.0
+  - speexdsp: V7.3.0
 
 ## 第四部分：编译连接信息
 # build_config:                            # <可选项> 编译配置项
@@ -44,7 +46,7 @@ depends:
 #     - libs                               #   -Llibs
 build_config:
   cflag: >
-    -Wno-nonnull-compare -Wno-unused-function -Wno-unused-but-set-variable
+      -Wno-nonnull-compare -Wno-unused-function -Wno-unused-but-set-variable
   define:
     - AEF_DEBUG=0
     - TMALL_PATCH=0
@@ -112,14 +114,13 @@ source_file:
   - "output/ao.c"
   - "output/ao_alsa.c"
   - "output/output_all.c"
-  - "output/ao_ipc.c"
 
   - "stream/stream.c"
   - "stream/stream_mem.c"
   - "stream/stream_file.c"
   - "stream/stream_http.c"
-  - "stream/stream_http_api.c"
   - "stream/stream_fifo.c"
+  - "stream/stream_crypto.c"
   - "stream/stream_all.c"
 
   - "avfilter/avfilter.c"
@@ -133,14 +134,12 @@ source_file:
   - "swresample/pcm_convert.c"
   - "swresample/resample.c"
   - "swresample/resample_ipc.c"
-    #- "swresample/resample_soxr.c"
   - "swresample/resample_speex.c"
   - "swresample/resample_silan.c"
   - "swresample/resample_all.c"
 
   - "aef/eq.c"
   - "aef/eq_ipc.c"
-  - "aef/eq_sona.c"
   - "aef/eq_all.c"
   - "aef/aef.c"
   - "aef/aef_ipc.c"
@@ -151,7 +150,6 @@ source_file:
   - "icore/ffticore/ffticore.c"
   - "icore/resicore/resicore.c"
   - "icore/eqicore/eqicore.c"
-  - "icore/aoicore/aoicore.c"
   - "icore/adicore/adicore.c"
   - "icore/mcaicore/mcaicore.c"
   - "tfft/fft.c"

@@ -10,10 +10,6 @@
 
 struct sfifo_priv {
     nsfifo_t          *fifo;
-    char              avformat[16];
-    char              avcodec[16];
-    int32_t           rate;
-    int32_t           channel;
 };
 
 /* url example: fifo://tts/1?avformat=rawaudio&avcodec=pcm_s16le&channel=2&rate=44100&size=1024 */
@@ -32,11 +28,7 @@ static int _stream_fifo_open(stream_cls_t *o, int mode)
         goto err;
     }
 
-    url_get_item_value(o->url, "avformat", priv->avformat, sizeof(priv->avformat));
-    url_get_item_value(o->url, "avcodec", priv->avcodec, sizeof(priv->avcodec));
     url_get_item_value_int(o->url, "size", &o->size);
-    url_get_item_value_int(o->url, "rate", &priv->rate);
-    url_get_item_value_int(o->url, "channel", &priv->channel);
 
     priv->fifo = fifo;
     o->priv    = priv;
@@ -114,34 +106,13 @@ static int _stream_fifo_seek(stream_cls_t *o, int32_t pos)
 
 static int _stream_fifo_control(stream_cls_t *o, int cmd, void *arg, size_t *arg_size)
 {
-    int ret = 0;
-    struct sfifo_priv *priv = o->priv;
-
-    switch (cmd) {
-    case STREAM_CMD_GET_CODEC:
-        snprintf((char*)arg, *arg_size, "%s", priv->avcodec);
-        break;
-    case STREAM_CMD_GET_FORMAT:
-        snprintf((char*)arg, *arg_size, "%s", priv->avformat);
-        break;
-    case STREAM_CMD_GET_RATE:
-        *(int32_t*)arg = priv->rate;
-        break;
-    case STREAM_CMD_GET_CHANNEL:
-        *(int32_t*)arg = priv->channel;
-        break;
-    default:
-        //LOGE(TAG, "%s, %d control failed. cmd = %d", __FUNCTION__, __LINE__, cmd);
-        return -1;
-    }
-
-    return ret;
+    //TODO
+    return -1;
 }
 
 const struct stream_ops stream_ops_fifo = {
     .name            = "fifo",
     .type            = STREAM_TYPE_FIFO,
-    .enable_cache    = 0,
     .protocols       = { "fifo", NULL },
 
     .open            = _stream_fifo_open,

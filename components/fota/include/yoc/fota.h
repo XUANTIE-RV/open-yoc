@@ -82,33 +82,106 @@ typedef struct {
     int auto_check_en;
 } fota_config_t;
 
+/**
+ * @brief  开始下载镜像
+ * @param  [in] fota: fota 句柄
+ * @return 0 on success, -1 on failed
+ */
 int fota_upgrade(fota_t *fota);
 
+/**
+ * @brief  强制检测版本
+ * @param  [in] fota: fota 句柄
+ */
 void fota_do_check(fota_t *fota);
 
+/**
+ * @brief  创建FOTA服务
+ * @param  [in] fota: fota 句柄
+ * @return 0 on success, -1 on failed
+ */
 int fota_start(fota_t *fota);
 
+/**
+ * @brief  停止FOTA功能，退出FOTA服务
+ * @param  [in] fota: fota 句柄
+ * @return 0 on success, -1 on failed
+ */
 int fota_stop(fota_t *fota);
 
+/**
+ * @brief  FOTA完成，调用用户实现的finish接口
+ * @param  [in] fota: fota 句柄
+ */
 void fota_finish(fota_t *fota);
 
+/**
+ * @brief  FOTA失败，调用用户实现的fail接口，并释放FOTA资源,但不释放FOTA句柄
+ * @param  [in] fota: fota 句柄
+ */
 void fota_fail(fota_t *fota);
 
+/**
+ * @brief  配置FOTA参数
+ * @param  [in] fota: fota 句柄
+ * @param  [in] config: 配置数据指针，具体见 `fota_config_t`
+ */
 void fota_config(fota_t *fota, fota_config_t *config);
 
+/**
+ * @brief  设置是否自动不断检测服务器固件版本并升级的功能
+ * @param  [in] fota: fota 句柄
+ * @param  [in] enable: 0表示不自动检测，1表示自动检测
+ */
 void fota_set_auto_check(fota_t *fota, int enable);
 
+/**
+ * @brief  获取是否自动检测判断
+ * @param  [in] fota: fota 句柄
+ * @return 0表示不自动检测，1表示自动检测
+ */
 int fota_get_auto_check(fota_t *fota);
 
+/**
+ * @brief  获取升级状态
+ * @param  [in] fota: fota 句柄
+ * @return fota_status_e
+ */
 fota_status_e fota_get_status(fota_t *fota);
 
+/**
+ * @brief  fota初始化
+ * @param  [in] fota_name: FOTA平台名字，比如"cop",
+ * @param  [in] dst: 差分包存储url
+ * @param  [in] event_cb: 用户事件回调
+ * @return fota句柄或者NULL
+ */
 fota_t *fota_open(const char *fota_name, const char *dst, fota_event_cb_t event_cb);
 
+/**
+ * @brief  关闭FOTA功能，释放所有资源
+ * @param  [in] fota: fota 句柄
+ * @return 0 on success, -1 on failed
+ */
 int fota_close(fota_t *fota);
 
+/**
+ * @brief  注册为cop平台，即从cop平台下载固件
+ * @return 0 on success, -1 on failed
+ */
 int fota_register_cop(void);
+
+/**
+ * @brief  注册为coap平台，即从coap平台下载固件
+ * @return 0 on success, -1 on failed
+ */
 int fota_register_coap(void);
 
+/**
+ * @brief  注册平台接口
+ * @param  [in] cls: 不同平台实现的接口集合，具体实现接口见`fota_cls_t`
+ * @return 0 on success, -1 on failed
+ */
 int fota_register(const fota_cls_t *cls);
 
 #ifdef __cplusplus

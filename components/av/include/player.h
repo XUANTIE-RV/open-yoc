@@ -29,7 +29,6 @@ typedef struct player_cb player_t;
 
 /**
 * @brief  player event callback for user
-* @attention: can't call player_free in the callback
 * @param  [in] player
 * @param  [in] event : PLAYER_EVENT_XXX
 * @param  [in] data  : reserved
@@ -49,7 +48,7 @@ typedef struct {
     uint64_t                  duration;      ///< ms, media duration
 } media_info_t;
 
-typedef struct player_header {
+typedef struct player_conf {
     char                      *ao_name;      ///< ao name
     uint8_t                   vol_en;        ///< soft vol scale enable
     uint8_t                   vol_index;     ///< soft vol scale index (0~255)
@@ -59,12 +58,12 @@ typedef struct player_header {
     uint32_t                  resample_rate; ///< none zereo means need to resample
     uint32_t                  rcv_timeout;   ///< timeout for recv stream. used inner default timeout when 0
     uint32_t                  cache_size;    ///< size of the web cache. 0 use default
-    uint32_t                  cache_percent; ///< (0~100)start read for player when up to cache_percent. 0 use default
+    uint32_t                  cache_start_threshold; ///< (0~100)start read for player when up to cache_start_threshold. 0 use default
     uint32_t                  period_ms;     ///< period cache size(ms) for audio out. 0 means use default
     uint32_t                  period_num;    ///< number of period_ms. total cache size for ao is (period_num * period_ms * (rate / 1000) * 2 * (16/8)). 0 means use default
     get_decrypt_cb_t          get_dec_cb;    ///< used for get decrypt info
     player_event_t            event_cb;      ///< callback of the player event
-} plyh_t;
+} ply_conf_t;
 
 /**
  * @brief  init player module
@@ -73,11 +72,18 @@ typedef struct player_header {
 int player_init();
 
 /**
+ * @brief  init the player config param
+ * @param  [in] ply_cnf
+ * @return 0/-1
+ */
+int player_conf_init(ply_conf_t *ply_cnf);
+
+/**
  * @brief  new a player obj
- * @param  [in] plyh
+ * @param  [in] ply_cnf
  * @return NULL on error
  */
-player_t* player_new(const plyh_t *plyh);
+player_t* player_new(const ply_conf_t *ply_cnf);
 
 /**
  * @brief  control/config the player by command
@@ -91,10 +97,11 @@ int player_ioctl(player_t *player, int cmd, ...);
 /**
  * @brief  player play interface
  * @param  [in] player
- * @param  [in] url : example: http://ip:port/xx.mp3
+ * @param  [in] url        : example: http://ip:port/xx.mp3
+ * @param  [in] start_time : begin play time, ms
  * @return 0/-1
  */
-int player_play(player_t *player, const char *url);
+int player_play(player_t *player, const char *url, uint64_t start_time);
 
 /**
  * @brief  pause the player

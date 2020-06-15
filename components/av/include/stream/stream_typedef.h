@@ -24,6 +24,7 @@ typedef enum stream_type {
     STREAM_TYPE_HTTP,
     STREAM_TYPE_MEM,
     STREAM_TYPE_FIFO,
+    STREAM_TYPE_CRYPTO,
 } stream_type_t;
 
 __END_DECLS__

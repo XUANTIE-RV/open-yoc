@@ -10,7 +10,6 @@
  ******************************************************************************/
 
 #include <drv/common.h>
-#include <csi_config.h>
 #include <soc.h>
 #include <silan_pic.h>
 #ifndef CONFIG_KERNEL_NONE
@@ -86,6 +85,30 @@ static inline void do_handler(IRQ_HANDLER *irq_p)
     }
 }
 
+#if defined(CONFIG_FREQ_TEST)
+unsigned int tick_count;
+ATTRIBUTE_ISR void CORET_IRQHandler(void)
+{
+	tick_count++;
+#ifndef CONFIG_KERNEL_FREERTOS
+    CSI_INTRPT_ENTER();
+#endif
+
+    readl(0xE000E010);
+
+#if defined(CONFIG_KERNEL_RHINO)
+    systick_handler();
+#elif defined(CONFIG_KERNEL_FREERTOS)
+    xPortSysTickHandler();
+#elif defined(CONFIG_KERNEL_UCOS)
+    OSTimeTick();
+#endif
+
+#ifndef CONFIG_KERNEL_FREERTOS
+    CSI_INTRPT_EXIT();
+#endif
+}
+#else
 ATTRIBUTE_ISR void CORET_IRQHandler(void)
 {
 #ifndef CONFIG_KERNEL_FREERTOS
@@ -106,6 +129,7 @@ ATTRIBUTE_ISR void CORET_IRQHandler(void)
     CSI_INTRPT_EXIT();
 #endif
 }
+#endif
 
 ATTRIBUTE_ISR void SARADC_IRQHandler(void)
 {

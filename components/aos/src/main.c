@@ -8,7 +8,6 @@
  * @version  V1.0
  * @date     02. June 2017
  ******************************************************************************/
-#include <yoc_config.h>
 
 #include <aos/log.h>
 #include <aos/kv.h>
@@ -17,7 +16,7 @@
 
 #define INIT_TASK_STACK_SIZE 8192
 
-extern void main();
+extern int main();
 static void application_task_entry(void *arg)
 {
     main();

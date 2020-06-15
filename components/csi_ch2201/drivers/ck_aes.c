@@ -9,7 +9,6 @@
  * @date     02. June 2017
  ******************************************************************************/
 
-#include <csi_config.h>
 #include <string.h>
 #include "drv/aes.h"
 #include "drv/irq.h"

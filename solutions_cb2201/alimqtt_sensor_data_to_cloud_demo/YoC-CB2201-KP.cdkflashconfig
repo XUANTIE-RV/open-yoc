@@ -40,7 +40,7 @@
       {
         "Type": 1,
         "Verify": false,
-        "FilePath": "script/dev_kp.hex",
+        "FilePath": "dev_kp.hex",
         "Program": true
       }
     ]

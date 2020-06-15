@@ -1,12 +1,11 @@
 
 ## 第一部分： 基础信息
 name: cb2201                                        # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
-version: v7.2-dev
+version: v7.3.0                                     # <必选项> 组件版本号
 description: CB2201 board configure.                # <必选项> 建议至少20字以上
-type: board                                         # <可选项> 组件类型，为：solution, chip, board, common，缺省值 common
+type: board                                         # <必选项> 组件类型，为：solution, chip, board, common
 
 tag: 核心模块                                       # <可选项> 组件分类，缺省值： ''
-yoc_version: v7.2
 license: Apache license v2.0                        # <可选项> 源代码的许可证，要确保所有代码、文件的许可证不冲突。如：MIT，Apache license v2.0，BSD
 
 ## 第二部分：依赖信息
@@ -15,6 +14,8 @@ license: Apache license v2.0                        # <可选项> 源代码的�
 # depends:                                 # <可选项> 该组件依赖其他的组件，合理的依赖才能保证组件能编译、使用
 #   - minilibc: v7.2.0
 #   - aos: >=v7.2.0
+depends:
+  - csi_ch2201: V7.3.0
 
 ## 第三部分：板级信息
 # hw_info:                                 # 对 solution、board、chip 三个字段的改进，统称为 hw_info 字段
@@ -67,7 +68,7 @@ license: Apache license v2.0                        # <可选项> 源代码的�
 #   flash_program: bin/flash_program.elf   # <可选项> 芯片全局烧写程序
 board:
   vendor_name: csky
-  chip_name: chip_ch2201
+  chip_name: csi_ch2201
   cpu_name: CK802
   ld_script: configs/gcc_eflash.ld
 
@@ -113,7 +114,16 @@ source_file:
 #   - dest: include/                       # 安装的目的路径 dest是相当路径，通常是相对于YoC SDK 安装目录
 #     source:                              # 安装源列表
 #      - src/*.h                           # 支持通配符，相对路径
-
+install:
+  - dest: include
+    source:
+      - include/*.h
+  - dest: cb2201/bootimgs
+    source:
+      - bootimgs/*
+  - dest: cb2201/configs
+    source:
+      - configs/*
 ## 第七部分：导出部分
 # export:
 #   - dest: "<SOLUTION_PATH>/generated/data" # 安装的目的路径 dest是相当路径
@@ -127,5 +137,7 @@ export:
     source:
       - "bootimgs/boot"
       - "bootimgs/tee"
-      - "bootimgs/mtb"
       - "configs/config.yaml"
+  - dest: "<SOLUTION_PATH>/generated"
+    source:
+      - "bootimgs/dev_kp.hex"

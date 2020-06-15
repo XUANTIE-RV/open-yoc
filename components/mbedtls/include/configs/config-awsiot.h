@@ -46,7 +46,9 @@
 
 /* mbed TLS modules */
 #define MBEDTLS_AES_C
+#ifdef CONFIG_TEE_CA
 #define MBEDTLS_AES_ALT
+#endif
 #define MBEDTLS_ASN1_PARSE_C
 #define MBEDTLS_BIGNUM_C
 #define MBEDTLS_CIPHER_C

@@ -54,7 +54,7 @@ void button_volume_mute()
 
 static void button_evt(button_evt_id_t event_id, char *name, void *priv)
 {
-    LOGD(TAG, "evt[%d] key[%s]", event_id, name);
+    LOGE(TAG, "evt[%d] key[%s]", event_id, name);
     evt_data_t data;
     data.event_id = event_id;
     strlcpy(data.name, name, MAX_BUTTON_NAME);
@@ -70,16 +70,16 @@ static void bc_evt(button_evt_id_t event_id, char *name, void *priv)
 }
 // FIXME: BUTTON配置和上报的事件ID需要统一
 const static button_config_t button_table[] = {
-    {APP_KEY_MUTE, PRESS_UP_FLAG | PRESS_LONG_DOWN_FLAG, button_evt, NULL, "mute"},
-    {APP_KEY_VOL_INC, PRESS_UP_FLAG | PRESS_LONG_DOWN_FLAG, button_evt, NULL, "inc"},
-    {APP_KEY_VOL_DEC, PRESS_UP_FLAG | PRESS_LONG_DOWN_FLAG, button_evt, NULL, "dec"},
+    {APP_KEY_MUTE,    EVT_ALL_FLAG, button_evt, NULL, BUTTON_TYPE_GPIO,  "mute"},
+    {APP_KEY_VOL_INC, EVT_ALL_FLAG, button_evt, NULL, BUTTON_TYPE_GPIO,  "inc"},
+    {APP_KEY_VOL_DEC, EVT_ALL_FLAG, button_evt, NULL, BUTTON_TYPE_GPIO,  "dec"},
     {0, 0, NULL, NULL},
 };
 
 const static button_combinations_t bc_table[] = {
     {
-        .pin_id[0] = APP_KEY_MUTE,
-        .pin_id[1] = APP_KEY_VOL_INC,
+        .pin_name[0] = "mute",
+        .pin_name[1] = "inc",
         .evt_flag = PRESS_LONG_DOWN_FLAG,
         .pin_sum = 2,
         .tmout = 500,
@@ -88,8 +88,8 @@ const static button_combinations_t bc_table[] = {
         .name = "mute&inc"
     },
     {
-        .pin_id[0] = APP_KEY_MUTE,
-        .pin_id[1] = APP_KEY_VOL_DEC,
+        .pin_name[0] = "mute",
+        .pin_name[1] = "dec",
         .evt_flag = PRESS_LONG_DOWN_FLAG,
         .pin_sum = 2,
         .tmout = 500,
@@ -144,10 +144,10 @@ void app_button_init(void)
     button_srv_init();
     button_init(button_table);
     button_param_t pb;
-    button_param_cur(APP_KEY_MUTE, &pb);
+    button_param_cur("mute", &pb);
     pb.ld_tmout = 5000;
-    button_param_set(APP_KEY_MUTE, &pb);
-    button_param_set(APP_KEY_VOL_INC, &pb);
-    button_param_set(APP_KEY_VOL_DEC, &pb);
+    button_param_set("mute", &pb);
+    button_param_set("inc", &pb);
+    button_param_set("dec", &pb);
     button_combination_init(bc_table);
 }

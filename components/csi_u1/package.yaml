@@ -1,0 +1,39 @@
+name: csi_u1
+version: v7.3.0                                     # <必选项> 组件版本号
+description: U1 Chip CSI driver demo.
+tag: 核心模块
+keywords:                                      # 多标签
+  - base
+license: Apache license v2.0                   # GPLv2，LGPLv2.1，MIT，Apache license v2.0，BSD
+
+# hidden: true
+
+type: chip
+
+depends: ~                                      # 该组件依赖其他的组件
+
+chip:
+  cpu_name: CK802
+  vendor_name: csky
+  ld_script: configs/gcc_eflash.ld.S
+  flash_program: bin/flash_program.elf
+
+
+build_config:
+  include:
+    - include
+
+  cflag: ' -Wno-unused-function'          # C 编译器所需要要的编译参数
+  cxxflag: ''                                  # CXX 编译器所需要要的编译参数
+  asmflag: ''                                  # 汇编器所需要要参数
+  define:                                      # 宏定义
+    - NO_MORE_DEFINE
+source_file:
+  - "drivers/*.S"
+  - "drivers/*.c"
+
+
+install:
+ - dest: "include/csi/chip/u1"
+   source:
+      - "include/*.h"

@@ -9,7 +9,6 @@
  * @date     20. Nov 2018
  ******************************************************************************/
 
-#include <csi_config.h>
 #include <stdbool.h>
 #include <string.h>
 #include <drv/rtc.h>

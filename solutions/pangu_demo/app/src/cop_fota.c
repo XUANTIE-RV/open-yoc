@@ -1,4 +1,3 @@
-#include <yoc_config.h>
 #include <aos/aos.h>
 #include <yoc/fota.h>
 #include <yoc/eventid.h>
@@ -132,4 +131,16 @@ void app_fota_do_check(void)
 void app_fota_set_auto_check(int enable)
 {
     g_fota_handle->auto_check_en = enable;
+}
+
+int app_fota_is_downloading(void)
+{
+    if (g_fota_handle == NULL) {
+        return 0;
+    }
+
+    if (fota_get_status(g_fota_handle) == FOTA_DOWNLOAD) {
+        return 1;
+    }
+    return 0;
 }

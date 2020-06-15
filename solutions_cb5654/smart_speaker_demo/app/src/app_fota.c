@@ -42,6 +42,7 @@ static int fota_event_cb(void *arg, fota_event_e event)
 
         case FOTA_EVENT_FINISH:
             LOGD(TAG, "FOTA FINISH :%x", fota->status);
+            aos_kv_del("fota_offset");
             aos_reboot();
             break;
 

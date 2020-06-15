@@ -15,7 +15,6 @@
  * @tag      DRV_DW_UART_TAG
  ******************************************************************************/
 
-#include <csi_config.h>
 #include <stdbool.h>
 #include <string.h>
 #include <drv/irq.h>

@@ -7,8 +7,7 @@
 #include <devices/devicelist.h>
 #include <soc.h>
 #include <syscfg.h>
-#include <yoc/adc_key_srv.h>
-#include <yoc/netmgr.h>
+#include <yoc/netmgr_service.h>
 
 #include "silan_voice_adc.h"
 #include "app_lpm.h"
@@ -113,7 +112,7 @@ void app_lpm_enter_standby_mode(void)
 
     board_enter_lpm(LPM_POLICY_DEEP_SLEEP);
 
-    key_srv_stop();
+    // key_srv_stop();
     silan_risc_debug_close();
 
     lpm_config_sdbwake_src();

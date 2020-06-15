@@ -21,7 +21,6 @@
 #include <drv/adc.h>
 #include <drv/gpio.h>
 #include <pinmux.h>
-#include <aos/hal/adc.h>
 #include <devices/devicelist.h>
 #include <devices/led_rgb.h>
 
@@ -37,7 +36,6 @@
 #include "app_aui_cloud.h"
 #include "app_i2c_led.h"
 
-extern i2c_dev_t g_i2c_dev;
 extern int g_fct_mode;
 
 extern void mdelay(uint32_t ms);
@@ -105,6 +103,9 @@ void app_fota_set_auto_check(int enable);
 
 /* factory test */
 void fct_case_init(void);
+
+/* sd detect check */
+int8_t app_sd_detect_check(void);
 
 /* wifi provisioning method */
 #define WIFI_PROVISION_SOFTAP           1

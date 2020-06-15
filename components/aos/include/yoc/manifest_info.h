@@ -5,7 +5,6 @@
 #ifndef __MANIFEST_INFO_H__
 #define __MANIFEST_INFO_H__
 
-#include <yoc_config.h>
 
 
 #ifdef __cplusplus

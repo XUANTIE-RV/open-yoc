@@ -3,7 +3,7 @@ solution:
   ld_script: ""
 type: solution
 name: smart_voice_fan_demo
-yoc_version: 7.2
+version: v7.3.0                                     # <必选项> 组件版本号
 description: 智能语音风扇例程
 keywords:
   - sc5864
@@ -12,10 +12,10 @@ keywords:
 author: feimi
 license: Apache license v2.0
 depends:
-  - cb5864: V7.2.2
-  - csi_sc5864: V7.2.2
-  - csi: V7.2.2
-defconfig:
+  - cb5864: V7.3.0
+  - csi_sc5864: V7.3.0
+  - csi: V7.3.0
+def_config:
   CONFIG_ARCH_INTERRUPTSTACK: 512
   CONFIG_BOARD_NAME: cb5864
   CONFIG_CHIP_NAME: sc5864

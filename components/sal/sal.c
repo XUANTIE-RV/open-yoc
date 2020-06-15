@@ -66,7 +66,7 @@ int sal_module_deinit(void)
 {
     int err = 0;
 
-    aos_check_return_einval(g_sal_module && g_sal_module->init);
+    aos_check_return_einval(g_sal_module && !g_sal_module->init);
 
     // if (NULL == g_sal_module) {
     //     SAL_LOGE(TAG, "sal module deinit fail for there is no sal module registered yet \n");

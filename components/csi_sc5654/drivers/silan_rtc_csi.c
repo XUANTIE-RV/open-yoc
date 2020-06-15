@@ -9,7 +9,6 @@
  * @date     20. Nov 2018
  ******************************************************************************/
 
-#include <csi_config.h>
 #include <stdbool.h>
 #include <string.h>
 #include <drv/rtc.h>
@@ -583,6 +582,8 @@ int32_t csi_rtc_set_alarm(rtc_handle_t handle, const struct tm *rtctime)
 
     if (rtctime->tm_wday > 6)
        return ERR_RTC(RTC_ERROR_TIME);
+    if (rtctime->tm_mday < 1 || rtctime->tm_mday > 31)
+        return ERR_RTC(RTC_ERROR_TIME);
     if (rtctime->tm_hour < 0 || rtctime->tm_hour >= 24)
         return ERR_RTC(RTC_ERROR_TIME);
     if (rtctime->tm_min < 0 || rtctime->tm_min >= 60)
@@ -590,7 +591,7 @@ int32_t csi_rtc_set_alarm(rtc_handle_t handle, const struct tm *rtctime)
 
     silan_rtc_reg_set(RTC_MIN_ALARM, (silan_rtc_reg_get(RTC_MIN_ALARM) & (~0x7f)) | (hex_to_bcd(rtctime->tm_min) & (~RTC_WEEK_ALARM_MAE)));
     silan_rtc_reg_set(RTC_HOUR_ALARM, (silan_rtc_reg_get(RTC_HOUR_ALARM) & (~0x7f)) | (hex_to_bcd(rtctime->tm_hour) & (~RTC_HOUR_ALARM_HAE)));
-    // silan_rtc_reg_set(RTC_DAY_ALARM, (silan_rtc_reg_get(RTC_DAY_ALARM) & 0x3f) | hex_to_bcd(rtctime->tm_mday));
+    silan_rtc_reg_set(RTC_DAY_ALARM, (silan_rtc_reg_get(RTC_DAY_ALARM) & (~0x7f)) | (hex_to_bcd(rtctime->tm_mday) & (~RTC_DAY_ALARM_DAE)));
     if (rtctime->tm_wday < 0) {
         /* disable week alarm */
         silan_rtc_reg_set(RTC_WEEK_ALARM, (silan_rtc_reg_get(RTC_WEEK_ALARM) & (~0xF)) | hex_to_bcd(0) | RTC_WEEK_ALARM_WAE);

@@ -11,11 +11,10 @@
 #include <math.h>
 #include <aos/aos.h>
 #include <aos/log.h>
-#include <aos/hal/i2c.h>
 #include <alsa/snd.h>
 #include <alsa/pcm.h>
 #include <alsa/mixer.h>
-
+#include <devices/iic.h>
 #include <silan_syscfg.h>
 #include <silan_adev.h>
 #include <silan_iomux.h>
@@ -40,16 +39,17 @@
 static int last_l_vol = 0xff;
 static int last_r_vol = 0xff;
 
-static i2c_dev_t *g_i2c_dev;
+static aos_dev_t *g_i2c_dev;
 
-static int add2010_i2c_write_reg(i2c_dev_t *dev, uint8_t addr, uint8_t val)
+
+static int add2010_i2c_write_reg(aos_dev_t *dev, uint8_t addr, uint8_t val)
 {
     uint8_t reg_val[2] = {addr, val};
 
-    return hal_i2c_master_send(dev, ADD2010_ADDR, reg_val, 2, ADD2010_I2C_TIMEOUT);
+    return iic_master_send(dev, ADD2010_ADDR, reg_val, 2, ADD2010_I2C_TIMEOUT);
 }
 
-static int add2010_config(i2c_dev_t *i2c_dev, int left_vol, int right_vol)
+static int add2010_config(aos_dev_t *i2c_dev, int left_vol, int right_vol)
 {
     int ret;
 
@@ -96,7 +96,7 @@ err:
     return -1;
 }
 
-int add2010_init(i2c_dev_t *i2c_dev)
+int add2010_init(aos_dev_t *i2c_dev)
 {
     LOGD(TAG, "start add2010 config");
 
@@ -107,7 +107,7 @@ int add2010_init(i2c_dev_t *i2c_dev)
     return 0;
 }
 
-int add2010_shutdown(i2c_dev_t *i2c_dev)
+int add2010_shutdown(aos_dev_t *i2c_dev)
 {
     int ret;
 
@@ -120,7 +120,7 @@ int add2010_shutdown(i2c_dev_t *i2c_dev)
 /**
  * set eq params for 1~12 EQ filters
  */
-int add2010_set_eq_param(i2c_dev_t *i2c_dev, uint8_t params[180])
+int add2010_set_eq_param(aos_dev_t *i2c_dev, uint8_t params[180])
 {
     printf("eq params:\n");
     for (int i = 0; i < 60; ++i) {
@@ -136,7 +136,7 @@ int add2010_set_eq_param(i2c_dev_t *i2c_dev, uint8_t params[180])
     return 0;
 }
 
-int add2010_set_vol(i2c_dev_t *i2c_dev, int l_gain, int r_gain)
+int add2010_set_vol(aos_dev_t *i2c_dev, int l_gain, int r_gain)
 {
     int l_val, r_val;
     int ret;
@@ -179,7 +179,7 @@ int add2010_set_vol(i2c_dev_t *i2c_dev, int l_gain, int r_gain)
     return 0;
 }
 
-int add2010_write_reg_table(i2c_dev_t *i2c_dev, add2010_reg_table_t *reg_address, int reg_num)
+int add2010_write_reg_table(aos_dev_t *i2c_dev, add2010_reg_table_t *reg_address, int reg_num)
 {
     add2010_reg_table_t *preg = reg_address;
 
@@ -194,7 +194,7 @@ int add2010_write_reg_table(i2c_dev_t *i2c_dev, add2010_reg_table_t *reg_address
     return 0;
 }
 
-int add2010_write_ram_table(i2c_dev_t *i2c_dev, int channel, add2010_ram_table_t *ram_address, int data_size)
+int add2010_write_ram_table(aos_dev_t *i2c_dev, int channel, add2010_ram_table_t *ram_address, int data_size)
 {
     add2010_ram_table_t *pram = ram_address;
 

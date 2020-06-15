@@ -13,7 +13,6 @@
 
 #include <stdio.h>
 #include <errno.h>
-#include <csi_config.h>
 #include <soc.h>
 #include <io.h>
 

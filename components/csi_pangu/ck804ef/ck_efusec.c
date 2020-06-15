@@ -9,7 +9,6 @@
  * @date     22. Mar 2019
  ******************************************************************************/
 
-#include <csi_config.h>
 #include <stdio.h>
 #include <string.h>
 #include <drv/efusec.h>

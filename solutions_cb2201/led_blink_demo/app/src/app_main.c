@@ -2,7 +2,6 @@
  * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
-#include <yoc_config.h>
 
 #include <stdlib.h>
 #include <string.h>

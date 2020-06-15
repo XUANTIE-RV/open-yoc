@@ -277,6 +277,22 @@ int device_is_busy(void)
     return busy;
 }
 
+int device_lpm(aos_dev_t *dev, int pm_state)
+{
+    int ret = -EBADF;
+
+    if (dev) {
+        device_lock(dev);
+        driver_t *drv = (driver_t*)dev->drv;
+        
+        aos_check_param(drv);
+        ret = DRIVER(dev)->lpm(dev, pm_state);
+        device_unlock(dev);
+    }
+
+    return ret;
+}
+
 void device_manage_power(int pm_state)
 {
     aos_dev_t *node;

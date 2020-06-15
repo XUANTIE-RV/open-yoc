@@ -13,22 +13,10 @@
 #include <metal/irq.h>
 #include <errno.h>
 #include <semaphore.h>
+#include <metal/mutex.h>
 
 int metal_condition_wait(struct metal_condition *cv,
 			 metal_mutex_t *m)
 {
-	unsigned int flags;
-
-	/* Check if the mutex has been acquired */
-	if (!cv || !m || !metal_mutex_is_acquired(m))
-		return -EINVAL;
-
-	flags = metal_irq_save_disable();
-	/* Release the mutex first. */
-	metal_mutex_release(m);
-	sem_wait(cv->cond.wait_sem);
-	metal_irq_restore_enable(flags);
-	/* Acquire the mutex again. */
-	metal_mutex_acquire(m);
-	return 0;
+	return pthread_cond_wait(&cv->cond, m);
 }

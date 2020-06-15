@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 
-#include <yoc_config.h>
 #include <stdlib.h>
 #include <string.h>
 #include <aos/aos.h>
-
+#include "cloud_baidu.h"
 #include "app_main.h"
 
 #define TAG "app"
@@ -62,6 +61,13 @@ int aui_nlp_process_xf_rtasr(cJSON *js, const char *json_text)
     }
     LOGI(TAG, "parse success, buf = %s, len = %d\n", buf, len);
 
-    return len ? aui_cloud_push_text(&g_aui_handler, buf) : -1;
+    if (len > 0) {
+        if (strncasecmp(buf, MUSIC_PREFIX, strlen(MUSIC_PREFIX)) == 0) {
+            LOGI(TAG, "get music url start");
+            return baidu_music(&g_aui_handler, buf);
+        }
+        return aui_cloud_push_text(&g_aui_handler, buf);        
+    }
+    return -1;
 }
 

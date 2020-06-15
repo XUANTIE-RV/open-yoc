@@ -11,9 +11,9 @@ __BEGIN_DECLS__
 
 enum {
     AO_CMD_UNKNOWN,
-    AO_CMD_EQ_ENABLE,
-    AO_CMD_EQ_SET_PARAM,
-    AO_CMD_VOL_SET,
+    AO_CMD_EQ_ENABLE,        ///< equalizer enable, may be not support for some hardware.
+    AO_CMD_EQ_SET_PARAM,     ///< equalizer param config, may be not support for some hardware.
+    AO_CMD_VOL_SET,          ///< soft vol
 };
 
 /* equalizer typedef below */

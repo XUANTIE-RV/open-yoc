@@ -35,18 +35,22 @@ static void fs_init()
     int ret;
     int fatfs_en = 0;
 
-    aos_kv_getint("fatfs_en", &fatfs_en);
+    vfs_init();
 
+    fatfs_en = app_sd_detect_check();
     LOGD(TAG, fatfs_en ? "fatfs enable" : "fatfs disable");
 
-    if (!fatfs_en) {
-        return;
+    if (fatfs_en == 1) {
+        ret = vfs_fatfs_register();
+        if (ret != 0) {
+            LOGI(TAG, "fatfs register failed(%d)", ret);
+            return;
+        }
     }
 
-    vfs_init();
-    ret = vfs_fatfs_register();
+    ret = vfs_lfs_register("lfs");
     if (ret != 0) {
-        LOGI(TAG, "fatfs register failed(%d)", ret);
+        LOGI(TAG, "littlefs register failed(%d)", ret);
         return;
     }
 

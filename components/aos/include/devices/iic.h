@@ -38,14 +38,20 @@ typedef struct {
     int32_t                 slave_addr;
 } iic_config_t;
 
+#define I2C_MEM_ADDR_SIZE_8BIT  1 /* i2c menory address size 8bit */
+#define I2C_MEM_ADDR_SIZE_16BIT 2 /* i2c menory address size 16bit */
 
 #define iic_open(name) device_open(name)
 #define iic_open_id(name, id) device_open_id(name, id)
 #define iic_close(dev) device_close(dev)
 
 int iic_config(aos_dev_t *dev, iic_config_t *config);
-int iic_send(aos_dev_t *dev, uint8_t dev_addr, const void *data, uint32_t size);
-int iic_recv(aos_dev_t *dev, uint8_t dev_addr, void *data, uint32_t size);
+int iic_master_send(aos_dev_t *dev, uint16_t dev_addr, const void *data, uint32_t size, uint32_t timeout);
+int iic_master_recv(aos_dev_t *dev, uint16_t dev_addr, void *data, uint32_t size, uint32_t timeout);
+int iic_slave_send(aos_dev_t *dev, const void *data, uint32_t size, uint32_t timeout);
+int iic_slave_recv(aos_dev_t *dev, void *data, uint32_t size, uint32_t timeout);
+int iic_mem_write(aos_dev_t *dev, uint16_t dev_addr, uint16_t mem_addr, uint16_t mem_addr_size, const void *data, uint32_t size, uint32_t timeout);
+int iic_mem_read(aos_dev_t *dev, uint16_t dev_addr, uint16_t mem_addr, uint16_t mem_addr_size, void *data, uint32_t size, uint32_t timeout);
 void iic_config_default(iic_config_t *config);
 
 

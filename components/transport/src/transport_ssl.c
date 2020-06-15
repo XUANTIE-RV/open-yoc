@@ -124,8 +124,7 @@ static int ssl_read(transport_handle_t t, char *buffer, int len, int timeout_ms)
             return poll;
         }
     }
-    // ret = tls_conn_read(ssl->tls, (unsigned char *)buffer, len, timeout_ms);
-    ret = tls_conn_read(ssl->tls, (unsigned char *)buffer, len, 10);
+    ret = tls_conn_read(ssl->tls, (unsigned char *)buffer, len, timeout_ms);
     if (ret < 0) {
         LOGE(TAG, "tls_conn_read error, errno=%s", strerror(errno));
     }

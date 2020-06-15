@@ -169,7 +169,7 @@ int ulog_backend_register(ulog_backend_t backend, const char *name)
 {
     aos_assert(backend);
     aos_assert(name);
-    aos_assert(ulog.init_ok);
+    aos_assert(t_ulog.init_ok);
     aos_assert(backend->output);
 
     if (backend->init)
@@ -188,7 +188,7 @@ int ulog_backend_register(ulog_backend_t backend, const char *name)
 int ulog_backend_unregister(ulog_backend_t backend)
 {
     aos_assert(backend);
-    aos_assert(ulog.init_ok);
+    aos_assert(t_ulog.init_ok);
 
     if (backend->deinit)
     {

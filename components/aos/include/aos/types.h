@@ -14,15 +14,6 @@
 extern "C" {
 #endif
 
-#define POLLIN  0x1
-#define POLLOUT 0x2
-#define POLLERR 0x4
-struct pollfd {
-    int fd;
-    short events;
-    short revents;
-};
-
 #define AOS_EXPORT(...)
 
 #ifdef __cplusplus

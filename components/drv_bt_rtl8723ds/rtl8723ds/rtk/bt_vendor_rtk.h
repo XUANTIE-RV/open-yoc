@@ -32,6 +32,7 @@
 
 
 #include <string.h>
+#include <devices/hci.h>
 
 /******************************************************************************
 **  Constants & Macros
@@ -184,7 +185,9 @@
 #define HW_END_WITH_HCI_RESET    FALSE
 #endif
 
-void hw_config_start(uint8_t is_mp_mode);
+void hw_config_start(hci_driver_send_cmd_t send_cmd);
+
+void set_mp_mode();
 
 // #define HCI_LOGD(tag, fmt, ...)  LOGD(tag, fmt, ##__VA_ARGS__)
 #define HCI_LOGD(tag, fmt, ...)

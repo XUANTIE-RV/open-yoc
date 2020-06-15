@@ -2,7 +2,6 @@
  * Copyright (C) 2019-2020 Alibaba Group Holding Limited
  */
 
-#include <yoc_config.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -13,6 +12,7 @@
 #include <devices/hal/uart_impl.h>
 
 #include "drv/usart.h"
+#include <devices/console_uart.h>
 
 aos_dev_t *g_console_handle = NULL;
 static uint16_t g_console_buf_size = 128; 

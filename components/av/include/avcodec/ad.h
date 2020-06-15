@@ -18,6 +18,16 @@ __BEGIN_DECLS__
             ad_ops_register(&ad_ops_##x);                             \
     }
 
+#define AD_OPS_MAX            (16)
+
+typedef struct ad_conf {
+    sf_t                      sf;             ///< if needed
+    uint8_t                   *extradata;     ///< extradata or frame header, if needed
+    int32_t                   extradata_size;
+    uint32_t                  block_align;    ///< size of one frame, if needed
+    uint32_t                  bps;            ///< bps, if needed
+} ad_conf_t;
+
 /**
  * @brief  regist ad ops
  * @param  [in] ops
@@ -26,11 +36,19 @@ __BEGIN_DECLS__
 int ad_ops_register(const struct ad_ops *ops);
 
 /**
+* @brief  init the ad config param
+* @param  [in] ad_cnf
+* @return 0/-1
+*/
+int ad_conf_init(ad_conf_t *ad_cnf);
+
+/**
  * @brief  open/create one audio decoder
- * @param  [in] ash : audio stream header
+ * @param  [in] id
+ * @param  [in] ad_cnf
  * @return NULL on err
  */
-ad_cls_t* ad_open(const sh_audio_t *ash);
+ad_cls_t* ad_open(avcodec_id_t id, const ad_conf_t *ad_cnf);
 
 /**
  * @brief  decode one audio frame
@@ -66,13 +84,6 @@ int ad_reset(ad_cls_t *o);
  * @return 0/-1
  */
 int ad_close(ad_cls_t *o);
-
-/**
- * @brief  decode is eof whether
- * @param  [in] o
- * @return 0/1
- */
-int ad_is_eof(ad_cls_t *o);
 
 __END_DECLS__
 

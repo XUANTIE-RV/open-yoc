@@ -17,6 +17,8 @@ extern "C" {
 #define SIGEV_SIGNAL 1
 #define SIGEV_THREAD 2
 
+#define SIGALRM      14
+
 union sigval {
     int   sival_int;
     void *sival_ptr;

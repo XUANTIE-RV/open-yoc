@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <csi_config.h>
 #include <k_api.h>
 #include <drv/timer.h>
 #include <csi_core.h>

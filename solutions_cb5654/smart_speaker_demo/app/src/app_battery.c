@@ -10,6 +10,7 @@
 #ifdef CONFIG_BATTERY_ADC
 static uint32_t battery_volt = 0;
 static int g_pin_adc, g_pin_charge, g_check_interval_s;
+static aos_timer_t g_battery_tmr;
 
 static void battery_check_cb(int bat_volt)
 {
@@ -47,7 +48,7 @@ void battery_update_avg(void)
     volts[read_cnt] = battery_voltage_read();
     battery_vsum += volts[read_cnt];
 
-    if (++read_cnt == BATTERY_AVG_ROUND) {        
+    if (++read_cnt == BATTERY_AVG_ROUND) {
         uint32_t avg;
         avg = battery_vsum / read_cnt;
 
@@ -86,6 +87,12 @@ static void app_battery_check(uint32_t event_id, const void *param, void *contex
     }
 }
 
+static void app_battery_scan(void *timer, void *arg)
+{
+    battery_update_avg();
+    app_charger_check();
+}
+
 int app_battery_init(int pin_adc, int pin_pwr, int check_interval_s)
 {
     if (check_interval_s < 10) {
@@ -106,6 +113,8 @@ int app_battery_init(int pin_adc, int pin_pwr, int check_interval_s)
     event_subscribe(EVENT_BATTERY_CHECK, app_battery_check, NULL);
     event_publish_delay(EVENT_BATTERY_CHECK, NULL, check_interval_s * 1000);
 
+    aos_timer_new_ext(&g_battery_tmr, app_battery_scan, NULL, 100, 1, 1);
+
     return 0;
 }
 
@@ -119,7 +128,7 @@ void app_charger_check(void)
     static uint8_t charge_cnt = 0;
     int charged;
     int ret;
-    
+
     if (g_pin_charge < 0) {
         return;
     }

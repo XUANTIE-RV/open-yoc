@@ -14,13 +14,13 @@ void playback (void)
     aos_pcm_t *playback_handle;
     aos_pcm_hw_params_t *hw_params;
 
-    aos_pcm_open (&playback_handle, "pcmP0", SND_PCM_STREAM_PLAYBACK, 0); //打开设备“pcmP0”
+    aos_pcm_open (&playback_handle, "pcmP0", AOS_PCM_STREAM_PLAYBACK, 0); //打开设备“pcmP0”
 
     aos_pcm_hw_params_alloca(&hw_params); //申请硬件参数内存空间
 
     aos_pcm_hw_params_any(playback_handle, hw_params); //初始化硬件参数
-    aos_pcm_hw_params_set_access(playback_handle, hw_params, SND_PCM_ACCESS_RW_INTERLEAVED); // 设置音频数据参数为交错模式
-    aos_pcm_hw_params_set_format(playback_handle, hw_params, SND_PCM_FORMAT_S16_LE); //设置音频数据参数为小端16bit
+    aos_pcm_hw_params_set_access(playback_handle, hw_params, AOS_PCM_ACCESS_RW_INTERLEAVED); // 设置音频数据参数为交错模式
+    aos_pcm_hw_params_set_format(playback_handle, hw_params, AOS_PCM_FORMAT_S16_LE); //设置音频数据参数为小端16bit
     aos_pcm_hw_params_set_rate_near(playback_handle, hw_params, 16000, 0); //设置音频数据参数采样率为16K
     aos_pcm_hw_params_set_channels(playback_handle, hw_params, 2); //设置音频数据参数为2通道
 
@@ -50,13 +50,13 @@ void captrue(void)
     aos_pcm_t *capture_handle;
     aos_pcm_hw_params_t *hw_params;
 
-    aos_pcm_open (&capture_handle, "pcmC0", SND_PCM_STREAM_CAPTURE, 0);//打开设备“pcmC0”
+    aos_pcm_open (&capture_handle, "pcmC0", AOS_PCM_STREAM_CAPTURE, 0);//打开设备“pcmC0”
 
     aos_pcm_hw_params_malloc (&hw_params);//申请硬件参数内存空间
 
     aos_pcm_hw_params_any (capture_handle, hw_params);//初始化硬件参数
-    aos_pcm_hw_params_set_access (capture_handle, hw_params, SND_PCM_ACCESS_RW_INTERLEAVED);// 设置音频数据参数为交错模式
-    aos_pcm_hw_params_set_format (capture_handle, hw_params, SND_PCM_FORMAT_S16_LE);//设置音频数据参数为小端16bit
+    aos_pcm_hw_params_set_access (capture_handle, hw_params, AOS_PCM_ACCESS_RW_INTERLEAVED);// 设置音频数据参数为交错模式
+    aos_pcm_hw_params_set_format (capture_handle, hw_params, AOS_PCM_FORMAT_S16_LE);//设置音频数据参数为小端16bit
     aos_pcm_hw_params_set_rate_near (capture_handle, hw_params, 16000, 0);//设置音频数据参数采样率为16K
     aos_pcm_hw_params_set_channels (capture_handle, hw_params, 2);//设置音频数据参数为2通道
 

@@ -21,9 +21,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "hci/hci_hal.h"
-#include "stack/hcidefs.h"
-#include "bt_hci_bdroid.h"
 
 //HCI Command opcodes
 #define HCI_LE_READ_BUFFER_SIZE     0x2002
@@ -38,14 +35,34 @@
 #define HCI_VSC_SET_WAKE_UP_DEVICE      0xFC7B
 #define HCI_VSC_BT_OFF                  0xFC28
 
-typedef struct hci_h5_mp_t {
-     void     (*h5_int_init)(hci_hal_callbacks_t *h5_callbacks);
-     void     (*h5_int_cleanup)(void);
-     uint16_t (*h5_send_cmd)(serial_data_type_t type, uint8_t *data, uint16_t length);
-     uint8_t  (*h5_send_sync_cmd)(uint16_t opcode, uint8_t *data, uint16_t length);
-     uint32_t  (*h5_recv_msg)(uint8_t *byte, uint16_t length);
-} hci_h5_mp_t;
+//HCI Event codes
+#define HCI_CONNECTION_COMP_EVT             0x03
+#define HCI_DISCONNECTION_COMP_EVT          0x05
+#define HCI_COMMAND_COMPLETE_EVT            0x0E
+#define HCI_COMMAND_STATUS_EVT              0x0F
+#define HCI_NUM_OF_CMP_PKTS_EVT             0x13
+#define HCI_BLE_EVT                         0x3E
 
-const hci_h5_mp_t *hci_get_h5_int_interface_mp(void);
+#define BT_HCI_EVT_LE_ADVERTISING_REPORT        0x02
+
+typedef enum {
+    DATA_TYPE_NONE    = 0,
+    DATA_TYPE_COMMAND = 1,
+    DATA_TYPE_ACL     = 2,
+    DATA_TYPE_SCO     = 3,
+    DATA_TYPE_EVENT   = 4
+} hci_data_type_t;
+
+typedef void (*packet_recv)(hci_data_type_t type, uint8_t *data, uint32_t len);
+
+typedef struct h5_mp_t {
+     void     (*h5_int_init)(packet_recv h5_callbacks);
+     void     (*h5_int_cleanup)(void);
+     uint16_t (*h5_send_cmd)(hci_data_type_t type, uint8_t *data, uint16_t length);
+     uint8_t  (*h5_send_sync_cmd)(uint16_t opcode, uint8_t *data, uint16_t length);
+     uint16_t (*h5_send_acl_data)(hci_data_type_t type, uint8_t *data, uint16_t length);
+} h5_mp_t;
+
+const h5_mp_t *get_h5_mp_interface(void);
 
 

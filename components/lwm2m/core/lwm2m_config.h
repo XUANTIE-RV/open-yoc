@@ -55,7 +55,6 @@
 #ifndef _LWM2M_CONFIG_H_
 #define _LWM2M_CONFIG_H_
 
-#include <yoc_config.h>
 #include <aos/log.h>
 
 

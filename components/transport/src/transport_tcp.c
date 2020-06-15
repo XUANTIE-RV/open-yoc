@@ -18,7 +18,6 @@
 #include "lwip/sockets.h"
 #include "lwip/dns.h"
 #include "lwip/netdb.h"
-#include <yoc_config.h>
 #include <aos/log.h>
 // #include <aos/network.h>
 #include "transport_utils.h"

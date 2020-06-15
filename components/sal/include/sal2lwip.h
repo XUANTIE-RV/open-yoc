@@ -74,8 +74,8 @@
 #define sal_sendmsg      sendmsg
 #define sal_sendto       sendto
 #define sal_socket       socket
-//#define sal_select       select
-//#define sal_select2      select2
+#define sal_select       select
+#define sal_select2      select2
 #define sal_ioctlsocket  ioctl
 
 // #define sal_fcntl        fcntl

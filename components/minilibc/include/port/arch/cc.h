@@ -44,7 +44,6 @@
 #endif
 
 /* Include some files for defining library routines */
-// #include <yoc_config.h>
 
 #include <sys/types.h>
 #include <errno.h>

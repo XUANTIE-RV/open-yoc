@@ -29,8 +29,13 @@ extern "C"
 #define EXTERN extern
 #endif
 
+#ifdef CONFIG_SERIAL_USE_VFS
 int uart_rpmsg_init(const char *cpu_name, const char *dev_name,
                     int buf_size, bool isconsole);
+#else
+int uart_rpmsg_init(const char *cpuname, const char *devname,
+                    int uart_idx, int buf_size, bool isconsole);
+#endif
 
 #undef EXTERN
 #ifdef __cplusplus

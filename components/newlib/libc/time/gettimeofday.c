@@ -2,7 +2,6 @@
  * Copyright (C) 2019-2020 Alibaba Group Holding Limited
  */
 
-#include <yoc_config.h>
 #include <sys/time.h>
 #include <time.h>
 

@@ -23,47 +23,40 @@ static void _player_event(player_t *player, uint8_t type, const void *data, uint
 {
     UNUSED(len);
     UNUSED(data);
-    UNUSED(handle);
-    LOGI(TAG, "=====%s, %d, type = %d", __FUNCTION__, __LINE__, type);
 
     switch (type) {
     case PLAYER_EVENT_ERROR:
         player_stop(player);
         break;
-
     case PLAYER_EVENT_START:
         break;
-
     case PLAYER_EVENT_FINISH:
         player_stop(player);
         break;
-
     default:
         break;
     }
 }
 
-void main()
+int app_main()
 {
-    plyh_t plyh;
-
-    memset(&plyh, 0, sizeof(plyh_t));
-    /* 配置eq功能为8段式 */
-    plyh.eq_segments   = 8;
+    ply_conf_t ply_cnf;
+    
+    player_conf_init(&ply_cnf);
     /* 配置音频重采样到48k */
-    plyh.resample_rate = 48000;
-    plyh.rcv_timeout   = 0;
+    ply_cnf.resample_rate = 48000;
     /* 配置播放器状态回调函数 */
-    plyh.event_cb      = _player_event;
-    /* 实例化一个播放器 */
-    g_player = player_new(&plyh);
-
+    ply_cnf.event_cb      = _player_event;
+    /* 根据配置参数创建播放器示例 */
+    g_player = player_new(&ply_cnf);
+    
     /* 网络mp3歌曲 */
     char *url = "http://www.baidu.com/xx.mp3";
     /* 文件/sd卡mp3歌曲 */
     //char *url = "file:///fatfs0/test.MP3";
     /* 播放指定url的音频文件 */
-    player_play(g_player, url);
+    player_play(g_player, url, 0);
 }
+
 ```
 

@@ -7,7 +7,6 @@
  * @version  V1.0
  * @date     18. July 2018
  ******************************************************************************/
-#include <csi_config.h>
 #include <stdint.h>
 #include <soc.h>
 #include <io.h>

@@ -21,7 +21,6 @@
 #include "drv/timer.h"
 #include "soc.h"
 #include "string.h"
-#include <csi_config.h>
 
 #define DMAC1_CFG(addr)  (*(volatile uint32_t *)((CSKY_DMAC1_BASE + (addr))))
 
@@ -215,7 +214,7 @@ void ck_codec_input_cache_read_info_update(int idx, int32_t *adc_event)
     int out_len = dev_ringbuf_out(cache_fifo, adc_temp_buf, ADC_BUF_SIZE);
     int in_len = dev_ringbuf_in(input_ring_fifo, adc_temp_buf, out_len);
 
-    priv->handle->mv_size += in_len;
+    priv->handle->mv_size = input_ring_fifo->data_len;
 
     if (priv->handle->mv_size >= priv->handle->period) {
         priv->handle->mv_size = 0;
@@ -332,6 +331,8 @@ void ck_codec_input_dma_stop(ck_codec_ch_priv_t *input_priv)
 
     if (priv_adc_channel_en == 0) {
         csi_timer_stop(ad_timer_handle);
+        csi_timer_uninitialize(ad_timer_handle);
+        ad_timer_handle = NULL;
     }
 }
 

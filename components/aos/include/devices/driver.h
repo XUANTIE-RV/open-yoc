@@ -40,14 +40,14 @@ struct _driver_obj {
   \brief       register device object into device driver framework.
   \param[in]   drv      device driver object
   \param[in]   count    device number
-  \return      <0 error, >0 return dev count.
+  \return      -1 error, 0 success.
 */
 int driver_register(driver_t *drv, void *config, int idx);
 
 /**
   \brief       remove device object from device driver framework.
   \param[in]   name     device name
-  \return      <0 error, >0 return operation result
+  \return      -1 error, 0 success
 */
 int driver_unregister(const char *name);
 
@@ -97,7 +97,20 @@ int device_unlock(aos_dev_t *dev);
 */
 int device_valid(aos_dev_t *dev, const char *name);
 
+/**
+  \brief       get a device 's id
+  \param[in]   dev      device driver object
+  \return      device 's id
+*/
 int device_tags(aos_dev_t *dev);
+
+/**
+  \brief       device enter(leave)lpm
+  \param[in]   dev      device driver object
+  \param[in]   state    1:enter lpm 0:leave lpm
+  \return      =0 success other is error
+*/
+int device_lpm(aos_dev_t *dev, int pm_state);
 
 #ifdef __cplusplus
 }

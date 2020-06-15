@@ -2,7 +2,6 @@
  * Copyright (C) 2019-2020 Alibaba Group Holding Limited
  */
 
-#include <csi_config.h>
 #include <soc.h>
 
 extern void Default_Handler(void);

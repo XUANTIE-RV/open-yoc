@@ -26,11 +26,13 @@
 
 typedef struct {
     codec_output_t *hdl;
+    aos_pcm_hw_params_t params;
     int state;
 } playback_t;
 
 typedef struct {
     codec_input_t *hdl;
+	aos_pcm_hw_params_t params;
     int channels;
     char *recv;
     int state;
@@ -44,6 +46,9 @@ typedef struct {
 
 mixer_playback_t mixp0;
 
+static int pcmc_param_set(aos_pcm_t *pcm, struct aos_pcm_hw_params *params);
+static int pcmp_param_set(aos_pcm_t *pcm, aos_pcm_hw_params_t *params);
+
 static void playback_free(playback_t *playback)
 {
     if (playback->state == 1) {
@@ -54,6 +59,20 @@ static void playback_free(playback_t *playback)
         playback->state = 0;
         playback->hdl = 0;
     }
+}
+
+static int pcmp_lpm(aos_dev_t *dev, int state)
+{
+    aos_pcm_t *pcm = pcm_dev(dev);
+    playback_t *playback = (playback_t *)pcm->hdl;
+
+    if (state == 1) {
+        playback_free(playback);
+    } else {
+        pcmp_param_set(pcm, &playback->params);
+    }
+
+    return 0;
 }
 
 static int pcmp_open(aos_dev_t *dev)
@@ -133,18 +152,19 @@ static int pcmp_param_set(aos_pcm_t *pcm, aos_pcm_hw_params_t *params)
 
     if (mixp0.hdl.cb == NULL) {
         memcpy(&mixp0.hdl, codec, sizeof(codec_output_t));
+    }
 
-        if (mixp0.l == -31 || mixp0.r == -31) {
-            csi_codec_output_mute(codec, 1);
-        } else {
-            csi_codec_output_mute(codec, 0);
-            csi_codec_output_set_mixer_left_gain(codec, mixp0.l);
-            csi_codec_output_set_mixer_right_gain(codec, mixp0.r);
-        }
+    if (mixp0.l == -31 || mixp0.r == -31) {
+        csi_codec_output_mute(codec, 1);
+    } else {
+        csi_codec_output_mute(codec, 0);
+        csi_codec_output_set_analog_left_gain(codec, mixp0.l);
+        csi_codec_output_set_analog_right_gain(codec, mixp0.r);
     }
 
     playback->state = 1;
     playback->hdl = codec;
+    memcpy(&playback->params, params, sizeof(aos_pcm_hw_params_t));
 
     return 0;
 pcmp_err1:
@@ -188,9 +208,11 @@ static int snd_set_gain(aos_mixer_elem_t *elem, int l, int r)
             csi_codec_output_mute(p, 1);
         } else {
             csi_codec_output_mute(p, 0);
-            csi_codec_output_set_mixer_left_gain(p, l);
-            csi_codec_output_set_mixer_right_gain(p, r);
+            csi_codec_output_set_analog_left_gain(p, l);
+            csi_codec_output_set_analog_right_gain(p, r);
         }
+        mixp0.l = l;
+        mixp0.r = r;
     } else {
         mixp0.l = l;
         mixp0.r = r;
@@ -245,6 +267,20 @@ static void capture_free(capture_t *capture)
         capture->state = 0;
         capture->hdl = 0;
     }
+}
+
+static int pcmc_lpm(aos_dev_t *dev, int state)
+{
+    aos_pcm_t *pcm = pcm_dev(dev);
+    capture_t *capture = (capture_t *)pcm->hdl;
+
+    if (state == 1) {
+        capture_free(capture);
+    } else {
+        pcmc_param_set(pcm, &capture->params);
+    }
+
+    return 0;
 }
 
 static int pcmc_open(aos_dev_t *dev)
@@ -407,6 +443,7 @@ static aos_pcm_drv_t aos_pcm_drv[] = {
             .uninit             = pcm_uninit,
             .open               = pcmp_open,
             .close              = pcmp_close,
+            .lpm                = pcmp_lpm,
         },
         .ops = {
             .hw_params_set      = pcmp_param_set,
@@ -416,11 +453,12 @@ static aos_pcm_drv_t aos_pcm_drv[] = {
     },
     {
         .drv = {
-            .name = "pcmC",
-            .init = pcm_init,
-            .uninit = pcm_uninit,
-            .open = pcmc_open,
-            .close = pcmc_close,
+            .name               = "pcmC",
+            .init               = pcm_init,
+            .uninit             = pcm_uninit,
+            .open               = pcmc_open,
+            .close              = pcmc_close,
+            .lpm                = pcmc_lpm,
         },
         .ops = {
             .hw_params_set = pcmc_param_set,
@@ -484,6 +522,17 @@ static int card_close(aos_dev_t *dev)
     return 0;
 }
 
+static int card_lpm(aos_dev_t *dev, int state)
+{
+    if (state == 1) {
+        csi_codec_lpm(dev->id, CODEC_MODE_SLEEP);
+    } else {
+        csi_codec_lpm(dev->id, CODEC_MODE_RUN);
+    }
+
+    return 0;
+}
+
 static snd_card_drv_t snd_card_drv = {
     .drv = {
         .name   = "card",
@@ -491,10 +540,11 @@ static snd_card_drv_t snd_card_drv = {
         .uninit = card_uninit,
         .open   = card_open,
         .close  = card_close,
+        .lpm    = card_lpm,
     }
 };
 
-void snd_pangu_card_register(int vol_range)
+void snd_card_pangu_register(void *config)
 {
     driver_register(&snd_card_drv.drv, NULL, 0);
 }

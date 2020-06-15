@@ -10,7 +10,6 @@
  * @date     19. Feb 2019
  ******************************************************************************/
 
-#include <csi_config.h>
 #include <drv/pwm.h>
 #include <drv/irq.h>
 #include <ck_pwm.h>

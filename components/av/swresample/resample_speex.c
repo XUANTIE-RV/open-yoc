@@ -22,7 +22,6 @@ static int _resample_speex_init(resx_t *r)
     priv = aos_zalloc(sizeof(struct res_speex_priv));
     CHECK_RET_TAG_WITH_RET(priv, -1);
 
-    /* quality is 8 default */
     srs = speex_resampler_init((spx_uint32_t)r->channels, (spx_uint32_t)r->irate, (spx_uint32_t)r->orate, 0, &error);
     CHECK_RET_TAG_WITH_GOTO(srs, err);
 

@@ -356,6 +356,30 @@ int ipc_message_ack(ipc_t *ipc, message_t *msg, int timeout_ms)
     return 0;
 }
 
+int ipc_lpm(int cpu_id, int state)
+{
+    ipc_t *ipc;
+
+    slist_for_each_entry (&ipc_list, ipc, ipc_t, next) {
+        if (ipc->des_cpu_id == cpu_id) {
+            break;
+        }
+    }
+
+    if (ipc == NULL) {
+        return -1;
+    }
+
+    // if (state == 0) {
+    //     ipc->seq = 1;
+    //     ipc->seq_bake = 0;
+    // }
+
+    channel_mailbox_lpm(ipc->ch, state);
+    
+    return 0;
+}
+
 ipc_t *ipc_get(int cpu_id)
 {
 #define IPC_NAME_MAX_LEN 16

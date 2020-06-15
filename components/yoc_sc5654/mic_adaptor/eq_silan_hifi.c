@@ -2,7 +2,6 @@
  * Copyright (C) 2019-2020 Alibaba Group Holding Limited
  */
 #include <aos/debug.h>
-
 #include "aef/eq_cls.h"
 #include <yv_ap.h>
 
@@ -19,13 +18,6 @@ static int _eq_silan_hifi_init(eqx_t *eq, uint32_t rate, uint8_t eq_segments)
 {
     struct eq_silan_hifi_priv *priv = NULL;
 
-    //LOGD(TAG, ">>>>>>>>enter %s  %p,%d,%d", __FUNCTION__, eq, rate, eq_segments);
-    aos_assert(eq);
-
-    if (eq_segments == 0) {
-        return -1;
-    }
-
     priv = aos_zalloc(sizeof(struct eq_silan_hifi_priv));
     CHECK_RET_TAG_WITH_RET(priv, -1);
 
@@ -39,11 +31,7 @@ static int _eq_silan_hifi_set_enable(eqx_t *eq, uint8_t enable)
     struct eq_silan_hifi_priv *priv = eq->priv;
     priv->debug                     = 1;
 
-    //LOGD(TAG, ">>>>>>>>enter %s  %p,%d", __FUNCTION__, eq, enable);
-    aos_assert(eq);
-
     g_eq_settings.eq_num = 1;
-
     yv_t *yv_handle = yv_get_handler();
 
     yv_eq_init(yv_handle, &g_eq_settings);
@@ -59,10 +47,6 @@ static int _eq_silan_hifi_set_param(eqx_t *eq, uint8_t segid, const eqfp_t *para
     int                        rc   = -1;
     struct eq_silan_hifi_priv *priv = eq->priv;
     priv->debug                     = 2;
-
-    //LOGD(TAG, ">>>>>>>>enter %s  %p,%d,(%d,%d,%d,%.3f,%.3f)", __FUNCTION__, eq, segid,
-    //    param->enable, param->type, param->rate, param->gain, param->q);
-    aos_assert(eq);
 
     if (segid < eq->eq_segments && segid < MAX_EQ_FILTER_NUM) {
         g_eq_settings.filters[0][segid].filterNum = eq->eq_segments;
@@ -84,9 +68,6 @@ static int _eq_silan_hifi_process(eqx_t *eq, const int16_t *in, int16_t *out, si
     struct eq_silan_hifi_priv *priv = eq->priv;
     priv->debug                     = 3;
 
-    //LOGD(TAG, ">>>>>>>>enter %s  %p,%p,%p,%d", __FUNCTION__, eq, in, out, nb_samples);
-    aos_assert(eq);
-
     if (eq->enable) {
         memcpy(out, in, nb_samples * sizeof(int16_t));
 
@@ -104,9 +85,6 @@ static int _eq_silan_hifi_uninit(eqx_t *eq)
     struct eq_silan_hifi_priv *priv = eq->priv;
     priv->debug                     = 4;
 
-    //LOGD(TAG, ">>>>>>>>enter %s  %p", __FUNCTION__, eq);
-    aos_assert(eq);
-
     aos_free(priv);
     eq->priv = NULL;
 
@@ -114,7 +92,7 @@ static int _eq_silan_hifi_uninit(eqx_t *eq)
 }
 
 const struct eqx_ops eqx_ops_silan = {
-    .name = "eq_silan_hifi",
+    .name       = "eq_silan_hifi",
 
     .init       = _eq_silan_hifi_init,
     .set_enable = _eq_silan_hifi_set_enable,

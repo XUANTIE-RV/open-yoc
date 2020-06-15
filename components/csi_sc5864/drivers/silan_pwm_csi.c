@@ -9,7 +9,6 @@
  * @date     02. June 2017
  ******************************************************************************/
 
-#include <csi_config.h>
 #include <drv/pwm.h>
 #include <soc.h>
 #include <silan_pwm.h>

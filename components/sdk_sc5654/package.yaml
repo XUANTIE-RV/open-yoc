@@ -1,0 +1,72 @@
+
+## 第一部分： 基础信息
+name: sdk_sc5654                                    # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
+version: v7.3.0                                     # <必选项> 组件版本号
+description: sc5654 SDK套件，包含各种依赖组件和demo  # <必选项> 建议至少20字以上
+type: common                                        # <必选项> 组件类型，为：solution, chip, board, common
+
+tag: 核心模块                                       # <可选项> 组件分类，缺省值： ''
+license: Apache license v2.0                        # <可选项> 源代码的许可证，要确保所有代码、文件的许可证不冲突。如：MIT，Apache license v2.0，BSD
+
+## 第二部分：依赖信息
+#           指定该组件依赖的组件及版本，版本支持条件比较，支持：>=v1.0, >v1.0, ==v1.0, <=v1.0, <v1.0, v1.0
+#           未指定条件时，默认为 ==，如 v1.0 与 ==v1.0
+# depends:                                 # <可选项> 该组件依赖其他的组件，合理的依赖才能保证组件能编译、使用
+#   - minilibc: v7.2.0
+#   - aos: >=v7.2.0
+depends:
+  - aos: V7.3.0
+  - aui_aliyunnls: V7.3.0
+  - aui_cloud: V7.3.0
+  - av: V7.3.0
+  - flac: V7.3.0
+  - amrnb: V7.3.0
+  - amrwb: V7.3.0
+  - pvmp3dec: V7.3.0
+  - speexdsp: V7.3.0
+  - cjson: V7.3.0
+  - clock_alarm: V7.3.0
+  - console: V7.3.0
+  - csi: V7.3.0
+  - drivers: V7.3.0
+  - drv_sdmmc: V7.3.0
+  - drv_snd_sc5654: V7.3.0
+  - drv_wifi_rtl8723ds: V7.3.0
+  - drv_leds: V7.3.0
+  - fatfs: V7.3.0
+  - fota: V7.3.0
+  - ipc: V7.3.0
+  - kv: V7.3.0
+  - lwip: V7.3.0
+  - ntp: V7.3.0
+  - mbedtls: V7.3.0
+  - mic: V7.3.0
+  - minialsa: V7.3.0
+  - minilibc: V7.3.0
+  - netmgr: V7.3.0
+  - posix: V7.3.0
+  - record: V7.3.0
+  - rhino: V7.3.0
+  - vfs: V7.3.0
+  - voice: V7.3.0
+  - voice_mit: V7.3.0
+  - voice_huwen: V7.3.0
+  - voice_thead: V7.3.0
+  - webclient: V7.3.0
+  - websocket: V7.3.0
+  - adc_button: V7.3.0
+  - wifi_provisioning: V7.3.0
+  - smartliving: V7.3.0
+  - fct: V7.3.0
+  - httpclient: V7.3.0
+  - transport: V7.3.0
+  - yoc_sc5654: V7.3.0
+  - littlefs: V7.3.0
+  - ble_mesh: V7.3.0
+  # board
+  - cb5654: V7.3.0
+  # chip
+  - csi_sc5654: V7.3.0
+  # solutions
+  - smart_speaker_demo: V7.3.0
+  - mesh_shell_example: V7.3.0

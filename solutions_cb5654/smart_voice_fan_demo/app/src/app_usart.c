@@ -3,7 +3,6 @@
  */
 #include "soc.h"
 #include "pin_name.h"
-#include <csi_config.h>
 #include <drv/usart.h>
 #include "board_config.h"
 #include <pinmux.h>

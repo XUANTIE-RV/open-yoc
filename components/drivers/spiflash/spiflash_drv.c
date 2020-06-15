@@ -23,7 +23,13 @@ static aos_dev_t *yoc_spiflash_init(driver_t *drv,void *config, int id)
 
 static int yoc_spiflash_lpm(aos_dev_t *dev, int state)
 {
+    flash_dev_t *flash = (flash_dev_t*)dev;
 
+    if (state) {
+        csi_spiflash_power_down(flash);
+    } else {
+        csi_spiflash_release_power_down(flash);
+    }
     return 0;
 }
 

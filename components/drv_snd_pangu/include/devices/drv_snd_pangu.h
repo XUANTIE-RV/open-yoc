@@ -7,12 +7,12 @@
 extern "C" {
 #endif
 
-extern void snd_card_register(int vol_range);
+extern void snd_card_register(void *config);
 
 extern void snd_card_ap_register(int vol_range);
 extern void snd_card_cp_register(int vol_range);
 
-extern void snd_pangu_card_register(int vol_range);
+extern void snd_card_pangu_register(void *config);
 #ifdef __cplusplus
 }
 #endif

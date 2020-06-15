@@ -22,6 +22,7 @@ int eqx_ops_register(const struct eqx_ops *ops)
         return -1;
     }
     _eqx_ops = (struct eqx_ops*)ops;
+    LOGD(TAG, "regist equalizer, name = %s", _eqx_ops->name);
 
     return 0;
 }

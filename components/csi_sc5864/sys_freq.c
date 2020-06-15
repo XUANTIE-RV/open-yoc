@@ -29,3 +29,8 @@ int32_t drv_get_timer_freq(void)
 {
     return silan_get_timer_cclk();
 }
+
+uint32_t drv_get_cur_cpu_freq(void)
+{
+    return drv_get_cpu_freq(0);
+}

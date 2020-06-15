@@ -14,7 +14,6 @@
 static slist_t channel_list;
 
 #define EVENT_WRITE (0x01)
-
 int channel_put_message(channel_t *ch, void *msg, int len, uint32_t timeout_ms)
 {
     mailbox_handle_t handle = (mailbox_handle_t)ch->context;
@@ -101,4 +100,18 @@ channel_t *channel_mailbox_get(int cpu_id, channel_cb cb, void *priv)
     free(ch);
 
     return NULL;
+}
+
+int channel_mailbox_lpm(channel_t *ch, int state)
+{
+    mailbox_handle_t handle = (mailbox_handle_t)ch->context;
+
+    if (state) {
+        csi_mailbox_uninitialize(handle);
+        ch->context = NULL;
+    } else {
+        ch->context = csi_mailbox_initialize(mailbox_event_cb);
+    }
+    
+    return 0;
 }

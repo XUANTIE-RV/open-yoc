@@ -2,7 +2,6 @@
  * Copyright (C) 2018-2020 Alibaba Group Holding Limited
  */
 
-#include <yoc_config.h>
 #include <media.h>
 #include <yoc/eventid.h>
 #include <devices/audio.h>
@@ -29,6 +28,7 @@ typedef struct {
 typedef struct {
     int         type;
     int         resume;
+    uint64_t    seek_time;
     char       *url;
 } play_param_t;
 
@@ -78,6 +78,7 @@ typedef struct {
     player_t *hdl;
     int       speech_pause; //music 被其他打断标志
     int       state;
+    int       mute;         //当前是否是mute状态
     int       play_vol;
     int       min_vol;
     int       cur_vol;
@@ -198,35 +199,34 @@ static int m_vol_set(media_type_t *m, int vol)
     return 0;
 }
 
-static int m_start(media_type_t *m, const char *url)
+static int m_start(media_type_t *m, const char *url, uint64_t seek_time)
 {
     if (m->state == AUI_PLAYER_STOP) {
-        plyh_t plyh;
-        int vol_ret = m_vol_set(m, m->play_vol);
-        LOGD(TAG, "play%d vol:%d vol_ret:%d url:%s", m->type, abs_to_per(m->play_vol), vol_ret, url);
-        // aos_msleep(120);  // FIXME:
+        ply_conf_t ply_cnf;
+        // m_vol_set(m, m->play_vol);
+        LOGD(TAG, "play%d vol:%d url:%s", m->type, abs_to_per(m->play_vol), url);
 
         //TODO:
-        memset(&plyh, 0, sizeof(plyh_t));
-        plyh.ao_name       = "alsa";
-        plyh.eq_segments   = g_eq_segment_count;
-        plyh.resample_rate = m->config.resample_rate;
-        plyh.cache_size    = m->config.web_cache_size;
-        plyh.cache_percent = m->config.web_start_threshold;
-        plyh.period_ms     = m->config.snd_period_ms;
-        plyh.period_num    = m->config.snd_period_num;
-        plyh.rcv_timeout   = 0;
-        plyh.get_dec_cb    = m->key_cb;
-        plyh.event_cb      = player_event;
-        m->hdl = player_new(&plyh);
+        player_conf_init(&ply_cnf);
+        ply_cnf.ao_name               = "alsa";
+        ply_cnf.eq_segments           = g_eq_segment_count;
+        ply_cnf.resample_rate         = m->config.resample_rate;
+        ply_cnf.cache_size            = m->config.web_cache_size;
+        ply_cnf.cache_start_threshold = m->config.web_start_threshold;
+        ply_cnf.period_ms             = m->config.snd_period_ms;
+        ply_cnf.period_num            = m->config.snd_period_num;
+        ply_cnf.rcv_timeout           = 0;
+        ply_cnf.get_dec_cb            = m->key_cb;
+        ply_cnf.event_cb              = player_event;
+        m->hdl = player_new(&ply_cnf);
 
         /* EQ config */
-        if(g_eq_segment_count > 0 && g_eq_segments != NULL) {
+        if(g_eq_segment_count > 0 && g_eq_segments) {
             int i;
             peq_seten_t eqen;
             peq_setpa_t eqpa;
 
-            for (i = 0; i < plyh.eq_segments; i++) {
+            for (i = 0; i < ply_cnf.eq_segments; i++) {
                 eqpa.segid = i;
                 eqpa.param = g_eq_segments[i];
                 //memcpy(&eqpa.param, (void*)&bqfparams[i], sizeof(eqfp_t));
@@ -242,7 +242,7 @@ static int m_start(media_type_t *m, const char *url)
         if (m->hdl == NULL) {
             LOGE(TAG, "play err(%s)", url);
         } else {
-            player_play(m->hdl, url);
+            player_play(m->hdl, url, seek_time);
             m->state    = AUI_PLAYER_PLAYING;
         }
     }
@@ -250,17 +250,26 @@ static int m_start(media_type_t *m, const char *url)
     return m->hdl ? 0 : -1;
 }
 
-static int m_continue(media_type_t *m)
+static int m_continue(media_type_t *m, int flag)
 {
-    if (m->hdl) {
-        if (m->state == AUI_PLAYER_PAUSED) {
-            audio_set_vol(m->cur_vol, m->cur_vol);
-            player_resume(m->hdl);
-            m->state = AUI_PLAYER_PLAYING;
-        } else if (m->state == AUI_PLAYER_PLAYING && m->cur_vol == 0) {
-            audio_set_vol(m->play_vol, m->play_vol);
-            m->cur_vol = m->play_vol;
+    if (m->hdl && m->state == AUI_PLAYER_PAUSED) {
+
+        if (m->mute == 0) {
+            if (m->play_vol < m->min_vol && m->cur_vol < m->min_vol) {
+                m_vol_set(m, m->min_vol);
+            }
+        } else {
+            audio_set_vol(0, 0);
         }
+
+        player_resume(m->hdl);
+        m->state = AUI_PLAYER_PLAYING;
+    }
+
+    if (flag && m->mute == 1) {
+        audio_set_vol(m->play_vol, m->play_vol);
+        m->cur_vol = m->play_vol;
+        m->mute    = 0;
 
         return 0;
     }
@@ -288,7 +297,7 @@ static void music_stash_pop(void)
     if (m->speech_pause == 1) {
         m->speech_pause = 0;
         // audio_set_vol(m->cur_vol, m->cur_vol);
-        m_continue(m);
+        m_continue(m, 0);
         m_step_vol(m, m->play_vol, 1000);
     }
 }
@@ -354,11 +363,17 @@ static int _play(media_t *media, rpc_t *rpc)
     }
 
     if (start == 1) {
-        if (m->play_vol < m->min_vol && m->cur_vol < m->min_vol) {
-            m_vol_set(m, m->min_vol);
+        if (!m->mute) {
+            if (m->play_vol < m->min_vol && m->cur_vol < m->min_vol) {
+                m_vol_set(m, m->min_vol);
+            } else {
+                m_vol_set(m, m->play_vol);
+            }
+        } else {
+            audio_set_vol(0, 0);
         }
 
-        ret = m_start(m, param->url);
+        ret = m_start(m, param->url, param->seek_time);
 
         if (ret < 0) {
             media_evt_call(m->type, AUI_PLAYER_EVENT_ERROR);
@@ -402,7 +417,7 @@ static int _continue(media_t *media, rpc_t *rpc)
         m_vol_set(m, m->min_vol);
     }
 
-    rpc_ret = m_continue(m);
+    rpc_ret = m_continue(m, 1);
 
     rpc_return_int(rpc, rpc_ret);
 
@@ -439,10 +454,12 @@ static int _mute(media_t *media, rpc_t *rpc)
     if (type != MEDIA_ALL) {
         m          = get_type(type);
         m->cur_vol = 0;
+        m->mute    = 1;
     } else {
         for (int i = 0; i < MEDIA_MAX_NUM; i++) {
             m          = get_type(i);
             m->cur_vol = 0;
+            m->mute    = 1;
         }
     }
 
@@ -544,11 +561,13 @@ static int _vol_add(media_t *media, rpc_t *rpc)
         m       = get_type(param->type);
         volume  = m->play_vol + add_vol;
         rpc_ret = m_vol_set(m, volume);
+        m->mute = 0;
     } else {
         for (int i = 0; i < MEDIA_MAX_NUM; i++) {
             m       = get_type(i);
             volume  = m->play_vol + add_vol;
             rpc_ret = m_vol_set(m, volume);
+            m->mute = 0;
         }
     }
 
@@ -568,11 +587,13 @@ static int _vol_set(media_t *media, rpc_t *rpc)
     if (param->type != MEDIA_ALL) {
         m       = get_type(param->type);
         rpc_ret = m_vol_set(m, volume);
+        m->mute = 0;
     } else {
         for (int i = 0; i < MEDIA_MAX_NUM; i++) {
             m = get_type(i);
 
             rpc_ret = m_vol_set(m, volume);
+            m->mute = 0;
         }
     }
 
@@ -630,6 +651,10 @@ static void _evt_hdl(rpc_t *rpc, int evt_id)
         music_stash_pop();
         m->resume = 0;
     }
+
+    if (evt_id == AUI_PLAYER_EVENT_ERROR || evt_id == AUI_PLAYER_EVENT_FINISH) {
+        m_stop(m);
+    }
     media_evt_call(m->type, evt_id);
 
     //LOGD(TAG, "media(%d) evt end\n", m->type);
@@ -669,7 +694,9 @@ static void _step_vol_handle(int type)
     }
 
     m->cur_vol -= m->step_vol;
-    audio_set_vol(m->cur_vol, m->cur_vol);
+
+    if (!m->mute)
+        audio_set_vol(m->cur_vol, m->cur_vol);
 
     if ((m->cur_vol - m->exp_vol) / m->step_vol == 0) {
         m->step_vol = m->cur_vol - m->exp_vol;
@@ -719,7 +746,7 @@ static void m_step_vol(media_type_t *m, int new_vol, int time)
         off_t = 0;
 
         while (i--) {
-            _step_vol_handle(0);
+            _step_vol_handle(m->type);
             //printf("---%d---\n", m->cur_vol);
             _step_vol_sleep(off_t, VOL_STEP_TIME * j);
             new_t = aos_now_ms();
@@ -727,7 +754,7 @@ static void m_step_vol(media_type_t *m, int new_vol, int time)
             j++;
         }
 
-        _step_vol_handle(0);
+        _step_vol_handle(m->type);
         LOGD(TAG, "media vol end(%d) :%d", m->cur_vol / 1, aos_now_ms());
     }
 }
@@ -767,6 +794,23 @@ int aui_player_play(int type, const char *url, int resume)
     param.type = type;
     param.url  = strdup(url);
     param.resume = resume;
+    param.seek_time = 0;
+
+    ret = uservice_call_async(g_media.srv, MEDIA_PLAY_CMD, &param, sizeof(play_param_t));
+    return ret;
+}
+
+int aui_player_seek_play(int type, const char *url, uint64_t seek_time, int resume)
+{
+    aos_check_return_einval(type >= MEDIA_MUSIC && type <= MEDIA_SYSTEM && url && strlen(url) > 0);
+    int          ret = -1;
+    play_param_t param;
+
+    param.type = type;
+    param.url  = strdup(url);
+    param.resume = resume;
+    param.seek_time = seek_time;
+
 
     ret = uservice_call_async(g_media.srv, MEDIA_PLAY_CMD, &param, sizeof(play_param_t));
     return ret;

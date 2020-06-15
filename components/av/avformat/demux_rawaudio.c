@@ -2,6 +2,7 @@
  * Copyright (C) 2018-2020 Alibaba Group Holding Limited
  */
 
+#include "avutil/url_parse.h"
 #include "avformat/demux_cls.h"
 #include "stream/stream.h"
 
@@ -18,27 +19,20 @@ struct rawaudio_priv {
     uint64_t                   iduration;  ///< inner duration, base time_base
 };
 
+/* url example: mem://addr=765432&size=1024&avformat=mp3&acodec=mp3 */
 static int _demux_rawaudio_open(demux_cls_t *o)
 {
-    int rc;
-    size_t size;
     sf_t sf = 0;
     struct rawaudio_priv *priv;
 
     priv = aos_zalloc(sizeof(struct rawaudio_priv));
     CHECK_RET_TAG_WITH_RET(priv, -1);
 
-    size = sizeof(priv->avcodec);
-    rc = stream_control(o->s, STREAM_CMD_GET_CODEC, priv->avcodec, &size);
-    CHECK_RET_TAG_WITH_GOTO(rc == 0, err);
-
-    size = sizeof(priv->rate);
-    rc = stream_control(o->s, STREAM_CMD_GET_RATE, &priv->rate, &size);
-    CHECK_RET_TAG_WITH_GOTO(rc == 0, err);
-
-    size = sizeof(priv->channel);
-    rc = stream_control(o->s, STREAM_CMD_GET_CHANNEL, &priv->channel, &size);
-    CHECK_RET_TAG_WITH_GOTO(rc == 0, err);
+    url_get_item_value(stream_get_url(o->s), "avcodec", priv->avcodec, sizeof(priv->avcodec));
+    url_get_item_value_int(stream_get_url(o->s), "rate", &priv->rate);
+    CHECK_RET_TAG_WITH_GOTO(priv->rate > 0, err);
+    url_get_item_value_int(stream_get_url(o->s), "channel", &priv->channel);
+    CHECK_RET_TAG_WITH_GOTO(priv->channel > 0, err);
 
     if (0 == strcmp(priv->avcodec, "pcm_s16be")) {
         sf = sf_make_bit(16) | sf_make_signed(1) | sf_make_bigendian(1);

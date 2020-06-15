@@ -5,6 +5,23 @@
 #ifndef STRING_H
 #define STRING_H
 
+
+#define CHAR_BYTE  1
+#define CHAR_SHIFT 0
+
+
+/* Macros convert between chars and bytes */
+#define B2C(x) (((x) + CHAR_BYTE - 1) >> CHAR_SHIFT)
+#define C2B(x) ((x) << CHAR_SHIFT)
+
+#define B2C_OFF(x) ((x) >> CHAR_SHIFT)
+#define C2B_OFF(x) ((x) << CHAR_SHIFT)
+
+#define B2C_REM(x) ((x) - C2B_OFF(B2C_OFF(x)))
+
+#define B2C_SHIFT(x) ((x) - CHAR_SHIFT)
+#define C2B_SHIFT(x) ((x) + CHAR_SHIFT)
+
 #include <features.h>
 #define __need_size_t
 #include <stddef.h>

@@ -21,8 +21,6 @@
 #include <arpa/inet.h>
 #include <aos/errno.h>
 #include <aos/log.h>
-// #include "mbedtls/entropy.h"
-#include "mbedtls/ctr_drbg.h"
 #include "mbedtls/error.h"
 
 #if defined(MBEDTLS_DEBUG_C)
@@ -204,26 +202,35 @@ static void mbedtls_cleanup(tls_t *tls)
     mbedtls_x509_crt_free(&tls->cacert);
     mbedtls_x509_crt_free(&tls->clientcert);
     mbedtls_pk_free(&tls->clientkey);
-    // mbedtls_entropy_free(&tls->entropy);
+    mbedtls_entropy_free(&tls->entropy);
     mbedtls_ssl_config_free(&tls->conf);
-    // mbedtls_ctr_drbg_free(&tls->ctr_drbg);
+    mbedtls_ctr_drbg_free(&tls->ctr_drbg);
     mbedtls_ssl_free(&tls->ssl);
 }
 
 static int create_ssl_handle(tls_t *tls, const char *hostname, size_t hostlen, const tls_cfg_t *cfg)
 {
-    int ret;
+    int ret, value;
+    const char *pers = "https";
 
 #if defined(MBEDTLS_DEBUG_C)
     mbedtls_debug_set_threshold(5);
 #endif
 
     tls->server_fd.fd = tls->sockfd;
-    mbedtls_ssl_init_ext(&tls->ssl, 8 * 1024);
-    // mbedtls_ctr_drbg_init(&tls->ctr_drbg);
+    mbedtls_ssl_init(&tls->ssl);
+    mbedtls_ctr_drbg_init(&tls->ctr_drbg);
     mbedtls_ssl_config_init(&tls->conf);
-    // mbedtls_entropy_init(&tls->entropy);
-
+    mbedtls_entropy_init(&tls->entropy);
+    if ((value = mbedtls_ctr_drbg_seed(&tls->ctr_drbg,
+                               mbedtls_entropy_func,
+                               &tls->entropy,
+                               (const unsigned char*)pers,
+                               strlen(pers))) != 0) {
+        LOGE(TAG, "mbedtls_ctr_drbg_seed() failed, value:-0x%x.", -value);
+        ret = -1;
+        goto exit;
+    }
 
     /* Hostname set here should match CN in server certificate */
     char *use_host = strndup(hostname, hostlen);
@@ -305,7 +312,7 @@ static int create_ssl_handle(tls_t *tls, const char *hostname, size_t hostlen, c
         goto exit;
     }
 
-    mbedtls_ssl_conf_rng(&tls->conf, mbedtls_ctr_drbg_random, NULL);
+    mbedtls_ssl_conf_rng(&tls->conf, mbedtls_ctr_drbg_random, &tls->ctr_drbg);
     mbedtls_ssl_conf_dbg(&tls->conf, _ssl_debug, NULL);
 #ifdef CONFIG_MBEDTLS_DEBUG
     mbedtls_enable_debug_log(&tls->conf, 4);

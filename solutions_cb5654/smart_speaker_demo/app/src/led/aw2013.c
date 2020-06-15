@@ -33,14 +33,14 @@ uint8_t delay_regs[3] = {0x39, 0x3c, 0x3f};
 
 #define TAG "AW2013"
 
-static int aw2013_i2c_write_reg(i2c_dev_t *dev, uint8_t addr, uint8_t val)
+static int aw2013_i2c_write_reg(aos_dev_t *dev, uint8_t addr, uint8_t val)
 {
     uint8_t reg_val[2] = {addr, val};
 
-    return hal_i2c_master_send(dev, AW2013_ADDR, reg_val, 2, AW2013_I2C_TIMEOUT);
+    return iic_master_send(dev, AW2013_ADDR, reg_val, 2, AW2013_I2C_TIMEOUT);
 }
 
-int aw2013_init(i2c_dev_t *i2c_dev)
+int aw2013_init(aos_dev_t *i2c_dev)
 {
     LOGD(TAG, "start aw2013 config");
 
@@ -74,7 +74,7 @@ err:
     return -1;
 }
 
-int aw2013_low_power(i2c_dev_t *i2c_dev)
+int aw2013_low_power(aos_dev_t *i2c_dev)
 {
     int ret;
     
@@ -84,7 +84,7 @@ int aw2013_low_power(i2c_dev_t *i2c_dev)
     return 0;
 }
 
-int aw2013_led_control(i2c_dev_t *i2c_dev, led_rgb_t led, led_mode_t mode, uint8_t dime)
+int aw2013_led_control(aos_dev_t *i2c_dev, led_rgb_t led, led_mode_t mode, uint8_t dime)
 {
     CHECK_PARAM(led <= LED_BLUE && led >= LED_RED, -1);
     CHECK_PARAM(mode <= LED_BREATH && mode >= LED_OFF, -1);

@@ -12,9 +12,10 @@
 
 __BEGIN_DECLS__
 
-typedef struct ao_header {
+#define AO_OPS_MAX            (6)
+
+typedef struct ao_conf {
     char                      *name;         ///< ao name
-    sf_t                      sf;            ///< sample format
     uint32_t                  period_ms;     ///< period cache size(ms) for audio out. 0 means use default
     uint32_t                  period_num;    ///< number of period_ms. total cache size for ao is (period_num * period_ms * (rate / 1000) * 2 * (16/8)). 0 means use default
     uint8_t                   eq_segments;   ///< equalizer segments number. 0 means don't need eq
@@ -23,7 +24,7 @@ typedef struct ao_header {
     uint32_t                  resample_rate; ///< none zereo means need to resample
     uint8_t                   vol_en;        ///< soft vol scale enable
     uint8_t                   vol_index;     ///< soft vol scale index (0~255)
-} aoh_t;
+} ao_conf_t;
 
 /**
  * @brief  regist ao ops
@@ -33,11 +34,19 @@ typedef struct ao_header {
 int ao_ops_register(const struct ao_ops *ops);
 
 /**
- * @brief  open/create a audio out by name
- * @param  [in] aoh
+ * @brief  init the ao config param
+ * @param  [in] ao_cnf
+ * @return 0/-1
+ */
+int ao_conf_init(ao_conf_t *ao_cnf);
+
+/**
+ * @brief  open a audio out
+ * @param  [in] sf     : audio sample format
+ * @param  [in] ao_cnf
  * @return NULL on error
  */
-ao_cls_t* ao_open(const aoh_t *aoh);
+ao_cls_t* ao_open(sf_t sf, const ao_conf_t *ao_cnf);
 
 /**
  * @brief  control the ao

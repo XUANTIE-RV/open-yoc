@@ -3,7 +3,6 @@
  */
 
 
-#include <csi_config.h>
 #include <soc.h>
 
 extern void Default_Handler(void);

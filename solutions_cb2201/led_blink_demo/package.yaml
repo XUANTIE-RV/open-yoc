@@ -3,7 +3,7 @@ solution:
   ld_script: ""
 type: solution
 name: led_blink_demo
-yoc_version: 7.2
+version: v7.3.0                                     # <必选项> 组件版本号
 description: 基于cb2201的LED电灯示例
 keywords:
   - cb2201
@@ -11,16 +11,16 @@ keywords:
 author: feimi
 license: Apache license v2.0
 depends:
-  - aos: V7.2.2
-  - cb2201: V7.2.2
-  - csi_ch2201: V7.2.2
-  - console: V7.2.2
-  - csi: V7.2.2
-  - drivers: V7.2.2
-  - minilibc: V7.2.2
-  - rhino: V7.2.2
-  - kv: V7.2.2
-defconfig:
+  - aos: V7.3.0
+  - cb2201: V7.3.0
+  - csi_ch2201: V7.3.0
+  - console: V7.3.0
+  - csi: V7.3.0
+  - drivers: V7.3.0
+  - minilibc: V7.3.0
+  - rhino: V7.3.0
+  - kv: V7.3.0
+def_config:
   CONFIG_ARCH_CSKY: 1
   CONFIG_ARCH_INTERRUPTSTACK: 1024
   CONFIG_BOARD_NAME: cb2201

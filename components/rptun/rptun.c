@@ -33,9 +33,6 @@
 #define RPTUN_EVENT             0x00000001
 #define RPTUN_NAME_SIZE         16
 
-#define CONFIG_RPTUN_STACKSIZE 2048
-#define CONFIG_RPTUN_PRIORITY 224
-
 /****************************************************************************
  * Private Types
  ****************************************************************************/

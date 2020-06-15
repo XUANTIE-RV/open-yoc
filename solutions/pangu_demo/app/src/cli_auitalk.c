@@ -4,6 +4,7 @@
 #include <yoc/mic.h>
 #include <media.h>
 #include <aos/cli.h>
+#include "cloud_baidu.h"
 #include "app_main.h"
 #include "audio/audio_res.h"
 
@@ -43,15 +44,19 @@ static int cli_aui_proc(int argc, char **argv)
     if (strcmp(argv[1], "talk") == 0) {
         char *text = get_text(argc, argv, 2);
         if (text) {
-            aui_cloud_push_text(&g_aui_handler, text);
+            if (strncasecmp(text, MUSIC_PREFIX, strlen(MUSIC_PREFIX)) == 0) {
+                baidu_music(&g_aui_handler, text);
+            } else {
+                aui_cloud_push_text(&g_aui_handler, text);
+            }
             free(text);
         }
     } else if (strcmp(argv[1], "tts") == 0) {
         char *text = get_text(argc, argv, 2);
         if (text) {
             aui_player_stop(MEDIA_SYSTEM);
-            aui_cloud_req_tts(&g_aui_handler, NULL, text, NULL);
-            aui_player_play(MEDIA_SYSTEM, "fifo://tts/1", 1);
+            aui_cloud_req_tts(&g_aui_handler, text, NULL);
+            app_player_play(MEDIA_SYSTEM, "fifo://tts/1", 1);
             free(text);
         }
     } else if (strcmp(argv[1], "wake") == 0) {

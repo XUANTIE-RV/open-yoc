@@ -5,7 +5,7 @@
 #define _APP_MAIN_H_
 #include <stdint.h>
 #include <yoc/uservice.h>
-#include <yoc/netmgr.h>
+#include <yoc/netmgr_service.h>
 
 extern netmgr_hdl_t app_netmgr_hdl;
 

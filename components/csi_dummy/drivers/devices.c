@@ -9,7 +9,6 @@
  * @date     24. August 2017
  ******************************************************************************/
 #include "soc.h"
-#include <csi_config.h>
 #include <drv/usart.h>
 #include <drv/timer.h>
 #include <drv/rtc.h>

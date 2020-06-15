@@ -79,7 +79,7 @@ int demux_register_adts();
 
 ## 解码层
 
-解码层支持pvmp3解码(mp3)、pcm解码(裸流)、ipc解码(核间解码)、pvmp3解码(mp3)等编码格式的支持。
+解码层支持pcm解码(裸流)、ipc解码(核间解码)、pvmp3解码(mp3)等编码格式的支持。
 
 ```c
 /**

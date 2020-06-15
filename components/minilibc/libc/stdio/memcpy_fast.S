@@ -59,7 +59,7 @@
 #define PROLOG push  l0, l1, l2
 #define EPILOG pop l0, l1, l2
 #define STKSIZE 12
-#elif defined(__CK810__) || defined(__CK807__) || defined(__CK804__)
+#elif defined(__CK810__) || defined(__CK807__) || defined(__CK804__) || defined(__CK803__)
 #define PROLOG
 #define EPILOG rts
 #define STKSIZE 0
@@ -94,7 +94,7 @@ memcpy:
 __memcpy_fast:
     PROLOG
     .stack_size __memcpy_fast, STKSIZE
-#if defined(__CK810__) || defined(__CK807__) || defined(__CK804__)
+#if defined(__CK810__) || defined(__CK807__) || defined(__CK804__) || defined(__CK803__)
     mov     r3, r0
     cmplti  r2, 4                                            /* If len less than 4 bytes */
     jbt     .L_copy_by_byte

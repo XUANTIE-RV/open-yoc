@@ -47,7 +47,7 @@ static int _demux_mp3_probe(const avprobe_data_t *pd)
         else
             score = rc ? 0 : AVPROBE_SCORE_MAX;
 
-        LOGI(TAG, "mp3 probe, sync_cnt = %d, rc = %d, score = %d", sync_cnt, rc, score);
+        LOGD(TAG, "mp3 probe, sync_cnt = %d, rc = %d, score = %d", sync_cnt, rc, score);
     }
 
     return score;
@@ -117,7 +117,7 @@ static int _demux_mp3_close(demux_cls_t *o)
 static int _demux_mp3_read_packet(demux_cls_t *o, avpacket_t *pkt)
 {
     int rc = -1;
-    int len = 0, eof;
+    int len = 0;
     int resync_cnt = 10, cnt = 0;
     uint8_t hdr[MP3_HDR_LEN];
     struct mp3_priv *priv = o->priv;
@@ -174,9 +174,6 @@ resync:
 
     return len;
 err:
-    eof = stream_is_eof(o->s);
-    rc  = eof ? 0 : rc;
-    LOGI(TAG, "read packet may be eof. eof = %d, rc = %d, url = %s", eof, rc, stream_get_url(o->s));
     return rc;
 }
 

@@ -1,13 +1,13 @@
 
 ## 第一部分： 基础信息
 name: yunio                                         # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
+version: v7.3.0                                     # <必选项> 组件版本号
 description: 定义了数据处理及上云接口，规范不同的云平台，尽可能的统一使用方法，降低用户使用不同平台的学习成本 # <必选项> 建议至少20字以上
-type: common                                        # <可选项> 组件类型，为：solution, chip, board, common，缺省值 common
+type: common                                        # <必选项> 组件类型，为：solution, chip, board, common
 
 tag: 云端SDK                                        # <可选项> 组件分类，缺省值： ''
 keywords:                                           # <可选项> 标签，会影响到组件被搜索的效果，合理的标签很重要
   - base
-yoc_version: ['V7.2', 'v7.3']
 license: Apache license v2.0                        # <可选项> 源代码的许可证，要确保所有代码、文件的许可证不冲突。如：MIT，Apache license v2.0，BSD
 
 ## 第二部分：依赖信息
@@ -17,12 +17,11 @@ license: Apache license v2.0                        # <可选项> 源代码的�
 #   - minilibc: v7.2.0
 #   - aos: >=v7.2.0
 depends:
-  - csi: V7.2.2
-  - rhino: V7.2.2
-  - minilibc: V7.2.2
-  - aos: V7.2.2
-  - aliot: V7.2.2
-  # - lwm2m: V7.2.2
+  - csi: V7.3.0
+  - rhino: V7.3.0
+  - aos: V7.3.0
+  - aliot: V7.3.0
+  # - lwm2m: V7.3.0
   # - onenet: V72.2.0
 
 ## 第四部分：编译连接信息
@@ -52,16 +51,16 @@ build_config:
     # - src/oceancon
     # - src/onenet
   libs:
-#    - iot_alicoap_psk
-    - iot_alimqtt_tls
+    # - iot_alicoap_psk ? <CONFIG_CLOUDIO_ALICOAP>
+    # - iot_alimqtt_tls ? <CONFIG_CLOUDIO_ALIMQTT>
   libpath:
     - ./libs/<cpu>
 
 # source_file:                             # <可选项> 指定参与编译的源代码文件，支持通配符，采用相对路径
 #   - src/*.c                              # 例：组件 src 目录下所有的扩展名为 c 的源代码文件
 source_file:
-#  - src/iot_alicoap/*.c ? <CONFIG_CLOUDIO_ALICOAP>
-  - src/iot_alimqtt/*.c
+  - src/iot_alicoap/*.c ? <CONFIG_CLOUDIO_ALICOAP>
+  - src/iot_alimqtt/*.c ? <CONFIG_CLOUDIO_ALIMQTT>
   # - 'src/oceancon/*.c    ? <CONFIG_CLOUDIO_OCEANCON>'
   # - 'src/onenet/*.c      ? <CONFIG_CLOUDIO_ONENET>'
   - src/iot.c
@@ -82,7 +81,9 @@ install:
   - dest: "include/yoc"
     source:
       - "include/yoc/*.h"
-
+  - dest: lib
+    source:
+      - libs/<cpu>/*.a
 ## 第七部分：导出部分
 # export:
 #   - dest: "<SOLUTION_PATH>/generated/data" # 安装的目的路径 dest是相当路径

@@ -9,7 +9,6 @@
 ******************************************************************************/
 #include <stdbool.h>
 #include <string.h>
-#include <csi_config.h>
 #include "dw_dmac.h"
 #include "csi_core.h"
 #include "drv/dmac.h"

@@ -24,25 +24,25 @@ static aos_pcm_t *pcm_init(ao_cls_t *o, unsigned int *rate)
     err = aos_pcm_hw_params_any(pcm, params);
 
     if (err < 0) {
-        LOGD(TAG, "Broken configuration for this PCM: no configurations available");
+        LOGE(TAG, "Broken configuration for this PCM: no configurations available");
     }
 
     err = aos_pcm_hw_params_set_access(pcm, params, AOS_PCM_ACCESS_RW_INTERLEAVED);
 
     if (err < 0) {
-        LOGD(TAG, "Access type not available");
+        LOGE(TAG, "Access type not available");
     }
 
     err = aos_pcm_hw_params_set_format(pcm, params, 16);
 
     if (err < 0) {
-        LOGD(TAG, "Sample format non available");
+        LOGE(TAG, "Sample format non available");
     }
 
     err = aos_pcm_hw_params_set_channels(pcm, params, 2);
 
     if (err < 0) {
-        LOGD(TAG, "Channels count non available");
+        LOGE(TAG, "Channels count non available");
     }
 
     aos_pcm_hw_params_set_rate_near(pcm, params, rate, 0);
@@ -88,7 +88,7 @@ static int _ao_alsa_open(ao_cls_t *o, sf_t sf)
 
     o->sf   = sf;
     o->priv = priv;
-    LOGI(TAG, " ao open");
+    LOGD(TAG, " ao open");
     return 0;
 err:
     aos_free(priv);

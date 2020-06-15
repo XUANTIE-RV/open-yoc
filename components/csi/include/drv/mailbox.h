@@ -19,6 +19,16 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+typedef struct {
+    int count;
+    struct {
+        uint32_t  mailbox_id;
+        uint32_t  tx_chnl;
+        uint32_t  rx_chnl;
+     } config[];
+} mailbox_chnl_config_t;
+
 /// definition for mailbox handle.
 typedef void *mailbox_handle_t;
 
@@ -65,6 +75,13 @@ int32_t csi_mailbox_send(mailbox_handle_t handle, int32_t mailbox_id, const void
   \return      received number or  error code
 */
 int32_t csi_mailbox_receive(mailbox_handle_t handle, int32_t mailbox_id, void *data, uint32_t num);
+
+/**
+  \brief       enable mailbox ch irq
+  \param[in]   cb_event  event call back function \ref mailbox_event_cb_t
+  \return      return mailbox handle if success
+*/
+int32_t csi_mailbox_chnl_enable(mailbox_handle_t handle, int32_t mailbox_id);
 
 #ifdef __cplusplus
 }

@@ -45,7 +45,7 @@ int aos_pcm_open(aos_pcm_t **pcm_ret, const char *name, aos_pcm_stream_t stream,
     aos_pcm_t *pcm;
     card_dev_t *card;
 
-    snd_card_attach("card0", &card); // Do not put it behind of " (aos_pcm_dev_t *)device_open(name)"
+    aos_card_attach("card0", &card); // Do not put it behind of " (aos_pcm_dev_t *)device_open(name)"
 
     if (card == NULL) {
         *pcm_ret = NULL;

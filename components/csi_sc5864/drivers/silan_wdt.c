@@ -9,7 +9,6 @@
  * @date     02. June 2017
  ******************************************************************************/
 
-#include <csi_config.h>
 #include <stdio.h>
 #include <silan_pic.h>
 #include <silan_syscfg.h>

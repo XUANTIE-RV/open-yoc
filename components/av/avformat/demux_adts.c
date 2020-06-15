@@ -20,7 +20,7 @@ static int _demux_adts_probe(const avprobe_data_t *pd)
     int rc;
     int score = 0;
     bio_t bio;
-    uint8_t hdr[ADTS_HDR_SIZE];
+    uint8_t hdr[ADTS_HDR_SIZE] = {0};
     struct adts_hdr hinfo = {0};
 
     bio_init(&bio, pd->buf, pd->buf_size);
@@ -44,7 +44,7 @@ static int _demux_adts_open(demux_cls_t *o)
     int rc;
     int fsize;
     int bits = 16, flen;
-    uint8_t hdr[ADTS_HDR_SIZE];
+    uint8_t hdr[ADTS_HDR_SIZE] = {0};
     uint8_t *extradata = NULL;
     struct adts_priv *priv = NULL;
 
@@ -98,7 +98,7 @@ static int _demux_adts_read_packet(demux_cls_t *o, avpacket_t *pkt)
     int rc = -1;
     int len = 0, offset, eof;
     int resync_cnt = 10, cnt = 0;
-    uint8_t hdr[ADTS_HDR_SIZE];
+    uint8_t hdr[ADTS_HDR_SIZE] = {0};
     struct adts_hdr hinfo  = {0};
     struct adts_priv *priv = o->priv;
 

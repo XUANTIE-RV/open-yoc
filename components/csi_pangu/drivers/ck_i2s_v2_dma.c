@@ -8,7 +8,6 @@
  * @version  V1.2
  * @date     8.15. August 2019
  ******************************************************************************/
-#include <csi_config.h>
 #include <string.h>
 #include <drv/irq.h>
 #include <drv/i2s.h>
@@ -348,7 +347,7 @@ static void ck_i2s_dma_run_rx_cb(ck_i2s_priv_v2_t *priv)
         i2s_event = I2S_EVENT_RECEIVE_COMPLETE;
     }
 
-    if (dev_ringbuf_avail(&priv->tx_ring_buf.fifo) == 0) {
+    if (dev_ringbuf_avail(&priv->rx_ring_buf.fifo) == 0) {
         i2s_event = I2S_EVENT_RX_BUFFER_FULL;
     }
 

@@ -8,7 +8,6 @@
  * @date     17. August 2018
  ******************************************************************************/
 
-#include <csi_config.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <soc.h>

@@ -1,13 +1,13 @@
 
 ## 第一部分： 基础信息
 name: csi_ch2201                                    # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
+version: v7.3.0                                     # <必选项> 组件版本号
 description: CH2201 Chip CSI driver SDK.            # <必选项> 建议至少20字以上
-type: chip                                          # <可选项> 组件类型，为：solution, chip, board, common，缺省值 common
+type: chip                                          # <必选项> 组件类型，为：solution, chip, board, common
 
 tag: 核心模块                                       # <可选项> 组件分类，缺省值： ''
 keywords:                                           # <可选项> 标签，会影响到组件被搜索的效果，合理的标签很重要
   - base
-yoc_version: V7.2.2
 license: Apache license v2.0                        # <可选项> 源代码的许可证，要确保所有代码、文件的许可证不冲突。如：MIT，Apache license v2.0，BSD
 
 ## 第二部分：依赖信息
@@ -69,7 +69,8 @@ license: Apache license v2.0                        # <可选项> 源代码的�
 chip:
   vendor_name: csky
   cpu_name: CK802
-  # ld_script: configs/gcc_eflash.ld.S
+  ld_script: configs/gcc_eflash.ld
+  flash_program: bin/flash_program.elf
 
 ## 第四部分：编译连接信息
 # build_config:                            # <可选项> 编译配置项
@@ -118,9 +119,12 @@ source_file:
 #     source:                              # 安装源列表
 #      - src/*.h                           # 支持通配符，相对路径
 install:
-  - dest: "include/csi/chip/ch2201"
+  - dest: "include"
     source:
       - "include/*.h"
+  - dest: lib
+    source:
+      - tee/libcsiteeca.a
 
 ## 第七部分：导出部分
 # export:

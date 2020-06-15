@@ -1,13 +1,13 @@
 
 ## 第一部分： 基础信息
 name: csi_dummy                                     # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
-description: YunVoice Chip CSI driver SDK.          # <必选项> 建议至少20字以上
-type: chip                                          # <可选项> 组件类型，为：solution, chip, board, common，缺省值 common
+version: v7.3.0                                     # <必选项> 组件版本号
+description: Chip CSI driver SDK.                   # <必选项> 建议至少20字以上
+type: chip                                          # <必选项> 组件类型，为：solution, chip, board, common
 
 tag: 核心模块                                       # <可选项> 组件分类，缺省值： ''
 keywords:                                           # <可选项> 标签，会影响到组件被搜索的效果，合理的标签很重要
   - chip
-yoc_version: V7.2.2
 license: Apache license v2.0                        # <可选项> 源代码的许可证，要确保所有代码、文件的许可证不冲突。如：MIT，Apache license v2.0，BSD
 
 ## 第二部分：依赖信息
@@ -17,7 +17,7 @@ license: Apache license v2.0                        # <可选项> 源代码的�
 #   - minilibc: v7.2.0
 #   - aos: >=v7.2.0
 depends:
-  - csi: V7.2.2
+  - csi: V7.3.0
 
 ## 第三部分：板级信息
 # hw_info:                                 # 对 solution、board、chip 三个字段的改进，统称为 hw_info 字段
@@ -28,14 +28,17 @@ depends:
 #   board_name: pangu_cpu0                 # <可选项> 指定开发板组件名，未设置时，使用depends中 board 第一个组件
 #   ld_script: configs/gcc_eflash.ld       # <可选项> 连接时使用 LD 脚本，当选把未设置时，使用对应的 board 的 LD 脚本
 #   flash_program: bin/flash_program.elf   # <可选项> 芯片全局烧写程序
+#   toolchain_prefix: csky-abiv2-elf       # <可选项> 编译器前缀
 #   cpu0:
 #     cpu_name: CK804EF                    # <必选项> 该芯片使用的 CPU 型号
 #     ld_script: configs/gcc_eflash.ld     # <必选项> 连接时使用 LD 脚本
 #     flash_program: bin/flash_program.elf # <可选项> 该CPU对应烧写程序，未指定时使用全局烧写程序
+#     toolchain_prefix: csky-abiv2-elf     # <可选项> 编译器前缀
 #   cpu1:
 #     cpu_name: CK804EF                    # <必选项> 该芯片使用的 CPU 型号
 #     ld_script: configs/gcc_eflash.ld     # <可选项> 连接时使用 LD 脚本
 #     flash_program: bin/flash_program.elf # <可选项> 该CPU对应烧写程序，未指定时使用全局烧写程序
+#     toolchain_prefix: csky-abiv2-elf     # <可选项> 编译器前缀
 
 ## solution component
 # hw_info:
@@ -55,6 +58,7 @@ depends:
 # hw_info:
 #   cpu_name: CK804EF
 #   ld_script: configs/gcc_eflash.ld
+#   toolchain_prefix: csky-abiv2-elf
 #   flash_program: bin/flash_program.elf
 
 ## chip component(多处理器)
@@ -63,15 +67,18 @@ depends:
 #     cpu_name: CK804EF                    # <必选项> 该芯片使用的 CPU 型号
 #     ld_script: configs/gcc_eflash.ld     # <必选项> 连接时使用 LD 脚本
 #     flash_program: bin/flash_program.elf # <可选项> 该CPU对应烧写程序，未指定时使用全局烧写程序
+#     toolchain_prefix: csky-abiv2-elf     # <可选项> 编译器前缀
 #   cpu1:
 #     cpu_name: CK804EF                    # <必选项> 该芯片使用的 CPU 型号
 #     ld_script: configs/gcc_eflash.ld     # <必选项> 连接时使用 LD 脚本
 #     flash_program: bin/flash_program.elf # <可选项> 该CPU对应烧写程序，未指定时使用全局烧写程序
-#   flash_program: bin/flash_program.elf   # <可选项> 芯片全局烧写程序
+#     toolchain_prefix: csky-abiv2-elf     # <可选项> 编译器前缀
 chip:
   vendor_name: dummy
   cpu_name: CK804
-  ld_script: configs/gcc_eflash.ld.S
+  ld_script: configs/gcc_eflash.ld
+  flash_program: bin/flash_program.elf
+  toolchain_prefix: csky-abiv2-elf
 
 ## 第四部分：编译连接信息
 # build_config:                            # <可选项> 编译配置项
@@ -116,7 +123,10 @@ source_file:
 #   - dest: include/                       # 安装的目的路径 dest是相当路径，通常是相对于YoC SDK 安装目录
 #     source:                              # 安装源列表
 #      - src/*.h                           # 支持通配符，相对路径
-
+install:
+  - dest: "include"
+    source:
+      - "include/*.h"
 ## 第七部分：导出部分
 # export:
 #   - dest: "<SOLUTION_PATH>/generated/data" # 安装的目的路径 dest是相当路径

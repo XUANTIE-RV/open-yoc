@@ -1,10 +1,9 @@
-#include <yoc_config.h>
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <aos/debug.h>
 #include <aos/log.h>
-#include <yoc/netmgr.h>
+#include <yoc/netmgr_service.h>
 #include <yoc/eventid.h>
 
 #include "app_main.h"

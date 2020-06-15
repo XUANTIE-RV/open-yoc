@@ -9,7 +9,6 @@
 extern "C" {
 #endif
 
-// #include <yoc_config.h>
 #include <string.h>
 
 typedef enum {
@@ -24,7 +23,7 @@ typedef enum {
 
 #ifndef CONFIG_LOGLEVEL_DEFAULT
 
-#ifdef CONFIG_DEBUG
+#if defined(CONFIG_DEBUG) && CONFIG_DEBUG
 #define CONFIG_LOGLEVEL_DEFAULT  5
 #else
 #define CONFIG_LOGLEVEL_DEFAULT  4

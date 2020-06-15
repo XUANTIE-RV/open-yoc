@@ -57,6 +57,7 @@
 #include "lwip/nd6.h"
 #include "lwip/ip6_frag.h"
 #include "lwip/mld6.h"
+#include "lwip/dhcp6.h"
 #include "lwip/sys.h"
 #include "lwip/pbuf.h"
 
@@ -108,8 +109,12 @@ const struct lwip_cyclic_timer lwip_cyclic_timers[] = {
 #if LWIP_IPV6_MLD
   {MLD6_TMR_INTERVAL, HANDLER(mld6_tmr)},
 #endif /* LWIP_IPV6_MLD */
+#if LWIP_IPV6_DHCP6
+  {DHCP6_TIMER_MSECS, HANDLER(dhcp6_tmr)},
+#endif /* LWIP_IPV6_DHCP6 */
 #endif /* LWIP_IPV6 */
 };
+const int lwip_num_cyclic_timers = LWIP_ARRAYSIZE(lwip_cyclic_timers);
 
 #if LWIP_TIMERS && !LWIP_TIMERS_CUSTOM
 
@@ -117,6 +122,14 @@ const struct lwip_cyclic_timer lwip_cyclic_timers[] = {
 static struct sys_timeo *next_timeout;
 
 static u32_t current_timeout_due_time;
+
+#if LWIP_TESTMODE
+struct sys_timeo**
+sys_timeouts_get_next_timeout(void)
+{
+  return &next_timeout;
+}
+#endif
 
 #if LWIP_TCP
 /** global variable that shows if the tcp timer is currently scheduled or not */
@@ -152,6 +165,8 @@ tcpip_tcp_timer(void *arg)
 void
 tcp_timer_needed(void)
 {
+  LWIP_ASSERT_CORE_LOCKED();
+
   /* timer is off but needed again? */
   if (!tcpip_tcp_timer_active && (tcp_active_pcbs || tcp_tw_pcbs)) {
     /* enable and start timer */
@@ -206,17 +221,21 @@ sys_timeout_abs(u32_t abs_time, sys_timeout_handler handler, void *arg)
 }
 
 /**
- * Timer callback function that calls mld6_tmr() and reschedules itself.
+ * Timer callback function that calls cyclic->handler() and reschedules itself.
  *
  * @param arg unused argument
  */
 static volatile int g_dns_cyclic_status = 0;
-static void
-cyclic_timer(void *arg)
+#if !LWIP_TESTMODE
+static
+#endif
+void
+lwip_cyclic_timer(void *arg)
 {
   u32_t now;
   u32_t next_timeout_time;
-  const struct lwip_cyclic_timer* cyclic = (const struct lwip_cyclic_timer*)arg;
+  const struct lwip_cyclic_timer *cyclic = (const struct lwip_cyclic_timer *)arg;
+
 #if LWIP_DEBUG_TIMERNAMES
   LWIP_DEBUGF(TIMERS_DEBUG, ("tcpip: %s()\n", cyclic->handler_name));
 #endif
@@ -229,23 +248,23 @@ cyclic_timer(void *arg)
 #endif
 
   cyclic->handler();
-  
+
   now = sys_now();
   next_timeout_time = (u32_t)(current_timeout_due_time + cyclic->interval_ms);  /* overflow handled by TIME_LESS_THAN macro */ 
   if (TIME_LESS_THAN(next_timeout_time, now)) {
     /* timer would immediately expire again -> "overload" -> restart without any correction */
 #if LWIP_DEBUG_TIMERNAMES
-    sys_timeout_abs((u32_t)(now + cyclic->interval_ms), cyclic_timer, arg, cyclic->handler_name);
+    sys_timeout_abs((u32_t)(now + cyclic->interval_ms), lwip_cyclic_timer, arg, cyclic->handler_name);
 #else
-    sys_timeout_abs((u32_t)(now + cyclic->interval_ms), cyclic_timer, arg);
+    sys_timeout_abs((u32_t)(now + cyclic->interval_ms), lwip_cyclic_timer, arg);
 #endif
 
   } else {
     /* correct cyclic interval with handler execution delay and sys_check_timeouts jitter */
 #if LWIP_DEBUG_TIMERNAMES
-    sys_timeout_abs(next_timeout_time, cyclic_timer, arg, cyclic->handler_name);
+    sys_timeout_abs(next_timeout_time, lwip_cyclic_timer, arg, cyclic->handler_name);
 #else
-    sys_timeout_abs(next_timeout_time, cyclic_timer, arg);
+    sys_timeout_abs(next_timeout_time, lwip_cyclic_timer, arg);
 #endif
   }
 }
@@ -261,7 +280,7 @@ void sys_timeouts_init(void)
 #if LWIP_EXT_NO_DNS_TMR
     if (lwip_cyclic_timers[i].handler != dns_tmr)
 #endif
-      sys_timeout(lwip_cyclic_timers[i].interval_ms, cyclic_timer, LWIP_CONST_CAST(void*, &lwip_cyclic_timers[i]));
+      sys_timeout(lwip_cyclic_timers[i].interval_ms, lwip_cyclic_timer, LWIP_CONST_CAST(void*, &lwip_cyclic_timers[i]));
   }
 }
 
@@ -272,7 +291,7 @@ void sys_timeouts_start_dns_cyclic_timer()
     if (g_dns_cyclic_status++ == 0) {
       for (i = 1; i < LWIP_ARRAYSIZE(lwip_cyclic_timers); i++) {
           if (lwip_cyclic_timers[i].handler == dns_tmr) {
-            sys_timeout(lwip_cyclic_timers[i].interval_ms, cyclic_timer, (void*)(size_t)&lwip_cyclic_timers[i]);
+            sys_timeout(lwip_cyclic_timers[i].interval_ms, lwip_cyclic_timer, (void*)(size_t)&lwip_cyclic_timers[i]);
             break;
           }
       }
@@ -286,7 +305,7 @@ void sys_timeouts_stop_dns_cyclic_timer()
     if (--g_dns_cyclic_status == 0) {
       for (i = 1; i < LWIP_ARRAYSIZE(lwip_cyclic_timers); i++) {
           if (lwip_cyclic_timers[i].handler == dns_tmr) {
-            sys_untimeout(cyclic_timer, (void*)(size_t)&lwip_cyclic_timers[i]);
+            sys_untimeout(lwip_cyclic_timer, (void*)(size_t)&lwip_cyclic_timers[i]);
             break;
           }
       }
@@ -305,13 +324,15 @@ void sys_timeouts_stop_dns_cyclic_timer()
  */
 #if LWIP_DEBUG_TIMERNAMES
 void
-sys_timeout_debug(u32_t msecs, sys_timeout_handler handler, void *arg, const char* handler_name)
+sys_timeout_debug(u32_t msecs, sys_timeout_handler handler, void *arg, const char *handler_name)
 #else /* LWIP_DEBUG_TIMERNAMES */
 void
 sys_timeout(u32_t msecs, sys_timeout_handler handler, void *arg)
 #endif /* LWIP_DEBUG_TIMERNAMES */
 {
   u32_t next_timeout_time;
+
+  LWIP_ASSERT_CORE_LOCKED();
 
   LWIP_ASSERT("Timeout time too long, max is LWIP_UINT32_MAX/4 msecs", msecs <= (LWIP_UINT32_MAX / 4));
 
@@ -337,6 +358,8 @@ sys_untimeout(sys_timeout_handler handler, void *arg)
 {
   struct sys_timeo *prev_t, *t;
 
+  LWIP_ASSERT_CORE_LOCKED();
+
   if (next_timeout == NULL) {
     return;
   }
@@ -350,10 +373,6 @@ sys_untimeout(sys_timeout_handler handler, void *arg)
       } else {
         prev_t->next = t->next;
       }
-      // /* If not the last one, add time of this one back to next */
-      // if (t->next != NULL) {
-      //   t->next->time += t->time;
-      // }
       memp_free(MEMP_SYS_TIMEOUT, t);
       return;
     }
@@ -369,13 +388,12 @@ sys_untimeout(sys_timeout_handler handler, void *arg)
  *
  * Must be called periodically from your main loop.
  */
-#if !NO_SYS && !defined __DOXYGEN__
-static
-#endif /* !NO_SYS */
 void
 sys_check_timeouts(void)
 {
   u32_t now;
+
+  LWIP_ASSERT_CORE_LOCKED();
 
   /* Process only timers expired at the start of the function. */
   now = sys_now();
@@ -417,7 +435,7 @@ sys_check_timeouts(void)
   } while (1);
 }
 
-/** Set back the timestamp of the last call to sys_check_timeouts()
+/** Rebase the timeout times to the current time.
  * This is necessary if sys_check_timeouts() hasn't been called for a long
  * time (e.g. while saving energy) to prevent all timer functions of that
  * period being called.
@@ -444,16 +462,15 @@ sys_restart_timeouts(void)
 /** Return the time left before the next timeout is due. If no timeouts are
  * enqueued, returns 0xffffffff
  */
-#if !NO_SYS
-static
-#endif /* !NO_SYS */
 u32_t
 sys_timeouts_sleeptime(void)
 {
   u32_t now;
 
+  LWIP_ASSERT_CORE_LOCKED();
+
   if (next_timeout == NULL) {
-    return 0xffffffff;
+    return SYS_TIMEOUTS_SLEEPTIME_INFINITE;
   }
   now = sys_now();
   if (TIME_LESS_THAN(next_timeout->time, now)) {
@@ -464,38 +481,6 @@ sys_timeouts_sleeptime(void)
     return ret;
   }
 }
-
-#if !NO_SYS
-
-/**
- * Wait (forever) for a message to arrive in an mbox.
- * While waiting, timeouts are processed.
- *
- * @param mbox the mbox to fetch the message from
- * @param msg the place to store the message
- */
-void
-sys_timeouts_mbox_fetch(sys_mbox_t *mbox, void **msg)
-{
-  u32_t sleeptime;
-
-again:
-  if (!next_timeout) {
-    sys_arch_mbox_fetch(mbox, msg, 0);
-    return;
-  }
-
-  sleeptime = sys_timeouts_sleeptime();
-  if (sleeptime == 0 || sys_arch_mbox_fetch(mbox, msg, sleeptime) == SYS_ARCH_TIMEOUT) {
-    /* If a SYS_ARCH_TIMEOUT value is returned, a timeout occurred
-       before a message could be fetched. */
-    sys_check_timeouts();
-    /* We try again to fetch a message from the mbox. */
-    goto again;
-  }
-}
-
-#endif /* NO_SYS */
 
 #else /* LWIP_TIMERS && !LWIP_TIMERS_CUSTOM */
 /* Satisfy the TCP code which calls this function */

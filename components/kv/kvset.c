@@ -11,11 +11,84 @@
 #include "block.h"
 
 static void kv_verify(kv_t *kv);
+#ifdef ENABLE_CACHE
+static uint32_t _key_hash(const char *str)
+{
+    uint32_t hash = 0;
+    while (*str) {
+        hash = (hash << 7) + (hash << 1) + hash + (*str++);
+    }
+    return hash;
+}
 
+void kv_cache_in(kv_t *kv, const char *key, int block_id, uint32_t offset)
+{
+    int i = 0;
+    cache_node_t *cache = NULL;
+    uint32_t hash = _key_hash(key);
+
+    for (i = 0; i < kv->cache_num; i++) {
+        cache = &kv->cache[i];
+        if (cache->offset == 0xFFFF && cache->block_id == 0xFFFF)
+            break;
+
+        if (cache->hash == hash && cache->block_id == block_id && cache->offset == offset)
+            return;
+    }
+    if (i >= kv->cache_num) {
+        kv->cache = realloc(kv->cache, (kv->cache_num + 1) * sizeof(cache_node_t));
+        // cache_node_t *temp = calloc(kv->cache_num + 1, sizeof(cache_node_t));
+        // if (temp == NULL) {
+        //     printf("kv_cache_in: not alloc mem\n");
+        //     return;
+        // }
+        // memcpy(temp, kv->cache, kv->cache_num * sizeof(cache_node_t));
+        // free(kv->cache);
+        // kv->cache = temp;
+        cache = &kv->cache[kv->cache_num++];
+    }
+
+    cache->hash     = hash;
+    cache->block_id = block_id;
+    cache->offset   = offset;
+}
+
+void kv_cache_out(kv_t *kv, int block_id, uint32_t offset)
+{
+    for (int i = 0; i < kv->cache_num; i++) {
+        cache_node_t *cache = &kv->cache[i];
+        if (cache->offset == offset && cache->block_id == block_id) {
+            cache->block_id = 0xFFFF;
+            cache->offset   = 0xFFFF;
+            break;
+        }
+    }
+}
+
+static int _iter_cache_node(kvnode_t *node, void *p)
+{
+    kv_t *kv = (kv_t *)p;
+
+    if (NODE_VAILD(node))
+        kv_cache_in(kv, (const char *)KVNODE_OFFSET2CACHE(node, head_offset), (int16_t)node->block->id, (uint16_t)node->head_offset);
+
+    return 0;
+}
+#endif
+
+/**
+ * @brief  init the kv fs 
+ * @param  [in] kv
+ * @param  [in] mem        : the start addrress of flash or mem, etc
+ * @param  [in] block_num  : number of blocks
+ * @param  [in] block_size : size of per-block
+ * @return 0/-1 
+ */
 int kv_init(kv_t *kv, uint8_t *mem, int block_num, int block_size)
 {
     int gc_size = 0;
     kv->num    = block_num;
+    kv->mem    = mem;
     kv->blocks = calloc(kv->num, sizeof(kvblock_t));
     if (kv->blocks == NULL) {
         return -1;
@@ -36,13 +109,20 @@ int kv_init(kv_t *kv, uint8_t *mem, int block_num, int block_size)
             kv->bid = i;
     }
 
-    // printf("gc_bid = %d, bid = %d\n", kv->gc_bid, kv->bid);
     kv_verify(kv);
 
+#ifdef ENABLE_CACHE
+    kv->cache_num = INIT_CACHE_NUM;
+    kv->cache = calloc(kv->cache_num, sizeof(cache_node_t));
+    if (kv->cache == NULL) {
+        return -1;
+    }
+    memset(kv->cache, 0xFF, kv->cache_num * sizeof(cache_node_t));
+    kv_iter(kv, _iter_cache_node, kv);
+#endif
     return 0;
 }
 
-extern int block_read(kvblock_t *block, int offset, void *data, int size);
 static void kv_verify(kv_t *kv)
 {
     for (int i = 0; i < kv->num; i++) {
@@ -66,7 +146,6 @@ static void kv_verify(kv_t *kv)
                     while (kvblock_search(block_2, next, &node_2) == 0) {
                         if (NODE_VAILD(&node_2)) {
                             if (kvblock_check_version(&node_1, &node_2) == &node_1) {
-
                                 /* free block 2 */
                                 kvblock_cache_free(block_2);
                                 goto out;
@@ -88,6 +167,13 @@ static void kv_verify(kv_t *kv)
     }
 }
 
+/**
+ * @brief  iterate all valid kv pair  
+ * @param  [in] kv
+ * @param  [in] fn   : callback
+ * @param  [in] data : opaque of the fn callback
+ * @return 0 on success 
+ */
 int kv_iter(kv_t *kv, int (*fn)(kvnode_t *, void *), void *data)
 {
     int ret = -1;
@@ -100,16 +186,42 @@ int kv_iter(kv_t *kv, int (*fn)(kvnode_t *, void *), void *data)
     return ret;
 }
 
+/**
+ * @brief  find the kvnode by key  
+ * @param  [in] kv
+ * @param  [in] key
+ * @param  [in] node : used for store the result finding
+ * @return 0 if find 
+ */
 int kv_find(kv_t *kv, const char *key, kvnode_t *node)
 {
     int found = -1;
+
+#ifdef ENABLE_CACHE
+    uint32_t hash = _key_hash(key);
+    for (int i = 0; i < kv->cache_num; i++) {
+        cache_node_t *cache = &kv->cache[i];
+        if (cache->hash == hash && cache->block_id != 0xFFFF && cache->offset != 0xFFFF) {
+            kvblock_t *block = &kv->blocks[cache->block_id];
+            kvblock_cache_malloc(block);
+
+            uint8_t *next = block->mem_cache + cache->offset;
+            kvblock_search(block, next, node);
+            int cmp_res = kvnode_cmp_name(node, key);
+            kvblock_cache_free(block);
+            if (cmp_res == 0)
+                return 0;
+        }
+    }
+#else
     for (int i = 0; i < kv->num; i++) {
-        if (kvblock_find(kv->blocks + i, key, node) == 0){
+        if (kvblock_find(kv->blocks + i, key, node) == 0) {
             found = 0;
             if (node->rw != 0)
                 return 0;
         }
     }
+#endif
 
     return found;
 }
@@ -121,8 +233,9 @@ static int _kvblock_deep_gc(kvnode_t *node, void *data)
     if (node->rw == 1) {
         int version = node->version == 255 ? 1 : node->version + 1;
 
-        if (kvblock_set(block, (const char *)KVNODE_OFFSET2CACHE(node, head_offset), KVNODE_OFFSET2CACHE(node, value_offset), node->val_size, version) >= 0)
+        if (kvblock_set(block, (const char *)KVNODE_OFFSET2CACHE(node, head_offset), KVNODE_OFFSET2CACHE(node, value_offset), node->val_size, version) >= 0){
             kvnode_rm(node);
+        }
     }
 
     return 0;
@@ -164,6 +277,14 @@ int kv_gc(kv_t *kv)
     return -1;
 }
 
+/**
+ * @brief  set key-value pair 
+ * @param  [in] kv
+ * @param  [in] key
+ * @param  [in] value
+ * @param  [in] size  : size of the value
+ * @return size on success 
+ */
 int kv_set(kv_t *kv, const char *key, void *value, int size)
 {
     if (key == NULL || value == NULL || size <= 0 || strlen(key) + size >= 498)
@@ -191,12 +312,20 @@ start1:
 start2:
     start_bid = kv->bid;
     while (1) {
-        if (kv->blocks[kv->bid].ro_count == 0 && kv->bid != kv->gc_bid &&
-            kvblock_set(kv->blocks + kv->bid, key, value, size, version) >= 0) {
-            if (kv_exist)
-                kvnode_rm(&node);
-
-            return size;
+        if (kv->blocks[kv->bid].ro_count == 0 && kv->bid != kv->gc_bid) {
+            int offset = kvblock_set(kv->blocks + kv->bid, key, value, size, version);
+            if (offset >= 0) {
+                if (kv_exist) {
+                    kvnode_rm(&node);
+#ifdef ENABLE_CACHE
+                    kv_cache_out(kv, node.block->id, node.head_offset);
+                }
+                kv_cache_in(kv, key, kv->bid, offset);
+#else
+                }
+#endif
+                return size;
+            }
         }
 
         kv->bid = (kv->bid + 1) % kv->num;
@@ -215,6 +344,14 @@ start2:
     return -1;
 }
 
+/**
+ * @brief  get value by the key-string
+ * @param  [in] kv
+ * @param  [in] key
+ * @param  [in] value
+ * @param  [in] size  : size of the value
+ * @return > 0 on success 
+ */
 int kv_get(kv_t *kv, const char *key, void *value, int size)
 {
     kvnode_t node;
@@ -266,18 +403,33 @@ int kv_get(kv_t *kv, const char *key, void *value, int size)
     return -1;
 }
 
+/**
+ * @brief  delete the key from kv fs 
+ * @param  [in] kv
+ * @param  [in] key
+ * @return 0 on success 
+ */
 int kv_rm(kv_t *kv, const char *key)
 {
     kvnode_t node;
     int ret = kv_find(kv, key, &node);
 
     /* kvnode rm no mem opt, ignore call kvblock_cache_malloc */
-    if (ret == 0)
+    if (ret == 0) {
         kvnode_rm(&node);
+#ifdef ENABLE_CACHE
+        kv_cache_out(kv, node.block->id, node.head_offset);
+#endif
+    }
 
     return ret;
 }
 
+/**
+ * @brief  reset the kv fs 
+ * @param  [in] kv
+ * @return 0/-1 
+ */
 int kv_reset(kv_t *kv)
 {
     for (int i = 0; i < kv->num; i++)

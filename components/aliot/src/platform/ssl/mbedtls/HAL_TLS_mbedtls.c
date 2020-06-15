@@ -318,7 +318,7 @@ static int _ssl_client_init(mbedtls_ssl_context *ssl,
     mbedtls_debug_set_threshold((int)DEBUG_LEVEL);
 #endif
     _net_init(tcp_fd);
-    mbedtls_ssl_init_ext(ssl, 4096);
+    mbedtls_ssl_init(ssl);
     mbedtls_ssl_config_init(conf);
     mbedtls_x509_crt_init(crt509_ca);
 
@@ -483,7 +483,7 @@ static int _TLSConnectNetwork(TLSDataParams_t *pTlsData, const char *addr, const
 
     while ((ret = mbedtls_ssl_handshake(&(pTlsData->ssl))) != 0) {
         if ((ret != MBEDTLS_ERR_SSL_WANT_READ) && (ret != MBEDTLS_ERR_SSL_WANT_WRITE)) {
-            SSL_LOGE("hs -0x%04x", -ret);
+            SSL_LOGE("Handshake e: -0x%04x", -ret);
             return ret;
         }
     }

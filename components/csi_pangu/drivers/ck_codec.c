@@ -117,6 +117,53 @@ int32_t csi_codec_init(uint32_t idx)
     return 0;
 }
 
+void csi_codec_lpm(uint32_t idx, codec_lpm_state_t state)
+{        
+    if (idx >= CONFIG_CODEC_NUM) {
+        return;
+    }
+
+    if (state == CODEC_MODE_SLEEP) {
+        ck_codec_priv_v2_t *priv = &ck_codec_instance_v2[idx];
+        ck_codec_inerrupt_disable_all(priv);
+        // ck_codec_sb_power_ctrl(priv, 1);
+        drv_irq_unregister(priv->gsk_irq);
+        drv_irq_disable(priv->gsk_irq);
+    } else if (state == CODEC_MODE_RUN){
+        ck_codec_priv_v2_t *priv = &ck_codec_instance_v2[idx];
+        priv->idx = idx;
+        void *gsk_handler = NULL;
+
+        int32_t ret = target_codec_init(idx, &priv->base, &priv->gsk_irq, &gsk_handler);
+
+        if (ret != idx) {
+            return;
+        }
+
+        ck_codec_reg_t *addr = (ck_codec_reg_t *)priv->base;
+        /*IRQ High level*/
+        addr->ICR = 0;
+        addr->IMR = 0x30;
+
+        ck_codec_sb_power_ctrl(priv, 0);
+        ck_codec_mclk_freq_select(priv, CK_CODEC_MCLK_12M);
+        ck_codec_tx_threshold_val(priv, 4);
+        ck_codec_rx_threshold_val(priv, 4);
+
+        ck_codec_inerrupt_disable_all(priv);
+        uint32_t mask = 0xff | 0x3ff << 18;
+        ck_codec_inerrupt_ctrl(priv, mask, 1);
+
+        drv_irq_register(priv->gsk_irq, gsk_handler);
+        drv_irq_enable(priv->gsk_irq);
+
+        /*wait codec power ready*/
+        uint32_t time_out = CODEC_BUSY_TIMEOUT;
+
+        while (!(addr->SR & (1 << 7)) && time_out--);      
+    }
+}
+
 void csi_codec_uninit(uint32_t idx)
 {
     ck_codec_priv_v2_t *priv = &ck_codec_instance_v2[idx];
@@ -959,3 +1006,83 @@ int32_t csi_codec_output_mute(codec_output_t *handle, int en)
 
     return 0;
 }
+
+static __attribute__((isr)) void ck_codec_whisper_iqrhandle()
+{
+    ck_codec_priv_v2_t *codec_priv = &ck_codec_instance_v2[0];
+    ck_codec_reg_t *addr = (ck_codec_reg_t *)codec_priv->base;
+
+    addr->TRAN_SEL = 0x0;
+    addr->IFR_WT = 0x1;
+
+    ck_codec_ch_priv_t *ch = &ck_codec_input_instance[0];
+    if (ch->cb != NULL) {
+        ch->cb(0, CODEC_EVENT_VAD_TRIGGER, ch->cb_arg);
+    }
+}
+
+static void delay(int ms)
+{
+    volatile int i, j;
+
+    for (i = 0; i < ms; i++) {
+        for (j = 0; j < i; j++) {
+            ;
+        }
+    }
+}
+
+int32_t csi_codec_vad_enable(codec_input_t *handle, int en)
+{
+    #define PREG32(addr) *((volatile unsigned int *)addr)
+
+    if (handle->codec_idx >= CONFIG_CODEC_NUM || handle->codec_idx < 0) {
+        return -1;
+    }
+
+    if (handle->ch_idx != 0) {
+        return -1;
+    }
+
+    ck_codec_priv_v2_t *codec_priv = &ck_codec_instance_v2[handle->codec_idx];
+    ck_codec_reg_t *addr = (ck_codec_reg_t *)codec_priv->base;
+
+    if (en) {
+        PREG32(0x8b00006c) = 0x1;
+        PREG32(0x8b000068) = 0x3FFE;
+        PREG32(0x8b000068) = 0x3FFF;
+
+        addr->TRAN_SEL = 0x0;
+        addr->PATH_EN |= 0x1;
+        addr->CR_VIC = 0x0;  //digital detection mode
+        addr->ICR = 0x0;  //interrupt form: high level
+        addr->CR_ADC[0] = 0x20;
+
+        addr->IMR_WT = 0x0;
+        addr->CR_WT_2 = 0x80;
+        delay(1000);
+        addr->CR_WT_3 = handle->vad_threshold;
+        delay(1000);
+        addr->IFR_WT = 0x1;
+        addr->ICR_WT = 0x0;
+        delay(1000);
+        addr->CR_WT = 0x80;
+
+        drv_irq_register(CODEC_WHISPER_IRQn, ck_codec_whisper_iqrhandle);
+        csi_vic_clear_pending_irq(CODEC_WHISPER_IRQn);
+        drv_irq_enable(CODEC_WHISPER_IRQn);
+        PREG32(0xe000e280) = 0x10000;
+        PREG32(0xE000E140) = 0x40;
+    } else {
+        addr->TRAN_SEL = 0x0;
+        addr->CR_WT = 0x0;
+        addr->PATH_EN = 0;
+        addr->CR_ADC[0] = 0;
+        addr->CR_WT_2 = 0;
+        drv_irq_disable(CODEC_WHISPER_IRQn);
+        drv_irq_unregister(CODEC_WHISPER_IRQn);
+    }
+
+    return 0;
+}
+

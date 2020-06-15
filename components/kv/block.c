@@ -2,7 +2,6 @@
  * Copyright (C) 2019-2020 Alibaba Group Holding Limited
  */
 
-#include <yoc_config.h>
 
 #include <stdio.h>
 #include <string.h>
@@ -13,8 +12,8 @@
 #ifndef linux
 #include <aos/debug.h>
 #endif
-//#include "crc16.h"
 
+#include "kvset.h"
 #include "block.h"
 
 #define RW_FLAG_SIZE 5
@@ -56,15 +55,15 @@ void kvnode_show(kvnode_t *node)
 }
 
 static void block_erase(kvblock_t *block) {
-    block->kv->ops->erase(block, 0, block->size);
+    block->kv->ops->erase(block->kv, (int)block->mem - (int)block->kv->mem, block->size);
 }
 
 static int block_write(kvblock_t *block, int offset, void *data, int size) {
-    return block->kv->ops->write(block, offset, data, size);
+    return block->kv->ops->write(block->kv, (int)block->mem + offset - (int)block->kv->mem, data, size);
 }
 
 int block_read(kvblock_t *block, int offset, void *data, int size) {
-    return block->kv->ops->read(block, offset, data, size);
+    return block->kv->ops->read(block->kv, (int)block->mem + offset - (int)block->kv->mem, data, size);
 }
 
 static void __kvblock_gc(kvblock_t *block)
@@ -77,6 +76,13 @@ static void __kvblock_gc(kvblock_t *block)
     block->count        = 0;
 }
 
+/**
+ * @brief  init the block
+ * @param  [in] block
+ * @param  [in] mem  : addr of the block
+ * @param  [in] size : size of block mem
+ * @return  
+ */
 void kvblock_init(kvblock_t *block, uint8_t *mem, int size)
 {
     block->size = size;
@@ -129,7 +135,12 @@ void kvnode_rm(kvnode_t *node)
     }
 }
 
-// alloc a kv node, return node start write address
+/**
+ * @brief  alloc a kv node, return node start write address
+ * @param  [in] block
+ * @param  [in] size
+ * @return -1 on error 
+ */
 int kvblock_alloc_node(kvblock_t *block, int size)
 {
     if (block->write_offset + size <= block->size - 4) {
@@ -142,6 +153,15 @@ int kvblock_alloc_node(kvblock_t *block, int size)
     return -1;
 }
 
+/**
+ * @brief  write the kv pair to the block 
+ * @param  [in] block
+ * @param  [in] key
+ * @param  [in] value
+ * @param  [in] size    : size of the value
+ * @param  [in] version : 1~255
+ * @return -1 on error  
+ */
 int kvblock_set(kvblock_t *block, const char *key, void *value, int size, int version)
 {
     int len = strlen(key);
@@ -198,6 +218,13 @@ int kvblock_set(kvblock_t *block, const char *key, void *value, int size, int ve
     return offset;
 }
 
+/**
+ * @brief  search kv-node in the block 
+ * @param  [in] block
+ * @param  [in] c    : start addr begin search of the block
+ * @param  [in] node
+ * @return 0/-1 
+ */
 int kvblock_search(kvblock_t *block, uint8_t *c, kvnode_t *node)
 {
     uint8_t *delim = NULL;
@@ -272,6 +299,12 @@ int kvblock_search(kvblock_t *block, uint8_t *c, kvnode_t *node)
     return -1;
 }
 
+/**
+ * @brief  check the two kvnode(same key) & delete the old one 
+ * @param  [in] node1
+ * @param  [in] node2
+ * @return node of the delete
+ */
 kvnode_t *kvblock_check_version(kvnode_t *node1, kvnode_t *node2)
 {
     uint8_t *head1 = KVNODE_OFFSET2CACHE(node1, head_offset);
@@ -306,13 +339,24 @@ struct find_node_t {
     kvnode_t *ret_node;
 };
 
+/**
+ * @brief  compare the kvnode by key
+ * @param  [in] node
+ * @param  [in] key
+ * @return 0 on equal 
+ */
+int kvnode_cmp_name(kvnode_t *node, const char *key)
+{
+    uint8_t *head =KVNODE_OFFSET2CACHE(node, head_offset);
+    return keycmp((const uint8_t *)key, (uint8_t *)head,
+                node->value_offset - node->head_offset - 1);
+}
+
 int _iter_find(kvnode_t *node, void *p)
 {
-    struct find_node_t *n = (struct find_node_t*)p;
+    struct find_node_t *n = (struct find_node_t *)p;
 
-    uint8_t *head =KVNODE_OFFSET2CACHE(node, head_offset);
-
-    if (keycmp((const uint8_t*)n->key, (uint8_t*)head, node->value_offset - node->head_offset - 1) == 0) {
+    if (kvnode_cmp_name(node, n->key) == 0) {
         n->found = 0;
         memcpy(n->ret_node, node, sizeof(kvnode_t));
         if (node->rw != 0)
@@ -323,6 +367,13 @@ int _iter_find(kvnode_t *node, void *p)
     return n->count > 0 ? 0: -1;
 }
 
+/**
+ * @brief  find the kvnode by key  
+ * @param  [in] block
+ * @param  [in] key
+ * @param  [in] node : used for store the result finding
+ * @return 0 if find 
+ */
 int kvblock_find(kvblock_t *block, const char *key, kvnode_t *node)
 {
     struct find_node_t n;
@@ -367,6 +418,11 @@ static int _iter_rm_all_rw_node(kvnode_t *node, void *p)
     return 0;
 }
 
+/**
+ * @brief  reset the block, detele valid kv pair
+ * @param  [in] block
+ * @return  
+ */
 void kvblock_reset(kvblock_t *block)
 {
     kvblock_iter(block, NODE_EXISTS, _iter_rm_all_rw_node, NULL);
@@ -410,6 +466,12 @@ void kvblock_calc(kvblock_t *block)
     kvblock_cache_free(block);
 }
 
+/**
+ * @brief  show all kv to stdout in hex
+ * @param  [in] block
+ * @param  [in] num
+ * @return  
+ */
 void kvblock_show_data(kvblock_t *block, int num)
 {
 #ifdef CONFIG_NON_ADDRESS_FLASH
@@ -438,12 +500,22 @@ static int _iter_dump(kvnode_t *node, void *p)
     return 0;
 }
 
+/**
+ * @brief  dump the block to stdout 
+ * @param  [in] block
+ * @return  
+ */
 void kvblock_dump(kvblock_t *block)
 {
     // kvblock_show_data(block, 8);
     kvblock_iter(block, NODE_ALL, _iter_dump, NULL);
 }
 
+/**
+ * @brief  malloc memory for the block  
+ * @param  [in] block
+ * @return  
+ */
 void kvblock_cache_malloc(kvblock_t *block)
 {
 #ifdef CONFIG_NON_ADDRESS_FLASH
@@ -460,6 +532,11 @@ void kvblock_cache_malloc(kvblock_t *block)
     block->mem_cache_ref ++;
 }
 
+/**
+ * @brief  free memory for the block  
+ * @param  [in] block
+ * @return  
+ */
 void kvblock_cache_free(kvblock_t *block)
 {
     block->mem_cache_ref --;

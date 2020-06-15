@@ -15,6 +15,7 @@ extern "C" {
 #include <string.h>
 
 int aos_kv_init(const char *partname);
+int aos_kv_flash_init(const char *flashname, int addr, int block_num);
 
 /**
  * This function will reset all kv, restore factory settting

@@ -4,7 +4,7 @@
 #include <at_cmd.h>
 #include <yoc/eventid.h>
 #include <yoc/iot.h>
-#include <yoc/netmgr.h>
+#include <yoc/netmgr_service.h>
 #include <pin.h>
 #include <devices/device.h>
 #include <devices/led.h>

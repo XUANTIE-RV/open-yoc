@@ -12,7 +12,6 @@
  * @chip     pangu
  ******************************************************************************/
 
-#include <csi_config.h>
 #include <stdint.h>
 #include <io.h>
 #include <soc.h>
@@ -35,10 +34,6 @@ int g_system_clock = 24000000;
 
 static void config_system_clock(void)
 {
-    int module_id;
-
-    drv_clk_enable(RTC_CLK);
-    drv_clk_enable(UART1_CLK);
 }
 
 static void config_irq_priority(void)
@@ -52,15 +47,7 @@ static void config_irq_priority(void)
 
 int32_t drv_get_cpu_id(void)
 {
-#ifdef CONFIG_CHIP_PANGU_CPU0
     return 0;
-#endif
-
-#ifdef CONFIG_CHIP_PANGU_CPU1
-    return 1;
-#endif
-
-    return 2;
 }
 
 #ifdef CONFIG_KERNEL_NONE
@@ -68,7 +55,7 @@ static void _system_init_for_baremetal(void)
 {
     __enable_excp_irq();
 
-    csi_coret_config(drv_get_cpu_freq(drv_get_cpu_id()) / CONFIG_SYSTICK_HZ, CORET_IRQn);    //10ms
+    csi_coret_config(drv_get_cur_cpu_freq() / CONFIG_SYSTICK_HZ, CORET_IRQn);    //10ms
 
     mm_heap_initialize();
 }
@@ -87,7 +74,7 @@ static void _system_init_for_kernel(void)
     irq_vectors_init();
 #endif
 
-    csi_coret_config(drv_get_cpu_freq(drv_get_cpu_id()) / CONFIG_SYSTICK_HZ, CORET_IRQn);    //10ms
+    csi_coret_config(drv_get_cur_cpu_freq() / CONFIG_SYSTICK_HZ, CORET_IRQn);    //10ms
     drv_irq_enable(CORET_IRQn);
 
 #ifndef CONFIG_KERNEL_RHINO
@@ -109,64 +96,6 @@ static void __memcpy(void *dest, const void *src, size_t n)
 }
 #endif
 
-static void section_data_copy(void)
-{
-#ifdef CONFIG_SYSTEM_SECURE
-    extern uint32_t __stext;
-    extern uint32_t __etext;
-    extern uint32_t __srodata;
-    extern uint32_t __flash_code_end__;
-    extern uint32_t __erodata;
-    extern uint32_t __data_start__;
-    extern uint32_t __data_end__;
-    extern uint32_t __ram_code_start__;
-    extern uint32_t __ram_code_end__;
-
-    uint32_t src_addr;
-
-    uint32_t xip_flag = (uint32_t)&__stext;
-
-    /* if run in flash */
-    if ((xip_flag & 0xFF000000) == 0x8000000) {
-        src_addr = (uint32_t)&__erodata;
-        __memcpy((void *)(&__data_start__), \
-                 (void *)src_addr, \
-                 (uint32_t)(&__data_end__) - (uint32_t)(&__data_start__));
-
-        src_addr += (uint32_t)(&__data_end__) - (uint32_t)(&__data_start__);
-        __memcpy((void *)(&__ram_code_start__), \
-                 (void *)src_addr, \
-                 (uint32_t)(&__ram_code_end__) - (uint32_t)(&__ram_code_start__));
-    } else {
-        uint32_t entry_addr = (uint32_t)&Reset_Handler;
-
-        /* if reset_handler run in flash */
-        if ((entry_addr & 0xFF000000) == 0x8000000) {
-            src_addr = (uint32_t)&__flash_code_end__;
-            __memcpy((void *)(&__stext), \
-                     (void *)src_addr, \
-                     (uint32_t)(&__etext) - (uint32_t)(&__stext));
-
-            src_addr += (uint32_t)(&__etext) - (uint32_t)(&__stext);
-            __memcpy((void *)(&__srodata), \
-                     (void *)src_addr, \
-                     (uint32_t)(&__erodata) - (uint32_t)(&__srodata));
-
-            src_addr += (uint32_t)(&__erodata) - (uint32_t)(&__srodata);
-            __memcpy((void *)(&__data_start__), \
-                     (void *)src_addr, \
-                     (uint32_t)(&__data_end__) - (uint32_t)(&__data_start__));
-
-            src_addr += (uint32_t)(&__data_end__) - (uint32_t)(&__data_start__);
-            __memcpy((void *)(&__ram_code_start__), \
-                     (void *)src_addr, \
-                     (uint32_t)(&__ram_code_end__) - (uint32_t)(&__ram_code_start__));
-        }
-    }
-
-#endif
-}
-
 /**
   * @brief  initialize the system
   *         Initialize the psr and vbr.
@@ -175,7 +104,6 @@ static void section_data_copy(void)
   */
 void SystemInit(void)
 {
-    section_data_copy();
     __set_VBR((uint32_t) & (__Vectors));
 
     /* Clear active and pending IRQ, and disable IRQ */

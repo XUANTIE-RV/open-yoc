@@ -41,7 +41,7 @@
 aos_dev_t* uart_dev;
 uart_config_t g_uart_config;
 static void *g_priv;
-static hci_event_cb  g_event;
+static hci_event_cb_t  g_event;
 static aos_event_t g_uart_event;
 int g_uart_id;
 int g_bt_dis_pin;
@@ -116,7 +116,7 @@ static int h5_recv_data(aos_dev_t *dev, uint8_t *data, uint32_t size)
     return userial_vendor_recv_data(data, size, 0);
 }
 
-static int h5_set_event(aos_dev_t *dev, hci_event_cb event, void *priv)
+static int h5_set_event(aos_dev_t *dev, hci_event_cb_t event, void *priv)
 {
     g_event = event;
     g_priv = priv;
@@ -124,9 +124,9 @@ static int h5_set_event(aos_dev_t *dev, hci_event_cb event, void *priv)
     return 0;
 }
 
-static int h5_start(aos_dev_t *dev)
+static int h5_start(aos_dev_t *dev, hci_driver_send_cmd_t send_cmd)
 {
-    hw_config_start(0);
+    hw_config_start(send_cmd);
 
     return 0;
 }
@@ -153,9 +153,13 @@ static hci_driver_t h5_driver = {
     .send      = h5_send_data,
     .recv      = h5_recv_data,
     .start     = h5_start,
-    // .get_vendor_interface = h5_get_vendor_interface
 };
 
+/**
+ * @brief  register bluetooth driver of rtl8723 
+ * @param  [in] config
+ * @return  
+ */
 void bt_rtl8723ds_register(rtl8723ds_bt_config *config)
 {
     g_bt_dis_pin = config->bt_dis_pin;

@@ -16,6 +16,7 @@ VOICE_PKG:=$(shell cat package.yaml | grep "\- voice_" | sed 's/[[:space:]\"]//g
 DSPFW_BIN=../../components/${VOICE_PKG}/sc5654/dspfw.bin
 CONFIG_YAML=../../components/${VOICE_PKG}/sc5654/configs/config.yaml
 CONFIG_LDF=../../components/${VOICE_PKG}/sc5654/configs/gcc_flash.ld
+LFS_BIN:=app/src/audio/lfs.bin
 
 .PHONY:startup
 startup: all
@@ -31,7 +32,7 @@ all:
 	$(CPRE) cp $(M0BOOT_BIN) $(MK_GENERATED_IMGS_PATH)/data/m0flash
 	$(CPRE) cp $(DSPFW_BIN) $(MK_GENERATED_IMGS_PATH)/data/dsp
 	$(CPRE) cp $(CONFIG_YAML) $(MK_GENERATED_IMGS_PATH)/data/
-
+	$(CPRE) cp $(LFS_BIN) $(MK_GENERATED_IMGS_PATH)/data/lfs
 	$(CPRE) $(PRODUCT_BIN) image $(MK_GENERATED_IMGS_PATH)/images.zip -i $(MK_GENERATED_IMGS_PATH)/data -l -b -p -v "v1.0"
 	$(CPRE) $(PRODUCT_BIN) image $(MK_GENERATED_IMGS_PATH)/images.zip -e $(MK_GENERATED_IMGS_PATH) -x
 	$(CPRE) rm -fr $(MK_GENERATED_IMGS_PATH)/data
@@ -50,6 +51,9 @@ flash:
 flashdsp:
 	$(CPRE) $(PRODUCT_BIN) flash $(MK_GENERATED_IMGS_PATH)/images.zip -w dsp
 
+flashlfs:
+	$(CPRE) $(PRODUCT_BIN) flash $(MK_GENERATED_IMGS_PATH)/images.zip -w lfs
+
 .PHONY:flashboot
 flashboot:
 	$(CPRE) $(PRODUCT_BIN) flash $(MK_GENERATED_IMGS_PATH)/images.zip -w m0flash
@@ -59,6 +63,7 @@ flashboot:
 flashall:
 	$(CPRE) $(PRODUCT_BIN) flash $(MK_GENERATED_IMGS_PATH)/images.zip -w dsp
 	$(CPRE) $(PRODUCT_BIN) flash $(MK_GENERATED_IMGS_PATH)/images.zip -w prim
+	$(CPRE) $(PRODUCT_BIN) flash $(MK_GENERATED_IMGS_PATH)/images.zip -w lfs
 #	$(CPRE) $(PRODUCT_BIN) flash $(MK_GENERATED_IMGS_PATH)/images.zip -a
 
 .PHONY:clean

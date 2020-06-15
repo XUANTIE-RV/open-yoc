@@ -22,11 +22,10 @@
 #include "mbedtls/debug.h"
 #endif
 
-#define TAG  "WEB"
-#define close lwip_close
+#define TAG                   "WEB"
+#define close                 lwip_close
 
 extern int select(int maxfdp1, fd_set *readset, fd_set *writeset, fd_set *exceptset, struct timeval *timeout);
-
 
 #ifdef AV_USING_TLS
 struct mtls_session {
@@ -63,8 +62,7 @@ static void _mtls_session_init(struct mtls_session *mtls)
 {
     if (mtls && (!mtls->init)) {
         mbedtls_net_init(&mtls->nctx);
-        //FIXME: 16k is neccessary sometimes, but have risk
-        mbedtls_ssl_init_ext(&mtls->ssl, 16*1024);
+        mbedtls_ssl_init(&mtls->ssl);
         mbedtls_ssl_config_init(&mtls->conf);
         mbedtls_x509_crt_init(&mtls->cacert );
         mbedtls_ctr_drbg_init(&mtls->ctr_drbg);
@@ -688,7 +686,7 @@ int wsession_get_range(wsession_t *session, const char *url, int redirect, int r
         return -1;
     }
 
-    rc = wsession_open(session, url, 4000);
+    rc = wsession_open(session, url, WEB_TIMEOUT_DEFAULT);
     CHECK_RET_WITH_RET(rc == 0, -1);
 
     if (range_s >= 0) {
@@ -700,10 +698,10 @@ int wsession_get_range(wsession_t *session, const char *url, int redirect, int r
         wsession_hdrs_add(session, "Range", range_v);
     }
 
-    rc = wsession_send_hdr(session, WEB_METHOD_GET, 4000);
+    rc = wsession_send_hdr(session, WEB_METHOD_GET, WEB_TIMEOUT_DEFAULT);
     CHECK_RET_WITH_GOTO(rc == 0, err);
 
-    rc = wsession_read_resp_hdr(session, 4000);
+    rc = wsession_read_resp_hdr(session, WEB_TIMEOUT_DEFAULT);
     CHECK_RET_WITH_GOTO(rc == 0, err);
 
     LOGI(TAG, "HTTP response: %d %s", session->code, session->phrase);

@@ -7,7 +7,6 @@
  * @version  V1.0
  * @date     26. April 2019
  ******************************************************************************/
-#include <csi_config.h>
 #include <stdint.h>
 #include <soc.h>
 #ifdef CONFIG_TEE_CA
@@ -247,4 +246,9 @@ void drv_set_clk_stable_counter(uint32_t count)
     pmu->CSSCR = count;
 
 #endif
+}
+
+uint32_t drv_get_cur_cpu_freq(void)
+{
+    return drv_get_cpu_freq(0);
 }

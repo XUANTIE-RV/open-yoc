@@ -1,11 +1,12 @@
 /*
- * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ * Copyright (C) 2019-2020 Alibaba Group Holding Limited
  */
 
 #include <stdlib.h>
 #include <string.h>
 #include <aos/kv.h>
 #include <media.h>
+#include <soc.h>
 #include "app_main.h"
 #include "audio/audio_res.h"
 
@@ -27,6 +28,17 @@ static int ai_kv_set_vol(int type, int vol)
 }
 
 static int g_mute_flag = 0;
+static int g_lpm_flag = 0;
+
+#define LPM_RETURN() \
+    if (g_lpm_flag) { \
+        return; \
+    }
+
+#define LPM_RETURN_RET(ret) \
+    if (g_lpm_flag) { \
+        return ret; \
+    }
 
 /**
  * 从kv中读取初始化播放器音量
@@ -75,6 +87,7 @@ static void app_volume_adjust(int vol)
 
 void app_volume_inc(int notify)
 {
+    LPM_RETURN();
     app_volume_adjust(10);
     auikv_player_vol_save();
 
@@ -89,6 +102,7 @@ void app_volume_inc(int notify)
 
 void app_volume_dec(int notify)
 {
+    LPM_RETURN();
     app_volume_adjust(-10);
     auikv_player_vol_save();
 
@@ -103,6 +117,7 @@ void app_volume_dec(int notify)
 
 void app_volume_set(int vol, int notify)
 {
+    LPM_RETURN();
     aui_player_vol_set(MEDIA_ALL, vol);
     auikv_player_vol_save();
 
@@ -117,6 +132,7 @@ void app_volume_set(int vol, int notify)
 
 void app_volume_mute(void)
 {
+    LPM_RETURN();
     if (g_mute_flag == 0) {
         aui_player_mute(MEDIA_ALL);
         g_mute_flag = 1;
@@ -137,6 +153,8 @@ int app_player_get_mute_state(void)
 
 void app_player_reverse(void)
 {
+    LPM_RETURN();
+
     aui_player_state_t state;
     state = aui_player_get_state(MEDIA_SYSTEM);
 
@@ -161,6 +179,8 @@ void app_player_reverse(void)
 
 void app_player_pause(void)
 {
+    LPM_RETURN();
+
     aui_player_state_t state;
     state = aui_player_get_state(MEDIA_SYSTEM);
 
@@ -177,6 +197,8 @@ void app_player_pause(void)
 
 void app_player_resume(void)
 {
+    LPM_RETURN();
+
     aui_player_state_t state;
     state = aui_player_get_state(MEDIA_MUSIC);
 
@@ -187,6 +209,8 @@ void app_player_resume(void)
 
 void app_player_stop(void)
 {
+    LPM_RETURN();
+
     aui_player_state_t state;
     state = aui_player_get_state(MEDIA_MUSIC);
 
@@ -199,4 +223,42 @@ void app_player_stop(void)
     if (state == AUI_PLAYER_PLAYING) {
         aui_player_stop(MEDIA_SYSTEM);
     }
+}
+
+int app_player_play(int type, const char *url, int resume)
+{
+    LPM_RETURN_RET(-1);
+
+    aui_player_play(type, url, resume);
+
+    return 0;
+}
+
+int app_player_is_busy(void)
+{
+    aui_player_state_t play_st;
+    play_st = aui_player_get_state(MEDIA_MUSIC);
+    if (play_st == AUI_PLAYER_PLAYING) {
+        return 1;
+    }
+
+    play_st = aui_player_get_state(MEDIA_SYSTEM);
+    if (play_st == AUI_PLAYER_PLAYING) {
+        return 1;
+    }
+
+    return 0;
+}
+
+int app_player_lpm(int state)
+{
+    uint32_t irq_flag = 0;
+
+    irq_flag = csi_irq_save();
+    aos_kernel_sched_suspend();
+    g_lpm_flag = state;
+    aos_kernel_sched_resume();
+    csi_irq_restore(irq_flag);
+
+    return 0;
 }

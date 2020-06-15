@@ -1,0 +1,32 @@
+name: u1
+version: v7.3.0                                     # <必选项> 组件版本号
+description: u1 board configure.
+tag: 核心模块
+
+type: board
+license: Apache license v2.0
+
+suitableChip:
+  - u1
+
+board:
+  vendor_name: 'csky'
+  chip_name: 'csi_u1'
+  cpu_name: 'CK802'
+  ld_script: configs/gcc_eflash.ld
+
+depends:
+  - csi_u1: V7.3.0
+
+source_file:
+  - src/*.c
+
+build_config:
+  include:
+    - include
+
+  cflag: >
+    -nostdlib -mistack -Wpointer-arith -Wundef -Wall -Wl,-EL
+    -ffunction-sections -fdata-sections
+    -fno-inline-functions -fno-builtin -fno-strict-aliasing -fno-strength-reduce
+

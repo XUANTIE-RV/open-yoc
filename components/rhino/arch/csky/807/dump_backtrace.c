@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-#include <csi_config.h>
 
 #ifdef CONFIG_BACKTRACE
 

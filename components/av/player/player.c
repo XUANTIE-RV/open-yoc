@@ -2,7 +2,6 @@
  * Copyright (C) 2018-2020 Alibaba Group Holding Limited
  */
 
-#include <yoc_config.h>
 #include "avutil/common.h"
 #include "avutil/av_typedef.h"
 #include "stream/stream.h"
@@ -33,7 +32,8 @@ enum player_status {
 			player->event_cb(player, type, data, len); \
 	} while(0)
 
-#define PLAYER_TASK_QUIT_EVT  (0x01)
+#define PLAYER_TASK_QUIT_EVT           (0x01)
+
 struct player_cb {
     char                         *url;
     stream_cls_t                 *s;
@@ -42,8 +42,9 @@ struct player_cb {
     ao_cls_t                     *ao;
     char                         *ao_name;      ///< ao name
 
+    uint64_t                     start_time;    ///< begin play time
     uint32_t                     cache_size;    ///< size of the web cache. 0 use default
-    uint32_t                     cache_percent; ///< (0~100)start read for player when up to cache_percent. 0 use default
+    uint32_t                     cache_start_threshold; ///< (0~100)start read for player when up to cache_start_threshold. 0 use default
     uint32_t                     period_ms;     ///< period cache size(ms) for audio out. 0 means use default
     uint32_t                     period_num;    ///< number of period_ms. total cache size for ao is (period_num * period_ms * (rate / 1000) * 2 * (16/8)). 0 means use default
     uint32_t                     resample_rate; ///< none zereo means need to resample
@@ -79,7 +80,7 @@ struct player_cb {
  * @param  [in] player
  * @return
  */
-static void _player_once_init(player_t *player)
+static void _player_inner_init(player_t *player)
 {
     player->url        = NULL;
     player->s          = NULL;
@@ -88,6 +89,7 @@ static void _player_once_init(player_t *player)
     player->ao         = NULL;
     player->need_quit  = 0;
     player->cur_pts    = 0;
+    player->start_time = 0;
     player->status     = PLAYER_STATUS_STOPED;
     player->evt_status = PLAYER_EVENT_UNKNOWN;
 
@@ -120,53 +122,72 @@ int player_init()
 }
 
 /**
+ * @brief  init the player config param
+ * @param  [in] ply_cnf
+ * @return 0/-1
+ */
+int player_conf_init(ply_conf_t *ply_cnf)
+{
+    CHECK_PARAM(ply_cnf, -1);
+    memset(ply_cnf, 0, sizeof(ply_conf_t));
+    ply_cnf->ao_name               = "alsa";
+    ply_cnf->rcv_timeout           = SRCV_TIMEOUT_DEFAULT;
+    ply_cnf->cache_size            = SCACHE_SIZE_DEFAULT;
+    ply_cnf->cache_start_threshold = SCACHE_THRESHOLD_DEFAULT;
+    ply_cnf->period_ms             = AO_ONE_PERIOD_MS;
+    ply_cnf->period_num            = AO_TOTAL_PERIOD_NUM;
+
+    return 0;
+}
+
+/**
  * @brief  new a player obj
- * @param  [in] plyh
+ * @param  [in] ply_cnf
  * @return NULL on error
  */
-player_t* player_new(const plyh_t *plyh)
+player_t* player_new(const ply_conf_t *ply_cnf)
 {
     player_t *player = NULL;
 
-    CHECK_PARAM(plyh && plyh->ao_name, NULL);
+    CHECK_PARAM(ply_cnf && ply_cnf->ao_name, NULL);
     LOGI(TAG, "%s, %d enter.", __FUNCTION__, __LINE__);
     player = (struct player_cb*)aos_zalloc(sizeof(struct player_cb));
     CHECK_RET_TAG_WITH_RET(player, NULL);
-    player->ao_name = strdup(plyh->ao_name);
+    player->ao_name = strdup(ply_cnf->ao_name);
     CHECK_RET_TAG_WITH_GOTO(player->ao_name, err);
 
 #if 1
-    if (plyh->eq_segments && plyh->aef_conf && plyh->aef_conf_size) {
+    if (ply_cnf->eq_segments && ply_cnf->aef_conf && ply_cnf->aef_conf_size) {
         LOGE(TAG, "param faild, eq & aef can't both enabled");
         goto err;
     }
 #endif
-    if (plyh->eq_segments) {
-        player->eq_params = aos_zalloc(sizeof(eqfp_t) * plyh->eq_segments);
+    if (ply_cnf->eq_segments) {
+        player->eq_params = aos_zalloc(sizeof(eqfp_t) * ply_cnf->eq_segments);
         CHECK_RET_TAG_WITH_GOTO(player->eq_params, err);
     }
-    if (plyh->aef_conf && plyh->aef_conf_size) {
-        player->aef_conf = aos_malloc(plyh->aef_conf_size);
+    if (ply_cnf->aef_conf && ply_cnf->aef_conf_size) {
+        player->aef_conf = aos_malloc(ply_cnf->aef_conf_size);
         CHECK_RET_TAG_WITH_GOTO(player->aef_conf, err);
-        memcpy(player->aef_conf, plyh->aef_conf, plyh->aef_conf_size);
-        player->aef_conf_size = plyh->aef_conf_size;
+        memcpy(player->aef_conf, ply_cnf->aef_conf, ply_cnf->aef_conf_size);
+        player->aef_conf_size = ply_cnf->aef_conf_size;
     }
 
-    player->event_cb      = plyh->event_cb;
-    player->get_dec_cb    = plyh->get_dec_cb;
-    player->resample_rate = plyh->resample_rate;
-    player->vol_en        = plyh->vol_en;
-    player->vol_index     = plyh->vol_index;
-    player->rcv_timeout   = plyh->rcv_timeout ? plyh->rcv_timeout : SRCV_TIMEOUT_DEFAULT;
-    player->eq_segments   = plyh->eq_segments;
-    player->cache_size    = plyh->cache_size ? plyh->cache_size : SCACHE_SIZE_DEFAULT;
-    player->cache_percent = plyh->cache_percent ? plyh->cache_percent : SCACHE_PERCENT_DEFAULT;
-    player->period_ms     = plyh->period_ms ? plyh->period_ms : AO_ONE_PERIOD_MS;
-    player->period_num    = plyh->period_num ? plyh->period_num : AO_TOTAL_PERIOD_NUM;
-    player->status        = PLAYER_STATUS_STOPED;
+    player->event_cb              = ply_cnf->event_cb;
+    player->get_dec_cb            = ply_cnf->get_dec_cb;
+    player->resample_rate         = ply_cnf->resample_rate;
+    player->vol_en                = ply_cnf->vol_en;
+    player->vol_index             = ply_cnf->vol_index;
+    player->rcv_timeout           = ply_cnf->rcv_timeout ? ply_cnf->rcv_timeout : SRCV_TIMEOUT_DEFAULT;
+    player->eq_segments           = ply_cnf->eq_segments;
+    player->cache_size            = ply_cnf->cache_size ? ply_cnf->cache_size : SCACHE_SIZE_DEFAULT;
+    player->cache_start_threshold = ply_cnf->cache_start_threshold ? ply_cnf->cache_start_threshold : SCACHE_THRESHOLD_DEFAULT;
+    player->period_ms             = ply_cnf->period_ms ? ply_cnf->period_ms : AO_ONE_PERIOD_MS;
+    player->period_num            = ply_cnf->period_num ? ply_cnf->period_num : AO_TOTAL_PERIOD_NUM;
+    player->status                = PLAYER_STATUS_STOPED;
     aos_event_new(&player->evt, 0);
     aos_mutex_new(&player->lock);
-    _player_once_init(player);
+    _player_inner_init(player);
 
     LOGI(TAG, "%s, %d leave. player = %p", __FUNCTION__, __LINE__, player);
     return player;
@@ -285,22 +306,21 @@ static int _interrupt(void *arg)
 static ao_cls_t* _player_ao_new(player_t *player, sf_t ao_sf)
 {
     int i, rc;
-    aoh_t aoh;
+    ao_conf_t ao_cnf;
     size_t size;
     ao_cls_t *ao;
 
-    memset(&aoh, 0, sizeof(aoh_t));
-    aoh.sf            = ao_sf;
-    aoh.name          = player->ao_name;
-    aoh.eq_segments   = player->eq_segments;
-    aoh.resample_rate = player->resample_rate;
-    aoh.aef_conf      = player->aef_conf;
-    aoh.aef_conf_size = player->aef_conf_size;
-    aoh.vol_en        = player->vol_en;
-    aoh.vol_index     = player->vol_index;
-    aoh.period_ms     = player->period_ms;
-    aoh.period_num    = player->period_num;
-    ao = ao_open(&aoh);
+    ao_conf_init(&ao_cnf);
+    ao_cnf.name          = player->ao_name;
+    ao_cnf.eq_segments   = player->eq_segments;
+    ao_cnf.resample_rate = player->resample_rate;
+    ao_cnf.aef_conf      = player->aef_conf;
+    ao_cnf.aef_conf_size = player->aef_conf_size;
+    ao_cnf.vol_en        = player->vol_en;
+    ao_cnf.vol_index     = player->vol_index;
+    ao_cnf.period_ms     = player->period_ms;
+    ao_cnf.period_num    = player->period_num;
+    ao = ao_open(ao_sf, &ao_cnf);
     CHECK_RET_TAG_WITH_RET(ao, NULL);
 
     if (player->eq_params) {
@@ -333,26 +353,36 @@ static int _player_prepare(player_t *player)
 {
     int rc;
     sf_t sf;
-    sth_t sth;
+    ad_conf_t ad_cnf;
+    stm_conf_t stm_cnf;
     stream_cls_t  *s       = NULL;
     demux_cls_t   *demuxer = NULL;
     ad_cls_t      *ad      = NULL;
     ao_cls_t      *ao      = NULL;
 
-    memset(&sth, 0, sizeof(sth_t));
-    sth.mode          = STREAM_READ;
-    sth.url           = player->url;
-    sth.get_dec_cb    = player->get_dec_cb;
-    sth.cache_size    = player->cache_size;
-    sth.cache_percent = player->cache_percent;
-    sth.irq.arg       = player;
-    sth.irq.handler   = _interrupt;
-    s = stream_open(&sth);
+    stream_conf_init(&stm_cnf);
+    stm_cnf.rcv_timeout           = player->rcv_timeout;
+    stm_cnf.get_dec_cb            = player->get_dec_cb;
+    stm_cnf.cache_size            = player->cache_size;
+    stm_cnf.cache_start_threshold = player->cache_start_threshold;
+    stm_cnf.irq.arg               = player;
+    stm_cnf.irq.handler           = _interrupt;
+    s = stream_open(player->url, &stm_cnf);
     CHECK_RET_TAG_WITH_GOTO(s, err);
     demuxer = demux_open(s);
     CHECK_RET_TAG_WITH_GOTO(demuxer, err);
+    if (player->start_time) {
+        rc = demux_seek(demuxer, player->start_time);
+        CHECK_RET_TAG_WITH_GOTO(rc == 0, err);
+    }
 
-    ad = ad_open(&demuxer->ash);
+    ad_conf_init(&ad_cnf);
+    ad_cnf.sf             = demuxer->ash.sf;
+    ad_cnf.extradata      = demuxer->ash.extradata;
+    ad_cnf.extradata_size = demuxer->ash.extradata_size;
+    ad_cnf.block_align    = demuxer->ash.block_align;
+    ad_cnf.bps            = demuxer->ash.bps;
+    ad = ad_open(demuxer->ash.id, &ad_cnf);
     CHECK_RET_TAG_WITH_GOTO(ad, err);
 
     /* FIXME: sf of the demuxer may be inaccurate */
@@ -458,7 +488,7 @@ static void _ptask(void *arg)
             player->stat.run_loop_valid++;
             if (play_first == 1) {
                 play_first = 0;
-                LOGI(TAG, "play first");
+                LOGI(TAG, "first frame output");
             }
         } else {
             LOGE(TAG, "ao write fail, rc = %d, pcm_size = %d", rc, dframe->linesize[0]);
@@ -470,11 +500,11 @@ static void _ptask(void *arg)
     rc = 0;
 quit:
     player_unlock();
-    LOGI(TAG, "cb run task quit");
+    LOGD(TAG, "cb run task quit");
     avpacket_free(&pkt);
     avframe_free(&dframe);
     aos_event_set(&player->evt, PLAYER_TASK_QUIT_EVT, AOS_EVENT_OR);
-    if (player->status != PLAYER_STATUS_STOPED) {
+    if ((player->status != PLAYER_STATUS_STOPED) && (player->need_quit != 1)) {
         player->evt_status = (rc < 0) ? PLAYER_EVENT_ERROR : PLAYER_EVENT_FINISH;
         EVENT_CALL(player, player->evt_status, NULL, 0);
     }
@@ -484,10 +514,11 @@ quit:
 /**
  * @brief  player play interface
  * @param  [in] player
- * @param  [in] url : example: http://ip:port/xx.mp3
+ * @param  [in] url        : example: http://ip:port/xx.mp3
+ * @param  [in] start_time : begin play time, ms
  * @return 0/-1
  */
-int player_play(player_t *player, const char *url)
+int player_play(player_t *player, const char *url, uint64_t start_time)
 {
     int rc = -1;
     aos_task_t ptask;
@@ -503,8 +534,9 @@ int player_play(player_t *player, const char *url)
         LOGE(TAG, "the player: %p is not stopped!", player);
         goto quit;
     }
-    _player_once_init(player);
-    player->url = strdup(url);
+    _player_inner_init(player);
+    player->start_time = start_time;
+    player->url        = strdup(url);
     CHECK_RET_TAG_WITH_GOTO(player->url, quit);
     player->status = PLAYER_STATUS_PREPARING;
     rc = aos_task_new_ext(&ptask, "player_task", _ptask, (void *)player, 96*1024, AOS_DEFAULT_APP_PRI - 2);
@@ -576,7 +608,8 @@ static int _player_stop(player_t *player)
 
 #ifndef FPGA_ENABLE
     if (player->ao) {
-        if ((demux_is_eof(player->demuxer) == 1) && (player->evt_status == PLAYER_EVENT_FINISH)) {
+        /* play finish normal */
+        if (player->evt_status == PLAYER_EVENT_FINISH) {
             ao_drain(player->ao);
         }
         ao_stop(player->ao);
@@ -622,7 +655,7 @@ int player_stop(player_t *player)
         aos_mutex_unlock(&player->lock);
         aos_event_get(&player->evt, PLAYER_TASK_QUIT_EVT, AOS_EVENT_OR_CLEAR, &flag, AOS_WAIT_FOREVER);
         ret = _player_stop(player);
-        _player_once_init(player);
+        _player_inner_init(player);
     } else {
         aos_mutex_unlock(&player->lock);
     }
@@ -640,9 +673,8 @@ int player_free(player_t *player)
 {
     int rc = 0;
 
-    LOGI(TAG, "%s, %d enter. player = %p", __FUNCTION__, __LINE__, player);
     CHECK_PARAM(player, -1);
-
+    LOGI(TAG, "%s, %d enter. player = %p", __FUNCTION__, __LINE__, player);
     if (player->status != PLAYER_STATUS_STOPED) {
         rc = player_stop(player);
     }
@@ -673,15 +705,12 @@ int player_seek(player_t *player, uint64_t timestamp)
     LOGI(TAG, "%s, %d enter. player = %p, timestamp = %llu", __FUNCTION__, __LINE__, player, timestamp);
     demuxer = player->demuxer;
     if (player->status == PLAYER_STATUS_PLAYING || player->status == PLAYER_STATUS_PAUSED) {
-        //FIXME: atleast 2 second at tail
-        if (timestamp + 2000 < demuxer->duration) {
-            ao_stop(player->ao);
-            rc = demux_seek(demuxer, timestamp);
-            if (rc == 0) {
-                ad_reset(player->ad);
-            }
-            ao_start(player->ao);
+        ao_stop(player->ao);
+        rc = demux_seek(demuxer, timestamp);
+        if (rc == 0) {
+            ad_reset(player->ad);
         }
+        ao_start(player->ao);
     }
     LOGI(TAG, "%s, %d leave. player = %p", __FUNCTION__, __LINE__, player);
     aos_mutex_unlock(&player->lock);
@@ -730,6 +759,7 @@ int player_get_media_info(player_t *player, media_info_t *minfo)
     aos_mutex_lock(&player->lock, AOS_WAIT_FOREVER);
     LOGD(TAG, "%s, %d enter. player = %p", __FUNCTION__, __LINE__, player);
     demuxer = player->demuxer;
+    memset(minfo, 0, sizeof(media_info_t));
     if (player->status == PLAYER_STATUS_PLAYING || player->status == PLAYER_STATUS_PAUSED) {
         minfo->tracks   = demuxer->tracks;
         minfo->size     = stream_get_size(player->s);

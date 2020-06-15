@@ -33,7 +33,6 @@
 #define LWIP_LWIPOPTS_H
 
 //#include "lwip/arch.h"
-#include <yoc_config.h>
 
 /**
  * Include user defined options first. Anything not defined in these files

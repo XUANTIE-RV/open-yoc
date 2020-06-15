@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Project Name="chip_test_pangu" Version="1">
+<Project Name="pangu_demo" Version="1">
   <Description>aos event</Description>
   <MonitorProgress>
-    <FlashOperate>1654</FlashOperate>
+    <FlashOperate>1078</FlashOperate>
     <DebugLaunch>52</DebugLaunch>
   </MonitorProgress>
   <UIControl>
@@ -13,46 +13,51 @@
   </UIControl>
   <Dependencies/>
   <Chips>
-    <Chip ID="csi_pangu" Version="V7.2.2" IsBasic="false"/>
+    <Chip ID="csi_pangu" Version="V7.3.0" IsBasic="false"/>
   </Chips>
   <Boards>
-    <Board ID="pangu_cpu0" Version="V7.2.2" IsBasic="false"/>
+    <Board ID="pangu_cpu0" Version="V7.3.0" IsBasic="false"/>
   </Boards>
   <Packages>
-    <Package ID="csi" Version="V7.2.2" IsBasic="false"/>
-    <Package ID="rhino" Version="V7.2.2" IsBasic="false"/>
-    <Package ID="minilibc" Version="V7.2.2" IsBasic="false"/>
-    <Package ID="aos" Version="V7.2.2" IsBasic="false"/>
-    <Package ID="console" Version="V7.2.2" IsBasic="false"/>
-    <Package ID="netmgr" Version="V7.2.2" IsBasic="false"/>
-    <Package ID="drivers" Version="V7.2.2" IsBasic="false"/>
-    <Package ID="drv_wifi_rtl8723ds" Version="V7.2.2" IsBasic="false"/>
-    <Package ID="drv_sdmmc" Version="V7.2.2" IsBasic="false"/>
-    <Package ID="drv_snd_pangu" Version="V7.2.2" IsBasic="false"/>
-    <Package ID="minialsa" Version="V7.2.2" IsBasic="false"/>
-    <Package ID="ipc" Version="V7.2.2" IsBasic="false"/>
-    <Package ID="posix" Version="V7.2.2" IsBasic="false"/>
-    <Package ID="ntp" Version="V7.2.2" IsBasic="false"/>
-    <Package ID="fota" Version="V7.2.2" IsBasic="false"/>
-    <Package ID="lwip" Version="V7.2.2" IsBasic="false"/>
-    <Package ID="aui_cloud" Version="V7.2.2" IsBasic="false"/>
-    <Package ID="voice" Version="V7.2.2" IsBasic="false"/>
-    <Package ID="record" Version="V7.2.2" IsBasic="false"/>
-    <Package ID="webclient" Version="V7.2.2" IsBasic="false"/>
-    <Package ID="websocket" Version="V7.2.2" IsBasic="false"/>
-    <Package ID="mic" Version="V7.2.2" IsBasic="false"/>
-    <Package ID="player" Version="V7.2.2" IsBasic="false"/>
-    <Package ID="av" Version="V7.2.2" IsBasic="false"/>
-    <Package ID="pvmp3dec" Version="V7.2.2" IsBasic="false"/>
-    <Package ID="itmall" Version="V7.2.2" IsBasic="false"/>
-    <Package ID="adicore" Version="V7.2.2" IsBasic="false"/>
-    <Package ID="eqicore" Version="V7.2.2" IsBasic="false"/>
-    <Package ID="resicore" Version="V7.2.2" IsBasic="false"/>
-    <Package ID="kv" Version="V7.2.2" IsBasic="false"/>
-    <Package ID="cjson" Version="V7.2.2" IsBasic="false"/>
-    <Package ID="button" Version="V7.2.2" IsBasic="false"/>
-    <Package ID="mbedtls" Version="V7.2.2" IsBasic="false"/>
-    <Package ID="vfs" Version="V7.2.2" IsBasic="false"/>
+    <Package ID="csi" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="rhino" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="minilibc" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="aos" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="console" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="netmgr" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="drivers" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="drv_wifi_rtl8723ds" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="drv_sdmmc" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="drv_snd_pangu" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="minialsa" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="ipc" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="posix" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="ntp" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="fota" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="lwip" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="aui_cloud" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="aui_demo" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="voice" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="record" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="webclient" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="websocket" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="mic" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="av" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="flac" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="amrnb" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="amrwb" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="pvmp3dec" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="speexdsp" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="kv" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="cjson" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="button" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="mbedtls" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="vfs" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="httpclient" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="transport" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="ble_mesh" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="drv_bt_rtl8723ds" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="fatfs" Version="V7.3.0" IsBasic="false"/>
   </Packages>
   <VirtualDirectory Name="app">
     <VirtualDirectory Name="include">
@@ -227,6 +232,7 @@
       <FileOption/>
     </File>
   </VirtualDirectory>
+  <MergedToYaml>yes</MergedToYaml>
   <DebugSessions>
     <watchExpressions/>
     <memoryExpressions>;;;</memoryExpressions>
@@ -313,7 +319,7 @@
         <CreateHexFile>yes</CreateHexFile>
         <CreateBinFile>no</CreateBinFile>
         <Preprocessor>no</Preprocessor>
-        <Disasm>no</Disasm>
+        <Disassmeble>yes</Disassmeble>
         <CallGraph>no</CallGraph>
         <Map>no</Map>
       </Output>
@@ -363,10 +369,11 @@
         <LibPath/>
         <OtherFlags>-Wl,-zmax-page-size=1024 -mhard-float</OtherFlags>
         <AutoLDFile>no</AutoLDFile>
+        <LinkType>whole-archive</LinkType>
       </Linker>
       <Debug>
         <LoadApplicationAtStartup>no</LoadApplicationAtStartup>
-        <Connector>Remote ICE</Connector>
+        <Connector>ICE</Connector>
         <StopAt>no</StopAt>
         <StopAtText>main</StopAtText>
         <InitFile>$(ProjectPath)/script/gdbinit</InitFile>
@@ -379,6 +386,7 @@
         <ConfigICE>
           <IP>localhost</IP>
           <PORT>1025</PORT>
+          <CPUNumber>0</CPUNumber>
           <Clock>12000</Clock>
           <Delay>10</Delay>
           <WaitReset>300</WaitReset>

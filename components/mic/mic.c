@@ -16,14 +16,12 @@ struct __mic {
     utask_t         *task;
     mic_state_t      state;
     int              source;
-    mic_hw_param_t   hw;
-    mic_sw_param_t   sw;
+    mic_param_t      param;
     aui_mic_evt_t    cb;
     int              evt_cnt;
     uint8_t          rbuf[FRAME_SIZE];
     char            *recv_buf;
-    dev_ringbuf_t     ring_buffer;
-
+    dev_ringbuf_t    ring_buffer;
     mic_ops_t       *ops;
     void            *priv;
 };
@@ -36,6 +34,7 @@ typedef enum {
     _SET_ASR_CMD,
     _EVENT_CMD,
     _REC_CMD,
+    _GET_KWMAP_CMD,
 
     MIC_END_CMD
 } MIC_CMD;
@@ -63,6 +62,7 @@ typedef struct {
 } wwv_param_t;
 
 mic_t g_mic;
+static mic_kw_map_t *mic_kw_map = NULL;
 
 #define MIC_OPS(mic, fn, param) \
         if (mic->ops->fn) \
@@ -102,6 +102,10 @@ static int _control(mic_t *mic, rpc_t *rpc)
         MIC_OPS(mic, debug_control, 2);
     } else if (type == MIC_CTRL_DEBUG_CLOSE) {
         MIC_OPS(mic, debug_control, 0);
+    } else if (type == MIC_CTRL_WAKEUP_START) {
+        MIC_OPS(mic, wakup_audio_stat, 1);
+    } else if (type == MIC_CTRL_WAKEUP_END) {
+        MIC_OPS(mic, wakup_audio_stat, 0);
     } else {
         ;
     }
@@ -143,6 +147,18 @@ static void mic_event_hdl(void *priv, mic_event_id_t event_id, void *data, int s
         uservice_call_async(mic->srv, _EVENT_CMD, &param, sizeof(param));
     }
 
+}
+
+static int _get_kw_map(mic_t *mic, rpc_t *rpc)
+{
+    void *kw_map;
+
+    MIC_OPS(mic, get_kw_map, &kw_map);
+
+    rpc_put_reset(rpc);
+    rpc_put_buffer(rpc, &kw_map, sizeof(kw_map));
+
+    return 0;
 }
 
 static int _set_param(mic_t *mic, rpc_t *rpc)
@@ -260,6 +276,7 @@ static const rpc_process_t c_mic_cmd_cb_table[] = {
     {_GET_STATE_CMD,         (process_t)_get_state},
     {_EVENT_CMD,             (process_t)_event_hdl},
     {_REC_CMD,               (process_t)_rec_ctrl},
+    {_GET_KWMAP_CMD,         (process_t)_get_kw_map},
     {MIC_END_CMD,            (process_t)NULL},
 };
 
@@ -268,13 +285,13 @@ int mic_process_rpc(void *context, rpc_t *rpc)
     return uservice_process(context, rpc, c_mic_cmd_cb_table);
 }
 
-int aui_mic_set_param(mic_pcm_param_t *param)
+int aui_mic_set_param(mic_param_t *param)
 {
     int ret = -1;
 
     aos_check_return_einval(g_mic.srv);
 
-    ret = uservice_call_async(g_mic.srv, _SET_PARAM_CMD, (void *)param, sizeof(mic_pcm_param_t));
+    ret = uservice_call_async(g_mic.srv, _SET_PARAM_CMD, (void *)param, sizeof(mic_param_t));
     return ret;
 }
 
@@ -440,6 +457,37 @@ int aui_mic_rec_stop(void)
 
     ret = uservice_call_async(g_mic.srv, _REC_CMD, (void *)&rec_param, sizeof(rec_param_t));
     return ret;
+}
+
+int aui_mic_init_kw_map(void)
+{
+    int ret = -1;
+    aos_check_return_einval(g_mic.srv);
+
+    ret = uservice_call_sync(g_mic.srv, _GET_KWMAP_CMD, NULL, &mic_kw_map, sizeof(mic_kw_map_t *));
+
+    LOGD(TAG, "key word map inited:");
+    for (int i = 0; i < mic_kw_map->count; ++i) {
+        LOGD(TAG, "kw %d : %s", mic_kw_map->kw_arr[i].id, mic_kw_map->kw_arr[i].word);
+    }
+
+    return ret;
+}
+
+int aui_mic_get_kw(int kwid, char **word)
+{
+    if (!mic_kw_map || !mic_kw_map->count) {
+        return -1;
+    }
+
+    for (int i = 0; i < mic_kw_map->count; ++i) {
+        if (kwid == mic_kw_map->kw_arr[i].id) {
+            *word = mic_kw_map->kw_arr[i].word;
+            return 0;
+        }
+    }
+    
+    return -1;
 }
 
 int mic_ops_register(mic_ops_t *ops)

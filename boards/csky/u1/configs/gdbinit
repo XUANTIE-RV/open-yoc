@@ -1,0 +1,7 @@
+#
+# Will Run this script before Start Debug 
+# 
+
+target jtag jtag://192.168.56.1:1025
+
+lo

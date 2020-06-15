@@ -10,7 +10,8 @@
 
 __BEGIN_DECLS__
 
-#define WEB_USER_AGENT "CSKY/YOC"
+#define WEB_USER_AGENT        "CSKY/YOC"
+#define WEB_TIMEOUT_DEFAULT   (6*1000)   // ms
 
 typedef struct web_session {
     int                             fd;

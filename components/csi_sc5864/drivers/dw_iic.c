@@ -9,7 +9,6 @@
  * @date     02. June 2017
  ******************************************************************************/
 
-#include <csi_config.h>
 #include <drv/iic.h>
 #include <dw_iic.h>
 #include <soc.h>

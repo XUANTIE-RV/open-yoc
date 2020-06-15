@@ -10,7 +10,6 @@
  * @chip     pangu
  ******************************************************************************/
 
-#include <csi_config.h>
 #include <drv/pmu.h>
 #include <drv/tee.h>
 #include <csi_core.h>

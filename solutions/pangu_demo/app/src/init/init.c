@@ -1,4 +1,3 @@
-#include <yoc_config.h>
 
 #include <stdbool.h>
 #include <aos/aos.h>
@@ -20,7 +19,7 @@ const char *TAG = "INIT";
 #define reg_wr(reg_addr) *((volatile uint32_t *)reg_addr)
 extern void mdelay(uint32_t ms);
 
-static void cpu1_init(void)
+void cpu1_init(void)
 {
 #define CPU1_RUN_ADDR   (0x18500000)
     partition_t p = partition_open("cpu1");
@@ -34,10 +33,10 @@ static void cpu1_init(void)
     reg_wr(0x30000080) = CPU1_RUN_ADDR;
     reg_wr(0x30000008) &= ~0x1;
     reg_wr(0x30000008) |= 0x1;
-    mdelay(200);
+    // mdelay(200);
 }
 
-static void cpu2_init(void)
+void cpu2_init(void)
 {
 #define CPU2_RUN_ADDR               (0x18600000)
 
@@ -51,7 +50,7 @@ static void cpu2_init(void)
     reg_wr(0x30000044) = CPU2_RUN_ADDR;
     reg_wr(0x30000008) &= ~0x02;
     reg_wr(0x30000008) |= 0x02;
-    mdelay(200);
+    // mdelay(200);
 }
 
 static void itcm_code_load()
@@ -140,7 +139,7 @@ void board_yoc_init()
 
     aos_kv_init("kv");
 
-    snd_card_register(6300);
+    snd_card_register(NULL);
     speaker_init();
 
     event_service_init(NULL);

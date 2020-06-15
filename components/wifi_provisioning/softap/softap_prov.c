@@ -19,8 +19,10 @@
 #include "index_html.h"
 
 #define TAG "ap_prov"
-
+static void dns_server_entry(void *arg);
 #define MAP_AP 15
+#define SSID_LIST_SIZE_MAX (2048)
+
 static wifi_ap_record_t g_ap_records[MAP_AP];
 static int g_ap_number;
 
@@ -95,9 +97,30 @@ static char *url_decode(const char *str)
     return dStr;
 }
 
+static void sendall(int socketfd, uint8_t* data, uint32_t len, int flags)
+{
+    int ret = 0;
+    uint32_t sendlen = 0;
+
+    while (sendlen < len) {
+        ret = send(socketfd, data + sendlen, len - sendlen, flags);
+
+        if (ret >= 0) {
+            sendlen  += ret;
+        } else {
+            if (errno == EAGAIN || errno == EINTR) {
+                aos_msleep(20);
+                continue;
+            } else {
+                break;
+            }
+        }
+    }
+}
 
 static void http_client_handle(void *args)
 {
+    int rc;
     struct ap_prov_context *context = ((http_client_t*)args)->context;
     int iNewSockFD = ((http_client_t*)args)->fd;
     int iStatus;
@@ -106,23 +129,11 @@ static void http_client_handle(void *args)
     LOGD(TAG, "Start process client %d", iNewSockFD);
     // waits packets from the connected TCP client
 
-#if 1
     /** set socket options */
-    int timeout_ms = 10000;
+    int timeout_ms = 5000;
     struct timeval interval = {timeout_ms / 1000, (timeout_ms % 1000) * 1000};
 
-    if (interval.tv_sec < 0 || (interval.tv_sec == 0 && interval.tv_usec <= 100)) {
-        interval.tv_sec = 0;
-        interval.tv_usec = 10000;
-    }
-
-    if (setsockopt(iNewSockFD, SOL_SOCKET, SO_RCVTIMEO, (char *)&interval, sizeof(struct timeval))) {
-        LOGE(TAG, "http SO_RCVTIMEO failed");
-        close(iNewSockFD);
-        return;
-    }
-
-#endif
+    setsockopt(iNewSockFD, SOL_SOCKET, SO_RCVTIMEO, (char *)&interval, sizeof(struct timeval));
 
     uint8_t *http_header = aos_zalloc(1024);
     uint8_t *socket_recv_buf = aos_zalloc(socket_recv_size);
@@ -133,102 +144,78 @@ static void http_client_handle(void *args)
         iStatus = recv(iNewSockFD, socket_recv_buf, socket_recv_size - 1, 0);
         socket_recv_buf[socket_recv_size - 1] = 0;
 
-        if (iStatus < 0) {
-
-            if (errno == EAGAIN || errno == EINTR) {
-                continue;
-            }
-            LOGE(TAG, "TCP ERROR: server recv data error iStatus:%d error: %d", iStatus, errno);
-            goto Exit;
-        } else if (iStatus == 0) {
-            LOGD(TAG, "TCP CLOSE");
+        if (iStatus <= 0) {
+            LOGE(TAG, "TCP CLOSE. iStatus:%d error: %d", iStatus, errno);
             goto Exit;
         }
 
-        // LOGD(TAG, "Received:%s\n", socket_recv_buf);
-
+        //printf("\n\nrecv buf => %s\n\n\n", socket_recv_buf);
         /** get index.html */
-        if ((strstr((char *)socket_recv_buf, "GET / HTTP/1.0") != NULL ||
-            strstr((char *)socket_recv_buf, "GET /index.html HTTP/1.0") != NULL) &&
-            (strstr((char *)socket_recv_buf, "Host: 192.168.1.1") != NULL)) {
+        if ((strstr((char *)socket_recv_buf, "GET / HTTP/1") ||
+             strstr((char *)socket_recv_buf, "GET /index.html HTTP/1")) &&
+            (strstr((char *)socket_recv_buf, "Host: 192.168.1.1"))) {
 
             LOGD(TAG, "Received HTTP GET, Send response HTTP/1.0");
             /** send response */
-            char *http_header_fmt = "HTTP/1.0 200 OK\r\n"
-                                    "Content-Type: text/html\r\n"
-                                    "Content-Length: %d\r\n\r\n";
+            char *http_header_fmt;
+            if (strstr((char *)socket_recv_buf, "HTTP/1.0")) {
+                http_header_fmt = "HTTP/1.0 200 OK\r\n"
+                                  "Content-Type: text/html\r\n"
+                                  "Content-Length: %d\r\n\r\n";
+            } else {
+                http_header_fmt = "HTTP/1.1 200 OK\r\n"
+                                  "Content-Type: text/html\r\n"
+                                  "Content-Length: %d\r\n\r\n";
+            }
 
-            char *http_ssid_list = aos_zalloc_check(2000);
-
+            char *http_ssid_list = aos_zalloc_check(SSID_LIST_SIZE_MAX);
             const char *ssid_list_fmt = "\t\t\t<option value =\"%s\">%s</option>\n";
 
+            rc = 0;
             for (int i = 0; i < g_ap_number; i++) {
                 if (g_ap_records[i].ssid[0] != 0)
-                    sprintf(http_ssid_list + strlen(http_ssid_list), ssid_list_fmt, g_ap_records[i].ssid, g_ap_records[i].ssid);
+                    rc += snprintf(http_ssid_list + rc, SSID_LIST_SIZE_MAX - rc, ssid_list_fmt, g_ap_records[i].ssid, g_ap_records[i].ssid);
             }
 
             sprintf((char *)http_header, http_header_fmt, strlen(index_html_start) + strlen(index_html_end) + strlen(http_ssid_list));
-            send(iNewSockFD, http_header, strlen((char *)http_header), 0);
-            send(iNewSockFD, index_html_start, strlen(index_html_start), 0);
-            send(iNewSockFD, http_ssid_list, strlen(http_ssid_list), 0);
-            send(iNewSockFD, index_html_end, strlen(index_html_end), 0);
+            sendall(iNewSockFD, http_header, strlen((char *)http_header), 0);
+            sendall(iNewSockFD, (uint8_t*)index_html_start, strlen(index_html_start), 0);
+            sendall(iNewSockFD, (uint8_t*)http_ssid_list, strlen(http_ssid_list), 0);
+            sendall(iNewSockFD, (uint8_t*)index_html_end, strlen(index_html_end), 0);
 
             aos_free(http_ssid_list);
             goto Exit;
 
         }
-
-        if ((strstr((char *)socket_recv_buf, "GET / HTTP/1.1") != NULL ||
-            strstr((char *)socket_recv_buf, "GET /index.html HTTP/1.1") != NULL) &&
-            (strstr((char *)socket_recv_buf, "Host: 192.168.1.1") != NULL)) {
-
-            LOGD(TAG, "Received HTTP GET, Send response HTTP/1.1");
-            /** send response */
-            char *http_header_fmt = "HTTP/1.0 200 OK\r\n"
-                                    "Content-Type: text/html\r\n"
-                                    "Content-Length: %d\r\n\r\n";
-
-            char *http_ssid_list = aos_zalloc_check(2000);
-
-            const char *ssid_list_fmt = "\t\t\t<option value =\"%s\">%s</option>\n";
-
-            for (int i = 0; i < g_ap_number; i++) {
-                if (g_ap_records[i].ssid[0] != 0)
-                    sprintf(http_ssid_list + strlen(http_ssid_list), ssid_list_fmt, g_ap_records[i].ssid, g_ap_records[i].ssid);
-            }
-
-            sprintf((char *)http_header, http_header_fmt, strlen(index_html_start) + strlen(index_html_end) + strlen(http_ssid_list));
-            send(iNewSockFD, http_header, strlen((char *)http_header), 0);
-            send(iNewSockFD, index_html_start, strlen(index_html_start), 0);
-            send(iNewSockFD, http_ssid_list, strlen(http_ssid_list), 0);
-            send(iNewSockFD, index_html_end, strlen(index_html_end), 0);
-
-            aos_free(http_ssid_list);
-            goto Exit;
-        }
-
 
         if ((strstr((char *)socket_recv_buf, "GET ")) != NULL) {
 
             LOGD(TAG, "Received HTTP GET, Send response 301");
             /** send response */
-            char *http_header_fmt = "HTTP/1.0 302 Moved Temporarily\r\n"
+            char *http_header_fmt = "HTTP/1.0 301 Moved Permanently\r\n"
                                     "Location: http://192.168.1.1/index.html\r\n\r\n";
 
-            send(iNewSockFD, http_header_fmt, strlen((char *)http_header_fmt), 0);
+            sendall(iNewSockFD, (uint8_t*)http_header_fmt, strlen((char *)http_header_fmt), 0);
 
             goto Exit;
         }
 
         /* received ssid&password */
-        if ((strstr((char *)socket_recv_buf, "POST / HTTP/1.1")) != NULL ||
-            (strstr((char *)socket_recv_buf, "POST /index.html HTTP/1.1")) != NULL) {
+        if ((strstr((char *)socket_recv_buf, "POST / HTTP/1.")) != NULL ||
+            (strstr((char *)socket_recv_buf, "POST /index.html HTTP/1.")) != NULL) {
 
             LOGD(TAG, "Received HTTP POST, Send response");
             /** send response */
-            char *http_header_fmt = "HTTP/1.1 200 OK\r\n"
-                                    "Content-Type: text/html\r\n"
-                                    "Content-Length: %d\r\n\r\n";
+            char *http_header_fmt;
+            if (strstr((char *)socket_recv_buf, "HTTP/1.0")) {
+                http_header_fmt = "HTTP/1.0 200 OK\r\n"
+                                  "Content-Type: text/html\r\n"
+                                  "Content-Length: %d\r\n\r\n";
+            } else {
+                http_header_fmt = "HTTP/1.1 200 OK\r\n"
+                                  "Content-Type: text/html\r\n"
+                                  "Content-Length: %d\r\n\r\n";
+            }
 
             char *pos1 = NULL;
             char *pos2 = NULL;
@@ -317,16 +304,21 @@ static void http_client_handle(void *args)
             context->prov_enable = 0;
 
             sprintf((char *)http_header, http_header_fmt, strlen(ok_html));
-            send(iNewSockFD, http_header, strlen((char *)http_header), 0);
-            send(iNewSockFD, ok_html, strlen(ok_html), 0);
+            sendall(iNewSockFD, http_header, strlen((char *)http_header), 0);
+            sendall(iNewSockFD, (uint8_t*)ok_html, strlen(ok_html), 0);
 
             free(decoded_content);
             free(content);
             goto Exit;
-
         }
+        {
+            LOGD(TAG, "no match..., Send response 204");
+            /** send response */
+            char *http_header_fmt = "HTTP/1.0 204 No Content\r\n\r\n";
 
-
+            sendall(iNewSockFD, (uint8_t*)http_header_fmt, strlen((char *)http_header_fmt), 0);
+            goto Exit;
+        }
     }
 
 Exit:
@@ -348,7 +340,7 @@ static int http_server(struct ap_prov_context *context)
     int                 n;
     int                 iStatus;
 
-        /** set socket timeout to 5 s */
+    /** set socket timeout to 5 s */
     int timeout_ms = 5 * 1000;
     struct timeval interval = {timeout_ms / 1000, (timeout_ms % 1000) * 1000};
     http_client_t *client;
@@ -393,16 +385,16 @@ static int http_server(struct ap_prov_context *context)
     }
 
     LOGD(TAG, "Bind successfully.");
-
-
     // putting the socket for listening to the incoming TCP connection
-    iStatus = listen(iSockFD, 20);
+    iStatus = listen(iSockFD, 2);
 
     if (iStatus != 0) {
         LOGE(TAG, "TCP ERROR: listen tcp server socket fd error %d", iStatus);
         goto Exit1;
     }
 
+    aos_task_t task_handle;
+    aos_check_param(!aos_task_new_ext(&task_handle, "dns_server", dns_server_entry, NULL, 2048, 32));
 
 Restart:
     iNewSockFD = -1;
@@ -415,6 +407,7 @@ Restart:
 
         /* will block here... */
         iNewSockFD = accept(iSockFD, (struct sockaddr *)&sAddr, (socklen_t *)&addrlen);
+        //printf("============>>accept: %d, errno = %d#\n", iNewSockFD, errno);
 
         if (iNewSockFD < 0) {
             //printf("#");
@@ -525,8 +518,7 @@ static void process_query(int fd)
                     domain[dlen++] = '.';
                 while(qlen-- > 0)
                     domain[dlen++] = (char)tolower(*pos++);
-            }
-            else {
+            } else {
                 memcpy(&qds, pos, sizeof(DNS_QDS));
                 if(ntohs(qds.classes) != 0x01)
                     shdr->rcode = 4;
@@ -616,10 +608,10 @@ static void dns_server_entry(void *arg)
         tv.tv_usec = 0;
 
         fds = select(maxfd, &readfds, NULL, NULL, &tv);
-        if(fds > 0) {
-
-            if(FD_ISSET(socket_fd, &readfds))
-                process_query(socket_fd);
+        if(fds > 0 && FD_ISSET(socket_fd, &readfds)) {
+            process_query(socket_fd);
+        } else {
+            aos_msleep(300);
         }
     }
 
@@ -644,9 +636,6 @@ static void prov_thread(void *arg)
     int i = 0;
     struct ap_prov_context *context = (struct ap_prov_context *)arg;
 
-    aos_task_t task_handle;
-    aos_check_param(!aos_task_new_ext(&task_handle, "dns_server", dns_server_entry, NULL, 2048, 32));
-
     while (1) {
         if (dhcps_get_client_number() > 0)
             break;
@@ -661,14 +650,14 @@ static void prov_thread(void *arg)
         wifi_sta_list_t sta_list = {0};
         hal_wifi_ap_get_sta_list(context->dev, &sta_list);
         for (i = 0; i < sta_list.num; i++) {
-            LOGD(TAG, "STA[%d]=%02x:%02x:%02x:%02x:%02x:%02x\n", 
-                i, 
-                sta_list.sta[i].mac[0],
-                sta_list.sta[i].mac[1],
-                sta_list.sta[i].mac[2],
-                sta_list.sta[i].mac[3],
-                sta_list.sta[i].mac[4],
-                sta_list.sta[i].mac[5]);
+            LOGD(TAG, "STA[%d]=%02x:%02x:%02x:%02x:%02x:%02x\n",
+                 i,
+                 sta_list.sta[i].mac[0],
+                 sta_list.sta[i].mac[1],
+                 sta_list.sta[i].mac[2],
+                 sta_list.sta[i].mac[3],
+                 sta_list.sta[i].mac[4],
+                 sta_list.sta[i].mac[5]);
         }
     }
 

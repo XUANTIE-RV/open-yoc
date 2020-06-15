@@ -67,6 +67,11 @@
 #define POWER_KEY_VAL_MAX   1600
 #define POWER_KEY_VAL_MIN   1300
 
+/* SD卡侦测 */
+#define CONFIG_SD_DETECT_EN 1       /* SD卡侦测使能 */
+#define SD_DETECT_PIN       PC7  /* SD卡侦测pin口 GPIO1_16 */
+#define SD_DETECT_FUNC      PC7_SDIO_DET /* 该pin口的FUNC */
+
 /* 可用GPIO列表 */
 #define USER_GPIO_LIST_STR \
 "ID  Name\n \

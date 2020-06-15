@@ -10,12 +10,8 @@
 __BEGIN_DECLS__
 
 typedef enum stream_cmd {
+    //TODO:
     STREAM_CMD_UNKNOWN,
-    STREAM_CMD_GET_SIZE,
-    STREAM_CMD_GET_FORMAT,
-    STREAM_CMD_GET_CODEC,
-    STREAM_CMD_GET_CHANNEL,
-    STREAM_CMD_GET_RATE,
 } stream_cmd_t;
 
 

@@ -150,8 +150,8 @@ static int ipc_pcmp_param_set(card_ipc_t *c, void *data, int len)
 
     csi_codec_output_start(codec);
 
-    csi_codec_output_set_mixer_left_gain(codec, -10);
-    csi_codec_output_set_mixer_right_gain(codec, -10);
+    csi_codec_output_set_analog_left_gain(codec, -10);
+    csi_codec_output_set_analog_right_gain(codec, -10);
     playback->state = 1;
     playback->hdl = codec;
 

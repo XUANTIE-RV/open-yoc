@@ -21,6 +21,7 @@ int aefx_ops_register(const struct aefx_ops *ops)
         return -1;
     }
     _aefx_ops = (struct aefx_ops*)ops;
+    LOGD(TAG, "regist affecter, name = %s", _aefx_ops->name);
 
     return 0;
 }

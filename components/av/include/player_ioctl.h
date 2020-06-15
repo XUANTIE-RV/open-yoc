@@ -12,8 +12,8 @@ __BEGIN_DECLS__
 
 enum {
     PLAYER_CMD_UNKNOWN,
-    PLAYER_CMD_EQ_SET_PARAM,
-    PLAYER_CMD_EQ_ENABLE,
+    PLAYER_CMD_EQ_SET_PARAM,       ///< if support
+    PLAYER_CMD_EQ_ENABLE,          ///< if support
     PLAYER_CMD_SET_CACHE_SIZE,     ///< next play valid
     PLAYER_CMD_SET_RESAMPLE_RATE,  ///< next play valid
     PLAYER_CMD_SET_RCVTO,          ///< next play valid

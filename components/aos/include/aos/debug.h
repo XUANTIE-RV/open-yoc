@@ -4,7 +4,6 @@
 
 #ifndef AOS_DEBUG_H
 #define AOS_DEBUG_H
-//#include <yoc_config.h>
 
 #include <stdio.h>
 #include <errno.h>

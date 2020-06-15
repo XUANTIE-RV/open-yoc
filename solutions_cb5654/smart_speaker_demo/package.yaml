@@ -3,57 +3,61 @@ solution:
   ld_script: gcc_flash.ld
 type: solution
 name: smart_speaker_demo
-yoc_version: 7.2
+version: v7.3.0                                     # <必选项> 组件版本号
 description: 智能音箱例程
 keywords:
   - sc5654
 author: feimi
 license: Apache license v2.0
 depends:
-  - aos: V7.2.2
-  - aos_hal: V7.2.2
-  - aui_aliyunnls: V7.2.2
-  - av: V7.2.2
-  - pvmp3dec: V7.2.2
-  - speexdsp: V7.2.2
-  - cb5654: V7.2.2
-  - csi_sc5654: V7.2.2
-  - cjson: V7.2.2
-  - clock_alarm: V7.2.2
-  - console: V7.2.2
-  - csi: V7.2.2
-  - drivers: V7.2.2
-  - drv_sdmmc: V7.2.2
-  - drv_snd_sc5654: V7.2.2
-  - drv_wifi_rtl8723ds: V7.2.2
-  - drv_leds: V7.2.2
-  - fatfs: V7.2.2
-  - fota: V7.2.2
-  - ipc: V7.2.2
-  - kv: V7.2.2
-  - lwip: V7.2.2
-  - ntp: V7.2.2
-  - mbedtls: V7.2.2
-  - mic: V7.2.2
-  - minialsa: V7.2.2
-  - minilibc: V7.2.2
-  - netmgr: V7.2.2
-  - posix: V7.2.2
-  - record: V7.2.2
-  - rhino: V7.2.2
-  - vfs: V7.2.2
-  - voice: V7.2.2
-  - webclient: V7.2.2
-  - websocket: V7.2.2
-  - adc_button: V7.2.2
-  - wifi_provisioning: V7.2.2
-  - smartliving: V7.2.2
-  - fct: V7.2.2
-  - httpclient: V7.2.2
-  - transport: V7.2.2
-  - yoc_sc5654: V7.2.2
-  - voice_mit: V7.2.2
-defconfig:
+  - aos: V7.3.0
+  - aui_cloud: V7.3.0
+  - aui_aliyunnls: V7.3.0
+  - av: V7.3.0
+  - flac: V7.3.0
+  - amrnb: V7.3.0
+  - amrwb: V7.3.0
+  - pvmp3dec: V7.3.0
+  - speexdsp: V7.3.0
+  - cb5654: V7.3.0
+  - csi_sc5654: V7.3.0
+  - cjson: V7.3.0
+  - clock_alarm: V7.3.0
+  - console: V7.3.0
+  - csi: V7.3.0
+  - drivers: V7.3.0
+  - drv_sdmmc: V7.3.0
+  - drv_snd_sc5654: V7.3.0
+  - drv_wifi_rtl8723ds: V7.3.0
+  - drv_leds: V7.3.0
+  - fatfs: V7.3.0
+  - fota: V7.3.0
+  - ipc: V7.3.0
+  - kv: V7.3.0
+  - lwip: V7.3.0
+  - ntp: V7.3.0
+  - mbedtls: V7.3.0
+  - mic: V7.3.0
+  - minialsa: V7.3.0
+  - minilibc: V7.3.0
+  - netmgr: V7.3.0
+  - posix: V7.3.0
+  - record: V7.3.0
+  - rhino: V7.3.0
+  - vfs: V7.3.0
+  - voice: V7.3.0
+  - voice_mit: V7.3.0
+  - webclient: V7.3.0
+  - websocket: V7.3.0
+  - button: V7.3.0
+  - wifi_provisioning: V7.3.0
+  - smartliving: V7.3.0
+  - fct: V7.3.0
+  - httpclient: V7.3.0
+  - transport: V7.3.0
+  - yoc_sc5654: V7.3.0
+  - littlefs: V7.3.0
+def_config:
   CONFIG_ARCH_INTERRUPTSTACK: 4096
   CONFIG_CLI: 1
   CONFIG_CPU: ck803ef
@@ -86,7 +90,6 @@ build_config:
   internal_include:
     - ""
   include:
-    - include
     - app/include
     - app/src
     - app/src/audio
@@ -113,8 +116,8 @@ source_file:
   - app/src/voice_debug/t-head/*.c ? <CONFIG_THEAD_DSP>
   - app/src/voice_debug/mit/*.c ? <CONFIG_MIT_DSP>
   - app/src/voice_debug/huwen/*.c ? <CONFIG_HUWEN_DSP>
-  - app/src/fct/mit/*.c ?<BOARD_MIT_V2>
-  - app/src/fct/org/*.c ?<BOARD_CB5654>
+  - app/src/fct/mit/*.c ? <BOARD_MIT_V2>
+  - app/src/fct/org/*.c ? <BOARD_CB5654>
 link_config:
   path: ~
   library: ~

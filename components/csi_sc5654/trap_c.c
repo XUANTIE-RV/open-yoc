@@ -12,7 +12,6 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <csi_config.h>
 #include <csi_core.h>
 
 void (*trap_c_callback)(void);

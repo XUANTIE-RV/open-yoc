@@ -14,7 +14,6 @@
  ******************************************************************************/
 #include <stdint.h>
 #include "drv/common.h"
-#include "csi_config.h"
 
 //USI device number
 #define CONFIG_USI_USART_NUM CONFIG_USI_NUM

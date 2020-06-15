@@ -9,7 +9,6 @@
  * @date     02. June 2017
  ******************************************************************************/
 
-#include <csi_config.h>
 #include "soc.h"
 #include "io.h"
 #include "csi_core.h"

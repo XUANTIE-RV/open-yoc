@@ -36,7 +36,7 @@ int aos_mixer_attach(aos_mixer_t *mixer, const char *card_name)
 {
     card_dev_t *card;
 
-    snd_card_attach(card_name, &card);
+    aos_card_attach(card_name, &card);
     if (card == NULL) {
         return -1;
     }

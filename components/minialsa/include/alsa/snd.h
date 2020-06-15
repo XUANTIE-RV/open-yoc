@@ -30,9 +30,10 @@ typedef struct module
 
 //提供声卡注册和查询
 
-int snd_card_new(int *parent, int idx, const char *xid, struct module *module, int size, snd_card_drv_t **card_ret);
-int snd_card_free(snd_card_drv_t *card);
-int snd_card_attach(const char *name, card_dev_t **card);
+int aos_card_new(int *parent, int idx, const char *xid, struct module *module, int size, snd_card_drv_t **card_ret);
+int aos_card_free(snd_card_drv_t *card);
+int aos_card_attach(const char *name, card_dev_t **card);
+int aos_card_lpm(const char *name ,int state);
 
 #ifdef __cplusplus
 }

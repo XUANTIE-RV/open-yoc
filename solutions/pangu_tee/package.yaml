@@ -1,0 +1,74 @@
+name: pangu_tee
+version: v7.3.0                                     # <必选项> 组件版本号
+description: YoC YunVoice SDK
+
+type: solution
+
+solution:
+  cpu_name: CK804ef
+  ld_script: gcc_flash.ld
+
+depends:                                       # 该组件依赖其他的组件
+#  - csi: V7.3.0
+#  - csi_pangu: V7.3.0
+#  - pangu_cpu0: V7.3.0 # '>' | ‘>=' | ''
+  - tee: V7.3.0
+
+# 编译参数
+build_config:
+  include:
+    - app/include
+    - csi_arch/inc
+    - csi_pangu/csi_core/ck804
+    - csi_pangu/csi_driver/include
+    - csi_pangu/csi_driver/csky/hobbit4/include
+    - csi_pangu/csi_driver/csky/common/include
+    - port/include
+  libs:
+
+    # - csky_patch_dgb    # when CONFIG_DEBUG=3
+  libpath:
+
+  cflag: -c -O2 -Wall -Wa,-melrw -fno-builtin -ffunction-sections -fdata-sections -mistack
+  cxxflag: -g2 -O2  -Wall
+  asmflag: ""
+
+  ldflag: -nostartfiles -Wl,--gc-sections -fno-builtin
+
+
+# 源文件
+source_file:
+  - app/src/board_init.c
+  - app/src/app_main.c
+  - csi_arch/*.S
+  - csi_arch/*.c
+  - csi_pangu/csi_core/*.c
+  - csi_pangu/csi_driver/csky/common/*.c
+  - csi_pangu/csi_driver/csky/hobbit4/*.c
+  - port/hobbit4/*.c
+  - port/common/*.c
+  - port/common/crypto/*.c
+  - port/common/efuse/*.c
+  - lib/stdio/*.c
+
+def_config:
+  CONFIG_NTW_IMG_NAME: "prim"
+  CONFIG_TB_KP: 1
+  CONFIG_DEV_CID: 1
+  CONFIG_ALGO_SHA: 1
+  CONFIG_ALGO_TRNG: 1
+  CONFIG_ALGO_AES: 1
+  CONFIG_ALGO_RSA: 1
+  CONFIG_ALGO_LPM: 1
+  CONFIG_SYS_FREQ: 1
+  CONFIG_ALGO_BASE64: 1
+  CONFIG_ALGO_HMAC: 1
+  CONFIG_SHA_BLOCK_MODE: 1
+  CONFIG_TEE_DEBUG: 1
+  CONFIG_TEE_VERSION: "1.4.0"
+  CONFIG_USART: 1
+  CONFIG_TRNG: 1
+  CONFIG_SHA: 1
+  CONFIG_AES: 1
+  CONFIG_RSA: 1
+  CONFIG_TEST: 1

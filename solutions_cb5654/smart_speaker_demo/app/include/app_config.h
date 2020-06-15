@@ -9,6 +9,7 @@
 /* You can add user configuration items here. */
 
 #define CONFIG_WIFI_SMARTLIVING 1 /* 飞燕配网 */
+#define CONFIG_SMARTLIVING_MQTT 0 /* 飞燕mqtt发布及订阅 */
 
 #define APP_FOTA_EN 1  /* 升级 */
 
@@ -39,6 +40,12 @@
 #define APP_EQ_EN 1 /* 软件EQ使能配置 */
 #else
 #define APP_EQ_EN 0 /* 软件EQ使能配置 */
+#endif
+
+#if (defined(BOARD_MIT_V2) || defined(BOARD_MIT_V3))
+#define INIT_VOL 0
+#else
+#define INIT_VOL 20
 #endif
 
 #endif

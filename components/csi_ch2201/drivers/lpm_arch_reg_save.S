@@ -5,7 +5,6 @@
  FILE_NAME           : arch_reg_save.S
  FUNCTION            : save the cpu context:
  ******************************************************************************/
-#include<csi_config.h>
 
 .global arch_do_cpu_save
 .global arch_do_cpu_resume

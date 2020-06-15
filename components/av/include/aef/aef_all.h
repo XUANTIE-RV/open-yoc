@@ -36,7 +36,8 @@ static inline int aefx_register()
 {
 #if defined(CONFIG_AEFXER_SONA)
     REGISTER_AEFXER(SONA, sona);
-#elif defined(CONFIG_AEFXER_IPC)
+#endif
+#if defined(CONFIG_AEFXER_IPC)
     REGISTER_AEFXER(IPC, ipc);
 #endif
     return 0;

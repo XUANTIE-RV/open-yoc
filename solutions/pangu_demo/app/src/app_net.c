@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ * Copyright (C) 2019-2020 Alibaba Group Holding Limited
  */
 
 #include <app_config.h>
@@ -9,7 +9,7 @@
 #include <devices/devicelist.h>
 #include <devices/wifi.h>
 #include <devices/rtl8723ds.h>
-#include <yoc/netmgr.h>
+#include <yoc/netmgr_service.h>
 #include <yoc/eventid.h>
 #include <yoc/uservice.h>
 #include <yoc/init.h>

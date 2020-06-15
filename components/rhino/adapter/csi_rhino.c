@@ -7,7 +7,6 @@
  * @version  V1.0
  * @date     20. July 2016
  ******************************************************************************/
-#include <csi_config.h>
 #include <csi_kernel.h>
 #include <k_api.h>
 #include <stdlib.h>

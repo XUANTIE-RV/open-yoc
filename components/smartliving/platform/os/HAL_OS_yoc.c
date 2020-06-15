@@ -486,7 +486,7 @@ int HAL_GetModuleID(char *mid_str)
     return 0;
 }
 
-#define NETIF_INFO  "realtek-8723ds"
+#define NETIF_INFO  "yoc-wifi"
 int HAL_GetNetifInfo(char *nif_str)
 {
     strcpy(nif_str, NETIF_INFO);

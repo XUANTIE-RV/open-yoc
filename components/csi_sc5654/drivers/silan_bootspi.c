@@ -1065,7 +1065,7 @@ spiflash_handle_t csi_spiflash_initialize(int32_t idx, spiflash_event_cb_t cb_ev
     spi_st = (spi_struct_t *)base;
     //bootspi.cfg = BOOTSPI_CFG_FASTMODE | BOOTSPI_CFG_RCV_CPOL | BOOTSPI_CFG_PROREAD;
     bootspi.cfg = BOOTSPI_CFG_FASTMODE | BOOTSPI_CFG_RCV_CPOL | BOOTSPI_CFG_PROREAD;
-    bootspi.clk = 2;
+    bootspi.clk = BOOTSPI_CLK_DIV4;/*40M*/
 
     return (spiflash_handle_t)spiflash_priv;
 }
@@ -1299,3 +1299,23 @@ spiflash_status_t csi_spiflash_get_status(spiflash_handle_t handle)
     return spiflash_priv->status;
 }
 
+
+/**
+  \brief       Flash power down.
+  \param[in]   handle  spiflash handle to operate.
+  \return      Pointer to Flash information \ref spiflash_info_t
+*/
+int32_t csi_spiflash_power_down(spiflash_handle_t handle)
+{
+    return 0;
+}
+
+/**
+  \brief       Flash release power down.
+  \param[in]   handle  spiflash handle to operate.
+  \return      Pointer to Flash information \ref spiflash_info_t
+*/
+int32_t csi_spiflash_release_power_down(spiflash_handle_t handle)
+{
+    return 0;
+}

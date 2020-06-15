@@ -48,6 +48,8 @@
 #define NSEC_PER_MSEC       1000000
 #define TICK2MSEC(tick)     ((tick)* (1000 / CLOCKS_PER_SEC))
 
+#define TIME_ZONE           8
+
 /* CLOCK_REALTIME refers to the standard time source.  For most
  * implementations, the standard time source is the system timer interrupt.
  * However, if the platform supports an RTC, then the standard time source

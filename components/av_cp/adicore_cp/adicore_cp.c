@@ -21,32 +21,28 @@ struct adicore_cp_priv {
 
 static int _icore_ad_open(icore_msg_t *msg)
 {
+    ad_conf_t ad_cnf;
     adicore_open_t *inp;
     ad_cls_t *ad = NULL;
-    sh_audio_t ash;
 
     inp = icore_get_msg(msg, adicore_open_t);
     CHECK_RET_TAG_WITH_RET(inp, -1);
 
-    memset(&ash, 0, sizeof(sh_audio_t));
-    ash.extradata = inp->ash.extradata;
-    ash.extradata_size = inp->ash.extradata_size;
-    if (inp->ash.id == ICORE_CODEC_ID_MP3) {
-        ash.id = AVCODEC_ID_MP3;
-    } else if (inp->ash.id == ICORE_CODEC_ID_AAC) {
-        ash.id = AVCODEC_ID_AAC;
-    } else {
+    ad_conf_init(&ad_cnf);
+    ad_cnf.sf             = inp->adi_cnf.sf;
+    ad_cnf.block_align    = inp->adi_cnf.block_align;
+    ad_cnf.bps            = inp->adi_cnf.bps;
+    ad_cnf.extradata      = inp->adi_cnf.extradata;
+    ad_cnf.extradata_size = inp->adi_cnf.extradata_size;
+    csi_dcache_invalid_range((uint32_t*)ad_cnf.extradata, ad_cnf.extradata_size);
+    ad = ad_open(inp->id, &ad_cnf);
+    if (!ad) {
+        LOGE(TAG, "ad open faild, codecid = %d", inp->id);
         return -1;
     }
-
-    ad = ad_open(&ash);
-    if (ad == NULL) {
-        LOGE(TAG, "ad open faild, codecid = %d", inp->ash.id);
-        return -1;
-    }
-
     inp->ad = ad;
     inp->sf = ad->ash.sf;
+
     return 0;
 }
 

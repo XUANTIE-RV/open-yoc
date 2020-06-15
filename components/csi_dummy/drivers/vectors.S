@@ -9,7 +9,6 @@
  * @date     28. Nove 2017
  ******************************************************************************/
 
-#include <csi_config.h>
 
 .import trap_c
 
@@ -94,6 +93,7 @@ Default_Handler:
     .endm
 
     def_irq_handler trap0_handler
+    def_irq_handler tspend_handler
     def_irq_handler CORET_IRQHandler
     def_irq_handler TIMA0_IRQHandler
     def_irq_handler TIMA1_IRQHandler

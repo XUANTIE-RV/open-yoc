@@ -5,6 +5,7 @@
 #include <app_config.h>
 #include <aos/aos.h>
 #include <aos/log.h>
+#include <devices/iic.h>
 #include <pinmux.h>
 #include <pin_name.h>
 #include <drv/gpio.h>
@@ -82,15 +83,15 @@ const static int led_map[] = {
 #endif
 
 
-static int aw9523_i2c_write_reg(i2c_dev_t *dev, uint8_t addr, uint8_t val)
+static int aw9523_i2c_write_reg(aos_dev_t *dev, uint8_t addr, uint8_t val)
 {
     uint8_t reg_val[2] = {addr, val};
 
-    return hal_i2c_master_send(dev, AW9523_ADDR, reg_val, 2, AW9523_I2C_TIMEOUT);
+    return iic_master_send(dev, AW9523_ADDR, reg_val, 2, AW9523_I2C_TIMEOUT);
 }
 
 
-int aw9523_init(i2c_dev_t *i2c_dev)
+int aw9523_init(aos_dev_t *i2c_dev)
 {
     LOGD(TAG, "start aw9523 config");
 
@@ -174,7 +175,7 @@ int aw9523_shutdown(void)
     return 0;
 }
 
-int aw9523_led_control(i2c_dev_t *i2c_dev, led_array_id_t index, uint8_t dime)
+int aw9523_led_control(aos_dev_t *i2c_dev, led_array_id_t index, uint8_t dime)
 {
     CHECK_PARAM(index <= LED_ARRAY_12 && index >= LED_ARRAY_1, -1);
 
@@ -192,23 +193,23 @@ int aw9523_led_control(i2c_dev_t *i2c_dev, led_array_id_t index, uint8_t dime)
     return ret;
 }
 
-static int aw9523_iic_read_reg(i2c_dev_t *i2c_dev, uint8_t reg_addr, uint8_t val[], uint8_t num)
+static int aw9523_iic_read_reg(aos_dev_t *i2c_dev, uint8_t reg_addr, uint8_t val[], uint8_t num)
 {
     int     ret;
     uint8_t wbuf[1] = {
         reg_addr,
     };
 
-    ret = hal_i2c_master_send(i2c_dev, AW9523_ADDR, wbuf, 1, AW9523_I2C_TIMEOUT);
+    ret = iic_master_send(i2c_dev, AW9523_ADDR, wbuf, 1, AW9523_I2C_TIMEOUT);
     CHECK_RET_WITH_RET(ret == 0, -1);
 
-    ret = hal_i2c_master_recv(i2c_dev, AW9523_ADDR, val, num, AW9523_I2C_TIMEOUT);
+    ret = iic_master_recv(i2c_dev, AW9523_ADDR, val, num, AW9523_I2C_TIMEOUT);
     CHECK_RET_WITH_RET(ret == 0, -1);
 
     return ret;
 }
 
-int aw9523_read_input(i2c_dev_t *i2c_dev, uint16_t *val, uint16_t input_mask)
+int aw9523_read_input(aos_dev_t *i2c_dev, uint16_t *val, uint16_t input_mask)
 {
     uint8_t lbyte = 0, hbyte = 0;
     int ret;

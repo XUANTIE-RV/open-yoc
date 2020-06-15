@@ -17,8 +17,14 @@ extern "C" {
 typedef struct iic_driver {
     driver_t drv;
     int (*config)(aos_dev_t *dev, iic_config_t *config);
-    int (*send)(aos_dev_t *dev, uint8_t dev_addr, const void *data, uint32_t size);
-    int (*recv)(aos_dev_t *dev, uint8_t dev_addr, void *data, uint32_t size);
+    int (*master_send)(aos_dev_t *dev, uint16_t dev_addr, const void *data, uint32_t size, uint32_t timeout);
+    int (*master_recv)(aos_dev_t *dev, uint16_t dev_addr, void *data, uint32_t size, uint32_t timeout);
+    int (*slave_send)(aos_dev_t *dev, const void *data, uint32_t size, uint32_t timeout);
+    int (*slave_recv)(aos_dev_t *dev, void *data, uint32_t size, uint32_t timeout);
+    int (*mem_write)(aos_dev_t *dev, uint16_t dev_addr, uint16_t mem_addr, uint16_t mem_addr_size,\
+                        const void *data, uint32_t size, uint32_t timeout);
+    int (*mem_read)(aos_dev_t *dev, uint16_t dev_addr, uint16_t mem_addr, uint16_t mem_addr_size,\
+                        void *data, uint32_t size, uint32_t timeout);
 } iic_driver_t;
 
 #ifdef __cplusplus

@@ -1,0 +1,33 @@
+name: drv_nbiot_u1
+version: v7.3.0                                     # <必选项> 组件版本号
+description: u1驱动
+tag: 第三方驱动
+keywords:
+  - base
+
+license: Apache license v2.0                  # GPLv2，LGPLv2.1，MIT，Apache license v2.0，BSD
+homepage: ""
+
+type: common
+
+depends:                                       # 该组件依赖其他的组件
+  - csi: V7.3.0
+  - rhino: V7.3.0
+  - aos: V7.3.0
+  - at: V7.3.0
+
+source_file:
+  - 'u1_api.c'
+  - 'u1_devops.c'
+
+build_config:
+  include:
+    - include
+
+  cflag: ""                                   # C 编译器所需要要的编译参数
+  # define:                                   # 宏定义
+
+install:
+  - dest: include/devices
+    source:
+      - "include/devices/*.h"

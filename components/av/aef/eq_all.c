@@ -6,16 +6,6 @@
 #include "aef/eq_all.h"
 
 /**
- * @brief  regist equalizer for sona
- * @return 0/-1
- */
-int eqx_register_sona()
-{
-    extern struct eqx_ops eqx_ops_sona;
-    return eqx_ops_register(&eqx_ops_sona);
-}
-
-/**
  * @brief  regist equalizer for silan
  * @return 0/-1
  */

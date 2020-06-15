@@ -19,7 +19,7 @@ __BEGIN_DECLS__
 
 #define SRCV_TIMEOUT_DEFAULT     (6*1000) ///< ms
 #define SCACHE_SIZE_DEFAULT      (20 * STREAM_BUF_SIZE_MAX)
-#define SCACHE_PERCENT_DEFAULT   (80)
+#define SCACHE_THRESHOLD_DEFAULT (80)
 
 typedef struct stream_cls stream_cls_t;
 
@@ -55,22 +55,22 @@ struct stream_cls {
     int32_t                   buf_len;
 
     int32_t                   pos;
-    int32_t                   size;            ///< length of the stream
+    int32_t                   size;                    ///< length of the stream
 
     char                      *url;
     uint8_t                   eof;
     uint8_t                   quit;
     uint8_t                   seekable;
     irq_av_t                  irq;
-    get_decrypt_cb_t          get_dec_cb;      ///< used for get decrypt info
+    get_decrypt_cb_t          get_dec_cb;              ///< used for get decrypt info
 
-    uint32_t                  rcv_timeout;     ///< ms
+    uint32_t                  rcv_timeout;             ///< ms. 0 use default & AOS_WAIT_FOREVER means wait forever
     aos_event_t               cache_quit;
-    uint32_t                  cache_size;      ///< size of the web cache. 0 use default
-    uint32_t                  cache_percent;   ///< (0~100)start read for player when up to cache_percent. 0 use default
-    uint32_t                  cache_per_upto;  ///<
+    uint32_t                  cache_size;              ///< size of the web cache. 0 use default
+    uint32_t                  cache_start_threshold;   ///< (0~100)start read for player when up to cache_start_threshold. 0 use default
+    uint8_t                   cache_start_upto;        ///<
     uint8_t                   cache_status;
-    int32_t                   cache_pos;       ///< cache position. used when cache enable
+    int32_t                   cache_pos;               ///< cache position. used when cache enable
 
     struct {
         uint32_t  to_4000ms;

@@ -4,13 +4,11 @@
 
 #include <stdio.h>
 #include <time.h>
-#include <yoc_config.h>
 #include <sys/types.h>
+#include <sys_freq.h>
 #include "csi_core.h"
 #include "drv/timer.h"
 
-
-extern int32_t drv_get_cpu_freq(int idx);
 extern uint64_t g_sys_tick_count;
 extern long long aos_now_ms(void);
 
@@ -65,7 +63,7 @@ int coretimspec(struct timespec *ts)
 
         if (clk1 == clk2 && pass2 > pass1) {
             msecs = clk1;
-            nsecs = pass2 * (NSEC_PER_SEC / drv_get_cpu_freq(0));
+            nsecs = pass2 * (NSEC_PER_SEC / drv_get_cur_cpu_freq());
             break;
         }
     }

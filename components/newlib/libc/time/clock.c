@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-#include <yoc_config.h>
 #include <time.h>
 
 extern int clock_gettime(clockid_t clockid, struct timespec *tp);

@@ -15,7 +15,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
-#include <csi_config.h>
 
 typedef struct {
     int             addr;

@@ -47,6 +47,7 @@ static void get_kv_config_time(uint8_t id)
     aos_kv_getint(name, &time);
     g_clock_alarm_array[idx].time = (time_t)time;
     if (time == 0) {
+        g_clock_alarm_array[idx].id = 0;
         g_clock_alarm_array[idx].period = CLOCK_ALARM_PERIOD_DISABLE;
         g_clock_alarm_array[idx].enable = 0;
         /* no clock alarm */
@@ -146,7 +147,11 @@ static time_t convert_to_absolute_time(clock_alarm_config_t *cfg_time)
     absolute_time = mktime(tm_now) - TIME_ZONE * 3600;
 
     if (absolute_time <= rtc_get_time()) {
-        update_period(cfg_time->period, &absolute_time);
+        if (cfg_time->period == CLOCK_ALARM_ONCE) {
+                absolute_time += ONE_DAY_TIME;
+        } else {
+            update_period(cfg_time->period, &absolute_time);
+        }
     }
 
     return absolute_time;
@@ -193,6 +198,7 @@ static void update_clock_alarm(uint8_t idx)
     if (g_clock_alarm_array[idx].period == CLOCK_ALARM_PERIOD_DISABLE) {
         set_kv_config_time(idx + 1, 0, CLOCK_ALARM_PERIOD_DISABLE);
         set_kv_config_enable(idx + 1, 0);
+        g_clock_alarm_array[idx].id = 0;
         g_clock_alarm_array[idx].time = 0;
         g_clock_alarm_array[idx].period = CLOCK_ALARM_PERIOD_DISABLE;
         g_clock_alarm_array[idx].enable = 0;
@@ -204,6 +210,7 @@ static void update_clock_alarm(uint8_t idx)
         //delete kv and reset struct
         set_kv_config_time(g_clock_alarm_array[idx].id, 0, CLOCK_ALARM_PERIOD_DISABLE);
         set_kv_config_enable(g_clock_alarm_array[idx].id, 0);
+        g_clock_alarm_array[idx].id = 0;
         g_clock_alarm_array[idx].time = 0;
         g_clock_alarm_array[idx].period = CLOCK_ALARM_PERIOD_DISABLE;
         g_clock_alarm_array[idx].enable = 0;
@@ -218,7 +225,7 @@ static void update_clock_alarm(uint8_t idx)
 }
 
 
-static void set_rtc_alarm(time_t set_time, clock_alarm_period_e period)
+static void config_rtc_alarm(time_t set_time, clock_alarm_period_e period)
 {
     int week = 0;
 #ifdef CONFIG_CLOCK_ALARM_SCHEDULE
@@ -227,13 +234,13 @@ static void set_rtc_alarm(time_t set_time, clock_alarm_period_e period)
     //ahead 30s
     struct tm *tm_set = convert_to_tm(set_time - 30);
 #endif
-    // LOGD(TAG, "set_rtc_alarm: time %d, period %d", set_time, period);
+    // LOGD(TAG, "config_rtc_alarm: time %d, period %d", set_time, period);
     if (period != CLOCK_ALARM_PERIOD_WEEK) {
         week = -1;
     } else {
         week = tm_set->tm_wday;
     }
-    rtc_set_alarm(week, tm_set->tm_hour, tm_set->tm_min, tm_set->tm_sec);
+    rtc_set_alarm(week, tm_set->tm_mday, tm_set->tm_hour, tm_set->tm_min, tm_set->tm_sec);
 }
 
 static void update_clock_timer_info(time_t time_rtc_now)
@@ -252,7 +259,7 @@ static void update_clock_timer_info(time_t time_rtc_now)
     uint8_t idx = min_id - 1;
 
 #ifdef CONFIG_CLOCK_ALARM_SCHEDULE
-    set_rtc_alarm(g_clock_alarm_array[idx].time, g_clock_alarm_array[idx].period);
+    config_rtc_alarm(g_clock_alarm_array[idx].time, g_clock_alarm_array[idx].period);
 #else
     int delta = g_clock_alarm_array[idx].time - time_rtc_now;
     if (delta < 90) {
@@ -267,7 +274,7 @@ static void update_clock_timer_info(time_t time_rtc_now)
             event_publish_delay(EVENT_CLOCK_TIMEOUT, arg, delta * 1000);
         }
     } else {
-        set_rtc_alarm(g_clock_alarm_array[idx].time, g_clock_alarm_array[idx].period);
+        config_rtc_alarm(g_clock_alarm_array[idx].time, g_clock_alarm_array[idx].period);
     }
 #endif
 }
@@ -338,7 +345,7 @@ static void clock_alarm_handle(void)
         void *arg = (void *)arg_mini_id;
         event_publish(EVENT_CLOCK_TIMEOUT, arg);
     } else {
-        set_rtc_alarm(g_clock_alarm_array[idx].time, g_clock_alarm_array[idx].period);
+        config_rtc_alarm(g_clock_alarm_array[idx].time, g_clock_alarm_array[idx].period);
     }
 #else
     //delta < 90 sec, start soft time. update clock array
@@ -353,6 +360,8 @@ static void clock_alarm_handle(void)
         }
 
         update_clock_timer_info(time_rtc_now);
+    } else {
+        config_rtc_alarm(g_clock_alarm_array[idx].time, g_clock_alarm_array[idx].period);
     }
 #endif
 }
@@ -361,8 +370,10 @@ static void clock_alarm_handle(void)
 static void local_event_cb(uint32_t event_id, const void *param, void *context)
 {
     if (event_id == EVENT_CLOCK_ALARM) {
+        LOGD(TAG, "EVENT_CLOCK_ALARM");
         clock_alarm_handle();
     } else if (event_id == EVENT_CLOCK_TIMEOUT) {
+        LOGD(TAG, "EVENT_CLOCK_TIMEOUT");
         clock_timer_callback((void *)param);
     } else {
         LOGE(TAG,"local_event_cb error event_id = 0x%x", event_id);
@@ -374,6 +385,8 @@ int clock_alarm_init(clock_alarm_cb_t alarm_cb)
     if (alarm_cb == NULL) {
         return -1;
     }
+
+    rtc_init();
 
     g_clock_alarm_cb = alarm_cb;
 
@@ -410,6 +423,81 @@ int clock_alarm_set(uint8_t id, clock_alarm_config_t *cfg_time)
         }
         //new clock
         for (idx = 0; idx < CLOCK_ALARM_NUM; idx++) {
+            if (abs_time == g_clock_alarm_array[idx].time && 
+                cfg_time->period == g_clock_alarm_array[idx].period) {
+                //clock repeat
+                return -2;
+            }
+        }
+        //find empty
+        for (idx = 0; idx < CLOCK_ALARM_NUM; idx++) {
+            if (g_clock_alarm_array[idx].time == 0) {
+                break;
+            }
+        }
+
+        if (idx >= CLOCK_ALARM_NUM) {
+            // clock alarm full
+            return -1;
+        }
+        g_clock_alarm_array[idx].enable = 0;
+    } else {
+        for (idx = 0; idx < CLOCK_ALARM_NUM; idx++) {
+            if (abs_time != 0 && abs_time == g_clock_alarm_array[idx].time &&
+                cfg_time->period == g_clock_alarm_array[idx].period) {
+                //clock repeat
+                return -2;
+            }
+        }
+        //modify clock
+        idx = id - 1;
+        if (idx >= CLOCK_ALARM_NUM) {
+            return -3;
+        }
+
+        if (cfg_time == NULL) {
+            set_kv_config_time(id, 0, CLOCK_ALARM_PERIOD_DISABLE);
+            set_kv_config_enable(id, 0);
+            g_clock_alarm_array[idx].id = 0;
+            g_clock_alarm_array[idx].time = 0;
+            g_clock_alarm_array[idx].period = CLOCK_ALARM_PERIOD_DISABLE;
+            g_clock_alarm_array[idx].enable = 0;
+            return 0;
+        }
+        if (abs_time == 0) {
+            /* config time error */
+            return -4;
+        }
+    }
+
+    //set value
+    g_clock_alarm_array[idx].id = idx + 1;
+    g_clock_alarm_array[idx].time = abs_time;
+    g_clock_alarm_array[idx].period = cfg_time->period;
+    if (clock_alarm_get_status() == 0) {
+        set_clock_alarm_status(1);
+    }
+
+    //store to kv
+    set_kv_config_time(g_clock_alarm_array[idx].id, g_clock_alarm_array[idx].time, g_clock_alarm_array[idx].period);
+    return g_clock_alarm_array[idx].id;
+}
+
+
+// set clock time, output: -2 - repeat clock; -1 - full array; other - clock id
+//id: 0 - set new clock; other - modify id clock info
+int clock_alarm_abstime_set(uint8_t id, time_t abs_time, clock_alarm_period_e period)
+{
+    uint8_t idx = 0;
+
+    if (abs_time == 0) {
+        /* config time error */
+        return -4;
+    }
+
+    if (id == 0) {
+        //new clock
+        for (idx = 0; idx < CLOCK_ALARM_NUM; idx++) {
             if (abs_time == g_clock_alarm_array[idx].time) {
                 //clock repeat
                 return -2;
@@ -433,25 +521,12 @@ int clock_alarm_set(uint8_t id, clock_alarm_config_t *cfg_time)
         if (idx >= CLOCK_ALARM_NUM) {
             return -3;
         }
-
-        if (cfg_time == NULL) {
-            set_kv_config_time(id, 0, CLOCK_ALARM_PERIOD_DISABLE);
-            set_kv_config_enable(id, 0);
-            g_clock_alarm_array[idx].time = 0;
-            g_clock_alarm_array[idx].period = CLOCK_ALARM_PERIOD_DISABLE;
-            g_clock_alarm_array[idx].enable = 0;
-            return 0;
-        }
-        if (abs_time == 0) {
-            /* config time error */
-            return -4;
-        }
     }
 
     //set value
     g_clock_alarm_array[idx].id = idx + 1;
     g_clock_alarm_array[idx].time = abs_time;
-    g_clock_alarm_array[idx].period = cfg_time->period;
+    g_clock_alarm_array[idx].period = period;
     if (clock_alarm_get_status() == 0) {
         set_clock_alarm_status(1);
     }

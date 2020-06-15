@@ -6,7 +6,6 @@
 #include <alsa/snd.h>
 #include <alsa/pcm.h>
 #include <alsa/mixer.h>
-#include <yoc_config.h>
 #include <ipc.h>
 #include <stdio.h>
 #include <csi_core.h>

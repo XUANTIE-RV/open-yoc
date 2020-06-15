@@ -5,9 +5,10 @@
 #include <aos/cli.h>
 #include <aos/log.h>
 #include <yoc/mic.h>
+#include <yoc/lpm.h>
 #include "app_main.h"
 
-static const char *TAG = "app_cli";
+#define TAG "app_cli"
 
 static int cli_pair_proc(int argc, char **argv)
 {
@@ -57,6 +58,21 @@ static void cmd_apps_func(char *wbuf, int wbuf_len, int argc, char **argv)
         } else if(strcmp(argv[1], "micrec") == 0) {
             if (cli_mic_rec_proc(argc, argv) == 0) {
                 return;
+            }
+        } else if(strcmp(argv[1], "lpm") == 0) {
+            if (lpm_check()) {
+                if (argc == 3) {
+                    int mode = atoi(argv[2]);
+
+                    if (mode == 1) {
+                        pm_config_policy(LPM_POLICY_LOW_POWER);
+                    } else if (mode == 2) {
+                        pm_config_policy(LPM_POLICY_DEEP_SLEEP);
+                    }
+                }
+                pm_agree_halt(0);
+            } else {
+                printf("\tlpm check failed\n");
             }
         }
     } else {

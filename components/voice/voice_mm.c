@@ -8,7 +8,7 @@
 #include <aos/kernel.h>
 #include <aos/list.h>
 
-#include "voice_ap.h"
+#include "voice.h"
 
 typedef struct {
     slist_t next;

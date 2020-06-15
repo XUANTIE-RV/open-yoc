@@ -44,9 +44,11 @@ static inline int resample_register()
 {
 #if defined(CONFIG_RESAMPLER_SILAN)
     REGISTER_RESAMPLER(SILAN, silan);
-#elif defined(CONFIG_RESAMPLER_IPC)
+#endif
+#if defined(CONFIG_RESAMPLER_IPC)
     REGISTER_RESAMPLER(IPC, ipc);
-#elif defined(CONFIG_RESAMPLER_SPEEX)
+#endif
+#if defined(CONFIG_RESAMPLER_SPEEX)
     REGISTER_RESAMPLER(SPEEX, speex);
 #endif
     return 0;

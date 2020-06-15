@@ -10,7 +10,6 @@
  * @date     02. June 2017
  ******************************************************************************/
 
-#include <csi_config.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
@@ -121,7 +120,7 @@ static int32_t sha_message_done(void)
 
     while ((sha_reg->SHA_CON & 0x40)) {
         if (!(timeout--)) {
-            return ERR_TRNG(DRV_ERROR_TIMEOUT);
+            return ERR_SHA(DRV_ERROR_TIMEOUT);
         }
     }
 

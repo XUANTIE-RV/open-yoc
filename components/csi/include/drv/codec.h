@@ -38,8 +38,15 @@ typedef enum {
     CODEC_EVENT_PERIOD_WRITE_COMPLETE       = 1,  ///< a peroid data write complete
     CODEC_EVENT_WRITE_BUFFER_EMPTY          = 2,  ///< fifo is empty
     CODEC_EVENT_READ_BUFFER_FULL            = 3,  ///< fifo is full
-    CODEC_EVENT_TRANSFER_ERROR              = 4,  ///< transfer error
+    CODEC_EVENT_VAD_TRIGGER                 = 4,  ///< vad is trigger 
+    CODEC_EVENT_TRANSFER_ERROR              = 5,  ///< transfer error
 } codec_event_t;
+
+typedef enum {
+    CODEC_MODE_RUN                  = 0,   ///< Running mode
+    CODEC_MODE_SLEEP,                      ///< Sleep mode
+    CODEC_MODE_SHUTDOWN                    ///< Shutdown mode
+} codec_lpm_state_t;
 
 typedef void (*codec_event_cb_t)(int idx, codec_event_t event, void *arg);
 
@@ -65,6 +72,7 @@ typedef struct {
     uint8_t *buf;
     uint32_t buf_size;     ///< Used to cache incoming data
     uint32_t period;       ///< when a peroid data is reached,the callback function is called
+    uint32_t vad_threshold;
     void *priv;
 } codec_input_t;
 
@@ -92,6 +100,7 @@ int32_t csi_codec_init(uint32_t idx);
   \return none
 */
 void csi_codec_uninit(uint32_t idx);
+void csi_codec_lpm(uint32_t idx, codec_lpm_state_t state);
 
 /**
   \brief  Control codec power
@@ -406,6 +415,14 @@ int32_t csi_codec_output_get_mixer_right_gain(codec_output_t *handle, int32_t *v
   \return 0 for success, negative for error code
 */
 int32_t csi_codec_output_mute(codec_output_t *handle, int en);
+
+/**
+  \brief  Contol codec wakeup
+  \param[in]  handle: codec input handle
+  \param[in]  en: 1 enable wakeup, 0 disable wakeup
+  \return 0 for success, negative for error code
+*/
+int32_t csi_codec_vad_enable(codec_input_t *handle, int en);
 
 #ifdef __cplusplus
 }

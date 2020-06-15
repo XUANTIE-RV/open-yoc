@@ -8,8 +8,6 @@
 
 #define TAG                    "s_http"
 
-#define HTTP_READ_TIMEOUT_MS   (6*1000)
-
 struct http_priv {
     wsession_t *session;
 };
@@ -26,7 +24,7 @@ static int _stream_http_open(stream_cls_t *o, int mode)
     CHECK_RET_TAG_WITH_RET(priv, -1);
 
     session = wsession_create();
-    CHECK_RET_TAG_WITH_RET(session, -1);
+    CHECK_RET_TAG_WITH_GOTO(session, err);
 
     rc = wsession_get(session, o->url, 3);
     if (rc) {
@@ -37,9 +35,9 @@ static int _stream_http_open(stream_cls_t *o, int mode)
     val = dict_get_val(&session->hdrs, "Content-Length");
     CHECK_RET_TAG_WITH_GOTO(val, err);
 
-    priv->session = session;
-    o->size       = atoi(val);
-    o->priv       = priv;
+    priv->session   = session;
+    o->size         = atoi(val);
+    o->priv         = priv;
 
     return 0;
 err:
@@ -68,7 +66,7 @@ static int _stream_http_read(stream_cls_t *o, uint8_t *buf, size_t count)
     int rc;
     struct http_priv *priv = o->priv;
 
-    rc = wsession_read(priv->session, (char*)buf, count, HTTP_READ_TIMEOUT_MS);
+    rc = wsession_read(priv->session, (char*)buf, count, o->rcv_timeout);
 
     return rc;
 }
@@ -98,19 +96,8 @@ static int _stream_http_seek(stream_cls_t *o, int32_t pos)
 
 static int _stream_http_control(stream_cls_t *o, int cmd, void *arg, size_t *arg_size)
 {
-    int ret = 0;
-    //struct http_priv *priv = o->priv;
-
-    switch (cmd) {
-    //TODO
-    case STREAM_CMD_GET_SIZE:
-        break;
-    default:
-        //LOGE(TAG, "stream constrol cmd not support. cmd = %d\n", cmd);
-        ret = -1;
-    }
-
-    return ret;
+    //TODO:
+    return -1;
 }
 
 const struct stream_ops stream_ops_http = {

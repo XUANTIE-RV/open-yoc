@@ -1,11 +1,10 @@
 /*
- * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ * Copyright (C) 2019-2020 Alibaba Group Holding Limited
  */
-#include <yoc_config.h>
 #include <stdlib.h>
 #include <string.h>
 #include <aos/aos.h>
-
+#include "cloud_baidu.h"
 #include "app_main.h"
 
 #define TAG "app-aliyunrasr"
@@ -40,7 +39,11 @@ int aui_nlp_process_aliyun_rasr(cJSON *js, const char *json_text)
     }
 
     LOGI(TAG, "parse success, buf = %s\n", data->valuestring);
-
+    
+    if (strncasecmp(data->valuestring, MUSIC_PREFIX, strlen(MUSIC_PREFIX)) == 0) {
+        LOGI(TAG, "get music url start");
+        return baidu_music(&g_aui_handler, data->valuestring);
+    }
     return aui_cloud_push_text(&g_aui_handler, data->valuestring);
 }
 

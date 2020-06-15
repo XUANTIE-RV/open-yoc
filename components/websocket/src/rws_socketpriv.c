@@ -19,7 +19,6 @@
  *   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *   THE SOFTWARE.
  */
-#include <yoc_config.h>
 #include <aos/aos.h>
 #include <aos/debug.h>
 
@@ -768,7 +767,7 @@ static void rws_socket_work_th_func(void * user_object)
         default:
             break;
         }
-        rws_thread_sleep(10);
+        rws_thread_sleep(5);
     }
 }
 

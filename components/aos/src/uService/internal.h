@@ -5,7 +5,6 @@
 #ifndef USERVICE_INTERNAL_H
 #define USERVICE_INTERNAL_H
 
-#include <yoc_config.h>
 #include <stdint.h>
 #include <aos/list.h>
 #include <yoc/uservice.h>

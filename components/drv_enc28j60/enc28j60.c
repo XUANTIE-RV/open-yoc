@@ -46,7 +46,6 @@
  * search-and-replace for the word "ethernetif" to replace it with
  * something that better describes your network interface.
  */
-#include <yoc_config.h>
 
 #include <aos/log.h>
 
@@ -932,7 +931,7 @@ static void tcpip_init_done(struct netif *netif)
  * Return:
  *          the status of init
  ********************************************************************************/
-int lwip_tcpip_init(void)
+static int lwip_tcpip_init(void)
 {
 #ifdef PERF
     perf_init("/tmp/minimal.perf");

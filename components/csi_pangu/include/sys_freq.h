@@ -109,9 +109,11 @@ int32_t drv_get_pwm_freq(int32_t idx);
 int32_t drv_get_i2s_freq(int32_t idx);
 void drv_clk_enable(clk_module_e module);
 void drv_clk_disable(clk_module_e module);
+int32_t drv_set_cpu_freq(int idx, cpu_freq_t freq);
 boot_reson_t drv_get_boot_reason(void);
 int drv_set_sdio_freq(int idx, int freq);
 int32_t drv_get_sdio_freq(int idx);
+uint32_t drv_get_cur_cpu_freq(void);
 
 #include <yun_pmu.h>
 

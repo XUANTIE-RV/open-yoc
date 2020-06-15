@@ -11,7 +11,7 @@
 
 #include <yoc/adc_key_srv.h>
 #include <aos/kernel.h>
-#include <aos/hal/adc.h>
+#include <devices/adc.h>
 
 #define TAG "adcbt"
 
@@ -58,18 +58,20 @@ static aos_timer_t  g_scan_timer       = {NULL};
 static int adc_value_read(int pin, int *vol)
 {
     int ret;
+    uint32_t ch = 0;
+    hal_adc_config_t config;
 
-    adc_dev_t adc_hd = {0, {0}, NULL};
-    adc_hd.port = hal_adc_pin2channel(pin);
-    adc_hd.config.sampling_cycle = 0;
-
-    ret = hal_adc_init(&adc_hd);
+    aos_dev_t *dev = adc_open("adc0");
+    ch = adc_pin2channel(dev, pin);
+    adc_config_default(&config);
+    config.channel = &ch;
+    ret = adc_config(dev, &config);
 
     if(ret == 0) {
-        ret = hal_adc_value_get(&adc_hd, vol, 0);
+        ret = adc_read(dev, vol, 0);
     }
 
-    hal_adc_finalize(&adc_hd);
+    adc_close(dev);
 
     return 0;
 }

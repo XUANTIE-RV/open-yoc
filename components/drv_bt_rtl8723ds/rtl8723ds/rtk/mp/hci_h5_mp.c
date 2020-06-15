@@ -34,35 +34,21 @@
 ******************************************************************************/
 #define LOG_TAG "bt_h5_int"
 #include <stdlib.h>
+#include <string.h>
 
 #include <aos/kernel.h>
 #include <aos/debug.h>
-#include <string.h>
 
-#include "hci/hci_hal.h"
-#include "bt_skbuff.h"
-#include "bt_list.h"
-#include "stack/hcimsgs.h"
-
-#include <osi/mutex.h>
-#include <osi/alarm.h>
-
-#include <drv/gpio.h>
-#include <pin_name.h>
-#include <pinmux.h>
 #include <devices/hci.h>
-#include <devices/uart.h>
 
 #include "hci_h5_mp.h"
 #include "bt_vendor_rtk.h"
-#include "userial_vendor.h"
 
-#if (C2H_FLOW_CONTROL_INCLUDED == TRUE)
-#include "l2c_int.h"
-#endif ///C2H_FLOW_CONTROL_INCLUDED == TRUE
+#define TAG "h5_mp"
 
 #define H5_TRACE_DATA_ENABLE 0
 
+#define STREAM_TO_UINT16(u16, p) {u16 = ((uint16_t)(*(p)) + (((uint16_t)(*((p) + 1))) << 8)); (p) += 2;}
 /******************************************************************************
 **  Constants & Macros
 ******************************************************************************/
@@ -84,15 +70,6 @@
 */
 #define INT_CMD_PKT_MAX_COUNT       8
 #define INT_CMD_PKT_IDX_MASK        0x07
-
-
-//HCI Event codes
-#define HCI_CONNECTION_COMP_EVT             0x03
-#define HCI_DISCONNECTION_COMP_EVT          0x05
-#define HCI_COMMAND_COMPLETE_EVT            0x0E
-#define HCI_COMMAND_STATUS_EVT              0x0F
-#define HCI_NUM_OF_CMP_PKTS_EVT             0x13
-#define HCI_BLE_EVT                         0x3E
 
 
 #define PATCH_DATA_FIELD_MAX_SIZE     252
@@ -127,15 +104,8 @@
 
 #define PACKET_TYPE_TO_INDEX(type) ((type) - 1)
 
-static const uint16_t outbound_event_types[] = {
-    MSG_HC_TO_STACK_HCI_ERR,
-    MSG_HC_TO_STACK_HCI_ACL,
-    MSG_HC_TO_STACK_HCI_SCO,
-    MSG_HC_TO_STACK_HCI_EVT
-};
-
 /* Callback function for the returned event of internal issued command */
-typedef void (*tTIMER_HANDLE_CBACK)(void *arg);
+typedef void (*tTIMER_HANDLE_CBACK)(void *timer, void *arg);
 
 typedef enum H5_RX_STATE {
     H5_W4_PKT_DELIMITER,
@@ -163,9 +133,152 @@ static volatile uint8_t h5_retransfer_running = 0;
 static volatile uint16_t h5_ready_events = 0;
 static volatile uint8_t h5_data_ready_running = 0;
 
+
+static aos_mutex_t h5_wakeup_mutex;
+
+extern int g_uart_id;
+extern int g_bt_dis_pin;
+
+/******************************************************************************
+**  Static function
+******************************************************************************/
+static aos_timer_t *OsAllocateTimer(tTIMER_HANDLE_CBACK timer_callback);
+static int OsStartTimer(aos_timer_t *timerid, int msec, int mode);
+static int OsStopTimer(aos_timer_t *timerid);
+static uint16_t h5_wake_up();
+
+static packet_recv h5_int_hal_callbacks;
+
+#define IN
+#define OUT
+
+#ifndef false
+#define false 0
+#endif
+
+#ifndef ture
+#define true 1
+#endif
+
+#ifndef EXTERN
+#define EXTERN
+#endif
+
+//****************************************************************************
+// CONSTANT DEFINITION
+//****************************************************************************
+#define DEFAULT_HEADER_SIZE    (8+4)
+
+//RTK_BUFFER data buffer alignment
+#define RTB_ALIGN   4
+
+//do alignment with RTB_ALIGN
+#define RTB_DATA_ALIGN(_Length)     ((_Length + (RTB_ALIGN - 1)) & (~(RTB_ALIGN - 1)))
+
+typedef struct _RT_LIST_ENTRY {
+    struct _RT_LIST_ENTRY *Next;   ///< Entry's next element
+    struct _RT_LIST_ENTRY *Prev;   ///< Entry's previous element
+} RT_LIST_ENTRY, *PRT_LIST_ENTRY;
+
+///List head would be another name of list entry, and it points to the list header
+typedef RT_LIST_ENTRY       RT_LIST_HEAD, *PRT_LIST_HEAD;
+
+/**
+    Macros to iterate over the list.
+    \param _Iter          : struct PRT_LIST_ENTRY type iterator to use as a loop cursor
+    \param _ListHead   : List head of which to be iterated
+*/
+#define LIST_FOR_EACH(_Iter, _ListHead) \
+        for ((_Iter) = (_ListHead)->Next; (_Iter) != (_ListHead); (_Iter) = (_Iter)->Next)
+
+/**
+    Macros to iterate over the list safely against removal of list entry.
+    If you would delete any list entry from the list while iterating the list, should use this macro
+    \param _Iter          : Struct PRT_LIST_ENTRY type iterator to use as a loop cursor
+    \param _Temp       : Another Struct PRT_LIST_ENTRY type to use as a temporary storage
+    \param _ListHead   : List head of which to be iterated
+*/
+#define LIST_FOR_EACH_SAFELY(_Iter, _Temp, _ListHead) \
+        for ((_Iter) = (_ListHead)->Next, (_Temp) = (_Iter)->Next; (_Iter) != (_ListHead);  \
+               (_Iter) = (_Temp), (_Temp) = (_Iter)->Next)
+
+/**
+    Macros to get the struct pointer of this list entry
+    You could make every RT_LIST_ENTRY at the first place of your structure to avoid the macro, which will be dangerouse.
+    Copy from winnt.h.
+    BUG:if offset of field in type larger than 32 bit interger, which is not likely to happen, it will error
+    \param _Ptr               : Struct RT_LIST_ENTRY type pointer
+    \param _Type            : The type of structure in which the RT_LIST_ENTRY embedded in
+    \param _Field            : the name of the RT_LIST_ENTRY within the struct
+*/
+#define LIST_ENTRY(_Ptr, _Type, _Field) ((_Type *)((char *)(_Ptr)-(unsigned long)(&((_Type *)0)->_Field)))
+
+/*----------------------------------------------------------------------------------
+    CONSTANT DEFINITION
+----------------------------------------------------------------------------------*/
+#define RTK_CONTEXT_SIZE 12
+
+#define RTB_QUEUE_ID_LENGTH          64
+
+struct BT_RTB_CONTEXT{
+    uint8_t   PacketType;
+    uint16_t Handle;
+};
+
+/*----------------------------------------------------------------------------------
+    STRUCTURE DEFINITION
+----------------------------------------------------------------------------------*/
+/**
+    Rtk buffer definition
+      Head -->|<---Data--->|<-----Length------>| <---End
+                     _________________________________
+                    |_____________|___________________|
+                    |<-headroom->|<--RealDataBuffer-->|
+
+    Compared to socket buffer, there exists no tail and end pointer and tailroom as tail is rarely used in bluetooth stack
+    \param List             : List structure used to list same type rtk buffer and manipulate rtk buffer like list.
+    \param Head           : Pointer to truely allocated data buffer. It point to the headroom
+    \param Data           : Pointer to real data buffer.
+    \param Length        : currently data length
+    \param HeadRoom  : Record initialize headroom size.
+    \param RefCount    : Reference count. zero means able to be freed, otherwise somebody is handling it.
+    \param Priv            : Reserved for multi-device support. Record Hci pointer which will handles this packet
+    \param Contest      : Control buffer, put private variables here.
+*/
+typedef struct _RTK_BUFFER
+{
+    RT_LIST_ENTRY List;
+    uint8_t *Head;
+    uint8_t *Data;
+    uint8_t *Tail;
+    uint8_t *End;
+    uint32_t Length;
+    uint32_t HeadRoom;
+//    RT_U16 TailRoom;
+    signed char   RefCount;
+
+    void* Priv;
+    union {
+        uint8_t Context[RTK_CONTEXT_SIZE];
+        struct BT_RTB_CONTEXT  rtb_ctx;
+    };
+}RTK_BUFFER, *PRTK_BUFFER;
+
+#define BT_CONTEXT(_Rtb) (&((_Rtb)->rtb_ctx))
+
+typedef struct _RTB_QUEUE_HEAD{
+    RT_LIST_HEAD List;
+    uint32_t  QueueLen;
+    aos_mutex_t Lock;
+    uint8_t   Id[RTB_QUEUE_ID_LENGTH];
+}RTB_QUEUE_HEAD, *PRTB_QUEUE_HEAD;
+
+typedef struct _RTB_QUEUE_HEAD  RTB_QUEUE_HEAD;
+
+typedef RTK_BUFFER sk_buff;
+
 /* Control block for HCISU_H5 */
 typedef struct HCI_H5_CB {
-    HC_BT_HDR   *p_rcv_msg;          /* Buffer to hold current rx HCI message */
     uint32_t    int_cmd_rsp_pending;        /* Num of internal cmds pending for ack */
 
     uint8_t     sliding_window_size;
@@ -200,59 +313,747 @@ typedef struct HCI_H5_CB {
     sk_buff     *data_skb;
     sk_buff     *internal_skb;
 
-    osi_alarm_t     *timer_data_retrans;
-    osi_alarm_t     *timer_sync_retrans;
-    osi_alarm_t     *timer_conf_retrans;
-    osi_alarm_t     *timer_wait_ct_baudrate_ready;
-    osi_alarm_t     *timer_h5_hw_init_ready;
+    aos_timer_t     *timer_data_retrans;
+    aos_timer_t     *timer_sync_retrans;
+    aos_timer_t     *timer_conf_retrans;
+    aos_timer_t     *timer_wait_ct_baudrate_ready;
+    aos_timer_t     *timer_h5_hw_init_ready;
 
     uint32_t    data_retrans_count;
     uint32_t    sync_retrans_count;
     uint32_t    conf_retrans_count;
 
-    osi_mutex_t mutex;
-    osi_sem_t   cond;
+    aos_mutex_t mutex;
+    aos_sem_t   cond;
     aos_task_t       thread_data_retrans;
 
-    osi_mutex_t data_mutex;
-    osi_sem_t  data_cond;
+    aos_mutex_t data_mutex;
+    aos_sem_t  data_cond;
     aos_task_t       thread_data_ready_cb;
 
     uint8_t     cleanuping;
+
+    aos_dev_t   *hci_dev;
 } tHCI_H5_CB;
 
 static tHCI_H5_CB rtk_h5;
-static osi_mutex_t h5_wakeup_mutex;
-static aos_event_t g_uart_event;
-static gpio_pin_handle_t gpio;
 
-extern int g_uart_id;
-extern int g_bt_dis_pin;
 
-/******************************************************************************
-**  Variables
-******************************************************************************/
+static void ListInitializeHeader(PRT_LIST_HEAD ListHead)
+{
+    ListHead->Next = ListHead;
+    ListHead->Prev = ListHead;
+}
 
-/* Num of allowed outstanding HCI CMD packets */
-volatile int num_hci_cmd_pkts = 1;
+/**
+    Tell whether the list is empty
+    \param [IN] ListHead          <RT_LIST_ENTRY>                 : List header of which to be test
+*/
+// static unsigned char ListIsEmpty(PRT_LIST_HEAD ListHead)
+// {
+//     return ListHead->Next == ListHead;
+// }
 
-/******************************************************************************
-**  Static function
-******************************************************************************/
-static osi_alarm_t *OsAllocateTimer(tTIMER_HANDLE_CBACK timer_callback);
-static int OsStartTimer(osi_alarm_t *timerid, int msec, int mode);
-static int OsStopTimer(osi_alarm_t *timerid);
-static uint16_t h5_wake_up();
+/*
+    Insert a new entry between two known consecutive entries.
+    This is only for internal list manipulation where we know the prev&next entries already
+    @New : New element to be added
+    @Prev: previous element in the list
+    @Next: Next element in the list
+*/
+static void
+    ListAdd(
+    PRT_LIST_ENTRY New,
+    PRT_LIST_ENTRY Prev,
+    PRT_LIST_ENTRY Next
+    )
+{
+    Next->Prev = New;
+    New->Next = Next;
+    New->Prev = Prev;
+    Prev->Next = New;
+}
+/**
+    Add a new entry to the list.
+    Insert a new entry after the specified head. This is good for implementing stacks.
+    \param [IN] ListNew            <RT_LIST_ENTRY>                 : new entry to be added
+    \param [IN OUT] ListHead    <RT_LIST_ENTRY>                 : List header after which to add new entry
+*/
+static void
+ListAddToHead(
+    PRT_LIST_ENTRY ListNew,
+    PRT_LIST_HEAD ListHead
+    )
+{
+    ListAdd(ListNew, ListHead, ListHead->Next);
+}
 
-static hci_hal_callbacks_t *h5_int_hal_callbacks;
+/**
+    Add a new entry to the list.
+    Insert a new entry before the specified head. This is good for implementing queues.
+    \param [IN] ListNew            <RT_LIST_ENTRY>                 : new entry to be added
+    \param [IN OUT] ListHead    <RT_LIST_ENTRY>                 : List header before which to add new entry
+*/
+static void
+ListAddToTail(
+    PRT_LIST_ENTRY ListNew,
+    PRT_LIST_HEAD ListHead
+    )
+{
+    ListAdd(ListNew, ListHead->Prev, ListHead);
+}
 
+// static RT_LIST_ENTRY*
+// ListGetTop(
+//     PRT_LIST_HEAD ListHead
+// )
+// {
+
+//     if (ListIsEmpty(ListHead))
+//         return 0;
+
+//     return ListHead->Next;
+// }
+
+// static RT_LIST_ENTRY*
+// ListGetTail(
+//     PRT_LIST_HEAD ListHead
+// )
+// {
+//     if (ListIsEmpty(ListHead))
+//         return 0;
+
+//     return ListHead->Prev;
+// }
+/**
+    Delete entry from the list
+    Note: ListIsEmpty() on this list entry would not return true, since its state is undefined
+    \param [IN] ListToDelete     <RT_LIST_ENTRY>                 : list entry to be deleted
+*/
+static void ListDeleteNode(PRT_LIST_ENTRY ListToDelete)
+{
+//    if (ListToDelete->Next != NULL && ListToDelete->Prev != NULL)
+    {
+        ListToDelete->Next->Prev = ListToDelete->Prev;
+        ListToDelete->Prev->Next = ListToDelete->Next;
+        ListToDelete->Next = ListToDelete->Prev = ListToDelete;
+    }
+}
+
+
+//****************************************************************************
+// FUNCTION
+//****************************************************************************
+/**
+    check whether queue is empty
+    \return :   false   Queue is not empty
+        TRU Queue is empty
+*/
+static unsigned char
+RtbQueueIsEmpty(
+   IN RTB_QUEUE_HEAD* RtkQueueHead
+)
+{
+    //return ListIsEmpty(&RtkQueueHead->List);
+    return  RtkQueueHead->QueueLen > 0 ? false : true;
+}
+
+/**
+    Allocate a RTK_BUFFER with specified data length and reserved headroom.
+    If caller does not know actual headroom to reserve for further usage, specify it to zero to use default value.
+    \param [IN]     Length            <uint32_t>        : current data buffer length to allcated
+    \param [IN]     HeadRoom     <uint32_t>         : if caller knows reserved head space, set it; otherwise set 0 to use default value
+    \return pointer to RTK_BUFFER if succeed, null otherwise
+*/
+static RTK_BUFFER*
+RtbAllocate(
+    uint32_t Length,
+    uint32_t HeadRoom
+    )
+{
+    RTK_BUFFER* Rtb = NULL;
+    ///Rtb buffer length:
+    ///     RTK_BUFFER   48
+    ///     HeadRoom      HeadRomm or 12
+    ///     Length
+    ///memory size: 48 + Length + 12(default) + 8*2(header for each memory) ---> a multiple of 8
+    ///example:       (48 + 8)+ (300 + 12 + 8) = 372
+    Rtb = malloc( sizeof(RTK_BUFFER) );
+    if(Rtb)
+    {
+        uint32_t BufferLen = HeadRoom ? (Length + HeadRoom) : (Length + DEFAULT_HEADER_SIZE);
+        BufferLen = RTB_DATA_ALIGN(BufferLen);
+        Rtb->Head = malloc(BufferLen);
+        if(Rtb->Head)
+        {
+            Rtb->HeadRoom = HeadRoom ? HeadRoom : DEFAULT_HEADER_SIZE;
+            Rtb->Data = Rtb->Head + Rtb->HeadRoom;
+            Rtb->End = Rtb->Data;
+            Rtb->Tail = Rtb->End + Length;
+            Rtb->Length = 0;
+            ListInitializeHeader(&Rtb->List);
+            Rtb->RefCount = 1;
+            return Rtb;
+        }
+    }
+
+    if (Rtb)
+    {
+        if (Rtb->Head)
+        {
+            free(Rtb->Head);
+        }
+
+        free(Rtb);
+    }
+    return NULL;
+}
+
+
+/**
+    Free specified Rtk_buffer
+    \param [IN]     RtkBuffer            <RTK_BUFFER*>        : buffer to free
+*/
+static void
+RtbFree(
+    RTK_BUFFER* RtkBuffer
+)
+{
+    if(RtkBuffer)
+    {
+        free(RtkBuffer->Head);
+        free(RtkBuffer);
+    }
+    return;
+}
+
+/**
+    Add a specified length protocal header to the start of data buffer hold by specified rtk_buffer.
+    This function extends used data area of the buffer at the buffer start.
+    \param [IN OUT]     RtkBuffer            <RTK_BUFFER*>        : data buffer to add
+    \param [IN]            Length                <uint32_t>                 : header length
+    \return  Pointer to the first byte of the extra data is returned
+*/
+// static uint8_t*
+// RtbAddHead(
+//     RTK_BUFFER* RtkBuffer,
+//     uint32_t                 Length
+//     )
+// {
+
+//     if ((uint32_t)(RtkBuffer->Data - RtkBuffer->Head) >= Length)
+//     {
+//         RtkBuffer->Data -= Length;
+//         RtkBuffer->Length += Length;
+//         RtkBuffer->HeadRoom -= Length;
+//         return RtkBuffer->Data;
+//     }
+
+//     return NULL;
+// }
+
+/**
+    Remove a specified length data from the start of data buffer hold by specified rtk_buffer.
+    This function returns the memory to the headroom.
+    \param [IN OUT]     RtkBuffer            <RTK_BUFFER*>        : data buffer to remove
+    \param [IN]            Length                <uint32_t>                 : header length
+    \return  Pointer to the next data in the buffer is returned, usually useless
+*/
+static unsigned char
+RtbRemoveHead(
+    RTK_BUFFER* RtkBuffer,
+    uint32_t                 Length
+    )
+{
+
+    if (RtkBuffer->Length >= Length)
+    {
+        RtkBuffer->Data += Length;
+        RtkBuffer->Length -= Length;
+        RtkBuffer->HeadRoom += Length;
+        return  true;
+    }
+
+    return false;
+}
+
+/**
+    Add a specified length protocal header to the end of data buffer hold by specified rtk_buffer.
+    This function extends used data area of the buffer at the buffer end.
+    \param [IN OUT]     RtkBuffer            <RTK_BUFFER*>        : data buffer to add
+    \param [IN]            Length                <uint32_t>                 : header length
+    \return  Pointer to the first byte of the extra data is returned
+*/
+static uint8_t*
+RtbAddTail(
+    RTK_BUFFER* RtkBuffer,
+    uint32_t                 Length
+    )
+{
+
+    if ((uint32_t)(RtkBuffer->Tail - RtkBuffer->End) >= Length)
+    {
+        uint8_t* Tmp = RtkBuffer->End;
+        RtkBuffer->End += Length;
+        RtkBuffer->Length += Length;
+        return Tmp;
+    }
+
+    return NULL;
+}
+
+static unsigned char
+RtbRemoveTail(
+    IN OUT RTK_BUFFER * RtkBuffer,
+    IN     uint32_t       Length
+)
+{
+
+    if ((uint32_t)(RtkBuffer->End - RtkBuffer->Data) >= Length)
+    {
+        RtkBuffer->End -= Length;
+        RtkBuffer->Length -= Length;
+        return true;
+    }
+
+    return false;
+}
+//****************************************************************************
+// RTB list manipulation
+//****************************************************************************
+/**
+    Initialize a rtb queue.
+    \return  Initilized rtb queue if succeed, otherwise NULL
+*/
+static RTB_QUEUE_HEAD*
+RtbQueueInit(
+)
+{
+    RTB_QUEUE_HEAD* RtbQueue = NULL;
+
+    RtbQueue = malloc(sizeof(RTB_QUEUE_HEAD));
+    if(RtbQueue)
+    {
+        aos_mutex_new(&RtbQueue->Lock);
+        ListInitializeHeader(&RtbQueue->List);
+        RtbQueue->QueueLen = 0;
+        return RtbQueue;
+    }
+
+    //error code comes here
+    if (RtbQueue)
+    {
+        free(RtbQueue);
+    }
+    return NULL;
+
+}
+
+static void
+RtbRemoveNode(
+    IN OUT RTB_QUEUE_HEAD* RtkQueueHead,
+    IN RTK_BUFFER*                 RtkBuffer
+)
+{
+    RtkQueueHead->QueueLen--;
+    ListDeleteNode(&RtkBuffer->List);
+}
+
+
+static void
+RtbEmptyQueue(
+    IN OUT RTB_QUEUE_HEAD* RtkQueueHead
+    )
+{
+    RTK_BUFFER* Rtb = NULL;
+    aos_mutex_lock(&RtkQueueHead->Lock, AOS_WAIT_FOREVER);
+
+    while( !RtbQueueIsEmpty(RtkQueueHead))
+    {
+        Rtb = (RTK_BUFFER*)RtkQueueHead->List.Next;
+        RtbRemoveNode(RtkQueueHead, Rtb);
+        RtbFree(Rtb);
+    }
+
+    aos_mutex_unlock(&RtkQueueHead->Lock);
+    return;
+}
+
+/**
+    Free a rtb queue.
+    \param [IN]     RtkQueueHead        <RTB_QUEUE_HEAD*>        : Rtk Queue
+*/
+static void
+RtbQueueFree(
+    RTB_QUEUE_HEAD* RtkQueueHead
+    )
+{
+    if (RtkQueueHead)
+    {
+
+
+        RtbEmptyQueue(RtkQueueHead);
+        aos_mutex_free(&RtkQueueHead->Lock);
+        free(RtkQueueHead);
+    }
+}
+
+/**
+    Queue specified RtkBuffer into a RtkQueue at list tail.
+    \param [IN OUT]     RtkQueueHead        <RTB_QUEUE_HEAD*>        : Rtk Queue
+    \param [IN]            RtkBuffer                <RTK_BUFFER*>                 : Rtk buffer to add
+*/
+static void
+RtbQueueTail(
+    IN OUT RTB_QUEUE_HEAD* RtkQueueHead,
+    IN RTK_BUFFER*                 RtkBuffer
+    )
+{
+    aos_mutex_lock(&RtkQueueHead->Lock, AOS_WAIT_FOREVER);
+    ListAddToTail(&RtkBuffer->List, &RtkQueueHead->List);
+    RtkQueueHead->QueueLen++;
+    aos_mutex_unlock(&RtkQueueHead->Lock);
+}
+
+/**
+    Queue specified RtkBuffer into a RtkQueue at list Head.
+    \param [IN OUT]     RtkQueueHead        <RTB_QUEUE_HEAD*>        : Rtk Queue
+    \param [IN]            RtkBuffer                <RTK_BUFFER*>                 : Rtk buffer to add
+*/
+static void
+RtbQueueHead(
+    IN OUT RTB_QUEUE_HEAD* RtkQueueHead,
+    IN RTK_BUFFER*                 RtkBuffer
+    )
+{
+    aos_mutex_lock(&RtkQueueHead->Lock, AOS_WAIT_FOREVER);
+    ListAddToHead(&RtkBuffer->List, &RtkQueueHead->List);
+    RtkQueueHead->QueueLen++;
+    aos_mutex_unlock(&RtkQueueHead->Lock);
+}
+
+
+/**
+    Insert new Rtkbuffer in the old buffer
+    \param [IN OUT]     RtkQueueHead        <RTB_QUEUE_HEAD*>        : Rtk Queue
+    \param [IN]            OldRtkBuffer                <RTK_BUFFER*>                 : old rtk buffer
+    \param [IN]            NewRtkBuffer                <RTK_BUFFER*>                 : Rtk buffer to add
+*/
+// static void
+// RtbInsertBefore(
+//     IN OUT RTB_QUEUE_HEAD* RtkQueueHead,
+//     IN RTK_BUFFER*  pOldRtkBuffer,
+//     IN RTK_BUFFER*  pNewRtkBuffer
+// )
+// {
+//     aos_mutex_lock(&RtkQueueHead->Lock, AOS_WAIT_FOREVER);
+//     ListAdd(&pNewRtkBuffer->List, pOldRtkBuffer->List.Prev, &pOldRtkBuffer->List);
+//     RtkQueueHead->QueueLen++;
+//     aos_mutex_unlock(&RtkQueueHead->Lock);
+// }
+
+/**
+    check whether the buffer is the last node in the queue
+*/
+// static unsigned char
+// RtbNodeIsLast(
+//     IN RTB_QUEUE_HEAD* RtkQueueHead,
+//     IN RTK_BUFFER*                 pRtkBuffer
+// )
+// {
+//     RTK_BUFFER* pBuf;
+//     aos_mutex_lock(&RtkQueueHead->Lock, AOS_WAIT_FOREVER);
+
+//     pBuf = (RTK_BUFFER*)RtkQueueHead->List.Prev;
+//     if(pBuf == pRtkBuffer)
+//     {
+//         aos_mutex_unlock(&RtkQueueHead->Lock);
+//         return true;
+//     }
+//     aos_mutex_unlock(&RtkQueueHead->Lock);
+//     return false;
+// }
+
+/**
+    get the next buffer node after the specified buffer in the queue
+    if the specified buffer is the last node in the queue , return NULL
+    \param [IN]     RtkBuffer        <RTK_BUFFER*>        : Rtk Queue
+    \param [IN]     RtkBuffer        <RTK_BUFFER*>        : Rtk buffer
+    \return node after the specified buffer
+*/
+// static RTK_BUFFER*
+// RtbQueueNextNode(
+//     IN RTB_QUEUE_HEAD* RtkQueueHead,
+//     IN RTK_BUFFER*                 pRtkBuffer
+// )
+// {
+//     RTK_BUFFER* pBuf;
+//     aos_mutex_lock(&RtkQueueHead->Lock, AOS_WAIT_FOREVER);
+//     pBuf = (RTK_BUFFER*)RtkQueueHead->List.Prev;
+//     if(pBuf == pRtkBuffer)
+//     {
+//         aos_mutex_unlock(&RtkQueueHead->Lock);
+//         return NULL;    ///< if it is already the last node in the queue , return NULL
+//     }
+//     pBuf = (RTK_BUFFER*)pRtkBuffer->List.Next;
+//     aos_mutex_unlock(&RtkQueueHead->Lock);
+//     return pBuf;    ///< return next node after this node
+// }
+
+/**
+    Delete specified RtkBuffer from a RtkQueue.
+    It don't hold spinlock itself, so caller must hold it at someplace.
+    \param [IN OUT]     RtkQueueHead        <RTB_QUEUE_HEAD*>        : Rtk Queue
+    \param [IN]            RtkBuffer                <RTK_BUFFER*>                 : Rtk buffer to Remove
+*/
+
+/**
+    Get the RtkBuffer which is the head of a RtkQueue
+    \param [IN OUT]     RtkQueueHead        <RTB_QUEUE_HEAD*>        : Rtk Queue
+    \return head of the RtkQueue , otherwise NULL
+*/
+// static RTK_BUFFER*
+// RtbTopQueue(
+//     IN RTB_QUEUE_HEAD* RtkQueueHead
+// )
+// {
+//     RTK_BUFFER* Rtb = NULL;
+//     aos_mutex_lock(&RtkQueueHead->Lock, AOS_WAIT_FOREVER);
+
+//     if (RtbQueueIsEmpty(RtkQueueHead))
+//     {
+//         aos_mutex_unlock(&RtkQueueHead->Lock);
+//         return NULL;
+//     }
+
+//     Rtb = (RTK_BUFFER*)RtkQueueHead->List.Next;
+//     aos_mutex_unlock(&RtkQueueHead->Lock);
+
+//     return Rtb;
+// }
+
+/**
+    Remove a RtkBuffer from specified rtkqueue at list tail.
+    \param [IN OUT]     RtkQueueHead        <RTB_QUEUE_HEAD*>        : Rtk Queue
+    \return    removed rtkbuffer if succeed, otherwise NULL
+*/
+static RTK_BUFFER*
+RtbDequeueTail(
+    IN OUT RTB_QUEUE_HEAD* RtkQueueHead
+)
+{
+    RTK_BUFFER* Rtb = NULL;
+
+    aos_mutex_lock(&RtkQueueHead->Lock, AOS_WAIT_FOREVER);
+    if (RtbQueueIsEmpty(RtkQueueHead))
+    {
+         aos_mutex_unlock(&RtkQueueHead->Lock);
+         return NULL;
+    }
+    Rtb = (RTK_BUFFER*)RtkQueueHead->List.Prev;
+    RtbRemoveNode(RtkQueueHead, Rtb);
+    aos_mutex_unlock(&RtkQueueHead->Lock);
+
+    return Rtb;
+}
+
+/**
+    Remove a RtkBuffer from specified rtkqueue at list head.
+    \param [IN OUT]     RtkQueueHead        <RTB_QUEUE_HEAD*>        : Rtk Queue
+    \return    removed rtkbuffer if succeed, otherwise NULL
+*/
+static RTK_BUFFER*
+RtbDequeueHead(
+    IN OUT RTB_QUEUE_HEAD* RtkQueueHead
+    )
+{
+    RTK_BUFFER* Rtb = NULL;
+    aos_mutex_lock(&RtkQueueHead->Lock, AOS_WAIT_FOREVER);
+
+     if (RtbQueueIsEmpty(RtkQueueHead))
+     {
+         aos_mutex_unlock(&RtkQueueHead->Lock);
+         return NULL;
+     }
+    Rtb = (RTK_BUFFER*)RtkQueueHead->List.Next;
+    RtbRemoveNode(RtkQueueHead, Rtb);
+    aos_mutex_unlock(&RtkQueueHead->Lock);
+    return Rtb;
+}
+
+/**
+    Get current rtb queue's length.
+    \param [IN]     RtkQueueHead        <RTB_QUEUE_HEAD*>        : Rtk Queue
+    \return    current queue's length
+*/
+static signed long RtbGetQueueLen(
+    IN RTB_QUEUE_HEAD* RtkQueueHead
+    )
+{
+    return RtkQueueHead->QueueLen;
+}
+
+/**
+    Empty the rtkqueue.
+    \param [IN OUT]     RtkQueueHead        <RTB_QUEUE_HEAD*>        : Rtk Queue
+*/
+
+
+
+// ///Annie_tmp
+// static  unsigned char
+// RtbCheckQueueLen(IN RTB_QUEUE_HEAD* RtkQueueHead, IN uint8_t Len)
+// {
+//     return RtkQueueHead->QueueLen < Len ? true : false;
+// }
+
+/**
+    clone buffer for upper or lower layer, because original buffer should be stored in l2cap
+    \param <RTK_BUFFER* pDataBuffer: original buffer
+    \return cloned buffer
+*/
+// static RTK_BUFFER* RtbCloneBuffer(
+//     IN RTK_BUFFER* pDataBuffer
+// )
+// {
+//     RTK_BUFFER* pNewBuffer = NULL;
+//     if(pDataBuffer)
+//     {
+//         pNewBuffer = RtbAllocate(pDataBuffer->Length,0);
+//         if(!pNewBuffer)
+//         {
+//             return NULL;
+//         }
+//         if(pDataBuffer && pDataBuffer->Data)
+//             memcpy(pNewBuffer->Data, pDataBuffer->Data, pDataBuffer->Length);
+//         else
+//         {
+//             RtbFree(pNewBuffer);
+//             return NULL;
+//         }
+
+//         pNewBuffer->Length = pDataBuffer->Length;
+//     }
+//     return pNewBuffer;
+// }
+
+/***********************************************
+//
+//skb related functions
+//
+//
+//
+***********************************************/
+static uint8_t *hci_skb_get_data(IN sk_buff *skb)
+{
+    return skb->Data;
+}
+
+static uint32_t hci_skb_get_data_length(IN sk_buff *skb)
+{
+    return skb->Length;
+}
+
+static sk_buff *hci_skb_alloc(IN unsigned int len)
+{
+    sk_buff *skb = (sk_buff *)RtbAllocate(len, 0);
+    return skb;
+}
+
+static void hci_skb_free(IN OUT sk_buff **skb)
+{
+    RtbFree(*skb);
+    *skb = NULL;
+    return;
+}
+
+static void hci_skb_unlink(sk_buff *skb, struct _RTB_QUEUE_HEAD *list)
+{
+    RtbRemoveNode(list, skb);
+}
+
+// increase the date length in sk_buffer by len,
+// and return the increased header pointer
+static uint8_t *hci_skb_put(OUT sk_buff *skb, IN uint32_t len)
+{
+    RTK_BUFFER *rtb = (RTK_BUFFER *)skb;
+
+    return RtbAddTail(rtb, len);
+}
+
+// change skb->len to len
+// !!! len should less than skb->len
+static void hci_skb_trim(sk_buff *skb, unsigned int len)
+{
+    RTK_BUFFER *rtb = (RTK_BUFFER *)skb;
+    uint32_t skb_len = hci_skb_get_data_length(skb);
+
+    RtbRemoveTail(rtb, (skb_len - len));
+    return;
+}
+
+static uint8_t hci_skb_get_pkt_type(sk_buff *skb)
+{
+    return BT_CONTEXT(skb)->PacketType;
+}
+
+static void hci_skb_set_pkt_type(sk_buff *skb, uint8_t pkt_type)
+{
+    BT_CONTEXT(skb)->PacketType = pkt_type;
+}
+
+// decrease the data length in sk_buffer by len,
+// and move the content forward to the header.
+// the data in header will be removed.
+static void hci_skb_pull(OUT  sk_buff *skb, IN uint32_t len)
+{
+    RTK_BUFFER *rtb = (RTK_BUFFER *)skb;
+    RtbRemoveHead(rtb, len);
+    return;
+}
+
+static sk_buff *hci_skb_alloc_and_init(IN uint8_t PktType, IN uint8_t *Data, IN uint32_t  DataLen)
+{
+    sk_buff *skb = hci_skb_alloc(DataLen);
+
+    if (NULL == skb) {
+        return NULL;
+    }
+
+    memcpy(hci_skb_put(skb, DataLen), Data, DataLen);
+    hci_skb_set_pkt_type(skb, PktType);
+
+    return skb;
+}
+
+static void hci_skb_queue_head(IN RTB_QUEUE_HEAD *skb_head, IN RTK_BUFFER *skb)
+{
+    RtbQueueHead(skb_head, skb);
+}
+
+static void hci_skb_queue_tail(IN RTB_QUEUE_HEAD *skb_head, IN RTK_BUFFER *skb)
+{
+    RtbQueueTail(skb_head, skb);
+}
+
+static RTK_BUFFER *hci_skb_dequeue_head(IN RTB_QUEUE_HEAD *skb_head)
+{
+    return RtbDequeueHead(skb_head);
+}
+
+static RTK_BUFFER *hci_skb_dequeue_tail(IN RTB_QUEUE_HEAD *skb_head)
+{
+    return RtbDequeueTail(skb_head);
+}
+
+static uint32_t hci_skb_queue_get_length(IN RTB_QUEUE_HEAD *skb_head)
+{
+    return RtbGetQueueLen(skb_head);
+}
 
 /******************************************************************************
 **  Externs
 ******************************************************************************/
-extern void rtk_btsnoop_net_open(void);
-extern void rtk_btsnoop_net_close(void);
-extern void rtk_btsnoop_net_write(serial_data_type_t type, uint8_t *data, bool is_received);
 
 //timer API for retransfer
 static int h5_alloc_data_retrans_timer();
@@ -272,7 +1073,6 @@ static int h5_start_conf_retrans_timer();
 
 static int h5_alloc_wait_controller_baudrate_ready_timer();
 static int h5_free_wait_controller_baudrate_ready_timer();
-static int h5_stop_wait_controller_baudrate_ready_timer();
 static int h5_start_wait_controller_baudrate_ready_timer();
 
 static int h5_alloc_hw_init_ready_timer();
@@ -342,21 +1142,6 @@ static const uint16_t crc_table[] = {
 
 // Initialise the crc calculator
 #define H5_CRC_INIT(x) x = 0xffff
-
-
-/*******************************************************************************
-**
-** Function        ms_delay
-**
-** Description     sleep unconditionally for timeout milliseconds
-**
-** Returns         None
-**
-*******************************************************************************/
-static void ms_delay(uint32_t timeout)
-{
-    aos_msleep(timeout);
-}
 
 /**
 * Add "d" into crc scope, caculate the new crc value
@@ -528,7 +1313,7 @@ static void h5_unslip_one_byte(tHCI_H5_CB *h5, unsigned char byte)
                 break;
 
             default:
-                HCI_TRACE_ERROR("Error: Invalid byte %02x after esc byte", byte);
+                LOGE(TAG, "Error: Invalid byte %02x after esc byte", byte);
                 hci_skb_free(&h5->rx_skb);
                 h5->rx_skb = NULL;
                 h5->rx_state = H5_W4_PKT_DELIMITER;
@@ -561,7 +1346,7 @@ static sk_buff *h5_prepare_pkt(tHCI_H5_CB *h5, uint8_t *data, signed long len, s
     uint8_t hdr[4];
     uint16_t H5_CRC_INIT(h5_txmsg_crc);
     int rel, i;
-    //HCI_TRACE_DEBUG("HCI h5_prepare_pkt");
+    //HCI_LOGD(TAG, "HCI h5_prepare_pkt");
 
     switch (pkt_type) {
         case HCI_ACLDATA_PKT:
@@ -577,7 +1362,7 @@ static sk_buff *h5_prepare_pkt(tHCI_H5_CB *h5, uint8_t *data, signed long len, s
             break;
 
         default:
-            HCI_TRACE_ERROR("Unknown packet type");
+            LOGE(TAG, "Unknown packet type");
             return NULL;
     }
 
@@ -589,7 +1374,7 @@ static sk_buff *h5_prepare_pkt(tHCI_H5_CB *h5, uint8_t *data, signed long len, s
     nskb = hci_skb_alloc((len + 6) * 2 + 2);
 
     if (!nskb) {
-        HCI_TRACE_DEBUG("nskb is NULL");
+        HCI_LOGD(TAG, "nskb is NULL");
         return NULL;
     }
 
@@ -599,13 +1384,13 @@ static sk_buff *h5_prepare_pkt(tHCI_H5_CB *h5, uint8_t *data, signed long len, s
     hdr[0] = h5->rxseq_txack << 3;
     h5->is_txack_req = 0;
 
-    //HCI_TRACE_DEBUG("We request packet no(%u) to card", h5->rxseq_txack);
-    //HCI_TRACE_DEBUG("Sending packet with seqno %u and wait %u", h5->msgq_txseq, h5->rxseq_txack);
+    //HCI_LOGD(TAG, "We request packet no(%u) to card", h5->rxseq_txack);
+    //HCI_LOGD(TAG, "Sending packet with seqno %u and wait %u", h5->msgq_txseq, h5->rxseq_txack);
 
     if (H5_RELIABLE_PKT == rel) {
         // set reliable pkt bit and SeqNumber
         hdr[0] |= 0x80 + h5->msgq_txseq;
-        //HCI_TRACE_DEBUG("Sending packet with seqno(%u)", h5->msgq_txseq);
+        //HCI_LOGD(TAG, "Sending packet with seqno(%u)", h5->msgq_txseq);
         ++(h5->msgq_txseq);
         h5->msgq_txseq = (h5->msgq_txseq) & 0x07;
     }
@@ -666,7 +1451,7 @@ static void h5_remove_acked_pkt(tHCI_H5_CB *h5)
     int seqno = 0;
     int i = 0;
 
-    osi_mutex_lock(&h5_wakeup_mutex, OSI_MUTEX_MAX_TIMEOUT);
+    aos_mutex_lock(&h5_wakeup_mutex, AOS_WAIT_FOREVER);
 
     seqno = h5->msgq_txseq;
     pkts_to_be_removed = RtbGetQueueLen(h5->unack);
@@ -681,7 +1466,7 @@ static void h5_remove_acked_pkt(tHCI_H5_CB *h5)
     }
 
     if (h5->rxack != seqno) {
-        HCI_TRACE_DEBUG("Peer acked invalid packet");
+        HCI_LOGD(TAG, "Peer acked invalid packet");
     }
 
 
@@ -706,10 +1491,10 @@ static void h5_remove_acked_pkt(tHCI_H5_CB *h5)
     }
 
     if (i != pkts_to_be_removed) {
-        HCI_TRACE_DEBUG("Removed only (%u) out of (%u) pkts", i, pkts_to_be_removed);
+        HCI_LOGD(TAG, "Removed only (%u) out of (%u) pkts", i, pkts_to_be_removed);
     }
 
-    osi_mutex_unlock(&h5_wakeup_mutex);
+    aos_mutex_unlock(&h5_wakeup_mutex);
 
 }
 
@@ -722,11 +1507,11 @@ static void hci_h5_send_sync_req()
     skb = hci_skb_alloc_and_init(H5_LINK_CTL_PKT, h5sync, sizeof(h5sync));
 
     if (!skb) {
-        HCI_TRACE_ERROR("hci_skb_alloc_and_init fail!");
+        LOGE(TAG, "hci_skb_alloc_and_init fail!");
         return;
     }
 
-    HCI_TRACE_DEBUG("H5: --->>>send sync req");
+    HCI_LOGD(TAG, "H5: --->>>send sync req");
 
     h5_enqueue(skb);
     h5_wake_up();
@@ -743,11 +1528,11 @@ static void hci_h5_send_sync_resp()
     skb = hci_skb_alloc_and_init(H5_LINK_CTL_PKT, h5syncresp, sizeof(h5syncresp));
 
     if (!skb) {
-        HCI_TRACE_ERROR("hci_skb_alloc_and_init fail!");
+        LOGE(TAG, "hci_skb_alloc_and_init fail!");
         return;
     }
 
-    HCI_TRACE_DEBUG("H5: --->>>send sync resp");
+    HCI_LOGD(TAG, "H5: --->>>send sync resp");
     h5_enqueue(skb);
     h5_wake_up();
 
@@ -764,11 +1549,11 @@ static void hci_h5_send_conf_req()
     skb = hci_skb_alloc_and_init(H5_LINK_CTL_PKT, h5conf, sizeof(h5conf));
 
     if (!skb) {
-        HCI_TRACE_ERROR("hci_skb_alloc_and_init fail!");
+        LOGE(TAG, "hci_skb_alloc_and_init fail!");
         return;
     }
 
-    HCI_TRACE_DEBUG("H5: --->>>send conf req");
+    HCI_LOGD(TAG, "H5: --->>>send conf req");
     h5_enqueue(skb);
     h5_wake_up();
 
@@ -785,11 +1570,11 @@ static void hci_h5_send_conf_resp()
     skb = hci_skb_alloc_and_init(H5_LINK_CTL_PKT, h5confresp, sizeof(h5confresp));
 
     if (!skb) {
-        HCI_TRACE_ERROR("hci_skb_alloc_and_init fail!");
+        LOGE(TAG, "hci_skb_alloc_and_init fail!");
         return;
     }
 
-    HCI_TRACE_DEBUG("H5: --->>>send conf resp");
+    HCI_LOGD(TAG, "H5: --->>>send conf resp");
     h5_enqueue(skb);
     h5_wake_up();
 
@@ -798,16 +1583,16 @@ static void hci_h5_send_conf_resp()
 
 static void rtk_notify_hw_h5_init_result(uint8_t result)
 {
-    HCI_TRACE_DEBUG("rtk_notify_hw_h5_init_result");
+    HCI_LOGD(TAG, "rtk_notify_hw_h5_init_result");
     uint8_t sync_event[6] = {0x0e, 0x04, 0x03, 0xee, 0xfc, 0x00};
     // we need to make a sync event to bt
     sk_buff     *rx_skb;
     rx_skb = hci_skb_alloc_and_init(HCI_EVENT_PKT, sync_event, sizeof(sync_event));
 
-    osi_mutex_lock(&rtk_h5.data_mutex, OSI_MUTEX_MAX_TIMEOUT);
+    aos_mutex_lock(&rtk_h5.data_mutex, AOS_WAIT_FOREVER);
     hci_skb_queue_tail(rtk_h5.recv_data, rx_skb);
-    osi_sem_give(&rtk_h5.data_cond);
-    osi_mutex_unlock(&rtk_h5.data_mutex);
+    aos_sem_signal(&rtk_h5.data_cond);
+    aos_mutex_unlock(&rtk_h5.data_mutex);
 }
 
 
@@ -817,7 +1602,7 @@ static sk_buff *h5_dequeue()
 
     //   First of all, check for unreliable messages in the queue,
     //   since they have higher priority
-    osi_mutex_lock(&rtk_h5.data_mutex, OSI_MUTEX_MAX_TIMEOUT);
+    aos_mutex_lock(&rtk_h5.data_mutex, AOS_WAIT_FOREVER);
     if ((skb = (sk_buff *)hci_skb_dequeue_head(rtk_h5.unrel)) != NULL) {
         sk_buff *nskb = h5_prepare_pkt(&rtk_h5,
                                        hci_skb_get_data(skb),
@@ -825,20 +1610,20 @@ static sk_buff *h5_dequeue()
                                        hci_skb_get_pkt_type(skb));
 
         if (nskb) {
-            osi_mutex_unlock(&rtk_h5.data_mutex);
+            aos_mutex_unlock(&rtk_h5.data_mutex);
             hci_skb_free(&skb);
             return nskb;
         } else {
             hci_skb_queue_head(rtk_h5.unrel, skb);
         }
     }
-    osi_mutex_unlock(&rtk_h5.data_mutex);
+    aos_mutex_unlock(&rtk_h5.data_mutex);
 
     //   Now, try to send a reliable pkt. We can only send a
     //   reliable packet if the number of packets sent but not yet ack'ed
     //   is < than the winsize
 
-    osi_mutex_lock(&rtk_h5.data_mutex, OSI_MUTEX_MAX_TIMEOUT);
+    aos_mutex_lock(&rtk_h5.data_mutex, AOS_WAIT_FOREVER);
     if (RtbGetQueueLen(rtk_h5.unack) < rtk_h5.sliding_window_size &&
         (skb = (sk_buff *)hci_skb_dequeue_head(rtk_h5.rel)) != NULL) {
         sk_buff *nskb = h5_prepare_pkt(&rtk_h5,
@@ -848,14 +1633,14 @@ static sk_buff *h5_dequeue()
 
         if (nskb) {
             hci_skb_queue_tail(rtk_h5.unack, skb);
-            osi_mutex_unlock(&rtk_h5.data_mutex);
+            aos_mutex_unlock(&rtk_h5.data_mutex);
             h5_start_data_retrans_timer();
             return nskb;
         } else {
             hci_skb_queue_head(rtk_h5.rel, skb);
         }
     }
-    osi_mutex_unlock(&rtk_h5.data_mutex);
+    aos_mutex_unlock(&rtk_h5.data_mutex);
 
     //   We could not send a reliable packet, either because there are
     //   none or because there are too many unack'ed packets. Did we receive
@@ -875,7 +1660,7 @@ static int h5_enqueue(IN sk_buff *skb)
 {
     //Pkt length must be less than 4095 bytes
     if (hci_skb_get_data_length(skb) > 0xFFF) {
-        HCI_TRACE_ERROR("skb len > 0xFFF");
+        LOGE(TAG, "skb len > 0xFFF");
         hci_skb_free(&skb);
         return 0;
     }
@@ -883,18 +1668,18 @@ static int h5_enqueue(IN sk_buff *skb)
     switch (hci_skb_get_pkt_type(skb)) {
         case HCI_ACLDATA_PKT:
         case HCI_COMMAND_PKT:
-            osi_mutex_lock(&rtk_h5.data_mutex, OSI_MUTEX_MAX_TIMEOUT);
+            aos_mutex_lock(&rtk_h5.data_mutex, AOS_WAIT_FOREVER);
             hci_skb_queue_tail(rtk_h5.rel, skb);
-            osi_mutex_unlock(&rtk_h5.data_mutex);
+            aos_mutex_unlock(&rtk_h5.data_mutex);
             break;
 
 
         case H5_LINK_CTL_PKT:
         case H5_ACK_PKT:
         case H5_VDRSPEC_PKT:
-            osi_mutex_lock(&rtk_h5.data_mutex, OSI_MUTEX_MAX_TIMEOUT);
+            aos_mutex_lock(&rtk_h5.data_mutex, AOS_WAIT_FOREVER);
             hci_skb_queue_tail(rtk_h5.unrel, skb);/* 3-wire LinkEstablishment*/
-            osi_mutex_unlock(&rtk_h5.data_mutex);
+            aos_mutex_unlock(&rtk_h5.data_mutex);
             break;
 
         default:
@@ -913,9 +1698,9 @@ static uint16_t h5_wake_up()
     uint8_t *data = NULL;
     uint32_t data_len = 0;
 
-    osi_mutex_lock(&h5_wakeup_mutex, OSI_MUTEX_MAX_TIMEOUT);
+    aos_mutex_lock(&h5_wakeup_mutex, AOS_WAIT_FOREVER);
 
-    //HCI_TRACE_DEBUG("h5_wake_up");
+    //HCI_LOGD(TAG, "h5_wake_up");
     while (NULL != (skb = h5_dequeue())) {
         data = hci_skb_get_data(skb);
         data_len = hci_skb_get_data_length(skb);
@@ -932,12 +1717,12 @@ static uint16_t h5_wake_up()
         }
 #endif
         //we adopt the hci_drv interface to send data
-        bytes_sent = userial_vendor_send_data(data, data_len);
+        bytes_sent = hci_send(rtk_h5.hci_dev, data, data_len);
 
         hci_skb_free(&skb);
     }
 
-    osi_mutex_unlock(&h5_wakeup_mutex);
+    aos_mutex_unlock(&h5_wakeup_mutex);
     return bytes_sent;
 }
 
@@ -955,10 +1740,10 @@ static void h5_process_ctl_pkts(void)
 
     if (rtk_h5.link_estab_state == H5_UNINITIALIZED) { //sync
         if (!memcmp(hci_skb_get_data(skb), h5sync, 2)) {
-            HCI_TRACE_DEBUG("H5: <<<---recv sync req");
+            HCI_LOGD(TAG, "H5: <<<---recv sync req");
             hci_h5_send_sync_resp();
         } else if (!memcmp(hci_skb_get_data(skb), h5syncresp, 2)) {
-            HCI_TRACE_DEBUG("H5: <<<---recv sync resp");
+            HCI_LOGD(TAG, "H5: <<<---recv sync resp");
             h5_stop_sync_retrans_timer();
             rtk_h5.sync_retrans_count  = 0;
             rtk_h5.link_estab_state = H5_INITIALIZED;
@@ -971,13 +1756,13 @@ static void h5_process_ctl_pkts(void)
     } else if (rtk_h5.link_estab_state == H5_INITIALIZED) { //config
         if (!memcmp(hci_skb_get_data(skb), h5sync, 0x2)) {
 
-            HCI_TRACE_DEBUG("H5: <<<---recv sync req in H5_INITIALIZED");
+            HCI_LOGD(TAG, "H5: <<<---recv sync req in H5_INITIALIZED");
             hci_h5_send_sync_resp();
         } else if (!memcmp(hci_skb_get_data(skb), h5conf, 0x2)) {
-            HCI_TRACE_DEBUG("H5: <<<---recv conf req");
+            HCI_LOGD(TAG, "H5: <<<---recv conf req");
             hci_h5_send_conf_resp();
         } else if (!memcmp(hci_skb_get_data(skb), h5confresp,  0x2)) {
-            HCI_TRACE_DEBUG("H5: <<<---recv conf resp");
+            HCI_LOGD(TAG, "H5: <<<---recv conf resp");
             h5_stop_conf_retrans_timer();
             rtk_h5.conf_retrans_count  = 0;
 
@@ -987,7 +1772,7 @@ static void h5_process_ctl_pkts(void)
             rtk_h5.sliding_window_size = H5_CFG_SLID_WIN(cfg);
             rtk_h5.oof_flow_control = H5_CFG_OOF_CNTRL(cfg);
             rtk_h5.dic_type = H5_CFG_DIC_TYPE(cfg);
-            HCI_TRACE_DEBUG("rtk_h5.sliding_window_size(%d), oof_flow_control(%d), dic_type(%d)",
+            HCI_LOGD(TAG, "rtk_h5.sliding_window_size(%d), oof_flow_control(%d), dic_type(%d)",
                             rtk_h5.sliding_window_size, rtk_h5.oof_flow_control, rtk_h5.dic_type);
 
             if (rtk_h5.dic_type) {
@@ -996,24 +1781,24 @@ static void h5_process_ctl_pkts(void)
 
             rtk_notify_hw_h5_init_result(1);
         } else {
-            HCI_TRACE_DEBUG("H5_INITIALIZED receive event, ingnore");
+            HCI_LOGD(TAG, "H5_INITIALIZED receive event, ingnore");
         }
     } else if (rtk_h5.link_estab_state == H5_ACTIVE) {
         if (!memcmp(hci_skb_get_data(skb), h5sync, 0x2)) {
 
-            HCI_TRACE_DEBUG("H5: <<<---recv sync req in H5_ACTIVE");
+            HCI_LOGD(TAG, "H5: <<<---recv sync req in H5_ACTIVE");
             hci_h5_send_sync_resp();
-            HCI_TRACE_DEBUG("H5 : H5_ACTIVE transit to H5_UNINITIALIZED");
+            HCI_LOGD(TAG, "H5 : H5_ACTIVE transit to H5_UNINITIALIZED");
             rtk_h5.link_estab_state = H5_UNINITIALIZED;
             hci_h5_send_sync_req();
             h5_start_sync_retrans_timer();
         } else if (!memcmp(hci_skb_get_data(skb), h5conf, 0x2)) {
-            HCI_TRACE_DEBUG("H5: <<<---recv conf req in H5_ACTIVE");
+            HCI_LOGD(TAG, "H5: <<<---recv conf req in H5_ACTIVE");
             hci_h5_send_conf_resp();
         } else if (!memcmp(hci_skb_get_data(skb), h5confresp,  0x2)) {
-            HCI_TRACE_DEBUG("H5: <<<---recv conf resp in H5_ACTIVE, discard");
+            HCI_LOGD(TAG, "H5: <<<---recv conf resp in H5_ACTIVE, discard");
         } else {
-            HCI_TRACE_DEBUG("H5_ACTIVE receive unknown link control msg, ingnore");
+            HCI_LOGD(TAG, "H5_ACTIVE receive unknown link control msg, ingnore");
         }
 
     }
@@ -1032,7 +1817,7 @@ static uint8_t hci_recv_frame(sk_buff *skb, uint8_t pkt_type)
     uint32_t data_len = hci_skb_get_data_length(skb);
 
     (void)data_len;
-    HCI_TRACE_DEBUG("UART H5 RX: length = %d", data_len);
+    HCI_LOGD(TAG, "UART H5 RX: length = %d", data_len);
 
     //we only intercept evt packet here
     if (pkt_type == HCI_EVENT_PKT) {
@@ -1042,55 +1827,25 @@ static uint8_t hci_recv_frame(sk_buff *skb, uint8_t pkt_type)
         p = (uint8_t *)hci_skb_get_data(skb);
 
         event_code = *p++;
-        // HCI_TRACE_DEBUG("hci_recv_frame event_code(0x%x), len = %d", event_code, len);
+        // HCI_LOGD(TAG, "hci_recv_frame event_code(0x%x), len = %d", event_code, len);
 
         if (event_code == HCI_COMMAND_COMPLETE_EVT) {
-            num_hci_cmd_pkts = *p++;
+
             STREAM_TO_UINT16(opcode, p);
 
             if (opcode == HCI_VSC_UPDATE_BAUDRATE) {
                 intercepted = 1;
                 rtk_h5.internal_skb = skb;
-                HCI_TRACE_DEBUG("CommandCompleteEvent for command h5_start_wait_controller_baudrate_ready_timer (0x%04X)", opcode);
+                HCI_LOGD(TAG, "CommandCompleteEvent for command h5_start_wait_controller_baudrate_ready_timer (0x%04X)", opcode);
                 h5_start_wait_controller_baudrate_ready_timer();
             }
         }
 
     }
 
-    // HCI_TRACE_DEBUG("hci_recv_frame intercepted = %d", intercepted);
+    // HCI_LOGD(TAG, "hci_recv_frame intercepted = %d", intercepted);
     return intercepted;
 }
-
-#if (C2H_FLOW_CONTROL_INCLUDED == TRUE)
-static void hci_packet_complete(BT_HDR *packet){
-    uint8_t type, num_handle;
-    uint16_t handle;
-    uint16_t handles[MAX_L2CAP_LINKS + 4];
-    uint16_t num_packets[MAX_L2CAP_LINKS + 4];
-    uint8_t *stream = packet->data + packet->offset;
-    tL2C_LCB  *p_lcb = NULL;
-
-    STREAM_TO_UINT8(type, stream);
-    if (type == DATA_TYPE_ACL/* || type == DATA_TYPE_SCO*/) {
-        STREAM_TO_UINT16(handle, stream);
-        handle = handle & HCI_DATA_HANDLE_MASK;
-        p_lcb = l2cu_find_lcb_by_handle(handle);
-        if (p_lcb) {
-            p_lcb->completed_packets++;
-        }
-        //if (yoc_vhci_host_check_send_available()){
-            num_handle = l2cu_find_completed_packets(handles, num_packets);
-            if (num_handle > 0){
-                btsnd_hcic_host_num_xmitted_pkts (num_handle, handles, num_packets);
-            }
-        //} else {
-            //Send HCI_Host_Number_of_Completed_Packets next time.
-       // }
-
-    }
-}
-#endif ///C2H_FLOW_CONTROL_INCLUDED == TRUE
 
 /**
 * after rx data is parsed, and we got a rx frame saved in h5->rx_skb,
@@ -1106,7 +1861,6 @@ static void hci_packet_complete(BT_HDR *packet){
 static uint8_t h5_complete_rx_pkt(tHCI_H5_CB *h5)
 {
     int pass_up = 1;
-    uint16_t eventtype = 0;
     uint8_t *h5_hdr = NULL;
     uint8_t pkt_type = 0;
     uint8_t status = 0;
@@ -1128,38 +1882,34 @@ static uint8_t h5_complete_rx_pkt(tHCI_H5_CB *h5)
 #endif
 
     if (H5_HDR_RELIABLE(h5_hdr)) {
-        osi_mutex_lock(&h5_wakeup_mutex, OSI_MUTEX_MAX_TIMEOUT);
+        aos_mutex_lock(&h5_wakeup_mutex, AOS_WAIT_FOREVER);
         h5->rxseq_txack = H5_HDR_SEQ(h5_hdr) + 1;
         h5->rxseq_txack %= 8;
         h5->is_txack_req = 1;
-        osi_mutex_unlock(&h5_wakeup_mutex);
+        aos_mutex_unlock(&h5_wakeup_mutex);
         // send down an empty ack if needed.
         h5_wake_up();
     }
 
     h5->rxack = H5_HDR_ACK(h5_hdr);
     pkt_type = H5_HDR_PKT_TYPE(h5_hdr);
-    //HCI_TRACE_DEBUG("h5_complete_rx_pkt, pkt_type = %d", pkt_type);
+    //HCI_LOGD(TAG, "h5_complete_rx_pkt, pkt_type = %d", pkt_type);
 
     switch (pkt_type) {
         case HCI_ACLDATA_PKT:
             pass_up = 1;
-            eventtype = MSG_HC_TO_STACK_HCI_ACL;
             break;
 
         case HCI_EVENT_PKT:
             pass_up = 1;
-            eventtype = MSG_HC_TO_STACK_HCI_EVT;
             break;
 
         case HCI_SCODATA_PKT:
             pass_up = 1;
-            eventtype = MSG_HC_TO_STACK_HCI_SCO;
             break;
 
         case HCI_COMMAND_PKT:
             pass_up = 1;
-            eventtype = MSG_HC_TO_STACK_HCI_ERR;
             break;
 
         case H5_LINK_CTL_PKT:
@@ -1171,8 +1921,7 @@ static uint8_t h5_complete_rx_pkt(tHCI_H5_CB *h5)
             break;
 
         default:
-            HCI_TRACE_ERROR("Unknown pkt type(%d)", H5_HDR_PKT_TYPE(h5_hdr));
-            eventtype = MSG_HC_TO_STACK_HCI_ERR;
+            LOGE(TAG, "Unknown pkt type(%d)", H5_HDR_PKT_TYPE(h5_hdr));
             pass_up = 0;
             break;
     }
@@ -1191,35 +1940,16 @@ static uint8_t h5_complete_rx_pkt(tHCI_H5_CB *h5)
         hci_skb_pull(h5->rx_skb, H5_HDR_SIZE);
         hci_skb_set_pkt_type(h5->rx_skb, pkt_type);
 
-        //send command or  acl data it to bluedroid stack
-        uint16_t len = 0;
+        //send command or acl data it to bluedroid stack
         sk_buff *skb_complete_pkt = h5->rx_skb;
-
-        /* Allocate a buffer for message */
-
-        len = BT_HC_HDR_SIZE + hci_skb_get_data_length(skb_complete_pkt);
-        h5->p_rcv_msg = (HC_BT_HDR *) malloc(len);
-
-        if (h5->p_rcv_msg) {
-            /* Initialize buffer with received h5 data */
-            h5->p_rcv_msg->offset = 0;
-            h5->p_rcv_msg->layer_specific = 0;
-            h5->p_rcv_msg->event = eventtype;
-            h5->p_rcv_msg->len = hci_skb_get_data_length(skb_complete_pkt);
-            memcpy((uint8_t *)(h5->p_rcv_msg + 1), hci_skb_get_data(skb_complete_pkt), hci_skb_get_data_length(skb_complete_pkt));
-        }
 
         status = hci_recv_frame(skb_complete_pkt, pkt_type);
 
-        if (h5->p_rcv_msg) {
-            free(h5->p_rcv_msg);
-        }
-
         if (!status) {
-            osi_mutex_lock(&rtk_h5.data_mutex, OSI_MUTEX_MAX_TIMEOUT);
+            aos_mutex_lock(&rtk_h5.data_mutex, AOS_WAIT_FOREVER);
             hci_skb_queue_tail(rtk_h5.recv_data, h5->rx_skb);
-            osi_sem_give(&rtk_h5.data_cond);
-            osi_mutex_unlock(&rtk_h5.data_mutex);
+            aos_sem_signal(&rtk_h5.data_cond);
+            aos_mutex_unlock(&rtk_h5.data_mutex);
         }
     } else {
         // free ctl packet
@@ -1246,16 +1976,16 @@ static uint32_t h5_recv(tHCI_H5_CB *h5, uint8_t *data, int count)
     uint8_t *ptr;
     uint8_t *skb_data = NULL;
     uint8_t *hdr = NULL;
-    BOOLEAN complete_packet = FALSE;
+    bool     complete_packet = 0;
 
     ptr = (uint8_t *)data;
 
-    // HCI_TRACE_DEBUG("count %d rx_state %d rx_count %ld", count, h5->rx_state, h5->rx_count);
+    // HCI_LOGD(TAG, "count %d rx_state %d rx_count %ld", count, h5->rx_state, h5->rx_count);
 
     while (count) {
         if (h5->rx_count) {
             if (*ptr == 0xc0) {
-                HCI_TRACE_ERROR("short h5 packet %d %d", h5->rx_count, count);
+                LOGE(TAG, "short h5 packet %d %d", h5->rx_count, count);
                 hci_skb_free(&h5->rx_skb);
                 h5->rx_state = H5_W4_PKT_START;
                 h5->rx_count = 0;
@@ -1268,7 +1998,7 @@ static uint32_t h5_recv(tHCI_H5_CB *h5, uint8_t *data, int count)
             continue;
         }
 
-        //HCI_TRACE_DEBUG("h5_recv rx_state=%d", h5->rx_state);
+        //HCI_LOGD(TAG, "h5_recv rx_state=%d", h5->rx_state);
         switch (h5->rx_state) {
             case H5_W4_HDR:
                 // check header checksum. see Core Spec V4 "3-wire uart" page 67
@@ -1277,7 +2007,7 @@ static uint32_t h5_recv(tHCI_H5_CB *h5, uint8_t *data, int count)
 
                 if ((0xff & (uint8_t) ~(skb_data[0] + skb_data[1] +
                                         skb_data[2])) != skb_data[3]) {
-                    HCI_TRACE_ERROR("h5 hdr checksum error!!!");
+                    LOGE(TAG, "h5 hdr checksum error!!!");
                     hci_skb_free(&h5->rx_skb);
                     h5->rx_state = H5_W4_PKT_DELIMITER;
                     h5->rx_count = 0;
@@ -1286,7 +2016,7 @@ static uint32_t h5_recv(tHCI_H5_CB *h5, uint8_t *data, int count)
 
                 if (H5_HDR_RELIABLE(hdr)
                     && (H5_HDR_SEQ(hdr) != h5->rxseq_txack)) {
-                    HCI_TRACE_ERROR("Out-of-order %u %u",
+                    LOGE(TAG, "Out-of-order %u %u",
                                     H5_HDR_SEQ(hdr), h5->rxseq_txack);
                     h5->is_txack_req = 1;
                     h5_wake_up();
@@ -1313,15 +2043,15 @@ static uint32_t h5_recv(tHCI_H5_CB *h5, uint8_t *data, int count)
                     h5->rx_count = 2;
                 } else {
                     h5_complete_rx_pkt(h5); //Send ACK
-                    complete_packet = TRUE;
-                    //HCI_TRACE_DEBUG("--------> H5_W4_DATA ACK\n");
+                    complete_packet = 1;
+                    //HCI_LOGD(TAG, "--------> H5_W4_DATA ACK\n");
                 }
 
                 continue;
 
             case H5_W4_CRC:
                 if (bit_rev16(h5->message_crc) != h5_get_crc(h5)) {
-                    HCI_TRACE_ERROR("Checksum failed, computed(%04x)received(%04x)",
+                    LOGE(TAG, "Checksum failed, computed(%04x)received(%04x)",
                                     bit_rev16(h5->message_crc), h5_get_crc(h5));
                     hci_skb_free(&h5->rx_skb);
                     h5->rx_state = H5_W4_PKT_DELIMITER;
@@ -1331,7 +2061,7 @@ static uint32_t h5_recv(tHCI_H5_CB *h5, uint8_t *data, int count)
 
                 hci_skb_trim(h5->rx_skb, hci_skb_get_data_length(h5->rx_skb) - 2);
                 h5_complete_rx_pkt(h5);
-                complete_packet = TRUE;
+                complete_packet = 1;
                 continue;
 
             case H5_W4_PKT_DELIMITER:
@@ -1369,7 +2099,7 @@ static uint32_t h5_recv(tHCI_H5_CB *h5, uint8_t *data, int count)
                         if (!h5->rx_skb) {
                             h5->rx_state = H5_W4_PKT_DELIMITER;
                             h5->rx_count = 0;
-                            return FALSE;
+                            return 0;
                         }
 
                         break;
@@ -1389,43 +2119,31 @@ static void data_ready_cb_thread(void *arg)
 {
     sk_buff *skb;
 
-    HCI_TRACE_DEBUG("data_ready_cb_thread started");
+    HCI_LOGD(TAG, "data_ready_cb_thread started");
 
     while (h5_data_ready_running) {
 
-        osi_sem_take(&rtk_h5.data_cond, OSI_SEM_MAX_TIMEOUT);
+        aos_sem_wait(&rtk_h5.data_cond, AOS_WAIT_FOREVER);
 
         while ((hci_skb_queue_get_length(rtk_h5.recv_data) == 0)) {
-            osi_sem_take(&rtk_h5.data_cond, OSI_SEM_MAX_TIMEOUT);
+            aos_sem_wait(&rtk_h5.data_cond, AOS_WAIT_FOREVER);
         }
 
-        osi_mutex_lock(&rtk_h5.data_mutex, OSI_MUTEX_MAX_TIMEOUT);
+        aos_mutex_lock(&rtk_h5.data_mutex, AOS_WAIT_FOREVER);
         if ((skb = hci_skb_dequeue_head(rtk_h5.recv_data)) != NULL) {
             rtk_h5.data_skb = skb;
         }
-        osi_mutex_unlock(&rtk_h5.data_mutex);
+        aos_mutex_unlock(&rtk_h5.data_mutex);
 
         int length = hci_skb_get_data_length(rtk_h5.data_skb);
 
-        BT_HDR *packet = malloc(length + sizeof(BT_HDR));
-
-        if (packet == NULL) {
-            hci_skb_free(&rtk_h5.data_skb);
-            continue;
+        if (h5_int_hal_callbacks) {
+            h5_int_hal_callbacks(hci_skb_get_pkt_type(rtk_h5.data_skb),
+                                 hci_skb_get_data(rtk_h5.data_skb),
+                                 length);
         }
 
-        memcpy(packet->data, hci_skb_get_data(rtk_h5.data_skb), length);
-
-        packet->layer_specific = 0;
-        packet->offset = 0;
-        packet->len = length - packet->offset;
-        packet->event = outbound_event_types[PACKET_TYPE_TO_INDEX(hci_skb_get_pkt_type(rtk_h5.data_skb))];
-
         hci_skb_free(&rtk_h5.data_skb);
-#if (C2H_FLOW_CONTROL_INCLUDED == TRUE)
-      hci_packet_complete(packet);
-#endif ///C2H_FLOW_CONTROL_INCLUDED == TRUE
-        h5_int_hal_callbacks->packet_ready(packet);
     }
 
 }
@@ -1434,11 +2152,11 @@ static void data_retransfer_thread(void *arg)
 {
     uint16_t events;
 
-    HCI_TRACE_DEBUG("data_retransfer_thread started");
+    HCI_LOGD(TAG, "data_retransfer_thread started");
 
     while (h5_retransfer_running) {
 
-        osi_sem_take(&rtk_h5.cond, OSI_SEM_MAX_TIMEOUT);
+        aos_sem_wait(&rtk_h5.cond, AOS_WAIT_FOREVER);
 
         events = h5_ready_events;
         h5_ready_events = 0;
@@ -1446,7 +2164,7 @@ static void data_retransfer_thread(void *arg)
 
         if (events & H5_EVENT_RX) {
             sk_buff *skb;
-            HCI_TRACE_ERROR("retransmitting (%u) pkts, retransfer count(%d)", hci_skb_queue_get_length(rtk_h5.unack), rtk_h5.data_retrans_count);
+            LOGE(TAG, "retransmitting (%u) pkts, retransfer count(%d)", hci_skb_queue_get_length(rtk_h5.unack), rtk_h5.data_retrans_count);
 
             if (rtk_h5.data_retrans_count < DATA_RETRANS_COUNT) {
                 while ((skb = hci_skb_dequeue_tail(rtk_h5.unack)) != NULL) {
@@ -1467,59 +2185,69 @@ static void data_retransfer_thread(void *arg)
 
     }
 
-    HCI_TRACE_DEBUG("data_retransfer_thread exiting");
+    HCI_LOGD(TAG, "data_retransfer_thread exiting");
 }
 
 static void h5_retransfer_signal_event(uint16_t event)
 {
-    osi_mutex_lock(&rtk_h5.mutex, OSI_MUTEX_MAX_TIMEOUT);
+    aos_mutex_lock(&rtk_h5.mutex, AOS_WAIT_FOREVER);
     h5_ready_events |= event;
-    osi_sem_give(&rtk_h5.cond);
-    osi_mutex_unlock(&rtk_h5.mutex);
+    aos_sem_signal(&rtk_h5.cond);
+    aos_mutex_unlock(&rtk_h5.mutex);
 }
 
 static int create_data_retransfer_thread()
 {
     if (h5_retransfer_running) {
-        HCI_TRACE_ERROR("create_data_retransfer_thread has been called repeatedly without calling cleanup ?");
+        LOGE(TAG, "create_data_retransfer_thread has been called repeatedly without calling cleanup ?");
     }
 
     h5_retransfer_running = 1;
     h5_ready_events = 0;
 
-    int ret = osi_mutex_new(&rtk_h5.mutex);
-    aos_check(!ret, EIO);
-    ret = osi_sem_new(&rtk_h5.cond, 0, 0);
-    aos_check(!ret, EIO);
+    int ret = aos_mutex_new(&rtk_h5.mutex);
+    // aos_check_return_enomem(!ret);
+    ret = aos_sem_new(&rtk_h5.cond, 0);
+    // aos_check_return_enomem(!ret);
 
     if (aos_task_new_ext(&rtk_h5.thread_data_retrans, "data_retransfer",
                          (void *)data_retransfer_thread, NULL, 3072, AOS_DEFAULT_APP_PRI + 3) != 0) {
-        HCI_TRACE_ERROR("pthread_create thread_data_retrans failed!");
+        LOGE(TAG, "pthread_create thread_data_retrans failed!");
         h5_retransfer_running = 0;
         return -1 ;
     }
 
-    return 0;
+    return ret;
 
 }
 
 static int create_data_ready_cb_thread()
 {
     if (h5_data_ready_running) {
-        HCI_TRACE_ERROR("create_data_ready_cb_thread has been called repeatedly without calling cleanup ?");
+        LOGE(TAG, "create_data_ready_cb_thread has been called repeatedly without calling cleanup ?");
     }
 
     h5_data_ready_running = 1;
 
-    int ret = osi_mutex_new(&rtk_h5.data_mutex);
-    aos_check(!ret, EIO);
-    ret = osi_sem_new(&rtk_h5.data_cond, 0, 0);
-    aos_check(!ret, EIO);
+    int ret = aos_mutex_new(&rtk_h5.data_mutex);
+
+    if (ret != 0) {
+        return -1;
+    }
+
+    ret = aos_sem_new(&rtk_h5.data_cond, 0);
+
+    if (ret != 0) {
+        aos_mutex_free(&rtk_h5.data_mutex);
+        return -1;
+    }
 
     if (aos_task_new_ext(&rtk_h5.thread_data_ready_cb, "data_ready_cb",
                          (void *)data_ready_cb_thread, NULL, 3072, AOS_DEFAULT_APP_PRI + 3) != 0) {
-        HCI_TRACE_ERROR("pthread_create thread_data_ready_cb failed!");
+        LOGE(TAG, "pthread_create thread_data_ready_cb failed!");
         h5_data_ready_running = 0;
+        aos_mutex_free(&rtk_h5.data_mutex);
+        aos_sem_free(&rtk_h5.data_cond);
         return -1 ;
     }
 
@@ -1533,29 +2261,6 @@ static void hci_event(hci_event_t event, uint32_t size, void *priv)
     hci_h5_receive_msg(NULL , 0);
 }
 
-/*****************************************************************************
-**   HCI H5 INTERFACE FUNCTIONS
-*****************************************************************************/
-static void uart_event(aos_dev_t *dev, int event_id, void *priv)
-{
-    if (event_id == USART_EVENT_READ || event_id == USART_OVERFLOW) {
-        // printf("%s\n", __func__);
-        aos_event_set(&g_uart_event, 0x1, AOS_EVENT_OR);
-    }
-}
-
-
-static void hci_uart_entry(void *arg)
-{
-    uint32_t act_flag;
-
-    while (1) {
-        aos_event_get(&g_uart_event, 0x01, AOS_EVENT_OR_CLEAR, &act_flag, AOS_WAIT_FOREVER);
-    
-        hci_event(HCI_EVENT_READ, 0, NULL);
-    }
-}
-
 /*******************************************************************************
 **
 ** Function        hci_h5_init
@@ -1565,15 +2270,13 @@ static void hci_uart_entry(void *arg)
 ** Returns         None
 **
 *******************************************************************************/
-static void hci_h5_int_init(hci_hal_callbacks_t *h5_callbacks)
+extern int h5_mp_send_cmd(uint16_t opcode, uint8_t *data, uint32_t len, uint8_t *resp_data, uint32_t *resp_len);
+static void hci_h5_int_init(packet_recv h5_callbacks)
 {
-    HCI_TRACE_DEBUG("hci_h5_int_init");
+    HCI_LOGD(TAG, "hci_h5_int_init");
 
     h5_int_hal_callbacks = h5_callbacks;
     memset(&rtk_h5, 0, sizeof(tHCI_H5_CB));
-
-    /* Per HCI spec., always starts with 1 */
-    num_hci_cmd_pkts = 1;
 
     h5_alloc_data_retrans_timer();
     h5_alloc_sync_retrans_timer();
@@ -1581,18 +2284,16 @@ static void hci_h5_int_init(hci_hal_callbacks_t *h5_callbacks)
     h5_alloc_wait_controller_baudrate_ready_timer();
     h5_alloc_hw_init_ready_timer();
 
-    int ret = osi_mutex_new(&h5_wakeup_mutex);
-
-    aos_check(!ret, ENOMEM);
+    aos_mutex_new(&h5_wakeup_mutex);
 
     rtk_h5.recv_data = RtbQueueInit();
 
     if (create_data_ready_cb_thread() != 0) {
-        HCI_TRACE_ERROR("H5 create_data_ready_cb_thread failed");
+        LOGE(TAG, "H5 create_data_ready_cb_thread failed");
     }
 
     if (create_data_retransfer_thread() != 0) {
-        HCI_TRACE_ERROR("H5 create_data_retransfer_thread failed");
+        LOGE(TAG, "H5 create_data_retransfer_thread failed");
     }
 
     rtk_h5.unack = RtbQueueInit();
@@ -1601,31 +2302,16 @@ static void hci_h5_int_init(hci_hal_callbacks_t *h5_callbacks)
 
     rtk_h5.rx_state = H5_W4_PKT_DELIMITER;
     rtk_h5.rx_esc_state = H5_ESCSTATE_NOESC;
-    tUSERIAL_CFG userial_init_cfg = {
-        (USERIAL_DATABITS_8 | USERIAL_PARITY_EVEN | USERIAL_STOPBITS_1),
-        USERIAL_BAUD_115200,
-        USERIAL_HW_FLOW_CTRL_OFF,
-        g_uart_id
-    };
 
-    drv_pinmux_config(g_bt_dis_pin, PIN_FUNC_GPIO);
-    gpio = csi_gpio_pin_initialize(g_bt_dis_pin, NULL);
-    aos_check(gpio, EIO);
-    csi_gpio_pin_config(gpio, GPIO_MODE_PUSH_PULL, GPIO_DIRECTION_OUTPUT);
+    set_mp_mode();
 
-    csi_gpio_pin_write(gpio, 0);
-    aos_msleep(200);
-    csi_gpio_pin_write(gpio, 1);
-    aos_msleep(500);
+    rtk_h5.hci_dev = hci_open("hci");
 
-    aos_check(!aos_event_new(&g_uart_event, 0), EIO);
+    aos_check(rtk_h5.hci_dev, EIO);
 
-    aos_task_t task_handle;
-    aos_check(!aos_task_new_ext(&task_handle, "hci_uart", hci_uart_entry, NULL, 2048, 26), EIO);
+    hci_set_event(rtk_h5.hci_dev, hci_event, NULL);
 
-    userial_vendor_open(&userial_init_cfg, uart_event);
-
-    hw_config_start(1);
+    hci_start(rtk_h5.hci_dev, h5_mp_send_cmd);
 }
 
 /*******************************************************************************
@@ -1639,7 +2325,7 @@ static void hci_h5_int_init(hci_hal_callbacks_t *h5_callbacks)
 *******************************************************************************/
 static void hci_h5_cleanup(void)
 {
-    HCI_TRACE_DEBUG("hci_h5_cleanup");
+    HCI_LOGD(TAG, "hci_h5_cleanup");
 
     rtk_h5.cleanuping = 1;
 
@@ -1654,12 +2340,9 @@ static void hci_h5_cleanup(void)
         h5_retransfer_signal_event(H5_EVENT_EXIT);
 
     }
-    csi_gpio_pin_write(gpio, 0);
 
-    ms_delay(200);
-
-    osi_mutex_free(&rtk_h5.mutex);
-    osi_sem_free(&rtk_h5.cond);
+    aos_mutex_free(&rtk_h5.mutex);
+    aos_sem_free(&rtk_h5.cond);
 
     RtbQueueFree(rtk_h5.unack);
     RtbQueueFree(rtk_h5.rel);
@@ -1682,41 +2365,13 @@ static void hci_h5_cleanup(void)
 static uint8_t data_buffer[4096] = {0};
 static uint32_t hci_h5_receive_msg(uint8_t *byte, uint16_t length)
 {
-    uint32_t read_len = userial_vendor_recv_data(data_buffer, sizeof(data_buffer), 0);
+    uint32_t read_len = hci_recv(rtk_h5.hci_dev, data_buffer, 4096);
 
     if (read_len > 0) {
 
         return h5_recv(&rtk_h5, data_buffer, read_len);
     } else {
         return 0;
-    }
-}
-
-
-static size_t hci_h5_int_read_data(uint8_t *data_buffer, size_t max_size)
-{
-    HCI_TRACE_DEBUG("hci_h5_int_read_data need_size = %d", max_size);
-
-    if (!rtk_h5.data_skb) {
-        HCI_TRACE_ERROR("hci_h5_int_read_data, there is no data to read for this packet!");
-        return -1;
-    }
-
-    sk_buff *skb_complete_pkt = rtk_h5.data_skb;
-    uint8_t *data = hci_skb_get_data(skb_complete_pkt);
-    uint32_t data_len = hci_skb_get_data_length(skb_complete_pkt);
-
-    HCI_TRACE_DEBUG("hci_h5_int_read_data length = %d, need_size = %d", data_len, max_size);
-
-    if (data_len <= max_size) {
-        memcpy(data_buffer, data, data_len);
-        hci_skb_free(&rtk_h5.data_skb);
-        rtk_h5.data_skb = NULL;
-        return data_len;
-    } else {
-        memcpy(data_buffer, data, max_size);
-        hci_skb_pull(rtk_h5.data_skb, max_size);
-        return max_size;
     }
 }
 
@@ -1730,7 +2385,7 @@ static size_t hci_h5_int_read_data(uint8_t *data_buffer, size_t max_size)
 ** Returns          bytes send
 **
 *******************************************************************************/
-static uint16_t hci_h5_send_cmd(serial_data_type_t type, uint8_t *data, uint16_t length)
+static uint16_t hci_h5_send_cmd(hci_data_type_t type, uint8_t *data, uint16_t length)
 {
     sk_buff *skb = NULL;
     uint16_t opcode;
@@ -1738,23 +2393,21 @@ static uint16_t hci_h5_send_cmd(serial_data_type_t type, uint8_t *data, uint16_t
     skb = hci_skb_alloc_and_init(type, data, length);
 
     if (!skb) {
-        HCI_TRACE_ERROR("send cmd hci_skb_alloc_and_init fail!");
+        LOGE(TAG, "send cmd hci_skb_alloc_and_init fail!");
         return -1;
     }
 
     h5_enqueue(skb);
-
-    num_hci_cmd_pkts--;
 
     /* If this is an internal Cmd packet, the layer_specific field would
          * have stored with the opcode of HCI command.
          * Retrieve the opcode from the Cmd packet.
          */
     STREAM_TO_UINT16(opcode, data);
-    HCI_TRACE_DEBUG("HCI Command opcode(0x%04X)", opcode);
+    HCI_LOGD(TAG, "HCI Command opcode(0x%04X)", opcode);
 
     if (opcode == 0x0c03) {
-        HCI_TRACE_DEBUG("RX HCI RESET Command, stop hw init timer");
+        HCI_LOGD(TAG, "RX HCI RESET Command, stop hw init timer");
         h5_stop_hw_init_ready_timer();
     }
 
@@ -1772,14 +2425,14 @@ static uint16_t hci_h5_send_cmd(serial_data_type_t type, uint8_t *data, uint16_t
 ** Returns          bytes send
 **
 *******************************************************************************/
-static uint16_t hci_h5_send_acl_data(serial_data_type_t type, uint8_t *data, uint16_t length)
+static uint16_t hci_h5_send_acl_data(hci_data_type_t type, uint8_t *data, uint16_t length)
 {
     sk_buff *skb = NULL;
 
     skb = hci_skb_alloc_and_init(type, data, length);
 
     if (!skb) {
-        HCI_TRACE_ERROR("hci_h5_send_acl_data, alloc skb buffer fail!");
+        LOGE(TAG, "hci_h5_send_acl_data, alloc skb buffer fail!");
         return -1;
     }
 
@@ -1788,34 +2441,6 @@ static uint16_t hci_h5_send_acl_data(serial_data_type_t type, uint8_t *data, uin
     h5_wake_up();
     return length;
 }
-
-/*******************************************************************************
-**
-** Function        hci_h5_send_sco_data
-**
-** Description     get sco data from hal and send sco data
-**
-**
-** Returns          bytes send
-**
-*******************************************************************************/
-static uint16_t hci_h5_send_sco_data(serial_data_type_t type, uint8_t *data, uint16_t length)
-{
-    sk_buff *skb = NULL;
-
-    skb = hci_skb_alloc_and_init(type, data, length);
-
-    if (!skb) {
-        HCI_TRACE_ERROR("send sco data hci_skb_alloc_and_init fail!");
-        return -1;
-    }
-
-    h5_enqueue(skb);
-
-    h5_wake_up();
-    return length;
-}
-
 
 /*******************************************************************************
 **
@@ -1824,7 +2449,7 @@ static uint16_t hci_h5_send_sco_data(serial_data_type_t type, uint8_t *data, uin
 ** Description     Place the internal commands (issued internally by vendor lib)
 **                 in the tx_q.
 **
-** Returns         TRUE/FALSE
+** Returns         1/0
 **
 *******************************************************************************/
 static uint8_t hci_h5_send_sync_cmd(uint16_t opcode, uint8_t *p_buf, uint16_t length)
@@ -1836,87 +2461,102 @@ static uint8_t hci_h5_send_sync_cmd(uint16_t opcode, uint8_t *p_buf, uint16_t le
             h5_start_sync_retrans_timer();
         }
     } else if (rtk_h5.link_estab_state == H5_ACTIVE) {
-        HCI_TRACE_DEBUG("hci_h5_send_sync_cmd(0x%x), link_estab_state = %d", opcode, rtk_h5.link_estab_state);
-        return FALSE;
+        HCI_LOGD(TAG, "hci_h5_send_sync_cmd(0x%x), link_estab_state = %d", opcode, rtk_h5.link_estab_state);
+        return 0;
     }
 
-    return TRUE;
+    return 1;
 }
 
 /***
     Timer related functions
 */
-static osi_alarm_t *OsAllocateTimer(tTIMER_HANDLE_CBACK timer_callback)
+static aos_timer_t *OsAllocateTimer(tTIMER_HANDLE_CBACK timer_callback)
 {
-    osi_alarm_t *ret;
-#if 0
-    struct sigevent sigev;
-    timer_t timerid;
+    aos_timer_t *ret;
 
-    memset(&sigev, 0, sizeof(struct sigevent));
-    // Create the POSIX timer to generate signo
-    sigev.sigev_notify = SIGEV_THREAD;
-    //sigev.sigev_notify_thread_id = syscall(__NR_gettid);
-    sigev.sigev_notify_function = timer_callback;
-    sigev.sigev_value.sival_ptr = &timerid;
-#endif
+    ret = malloc(sizeof(aos_timer_t));
 
-    //HCI_TRACE_DEBUG("OsAllocateTimer rtk_parse sigev.sigev_notify_thread_id = syscall(__NR_gettid)!");
-    //Create the Timer using timer_create signal
-
-    if ((ret = osi_alarm_new("hci_h5", timer_callback, NULL, 0)) != NULL) {
-        return ret;
-    } else {
-        HCI_TRACE_ERROR("timer_create error!");
+    if (ret == NULL) {
         return NULL;
     }
-    return NULL;
+
+    aos_timer_new_ext(ret, timer_callback, NULL, 0xFFFFFFUL, 0, 0);
+
+    return ret;
 }
 
-static int OsFreeTimer(osi_alarm_t *timerid)
+static int OsFreeTimer(aos_timer_t *timerid)
 {
-    osi_alarm_free(timerid);
+    aos_timer_free(timerid);
+
+    free(timerid);
 
     return 0;
 }
 
-
-static int OsStartTimer(osi_alarm_t *timerid, int msec, int mode)
+static int OsStartTimer(aos_timer_t *timerid, int msec, int mode)
 {
-    //Set the Timer when to expire through timer_settime
+    int ret;
 
-    if (osi_alarm_set_periodic(timerid, msec) != 0) {
-        HCI_TRACE_ERROR("time_settime error!");
-        return -1;
+    //Set the Timer when to expire through timer_settime
+    if (!aos_timer_is_valid(timerid)) {
+        LOGE(TAG, "%s null\n", __func__);
+        goto end;
     }
 
+    ret = aos_timer_stop(timerid);
+
+    if (ret != 0) {
+       LOGE(TAG, "%s aos_timer_stop %d\n", __func__, ret); 
+    //    return ret;
+    }
+
+    if (mode) {
+        ret = aos_timer_change(timerid, msec);
+    } else {
+        ret = aos_timer_change_once(timerid, msec);
+    }
+
+    if (ret != 0) {
+       LOGE(TAG, "%s aos_timer_change %d\n", __func__, ret); 
+    //    return ret;
+    }
+
+    ret = aos_timer_start(timerid);
+
+    if (ret != 0) {
+       LOGE(TAG, "%s aos_timer_start %d\n", __func__, ret); 
+    //    return ret;
+    }
+
+end:
     return 0;
-
 }
 
-static int OsStopTimer(osi_alarm_t *timerid)
+static int OsStopTimer(aos_timer_t *timerid)
 {
-    return osi_alarm_cancel(timerid);
+    return  aos_timer_stop(timerid);
 }
 
-static void h5_retransfer_timeout_handler(void *arg)
+static void h5_retransfer_timeout_handler(void *timer, void *arg)
 {
-    HCI_TRACE_DEBUG("h5_retransfer_timeout_handler");
+    HCI_LOGD(TAG, "h5_retransfer_timeout_handler");
 
     if (rtk_h5.cleanuping) {
-        HCI_TRACE_ERROR("h5_retransfer_timeout_handler H5 is cleanuping, EXIT here!");
+        LOGE(TAG, "h5_retransfer_timeout_handler H5 is cleanuping, EXIT here!");
         return;
     }
 
     h5_retransfer_signal_event(H5_EVENT_RX);
 }
 
-static void h5_sync_retrans_timeout_handler(void *arg)
+static void h5_sync_retrans_timeout_handler(void *timer, void *arg)
 {
-    HCI_TRACE_DEBUG("h5_sync_retrans_timeout_handler");
+    HCI_LOGD(TAG, "h5_sync_retrans_timeout_handler");
 
     if (rtk_h5.cleanuping) {
-        HCI_TRACE_ERROR("h5_sync_retrans_timeout_handler H5 is cleanuping, EXIT here!");
+        LOGE(TAG, "h5_sync_retrans_timeout_handler H5 is cleanuping, EXIT here!");
         return;
     }
 
@@ -1926,19 +2566,18 @@ static void h5_sync_retrans_timeout_handler(void *arg)
     } else {
         h5_stop_sync_retrans_timer();
     }
-
 }
 
-static void h5_conf_retrans_timeout_handler(void *arg)
+static void h5_conf_retrans_timeout_handler(void *timer, void *arg)
 {
-    HCI_TRACE_DEBUG("h5_conf_retrans_timeout_handler");
+    HCI_LOGD(TAG, "h5_conf_retrans_timeout_handler");
 
     if (rtk_h5.cleanuping) {
-        HCI_TRACE_ERROR("h5_conf_retrans_timeout_handler H5 is cleanuping, EXIT here!");
+        LOGE(TAG, "h5_conf_retrans_timeout_handler H5 is cleanuping, EXIT here!");
         return;
     }
 
-    HCI_TRACE_DEBUG("Wait H5 Conf Resp timeout, %d times", rtk_h5.conf_retrans_count);
+    HCI_LOGD(TAG, "Wait H5 Conf Resp timeout, %d times", rtk_h5.conf_retrans_count);
 
     if (rtk_h5.conf_retrans_count < CONF_RETRANS_COUNT) {
         h5_start_conf_retrans_timer();
@@ -1950,12 +2589,12 @@ static void h5_conf_retrans_timeout_handler(void *arg)
 
 }
 
-static void h5_wait_controller_baudrate_ready_timeout_handler(void *arg)
+static void h5_wait_controller_baudrate_ready_timeout_handler(void *timer, void *arg)
 {
-    HCI_TRACE_DEBUG("h5_wait_ct_baundrate_ready_timeout_handler");
+    HCI_LOGD(TAG, "h5_wait_ct_baundrate_ready_timeout_handler");
 
     if (rtk_h5.cleanuping) {
-        HCI_TRACE_ERROR("h5_wait_controller_baudrate_ready_timeout_handler H5 is cleanuping, EXIT here!");
+        LOGE(TAG, "h5_wait_controller_baudrate_ready_timeout_handler H5 is cleanuping, EXIT here!");
 
         if (rtk_h5.internal_skb) {
             hci_skb_free(&rtk_h5.internal_skb);
@@ -1964,29 +2603,29 @@ static void h5_wait_controller_baudrate_ready_timeout_handler(void *arg)
         return;
     }
 
-    HCI_TRACE_DEBUG("No Controller retransfer, baudrate of controller ready");
+    HCI_LOGD(TAG, "No Controller retransfer, baudrate of controller ready");
 
     if (rtk_h5.internal_skb == NULL) {
         return;
     }
-    osi_mutex_lock(&rtk_h5.data_mutex, OSI_MUTEX_MAX_TIMEOUT);
+    aos_mutex_lock(&rtk_h5.data_mutex, AOS_WAIT_FOREVER);
     hci_skb_queue_tail(rtk_h5.recv_data, rtk_h5.internal_skb);
-    osi_sem_give(&rtk_h5.data_cond);
-    osi_mutex_unlock(&rtk_h5.data_mutex);
+    aos_sem_signal(&rtk_h5.data_cond);
+    aos_mutex_unlock(&rtk_h5.data_mutex);
 
     rtk_h5.internal_skb = NULL;
 }
 
-static void h5_hw_init_ready_timeout_handler(void *arg)
+static void h5_hw_init_ready_timeout_handler(void *timer, void *arg)
 {
-    HCI_TRACE_DEBUG("h5_hw_init_ready_timeout_handler");
+    HCI_LOGD(TAG, "h5_hw_init_ready_timeout_handler");
 
     if (rtk_h5.cleanuping) {
-        HCI_TRACE_ERROR("H5 is cleanuping, EXIT here!");
+        LOGE(TAG, "H5 is cleanuping, EXIT here!");
         return;
     }
 
-    HCI_TRACE_DEBUG("TIMER_H5_HW_INIT_READY timeout, kill restart BT");
+    HCI_LOGD(TAG, "TIMER_H5_HW_INIT_READY timeout, kill restart BT");
 }
 
 /*
@@ -2089,11 +2728,6 @@ static int h5_start_wait_controller_baudrate_ready_timer()
     return OsStartTimer(rtk_h5.timer_wait_ct_baudrate_ready, WAIT_CT_BAUDRATE_READY_TIMEOUT_VALUE, 0);
 }
 
-static int h5_stop_wait_controller_baudrate_ready_timer()
-{
-    return OsStopTimer(rtk_h5.timer_wait_ct_baudrate_ready);
-}
-
 /*
 ** h5 hw init ready timer functions
 */
@@ -2120,16 +2754,16 @@ static int h5_stop_hw_init_ready_timer()
     return OsStopTimer(rtk_h5.timer_h5_hw_init_ready);
 }
 
-const hci_h5_mp_t hci_h5_int_func_mptable = {
+const static h5_mp_t hci_h5_int_func = {
     .h5_int_init        = hci_h5_int_init,
     .h5_int_cleanup     = hci_h5_cleanup,
     .h5_send_cmd        = hci_h5_send_cmd,
+    .h5_send_acl_data   = hci_h5_send_acl_data,
     .h5_send_sync_cmd   = hci_h5_send_sync_cmd,
-    .h5_recv_msg        = hci_h5_receive_msg,
 };
 
-const hci_h5_mp_t *hci_get_h5_int_interface_mp()
+const h5_mp_t *get_h5_mp_interface()
 {
-    return &hci_h5_int_func_mptable;
+    return &hci_h5_int_func;
 }
 

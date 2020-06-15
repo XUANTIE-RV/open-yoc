@@ -88,6 +88,14 @@ int sign_extend(int val, unsigned bits);
  */
 char* four_2_str(uint32_t val);
 
+/**
+* @brief  crc8(x8+x2+x+1)
+* @param  [in] data
+* @param  [in] len
+* @return 0 if ok
+*/
+uint8_t av_crc8(uint8_t *data, size_t len);
+
 __END_DECLS__
 
 #endif /* __MISC_H__ */

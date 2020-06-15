@@ -15,7 +15,6 @@
  * @tag      DRV_DW_TIMER_TAG
  ******************************************************************************/
 
-#include <csi_config.h>
 #include <drv/irq.h>
 #include <drv/timer.h>
 #include <dw_timer.h>

@@ -1,13 +1,12 @@
 /*
- * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ * Copyright (C) 2019-2020 Alibaba Group Holding Limited
  */
 
-#include <yoc_config.h>
 
 #include <stdlib.h>
 #include <string.h>
 #include <aos/log.h>
-
+#include "cloud_baidu.h"
 #include "app_main.h"
 #include "audio/audio_res.h"
 
@@ -63,14 +62,14 @@ int aui_nlp_process_music_nlp(cJSON *js, const char *json_text)
         }
 
         LOGD(TAG, "process_music_nlp:%s", music_text);
-        if (aui_cloud_push_text(&g_aui_handler, music_text) < 0) {
-            LOGE(TAG, "aui_cloud_push_text");
+        if (baidu_music(&g_aui_handler, music_text) < 0) {
+            LOGE(TAG, "baidu_music");
             return -1;
         }
 
     } else if (strcmp(semantic_intent->valuestring, "RANDOM_SEARCH") == 0) {
-        if (aui_cloud_push_text(&g_aui_handler, "music:") < 0) {
-            LOGE(TAG, "aui_cloud_push_text");
+        if (baidu_music(&g_aui_handler, "music:") < 0) {
+            LOGE(TAG, "baidu_music");
             return -1;
         }
     } else if (strcmp(semantic_intent->valuestring, "INSTRUCTION") == 0) {

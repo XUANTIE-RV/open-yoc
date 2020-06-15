@@ -46,7 +46,7 @@ typedef int (*media_key_cb_t)(const void *in, size_t ilen, void *out, size_t *ol
 typedef struct {
     uint32_t  resample_rate;
     uint32_t  web_cache_size;      ///< size of the web cache. 0 use default
-    uint32_t  web_start_threshold; ///< (0~100)start read for player when up to cache_percent. 0 use default
+    uint32_t  web_start_threshold; ///< (0~100)start read for player when up to cache_start_threshold. 0 use default
     uint32_t  snd_period_ms;       ///< period cache size(ms) for audio out. 0 means use default
     uint32_t  snd_period_num;      ///< number of period_ms. total cache size for ao is (period_num * period_ms * (rate / 1000) * 2 * (16/8)). 0 means use default
 
@@ -82,10 +82,12 @@ int aui_player_init(utask_t *task, media_evt_t evt_cb);
  *        http://.../1.mp3            http音频
  *        fifo://tts/1           播放云端反馈的tts流
  *        mem://addr=%u&size=%u       播放存放在ram中资源
+ * @param seek_time   播放偏移时间
  * @param resume   自动重启音乐(0：手动 1：自动)
  * @return 0:成功
  */
 int aui_player_play(int type, const char *url, int resume);
+int aui_player_seek_play(int type, const char *url, uint64_t seek_time, int resume);
 
 /**
  * 暂停播放

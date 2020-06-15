@@ -74,7 +74,15 @@ static aos_pcm_t *_param_init(voice_pcm_t *vpcm, char *name, voice_pcm_param_t *
     return pcm;
 }
 
-static int pcm_param_init(voice_pcm_t *p)
+static int pcm_alsa_stop(aos_pcm_t *pcm)
+{
+    aos_pcm_close(pcm);
+
+    return 0;
+}
+
+
+static int pcm_alsa_start(voice_pcm_t *p)
 {
     p->mic->hdl = _param_init(p, p->mic->param->pcm_name,  p->mic->param);
 
@@ -159,7 +167,7 @@ static void pcm_buffer_deinit(voice_pcm_t *p)
     aos_free(p->ref->param);
     aos_free(p->mic);
     aos_free(p->ref);
-    aos_free(p->data);
+    voice_free(p->data);
 }
 
 static void pcm_entry(void *priv)
@@ -169,7 +177,7 @@ static void pcm_entry(void *priv)
     voice_capture_t *capture;
 
     pcm_buffer_init(p);
-    pcm_param_init(p);
+    pcm_alsa_start(p);
 
     while (1) {
         capture = p->mic;
@@ -243,6 +251,20 @@ int pcm_start(voice_pcm_t *p)
         return -1;
     }
 
+    return 0;
+}
+
+int pcm_stop(voice_pcm_t *p)
+{
+    if (p->mic->hdl) {
+        pcm_alsa_stop(p->mic->hdl);
+    }
+
+    if (p->ref->hdl) {
+        pcm_alsa_stop(p->ref->hdl);
+    }
+
+    // aos_task_new
     return 0;
 }
 

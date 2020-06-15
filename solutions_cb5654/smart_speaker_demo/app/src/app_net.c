@@ -5,7 +5,7 @@
 #include <devices/wifi.h>
 #include <devices/rtl8723ds.h>
 #include <ntp.h>
-#include <yoc/netmgr.h>
+#include <yoc/netmgr_service.h>
 
 #include "app_main.h"
 #include <softap_prov.h>
@@ -174,6 +174,11 @@ static void network_normal_handle(uint32_t event_id, const void *param)
                     local_audio_play(LOCAL_AUDIO_NET_SUCC);
                     event_publish(EVENT_NET_NTP_SUCCESS, NULL);
 
+#if defined(CONFIG_SMARTLIVING_MQTT) && CONFIG_SMARTLIVING_MQTT
+extern int mqtt_client_start(void);
+                    mqtt_client_start();
+#endif
+
 #if defined(APP_FOTA_EN) && APP_FOTA_EN
                     app_fota_start();
 #endif
@@ -289,15 +294,15 @@ static void _wifi_pair_thread(void *arg)
 
     switch (wifi_prov_method) {
         case WIFI_PROVISION_SOFTAP:
-            wifi_prov_start(wifi_prov_get_method_id("softap"), wifi_pair_callback, 120);
+            wifi_prov_start(wifi_prov_get_method_id("softap"), wifi_pair_callback, 600);
             break;
 #if defined(CONFIG_WIFI_SMARTLIVING) && CONFIG_WIFI_SMARTLIVING
         case WIFI_PROVISION_SL_DEV_AP:
-            wifi_prov_start(wifi_prov_get_method_id("sl_dev_ap"), wifi_pair_callback, 120);
+            wifi_prov_start(wifi_prov_get_method_id("sl_dev_ap"), wifi_pair_callback, 600);
             break;
 
         case WIFI_PROVISION_SL_SMARTCONFIG:
-            wifi_prov_start(wifi_prov_get_method_id("sl_smartconfig"), wifi_pair_callback, 120);
+            wifi_prov_start(wifi_prov_get_method_id("sl_smartconfig"), wifi_pair_callback, 600);
             break;
 #endif
         default:

@@ -38,7 +38,7 @@ typedef enum {
     SNTP_SYNC_STATUS_IN_PROGRESS,   // Smooth time sync in progress.
 } sntp_sync_status_t;
 
-static sntp_op_mode_t op_mode = SNTP_CLIENT_UNICAST;
+static sntp_op_mode_t g_op_mode = SNTP_CLIENT_UNICAST;
 static sntp_sync_time_cb_t time_sync_notification_cb = NULL;
 static int server_idx = 0;
 
@@ -66,6 +66,11 @@ void sntp_add_server(char *server)
     sntp_setservername(server_idx++, server);
 }
 
+void sntp_set_op_mode(sntp_op_mode_t op_mode)
+{
+    g_op_mode = op_mode;
+}
+
 void sntp_sync_start()
 {
     if (server_idx == 0) {
@@ -77,9 +82,9 @@ void sntp_sync_start()
 #endif
     }
 
-    if (op_mode == SNTP_CLIENT_UNICAST) {
+    if (g_op_mode == SNTP_CLIENT_UNICAST) {
         sntp_setoperatingmode(SNTP_OPMODE_POLL);
-    } else if (op_mode == SNTP_CLIENT_BROADCAST) {
+    } else if (g_op_mode == SNTP_CLIENT_BROADCAST) {
         sntp_setoperatingmode(SNTP_OPMODE_LISTENONLY);
     } else {
         LOGE(TAG, "sntp op mode error");

@@ -46,7 +46,6 @@ struct demux_cls {
     stream_cls_t                *s;
     sh_audio_t                  ash;
     aos_mutex_t                 lock;
-    uint8_t                     eof;           ///< demux is eof
     avpacket_t                  fpkt;          ///< reserved, the first packet for mp3, etc
     size_t                      id3v2size;     ///< TODO:
     uint64_t                    bps;

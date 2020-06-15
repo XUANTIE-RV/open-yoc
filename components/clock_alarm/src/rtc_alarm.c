@@ -18,6 +18,8 @@ void rtc_debug(void)
     time_t time_rtc_now;
     time_t time_sys_now;
 
+    rtc_init();
+
     if (g_rtc_hd == NULL) {
         LOGE(TAG, "rtc init");
         return;
@@ -31,13 +33,13 @@ void rtc_debug(void)
     time_sys_now = time(NULL);
     time_rtc_now = mktime(&tm_now);
 
-    LOGI(TAG, "RTC=%d,SYS=%d",time_rtc_now, time_sys_now);
-    LOGI(TAG, "app_rtc_debug %d:%d week%d", tm_now.tm_hour, tm_now.tm_min, tm_now.tm_wday);
+    printf("\tUTC:%s %d\n", ctime(&time_sys_now), time_sys_now );
+    printf("\tRTC:%s %d\n", ctime(&time_rtc_now), time_rtc_now );
 }
 
 void rtc_irq_handler(int32_t idx, rtc_event_e event)
 {
-    LOGD(TAG, "-----rtc_irqhandler: Time is up!-----");
+    //LOGD(TAG, "-----rtc_irqhandler: Time is up!-----");
     //rtc_debug();
     event_publish(EVENT_CLOCK_ALARM, NULL);
 }
@@ -49,9 +51,6 @@ void rtc_init(void)
     }
 
     g_rtc_hd = csi_rtc_initialize(0, rtc_irq_handler);
-    if (g_rtc_hd == NULL) {
-        LOGE(TAG, "rtc init");
-    }
 }
 
 void rtc_from_system(void)
@@ -63,7 +62,7 @@ void rtc_from_system(void)
     tm_now = gmtime(&time_t_now);
 
     if (g_rtc_hd == NULL) {
-        LOGE(TAG, "rtc init");
+        LOGE(TAG, "rtc init,from sys");
         return;
     }
 
@@ -79,13 +78,13 @@ void rtc_from_system(void)
 
 time_t rtc_to_system(void)
 {
-    rtc_init();
-
     struct tm tm_now = {0,};
     time_t time_rtc_now;
 
+    rtc_init();
+
     if (g_rtc_hd == NULL) {
-        LOGE(TAG, "rtc init");
+        LOGE(TAG, "rtc init,to sys");
         return 0;
     }
 
@@ -93,6 +92,7 @@ time_t rtc_to_system(void)
         LOGE(TAG, "rtc get");
         return 0;
     }
+    LOGD(TAG, "rtc time [%02d:%02d:%02d]", tm_now.tm_hour, tm_now.tm_min, tm_now.tm_sec);
 
     time_rtc_now = mktime(&tm_now);
 
@@ -109,8 +109,10 @@ time_t rtc_get_time(void)
 {
     struct tm tm_now = {0,};
 
+    rtc_init();
+
     if (g_rtc_hd == NULL) {
-        LOGE(TAG, "rtc init");
+        LOGE(TAG, "rtc init,get time");
         return 0;
     }
 
@@ -123,21 +125,24 @@ time_t rtc_get_time(void)
 }
 
 
-void rtc_set_alarm(int32_t week, int32_t hour, int32_t min, int32_t sec)
+void rtc_set_alarm(int32_t week, int day, int32_t hour, int32_t min, int32_t sec)
 {
     struct tm tm_time;
     tm_time.tm_wday = week;
+    tm_time.tm_mday = day;
     tm_time.tm_hour = hour;
     tm_time.tm_min  = min;
     tm_time.tm_sec  = sec;
 
+    rtc_init();
+
     if (g_rtc_hd == NULL) {
-        LOGE(TAG, "rtc init");
+        LOGE(TAG, "rtc init,set alarm");
         return;
     }
 
     if (csi_rtc_set_alarm(g_rtc_hd, &tm_time) < 0) {
-        LOGE(TAG, "config alarm");
+        LOGE(TAG, "set alarm");
         return;
     }
 

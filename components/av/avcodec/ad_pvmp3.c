@@ -83,7 +83,7 @@ static int _ad_pvmp3_decode(ad_cls_t *o, avframe_t *frame, int *got_frame, const
 
     rc = avframe_get_buffer(frame);
     if (rc < 0) {
-        LOGD(TAG, "avframe_get_buffer failed, may be oom. sf = %u, ch = %d, rate = %d\n", sf, channel,
+        LOGD(TAG, "avframe_get_buffer failed, may be oom. sf = %u, ch = %d, rate = %d", sf, channel,
              config->samplingRate);
         ret = -1;
         goto quit;

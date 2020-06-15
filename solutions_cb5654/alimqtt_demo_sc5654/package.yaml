@@ -3,7 +3,7 @@ solution:
   ld_script: ""
 type: solution
 name: alimqtt_demo_sc5654
-yoc_version: 7.2
+version: v7.3.0                                     # <必选项> 组件版本号
 description: alimqtt_demo_sc5654
 keywords:
   - sc5654
@@ -12,24 +12,24 @@ keywords:
 author: feimi
 license: Apache license v2.0
 depends:
-  - aos: V7.2.2
-  - cb5654: V7.2.2
-  - csi_sc5654: V7.2.2
-  - console: V7.2.2
-  - csi: V7.2.2
-  - drivers: V7.2.2
-  - drv_sdmmc: V7.2.2
-  - drv_wifi_rtl8723ds: V7.2.2
-  - lwip: V7.2.2
-  - kv: V7.2.2
-  - minilibc: V7.2.2
-  - posix: V7.2.2
-  - rhino: V7.2.2
-  - netmgr: V7.2.2
-  - yunio: V7.2.2
-  - aliot: V7.2.2
-  - mbedtls: V7.2.2
-defconfig:
+  - aos: V7.3.0
+  - cb5654: V7.3.0
+  - csi_sc5654: V7.3.0
+  - console: V7.3.0
+  - csi: V7.3.0
+  - drivers: V7.3.0
+  - drv_sdmmc: V7.3.0
+  - drv_wifi_rtl8723ds: V7.3.0
+  - lwip: V7.3.0
+  - kv: V7.3.0
+  - minilibc: V7.3.0
+  - posix: V7.3.0
+  - rhino: V7.3.0
+  - netmgr: V7.3.0
+  - yunio: V7.3.0
+  - aliot: V7.3.0
+  - mbedtls: V7.3.0
+def_config:
   CONFIG_ARCH_INTERRUPTSTACK: 4096
   CONFIG_BOARD_NAME: cb5654
   CONFIG_CHIP_NAME: sc5654

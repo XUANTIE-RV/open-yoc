@@ -63,16 +63,18 @@ int demux_register_amr();
  */
 static inline int demux_register_all()
 {
-    demux_register_wav();
-    demux_register_mp3();
-    demux_register_mp4();
-    demux_register_adts();
-    demux_register_rawaudio();
-    demux_register_flac();
-    demux_register_asf();
-    demux_register_amr();
+    int rc = 0;
 
-    return 0;
+    rc |= demux_register_wav();
+    rc |= demux_register_mp3();
+    rc |= demux_register_mp4();
+    rc |= demux_register_adts();
+    rc |= demux_register_rawaudio();
+    rc |= demux_register_flac();
+    rc |= demux_register_asf();
+    rc |= demux_register_amr();
+
+    return rc;
 }
 
 

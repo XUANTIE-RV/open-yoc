@@ -11,6 +11,11 @@
 extern "C" {
 #endif
 
+typedef enum {
+    WIFI_PROV_STOPED = 0,
+    WIFI_PROV_STARTED,
+} wifi_prov_status_t;
+
 typedef struct {
     char       ssid[33];
     char       password[65];
@@ -54,11 +59,16 @@ int wifi_prov_start(uint32_t method_ids, wifi_prov_cb cb, uint32_t timeout_s);
  */
 void wifi_prov_stop(void);
 
-/** get prov method id
+/** get prov method id by name
   * @param method_name the name for the prov method
   * @return method_id for the name or 0 if not found.
  */
 uint32_t wifi_prov_get_method_id(char *method_name);
+
+/** get prov satus
+  * @return prov status.
+ */
+wifi_prov_status_t wifi_prov_get_stauts();
 
 #ifdef __cplusplus
 }

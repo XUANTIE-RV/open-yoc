@@ -7,7 +7,6 @@
  * @version  V1.0
  * @date     26. April 2019
  ******************************************************************************/
-#include <csi_config.h>
 #include <stdint.h>
 #include <soc.h>
 #ifdef CONFIG_TEE_CA
@@ -78,4 +77,9 @@ void drv_clk_enable(uint32_t module)
 void drv_clk_disable(uint32_t module)
 {
 
+}
+
+uint32_t drv_get_cur_cpu_freq(void)
+{
+    return drv_get_cpu_freq(0);
 }

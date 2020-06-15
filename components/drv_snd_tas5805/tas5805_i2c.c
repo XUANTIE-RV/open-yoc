@@ -38,13 +38,13 @@ static int tas5805_write_byte(aos_dev_t *i2c_dev, uint8_t reg_addr, uint8_t reg_
     data[0] = reg_addr;
     data[1] = reg_data;
 
-    return (iic_send(i2c_dev, TAS5805_SLAVE_ADDR, data, 2));
+    return (iic_master_send(i2c_dev, TAS5805_SLAVE_ADDR, data, 2, AOS_WAIT_FOREVER));
 }
 
 static void tas5805_read_byte(aos_dev_t *i2c_dev, uint8_t reg_addr, uint8_t *reg_data)
 {
-    iic_send(i2c_dev, TAS5805_SLAVE_ADDR, &reg_addr, 1);
-    iic_recv(i2c_dev, TAS5805_SLAVE_ADDR, reg_data, 1);
+    iic_master_send(i2c_dev, TAS5805_SLAVE_ADDR, &reg_addr, 1, AOS_WAIT_FOREVER);
+    iic_master_recv(i2c_dev, TAS5805_SLAVE_ADDR, reg_data, 1, AOS_WAIT_FOREVER);
 }
 
 static inline int get_volume_index(int vol)

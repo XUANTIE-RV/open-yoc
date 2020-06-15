@@ -1,9 +1,8 @@
 name: pangu_demo
-version: v7.2-dev
-description: YoC YunVoice SDK
+version: v7.3.0                                     # <必选项> 组件版本号
+description: 盘古语音demo方案
 
 type: solution
-yoc_version: V7.2.2
 
 solution:
   board_name: pangu_cpu0
@@ -11,41 +10,42 @@ solution:
   ld_script: gcc_eflash.ld
 
 depends:                                       # 该组件依赖其他的组件
-  - csi: V7.2.2
-  - rhino: V7.2.2
-  - minilibc: V7.2.2
-  - aos: V7.2.2
-  - console: V7.2.2
-  - csi_pangu: V7.2.2
-  - netmgr: V7.2.2
-  - drivers: V7.2.2
-  - drv_wifi_rtl8723ds: V7.2.2
-  - drv_sdmmc: V7.2.2
-  - drv_snd_pangu: V7.2.2
-  - pangu_cpu0: V7.2.2 # '>' | ‘>=' | ''
-  - minialsa: V7.2.2
-  - ipc: V7.2.2
-  - posix: V7.2.2
-  - ntp: V7.2.2
-  - fota: V7.2.2
-  - lwip: V7.2.2
-  - aui_cloud: V7.2.2
-  - voice: V7.2.2
-  - record: V7.2.2
-  - webclient: V7.2.2
-  - websocket: V7.2.2
-  - mic: V7.2.2
-  - av: V7.2.2
-  - kv: V7.2.2
-  - cjson: V7.2.2
-  - button: V7.2.2
-  - mbedtls: V7.2.2
-  - vfs: V7.2.2
-  - aos: V7.2.2
-  - bt: V7.2.2
-  - drv_bt_rtl8723ds: V7.2.2
-  - fatfs: V7.2.2
-  - httpclient: V7.2.2
+  - csi: V7.3.0
+  - rhino: V7.3.0
+  - minilibc: V7.3.0
+  - aos: V7.3.0
+  - console: V7.3.0
+  - csi_pangu: V7.3.0
+  - netmgr: V7.3.0
+  - drivers: V7.3.0
+  - drv_wifi_rtl8723ds: V7.3.0
+  - drv_sdmmc: V7.3.0
+  - drv_snd_pangu: V7.3.0
+  - pangu_cpu0: V7.3.0 # '>' | ‘>=' | ''
+  - minialsa: V7.3.0
+  - ipc: V7.3.0
+  - posix: V7.3.0
+  - ntp: V7.3.0
+  - fota: V7.3.0
+  - lwip: V7.3.0
+  - aui_cloud: V7.3.0
+  - aui_demo: V7.3.0
+  - voice: V7.3.0
+  - record: V7.3.0
+  - webclient: V7.3.0
+  - websocket: V7.3.0
+  - mic: V7.3.0
+  - av: V7.3.0
+  - kv: V7.3.0
+  - cjson: V7.3.0
+  - button: V7.3.0
+  - mbedtls: V7.3.0
+  - vfs: V7.3.0
+  # - bt: V7.3.0
+  - ble_mesh: V7.3.0
+  - drv_bt_rtl8723ds: V7.3.0
+  - fatfs: V7.3.0
+  - httpclient: V7.3.0
 
 # 编译参数
 build_config:
@@ -55,10 +55,10 @@ build_config:
     - app/src/audio
     - app/src/wifipair
     - app/src/wifipair/ap
-    - include
   libs:
     - SonaAef_c
     - resample
+    - m
   libpath:
 
   cflag: -O2 -Wall
@@ -72,7 +72,6 @@ build_config:
 source_file:
   - app/src/init/cli_cmd.c
   - app/src/init/init.c
-  - app/src/cmd_proc_baidu_asr.c
   - app/src/cmd_proc_music_url.c
   - app/src/cmd_proc_xunfei_music.c
   - app/src/cmd_proc_xunfei_tts.c
@@ -81,7 +80,6 @@ source_file:
   - app/src/nlp_json_parse.c
   - app/src/cli_auitalk.c
   - app/src/cmd_proc_xf_asr.c
-  - app/src/cmd_proc_proxy_ws_asr.c
   - app/src/cmd_proc_aliyun_rasr.c
   - app/src/cmd_proc_xunfei_story.c
   - app/src/app_player.c
@@ -90,6 +88,7 @@ source_file:
   - app/src/app_rtc.c
   - app/src/app_main.c
   - app/src/cop_fota.c
+  - app/src/app_lpm.c
   - app/src/app_button.c
   - app/src/app_led.c
   - app/src/app_led_demo.c
@@ -111,12 +110,12 @@ source_file:
   - app/src/audio/net_cfg_timeout.mp3.c
   - app/src/audio/play_err.mp3.c
   - app/src/wifipair/ap/ap_pair.c
-  - app/src/a2dp/a2dp.c
-  - app/src/a2dp/bt_app_av.c
-  - app/src/a2dp/bt_app_core.c
+  - app/src/a2dp/a2dp.c ? <CONFIG_USING_BT_CMP>
+  - app/src/a2dp/bt_app_av.c ? <CONFIG_USING_BT_CMP>
+  - app/src/a2dp/bt_app_core.c ? <CONFIG_USING_BT_CMP>
 
 
-defconfig:
+def_config:
   CONFIG_DEBUG: 1
   # CONFIG_DEBUG_MM: 1
   CONFIG_ARCH_CSKY: 1
@@ -137,23 +136,20 @@ defconfig:
 
   CONFIG_SOFTWDT: 1
 
-  # CONFIG_TEE_CA: 1
+  CONFIG_TEE_CA: 1
+  # CONFIG_SYSTEM_SECURE: 1
 
   CONFIG_KERNEL_WORKQUEUE: 1
   CONFIG_SYSTICK_HZ: 1000
 
-  CONFIG_CPU_CK804EF: 1
-  CONFIG_CHIP_VENDOR_CSKY: 1
-  CONFIG_CHIP_PANGU: 1
-  CONFIG_CHIP_PANGU_CPU0: 1
   CONFIG_HAVE_VIC: 1
   CONFIG_KERNEL_RHINO: 1
   CONFIG_ARCH_INTERRUPTSTACK: 4096
 
   CONFIG_FFTXER_SPEEX: 0
   CONFIG_FFTXER_IPC: 0
-  CONFIG_RESAMPLER_SILAN: 1
-  CONFIG_RESAMPLER_SPEEX: 0
+  CONFIG_RESAMPLER_SILAN: 0
+  CONFIG_RESAMPLER_SPEEX: 1
   CONFIG_RESAMPLER_IPC: 0
   CONFIG_AEFXER_SONA: 1
   CONFIG_AEFXER_IPC: 0
@@ -165,12 +161,10 @@ defconfig:
   CONFIG_DECODER_AMRWB: 1
   CONFIG_DECODER_IPC: 1
 
-  CONFIG_SYSTEM_SECURE: 1
-  CONFIG_VENDOR_NAME: "csky"
-  CONFIG_CHIP_NAME: "pangu"
-  CONFIG_BOARD_NAME: "pangu_cpu0"
-  CONFIG_CPU: "ck804ef"
-
   # CONFIG_LED_TASK_ON: 1
+  CONFIG_MBEDTLS_SSL_MAX_CONTENT_LEN: 16384
+  ## for ble_mesh compoennt
+  CONFIG_BLE_MESH_PROV: 1
+  CONFIG_VENDOR_NAME: csky
 
 

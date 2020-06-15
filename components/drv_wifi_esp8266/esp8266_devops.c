@@ -642,28 +642,28 @@ static int esp8266_wifi_close_cb_register(netconn_close_cb_t cb)
 }
 
 static net_ops_t esp8266_net_driver = {
-    .set_mac_addr = esp8266_set_mac_addr,
-    .start_dhcp   = NULL,/*esp8266_start_dhcp*/
-    .stop_dhcp   = NULL,/*esp8266_stop_dhcp*/
-    .set_ipaddr   = esp8266_set_ipaddr,
-    .get_ipaddr   = esp8266_get_ipaddr,
-    .get_mac_addr = esp8266_get_mac_addr,
+    .set_mac_addr   = esp8266_set_mac_addr,
+    .start_dhcp     = NULL,/*esp8266_start_dhcp*/
+    .stop_dhcp      = NULL,/*esp8266_stop_dhcp*/
+    .set_ipaddr     = esp8266_set_ipaddr,
+    .get_ipaddr     = esp8266_get_ipaddr,
+    .get_mac_addr   = esp8266_get_mac_addr,
     .set_dns_server = esp8266_set_dns_server,
     .get_dns_server = esp8266_get_dns_server,
-    .ping         = esp8266_ping_remote,
-    .subscribe    = esp8266_subscribe,
+    .ping           = esp8266_ping_remote,
+    .subscribe      = esp8266_subscribe,
 };
 
 static wifi_driver_t esp8266_wifi_driver = {
-    .init               = esp8266_init,
-    .deinit             = esp8266_deinit,
-    .start              = esp8266_start,
-    .stop               = esp8266_stop,
-    .reset              = esp8266_reset,
-    .set_mode           = esp8266_set_mode,
-    .get_mode           = esp8266_get_mode,
-    .sta_get_link_status    = esp8266_drv_get_link_status,
-    .set_smartcfg       = esp8266_smartconfig,
+    .init                = esp8266_init,
+    .deinit              = esp8266_deinit,
+    .start               = esp8266_start,
+    .stop                = esp8266_stop,
+    .reset               = esp8266_reset,
+    .set_mode            = esp8266_set_mode,
+    .get_mode            = esp8266_get_mode,
+    .sta_get_link_status = esp8266_drv_get_link_status,
+    .set_smartcfg        = esp8266_smartconfig,
 };
 
 static sal_op_t esp8266_sal_driver = {

@@ -21,6 +21,7 @@ int fftx_ops_register(const struct fftx_ops *ops)
         return -1;
     }
     _fftx_ops = (struct fftx_ops*)ops;
+    LOGD(TAG, "regist fft, name = %s", _fftx_ops->name);
 
     return 0;
 }

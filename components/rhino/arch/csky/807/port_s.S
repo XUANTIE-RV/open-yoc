@@ -15,7 +15,6 @@
  */
 
 #include <k_config.h>
-#include <csi_config.h>
 
 #ifdef __CSKY_HARD_FLOAT__
 #define SAVE_VR_REGISTERS

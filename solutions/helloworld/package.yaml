@@ -1,35 +1,32 @@
 name: helloworld
-version: v7.2-dev
+version: v7.3.0                                     # <必选项> 组件版本号
 description: YoC helloworld SDK
 
 type: solution
-yoc_version: V7.2.2
 
 solution:
   cpu_id: cpu0
-  board_name: board_dummy
+  board_name: pangu_cpu0
+  # board_name: board_dummy
+  # toolchain_prefix: csky-abiv2-elf
   # cpu_name: CK805EF
   # vendor_name: csky
-  # chip_name: 'chip_ch2201'
+  # chip_name: 'csi_ch2201'
   # ld_script: configs/gcc_eflash.ld.S
 
 depends:                                       # 该组件依赖其他的组件
-  - csi: V7.2.2
-  - rhino: V7.2.2
-  - minilibc: V7.2.2
-  - aos: V7.2.2
-  - console: V7.2.2
-  - csi_pangu: V7.2.2
-  - netmgr: V7.2.2
-  - drivers: V7.2.2
-  - pangu_cpu0: V7.2.2
-  - minialsa: V7.2.2
-  - ipc: V7.2.2
-  - lwip: V7.2.2
-  # - yunio: V7.2.2
-  # - aliot: V7.2.2
-  # - onenet: V7.2.2
-  # - lwm2m: V7.2.2
+  - csi: V7.3.0
+  - rhino: V7.3.0
+  - minilibc: V7.3.0
+  - aos: V7.3.0
+  - console: V7.3.0
+  - drivers: V7.3.0
+  # board components
+  - board_dummy: V7.3.0
+  - pangu_cpu0: V7.3.0
+  - cb2201: V7.3.0
+  - cb5654: V7.3.0
+
 
 # 编译参数
 build_config:
@@ -44,7 +41,7 @@ source_file:
   - app/src/init/init.c
   - app/src/main.c
 
-defconfig:
+def_config:
   CONFIG_ARCH_INTERRUPTSTACK: 1024
   CONFIG_CLI: 1
   CONFIG_DEBUG: 1

@@ -4,17 +4,12 @@
 
 #include "stream/stream_cls.h"
 #include "vfs.h"
-#include "avutil/url_parse.h"
 
 #define TAG "s_file"
 
 struct file_priv {
     int        fd;
     char       *path;
-    char       avcodec[16];
-    char       avformat[16];
-    int32_t    rate;
-    int32_t    channel;
 };
 
 static char* _get_file_name(const char *url)
@@ -64,11 +59,6 @@ static int _stream_file_open(stream_cls_t *o, int mode)
 
     fd = aos_open(path, O_RDONLY);
     CHECK_RET_TAG_WITH_GOTO(fd > 0, err);
-
-    url_get_item_value(o->url, "avformat", priv->avformat, sizeof(priv->avformat));
-    url_get_item_value(o->url, "avcodec", priv->avcodec, sizeof(priv->avcodec));
-    url_get_item_value_int(o->url, "rate", &priv->rate);
-    url_get_item_value_int(o->url, "channel", &priv->channel);
 
     priv->fd   = fd;
     priv->path = path;
@@ -120,34 +110,13 @@ static int _stream_file_seek(stream_cls_t *o, int32_t pos)
 
 static int _stream_file_control(stream_cls_t *o, int cmd, void *arg, size_t *arg_size)
 {
-    int ret = 0;
-    struct file_priv *priv = o->priv;
-
-    switch (cmd) {
-    case STREAM_CMD_GET_CODEC:
-        snprintf((char*)arg, *arg_size, "%s", priv->avcodec);
-        break;
-    case STREAM_CMD_GET_FORMAT:
-        snprintf((char*)arg, *arg_size, "%s", priv->avformat);
-        break;
-    case STREAM_CMD_GET_RATE:
-        *(int32_t*)arg = priv->rate;
-        break;
-    case STREAM_CMD_GET_CHANNEL:
-        *(int32_t*)arg = priv->channel;
-        break;
-    default:
-        //LOGE(TAG, "%s, %d control failed. cmd = %d", __FUNCTION__, __LINE__, cmd);
-        return -1;
-    }
-
-    return ret;
+    //TODO:
+    return -1;
 }
 
 const struct stream_ops stream_ops_file = {
     .name            = "file",
     .type            = STREAM_TYPE_FILE,
-    .enable_cache    = 0,
     .protocols       = { "file", NULL },
 
     .open            = _stream_file_open,

@@ -20,6 +20,64 @@
 
 #define ALARM_CMD "    edit clock: app clock 2 clock_id period hh mm ss\n      period:0-once,1-day,2-week,3-workday\n      clock_id:0-add 1~5-edit\n    del clock: app clock 1 clock_id\n"
 
+#define TEST_TIMES 1
+#define TEST_BUFFER_SIZE (1*1024*1024)
+#define TEST_DATA_MBYTE (TEST_TIMES*TEST_BUFFER_SIZE/1024/1024)
+
+static void lfs_test_read(void)
+{
+    int fd = aos_open("/misc/lfs_test.txt", O_RDONLY);
+    if (fd < 0) {
+        printf("file not create, pls create first\n");
+    }
+
+    int   buff_size = TEST_BUFFER_SIZE;
+    char *buff      = malloc(buff_size);
+    memset(buff, 0xAA, buff_size);
+
+    printf("START\n");
+    int beg = aos_now_ms();
+    for (int i = 0; i < TEST_TIMES; i++) {
+        if (aos_read(fd, buff, buff_size) < 0) {
+            printf("read error\n");
+        }
+    }
+    int end = aos_now_ms();
+    printf("END");
+    printf("%.3fMB/s",  (TEST_DATA_MBYTE * 1000.0) / (end - beg) );
+
+    free(buff);
+    aos_close(fd);
+}
+
+static void lfs_test_write(void)
+{
+    int i = 0;
+    int total = 0;
+    int   buff_size = TEST_BUFFER_SIZE;
+    char *buff      = malloc(buff_size);
+    memset(buff, 0x55, buff_size);
+
+    for (i = 0; i < TEST_TIMES; i++) {
+        int fd = aos_open("/misc/lfs_test.txt", O_CREAT | O_RDWR);
+        if (fd < 0) {
+            printf("aos_open fail");
+        }
+
+        printf("START");
+        int beg = aos_now_ms();
+            if (aos_write(fd, buff, buff_size) < 0) {
+                printf("write error\n");
+            }
+        int end = aos_now_ms();
+        printf("END");
+        total += (end - beg);
+        aos_close(fd);
+    }
+    printf("%.3fMB/s",  (TEST_DATA_MBYTE * 1000.0) / total);
+    free(buff);
+}
+
 void http_download(const char *url, const char *save_dir)
 {
     int http_response_size = 4 * 1024;
@@ -386,6 +444,14 @@ extern int set_adc1_right_channel_other_analog_gain(int gain);
             ws_file_send(argv[2], argv[3], argv[4]);
         } else {
             printf("app ws_file_send <ip> <port> <file path>\n");
+        }
+    } else if (strcmp(argv[1], "lfs") == 0) {
+        if (strcmp(argv[2], "read") == 0) {
+            lfs_test_read();
+        } else if (strcmp(argv[2], "write") == 0) {
+            lfs_test_write();
+        } else {
+            printf("app lfs read/write");
         }
     }
     else {

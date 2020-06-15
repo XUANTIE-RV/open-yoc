@@ -1,18 +1,12 @@
 /*
  * Copyright (C) 2019-2020 Alibaba Group Holding Limited
  */
-
-#include <yoc_config.h>
-
 #include <aos/aos.h>
-
 #include <yoc/uservice.h>
 #include <yoc/eventid.h>
 #include <devices/netdrv.h>
-
 #include <yoc/netmgr.h>
 #include <yoc/netmgr_service.h>
-
 
 #define KV_VAL_LENGTH       32
 
@@ -51,33 +45,55 @@ int netmgr_kv_getint(const char *key)
 }
 #endif
 
+/**
+ * @brief  handle event of the netmgr uservice
+ * @param  [in] event_id
+ * @param  [in] param
+ * @param  [in] context
+ * @return
+ */
 void netmgr_event_cb(uint32_t event_id, const void *param, void *context)
 {
     if (netmgr_svc.srv == NULL) {
         LOGE(TAG, "Netmgr already stopped[%d]", event_id);
         return;
     }
-    switch(event_id)
-    {
-        case EVENT_NETWORK_RESTART:
-            uservice_call_async(netmgr_svc.srv, API_NET_RESET, (void *)&param, sizeof(netmgr_hdl_t));
-            break;
-        default:
-            uservice_call_async(netmgr_svc.srv, event_id, NULL, 0);
-            break;
+    switch(event_id) {
+    case EVENT_NETWORK_RESTART:
+        uservice_call_async(netmgr_svc.srv, API_NET_RESET, (void *)&param, sizeof(netmgr_hdl_t));
+        break;
+    default:
+        uservice_call_async(netmgr_svc.srv, event_id, NULL, 0);
+        break;
     }
 }
 
+/**
+ * @brief  subscribe event of the netmgr uservice
+ * @param  [in] cmd_id : EVENT_WIFI_LINK_UP, etc
+ * @return
+ */
 void netmgr_subscribe(int cmd_id)
 {
     event_subscribe(cmd_id, netmgr_event_cb, NULL);
 }
 
+/**
+ * @brief  unsubscribe event of the netmgr uservice
+ * @param  [in] cmd_id : EVENT_WIFI_LINK_UP, etc
+ * @return
+ */
 void netmgr_unsubscribe(int cmd_id)
 {
     event_unsubscribe(cmd_id, netmgr_event_cb, NULL);
 }
 
+/**
+ * @brief  find netmgr dev from netdev list by the network name
+ * @param  [in] list : netmgr dev list
+ * @param  [in] name
+ * @return NULL on error
+ */
 netmgr_dev_t *netmgr_find_dev(slist_t *list, const char *name)
 {
     netmgr_dev_t *node;
@@ -95,6 +111,12 @@ netmgr_dev_t *netmgr_find_dev(slist_t *list, const char *name)
     return NULL;
 }
 
+/**
+ * @brief  unregist service function
+ * @param  [in] cmd_id : command id of the netmgr uservice
+ * @param  [in] func : callback
+ * @return 0/-1
+ */
 int netmgr_unreg_srv_func(int cmd_id, netmgr_srv_func func)
 {
     struct netmgr_uservice *netmgr = &netmgr_svc;
@@ -111,7 +133,12 @@ int netmgr_unreg_srv_func(int cmd_id, netmgr_srv_func func)
     return -1;
 }
 
-
+/**
+ * @brief  regist service function
+ * @param  [in] cmd_id : command id of the netmgr uservice
+ * @param  [in] func : callback
+ * @return 0/-1
+ */
 int netmgr_reg_srv_func(int cmd_id, netmgr_srv_func func)
 {
     struct netmgr_uservice *netmgr = &netmgr_svc;
@@ -127,7 +154,12 @@ int netmgr_reg_srv_func(int cmd_id, netmgr_srv_func func)
     return -1;
 }
 
-
+/**
+ * @brief  start dhcp by the network name
+ * @param  [in] netmgr
+ * @param  [in] name : network name
+ * @return 0/-1
+ */
 int netmgr_start_dhcp(struct netmgr_uservice *netmgr, const char *name)
 {
     netmgr_dev_t *node = netmgr_find_dev(&netmgr->dev_list, name);
@@ -274,8 +306,8 @@ static int netmgr_srv_start(struct netmgr_uservice *netmgr, rpc_t *rpc)
 
 static int netmgr_srv_stop(struct netmgr_uservice *netmgr, rpc_t *rpc)
 {
-    netmgr_dev_t *node = *(netmgr_dev_t **)rpc_get_point(rpc);
     int ret = -1;
+    netmgr_dev_t *node = *(netmgr_dev_t **)rpc_get_point(rpc);
 
 
     if (node && node->unprovision) {
@@ -287,8 +319,8 @@ static int netmgr_srv_stop(struct netmgr_uservice *netmgr, rpc_t *rpc)
 
 static int netmgr_srv_info(struct netmgr_uservice *netmgr, rpc_t *rpc)
 {
-    netmgr_dev_t *node = *(netmgr_dev_t **)rpc_get_point(rpc);
     int ret = 0;
+    netmgr_dev_t *node = *(netmgr_dev_t **)rpc_get_point(rpc);
 
     if (node == NULL) {
         return -EBADFD;
@@ -316,46 +348,46 @@ static int netmgr_service(void *context, rpc_t *rpc)
     */
     switch (rpc->cmd_id) {
 
-        case API_NET_GET_HDL: {
-            char *name = rpc_get_point(rpc);
-            netmgr_dev_t *node;
+    case API_NET_GET_HDL: {
+        char *name = rpc_get_point(rpc);
+        netmgr_dev_t *node;
 
-            node = netmgr_find_dev(&netmgr->dev_list, name);
+        node = netmgr_find_dev(&netmgr->dev_list, name);
 
-            if (node == NULL) {
-                node = (netmgr_dev_t *)aos_zalloc(sizeof(netmgr_dev_t));
+        if (node == NULL) {
+            node = (netmgr_dev_t *)aos_zalloc(sizeof(netmgr_dev_t));
 
-                if (node) {
-                    node->dev = device_open(name);
+            if (node) {
+                node->dev = device_open(name);
 
-                    if (node->dev) {
-                        strncpy(node->name, name, NETMGR_NAME_LEN - 1);
-                        node->name[NETMGR_NAME_LEN - 1] = 0;
-                        slist_add_tail((slist_t *)node, &netmgr->dev_list);
-                    } else {
-                        aos_free(node);
-                        node = NULL;
-                    }
-                }
-            }
-
-            rpc_put_reset(rpc);
-            rpc_put_point(rpc, node);
-            rpc_reply(rpc);
-            return 0;
-        }
-
-        default: {
-            netmgr_srv_t *node;
-            slist_for_each_entry(&netmgr->srv_list, node, netmgr_srv_t, next) {
-                if (node->cmd_id == rpc->cmd_id) {
-                    ret = node->func(netmgr, rpc);
-                    break;
+                if (node->dev) {
+                    strncpy(node->name, name, NETMGR_NAME_LEN - 1);
+                    node->name[NETMGR_NAME_LEN - 1] = 0;
+                    slist_add_tail((slist_t *)node, &netmgr->dev_list);
+                } else {
+                    aos_free(node);
+                    node = NULL;
                 }
             }
         }
 
-        break;
+        rpc_put_reset(rpc);
+        rpc_put_point(rpc, node);
+        rpc_reply(rpc);
+        return 0;
+    }
+
+    default: {
+        netmgr_srv_t *node;
+        slist_for_each_entry(&netmgr->srv_list, node, netmgr_srv_t, next) {
+            if (node->cmd_id == rpc->cmd_id) {
+                ret = node->func(netmgr, rpc);
+                break;
+            }
+        }
+    }
+
+    break;
     }
 
     rpc_put_reset(rpc);
@@ -373,9 +405,22 @@ static int netmgr_service(void *context, rpc_t *rpc)
     return 0;
 }
 
-
+/**
+ * @brief  create & init the netmgr uservice
+ * @param  [in] task
+ * @return
+ */
 void netmgr_service_init(utask_t *task)
 {
+    aos_kernel_sched_suspend();
+    if (netmgr_svc.inited == 0) {
+        netmgr_svc.inited = 1;
+    } else {
+        aos_kernel_sched_resume();
+        return;
+    }
+    aos_kernel_sched_resume();
+
     netmgr_reg_srv_func(API_NET_IPCONFIG, netmgr_srv_ipconfig);
     netmgr_reg_srv_func(API_NET_START, netmgr_srv_start);
     netmgr_reg_srv_func(API_NET_STOP, netmgr_srv_stop);
@@ -389,18 +434,28 @@ void netmgr_service_init(utask_t *task)
     }
 
     if (task) {
-        netmgr_svc.task = task;
         netmgr_svc.srv = uservice_new("netmgr_svc", netmgr_service, &netmgr_svc);
         utask_add(task, netmgr_svc.srv);
+        netmgr_svc.task = task;
     }
 }
 
+/**
+ * @brief  destroy & uninit the netmgr uservice
+ * @return
+ */
 void netmgr_service_deinit()
 {
-    if (netmgr_svc.srv == NULL) {
+    aos_kernel_sched_suspend();
+    if (netmgr_svc.inited == 1) {
+        netmgr_svc.inited = 0;
+    } else {
+        aos_kernel_sched_resume();
         printf("Netmgr already stopped\n");
         return;
     }
+    aos_kernel_sched_resume();
+
     netmgr_unsubscribe(EVENT_NETWORK_RESTART);
     netmgr_unsubscribe(EVENT_NET_GOT_IP);
     netmgr_unsubscribe(API_NET_DHCP_CHECK);
@@ -420,6 +475,12 @@ void netmgr_service_deinit()
     netmgr_svc.srv = NULL;
 }
 
+/**
+ * @brief  set gotip flag by network name
+ * @param  [in] name
+ * @param  [in] gotip
+ * @return -1 on error
+ */
 int netmgr_set_gotip(const char *name, int gotip)
 {
     netmgr_dev_t *node = netmgr_find_dev(&netmgr_svc.dev_list, name);
@@ -432,6 +493,12 @@ int netmgr_set_gotip(const char *name, int gotip)
     return -1;
 }
 
+/**
+ * @brief  set link layer up flag by network name
+ * @param  [in] name
+ * @param  [in] linkup
+ * @return -1 on error
+ */
 int netmgr_set_linkup(const char *name, int linkup)
 {
     netmgr_dev_t *node = netmgr_find_dev(&netmgr_svc.dev_list, name);
@@ -463,6 +530,11 @@ netmgr_hdl_t netmgr_get_handle(const char *name)
     return hdl;
 }
 
+/**
+ * @brief  get aos_dev by the netmgr hdl
+ * @param  [in] netmgr_hdl_t
+ * @return NULL on error
+ */
 aos_dev_t *netmgr_get_dev(netmgr_hdl_t hdl)
 {
     netmgr_dev_t *dev = (netmgr_dev_t *)hdl;
@@ -471,6 +543,15 @@ aos_dev_t *netmgr_get_dev(netmgr_hdl_t hdl)
     return ((netmgr_dev_t *)dev)->dev;
 }
 
+/**
+ * @brief  netmgr config the ip or enable dhcp
+ * @param  [in] hdl
+ * @param  [in] dhcp_en : if enable, dhcp priority. otherwise use the static ip
+ * @param  [in] ipaddr
+ * @param  [in] netmask
+ * @param  [in] gw
+ * @return 0 on success
+ */
 int netmgr_ipconfig(netmgr_hdl_t hdl, int dhcp_en, char *ipaddr, char *netmask, char *gw)
 {
     int ret = -1;
@@ -495,6 +576,12 @@ int netmgr_ipconfig(netmgr_hdl_t hdl, int dhcp_en, char *ipaddr, char *netmask, 
     return ret;
 }
 
+/**
+ * @brief  netmgr start provision, async.
+ * if provison ok, EVENT_NETMGR_GOT_IP post, otherwise EVENT_NETMGR_NET_DISCON
+ * @param  [in] hdl
+ * @return 0/-1
+ */
 int netmgr_start(netmgr_hdl_t hdl)
 {
     int ret = 0;
@@ -505,7 +592,13 @@ int netmgr_start(netmgr_hdl_t hdl)
     return ret;
 }
 
-int netmgr_reset(netmgr_hdl_t hdl, int sec)
+/**
+ * @brief  reset the netmgr, and re-provision after sec
+ * @param  [in] hdl
+ * @param  [in] sec : 0s means re-provision immediatly
+ * @return 0/-1
+ */
+int netmgr_reset(netmgr_hdl_t hdl, uint32_t sec)
 {
     aos_check_return_einval(hdl);
 
@@ -526,6 +619,11 @@ int netmgr_reset(netmgr_hdl_t hdl, int sec)
     return 0;
 }
 
+/**
+ * @brief  stop netmgr(sync), will call the unprovison callback
+ * @param  [in] hdl
+ * @return 0/-1
+ */
 int netmgr_stop(netmgr_hdl_t hdl)
 {
     int ret = -1;
@@ -536,6 +634,11 @@ int netmgr_stop(netmgr_hdl_t hdl)
     return ret;
 }
 
+/**
+ * @brief  got ip whether
+ * @param  [in] hdl
+ * @return 0/1
+ */
 int netmgr_is_gotip(netmgr_hdl_t hdl)
 {
     netmgr_dev_t *node = netmgr_find_dev(&netmgr_svc.dev_list, NULL);
@@ -547,6 +650,11 @@ int netmgr_is_gotip(netmgr_hdl_t hdl)
     return 0;
 }
 
+/**
+ * @brief  link layer is up whether
+ * @param  [in] hdl
+ * @return 0/1
+ */
 int netmgr_is_linkup(netmgr_hdl_t hdl)
 {
     netmgr_dev_t *node = netmgr_find_dev(&netmgr_svc.dev_list, NULL);
@@ -558,6 +666,11 @@ int netmgr_is_linkup(netmgr_hdl_t hdl)
     return 0;
 }
 
+/**
+ * @brief  dump network info to stdout(ip/gateway/netmask, etc)
+ * @param  [in] hdl
+ * @return 0/-1
+ */
 int netmgr_get_info(netmgr_hdl_t hdl)
 {
     int ret = -1;
@@ -567,3 +680,4 @@ int netmgr_get_info(netmgr_hdl_t hdl)
     uservice_call_sync(netmgr_svc.srv, API_NET_INFO, &hdl, &ret, sizeof(int));
     return ret;
 }
+

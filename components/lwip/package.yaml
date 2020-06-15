@@ -1,13 +1,13 @@
 
 ## 第一部分： 基础信息
 name: lwip                                          # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
+version: v7.3.0                                     # <必选项> 组件版本号
 description: A Lightweight TCP/IP stack             # <必选项> 建议至少20字以上
-type: common                                        # <可选项> 组件类型，为：solution, chip, board, common，缺省值 common
+type: common                                        # <必选项> 组件类型，为：solution, chip, board, common
 
 tag: 核心模块                                       # <可选项> 组件分类，缺省值： ''
 keywords:                                           # <可选项> 标签，会影响到组件被搜索的效果，合理的标签很重要
   - base
-yoc_version: ['v7.2', 'v7.3']
 license: BSD                                        # <可选项> 源代码的许可证，要确保所有代码、文件的许可证不冲突。如：MIT，Apache license v2.0，BSD
 
 ## 第二部分：依赖信息
@@ -17,7 +17,7 @@ license: BSD                                        # <可选项> 源代码的�
 #   - minilibc: v7.2.0
 #   - aos: >=v7.2.0
 depends:
-  - minilibc: V7.2.2
+  # - minilibc: V7.3.0
 
 ## 第四部分：编译连接信息
 # build_config:                            # <可选项> 编译配置项
@@ -60,7 +60,9 @@ source_file:
   - "core/tcp_out.c"
   - "core/timeouts.c"
   - "core/udp.c"
-
+  - "core/altcp_alloc.c"
+  - "core/altcp_tcp.c"
+  - "core/altcp.c"
   - "core/ipv4/autoip.c"
   - "core/ipv4/dhcp.c"
   - "core/ipv4/etharp.c"
@@ -69,7 +71,6 @@ source_file:
   - "core/ipv4/ip4_frag.c"
   - "core/ipv4/ip4.c"
   - "core/ipv4/ip4_addr.c"
-
   - "core/ipv6/dhcp6.c"
   - "core/ipv6/ethip6.c"
   - "core/ipv6/icmp6.c"
@@ -79,7 +80,6 @@ source_file:
   - "core/ipv6/ip6_frag.c"
   - "core/ipv6/mld6.c"
   - "core/ipv6/nd6.c"
-
   - "api/api_lib.c"
   - "api/api_msg.c"
   - "api/err.c"
@@ -88,12 +88,14 @@ source_file:
   - "api/netifapi.c"
   - "api/sockets.c"
   - "api/tcpip.c"
-
+  - "api/if_api.c"
   - "netif/ethernet.c"
   - "netif/slipif.c"
-
+  - "netif/bridgeif.c"
+  - "netif/bridgeif_fdb.c"
+  - "netif/lowpan6_common.c"
   - "netif/lowpan6.c"
-
+  - "netif/lowpan6_ble.c"
   - "netif/ppp/auth.c"
   - "netif/ppp/ccp.c"
   - "netif/ppp/chap-md5.c"
@@ -124,46 +126,13 @@ source_file:
   - "netif/ppp/polarssl/md4.c"
   - "netif/ppp/polarssl/md5.c"
   - "netif/ppp/polarssl/sha1.c"
-
-  - "apps/snmp/snmp_asn1.c"
-  - "apps/snmp/snmp_core.c"
-  - "apps/snmp/snmp_mib2.c"
-  - "apps/snmp/snmp_mib2_icmp.c"
-  - "apps/snmp/snmp_mib2_interfaces.c"
-  - "apps/snmp/snmp_mib2_ip.c"
-  - "apps/snmp/snmp_mib2_snmp.c"
-  - "apps/snmp/snmp_mib2_system.c"
-  - "apps/snmp/snmp_mib2_tcp.c"
-  - "apps/snmp/snmp_mib2_udp.c"
-  - "apps/snmp/snmp_msg.c"
-  - "apps/snmp/snmpv3.c"
-  - "apps/snmp/snmp_netconn.c"
-  - "apps/snmp/snmp_pbuf_stream.c"
-  - "apps/snmp/snmp_raw.c"
-  - "apps/snmp/snmp_scalar.c"
-  - "apps/snmp/snmp_table.c"
-  - "apps/snmp/snmp_threadsync.c"
-  - "apps/snmp/snmp_traps.c"
-  - "apps/snmp/snmpv3_mbedtls.c"
-  - "apps/snmp/snmpv3_dummy.c"
-
-  - "apps/httpd/fs.c"
-  - "apps/httpd/httpd.c"
-
   - "apps/lwiperf/lwiperf.c"
-
   - "apps/sntp/sntp.c"
-
   - "apps/mdns/mdns.c"
-
   - "apps/netbiosns/netbiosns.c"
-
   - "apps/tftp/tftp_server.c"
-
   - "apps/mqtt/mqtt.c"
-
   - "apps/dhcpd/dhcps.c"
-
   - "apps/ping/ping.c"
   - "apps/ping/ping_v4.c"
   - "apps/ping/ping_v6.c"

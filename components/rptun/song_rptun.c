@@ -23,7 +23,6 @@
  * Private Types
  ****************************************************************************/
 
-#define CONFIG_RPTUN_NUM            2
 struct song_rptun_dev_s
 {
   struct rptun_dev_s               rptun;

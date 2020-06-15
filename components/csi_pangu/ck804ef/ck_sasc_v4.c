@@ -9,7 +9,6 @@
  * @date     26. Jan 2018
  ******************************************************************************/
 
-#include <csi_config.h>
 #include <stdio.h>
 #include <drv/sasc.h>
 #ifdef CONFIG_CHIP_PANGU

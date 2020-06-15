@@ -10,7 +10,6 @@
  * @date     02. June 2017
  ******************************************************************************/
 
-#include <csi_config.h>
 #include <string.h>
 #include <drv/usi_usart.h>
 #include <drv/usi_spi.h>

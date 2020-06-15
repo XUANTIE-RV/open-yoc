@@ -4,7 +4,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <yoc_config.h>
 #if defined(CONFIG_TCPIP) || defined(CONFIG_SAL)
 #include "lwip/sys.h"
 #include "lwip/sockets.h"

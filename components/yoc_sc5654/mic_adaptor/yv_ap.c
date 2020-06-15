@@ -175,7 +175,7 @@ static void param_init(yv_pcm_param_t *param)
     param->rate = RATE;
 
     param->nsmode   = 1;
-    param->acemode  = 1;
+    param->aecmode  = 1;
     param->vadmode  = 3;
 }
 

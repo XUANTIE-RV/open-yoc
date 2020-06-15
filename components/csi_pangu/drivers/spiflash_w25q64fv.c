@@ -10,7 +10,6 @@
  ******************************************************************************/
 #include <stdio.h>
 #include <string.h>
-#include <csi_config.h>
 #include <drv/spiflash.h>
 #include <soc.h>
 #include <io.h>

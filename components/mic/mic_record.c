@@ -2,7 +2,6 @@
  * Copyright (C) 2019-2020 Alibaba Group Holding Limited
  */
 
-#include "yoc_config.h"
 #include <time.h>
 #include <stdint.h>
 #include <aos/kernel.h>
@@ -12,7 +11,7 @@
 #include <yoc/mic.h>
 #include "mic_internal.h"
 
-static const char *TAG = "mic_record";
+#define TAG "mic_record"
 
 #define CHUNK_SIZE 2560
 #define RINGBUFFER_SIZE (CHUNK_SIZE * 30 + 1)

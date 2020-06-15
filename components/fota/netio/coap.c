@@ -2,7 +2,6 @@
  * Copyright (C) 2019-2020 Alibaba Group Holding Limited
  */
 
-#include <yoc_config.h>
 #include <yoc/netio.h>
 #include <yoc/fota.h>
 #include <aos/network.h>

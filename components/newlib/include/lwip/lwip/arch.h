@@ -52,6 +52,8 @@
  * @ingroup sys_layer
  * All defines related to this section must not be placed in lwipopts.h,
  * but in arch/cc.h!
+ * If the compiler does not provide memset() this file must include a
+ * definition of it, or include a file which defines it.
  * These options cannot be \#defined in lwipopts.h since they are not options
  * of lwIP itself, but options of the lwIP port to your system.
  * @{
@@ -116,12 +118,20 @@
 /* Define generic types used in lwIP */
 #if !LWIP_NO_STDINT_H
 #include <stdint.h>
+/* stdint.h is C99 which should also provide support for 64-bit integers */
+#if !defined(LWIP_HAVE_INT64) && defined(UINT64_MAX)
+#define LWIP_HAVE_INT64 1
+#endif
 typedef uint8_t   u8_t;
 typedef int8_t    s8_t;
 typedef uint16_t  u16_t;
 typedef int16_t   s16_t;
 typedef uint32_t  u32_t;
 typedef int32_t   s32_t;
+#if LWIP_HAVE_INT64
+typedef uint64_t  u64_t;
+typedef int64_t   s64_t;
+#endif
 typedef uintptr_t mem_ptr_t;
 #endif
 
@@ -164,7 +174,7 @@ typedef uintptr_t mem_ptr_t;
 
 /** Define this to 1 in arch/cc.h of your port if your compiler does not provide
  * the limits.h header. You need to define the type limits yourself in this case
- * (e.g. INT_MAX).
+ * (e.g. INT_MAX, SSIZE_MAX).
  */
 #ifndef LWIP_NO_LIMITS_H
 #define LWIP_NO_LIMITS_H 0
@@ -240,6 +250,11 @@ typedef int ssize_t;
  */
 #ifndef LWIP_PTR_NUMERIC_CAST
 #define LWIP_PTR_NUMERIC_CAST(target_type, val) LWIP_CONST_CAST(target_type, val)
+#endif
+
+/** Avoid warnings/errors related to implicitly casting away packed attributes by doing a explicit cast */
+#ifndef LWIP_PACKED_CAST
+#define LWIP_PACKED_CAST(target_type, val) LWIP_CONST_CAST(target_type, val)
 #endif
 
 /** Allocates a memory buffer of specified size that is of sufficient size to align
@@ -341,7 +356,7 @@ extern "C" {
 #define PACK_STRUCT_FLD_S(x) PACK_STRUCT_FIELD(x)
 #endif /* PACK_STRUCT_FLD_S */
 
-/** Packed structs support using \#include files before and after struct to be packed.\n
+/** PACK_STRUCT_USE_INCLUDES==1: Packed structs support using \#include files before and after struct to be packed.\n
  * The file included BEFORE the struct is "arch/bpstruct.h".\n
  * The file included AFTER the struct is "arch/epstruct.h".\n
  * This can be used to implement struct packing on MS Visual C compilers, see
@@ -357,6 +372,15 @@ extern "C" {
 #ifndef LWIP_UNUSED_ARG
 #define LWIP_UNUSED_ARG(x) (void)x
 #endif /* LWIP_UNUSED_ARG */
+
+/** LWIP_PROVIDE_ERRNO==1: Let lwIP provide ERRNO values and the 'errno' variable.
+ * If this is disabled, cc.h must either define 'errno', include <errno.h>,
+ * define LWIP_ERRNO_STDINCLUDE to get <errno.h> included or
+ * define LWIP_ERRNO_INCLUDE to <errno.h> or equivalent.
+ */
+#if defined __DOXYGEN__
+#define LWIP_PROVIDE_ERRNO
+#endif
 
 /**
  * @}

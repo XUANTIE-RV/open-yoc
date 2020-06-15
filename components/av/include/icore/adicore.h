@@ -20,11 +20,18 @@ typedef struct adicore adicore_t;
 int adicore_init();
 
 /**
+* @brief  init the adicore config param
+* @param  [in] ad_cnf
+* @return 0/-1
+*/
+int adicore_conf_init(adi_conf_t *adi_cnf);
+
+/**
  * @brief  open/create one audio remote-ipc decoder
- * @param  [in] ash
+ * @param  [in] adi_cnf
  * @return NULL on error
  */
-adicore_t* adicore_open(const adih_t *ash);
+adicore_t* adicore_open(avcodec_id_t id, const adi_conf_t *adi_cnf);
 
 /**
 * @brief  get the audio sample format

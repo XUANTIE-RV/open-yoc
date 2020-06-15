@@ -7,6 +7,16 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+
+/**
+ * 初始化rtc
+ *
+ * @param[in]  无
+ *
+ * @return  无.
+ */
+void rtc_init(void);
+
 /**
  * 系统时间同步到rtc
  *
@@ -42,6 +52,6 @@ time_t rtc_get_time(void);
  *
  * @return  无.
  */
-void rtc_set_alarm(int32_t week, int32_t hour, int32_t min, int32_t sec);
+void rtc_set_alarm(int32_t week, int day, int32_t hour, int32_t min, int32_t sec);
 
 #endif

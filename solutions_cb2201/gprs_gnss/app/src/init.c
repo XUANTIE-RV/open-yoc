@@ -1,4 +1,3 @@
-#include <yoc_config.h>
 
 #include <stdbool.h>
 #include <aos/aos.h>

@@ -163,7 +163,7 @@ static int _demux_flac_read_packet(demux_cls_t *o, avpacket_t *pkt)
     sf_t sf = o->ash.sf;
     int resync_cnt = 10, cnt = 0;
     int64_t sample_numbers = 0;
-    int eof, start_pos = -1, fsize = 0, remain;
+    int start_pos = -1, fsize = 0, remain;
     uint8_t hdr[FLAC_HDR_SIZE_MAX] = { 0 };
     struct flac_priv *priv         = o->priv;
     fsb_t *fsb                     = &priv->fsb;
@@ -193,8 +193,8 @@ resync:
     } else {
         if (!(hinfo->channels == sf_get_channel(sf) &&
               (hinfo->block_size > 0 && hinfo->block_size <= si->bsize_max) &&
-              (hinfo->bits == 0 || hinfo->bits == sf_get_bit(sf)) &&
-              (hinfo->rate == 0 || hinfo->rate == sf_get_rate(sf)))) {
+              (hinfo->bits == sf_get_bit(sf)) &&
+              (hinfo->rate == sf_get_rate(sf)))) {
             if (cnt > resync_cnt) {
                 LOGE(TAG, "flac sync failed, rc = %d, resync_cnt = %d", rc, resync_cnt);
                 goto err;
@@ -245,9 +245,6 @@ resync:
 
     return fsize;
 err:
-    eof = stream_is_eof(o->s);
-    rc  = eof ? 0 : rc;
-    LOGI(TAG, "read packet may be eof. eof = %d, rc = %d, url = %s", eof, rc, stream_get_url(o->s));
     return rc;
 }
 

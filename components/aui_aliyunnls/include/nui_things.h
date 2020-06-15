@@ -114,6 +114,7 @@ typedef struct {
 	int enable_vad;//是否使能VAD功能
 
 	int log_level;
+	int log_link_enable;//是否开启全链路统计log打印 
 } NuiThingsInitConfig;
 
 

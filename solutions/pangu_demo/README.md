@@ -1,6 +1,6 @@
 # 概述
 
-`pangu_demo` 是一个基于`pangu`芯片，包含语音交互和媒体播放的语音demo
+`pangu_demo` 是一个基于`pangu`芯片，包含语音交互和媒体播放的语音demo，唤醒词为“天猫精灵”
 
 # 编译
 
@@ -10,9 +10,15 @@ make clean;make
 
 # 烧录
 
+烧写所有分区
 ```bash
 make flashall
 ```
+烧写prim分区
+```bash
+make flash
+```
+**注意** 当前目录下必须要有`.gdbinit`
 
 # 命令
 
@@ -20,8 +26,10 @@ make flashall
 
 ### 设置wifi ssid和密码
 
+比如待连接的wifi账号是“TEST”,密码为“test1234”
+
 ```
-kv set wifi_ssid CSKY-T
+kv set wifi_ssid TEST
 ```
 
 ```
@@ -72,11 +80,7 @@ kv set model pangu
 kv set device_id b405d54804400000ba11a0ca8d90db0c
 ```
 
-## ASR服务器配置
 
-```
-kv set asr_server 192.168.1.102:8090
-```
 
 ## 测试命令
 
@@ -96,11 +100,14 @@ ai tts hello，”从前有座山 山里有座庙 庙里有个小和尚说”
 ai talk music:周杰伦+菊花台
 ```
 
+**注意：** 若无法播放可能由于版权问题，请更换参数
+
 ### ai talk text
+
 一般的交互信息
 
 ```
-ai talk “我想听 邓紫棋 的光年之外”
+ai talk “我想听歌” 
 ```
 
 ### ai music url[http://]
@@ -110,7 +117,10 @@ ai talk “我想听 邓紫棋 的光年之外”
 ai music http://zhangmenshiting.qianqian.com/data2/music/b945b1d2be8542bd895a56a6b92e963c/594654945/3008959933600128.mp3?xcode=b2dff42de18e306e9824035d6041d0a0
 ```
 
+**注意：** 若无法播放可能由于版权问题，请更换参数
+
 ### ai notify [0-6]
+
 播放通知音
 ```
 ai notify 0
@@ -139,5 +149,8 @@ app micrec start ws://192.168.1.102:9090 savename.pcm
 app micrec stop
 ```
 
-### Wifi测试命令
-具体见`../wifihalapp`例子
+- 进入低功耗
+```
+app lpm
+```
+

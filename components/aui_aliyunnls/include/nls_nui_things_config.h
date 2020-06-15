@@ -20,13 +20,14 @@ typedef enum {
 #endif
 
 typedef struct {
+	//内部指针变量，只是指针，不会主动申请空间，因此不需要释放。
 	NlsNuiThingsDialogType dialog_type;//default kNlsNuiThingsDialogTypeVA
 	int protocal_type;//vs
 	
-	int enable_wuw;//false
-	int enable_vpr;//false
-	int enable_gender;//false
-	int enable_decoder_vad;//false
+	int enable_wuw;        //使能唤醒二次确认
+	int enable_vpr;        //使能声纹认证
+	int enable_gender;     //使能性别认证
+	int enable_decoder_vad;//是否开启解码器vad，可选，默认是false
 
 	char *kws_format;//
 	char *sr_format;//
@@ -34,34 +35,41 @@ typedef struct {
 	
 	char *kws_word;//
 	char *kws_model;
-	char *vpr_service_id;
-	char *vpr_group_id;
+	char *vpr_service_id;//声纹服务的业务ID，可选
+	char *vpr_group_id;  //声纹服务的用户组ID，必填
 	
+	/*
 	char *sr_model;
 	char *sr_customization_id;
+	*/
 	//vocabulary map 语音识别服务的热词列表，可选
+	char * sr_model_lm_id;//语音识别服务的定制语言模型ID，可选
+	char * sr_model_am_id;//语音识别服务的定制声学模型ID，可选
 
 	char * session_id;
 
 	char * device_uuid;
 
-	int enable_vad_cloud;
+	int enable_vad_cloud;//是否开启云端VAD语音检测，外部设置生效
 	
 	char *token;
 	char *url;
 	char *app_key;
 	char *dialect;
 	
-	int enable_punctuation_prediction;
-	int enable_voice_detection;
+	int enable_punctuation_prediction;//是否开启标点，可选，默认是0
+	//int enable_voice_detection;       //是否启动语音检测，可选，默认是False 未使用20200330
 	
 	int debug_level;
 	
 	int enable_intermediate_result;//??
-	int enable_sentence_detection;//??
-	int enable_inverse_text_normalization;//??
-	int enable_word_level_result;//??
+	//int enable_sentence_detection;//??
+	int enable_inverse_text_normalization;//是否在后处理中执行ITN，可选，开启
+	//int enable_word_level_result;//??
+	int enable_disfluency;//是否开启顺滑，开启
 	//...
+	
+	char * dialog_context;//对话附加信息。 可选
 } NlsNuiThingsConfig;
 
 void nls_nui_things_config_print(NlsNuiThingsConfig * config);
@@ -77,6 +85,7 @@ int nls_nui_things_config_reset(NlsNuiThingsConfig * config);
 
 /* TTS 模块初始化时传入的配置参数类型*/
 typedef struct {
+	//内部指针变量，会申请空间，因此需要内部维护空间的申请和释放
 	int sample_rate;//音频采样率，默认是16000
 	int volume;     //音量，范围是0~100，默认50
 	int speech_rate;//语速，范围是-500~500，默认是0

@@ -135,6 +135,7 @@ static int alicoap_channel_send(iot_channel_t *ch)
         ret = alicoap_usrv_send((char *)ch->ch_open_arg, str, ret);
     } else {
         LOGD("IOT", "nothing to send");
+        ret = -1;
     }
 
     return ret;

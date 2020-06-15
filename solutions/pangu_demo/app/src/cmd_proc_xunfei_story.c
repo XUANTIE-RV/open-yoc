@@ -1,8 +1,7 @@
 /*
- * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ * Copyright (C) 2019-2020 Alibaba Group Holding Limited
  */
 
-#include <yoc_config.h>
 
 #include <stdlib.h>
 #include <string.h>
@@ -54,7 +53,7 @@ int aui_nlp_proc_cb_story_nlp(cJSON *js, const char *json_text)
     LOGD(TAG, "aui_nlp_proc_cb_tts_nlp:%s", url->valuestring);
 
     aui_player_stop(MEDIA_MUSIC);
-    aui_player_play(MEDIA_MUSIC,url->valuestring, 1);
+    app_player_play(MEDIA_MUSIC,url->valuestring, 1);
 
     return 0;
 }

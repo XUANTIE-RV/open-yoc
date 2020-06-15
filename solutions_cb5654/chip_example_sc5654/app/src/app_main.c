@@ -42,9 +42,6 @@ static void cli_reg_cmd_app(void)
 
     extern void test_iic_cmd(void);
     test_iic_cmd();
-
-    extern void test_flash_cmd(void);
-    test_flash_cmd();
 }
 
 

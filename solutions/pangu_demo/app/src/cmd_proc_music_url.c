@@ -1,8 +1,7 @@
 /*
- * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ * Copyright (C) 2019-2020 Alibaba Group Holding Limited
  */
 
-#include <yoc_config.h>
 
 #include <stdlib.h>
 #include <string.h>
@@ -35,7 +34,7 @@ int aui_nlp_process_music_url(cJSON *js, const char *json_text)
     }
 
     aui_player_stop(MEDIA_MUSIC);
-    aui_player_play(MEDIA_MUSIC, music_url->valuestring, 0);
+    app_player_play(MEDIA_MUSIC, music_url->valuestring, 0);
 
     return 0;
 }

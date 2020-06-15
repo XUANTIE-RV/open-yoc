@@ -12,7 +12,6 @@
  * @chip     pangu
  ******************************************************************************/
 
-#include <csi_config.h>
 #include <stdint.h>
 #include <io.h>
 #include <soc.h>
@@ -79,7 +78,7 @@ static void _system_init_for_baremetal(void)
 {
     __enable_excp_irq();
 
-    csi_coret_config(drv_get_cpu_freq(drv_get_cpu_id()) / CONFIG_SYSTICK_HZ, CORET_IRQn);    //10ms
+    csi_coret_config(drv_get_cur_cpu_freq() / CONFIG_SYSTICK_HZ, CORET_IRQn);    //10ms
 
     mm_heap_initialize();
 }
@@ -101,7 +100,7 @@ static void _system_init_for_kernel(void)
 #if defined(CONFIG_FREQ_TEST)
 	csi_coret_config(1000000, CORET_IRQn);
 #else
-    csi_coret_config(drv_get_cpu_freq(drv_get_cpu_id()) / CONFIG_SYSTICK_HZ, CORET_IRQn);    //10ms
+    csi_coret_config(drv_get_cur_cpu_freq() / CONFIG_SYSTICK_HZ, CORET_IRQn);    //10ms
 #endif
     drv_irq_enable(CORET_IRQn);
 
@@ -113,7 +112,7 @@ static void _system_init_for_kernel(void)
 }
 #endif
 
-#ifdef CONFIG_SYSTEM_SECURE
+#ifdef CONFIG_CHIP_PANGU_CPU0
 static void __memcpy(void *dest, const void *src, size_t n)
 {
     int i;
@@ -126,7 +125,7 @@ static void __memcpy(void *dest, const void *src, size_t n)
 
 static void section_data_copy(void)
 {
-#ifdef CONFIG_SYSTEM_SECURE
+#ifdef CONFIG_CHIP_PANGU_CPU0
     extern uint32_t __stext;
     extern uint32_t __etext;
     extern uint32_t __srodata;
@@ -201,7 +200,7 @@ void SystemInit(void)
     /* config APB1 clock from 18M to 48M */
     putreg32(2, (uint32_t *)0x8b000004);
 
-#ifndef CONFIG_SYSTEM_SECURE
+#if defined(CONFIG_CHIP_PANGU_CPU2)
     csi_cache_set_range(0, 0x18000000, CACHE_CRCR_16M, 1);
     csi_icache_enable();
     csi_dcache_enable();

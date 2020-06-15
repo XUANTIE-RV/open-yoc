@@ -9,7 +9,6 @@
  * @date     02. June 2017
  ******************************************************************************/
 
-#include <csi_config.h>
 #include "drv/timer.h"
 #include "dw_timer.h"
 #include <drv/irq.h>

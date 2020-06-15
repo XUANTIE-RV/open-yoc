@@ -157,7 +157,7 @@ static aos_pcm_t *pcm_init(unsigned int *rate)
     aos_pcm_t *pcm;
     int err, period_frames, buffer_frames;
 
-    aos_pcm_open(&pcm, "pcmC0", SND_PCM_STREAM_CAPTURE, 0);
+    aos_pcm_open(&pcm, "pcmC0", AOS_PCM_STREAM_CAPTURE, 0);
 
     aos_pcm_hw_params_alloca(&params);
     err = aos_pcm_hw_params_any(pcm, params);

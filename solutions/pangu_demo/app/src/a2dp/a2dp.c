@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ * Copyright (C) 2019-2020 Alibaba Group Holding Limited
  */
 
 #include <stdlib.h>
@@ -157,7 +157,7 @@ void audio_player(uint8_t action)
             if(player_status == 0) {
                 fifo = nsfifo_open(url, O_CREAT, 102400);
                 aos_check(fifo, ERR_MEM);
-                ret = player_play(g_player, url);
+                ret = player_play(g_player, url, 0);
                 aos_check(!ret, ERR_MEM);
                 player_status = 1;
             } else if (player_status == 2) {
@@ -218,30 +218,16 @@ void a2dp_start(char *wbuf, int wbuf_len, int argc, char **argv)
 {
     bt_err_t ret;
 
-    plyh_t plyh;
+    ply_conf_t ply_cnf;
 
-    memset(&plyh, 0, sizeof(plyh_t));
-    plyh.ao_name       = "alsa";
-    // plyh.eq_segments   = EQ_SEGMENT;
-    //plyh.resample_rate = 48000;
-    plyh.rcv_timeout   =  -1;
-    // plyh.get_dec_cb    = _get_decrypt;
-    plyh.event_cb      = _player_event;
+	player_conf_init(&ply_cnf);
+    // ply_cnf.eq_segments   = EQ_SEGMENT;
+    //ply_cnf.resample_rate = 48000;
+    ply_cnf.rcv_timeout   =  -1;
+    // ply_cnf.get_dec_cb    = _get_decrypt;
+    ply_cnf.event_cb      = _player_event;
 
-    g_player = player_new(&plyh);
-
-        // stream_register_mem();
-        // stream_register_file();
-        // stream_register_http();
-        // stream_register_fifo();
-
-        // demux_register_wav();
-        // demux_register_mp3();
-        // demux_register_mp4();
-        // demux_register_adts();
-        // demux_register_rawaudio();
-        // ad_register_pcm();
-
+    g_player = player_new(&ply_cnf);
 
     uart_csky_register(0);
 

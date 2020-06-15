@@ -20,7 +20,18 @@ typedef struct rtl8723ds_bt_config_t {
     int bt_dis_pin;
 } rtl8723ds_bt_config;
 
+/**
+ * @brief  register wifi driver of rtl8723 
+ * @param  [in] config
+ * @return  
+ */
 extern void wifi_rtl8723ds_register(rtl8723ds_gpio_pin* config);
+
+/**
+ * @brief  register bluetooth driver of rtl8723 
+ * @param  [in] config
+ * @return  
+ */
 extern void bt_rtl8723ds_register(rtl8723ds_bt_config* config);
 
 

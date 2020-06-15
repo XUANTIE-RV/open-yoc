@@ -8,7 +8,6 @@
  * 2018-08-25     armink       the first version
  */
 
-#include <yoc_config.h>
 #include "ulog_telnet.h"
 #include "ulog.h"
 #include <aos/aos.h>

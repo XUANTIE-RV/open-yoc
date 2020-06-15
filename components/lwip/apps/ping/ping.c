@@ -1,7 +1,6 @@
 /*
  * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
-// #include <yoc_config.h>
 
 #include <stdio.h>
 #include <stdlib.h>

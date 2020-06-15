@@ -9,7 +9,6 @@
  * @date     16. August 2018
  ******************************************************************************/
 
-#include <csi_config.h>
 #include <stdint.h>
 #include "pinmux.h"
 #include "pin_name.h"

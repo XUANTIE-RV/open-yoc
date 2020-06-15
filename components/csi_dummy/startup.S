@@ -7,12 +7,8 @@
  * @brief    startup file. Should use with
  *           GCC for CSKY Embedded Processors
  * @version  V1.0
- * @date     06. Mar 2019
- * @vendor   csky
- * @chip     pangu
+ * @date     06. Apr 2020
  ******************************************************************************/
-
-#include <csi_config.h>
 
 .section .vectors
     .align  10
@@ -84,32 +80,39 @@ _start:
     .type    Reset_Handler, %function
 Reset_Handler:
     psrclr  ie
-#if defined (CONFIG_SYSTEM_SECURE)
-    lrw     r0, 0xe000f000   /* Cache register base address */
-    lrw     r2, 0x800006d    /* CRCR1 value means: Cached data from 0x8000000(QSPIFLASH), Size= 8MB, Enable*/
-    lrw     r1, 0x1800006d   /* CRCR0 value means: Cached data from 0x18000000(SDRAM), Size= 8MB, Enable*/
-    stw     r1, (r0, 0x8)    /* store 0x10000063 to CRCR0(0xe000f008) */
-    stw     r2, (r0, 0xC)    /* store 0x10000063 to CRCR0(0xe000f008) */
-    movi    r1, 0x1          /* store 0x1 to r1 */
-    stw     r1, (r0, 0x4)    /* set CIR(0xe000f004) to 0x1, means invalid all caches */
-    movi    r1, 0x15          /* store 0x15 to r1 */
-    stw     r1, (r0, 0x0)    /* set CER(0xe000f000) to 0x1, means enable all caches */
-#endif
 
-    /* enable return speculative execution */
-    mfcr    r0, cr<31,0>
-    bseti   r0, 3
-    mtcr    r0, cr<31,0>
-
-#ifndef CONFIG_SYSTEM_SECURE
     lrw     r0, 0x80000200
-#else
-    lrw     r0, 0xe0000200
-#endif
     mtcr    r0, psr
 
     lrw     r0, g_top_irqstack
     mov     sp, r0
+
+/*
+ *  The ranges of copy from/to are specified by following symbols
+ *    __etext: LMA of start of the section to copy from. Usually end of text
+ *    __data_start__: VMA of start of the section to copy to
+ *    __data_end__: VMA of end of the section to copy to
+ *
+ *  All addresses must be aligned to 4 bytes boundary.
+ */
+    lrw     r1, __erodata
+    lrw     r2, __data_start__
+    lrw     r3, __data_end__
+
+    subu    r3, r2
+    cmpnei  r3, 0
+    bf      .L_loop0_done
+
+.L_loop0:
+    ldw     r0, (r1, 0)
+    stw     r0, (r2, 0)
+    addi    r1, 4
+    addi    r2, 4
+    subi    r3, 4
+    cmpnei  r3, 0
+    bt      .L_loop0
+
+.L_loop0_done:
 
 /*
  *  The BSS section is specified by following symbols

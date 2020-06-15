@@ -31,7 +31,6 @@
 #ifndef MBEDTLS_CONFIG_H
 #define MBEDTLS_CONFIG_H
 
-#include <yoc_config.h>
 /* System support */
 //#define MBEDTLS_HAVE_TIME /* Optionally used in Hello messages */
 /* Other MBEDTLS_HAVE_XXX flags irrelevant for this configuration */
@@ -39,9 +38,7 @@
 //#define MBEDTLS_NO_DEFAULT_ENTROPY_SOURCES
 //#define MBEDTLS_TEST_NULL_ENTROPY
 //#define MBEDTLS_HAVEGE_C
-//#ifdef CONFIG_CHIP_ZX297100
 //#define MBEDTLS_DEBUG_C
-//#endif
 //#define MBEDTLS_PLATFORM_C
 //#define MBEDTLS_PLATFORM_MEMORY
 //#define MBEDTLS_TIMING_C
@@ -70,13 +67,9 @@
 //#define MBEDTLS_NET_C
 //#define MBEDTLS_OID_C
 //#define MBEDTLS_SHA1_C
-//#ifndef CONFIG_CHIP_ZX297100
 //#define MBEDTLS_SHA1_ALT
-//#endif
 //#define MBEDTLS_SHA256_C
-//#ifndef CONFIG_CHIP_ZX297100
 //#define MBEDTLS_SHA256_ALT
-//#endif
 //#define MBEDTLS_SHA512_C
 //#define MBEDTLS_PK_C
 //#define MBEDTLS_PK_PARSE_C

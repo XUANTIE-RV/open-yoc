@@ -12,10 +12,12 @@
 #include <soc.h>
 #include <drv/wdt.h>
 
-void drv_reboot(void)
+void drv_reboot(int cmd)
 {
     wdt_handle_t wdt_handle;
     uint32_t irq_flag = 0;
+
+    (void)cmd;
 
     irq_flag = csi_irq_save();
 

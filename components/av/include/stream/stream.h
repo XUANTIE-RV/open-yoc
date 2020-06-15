@@ -10,15 +10,16 @@
 
 __BEGIN_DECLS__
 
-typedef struct stream_header {
-    char                      *url;             ///< url of the stream
+#define STREAM_OPS_MAX        (16)
+
+typedef struct stream_conf {
     enum stream_mode          mode;
     irq_av_t                  irq;
-    uint32_t                  rcv_timeout;      ///< ms. 0 use default & AOS_WAIT_FOREVER means wait forever
-    uint32_t                  cache_size;       ///< size of the web cache. 0 use default
-    uint32_t                  cache_percent;    ///< (0~100)start read for player when up to cache_percent. 0 use default
-    get_decrypt_cb_t          get_dec_cb;       ///< used for get decrypt info
-} sth_t;
+    uint32_t                  rcv_timeout;              ///< ms. 0 use default & AOS_WAIT_FOREVER means wait forever
+    uint32_t                  cache_size;               ///< size of the web cache. 0 use default
+    uint32_t                  cache_start_threshold;    ///< (0~100)start read for player when up to cache_start_threshold. 0 use default
+    get_decrypt_cb_t          get_dec_cb;               ///< used for get decrypt info
+} stm_conf_t;
 
 /**
  * @brief  regist stream ops
@@ -28,11 +29,19 @@ typedef struct stream_header {
 int stream_ops_register(const struct stream_ops *ops);
 
 /**
- * @brief  open a stream
- * @param  [in] sth
- * @return NULL on error
- */
-stream_cls_t* stream_open(const sth_t *sth);
+* @brief  init the stream config param
+* @param  [in] stm_cnf
+* @return 0/-1
+*/
+int stream_conf_init(stm_conf_t *stm_cnf);
+
+/**
+* @brief  open a stream
+* @param  [in] url
+* @param  [in] stm_cnf
+* @return NULL on error
+*/
+stream_cls_t* stream_open(const char *url, const stm_conf_t *stm_cnf);
 
 /**
  * @brief  read from a stream
@@ -79,7 +88,7 @@ int stream_close(stream_cls_t *o);
 /**
  * @brief  control a stream
  * @param  [in] o
- * @param  [in] cmd : command
+ * @param  [in] cmd : stream_cmd_t
  * @param  [in] arg
  * @param  [in/out] arg_size
  * @return

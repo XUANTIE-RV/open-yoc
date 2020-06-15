@@ -35,5 +35,6 @@ int channel_get_message(channel_t *ch, void *msg, int len, uint32_t timeout_ms);
 
 //mailbox
 channel_t *channel_mailbox_get(int cpu_id, channel_cb cb, void *priv);
+int channel_mailbox_lpm(channel_t *ch, int state);
 
 #endif // AOS_IPC_H

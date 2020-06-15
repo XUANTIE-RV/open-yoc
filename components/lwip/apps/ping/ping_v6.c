@@ -1,7 +1,6 @@
 /*
  * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
-#include <yoc_config.h>
 #if defined(CONFIG_CLI) && defined(CONFIG_TCPIP)
 
 #include <stdio.h>

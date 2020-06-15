@@ -73,7 +73,6 @@ enum {
 typedef struct sh_audio {
     sf_t                      sf;
     avcodec_id_t              id;
-
     uint8_t                   *extradata;     ///< extradata or frame header, if needed
     int32_t                   extradata_size;
     uint32_t                  block_align;    ///< size of one frame, if needed

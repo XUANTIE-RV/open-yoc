@@ -25,10 +25,12 @@ typedef enum {
     MIC_CTRL_START_SESSION,  /* 强制进入对话模式 */
     MIC_CTRL_ENABLE_WWV,     /* 使能唤醒二次确认功能*/
     MIC_CTRL_DISABLE_WWV,    /* 禁止唤醒二次确认功能*/
-    MIC_CTRL_DEBUG_LEVEL_1,  /* 设置调试模式1*/
-    MIC_CTRL_DEBUG_LEVEL_2,  /* 设置调试模式2*/
-    MIC_CTRL_DEBUG_LEVEL_3,  /* 设置调试模式3*/
-    MIC_CTRL_DEBUG_CLOSE,    /* 退出调试模式*/
+    MIC_CTRL_DEBUG_LEVEL_1,  /* 设置调试模式1 */
+    MIC_CTRL_DEBUG_LEVEL_2,  /* 设置调试模式2 */
+    MIC_CTRL_DEBUG_LEVEL_3,  /* 设置调试模式3 */
+    MIC_CTRL_DEBUG_CLOSE,    /* 退出调试模式 */
+    MIC_CTRL_WAKEUP_START,   /* 开始播放唤醒提示音 */
+    MIC_CTRL_WAKEUP_END,     /* 结束播放唤醒提示音 */
     MIC_END
 } mic_ctrl_cmd_t;
 
@@ -56,17 +58,19 @@ typedef enum {
 
 typedef struct mic_pcm_param {
     int   sample_bits;      /* 采样精度 默认16bit*/
-    int   channels;         /* 预留  */
+    int   channels;         /* 采样通道数 默认1*/
     int   rate;             /* 采样率 默认16K*/
     int   nsmode;           /* 去噪等级参数  0~3 非线性处理等级逐步加强，其他值无非线性处理 */
-    int   acemode;          /* 回音消除等级  0~3 非线性处理等级逐步加强，其他值无非线性处理 */
-    int   vadmode;          /* VAD等级 -1 关闭VAD,  0~3 等级逐步加强 */
+    int   aecmode;          /* 回音消除等级  0~3 非线性处理等级逐步加强，其他值无非线性处理 */
+    int   vadmode;          /* VAD等级 0~3 等级逐步加强 */
     int   sentence_time_ms; /* 有语音断句时间 */
     int   noack_time_ms;    /* 无语音超时时间 */
     int   max_time_ms;      /* 唤醒后总超时时间 */
     void *ext_param1;       /* 预留 */
     void *ext_param2;       /* 预留 */
-} mic_pcm_param_t;
+    int   vadswitch;        /* 0 关闭VAD，1 打开, 2 打开起点关闭尾点 */
+    int   vadfilter;        /* VAD过滤器类型， 0 关闭过滤器， 1~3 不同过滤器类型 */
+} mic_param_t;
 
 #define KWS_ID_WWV_MASK     0x10000
 
@@ -98,7 +102,7 @@ int aui_mic_stop(void);
  * @pram param 传入参数
  * @return 0:成功
  */
-int aui_mic_set_param(mic_pcm_param_t *param);
+int aui_mic_set_param(mic_param_t *param);
 
 /**
  * 设置麦克风唤醒使能
@@ -149,25 +153,34 @@ int aui_mic_rec_start(const char *url, const char *save_name);
  */
 int aui_mic_rec_stop(void);
 
+/**
+ * 初始化离线命令词映射表
+ * @return 0:成功
+ */
+int aui_mic_init_kw_map(void);
+
+/**
+ * 获取离线命令词
+ * @param kwid  离线命令词ID
+ * @param word 离线命令词字符串
+ * @return 0:成功
+ */
+int aui_mic_get_kw(int kwid, char **word);
+
 /*************************************************
  * 麦克风适配接口
  *************************************************/
 typedef struct __mic mic_t;
 
-typedef struct mic_hw_param {
-    int sample_bits;  /* 音频采样位 16bit*/
-    int channels;     /* 通道个数 1/2 */
-    int rate;         /* 音频采样率 16000*/
-    int encode;       /* 编码格式 0:PCM */
-    int source;       /* 预留，用于控制使能哪些麦克风 */
-} mic_hw_param_t;
+typedef struct mic_kw_id_wod{
+    int id;
+    char *word;
+} mic_kw_id_wod_t;
 
-typedef struct mic_sw_param {
-    int buffer_size;      /* 麦克风驱动每次返回的最大数据量 */
-    int buffer_num;       /* 预留，用于控制麦克风驱动使用的缓存个数 */
-    int start_threshold;  /* 预留 */
-    int sentence_time_ms; /* 断句时间 */
-} mic_sw_param_t;
+typedef struct mic_kw_map{
+    int count;
+    mic_kw_id_wod_t *kw_arr;
+} mic_kw_map_t;
 
 /**
  * MIC 事件回调处理
@@ -181,17 +194,21 @@ typedef void (*mic_event_t)(void *priv, mic_event_id_t evt_id, void *data, int s
 typedef struct mic_ops {
     int (*init)(mic_t *mic, mic_event_t mic_event);
     int (*deinit)(mic_t *mic);
+    int (*start)(mic_t *mic);
+    int (*stop)(mic_t *mic);
     int (*kws_control)(mic_t *mic, int flag);
     int (*kws_wake)(mic_t *mic, int flag);
     int (*wwv_enable)(mic_t *mic, int flag);
     int (*wwv_get_data)(mic_t *mic, void **param, size_t *size);
     int (*pcm_data_control)(mic_t *mic, int flag);
     int (*pcm_aec_control)(mic_t *mic, int flag);
+    int (*wakup_audio_stat)(mic_t *mic, int is_playing);
     int (*debug_control)(mic_t *mic, int flag);
     int (*vad_control)(mic_t *mic, int flag);
     int (*vad_timeout)(mic_t *mic, int timeout_ms);
-    int (*pcm_set_param)(mic_t *mic, void *param);
-    int (*pcm_get_param)(mic_t *mic, void *param);
+    int (*pcm_set_param)(mic_t *mic, mic_param_t *param);
+    int (*pcm_get_param)(mic_t *mic, mic_param_t *param);
+    int (*get_kw_map)(mic_t *mic, void **kws_map);
     void (*mic_rec_start)(mic_t *mic, const char *url, const char *save_name);
     void (*mic_rec_stop)(mic_t *mic);
 } mic_ops_t;
@@ -203,8 +220,12 @@ int mic_ops_register(mic_ops_t *ops);
 /**
  * 麦克风设备注册
  */
-void yunvoice_mic_register(void);
-void pangu_mic_register(void);
+typedef struct {
+    char *pcm;
+    int   cts_ms;
+    int   ipc_mode;
+} voice_adpator_param_t;
+
 void voice_mic_register(void);
 void mic_thead_v1_register(void);
 

@@ -1,7 +1,6 @@
 /*
  * Copyright (C) 2019-2020 Alibaba Group Holding Limited
  */
-#include <yoc_config.h>
 #if defined(CONFIG_CLI) && ( defined(CONFIG_TCPIP) || defined(CONFIG_SAL))
 #include <aos/cli.h>
 

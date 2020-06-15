@@ -9,7 +9,6 @@
  * @date     19. Feb 2019
  ******************************************************************************/
 
-#include <csi_config.h>
 #include "ck_pwm.h"
 #include "drv/pwm.h"
 #include "soc.h"

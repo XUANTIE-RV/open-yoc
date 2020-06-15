@@ -17,7 +17,6 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-#include <csi_config.h>
 
 #if defined (__CSKY_DSP__) || defined(__CSKY_DSPV2__) || defined(__CSKY_VDSPV2__) || defined (__CSKY_HARD_FLOAT__) || defined(__C807__)
 #define CSK_CPU_STACK_EXTRAL    68

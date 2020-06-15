@@ -11,7 +11,6 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
-#include <yoc_config.h>
 #include <aos/log.h>
 #include <aos/debug.h>
 #include <yoc/manifest_info.h>

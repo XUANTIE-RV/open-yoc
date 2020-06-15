@@ -2,7 +2,6 @@
  * Copyright (C) 2019-2020 Alibaba Group Holding Limited
  */
 
-#include <yoc_config.h>
 #include <time.h>
 
 extern int clock_gettime(clockid_t clockid, struct timespec *tp);

@@ -25,7 +25,6 @@
 /*******************************************************************************
  *                           Include header files                              *
  ******************************************************************************/
-#include <yoc_config.h>
 #include <assert.h>
 #include <stdlib.h>
 
@@ -933,7 +932,7 @@ static void mdm_netif_init(struct netif *netif)
 /*******************************************************************************
  *                      Global function implementations                        *
  ******************************************************************************/
-int lwip_tcpip_init(void)
+static int lwip_tcpip_init(void)
 {
 #ifdef PERF
     perf_init("/tmp/minimal.perf");
@@ -1065,5 +1064,6 @@ void nbiot_driver_register(void)
 
     //run eth_dev_init to create eth_dev_t and bind this driver
     driver_register(&nbiot_driver.drv, NULL, 0);
+    lwip_tcpip_init();
 }
 

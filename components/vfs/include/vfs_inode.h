@@ -65,6 +65,7 @@ typedef struct {
     inode_t    *node;   /* node for file */
     void       *f_arg;  /* f_arg for file */
     size_t      offset; /* offset for file */
+    int         i_flags; /* flags for file */
 } file_t;
 
 struct pollfd;

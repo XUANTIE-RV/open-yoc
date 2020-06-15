@@ -9,7 +9,6 @@
  * @date     24. August 2017
  ******************************************************************************/
 
-#include <csi_config.h>
 
 #define AHB_BASE        0x40000000
 #undef  EFLASH_CONTROL_BASE

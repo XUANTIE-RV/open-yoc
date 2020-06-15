@@ -317,7 +317,7 @@ static int _ssl_client_init(mbedtls_ssl_context *ssl,
     mbedtls_debug_set_threshold((int)DEBUG_LEVEL);
 #endif
     _net_init(tcp_fd);
-    mbedtls_ssl_init_ext(ssl, 4096);
+    mbedtls_ssl_init(ssl);
     mbedtls_ssl_config_init(conf);
     mbedtls_x509_crt_init(crt509_ca);
 

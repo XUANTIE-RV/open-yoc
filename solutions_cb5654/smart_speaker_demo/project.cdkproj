@@ -2,71 +2,65 @@
 <Project Name="smart_speaker_demo" Version="1">
   <Description>Smart Speaker Demo</Description>
   <MonitorProgress>
-    <FlashOperate>586</FlashOperate>
+    <FlashOperate>588</FlashOperate>
     <DebugLaunch>42</DebugLaunch>
   </MonitorProgress>
   <Chips>
-    <Chip ID="csi_sc5654" Version="V7.2.2" IsBasic="false"/>
+    <Chip ID="csi_sc5654" Version="V7.3.0" IsBasic="false"/>
   </Chips>
   <Boards>
-    <Board ID="cb5654" Version="V7.2.2" IsBasic="false"/>
+    <Board ID="cb5654" Version="V7.3.0" IsBasic="false"/>
   </Boards>
   <Packages>
-    <Package ID="aos" Version="V7.2.2" IsBasic="false"/>
-    <Package ID="aos_hal" Version="V7.2.2" IsBasic="false"/>
-    <Package ID="aui_aliyunnls" Version="V7.2.2" IsBasic="false"/>
-    <Package ID="av" Version="V7.2.2" IsBasic="false"/>
-    <Package ID="pvmp3dec" Version="V7.2.2" IsBasic="false"/>
-    <Package ID="fdk_aac" Version="V7.2.2" IsBasic="false"/>
-    <Package ID="speexdsp" Version="V7.2.2" IsBasic="false"/>
-    <Package ID="cjson" Version="V7.2.2" IsBasic="false"/>
-    <Package ID="clock_alarm" Version="V7.2.2" IsBasic="false"/>
-    <Package ID="console" Version="V7.2.2" IsBasic="false"/>
-    <Package ID="csi" Version="V7.2.2" IsBasic="false"/>
-    <Package ID="drivers" Version="V7.2.2" IsBasic="false"/>
-    <Package ID="drv_sdmmc" Version="V7.2.2" IsBasic="false"/>
-    <Package ID="drv_snd_sc5654" Version="V7.2.2" IsBasic="false"/>
-    <Package ID="drv_wifi_rtl8723ds" Version="V7.2.2" IsBasic="false"/>
-    <Package ID="drv_leds" Version="V7.2.2" IsBasic="false"/>
-    <Package ID="fatfs" Version="V7.2.2" IsBasic="false"/>
-    <Package ID="fota" Version="V7.2.2" IsBasic="false"/>
-    <Package ID="ipc" Version="V7.2.2" IsBasic="false"/>
-    <Package ID="kv" Version="V7.2.2" IsBasic="false"/>
-    <Package ID="lwip" Version="V7.2.2" IsBasic="false"/>
-    <Package ID="ntp" Version="V7.2.2" IsBasic="false"/>
-    <Package ID="mbedtls" Version="V7.2.2" IsBasic="false"/>
-    <Package ID="mic" Version="V7.2.2" IsBasic="false"/>
-    <Package ID="minialsa" Version="V7.2.2" IsBasic="false"/>
-    <Package ID="minilibc" Version="V7.2.2" IsBasic="false"/>
-    <Package ID="netmgr" Version="V7.2.2" IsBasic="false"/>
-    <Package ID="posix" Version="V7.2.2" IsBasic="false"/>
-    <Package ID="record" Version="V7.2.2" IsBasic="false"/>
-    <Package ID="rhino" Version="V7.2.2" IsBasic="false"/>
-    <Package ID="vfs" Version="V7.2.2" IsBasic="false"/>
-    <Package ID="voice" Version="V7.2.2" IsBasic="false"/>
-    <Package ID="webclient" Version="V7.2.2" IsBasic="false"/>
-    <Package ID="websocket" Version="V7.2.2" IsBasic="false"/>
-    <Package ID="adc_button" Version="V7.2.2" IsBasic="false"/>
-    <Package ID="wifi_provisioning" Version="V7.2.2" IsBasic="false"/>
-    <Package ID="smartliving" Version="V7.2.2" IsBasic="false"/>
-    <Package ID="fct" Version="V7.2.2" IsBasic="false"/>
-    <Package ID="httpclient" Version="V7.2.2" IsBasic="false"/>
-    <Package ID="transport" Version="V7.2.2" IsBasic="false"/>
-    <Package ID="yoc_sc5654" Version="V7.2.2" IsBasic="false"/>
-    <Package ID="voice_mit" Version="V7.2.2" IsBasic="false"/>
+    <Package ID="aos" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="aui_cloud" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="aui_aliyunnls" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="av" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="flac" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="amrnb" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="amrwb" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="pvmp3dec" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="speexdsp" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="cjson" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="clock_alarm" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="console" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="csi" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="drivers" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="drv_sdmmc" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="drv_snd_sc5654" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="drv_wifi_rtl8723ds" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="drv_leds" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="fatfs" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="fota" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="ipc" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="kv" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="lwip" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="ntp" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="mbedtls" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="mic" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="minialsa" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="minilibc" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="netmgr" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="posix" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="record" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="rhino" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="vfs" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="aui_aliyunnls" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="voice" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="voice_mit" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="webclient" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="websocket" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="button" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="wifi_provisioning" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="smartliving" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="fct" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="httpclient" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="transport" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="yoc_sc5654" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="littlefs" Version="V7.3.0" IsBasic="false"/>
   </Packages>
   <MergedToYaml>yes</MergedToYaml>
   <Dependencies Name="BuildSet"/>
-  <DebugSessions>
-    <watchExpressions/>
-    <memoryExpressions/>
-    <statistics/>
-    <peripheralTabs/>
-    <WatchDisplayFormat/>
-    <LocalDisplayFormat/>
-    <debugLayout/>
-    <memoryTabColSizeExpressions/>
-  </DebugSessions>
   <BuildConfigs>
     <BuildConfig Name="BuildSet">
       <Target>
@@ -143,9 +137,9 @@
         <CreateHexFile>yes</CreateHexFile>
         <CreateBinFile>no</CreateBinFile>
         <Preprocessor>no</Preprocessor>
-        <Disassmeble>no</Disassmeble>
+        <Disasm>no</Disasm>
         <CallGraph>no</CallGraph>
-        <GenMap>no</GenMap>
+        <Map>no</Map>
       </Output>
       <User>
         <BeforeCompile>
@@ -193,7 +187,6 @@
         <LibPath/>
         <OtherFlags/>
         <AutoLDFile>no</AutoLDFile>
-        <LinkType>whole-archive</LinkType>
       </Linker>
       <Debug>
         <LoadApplicationAtStartup>no</LoadApplicationAtStartup>
@@ -210,7 +203,6 @@
         <ConfigICE>
           <IP>localhost</IP>
           <PORT>1025</PORT>
-          <CPUNumber>0</CPUNumber>
           <Clock>12000</Clock>
           <Delay>10</Delay>
           <WaitReset>500</WaitReset>
@@ -250,4 +242,14 @@
       </Flash>
     </BuildConfig>
   </BuildConfigs>
+  <DebugSessions>
+    <watchExpressions/>
+    <memoryExpressions/>
+    <statistics/>
+    <peripheralTabs/>
+    <WatchDisplayFormat/>
+    <LocalDisplayFormat/>
+    <debugLayout/>
+    <memoryTabColSizeExpressions/>
+  </DebugSessions>
 </Project>

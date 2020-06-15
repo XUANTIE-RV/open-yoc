@@ -27,6 +27,16 @@ int ad_register_ipc()
 }
 
 /**
+ * @brief  regist ad for tmall
+ * @return 0/-1
+ */
+int ad_register_tmall()
+{
+    extern struct ad_ops ad_ops_tmall;
+    return ad_ops_register(&ad_ops_tmall);
+}
+
+/**
  * @brief  regist ad for pvmp3
  * @return 0/-1
  */

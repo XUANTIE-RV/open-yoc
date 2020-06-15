@@ -1,6 +1,6 @@
 #!/bin/sh
-
-SDK_ROOT=../../yoc_v7.2.2
+SDK_NAME=yoc_v7.2.2
+SDK_ROOT=../../$SDK_NAME
 YOC_ROOT=..
 
 mkdir -p $SDK_ROOT
@@ -18,7 +18,7 @@ done
 
 # extern comp
 echo ">>>>Ext comp"
-comps="aliot yunio flac amrnb amrwb"
+comps="aliot yunio"
 for comp in $comps
 do
     echo $comp
@@ -27,14 +27,17 @@ done
 
 
 cp -rf $YOC_ROOT/boards/silan/cb5654 $SDK_ROOT/boards/silan/.
-cp -rf $YOC_ROOT/boards/silan/mit-v2 $SDK_ROOT/boards/silan/.
-cp -rf $YOC_ROOT/boards/silan/mit-v3 $SDK_ROOT/boards/silan/.
+cp -rf $YOC_ROOT/boards/silan/mit_v2 $SDK_ROOT/boards/silan/.
+cp -rf $YOC_ROOT/boards/silan/mit_v3 $SDK_ROOT/boards/silan/.
 #cp -rf $YOC_ROOT/tools $SDK_ROOT/.
 cp $YOC_ROOT/.yoc $SDK_ROOT/.
 cp -rf smart_speaker_demo $SDK_ROOT/solutions_cb5654
 cp -rf chip_example_sc5654 $SDK_ROOT/solutions_cb5654
 cp -rf alimqtt_demo_sc5654 $SDK_ROOT/solutions_cb5654
 
-tar zcf yoc_v7.2.2.tar.gz $SDK_ROOT
+#tar zcf yoc_v7.2.2.tar.gz $SDK_ROOT
+cd $YOC_ROOT/../
+zip -qr ${SDK_NAME}.zip ${SDK_NAME}
+cd -
 
 rm $SDK_ROOT -rf

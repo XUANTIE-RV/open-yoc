@@ -9,7 +9,6 @@
  * @version  V1.0
  * @date     02. June 2017
  ******************************************************************************/
-#include <csi_config.h>
 #include <string.h>
 #include <drv/i2s.h>
 #include "silan_adev.h"

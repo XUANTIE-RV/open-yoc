@@ -1,7 +1,6 @@
 /*
  * Copyright (C) 2019-2020 Alibaba Group Holding Limited
  */
-#include <yoc_config.h>
 
 #if defined(CONFIG_TCPIP) || defined(CONFIG_SAL)
 
@@ -197,6 +196,20 @@ static void cmd_ifconfig_func(char *wbuf, int wbuf_len, int argc, char **argv)
     if (gprs_dev != NULL) {
 
         netmgr_hdl_t hdl = netmgr_get_handle("gprs");
+
+        if (item_count == 1) {
+
+            netmgr_get_info(hdl);
+
+            return;
+        }
+    }
+
+    aos_dev_t *nbiot_dev = device_find("nbiot", 0);
+
+    if (nbiot_dev != NULL) {
+
+        netmgr_hdl_t hdl = netmgr_get_handle("nbiot");
 
         if (item_count == 1) {
 

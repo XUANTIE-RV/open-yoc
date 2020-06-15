@@ -8,7 +8,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
-#include <yoc_config.h>
 #include <aos/kernel.h>
 #include <aos/list.h>
 
@@ -72,6 +71,14 @@ int        ipc_message_ack(ipc_t *ipc, message_t *msg, int timeout_ms);
  * @return 0 on success, -1 on failed
  */
 int        ipc_add_service(ipc_t *ipc, int service_id, ipc_process_t cb, void *priv);
+
+/**
+ * @brief  ipc lpm
+ * @param  [in] des_cpu_id: destionation cpu_id
+ * @return ipc handle
+ */
+
+int         ipc_lpm(int cpu_id, int state);
 
 #ifdef __cplusplus
 }

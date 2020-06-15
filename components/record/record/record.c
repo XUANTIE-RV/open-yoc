@@ -2,7 +2,6 @@
  * Copyright (C) 2019-2020 Alibaba Group Holding Limited
  */
 
-#include <yoc_config.h>
 #include <string.h>
 #include <aos/kernel.h>
 #include <aos/list.h>

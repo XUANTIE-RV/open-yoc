@@ -13,15 +13,16 @@
 
 #include <soc.h>
 #include <drv/wdt.h>
-#include <csi_config.h>
 
-void drv_reboot(void)
+void drv_reboot(int cmd)
 {
     uint32_t irq_flag = 0;
 
+    (void)cmd;
+
     irq_flag = csi_irq_save();
 
-#ifdef CONFIG_CPU_CK804EF
+#ifdef CONFIG_CHIP_PANGU_CPU0
     wdt_handle_t wdt_handle;
     wdt_handle = csi_wdt_initialize(0, NULL);
     csi_wdt_start(wdt_handle);

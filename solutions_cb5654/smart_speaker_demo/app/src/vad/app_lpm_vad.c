@@ -101,13 +101,10 @@ int app_softvad_init(void)
 SRAM_TEXT int sram_vad_mit(void)
 {
 #define	READ_BYTE_PER_CHANNEL	64
-
-	//uint32_t size=0;
     int i;
     int16_t buff[READ_BYTE_PER_CHANNEL];
     int16_t buff2[READ_BYTE_PER_CHANNEL / 2];
-    
-    // SRAM_DATA static int call_times = 0;
+
     lpm_VadDetectResult ret_vad_detect = kVadDetectResultVoice;
 
     if (check_pin_wakeup()) {
@@ -123,29 +120,28 @@ SRAM_TEXT int sram_vad_mit(void)
             buff2[i] = buff[i*2];
         }
 
-		ret_vad_detect = lpm_vad_detect((const char *)buff2,READ_BYTE_PER_CHANNEL/2);
-		// call_times ++;
+        ret_vad_detect = lpm_vad_detect((const char *)buff2,READ_BYTE_PER_CHANNEL/2);
 
-		if(ret_vad_detect==kVadDetectResultStartpoint) {
-		#if SDRAM_ACCESS_EN
-			//vad start
-			printf("vad start"); 
-		#endif
-			return 1;
-		}
-		else if(ret_vad_detect==kVadDetectResultEndpoint) {
-		#if SDRAM_ACCESS_EN
-			//vad end
-			printf("vad end");
-		#endif
-		}
-		else {
-		#if SDRAM_ACCESS_EN
-			//printf("ret_vad_detect=%d", ret_vad_detect);
-		#endif
-		}
-	}
-	return 0;
+        if(ret_vad_detect==kVadDetectResultStartpoint) {
+        #if SDRAM_ACCESS_EN
+            //vad start
+            printf("vad start");
+        #endif
+            return 1;
+        }
+        else if(ret_vad_detect==kVadDetectResultEndpoint) {
+        #if SDRAM_ACCESS_EN
+            //vad end
+            printf("vad end");
+        #endif
+        }
+        else {
+        #if SDRAM_ACCESS_EN
+            //printf("ret_vad_detect=%d", ret_vad_detect);
+        #endif
+        }
+    }
+    return 0;
 }
 
 int app_softvad_init(void)

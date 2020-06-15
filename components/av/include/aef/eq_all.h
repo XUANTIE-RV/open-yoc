@@ -17,12 +17,6 @@ __BEGIN_DECLS__
     }
 
 /**
- * @brief  regist equalizer for sona
- * @return 0/-1
- */
-int eqx_register_sona();
-
-/**
  * @brief  regist equalizer for silan
  * @return 0/-1
  */
@@ -40,11 +34,10 @@ int eqx_register_ipc();
  */
 static inline int eqx_register()
 {
-#if defined(CONFIG_EQXER_SONA)
-    REGISTER_EQXER(SONA, sona);
-#elif defined(CONFIG_EQXER_SILAN)
+#if defined(CONFIG_EQXER_SILAN)
     REGISTER_EQXER(SILAN, silan);
-#elif defined(CONFIG_EQXER_IPC)
+#endif
+#if defined(CONFIG_EQXER_IPC)
     REGISTER_EQXER(IPC, ipc);
 #endif
     return 0;

@@ -1,7 +1,8 @@
 /*
  * Copyright (C) 2019-2020 Alibaba Group Holding Limited
  */
-
+#include <devices/devicelist.h>
+#include <devices/iic.h>
 #include <devices/drv_snd_sc5654.h>
 #include <devices/drv_snd_add2010.h>
 #include <yoc/mic.h>
@@ -17,7 +18,7 @@
 #define SESSION_STATE_START 1
 #define SESSION_STATE_WWV 2
 
-i2c_dev_t g_i2c_dev;
+//i2c_dev_t g_i2c_dev;
 
 static void app_clock_alarm_cb(uint8_t clock_id)
 {
@@ -171,7 +172,7 @@ static int app_mic_init(int wwwv_enable)
     utask_t *task_mic = utask_new("task_mic", 3 * 1024, QUEUE_MSG_COUNT, AOS_DEFAULT_APP_PRI);
     ret               = aui_mic_start(task_mic, mic_evt_cb);
 
-    mic_pcm_param_t param;
+    mic_param_t param;
     memset(&param, 0, sizeof(param));
 
     if (CONFIG_LEFT_GAIN > 0 && CONFIG_RIGHT_GAIN < 0) {
@@ -194,14 +195,14 @@ static int app_mic_init(int wwwv_enable)
     param.noack_time_ms    = 0;
     param.max_time_ms      = 0;
     param.nsmode           = 0; /* 无非线性处理 */
-    param.acemode          = 0; /* 无非线性处理 */
+    param.aecmode          = 0; /* 无非线性处理 */
     param.vadmode          = 0; /* 使能VAD */
 #else
     param.sentence_time_ms = 1000;
     param.noack_time_ms    = 8000;
     param.max_time_ms      = 20000;
     param.nsmode           = 4; /* 无非线性处理 */
-    param.acemode          = 4; /* 无非线性处理 */
+    param.aecmode          = 4; /* 无非线性处理 */
     param.vadmode          = 3;
 #endif
     aui_mic_set_param(&param);
@@ -264,17 +265,26 @@ void main()
 
     LOGD(TAG, "enter app");
 
-    g_i2c_dev.port                 = 1;
-    g_i2c_dev.config.mode          = I2C_MODE_MASTER;
-    g_i2c_dev.config.freq          = I2C_BUS_BIT_RATES_400K;
-    g_i2c_dev.config.dev_addr      = 0x34;
-    g_i2c_dev.config.address_width = I2C_HAL_ADDRESS_WIDTH_7BIT;
-    hal_i2c_init(&g_i2c_dev);
+    // g_i2c_dev.port = 1;
+    // g_i2c_dev.config.mode = I2C_MODE_MASTER;
+    // g_i2c_dev.config.freq = I2C_BUS_BIT_RATES_400K;
+    // g_i2c_dev.config.dev_addr = 0x34;
+    // g_i2c_dev.config.address_width = I2C_HAL_ADDRESS_WIDTH_7BIT;
+    // hal_i2c_init(&g_i2c_dev);
+
+    // iic register at `board_base_init`
+    aos_dev_t *i2c_dev = iic_open_id("iic", 0);
+    iic_config_t config;
+    config.mode = MODE_MASTER;
+    config.speed = BUS_SPEED_FAST;
+    config.addr_mode = ADDR_7BIT;
+    config.slave_addr = 0x34;
+    iic_config(i2c_dev, &config);
 
 #if (defined(BOARD_MIT_V2) || defined(BOARD_MIT_V3))
-    add2010_init(&g_i2c_dev);
-    aw9523_init(&g_i2c_dev);
-    aw2013_init(&g_i2c_dev);
+    add2010_init(i2c_dev);
+    aw9523_init(i2c_dev);
+    aw2013_init(i2c_dev);
 #endif
 
     /* 关闭功放 */
@@ -336,15 +346,15 @@ void main()
 #if defined(APP_FOTA_EN) && APP_FOTA_EN
         app_fota_init();
 #endif
-    }
 
-    if (g_fct_mode) {
-        fct_case_init();
-    }
+        if (g_fct_mode) {
+            fct_case_init();
+        }
 
-    /* 交互系统初始化 */
-    app_aui_nlp_init();
-    app_text_cmd_init();
+        /* 交互系统初始化 */
+        app_aui_nlp_init();
+        app_text_cmd_init();
+    }
 
     /* 按键初始化 */
     app_button_init();

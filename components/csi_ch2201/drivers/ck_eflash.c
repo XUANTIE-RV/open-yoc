@@ -8,7 +8,6 @@
  * @date     02. June 2017
  ******************************************************************************/
 
-#include <csi_config.h>
 #include <stdio.h>
 #include <string.h>
 #include "drv/eflash.h"

@@ -27,7 +27,7 @@ void led_write_byte(uint8_t reg_addr,uint8_t reg_data)
     data[0] = reg_addr;
     data[1] = reg_data;
 
-    iic_send(iic_dev, Addr_GND, data, 2);
+    iic_master_send(iic_dev, Addr_GND, data, 2, -1);
 }
 
 static void led_burst_write_bytes(uint8_t reg_start_addr, uint8_t reg_data[95])
@@ -37,7 +37,7 @@ static void led_burst_write_bytes(uint8_t reg_start_addr, uint8_t reg_data[95])
     if (reg_data) {
         databuf[0] = reg_start_addr;
         memcpy(&databuf[1], reg_data, 95);
-        iic_send(iic_dev, Addr_GND, databuf, 96);
+        iic_master_send(iic_dev, Addr_GND, databuf, 96, -1);
     }
 }
 
@@ -100,7 +100,7 @@ void led_write_frame2(uint8_t buffer[85])
 #define LED_NUM_PER_ROW 5
 
     int i, j;
-    int col;
+    int col = 0;
     int count = 0;
     uint8_t regaddr;
     uint8_t reg_addr[85];

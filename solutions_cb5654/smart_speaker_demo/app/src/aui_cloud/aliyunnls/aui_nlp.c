@@ -18,6 +18,11 @@
 #define EVENT_WWV_CONFIRMED             (1 << 0)
 #define EVENT_WWV_REJECTED              (1 << 1)
 
+/* tts running state */
+#define TTS_STATE_IDLE                   0
+#define TTS_STATE_RUN                    1
+#define TTS_STATE_PLAY                   2
+
 /* ai cmd */
 static aui_cmd_set_t g_aui_nlp_process;
 
@@ -25,7 +30,8 @@ static aui_cmd_set_t g_aui_nlp_process;
 static aui_t        g_aui_handler;
 static aos_event_t  event_tts_state;
 static aos_event_t  event_wwv_result;
-static int          tts_running = 0;
+static int          tts_running = TTS_STATE_IDLE;
+static int          wwv_enabled = 0;
 
 /* 处理云端反馈的 NLP 文件，进行解析处理 */
 static void aui_nlp_cb(const char *json_text)
@@ -69,17 +75,22 @@ static void aui_tts_stat_cb(aui_tts_state_e stat)
 {
     switch(stat) {
         case AUI_TTS_INIT:
-            tts_running = 1;
+            tts_running = TTS_STATE_RUN;
             break;
 
-        case AUI_TTS_CONTINUE:
+        case AUI_TTS_PLAYING:
+            tts_running = TTS_STATE_PLAY;
             break;
 
         case AUI_TTS_FINISH:
+            if (tts_running == TTS_STATE_RUN) {
+                tts_running = TTS_STATE_IDLE;
+            }
             aos_event_set(&event_tts_state, EVENT_TTS_FINISHED, AOS_EVENT_OR);
             break;
 
         case AUI_TTS_ERROR:
+            tts_running = TTS_STATE_IDLE;
             aos_event_set(&event_tts_state, EVENT_TTS_FINISHED, AOS_EVENT_OR);
             break;
     }
@@ -90,10 +101,10 @@ static void media_state_cb(uint32_t event_id, const void *param, void *context)
     switch (event_id) {
         case EVENT_MEDIA_SYSTEM_ERROR:
         case EVENT_MEDIA_SYSTEM_FINISH:
-            if (tts_running) {
-                tts_running = 0;
-                aos_event_set(&event_tts_state, EVENT_TTS_PLAYER_FINISHED, AOS_EVENT_OR);
-            }
+                if (tts_running == TTS_STATE_PLAY) {
+                    tts_running = TTS_STATE_IDLE;
+                    aos_event_set(&event_tts_state, EVENT_TTS_PLAYER_FINISHED, AOS_EVENT_OR);
+                }
             break;
         default:;
     }
@@ -143,8 +154,24 @@ static void get_hex_mac(char *hex_mac)
     }
 }
 
-/*get mac-addr in style of value ,not string.*/
-static void get_uuid_static_app(char *buff, const int number)
+static void get_uuid(char *uuid)
+{
+    char product_key[32 + 1] = {0};
+    char device_name[32 + 1] = {0};
+    int pk_len = sizeof(product_key), dn_len = sizeof(device_name);
+
+    int ret1 = aos_kv_get("hal_devinfo_pk", product_key, &pk_len);
+    int ret2 = aos_kv_get("hal_devinfo_dn", device_name, &dn_len);
+    if (ret1 == 0 && ret2 == 0) {
+        sprintf(uuid, "%s&%s", product_key, device_name);
+    } else {
+        get_hex_mac(uuid);
+    }
+
+    LOGD(TAG, "device uuid %s", uuid);
+}
+
+static void get_session_id(char *buff, const int number)
 {
 
     char rand_string[] = "0123456789abcdeffdecba9876543210";
@@ -183,19 +210,19 @@ int json_string_eq(cJSON *js, const char *str)
 /* ai engine init */
 int app_aui_nlp_init(void)
 {
-    int ret;
+    int ret = -1;
     cJSON *js_account_info = NULL;
     char *s_account_info = NULL;
-    char device_uuid[12 + 1] = {0};
+    char device_uuid[100] = {0};
 
-    get_hex_mac(device_uuid);
+    get_uuid(device_uuid);
 
     aos_event_new(&event_tts_state, 0);
     event_subscribe(EVENT_MEDIA_SYSTEM_ERROR, media_state_cb, NULL);
     event_subscribe(EVENT_MEDIA_SYSTEM_FINISH, media_state_cb, NULL);
 
     js_account_info = cJSON_CreateObject();
-    CHECK_RET_WITH_GOTO(js_account_info, FAIL);
+    CHECK_RET_WITH_GOTO(js_account_info, END);
 
     cJSON_AddStringToObject(js_account_info, "device_uuid", device_uuid);
     cJSON_AddStringToObject(js_account_info, "asr_app_key", "y5QsLk2A3acWEhCs");
@@ -206,9 +233,7 @@ int app_aui_nlp_init(void)
     cJSON_AddStringToObject(js_account_info, "tts_url", "wss://nls-gateway-inner.aliyuncs.com/ws/v1");
 
     s_account_info = cJSON_PrintUnformatted(js_account_info);
-    CHECK_RET_TAG_WITH_GOTO(s_account_info, FAIL);
-
-    aui_cloud_set_account(s_account_info);
+    CHECK_RET_TAG_WITH_GOTO(s_account_info, END);
 
     aui_config_t cfg;
     cfg.per             = "aixia";
@@ -219,41 +244,39 @@ int app_aui_nlp_init(void)
     cfg.srate           = 16000;    /* 采样率，16000 */
     cfg.tts_cache_path  = NULL;     /* TTS内部缓存路径，NULL：关闭缓存功能 */
     cfg.cloud_vad       = 1;        /* 云端VAD功能使能， 0：关闭；1：打开 */
-
-    cfg.nlp_cb      = aui_nlp_cb;
+    cfg.js_account      = s_account_info;
+    cfg.nlp_cb          = aui_nlp_cb;
     g_aui_handler.config  = cfg;
     g_aui_handler.context = NULL;
-    g_aui_handler.asr_type = CLOUD_DEFAULT;
+
+    aui_asr_register_mit(&g_aui_handler);
+    aui_tts_register_mit(&g_aui_handler);
 
     ret = aui_cloud_init(&g_aui_handler);
 
     if (ret != 0) {
         LOGE(TAG, "ai engine error");
+        goto END;
     }
 
     aui_nlp_process_add(&g_aui_nlp_process, aui_nlp_proc_mit);
 
+    if (wwv_enabled) {
+        aos_event_new(&event_wwv_result, 0);
+        aui_cloud_init_wwv(&g_aui_handler, aui_wwv_cb);
+    }
+
+END:
     cJSON_Delete(js_account_info);
     free(s_account_info);
-    return 0;
-
-FAIL:
-    if (js_account_info) {
-        cJSON_Delete(js_account_info);
-    }
-
-    if (s_account_info) {
-        free(s_account_info);
-    }
     
-    return -1;
+    return ret;
 }
 
 int app_aui_wwv_init(void)
 {
-    aos_event_new(&event_wwv_result, 0);
+    wwv_enabled = 1;
 
-    aui_cloud_init_wwv(&g_aui_handler, aui_wwv_cb);
     return 0;
 }
 
@@ -283,7 +306,7 @@ int app_aui_cloud_push_audio(void *data, size_t size)
 int app_aui_cloud_stop(int force_stop)
 {
     if (force_stop) {
-        return aui_cloud_force_stop(&g_aui_handler);
+        return aui_cloud_stop(&g_aui_handler);
 
     }
 
@@ -294,8 +317,8 @@ int app_aui_cloud_start(int do_wwv)
 {
     char session_id[32 + 1] = {0};
 
-    get_uuid_static_app(session_id, 32);
-    aui_cloud_set_session_id(session_id);
+    get_session_id(session_id, 32);
+    aui_cloud_set_asr_session_id(&g_aui_handler, session_id);
 
     if (do_wwv) {
         aos_event_set(&event_wwv_result, 0, AOS_EVENT_AND);
@@ -319,13 +342,13 @@ int app_aui_cloud_tts_wait_finish()
 {
     unsigned int flags;
 
-    aos_event_set(&event_tts_state, 0, AOS_EVENT_AND);
-    if (tts_running) {
-        if (aui_player_get_state(MEDIA_SYSTEM) != AUI_PLAYER_PLAYING) {
-            aos_msleep(50);
+    if (tts_running != TTS_STATE_IDLE) {
+        while (tts_running == TTS_STATE_RUN) {
+            aos_msleep(100);
         }
-        if (tts_running && aui_player_get_state(MEDIA_SYSTEM) == AUI_PLAYER_PLAYING) {
-            aos_event_get(&event_tts_state, EVENT_TTS_PLAYER_FINISHED, AOS_EVENT_OR_CLEAR, &flags, AOS_WAIT_FOREVER);
+
+        if (tts_running == TTS_STATE_PLAY) {
+            aos_event_get(&event_tts_state, EVENT_TTS_PLAYER_FINISHED, AOS_EVENT_OR_CLEAR, &flags, 10000);
         }
     }
     return 0;
@@ -335,12 +358,11 @@ int app_aui_cloud_tts_run(const char *text, int wait_last)
 {
     if (wait_last) {
         app_aui_cloud_tts_wait_finish();
-
-        app_aui_cloud_stop_tts();
-        app_aui_cloud_start_tts();
     }
+    aui_cloud_set_tts_status_listener(&g_aui_handler, aui_tts_stat_cb);
 
-    return aui_cloud_req_tts(&g_aui_handler, NULL, text, aui_tts_stat_cb);
+	aos_event_set(&event_tts_state, 0, AOS_EVENT_AND);
+    return aui_cloud_req_tts(&g_aui_handler, text, NULL);
 }
 
 int app_aui_cloud_push_text(char *text)

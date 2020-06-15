@@ -2,7 +2,6 @@
  * Copyright (C) 2019-2020 Alibaba Group Holding Limited
  */
 
-#include <yoc_config.h>
 #include <aos/aos.h>
 #include <yoc/uservice.h>
 #include <yoc/eventid.h>
@@ -130,9 +129,7 @@ static netmgr_dev_t * netmgr_gprs_init(struct netmgr_uservice *netmgr)
             node->unprovision = netmgr_gprs_unprovision;
             node->info = netmgr_gprs_info;
             node->reset = netmgr_gprs_reset;
-            node->enable = 1;
             strcpy(node->name, "gprs");
-            node->id = 0;
 
             slist_add_tail((slist_t *)node, &netmgr->dev_list);
         }
@@ -142,13 +139,21 @@ static netmgr_dev_t * netmgr_gprs_init(struct netmgr_uservice *netmgr)
     return (netmgr_hdl_t)node;
 }
 
-
+/**
+ * @brief net manage init for gprs
+ * @return NULL on error
+ */
 netmgr_hdl_t netmgr_dev_gprs_init()
 {
     return netmgr_gprs_init(&netmgr_svc);
 }
 
-
+/**
+ * @brief  net manage config for gprs device(developed not yet, reserved)
+ * @param  [in] hdl
+ * @param  [in] mode
+ * @return 0 on success
+ */
 int netmgr_config_gprs(netmgr_hdl_t hdl, int mode)
 {
     int ret = -1;

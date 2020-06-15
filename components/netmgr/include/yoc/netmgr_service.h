@@ -37,8 +37,6 @@ extern "C" {
 
 /* kv key */
 #define KV_WIFI_EN          "wifi_en"
-//#define KV_WIFI_NAME        "wifi"
-//#define KV_WIFI_ID          "wifi_id"
 #define KV_WIFI_SSID        "wifi_ssid"
 #define KV_WIFI_PSK         "wifi_psk"
 
@@ -97,8 +95,6 @@ typedef struct netmgr_dev_s {
     slist_t     next;
 
     char name[NETMGR_NAME_LEN];
-    uint8_t id;
-    uint8_t enable;
     union {
         wifi_setting_t wifi_config;
         eth_setting_t eth_config;
@@ -106,7 +102,6 @@ typedef struct netmgr_dev_s {
     } config;
 
     uint8_t dhcp_en;
-    uint8_t mac_en;
     ip_addr_t ipaddr;
     ip_addr_t netmask;
     ip_addr_t gw;
@@ -136,6 +131,7 @@ typedef struct netmgr_srv_s {
 struct netmgr_uservice {
     uservice_t *srv;
     utask_t *task;
+    int      inited;
 
     slist_t dev_list;           /* struct netmgr_dev_t*/
     slist_t srv_list;           /* struct netmgr_srv_t*/
@@ -143,17 +139,89 @@ struct netmgr_uservice {
     //rpc_t *current_cmd;
 };
 
+/**
+ * @brief  handle event of the netmgr uservice
+ * @param  [in] event_id
+ * @param  [in] param
+ * @param  [in] context
+ * @return
+ */
 void netmgr_event_cb(uint32_t event_id, const void *param, void *context);
+
+/**
+ * @brief  start dhcp by the network name
+ * @param  [in] netmgr
+ * @param  [in] name : network name
+ * @return 0/-1
+ */
 int netmgr_start_dhcp(struct netmgr_uservice *netmgr, const char *name);
+
+/**
+ * @brief  find netmgr dev from netdev list by the network name
+ * @param  [in] list : netmgr dev list
+ * @param  [in] name
+ * @return NULL on error
+ */
 netmgr_dev_t *netmgr_find_dev(slist_t *list, const char *name);
+
+/**
+ * @brief  regist service function
+ * @param  [in] cmd_id : command id of the netmgr uservice
+ * @param  [in] func : callback
+ * @return 0/-1
+ */
 int netmgr_reg_srv_func(int cmd_id, netmgr_srv_func func);
+
+/**
+ * @brief  unregist service function
+ * @param  [in] cmd_id : command id of the netmgr uservice
+ * @param  [in] func : callback
+ * @return 0/-1
+ */
 int netmgr_unreg_srv_func(int cmd_id, netmgr_srv_func func);
+
+/**
+ * @brief  subscribe event of the netmgr uservice
+ * @param  [in] cmd_id : EVENT_WIFI_LINK_UP, etc
+ * @return
+ */
 void netmgr_subscribe(int cmd_id);
+
+/**
+ * @brief  unsubscribe event of the netmgr uservice
+ * @param  [in] cmd_id : EVENT_WIFI_LINK_UP, etc
+ * @return
+ */
 void netmgr_unsubscribe(int cmd_id);
 
+/**
+ * @brief  set gotip flag by network name
+ * @param  [in] name
+ * @param  [in] gotip
+ * @return -1 on error
+ */
 int netmgr_set_gotip(const char *name, int gotip);
 
+/**
+ * @brief  set link layer up flag by network name
+ * @param  [in] name
+ * @param  [in] linkup
+ * @return -1 on error
+ */
 int netmgr_set_linkup(const char *name, int linkup);
+
+/**
+ * @brief  create & init the netmgr uservice
+ * @param  [in] task
+ * @return
+ */
+void netmgr_service_init(utask_t *task);
+
+/**
+ * @brief  destroy & uninit the netmgr uservice
+ * @return
+ */
+void netmgr_service_deinit();
 
 #ifdef CONFIG_KV_SMART
 char *netmgr_kv_get(const char *key);

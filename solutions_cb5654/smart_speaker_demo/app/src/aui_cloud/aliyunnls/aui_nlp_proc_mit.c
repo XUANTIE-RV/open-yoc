@@ -10,7 +10,7 @@
 一次交互会有asr和nlp两次事件，但两次事件的task id相同，
 如果asr处理是对该值赋值，说明要忽略后续的nlp处理。
 */
-static char g_nlp_task_id[40]={0};
+static char g_nlp_task_id[40] = {0};
 
 /**
  * 解析ASR&NLP信息

@@ -15,7 +15,6 @@
  */
 
 #include <k_config.h>
-#include <csi_config.h>
 
 .extern g_active_task
 .extern g_preferred_ready_task

@@ -12,7 +12,7 @@
 #include <yoc/yoc.h>
 #include <aos/cli.h>
 #include <aos/cli_cmd.h>
-#include <yoc/netmgr.h>
+#include <yoc/netmgr_service.h>
 #include <yoc/eventid.h>
 
 /* app init */

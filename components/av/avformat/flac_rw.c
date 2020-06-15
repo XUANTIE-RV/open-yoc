@@ -2,6 +2,7 @@
  * Copyright (C) 2018-2020 Alibaba Group Holding Limited
  */
 
+#include "avutil/misc.h"
 #include "avutil/byte_rw.h"
 #include "avutil/bio.h"
 #include "avformat/flac_rw.h"
@@ -93,18 +94,21 @@ int flac_hdr_get(const uint8_t buf[FLAC_HDR_SIZE_MAX], struct flac_hdr *hinfo)
     else
         hinfo->block_size = _blocksize_table[bs_code];
 
-    if (sr_code < 12)
+    if (sr_code < 12) {
         hinfo->rate = _rate_table[sr_code];
-    else if (sr_code == 12)
+    } else if (sr_code == 12) {
         hinfo->rate = bio_r8(&bio) * 1000;
-    else if (sr_code == 13)
+    } else if (sr_code == 13) {
         hinfo->rate = bio_r16be(&bio);
-    else if (sr_code == 14)
+    } else if (sr_code == 14) {
         hinfo->rate = bio_r16be(&bio) * 10;
-    else
+    } else {
         return -1;
+    }
 
-    return 0;
+    bio_skip(&bio, 1);
+
+    return av_crc8(bio.buf, bio.pos) == 0 ? 0 : -1;
 }
 
 /**

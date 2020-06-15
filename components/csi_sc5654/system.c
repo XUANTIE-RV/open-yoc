@@ -10,7 +10,6 @@
  * @date     02. June 2017
  ******************************************************************************/
 
-#include <csi_config.h>
 #include <soc.h>
 #include <csi_core.h>
 #include <silan_pic.h>
@@ -71,6 +70,16 @@ void disable_sdmmc(void)
     sdio->PWREN = 0;
 }
 
+static void config_irq_priority(void)
+{
+    int i;
+
+    for (i = 2; i <= 22; i++) {
+        csi_vic_set_prio(i, 1);
+    }
+
+    csi_vic_set_prio(PIC_IRQID_CTIMER, 0);
+}
 /**
   * @brief  initialize the system
   *         Initialize the psr and vbr.
@@ -99,6 +108,7 @@ void SystemInit(void)
     csi_mpu_disable();
 
     silan_pic_init();
+    config_irq_priority();
 
 #ifdef CONFIG_KERNEL_NONE
     __enable_excp_irq();
@@ -107,7 +117,11 @@ void SystemInit(void)
     SystemCoreClockUpdate();
 
 #ifndef CONFIG_KERNEL_NONE
+#if defined(CONFIG_FREQ_TEST)
+	csi_coret_config(1000000, PIC_IRQID_CTIMER);
+#else
     csi_coret_config(SystemCoreClock / CONFIG_SYSTICK_HZ, PIC_IRQID_CTIMER);    //1ms
+#endif
     csi_vic_enable_irq(PIC_IRQID_CTIMER);
 #else
     csi_coret_config(SystemCoreClock / CONFIG_SYSTICK_HZ, PIC_IRQID_CTIMER);    //for mdelay()

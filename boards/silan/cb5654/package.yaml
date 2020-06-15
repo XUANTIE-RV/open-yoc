@@ -1,14 +1,14 @@
 
 ## 第一部分： 基础信息
 name: cb5654                                        # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
+version: v7.3.0                                     # <必选项> 组件版本号
 description: 智能语音开发板CB5654板级适配组件       # <必选项> 建议至少20字以上
-type: board                                         # <可选项> 组件类型，为：solution, chip, board, common，缺省值 common
+type: board                                         # <必选项> 组件类型，为：solution, chip, board, common
 
 keywords:                                           # <可选项> 标签，会影响到组件被搜索的效果，合理的标签很重要
   - sc5654
   - cb5654
   - yoc
-yoc_version: 7.2
 author: feimi                                       # <可选项> 原作者信息
 license: Apache license v2.0                        # <可选项> 源代码的许可证，要确保所有代码、文件的许可证不冲突。如：MIT，Apache license v2.0，BSD
 
@@ -19,7 +19,7 @@ license: Apache license v2.0                        # <可选项> 源代码的�
 #   - minilibc: v7.2.0
 #   - aos: >=v7.2.0
 depends:
-  - csi_sc5654: V7.2.2
+  - csi_sc5654: V7.3.0
 
 ## 第三部分：板级信息
 # hw_info:                                 # 对 solution、board、chip 三个字段的改进，统称为 hw_info 字段
@@ -119,7 +119,16 @@ def_config:
 #   - dest: include/                       # 安装的目的路径 dest是相当路径，通常是相对于YoC SDK 安装目录
 #     source:                              # 安装源列表
 #      - src/*.h                           # 支持通配符，相对路径
-
+install:
+  - dest: include
+    source:
+      - include/*.h
+  - dest: cb5654/bootimgs
+    source:
+      - bootimgs/*
+  - dest: cb5654/configs
+    source:
+      - configs/*
 ## 第七部分：导出部分
 # export:
 #   - dest: "<SOLUTION_PATH>/generated/data" # 安装的目的路径 dest是相当路径
@@ -128,4 +137,8 @@ def_config:
 #       - "bootimgs/tee"
 #       - "bootimgs/mtb"
 #       - "configs/config.yaml"
-
+export:
+  - dest: "<SOLUTION_PATH>/generated/data"
+    source:
+      - "bootimgs/boot"
+      - "configs/config.yaml"

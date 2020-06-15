@@ -5,7 +5,6 @@
 #ifndef _AUI_CLOUD_H_
 #define _AUI_CLOUD_H_
 
-#include <aos/kernel.h>
 #include <aos/list.h>
 #include <cJSON.h>
 
@@ -16,15 +15,8 @@ extern "C" {
  * AUI CLOUD系统API
  * 语音解析(云端)、NLP Json解析及处理
  *************************************************/
-
-typedef enum aui_asr_type {
-    CLOUD_DEFAULT = 0,
-    CLOUD_RASR_XFYUN = 1,
-    CLOUD_ASR_XFYUN = 2,
-    CLOUD_ASR_BAIDU = 3,
-    CLOUD_ASR_PROXY_WS = 4,
-    CLOUD_RASR_ALIYUN = 5
-} aui_asr_type_e;
+#define MUSIC_PREFIX "music:"
+#define MUSIC_URL_NLP  "{\"music::url\" : \"%s\"}"
 
 typedef struct aui_config {
     char *per;                      // 发音人选择
@@ -34,15 +26,16 @@ typedef struct aui_config {
     int   fmt;                      // 编码格式，预留
     int   srate;                    // 采样率，预留
     int   cloud_vad;                // 云端VAD功能使能，预留
-    char  *tts_cache_path;	        // TTS内部缓存路径，预留
+    char *tts_cache_path;	        // TTS内部缓存路径，预留
+    const char *js_account;         // json格式的账号信息，包含aui系统的所有账号信息
     void (*nlp_cb)(const char *json_text); // NLP处理回调
 } aui_config_t;
 
 typedef enum aui_tts_state {
-    AUI_TTS_INIT    = 1,
-    AUI_TTS_CONTINUE = 2,
-    AUI_TTS_FINISH  = 3,
-    AUI_TTS_ERROR   = 4,
+    AUI_TTS_INIT       = 1,
+    AUI_TTS_PLAYING    = 2,
+    AUI_TTS_FINISH     = 3,
+    AUI_TTS_ERROR      = 4,
 } aui_tts_state_e;
 
 typedef enum aui_wwv_resut {
@@ -50,23 +43,50 @@ typedef enum aui_wwv_resut {
     AUI_WWV_CONFIRM
 } aui_wwv_resut_e;
 
-typedef struct _aui {
-    aui_config_t    config;
-    void            *context;
-    aos_sem_t       sem;
-    aui_asr_type_e  asr_type;
-} aui_t;
-
 typedef void (* aui_wwv_cb_t)(aui_wwv_resut_e wwv_result);
 typedef void (* aui_tts_cb_t)(aui_tts_state_e tts_state);
 
-/**
- * 设置AUI系统账号信息，在aui_cloud_init之前调用
- * 
- * @param json_account_info json字符串格式的aui系统账号信息
- * @return 0:成功
- */
-int aui_cloud_set_account(const char *json_account_info);
+typedef struct _aui aui_t;
+
+#define aui_cmm_cls  \
+    void *priv; \
+    int (*init)(aui_t *aui); \
+    int (*deinit)(aui_t *aui); \
+    int (*start)(aui_t *aui); \
+    int (*stop)(aui_t *aui); \
+    int (*set_session_id)(aui_t *aui, const char *session_id);
+
+typedef struct aui_asr_cls {
+    aui_cmm_cls;
+    int (*enable_wwv)(aui_t *aui, int enable);
+    int (*init_wwv)(aui_t *aui, aui_wwv_cb_t cb);
+    int (*push_data)(aui_t *aui, void *data, size_t size);
+    int (*push_wwv_data)(aui_t *aui, void *data, size_t size);
+    int (*stop_push_data)(aui_t *aui);
+} aui_asr_cls_t;
+
+typedef struct aui_nlp_cls {
+    aui_cmm_cls;
+    int (*push_text)(aui_t *aui, char *text);
+} aui_nlp_cls_t;
+
+typedef struct aui_tts_cls {
+    aui_cmm_cls;
+    void (*set_status_listener)(aui_t *aui, aui_tts_cb_t stat_cb);
+    int (*req_tts)(aui_t *aui, const char *text, const char *player_fifo_name);
+} aui_tts_cls_t;
+
+typedef struct aui_ops {
+    aui_asr_cls_t *asr;
+    aui_nlp_cls_t *nlp;
+    aui_tts_cls_t *tts;
+} aui_ops_t;
+
+struct _aui {
+    aui_config_t config;
+    void *context;
+    aui_ops_t ops;
+};
 
 /**
  * AUI系统初始化
@@ -77,15 +97,7 @@ int aui_cloud_set_account(const char *json_account_info);
 int aui_cloud_init(aui_t *aui);
 
 /**
- * 设置云端会话ID
- *
- * @param session_id 会话ID字符串，相同ID认为是同一轮会话
- * @return 0:成功
- */
-int aui_cloud_set_session_id(const char *session_id);
-
-/**
- * 启动语音数据交互，在aui_cloud_start_pcm前调用
+ * 本次唤醒是否开启云端二次确认功能，在aui_cloud_start_pcm前调用
  *
  * @param aui aui对象指针
  * @param enable 本次唤醒是否做云端二次确认
@@ -100,6 +112,15 @@ int aui_cloud_enable_wwv(aui_t *aui, int enable);
  * @return 0:成功
  */
 int aui_cloud_start_pcm(aui_t *aui);
+
+/**
+ * 设置ASR云端会话ID
+ *
+ * @param aui aui对象指针
+ * @param session_id 会话ID字符串，相同ID认为是同一轮会话
+ * @return 0:成功
+ */
+int aui_cloud_set_asr_session_id(aui_t *aui, const char *session_id);
 
 /**
  * 向AUI系统输入语音数据
@@ -120,18 +141,10 @@ int aui_cloud_push_pcm(aui_t *aui, void *data, size_t size);
 int aui_cloud_stop_pcm(aui_t *aui);
 
 /**
- * 强制停止上云流程
+ * 初始化云端唤醒二次确认(wake word verification)
  * 
  * @param aui aui对象指针
- * @return 0:成功
- */
-int aui_cloud_force_stop(aui_t *aui);
-
-/**
- * 使能云端唤醒二次确认流程
- * 
- * @param aui aui对象指针
- * @param aui_wwv_cb 二次唤醒结果回调
+ * @param cb 二次唤醒结果回调
  * @return 0:成功
  */
 int aui_cloud_init_wwv(aui_t *aui, aui_wwv_cb_t cb);
@@ -140,19 +153,45 @@ int aui_cloud_init_wwv(aui_t *aui, aui_wwv_cb_t cb);
  * 推送唤醒二次确认音频数据到云端
  * 
  * @param aui aui对象指针
- * @param aui_wwv_cb 二次唤醒结果回调
+ * @param data 数据指针
+ * @param size 数据大小
  * @return 0:成功
  */
 int aui_cloud_push_wwv_data(aui_t *aui, void *data, size_t size);
 
 /**
+ * 启动nlp系统，连接云端
+ *
+ * @param aui aui对象指针
+ * @return 0:成功
+ */
+int aui_cloud_start_nlp(aui_t *aui);
+
+/**
  * 向AUI系统输入文本数据，AUI进行处理并回调NLP处理回调函数
  * 
  * @param aui aui对象指针
- * @param test 文本字符串
+ * @param text 文本字符串
  * @return 0:成功
  */
 int aui_cloud_push_text(aui_t *aui, char *text);
+
+/**
+ * 停止nlp系统，断开云端连接
+ *
+ * @param aui aui对象指针
+ * @return 0:成功
+ */
+int aui_cloud_stop_nlp(aui_t *aui);
+
+/**
+ * 设置AUI系统tts状态监听回调函数, 需要在aui_cloud_req_tts之前调用
+ * 
+ * @param aui aui对象指针
+ * @param stat_cb tts状态监听回调函数
+ * @return 0:成功
+ */
+void aui_cloud_set_tts_status_listener(aui_t *aui, aui_tts_cb_t stat_cb);
 
 /**
  * 启动tts系统，连接云端
@@ -166,11 +205,11 @@ int aui_cloud_start_tts(aui_t *aui);
  * 向AUI系统输入文本数据，要求返回文本的TTS转换后的语音结果
  *
  * @param aui aui对象指针
- * @param player_fifo_name 例如"fifo://tts1",播放接口可使用该字符串来播放音频
  * @param text 需要转换的文本
+ * @param player_fifo_name 例如"fifo://tts1",播放接口可使用该字符串来播放音频
  * @return 0:成功
  */
-int aui_cloud_req_tts(aui_t *aui, const char *player_fifo_name, const char *text, aui_tts_cb_t stat_cb);
+int aui_cloud_req_tts(aui_t *aui, const char *text, const char *player_fifo_name);
 
 /**
  * 停止tts系统，断开云端连接
@@ -179,6 +218,56 @@ int aui_cloud_req_tts(aui_t *aui, const char *player_fifo_name, const char *text
  * @return 0:成功
  */
 int aui_cloud_stop_tts(aui_t *aui);
+
+/**
+ * 停止上云流程
+ * 
+ * @param aui aui对象指针
+ * @return 0:成功
+ */
+int aui_cloud_stop(aui_t *aui);
+
+/**
+ * asr使用讯飞云
+ *
+ * @param aui aui对象指针
+ */
+void aui_asr_register_xunfei(aui_t *aui);
+
+/**
+ * asr使用阿里云
+ *
+ * @param aui aui对象指针
+ */
+void aui_asr_register_aliyun(aui_t *aui);
+
+/**
+ * asr使用MIT云
+ *
+ * @param aui aui对象指针
+ */
+void aui_asr_register_mit(aui_t *aui);
+
+/**
+ * nlp使用讯飞云
+ *
+ * @param aui aui对象指针
+ */
+void aui_nlp_register_xunfei(aui_t *aui);
+
+/**
+ * tts使用讯飞云
+ *
+ * @param aui aui对象指针
+ */
+void aui_tts_register_xunfei(aui_t *aui);
+
+/**
+ * tts使用MIT云
+ *
+ * @param aui aui对象指针
+ */
+void aui_tts_register_mit(aui_t *aui);
 
 /**
  * 向AI引擎输入文本数据，要求返回文本的TTS转换后的语音结果

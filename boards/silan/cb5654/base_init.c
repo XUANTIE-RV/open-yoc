@@ -19,6 +19,8 @@ void board_base_init(void)
     uart_csky_register(1); /* UART2 */
     uart_csky_register(2); /* UART3 */
     spiflash_csky_register(0);
+    adc_csky_register(0);
+    iic_csky_register(0);
 
 #ifndef CONFIG_DMAC_DSP_ACQ
     sram_init();

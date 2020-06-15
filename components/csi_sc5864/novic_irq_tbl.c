@@ -2,7 +2,6 @@
  * Copyright (C) 2019-2020 Alibaba Group Holding Limited
  */
 
-#include <csi_config.h>
 
 extern void NOVIC_IRQ_Default_Handler(void);
 extern void CORET_IRQHandler(void);

@@ -9,7 +9,6 @@
  * @version  V1.0
  * @date     06. Mar 2019
  ******************************************************************************/
-#include <csi_config.h>
 #include <stdbool.h>
 #include <string.h>
 #include <drv/irq.h>

@@ -38,11 +38,21 @@ static void _tls_random(unsigned char *output, size_t output_len)
 #endif
 }
 
+void mbedtls_ctr_drbg_init( mbedtls_ctr_drbg_context *ctx )
+{
+    (void)ctx;
+}
+
 int mbedtls_ctr_drbg_random(void *p_rng, unsigned char *output, size_t output_len)
 {
     (void)p_rng;
     _tls_random(output, output_len);
     return 0;
+}
+
+void mbedtls_ctr_drbg_free( mbedtls_ctr_drbg_context *ctx )
+{
+    (void)ctx;
 }
 
 #endif /* MBEDTLS_CTR_DRBG_C */

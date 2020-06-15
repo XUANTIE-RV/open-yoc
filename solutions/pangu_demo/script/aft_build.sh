@@ -22,6 +22,9 @@ mkdir -p ${MK_GENERATED_IMGS_PATH}/data
 if [ -f "${BOARD_PATH}/bootimgs/cpu1" ]; then cp ${BOARD_PATH}/bootimgs/cpu1 ${MK_GENERATED_IMGS_PATH}/data/; fi
 if [ -f "${BOARD_PATH}/bootimgs/cpu2" ]; then cp ${BOARD_PATH}/bootimgs/cpu2 ${MK_GENERATED_IMGS_PATH}/data/; fi
 if [ -f "${BOARD_PATH}/bootimgs/boot" ]; then cp ${BOARD_PATH}/bootimgs/boot ${MK_GENERATED_IMGS_PATH}/data/; fi
+if [ -f "${BOARD_PATH}/bootimgs/tee" ]; then cp ${BOARD_PATH}/bootimgs/tee ${MK_GENERATED_IMGS_PATH}/data/; fi
+if [ -f "${BOARD_PATH}/bootimgs/lpm" ]; then cp ${BOARD_PATH}/bootimgs/lpm ${MK_GENERATED_IMGS_PATH}/data/; fi
+if [ -f "${BOARD_PATH}/bootimgs/kp" ]; then cp ${BOARD_PATH}/bootimgs/kp ${MK_GENERATED_IMGS_PATH}/data/; fi
 
 #Convert
 cp ${BOARD_PATH}/configs/config.yaml ${MK_GENERATED_IMGS_PATH}/data/

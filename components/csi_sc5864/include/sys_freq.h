@@ -15,6 +15,7 @@
 
 int32_t drv_get_sys_freq(void);
 int32_t drv_get_timer_freq(void);
+uint32_t drv_get_cur_cpu_freq(void);
 
 #endif /* _SYS_FREQ_H_ */
 

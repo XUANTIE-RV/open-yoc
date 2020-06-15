@@ -1,7 +1,6 @@
 /*
  * Copyright (C) 2019-2020 Alibaba Group Holding Limited
  */
-#include <yoc_config.h>
 
 #include <unistd.h>
 #include <aos/aos.h>
@@ -33,6 +32,7 @@ got_file:
     f->node = node;
     f->f_arg = NULL;
     f->offset = 0;
+    f->i_flags = node->i_flags;
     inode_ref(node);
     return f;
 }

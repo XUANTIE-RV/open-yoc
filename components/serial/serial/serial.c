@@ -1,0 +1,1927 @@
+/************************************************************************************
+ * rptun/serial/serial.c
+ *
+ *   Copyright (C) 2007-2009, 2011-2013, 2016-2018 Gregory Nutt. All rights reserved.
+ *   Author: Gregory Nutt <gnutt@nuttx.org>
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ * 3. Neither the name NuttX nor the names of its contributors may be
+ *    used to endorse or promote products derived from this software
+ *    without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS
+ * OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
+ * AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ *
+ ************************************************************************************/
+
+/************************************************************************************
+ * Included Files
+ ************************************************************************************/
+
+#include <soc.h>
+#include <stdio.h>
+#include <stdint.h>
+#include <unistd.h>
+#include <string.h>
+#include <fcntl.h>
+#include <aos/kernel.h>
+#include <csi_kernel.h>
+#include <vfs.h>
+#include <vfs_register.h>
+#include <vfs_inode.h>
+#include <tioctl.h>
+#include "hal/uart_impl.h"
+#include "drv/usart.h"
+#include "serial.h"
+
+/************************************************************************************
+ * Pre-processor Definitions
+ ************************************************************************************/
+
+#define TAG "serial"
+
+/* Check watermark levels */
+
+#if defined(CONFIG_SERIAL_IFLOWCONTROL) && \
+    defined(CONFIG_SERIAL_IFLOWCONTROL_WATERMARKS)
+#  if CONFIG_SERIAL_IFLOWCONTROL_LOWER_WATERMARK < 1
+#    warning CONFIG_SERIAL_IFLOWCONTROL_LOWER_WATERMARK too small
+#  endif
+#  if CONFIG_SERIAL_IFLOWCONTROL_UPPER_WATERMARK > 99
+#    warning CONFIG_SERIAL_IFLOWCONTROL_UPPER_WATERMARK too large
+#  endif
+#  if CONFIG_SERIAL_IFLOWCONTROL_LOWER_WATERMARK >= CONFIG_SERIAL_IFLOWCONTROL_UPPER_WATERMARK
+#    warning CONFIG_SERIAL_IFLOWCONTROL_LOWER_WATERMARK too large
+#    warning Must be less than CONFIG_SERIAL_IFLOWCONTROL_UPPER_WATERMARK
+#  endif
+#endif
+
+/* Timing */
+
+#define POLL_DELAY_MSEC 1
+#define POLL_DELAY_USEC 1000
+
+#define enter_critical_section          csi_irq_save
+#define leave_critical_section(flag)    csi_irq_restore(flag)
+
+#ifndef TRUE
+#define  TRUE (1)
+#endif
+
+#ifndef FALSE
+#define  FALSE (0)
+#endif
+
+/************************************************************************************
+ * Private Types
+ ************************************************************************************/
+
+/************************************************************************************
+ * Private Function Prototypes
+ ************************************************************************************/
+
+static int     serial_takesem(aos_sem_t *sem, bool errout);
+#ifndef CONFIG_DISABLE_POLL
+static void    serial_pollnotify(serial_dev_t *dev, uint8_t eventset);
+#endif
+
+/* Write support */
+
+static int     serial_putxmitchar(serial_dev_t *dev, int ch, bool oktoblock);
+static inline ssize_t serial_irqwrite(serial_dev_t *dev, const char *buffer,
+                                    size_t buflen);
+static int     serial_tcdrain(serial_dev_t *dev, clock_t timeout);
+
+/* Character driver methods */
+
+#ifdef CONFIG_SERIAL_USE_VFS
+static int     serial_open(inode_t *node, file_t *fp);
+static int     serial_close(file_t *fp);
+static ssize_t serial_read(file_t *fp, void *buf, size_t buflen);
+static ssize_t serial_write(file_t *fp, const void *buf, size_t buflen);
+static int     serial_ioctl(file_t *fp, int cmd, unsigned long arg);
+#ifndef CONFIG_DISABLE_POLL
+static int serial_poll(file_t *filep, bool setup, poll_notify_t notify, struct pollfd *fds, void *arg);
+#endif
+#else
+static aos_dev_t *serial_init(driver_t *drv, void *config, int id);
+static void    serial_uninit(aos_dev_t *sdev);
+static int     serial_open(aos_dev_t *sdev);
+static int     serial_close(aos_dev_t *sdev);
+static int     serial_config(aos_dev_t *sdev, uart_config_t *config);
+static int     serial_set_type(aos_dev_t *sdev, int type);
+static int     serial_set_buffer_size(aos_dev_t *sdev, uint32_t size);
+static int     serial_read(aos_dev_t *sdev, void *buf, uint32_t buflen, unsigned int timeout_ms);
+static int     serial_write(aos_dev_t *sdev, const void *buf, uint32_t buflen);
+static void    serial_event(aos_dev_t *sdev, void (*event)(aos_dev_t *dev, int event_id, void *priv),
+                            void * priv);
+#endif
+
+/************************************************************************************
+ * Private Data
+ ************************************************************************************/
+
+#ifdef CONFIG_SERIAL_USE_VFS
+static const file_ops_t g_serialops =
+{
+  serial_open,  /* open */
+  serial_close, /* close */
+  serial_read,  /* read */
+  serial_write, /* write */
+  serial_ioctl  /* ioctl */
+#ifndef CONFIG_DISABLE_POLL
+  , serial_poll /* poll */
+#endif
+};
+#else
+static uart_driver_t serial_driver = {
+    .drv = {
+        .name   = "uart",
+        .init   = serial_init,
+        .uninit = serial_uninit,
+        .open   = serial_open,
+        .close  = serial_close,
+    },
+    .config          = serial_config,
+    .set_type        = serial_set_type,
+    .set_buffer_size = serial_set_buffer_size,
+    .send            = serial_write,
+    .recv            = serial_read,
+    .set_event       = serial_event,
+};
+#endif
+
+/************************************************************************************
+ * Private Functions
+ ************************************************************************************/
+
+/************************************************************************************
+ * Name: serial_takesem
+ ************************************************************************************/
+
+static int serial_takesem(aos_sem_t *sem, bool errout)
+{
+    int ret;
+
+    do {
+        /* Take the semaphore (perhaps waiting) */
+
+        ret = aos_sem_wait(sem, AOS_WAIT_FOREVER);
+        if (ret < 0) {
+            /* The only case that an error should occur here is if the wait was
+             * awakened by a signal.
+             */
+
+            aos_assert(ret == -EINTR || ret == -ECANCELED);
+
+            /* When the signal is received, should we errout? Or should we just
+             * continue waiting until we have the semaphore?
+             */
+
+            if (errout) {
+                return ret;
+            }
+        }
+    } while (ret == -EINTR);
+
+    return ret;
+}
+
+/************************************************************************************
+ * Name: serial_givesem
+ ************************************************************************************/
+
+#define serial_givesem(sem) (void)aos_sem_signal(sem)
+
+/****************************************************************************
+ * Name: serial_pollnotify
+ ****************************************************************************/
+
+#ifndef CONFIG_DISABLE_POLL
+static void serial_pollnotify(serial_dev_t *dev, uint8_t eventset)
+{
+    int i;
+
+    for (i = 0; i < CONFIG_SERIAL_NPOLLWAITERS; i++) {
+        struct pollfd *fds = dev->fds[i];
+        if (fds) {
+#ifdef CONFIG_SERIAL_REMOVABLE
+            fds->revents |= ((fds->events | (POLLERR | POLLHUP)) & eventset);
+#else
+            fds->revents |= (fds->events & eventset);
+#endif
+            if (fds->revents != 0) {
+                LOGI(TAG, "Report events: %02x\n", fds->revents);
+                aos_sem_signal(fds->sem);
+            }
+        }
+    }
+}
+#else
+#  define serial_pollnotify(dev,event)
+#endif
+
+/************************************************************************************
+ * Name: serial_putxmitchar
+ ************************************************************************************/
+
+static int serial_putxmitchar(serial_dev_t *dev, int ch, bool oktoblock)
+{
+    uint32_t flags;
+    int nexthead;
+    int ret;
+
+    /* Increment to see what the next head pointer will be.  We need to use the "next"
+     * head pointer to determine when the circular buffer would overrun
+     */
+
+    nexthead = dev->xmit.head + 1;
+    if (nexthead >= dev->xmit.size) {
+        nexthead = 0;
+    }
+
+    /* Loop until we are able to add the character to the TX buffer. */
+
+    for (; ; ) {
+        /* Check if the TX buffer is full */
+
+        if (nexthead != dev->xmit.tail) {
+            /* No.. not full.  Add the character to the TX buffer and return. */
+
+            dev->xmit.buffer[dev->xmit.head] = ch;
+            dev->xmit.head = nexthead;
+            return OK;
+        }
+
+        /* The TX buffer is full.  Should be block, waiting for the hardware
+         * to remove some data from the TX buffer?
+         */
+
+        else if (oktoblock) {
+            /* The following steps must be atomic with respect to serial
+             * interrupt handling.
+             */
+
+            flags = enter_critical_section();
+
+            /* Check again...  In certain race conditions an interrupt may
+             * have occurred between the test at the top of the loop and
+             * entering the critical section and the TX buffer may no longer
+             * be full.
+             *
+             * NOTE: On certain devices, such as USB CDC/ACM, the entire TX
+             * buffer may have been emptied in this race condition.  In that
+             * case, the logic would hang below waiting for space in the TX
+             * buffer without this test.
+             */
+
+            if (nexthead != dev->xmit.tail) {
+                ret = OK;
+            }
+
+#ifdef CONFIG_SERIAL_REMOVABLE
+            /* Check if the removable device is no longer connected while we
+             * have interrupts off.  We do not want the transition to occur
+             * as a race condition before we begin the wait.
+             */
+
+            else if (dev->disconnected) {
+                ret = -ENOTCONN;
+            }
+#endif
+            else {
+                /* Inform the interrupt level logic that we are waiting. */
+
+                dev->xmitwaiting = true;
+
+                /* Wait for some characters to be sent from the buffer with
+                 * the TX interrupt enabled.  When the TX interrupt is enabled,
+                 * serial_xmitchars() should execute and remove some of the data
+                 * from the TX buffer.
+                 *
+                 * NOTE that interrupts will be re-enabled while we wait for
+                 * the semaphore.
+                 */
+
+#ifdef CONFIG_SERIAL_DMA
+                serial_dmatxavail(dev);
+#endif
+                serial_enabletxint(dev);
+                ret = serial_takesem(&dev->xmitsem, true);
+                serial_disabletxint(dev);
+            }
+
+            leave_critical_section(flags);
+
+#ifdef CONFIG_SERIAL_REMOVABLE
+            /* Check if the removable device was disconnected while we were
+             * waiting.
+             */
+
+            if (dev->disconnected) {
+                return -ENOTCONN;
+            }
+#endif
+            /* Check if we were awakened by signal. */
+
+            if (ret < 0) {
+                /* A signal received while waiting for the xmit buffer to become
+                 * non-full will abort the transfer.
+                 */
+
+                return -EINTR;
+            }
+        }
+
+        /* The caller has request that we not block for data.  So return the
+         * EAGAIN error to signal this situation.
+         */
+
+        else {
+            return -EAGAIN;
+        }
+    }
+
+    /* We won't get here.  Some compilers may complain that this code is
+     * unreachable.
+     */
+
+    return OK;
+}
+
+/************************************************************************************
+ * Name: serial_putc
+ ************************************************************************************/
+
+static inline void serial_putc(serial_dev_t *dev, int ch)
+{
+    while (!serial_txready(dev)) {
+    }
+
+    serial_send(dev, ch);
+}
+
+/************************************************************************************
+ * Name: serial_irqwrite
+ ************************************************************************************/
+
+static inline ssize_t serial_irqwrite(serial_dev_t *dev, const char *buffer,
+                                      size_t buflen)
+{
+    ssize_t ret = buflen;
+
+    /* Force each character through the low level interface */
+
+    for (; buflen; buflen--) {
+        int ch = *buffer++;
+
+#ifdef CONFIG_SERIAL_TERMIOS
+        /* Do output post-processing */
+
+        if ((dev->tc_oflag & OPOST) != 0) {
+            /* Mapping CR to NL? */
+
+            if ((ch == '\r') && (dev->tc_oflag & OCRNL) != 0) {
+                ch = '\n';
+            }
+
+            /* Are we interested in newline processing? */
+
+            if ((ch == '\n') && (dev->tc_oflag & (ONLCR | ONLRET)) != 0) {
+                serial_putc(dev, '\r');
+            }
+        }
+
+#else   /* !CONFIG_SERIAL_TERMIOS */
+        /* If this is the console, then we should replace LF with CR-LF */
+
+        if (dev->isconsole && ch == '\n') {
+            serial_putc(dev, '\r');
+        }
+#endif
+
+        /* Output the character, using the low-level direct UART interfaces */
+
+        serial_putc(dev, ch);
+    }
+
+    return ret;
+}
+
+/************************************************************************************
+ * Name: serial_tcdrain
+ *
+ * Description:
+ *   Block further TX input.  Wait until all data has been transferred from the TX
+ *   buffer and until the hardware TX FIFOs are empty.
+ *
+ ************************************************************************************/
+
+static int serial_tcdrain(serial_dev_t *dev, clock_t timeout)
+{
+    int ret;
+
+    /* Get exclusive access to the to dev->tmit.  We cannot permit new data to be
+     * written while we are trying to flush the old data.
+     *
+     * A signal received while waiting for access to the xmit.head will abort the
+     * operation with EINTR.
+     */
+
+    ret = (ssize_t)serial_takesem(&dev->xmit.sem, true);
+    if (ret >= 0) {
+        uint32_t flags;
+        clock_t start;
+
+        /* Trigger emission to flush the contents of the tx buffer */
+
+        flags = enter_critical_section();
+
+#ifdef CONFIG_SERIAL_REMOVABLE
+        /* Check if the removable device is no longer connected while we have
+         * interrupts off.  We do not want the transition to occur as a race
+         * condition before we begin the wait.
+         */
+
+        if (dev->disconnected) {
+            dev->xmit.tail = dev->xmit.head;  /* Drop the buffered TX data */
+            ret = -ENOTCONN;
+        } else
+#endif
+        {
+            /* Continue waiting while the TX buffer is not empty.
+             *
+             * NOTE: There is no timeout on the following loop.  In
+             * situations were this loop could hang (with hardware flow
+             * control, as an example),  the caller should call
+             * tcflush() first to discard this buffered Tx data.
+             */
+
+            ret = OK;
+            while (ret >= 0 && dev->xmit.head != dev->xmit.tail) {
+                /* Inform the interrupt level logic that we are waiting. */
+
+                dev->xmitwaiting = true;
+
+                /* Wait for some characters to be sent from the buffer with
+                 * the TX interrupt enabled.  When the TX interrupt is
+                 * enabled, serial_xmitchars() should execute and remove some
+                 * of the data from the TX buffer.  We may have to wait several
+                 * times for the TX buffer to be entirely emptied.
+                 *
+                 * NOTE that interrupts will be re-enabled while we wait for
+                 * the semaphore.
+                 */
+
+#ifdef CONFIG_SERIAL_DMA
+                serial_dmatxavail(dev);
+#endif
+                serial_enabletxint(dev);
+                ret = serial_takesem(&dev->xmitsem, true);
+                serial_disabletxint(dev);
+            }
+        }
+
+        leave_critical_section(flags);
+
+        /* The TX buffer is empty (or an error occurred).  But there still may
+         * be data in the UART TX FIFO.  We get no asynchronous indication of
+         * this event, so we have to do a busy wait poll.
+         */
+
+        /* Set up for the timeout
+         *
+         * REVISIT:  This is a kludge.  The correct fix would be add an
+         * interface to the lower half driver so that the tcflush() operation
+         * all also cause the lower half driver to clear and reset the Tx FIFO.
+         */
+
+        start = csi_kernel_get_ticks();
+
+        if (ret >= 0) {
+            while (!serial_txempty(dev)) {
+                clock_t elapsed;
+
+                aos_msleep(POLL_DELAY_MSEC);
+
+                /* Check for a timeout */
+
+                elapsed = csi_kernel_get_ticks() - start;
+                if (elapsed >= timeout) {
+                    return -ETIMEDOUT;
+                }
+            }
+        }
+
+        serial_givesem(&dev->xmit.sem);
+    }
+
+    return ret;
+}
+
+/************************************************************************************
+ * Name: serial_open
+ *
+ * Description:
+ *   This routine is called whenever a serial port is opened.
+ *
+ ************************************************************************************/
+
+#ifdef CONFIG_SERIAL_USE_VFS
+static int serial_open(inode_t *node, file_t *fp)
+#else
+static int serial_open(aos_dev_t *sdev)
+#endif
+{
+#ifdef CONFIG_SERIAL_USE_VFS
+    inode_t         *inode  = fp->node;
+    serial_dev_t    *dev    = (serial_dev_t*)inode->i_arg;
+#else
+    serial_dev_t    *dev    = (serial_dev_t*)sdev;
+#endif
+    uint8_t         tmp;
+    int             ret;
+
+    /* If the port is the middle of closing, wait until the close is finished.
+     * If a signal is received while we are waiting, then return EINTR.
+     */
+
+    ret = serial_takesem(&dev->closesem, true);
+    if (ret < 0) {
+        /* A signal received while waiting for the last close operation. */
+
+        return ret;
+    }
+
+#ifdef CONFIG_SERIAL_REMOVABLE
+    /* If the removable device is no longer connected, refuse to open the
+     * device.  We check this after obtaining the close semaphore because
+     * we might have been waiting when the device was disconnected.
+     */
+
+    if (dev->disconnected) {
+        ret = -ENOTCONN;
+        goto errout_with_sem;
+    }
+#endif
+
+    /* Start up serial port */
+    /* Increment the count of references to the device. */
+
+    tmp = dev->open_count + 1;
+    if (tmp == 0) {
+        /* More than 255 opens; uint8_t overflows to zero */
+
+        ret = -EMFILE;
+        goto errout_with_sem;
+    }
+
+    /* Check if this is the first time that the driver has been opened. */
+
+    if (tmp == 1) {
+        uint32_t flags = enter_critical_section();
+
+        /* If this is the console, then the UART has already been initialized. */
+
+        if (!dev->isconsole) {
+            /* Perform one time hardware initialization */
+
+            ret = serial_setup(dev);
+            if (ret < 0) {
+                leave_critical_section(flags);
+                goto errout_with_sem;
+            }
+        }
+
+        /* In any event, we do have to configure for interrupt driven mode of
+         * operation.  Attach the hardware IRQ(s). Hmm.. should shutdown() the
+         * the device in the rare case that serial_attach() fails, tmp==1, and
+         * this is not the console.
+         */
+
+        ret = serial_attach(dev);
+        if (ret < 0) {
+            serial_shutdown(dev);
+            leave_critical_section(flags);
+            goto errout_with_sem;
+        }
+
+#ifdef CONFIG_SERIAL_DMA
+        /* Notify DMA that there is free space in the RX buffer */
+
+        serial_dmarxfree(dev);
+#endif
+
+        /* Enable the RX interrupt */
+
+        serial_enablerxint(dev);
+        leave_critical_section(flags);
+    }
+
+    /* Save the new open count on success */
+
+    dev->open_count = tmp;
+
+errout_with_sem:
+    serial_givesem(&dev->closesem);
+    return ret;
+}
+
+/************************************************************************************
+ * Name: serial_close
+ *
+ * Description:
+ *   This routine is called when the serial port gets closed.
+ *   It waits for the last remaining data to be sent.
+ *
+ ************************************************************************************/
+
+#ifdef CONFIG_SERIAL_USE_VFS
+static int serial_close(file_t *fp)
+#else
+static int serial_close(aos_dev_t *sdev)
+#endif
+{
+#ifdef CONFIG_SERIAL_USE_VFS
+    inode_t       *inode  = fp->node;
+    serial_dev_t  *dev    = (serial_dev_t*)inode->i_arg;
+#else
+    serial_dev_t  *dev    = (serial_dev_t*)sdev;
+#endif
+    uint32_t      flags;
+
+    /* Get exclusive access to the close semaphore (to synchronize open/close operations.
+     * NOTE: that we do not let this wait be interrupted by a signal.  Technically, we
+     * should, but almost no one every checks the return value from close() so we avoid
+     * a potential memory leak by ignoring signals in this case.
+     */
+
+    (void)serial_takesem(&dev->closesem, false);
+    if (dev->open_count > 1) {
+        dev->open_count--;
+        serial_givesem(&dev->closesem);
+        return OK;
+    }
+
+    /* There are no more references to the port */
+
+    dev->open_count = 0;
+
+    /* Stop accepting input */
+
+    serial_disablerxint(dev);
+
+    /* Prevent blocking if the device is opened with O_NONBLOCK */
+
+#ifdef CONFIG_SERIAL_USE_VFS
+    if ((fp->i_flags & O_NONBLOCK) == 0) {
+        /* Now we wait for the transmit buffer(s) to clear */
+
+        (void)serial_tcdrain(dev, 4 * aos_get_hz());
+    }
+#endif
+
+    /* Free the IRQ and disable the UART */
+
+    flags = enter_critical_section();         /* Disable interrupts */
+    serial_detach(dev);             /* Detach interrupts */
+    if (!dev->isconsole) {
+        serial_shutdown(dev);       /* Disable the UART */
+    }
+
+    leave_critical_section(flags);
+
+    /* We need to re-initialize the semaphores if this is the last close
+     * of the device, as the close might be caused by pthread_cancel() of
+     * a thread currently blocking on any of them.
+     */
+
+    serial_reset_sem(dev);
+    serial_givesem(&dev->closesem);
+    return OK;
+}
+
+/************************************************************************************
+ * Name: serial_read
+ ************************************************************************************/
+
+#ifdef CONFIG_SERIAL_USE_VFS
+static ssize_t serial_read(file_t *fp, void *buf, size_t buflen)
+#else
+static int serial_read(aos_dev_t *sdev, void *buf, uint32_t buflen, unsigned int timeout_ms)
+#endif
+{
+#ifdef CONFIG_SERIAL_USE_VFS
+    inode_t                 *inode  = fp->node;
+    serial_dev_t            *dev    = (serial_dev_t*)inode->i_arg;
+#else
+    serial_dev_t            *dev    = (serial_dev_t*)sdev;
+#endif
+    struct serial_buffer_s  *rxbuf  = &dev->recv;
+    char                    *buffer = (char *)buf;
+#ifdef CONFIG_SERIAL_IFLOWCONTROL_WATERMARKS
+    unsigned int            nbuffered;
+    unsigned int            watermark;
+#endif
+    uint32_t                flags;
+    ssize_t                 recvd = 0;
+    int16_t                 tail;
+    char                    ch;
+    int                     ret;
+
+    /* Only one user can access rxbuf->tail at a time */
+
+    ret = serial_takesem(&rxbuf->sem, true);
+    if (ret < 0) {
+        /* A signal received while waiting for access to the recv.tail will avort
+         * the transfer.  After the transfer has started, we are committed and
+         * signals will be ignored.
+         */
+
+        return ret;
+    }
+
+    /* Loop while we still have data to copy to the receive buffer.
+     * we add data to the head of the buffer; serial_xmitchars takes the
+     * data from the end of the buffer.
+     */
+
+    while ((size_t)recvd < buflen) {
+#ifdef CONFIG_SERIAL_REMOVABLE
+        /* If the removable device is no longer connected, refuse to read any
+        * further from the device.
+        */
+
+        if (dev->disconnected) {
+            if (recvd == 0) {
+                recvd = -ENOTCONN;
+            }
+
+            break;
+        }
+#endif
+
+        /* Check if there is more data to return in the circular buffer.
+         * NOTE: Rx interrupt handling logic may asynchronously increment
+         * the head index but must not modify the tail index.  The tail
+         * index is only modified in this function.  Therefore, no
+         * special handshaking is required here.
+         *
+         * The head and tail pointers are 16-bit values.  The only time that
+         * the following could be unsafe is if the CPU made two non-atomic
+         * 8-bit accesses to obtain the 16-bit head index.
+         */
+
+        tail = rxbuf->tail;
+        if (rxbuf->head != tail) {
+            /* Take the next character from the tail of the buffer */
+
+            ch = rxbuf->buffer[tail];
+
+            /* Increment the tail index.  Most operations are done using the
+             * local variable 'tail' so that the final rxbuf->tail update
+             * is atomic.
+             */
+
+            if (++tail >= rxbuf->size) {
+                tail = 0;
+            }
+
+            rxbuf->tail = tail;
+
+#ifdef CONFIG_SERIAL_TERMIOS
+            /* Do input processing if any is enabled */
+
+            if (dev->tc_iflag & (INLCR | IGNCR | ICRNL)) {
+                /* \n -> \r or \r -> \n translation? */
+
+                if ((ch == '\n') && (dev->tc_iflag & INLCR)) {
+                    ch = '\r';
+                } else if ((ch == '\r') && (dev->tc_iflag & ICRNL)) {
+                    ch = '\n';
+                }
+
+                /* Discarding \r ? */
+
+                if ((ch == '\r') & (dev->tc_iflag & IGNCR)) {
+                    continue;
+                }
+            }
+
+            /* Specifically not handled:
+             *
+             * All of the local modes; echo, line editing, etc.
+             * Anything to do with break or parity errors.
+             * ISTRIP - we should be 8-bit clean.
+             * IUCLC - Not Posix
+             * IXON/OXOFF - no xon/xoff flow control.
+             */
+#endif
+
+            /* Store the received character */
+
+            *buffer++ = ch;
+            recvd++;
+        }
+
+#ifndef CONFIG_SERIAL_USE_VFS
+        else {
+            break;
+        }
+#else
+#ifdef CONFIG_DEV_SERIAL_FULLBLOCKS
+        /* No... then we would have to wait to get receive more data.
+         * If the user has specified the O_NONBLOCK option, then just
+         * return what we have.
+         */
+
+        else if ((fp->i_flags & O_NONBLOCK) != 0) {
+            /* If nothing was transferred, then return the -EAGAIN
+             * error (not zero which means end of file).
+             */
+
+            if (recvd < 1) {
+                recvd = -EAGAIN;
+            }
+
+            break;
+       }
+#else
+        /* No... the circular buffer is empty.  Have we returned anything
+         * to the caller?
+         */
+
+        else if (recvd > 0) {
+            /* Yes.. break out of the loop and return the number of bytes
+             * received up to the wait condition.
+             */
+
+            break;
+       }
+
+        /* No... then we would have to wait to get receive some data.
+         * If the user has specified the O_NONBLOCK option, then do not
+         * wait.
+         */
+
+        else if ((fp->i_flags & O_NONBLOCK) != 0) {
+            /* Break out of the loop returning -EAGAIN */
+
+            recvd = -EAGAIN;
+            break;
+        }
+#endif
+        /* Otherwise we are going to have to wait for data to arrive */
+
+        else {
+#ifdef CONFIG_SERIAL_DMA
+            /* Disable all interrupts and test again...
+             * serial_disablerxint() is insufficient for the check in DMA mode.
+             */
+
+            flags = enter_critical_section();
+#else
+            /* Disable Rx interrupts and test again... */
+
+            serial_disablerxint(dev);
+#endif
+
+            /* If the Rx ring buffer still empty?  Bytes may have been added
+             * between the last time that we checked and when we disabled
+             * interrupts.
+             */
+
+            if (rxbuf->head == rxbuf->tail) {
+                /* Yes.. the buffer is still empty.  We will need to wait for
+                 * additional data to be received.
+                 */
+
+#ifdef CONFIG_SERIAL_DMA
+                /* Notify DMA that there is free space in the RX buffer */
+
+                serial_dmarxfree(dev);
+#else
+                /* Wait with the RX interrupt re-enabled.  All interrupts are
+                 * disabled briefly to assure that the following operations
+                 * are atomic.
+                 */
+
+                flags = enter_critical_section();
+
+                /* Re-enable UART Rx interrupts */
+
+                serial_enablerxint(dev);
+#endif
+
+#ifdef CONFIG_SERIAL_REMOVABLE
+                /* Check again if the removable device is still connected
+                 * while we have interrupts off.  We do not want the transition
+                 * to occur as a race condition before we begin the wait.
+                 */
+
+                if (dev->disconnected) {
+                    ret = -ENOTCONN;
+                } else
+#endif
+                {
+                    /* Now wait with the Rx interrupt enabled.  NuttX will
+                     * automatically re-enable global interrupts when this
+                     * thread goes to sleep.
+                     */
+
+                    dev->recvwaiting = true;
+                    ret = serial_takesem(&dev->recvsem, true);
+                }
+
+                leave_critical_section(flags);
+
+                /* Was a signal received while waiting for data to be
+                 * received?  Was a removable device disconnected while
+                 * we were waiting?
+                 */
+
+#ifdef CONFIG_SERIAL_REMOVABLE
+                if (ret < 0 || dev->disconnected)
+#else
+                if (ret < 0)
+#endif
+                {
+                    /* POSIX requires that we return after a signal is received.
+                     * If some bytes were read, we need to return the number of bytes
+                     * read; if no bytes were read, we need to return -1 with the
+                     * errno set correctly.
+                     */
+
+                    if (recvd == 0) {
+                        /* No bytes were read, return -EINTR (the VFS layer will
+                         * set the errno value appropriately.
+                         */
+
+#ifdef CONFIG_SERIAL_REMOVABLE
+                        recvd = dev->disconnected ? -ENOTCONN : -EINTR;
+#else
+                        recvd = -EINTR;
+#endif
+                    }
+
+                    break;
+                }
+            } else {
+                /* No... the ring buffer is no longer empty.  Just re-enable Rx
+                 * interrupts and accept the new data on the next time through
+                 * the loop.
+                 */
+
+#ifdef CONFIG_SERIAL_DMA
+                leave_critical_section(flags);
+#else
+                serial_enablerxint(dev);
+#endif
+            }
+        }
+#endif
+    }
+
+#ifdef CONFIG_SERIAL_DMA
+    /* Notify DMA that there is free space in the RX buffer */
+
+    flags = enter_critical_section();
+    serial_dmarxfree(dev);
+    leave_critical_section(flags);
+#endif
+
+#ifndef CONFIG_SERIAL_DMA
+    /* RX interrupt could be disabled by RX buffer overflow. Enable it now. */
+
+    serial_enablerxint(dev);
+#endif
+
+#ifdef CONFIG_SERIAL_IFLOWCONTROL
+#ifdef CONFIG_SERIAL_IFLOWCONTROL_WATERMARKS
+    /* How many bytes are now buffered */
+
+    rxbuf = &dev->recv;
+    if (rxbuf->head >= rxbuf->tail) {
+        nbuffered = rxbuf->head - rxbuf->tail;
+    } else {
+        nbuffered = rxbuf->size - rxbuf->tail + rxbuf->head;
+    }
+
+    /* Is the level now below the watermark level that we need to report? */
+
+    watermark = (CONFIG_SERIAL_IFLOWCONTROL_LOWER_WATERMARK * rxbuf->size) / 100;
+    if (nbuffered <= watermark) {
+        /* Let the lower level driver know that the watermark level has been
+         * crossed.  It will probably deactivate RX flow control.
+         */
+
+        (void)serial_rxflowcontrol(dev, nbuffered, false);
+    }
+#else
+    /* Is the RX buffer empty? */
+
+    if (rxbuf->head == rxbuf->tail) {
+        /* Deactivate RX flow control. */
+
+        (void)serial_rxflowcontrol(dev, 0, false);
+    }
+#endif
+#endif
+
+    serial_givesem(&dev->recv.sem);
+    return recvd;
+}
+
+/************************************************************************************
+ * Name: serial_write
+ ************************************************************************************/
+
+#ifdef CONFIG_SERIAL_USE_VFS
+static ssize_t serial_write(file_t *fp, const void *buf, size_t buflen)
+#else
+static int serial_write(aos_dev_t *sdev, const void *buf, uint32_t buflen)
+#endif
+{
+#ifdef CONFIG_SERIAL_USE_VFS
+    inode_t         *inode      = fp->node;
+    serial_dev_t    *dev        = (serial_dev_t*)inode->i_arg;
+#else
+    serial_dev_t    *dev        = (serial_dev_t*)sdev;
+#endif
+    const char      *buffer     = buf;
+    ssize_t         nwritten    = buflen;
+    bool            oktoblock   = TRUE;
+    int             ret;
+    char            ch;
+
+    /* We may receive serial writes through this path from interrupt handlers and
+     * from debug output in the IDLE task!  In these cases, we will need to do things
+     * a little differently.
+     */
+
+    if (aos_irq_context())
+    {
+        uint32_t flags;
+
+#ifdef CONFIG_SERIAL_REMOVABLE
+        /* If the removable device is no longer connected, refuse to write to
+         * the device.
+         */
+
+        if (dev->disconnected) {
+            return -ENOTCONN;
+        }
+#endif
+
+        flags = enter_critical_section();
+        ret = serial_irqwrite(dev, buffer, buflen);
+        leave_critical_section(flags);
+
+        return ret;
+    }
+
+    /* Only one user can access dev->xmit.head at a time */
+
+    ret = (ssize_t)serial_takesem(&dev->xmit.sem, true);
+    if (ret < 0) {
+        /* A signal received while waiting for access to the xmit.head will
+         * abort the transfer.  After the transfer has started, we are committed
+         * and signals will be ignored.
+         */
+
+        return ret;
+    }
+
+#ifdef CONFIG_SERIAL_REMOVABLE
+    /* If the removable device is no longer connected, refuse to write to the
+     * device.  This check occurs after taking the xmit.sem because the
+     * disconnection event might have occurred while we were waiting for
+     * access to the transmit buffers.
+     */
+
+    if (dev->disconnected) {
+        serial_givesem(&dev->xmit.sem);
+        return -ENOTCONN;
+    }
+#endif
+
+#ifdef CONFIG_SERIAL_USE_VFS
+    /* Can the following loop block, waiting for space in the TX
+     * buffer?
+     */
+
+    oktoblock = ((fp->i_flags & O_NONBLOCK) == 0);
+#endif
+
+    /* Loop while we still have data to copy to the transmit buffer.
+     * we add data to the head of the buffer; serial_xmitchars takes the
+     * data from the end of the buffer.
+     */
+
+    serial_disabletxint(dev);
+    for (; buflen; buflen--) {
+        ch  = *buffer++;
+        ret = OK;
+
+#ifdef CONFIG_SERIAL_TERMIOS
+        /* Do output post-processing */
+
+        if ((dev->tc_oflag & OPOST) != 0) {
+            /* Mapping CR to NL? */
+
+            if ((ch == '\r') && (dev->tc_oflag & OCRNL) != 0) {
+                ch = '\n';
+            }
+
+            /* Are we interested in newline processing? */
+
+            if ((ch == '\n') && (dev->tc_oflag & (ONLCR | ONLRET)) != 0) {
+                ret = serial_putxmitchar(dev, '\r', oktoblock);
+            }
+
+            /* Specifically not handled:
+             *
+             * OXTABS - primarily a full-screen terminal optimization
+             * ONOEOT - Unix interoperability hack
+             * OLCUC  - Not specified by POSIX
+             * ONOCR  - low-speed interactive optimization
+             */
+        }
+
+#else   /* !CONFIG_SERIAL_TERMIOS */
+        /* If this is the console, convert \n -> \r\n */
+
+        if (dev->isconsole && ch == '\n') {
+            ret = serial_putxmitchar(dev, '\r', oktoblock);
+        }
+#endif
+
+        /* Put the character into the transmit buffer */
+
+        if (ret >= 0) {
+            ret = serial_putxmitchar(dev, ch, oktoblock);
+        }
+
+        /* serial_putxmitchar() might return an error under one of two
+         * conditions:  (1) The wait for buffer space might have been
+         * interrupted by a signal (ret should be -EINTR), (2) if
+         * CONFIG_SERIAL_REMOVABLE is defined, then serial_putxmitchar()
+         * might also return if the serial device was disconnected
+         * (with -ENOTCONN), or (3) if O_NONBLOCK is specified, then
+         * then serial_putxmitchar() might return -EAGAIN if the output
+         * TX buffer is full.
+         */
+
+        if (ret < 0) {
+            /* POSIX requires that we return -1 and errno set if no data was
+             * transferred.  Otherwise, we return the number of bytes in the
+             * interrupted transfer.
+             */
+
+            if (buflen < (size_t)nwritten) {
+                /* Some data was transferred.  Return the number of bytes that
+                 * were successfully transferred.
+                 */
+
+                nwritten -= buflen;
+            } else {
+                /* No data was transferred. Return the negated errno value.
+                 * The VFS layer will set the errno value appropriately).
+                 */
+
+                nwritten = ret;
+            }
+
+            break;
+        }
+    }
+
+    if (dev->xmit.head != dev->xmit.tail) {
+#ifdef CONFIG_SERIAL_DMA
+        serial_dmatxavail(dev);
+#endif
+        serial_enabletxint(dev);
+    }
+
+    serial_givesem(&dev->xmit.sem);
+    return nwritten;
+}
+
+/************************************************************************************
+ * Name: serial_ioctl
+ ************************************************************************************/
+
+#ifdef CONFIG_SERIAL_USE_VFS
+static int serial_ioctl(file_t *fp, int cmd, unsigned long arg)
+{
+    inode_t         *inode      = fp->node;
+    serial_dev_t    *dev        = (serial_dev_t*)inode->i_arg;
+
+    /* Handle TTY-level IOCTLs here */
+    /* Let low-level driver handle the call first */
+
+    int ret = dev->ops->ioctl(fp, cmd, arg);
+
+    if (ret == -ENOTTY) {
+        switch (cmd) {
+            /* Get the number of bytes that may be read from the RX buffer
+             * (without waiting)
+             */
+
+            case FIONREAD: {
+                int count;
+                uint32_t flags = enter_critical_section();
+
+                /* Determine the number of bytes available in the RX buffer */
+
+                if (dev->recv.tail <= dev->recv.head) {
+                    count = dev->recv.head - dev->recv.tail;
+                } else {
+                    count = dev->recv.size - (dev->recv.tail - dev->recv.head);
+                }
+
+                leave_critical_section(flags);
+
+                *(int *)((uintptr_t)arg) = count;
+                ret = 0;
+            }
+            break;
+
+            /* Get the number of bytes that have been written to the TX buffer. */
+
+            case FIONWRITE: {
+                int count;
+                uint32_t flags = enter_critical_section();
+
+                /* Determine the number of bytes waiting in the TX buffer */
+
+                if (dev->xmit.tail <= dev->xmit.head) {
+                    count = dev->xmit.head - dev->xmit.tail;
+                } else {
+                    count = dev->xmit.size - (dev->xmit.tail - dev->xmit.head);
+                }
+
+                leave_critical_section(flags);
+
+                *(int *)((uintptr_t)arg) = count;
+                ret = 0;
+            }
+            break;
+
+            /* Get the number of free bytes in the TX buffer */
+
+            case FIONSPACE: {
+                int count;
+                uint32_t flags = enter_critical_section();
+
+                /* Determine the number of bytes free in the TX buffer */
+
+                if (dev->xmit.head < dev->xmit.tail) {
+                    count = dev->xmit.tail - dev->xmit.head - 1;
+                } else {
+                    count = dev->xmit.size - (dev->xmit.head - dev->xmit.tail) - 1;
+                }
+
+                leave_critical_section(flags);
+
+                *(int *)((uintptr_t)arg) = count;
+                ret = 0;
+            }
+            break;
+
+#ifdef CONFIG_SERIAL_TERMIOS
+            case TCFLSH: {
+                /* Empty the tx/rx buffers */
+
+                uint32_t flags = enter_critical_section();
+
+                if (arg == TCIFLUSH || arg == TCIOFLUSH) {
+                    dev->recv.tail = dev->recv.head;
+
+#ifdef CONFIG_SERIAL_IFLOWCONTROL
+                    /* De-activate RX flow control. */
+
+                    (void)serial_rxflowcontrol(dev, 0, false);
+#endif
+                }
+
+                if (arg == TCOFLUSH || arg == TCIOFLUSH) {
+                    dev->xmit.tail = dev->xmit.head;
+
+                    /* Inform any waiters there there is space available. */
+
+                    serial_datasent(dev);
+                }
+
+                leave_critical_section(flags);
+                ret = 0;
+            }
+            break;
+
+            case TCDRN: {
+                ret = serial_tcdrain(dev, 10 * aos_get_hz());
+            }
+            break;
+#endif
+
+#if defined(CONFIG_TTY_SIGINT) || defined(CONFIG_TTY_SIGSTP)
+            /* Make the given terminal the controlling terminal of the calling process */
+
+            case TIOCSCTTY: {
+                /* Check if the ISIG flag is set in the termios c_lflag to enable
+                 * this feature.  This flag is set automatically for a serial console
+                 * device.
+                 */
+
+                if ((dev->tc_lflag & ISIG) != 0) {
+                    /* Save the PID of the recipient of the SIGINT signal. */
+
+                    dev->pid = (pid_t)arg;
+                    aos_assert((unsigned long)(dev->pid) == arg);
+                }
+            }
+            break;
+#endif
+        }
+    }
+#ifdef CONFIG_SERIAL_TERMIOS
+    /* Append any higher level TTY flags */
+
+    else if (ret == OK) {
+        switch (cmd)
+        {
+            case TCGETS:
+            {
+                struct termios *termiosp = (struct termios *)arg;
+
+                if (!termiosp) {
+                    ret = -EINVAL;
+                    break;
+                }
+
+                /* And update with flags from this layer */
+
+                termiosp->c_iflag = dev->tc_iflag;
+                termiosp->c_oflag = dev->tc_oflag;
+                termiosp->c_lflag = dev->tc_lflag;
+            }
+            break;
+
+            case TCSETS:
+            {
+                struct termios *termiosp = (struct termios *)arg;
+
+                if (!termiosp) {
+                    ret = -EINVAL;
+                    break;
+                }
+
+                /* Update the flags we keep at this layer */
+
+                dev->tc_iflag = termiosp->c_iflag;
+                dev->tc_oflag = termiosp->c_oflag;
+                dev->tc_lflag = termiosp->c_lflag;
+
+#if defined(CONFIG_TTY_SIGINT) || defined(CONFIG_TTY_SIGSTP)
+                /* If the ISIG flag has been cleared in c_lflag, then un-
+                 * register the controlling terminal.
+                 */
+
+                if ((dev->tc_lflag & ISIG) == 0) {
+                    dev->pid = (pid_t)-1;
+                }
+#endif
+            }
+            break;
+        }
+    }
+#endif
+
+  return ret;
+}
+
+/****************************************************************************
+ * Name: serial_poll
+ ****************************************************************************/
+
+#ifndef CONFIG_DISABLE_POLL
+static int serial_poll(file_t *filep, bool setup, poll_notify_t notify, struct pollfd *fds, void *arg)
+{
+    inode_t     *inode  = filep->node;
+    uart_dev_t  *dev    = (uart_dev_t *)inode->i_arg;
+    uint8_t     eventset;
+    int         ndx;
+    int         ret;
+    int         i;
+
+    /* Some sanity checking */
+
+    if (!dev || !fds) {
+        return -ENODEV;
+    }
+
+    /* Are we setting up the poll?  Or tearing it down? */
+
+    ret = serial_takesem(&dev->pollsem, true);
+    if (ret < 0) {
+        /* A signal received while waiting for access to the poll data
+         * will abort the operation.
+         */
+
+        return ret;
+    }
+
+    if (setup) {
+        /* This is a request to set up the poll.  Find an available
+         * slot for the poll structure reference
+         */
+
+        for (i = 0; i < CONFIG_SERIAL_NPOLLWAITERS; i++) {
+            /* Find an available slot */
+
+            if (!dev->fds[i]) {
+                /* Bind the poll structure and this slot */
+
+                dev->fds[i]  = fds;
+                fds->priv    = &dev->fds[i];
+                break;
+            }
+        }
+
+        if (i >= CONFIG_SERIAL_NPOLLWAITERS) {
+            fds->priv    = NULL;
+            ret          = -EBUSY;
+            goto errout;
+        }
+
+        /* Should we immediately notify on any of the requested events?
+         * First, check if the xmit buffer is full.
+         *
+         * Get exclusive access to the xmit buffer indices.  NOTE: that we do not
+         * let this wait be interrupted by a signal (we probably should, but that
+         * would be a little awkward).
+         */
+
+        eventset = 0;
+        (void)serial_takesem(&dev->xmit.sem, false);
+
+        ndx = dev->xmit.head + 1;
+        if (ndx >= dev->xmit.size) {
+            ndx = 0;
+        }
+
+        if (ndx != dev->xmit.tail) {
+            eventset |= (fds->events & POLLOUT);
+        }
+
+        serial_givesem(&dev->xmit.sem);
+
+        /* Check if the receive buffer is empty.
+         *
+         * Get exclusive access to the recv buffer indices.  NOTE: that we do not
+         * let this wait be interrupted by a signal (we probably should, but that
+         * would be a little awkward).
+         */
+
+        (void)serial_takesem(&dev->recv.sem, false);
+        if (dev->recv.head != dev->recv.tail) {
+            eventset |= (fds->events & POLLIN);
+        }
+
+        serial_givesem(&dev->recv.sem);
+
+#ifdef CONFIG_SERIAL_REMOVABLE
+        /* Check if a removable device has been disconnected. */
+
+        if (dev->disconnected) {
+            eventset |= (POLLERR | POLLHUP);
+        }
+#endif
+
+        if (eventset) {
+            serial_pollnotify(dev, eventset);
+        }
+
+    } else if (fds->priv) {
+        /* This is a request to tear down the poll. */
+
+        struct pollfd **slot = (struct pollfd **)fds->priv;
+
+        if (!slot) {
+            ret              = -EIO;
+            goto errout;
+        }
+
+        /* Remove all memory of the poll setup */
+
+        *slot                = NULL;
+        fds->priv            = NULL;
+    }
+
+errout:
+    serial_givesem(&dev->pollsem);
+    return ret;
+}
+#endif
+
+#else
+
+/************************************************************************************
+ * Name: serial_init
+ *
+ * Description:
+ *   Init serial console and serial ports.
+ *
+ ************************************************************************************/
+
+static aos_dev_t *serial_init(driver_t *drv, void *config, int id)
+{
+    serial_dev_t *serial;
+    struct serial_dev_config_s *serial_config;
+
+    serial = (serial_dev_t *)device_new(drv, sizeof(serial_dev_t), id);
+    if (!serial) {
+        LOGE(TAG, "serial_init error!\n");
+        return NULL;
+    }
+
+    serial_config     = (struct serial_dev_config_s *)config;
+    serial->ops       = serial_config->ops;
+    serial->priv      = serial_config->priv;
+    serial->isconsole = serial_config->isconsole;
+    serial->recv.size = serial_config->buf_size;
+    serial->xmit.size = serial_config->buf_size;
+
+    serial->recv.buffer = aos_malloc(serial->recv.size);
+    if (!serial->recv.buffer) {
+        goto fail;
+    }
+
+    serial->xmit.buffer = aos_malloc(serial->xmit.size);
+    if (!serial->xmit.buffer) {
+        goto fail;
+    }
+
+#ifdef CONFIG_SERIAL_TERMIOS
+#if defined(CONFIG_TTY_SIGINT) || defined(CONFIG_TTY_SIGSTP)
+    /* Initialize  of the task that will receive SIGINT signals. */
+
+    serial->pid = (pid_t)-1;
+#endif
+
+    /* If this UART is a serial console */
+
+    if (serial->isconsole) {
+        /* Enable signals by default */
+
+        serial->tc_lflag |= ISIG;
+
+        /* Enable \n -> \r\n translation for the console */
+
+        serial->tc_oflag = OPOST | ONLCR;
+    }
+#endif
+
+    /* Initialize semaphores */
+
+    aos_sem_new(&serial->xmit.sem, 1);
+    aos_sem_new(&serial->recv.sem, 1);
+    aos_sem_new(&serial->closesem, 1);
+    aos_sem_new(&serial->xmitsem,  0);
+    aos_sem_new(&serial->recvsem,  0);
+#ifndef CONFIG_DISABLE_POLL
+    aos_sem_new(&serial->pollsem,  1);
+#endif
+
+    serial->ops->earlyinit(serial);
+    return (aos_dev_t *)serial;
+
+fail:
+    aos_free(serial->recv.buffer);
+    aos_free(serial->xmit.buffer);
+    aos_free(serial->priv);
+    device_free((aos_dev_t *)serial);
+
+    return NULL;
+}
+
+/************************************************************************************
+ * Name: serial_uninit
+ *
+ * Description:
+ *   Uninit serial console and serial ports.
+ *
+ ************************************************************************************/
+
+static void serial_uninit(aos_dev_t *dev)
+{
+    serial_dev_t *serial = (serial_dev_t*)dev;
+
+    aos_sem_free(&serial->xmit.sem);
+    aos_sem_free(&serial->recv.sem);
+    aos_sem_free(&serial->closesem);
+    aos_sem_free(&serial->xmitsem);
+    aos_sem_free(&serial->recvsem);
+#ifndef CONFIG_DISABLE_POLL
+    aos_sem_free(&serial->pollsem);
+#endif
+    aos_free(serial->recv.buffer);
+    aos_free(serial->xmit.buffer);
+    aos_free(serial->priv);
+    device_free(dev);
+}
+
+/************************************************************************************
+ * Name: serial_config
+ *
+ * Description:
+ *   Config serial console and serial ports.
+ *
+ ************************************************************************************/
+
+static int serial_config(aos_dev_t *sdev, uart_config_t *config)
+{
+    /* non-support */
+
+    return 0;
+}
+
+/************************************************************************************
+ * Name: serial_set_type
+ *
+ * Description:
+ *   Set serial type.
+ *
+ ************************************************************************************/
+
+static int serial_set_type(aos_dev_t *sdev, int type)
+{
+    /* non-support */
+
+    return 0;
+}
+
+/************************************************************************************
+ * Name: serial_set_buffer_size
+ *
+ * Description:
+ *   Set serial buffer size.
+ *
+ ************************************************************************************/
+
+static int serial_set_buffer_size(aos_dev_t *sdev, uint32_t size)
+{
+    /* non-support */
+
+    return 0;
+}
+
+/************************************************************************************
+ * Name: serial_event
+ *
+ * Description:
+ *   Set serial event.
+ *
+ ************************************************************************************/
+
+static void serial_event(aos_dev_t *sdev, void (*event)(aos_dev_t *dev, int event_id, void *priv),
+                         void * priv)
+{
+    serial_dev_t *dev = (serial_dev_t*)sdev;
+
+    dev->event_priv  = priv;
+    dev->event       = event;
+}
+#endif
+
+/************************************************************************************
+ * Public Functions
+ ************************************************************************************/
+
+/************************************************************************************
+ * Name: serial_register
+ *
+ * Description:
+ *   Register serial console and serial ports.
+ *
+ ************************************************************************************/
+
+#ifdef CONFIG_SERIAL_USE_VFS
+int serial_register(const char *path, serial_dev_t *dev)
+{
+#ifdef CONFIG_SERIAL_TERMIOS
+#if defined(CONFIG_TTY_SIGINT) || defined(CONFIG_TTY_SIGSTP)
+    /* Initialize  of the task that will receive SIGINT signals. */
+
+    dev->pid = (pid_t)-1;
+#endif
+
+    /* If this UART is a serial console */
+
+    if (dev->isconsole) {
+        /* Enable signals by default */
+
+        dev->tc_lflag |= ISIG;
+
+        /* Enable \n -> \r\n translation for the console */
+
+        dev->tc_oflag = OPOST | ONLCR;
+    }
+#endif
+
+    /* Initialize semaphores */
+
+    aos_sem_new(&dev->xmit.sem, 1);
+    aos_sem_new(&dev->recv.sem, 1);
+    aos_sem_new(&dev->closesem, 1);
+    aos_sem_new(&dev->xmitsem,  0);
+    aos_sem_new(&dev->recvsem,  0);
+#ifndef CONFIG_DISABLE_POLL
+    aos_sem_new(&dev->pollsem,  1);
+#endif
+
+    /* Register the serial driver */
+
+    LOGI(TAG, "Registering %s\n", path);
+    return aos_register_driver(path, &g_serialops, dev);
+}
+#else
+int serial_register(struct serial_dev_config_s *config)
+{
+    return driver_register(&serial_driver.drv, (void*)config, config->uart_idx);
+}
+#endif
+
+/************************************************************************************
+ * Name: serial_datareceived
+ *
+ * Description:
+ *   This function is called from serial_recvchars when new serial data is place in
+ *   the driver's circular buffer.  This function will wake-up any stalled read()
+ *   operations that are waiting for incoming data.
+ *
+ ************************************************************************************/
+
+void serial_datareceived(serial_dev_t *dev)
+{
+    /* Is there a thread waiting for read data?  */
+
+    if (dev->recvwaiting) {
+        /* Yes... wake it up */
+
+        dev->recvwaiting = false;
+        (void)aos_sem_signal(&dev->recvsem);
+    }
+
+    /* Notify all poll/select waiters that they can read from the recv buffer */
+
+#ifdef CONFIG_SERIAL_USE_VFS
+    serial_pollnotify(dev, POLLIN);
+#else
+    if (dev->event) {
+        dev->event((aos_dev_t*)dev, USART_EVENT_READ, dev->event_priv);
+    }
+#endif
+}
+
+/************************************************************************************
+ * Name: serial_datasent
+ *
+ * Description:
+ *   This function is called from serial_xmitchars after serial data has been sent,
+ *   freeing up some space in the driver's circular buffer. This function will
+ *   wake-up any stalled write() operations that was waiting for space to buffer
+ *   outgoing data.
+ *
+ ************************************************************************************/
+
+void serial_datasent(serial_dev_t *dev)
+{
+    /* Is there a thread waiting for space in xmit.buffer?  */
+
+    if (dev->xmitwaiting) {
+        /* Yes... wake it up */
+
+        dev->xmitwaiting = false;
+        (void)aos_sem_signal(&dev->xmitsem);
+    }
+
+    /* Notify all poll/select waiters that they can write to xmit buffer */
+
+#ifdef CONFIG_SERIAL_USE_VFS
+    serial_pollnotify(dev, POLLOUT);
+#else
+    if (dev->event) {
+        dev->event((aos_dev_t*)dev, USART_EVENT_WRITE, dev->event_priv);
+    }
+#endif
+}
+
+/************************************************************************************
+ * Name: serial_connected
+ *
+ * Description:
+ *   Serial devices (like USB serial) can be removed.  In that case, the "upper
+ *   half" serial driver must be informed that there is no longer a valid serial
+ *   channel associated with the driver.
+ *
+ *   In this case, the driver will terminate all pending transfers wint ENOTCONN and
+ *   will refuse all further transactions while the "lower half" is disconnected.
+ *   The driver will continue to be registered, but will be in an unusable state.
+ *
+ *   Conversely, the "upper half" serial driver needs to know when the serial
+ *   device is reconnected so that it can resume normal operations.
+ *
+ * Assumptions/Limitations:
+ *   This function may be called from an interrupt handler.
+ *
+ ************************************************************************************/
+
+#ifdef CONFIG_SERIAL_REMOVABLE
+void serial_connected(serial_dev_t *dev, bool connected)
+{
+    uint32_t flags;
+
+    /* Is the device disconnected?  Interrupts are disabled because this
+     * function may be called from interrupt handling logic.
+     */
+
+    flags = enter_critical_section();
+    dev->disconnected = !connected;
+    if (!connected) {
+        /* Yes.. wake up all waiting threads.  Each thread should detect the
+         * disconnection and return the ENOTCONN error.
+         */
+
+        /* Is there a thread waiting for space in xmit.buffer?  */
+
+        if (dev->xmitwaiting) {
+            /* Yes... wake it up */
+
+            dev->xmitwaiting = false;
+            (void)aos_sem_signal(&dev->xmitsem);
+        }
+
+        /* Is there a thread waiting for read data?  */
+
+        if (dev->recvwaiting) {
+            /* Yes... wake it up */
+
+            dev->recvwaiting = false;
+            (void)aos_sem_signal(&dev->recvsem);
+        }
+
+        /* Notify all poll/select waiters that a hangup occurred */
+
+#ifdef CONFIG_SERIAL_USE_VFS
+        serial_pollnotify(dev, POLLERR);
+#endif
+    }
+
+    leave_critical_section(flags);
+}
+#endif
+
+/************************************************************************************
+ * Name: serial_reset_sem
+ *
+ * Description:
+ *   This function is called when need reset uart semphore, this may used in kill one
+ *   process, but this process was reading/writing with the semphore.
+ *
+ ************************************************************************************/
+
+void serial_reset_sem(serial_dev_t *dev)
+{
+    aos_sem_free(&dev->xmitsem);
+    aos_sem_new(&dev->xmitsem,  0);
+    aos_sem_free(&dev->recvsem);
+    aos_sem_new(&dev->recvsem,  0);
+    aos_sem_free(&dev->xmit.sem);
+    aos_sem_new(&dev->xmit.sem, 1);
+    aos_sem_free(&dev->recv.sem);
+    aos_sem_new(&dev->recv.sem, 1);
+#ifndef CONFIG_DISABLE_POLL
+    aos_sem_free(&dev->pollsem);
+    aos_sem_new(&dev->pollsem,  1);
+#endif
+}

@@ -9,6 +9,8 @@
 
 __BEGIN_DECLS__
 
+#define DEMUX_OPS_MAX (16)
+
 /**
  * @brief  regist demux ops
  * @param  [in] ops
@@ -34,7 +36,7 @@ int demux_read_packet(demux_cls_t *o, avpacket_t *pkt);
 /**
  * @brief  seek the demux
  * @param  [in] o
- * @param  [in] timestamp : seek time
+ * @param  [in] timestamp : seek time(ms)
  * @return 0/-1
  */
 int demux_seek(demux_cls_t *o, uint64_t timestamp);
@@ -55,13 +57,6 @@ int demux_close(demux_cls_t *o);
  * @return
  */
 int demux_control(demux_cls_t *o, int cmd, void *arg, size_t *arg_size);
-
-/**
- * @brief  demux is eof whether
- * @param  [in] o
- * @return 0/1
- */
-int demux_is_eof(demux_cls_t *o);
 
 __END_DECLS__
 

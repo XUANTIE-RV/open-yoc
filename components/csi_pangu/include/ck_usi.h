@@ -14,7 +14,6 @@
 #include <stdio.h>
 #include "errno.h"
 #include "soc.h"
-#include "csi_config.h"
 
 #ifdef __cplusplus
 extern "C" {

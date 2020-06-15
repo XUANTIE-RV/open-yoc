@@ -1,8 +1,7 @@
 /*
- * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ * Copyright (C) 2019-2020 Alibaba Group Holding Limited
  */
 
-#include <yoc_config.h>
 
 #include <stdlib.h>
 #include <string.h>
@@ -60,9 +59,9 @@ int aui_nlp_proc_cb_tts_nlp(cJSON *js, const char *json_text)
 
     int ret;
     aui_player_stop(MEDIA_SYSTEM);
-    ret = aui_cloud_req_tts(&g_aui_handler, "fifo://tts/1", ai_answer->valuestring, NULL);
+    ret = aui_cloud_req_tts(&g_aui_handler, ai_answer->valuestring, "fifo://tts/1");
     if (ret == 0) {
-        aui_player_play(MEDIA_SYSTEM, "fifo://tts/1", 1);
+        app_player_play(MEDIA_SYSTEM, "fifo://tts/1", 1);
     }
 
     return ret;

@@ -19,10 +19,6 @@ typedef struct {
     char *tts_key_secret;
 }  mit_account_info_t;
 
-int mit_asr_init(aui_t *aui);
-int mit_tts_init(aui_t *aui);
-uint8_t* mit_get_mac_addr(void);
-
 extern mit_account_info_t g_mit_account_info;
 
 #endif

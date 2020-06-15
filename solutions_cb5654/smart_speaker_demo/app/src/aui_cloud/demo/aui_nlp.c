@@ -144,7 +144,7 @@ int app_aui_cloud_tts_wait_finish()
 int app_aui_cloud_tts_run(const char *text, int wait_last)
 {
     int ret;
-    ret = aui_cloud_req_tts(&g_aui_handler, "fifo://ttsdemo", text, NULL);
+    ret = aui_cloud_req_tts(&g_aui_handler, text, "fifo://ttsdemo");
     if (ret == 0) {
         aui_player_play(MEDIA_SYSTEM, "fifo://ttsdemo", 1);
     }
@@ -153,5 +153,9 @@ int app_aui_cloud_tts_run(const char *text, int wait_last)
 
 int app_aui_cloud_push_text(char *text)
 {
-    return aui_cloud_push_text(&g_aui_handler, text);
+    if (strncasecmp(text, MUSIC_PREFIX, strlen(MUSIC_PREFIX)) == 0) {
+        LOGI(TAG, "get music url start");
+        return baidu_music(&g_aui_handler, text);
+    }
+    return aui_cloud_push_text(&g_aui_handler, text); 
 }

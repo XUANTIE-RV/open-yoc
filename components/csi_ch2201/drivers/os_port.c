@@ -2,7 +2,6 @@
  * Copyright (C) 2019-2020 Alibaba Group Holding Limited
  */
 
-#include <csi_config.h>
 
 #ifdef CONFIG_KERNEL_RHINO
 extern void non_tspend_cpu_task_switch(void);

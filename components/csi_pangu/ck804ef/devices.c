@@ -13,7 +13,6 @@
  ******************************************************************************/
 
 #include <stdio.h>
-#include <csi_config.h>
 #include <soc.h>
 #include <drv/usart.h>
 #include <drv/timer.h>

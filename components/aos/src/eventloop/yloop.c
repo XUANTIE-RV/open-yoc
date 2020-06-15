@@ -1,4 +1,3 @@
-#include <yoc_config.h>
 
 #include <stdlib.h>
 #include <stdio.h>

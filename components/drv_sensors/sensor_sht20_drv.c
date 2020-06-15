@@ -100,7 +100,7 @@ static int yoc_sensor_sht20_fetch(aos_dev_t *dev)
 
     iic_config(dev, config);
 
-    ret = iic_send(dev, config->slave_addr, &sensor->humiaddr, 1);
+    ret = iic_master_send(dev, config->slave_addr, &sensor->humiaddr, 1, AOS_WAIT_FOREVER);
 
     if (ret < 0) {
         LOGE(TAG, "send err");
@@ -108,14 +108,14 @@ static int yoc_sensor_sht20_fetch(aos_dev_t *dev)
     }
 
     aos_msleep(80);
-    ret = iic_recv(dev, config->slave_addr, &sensor->recv_humi_buf, 2);
+    ret = iic_master_recv(dev, config->slave_addr, &sensor->recv_humi_buf, 2, AOS_WAIT_FOREVER);
 
     if (ret < 0) {
         LOGE(TAG, "recv err");
         return -1;
     }
 
-    ret = iic_send(dev, config->slave_addr, &sensor->tempaddr, 1);
+    ret = iic_master_send(dev, config->slave_addr, &sensor->tempaddr, 1, AOS_WAIT_FOREVER);
 
     if (ret < 0) {
         LOGE(TAG, "send err");
@@ -123,7 +123,7 @@ static int yoc_sensor_sht20_fetch(aos_dev_t *dev)
     }
 
     aos_msleep(80);
-    ret = iic_recv(dev, config->slave_addr, &sensor->recv_temp_buf, 2);
+    ret = iic_master_recv(dev, config->slave_addr, &sensor->recv_temp_buf, 2, AOS_WAIT_FOREVER);
 
     if (ret < 0) {
         LOGE(TAG, "recv err");

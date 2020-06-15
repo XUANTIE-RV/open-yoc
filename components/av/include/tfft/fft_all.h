@@ -36,7 +36,8 @@ static inline int fftx_register()
 {
 #if defined(CONFIG_FFTXER_SPEEX)
     REGISTER_FFTXER(SPEEX, speex);
-#elif defined(CONFIG_FFTXER_IPC)
+#endif
+#if defined(CONFIG_FFTXER_IPC)
     REGISTER_FFTXER(IPC, ipc);
 #endif
     return 0;

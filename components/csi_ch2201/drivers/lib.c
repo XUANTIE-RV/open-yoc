@@ -8,7 +8,6 @@
  * @version  V1.0
  * @date     02. June 2017
  ******************************************************************************/
-#include <csi_config.h>
 #include <stdint.h>
 #include <stdarg.h>
 #include <stdio.h>

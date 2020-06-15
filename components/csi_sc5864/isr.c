@@ -10,7 +10,6 @@
  ******************************************************************************/
 
 #include <drv/common.h>
-#include <csi_config.h>
 #include <soc.h>
 #include <silan_pic.h>
 #ifndef CONFIG_KERNEL_NONE

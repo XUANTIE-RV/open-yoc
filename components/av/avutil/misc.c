@@ -14,6 +14,11 @@ static struct {
     { "aac",              AVCODEC_ID_AAC       },
     { "raw pcm",          AVCODEC_ID_RAWAUDIO  },
     { "adpcm_ms",         AVCODEC_ID_ADPCM_MS  },
+    { "flac",             AVCODEC_ID_FLAC      },
+    { "wmav1",            AVCODEC_ID_WMAV1     },
+    { "wmav2",            AVCODEC_ID_WMAV2     },
+    { "amrnb",            AVCODEC_ID_AMRNB     },
+    { "amrwb",            AVCODEC_ID_AMRWB     },
 };
 
 /**
@@ -130,4 +135,29 @@ char* four_2_str(uint32_t val)
 
     return buf;
 }
+
+/**
+* @brief  crc8(x8+x2+x+1)
+* @param  [in] data
+* @param  [in] len
+* @return 0 if ok
+*/
+uint8_t av_crc8(uint8_t *data, size_t len)
+{
+    int i;
+    uint8_t crc = 0;
+
+    while (len--) {
+        crc ^= *data++;
+        for (i = 0; i < 8; i++) {
+            if (crc & 0x80)
+                crc = (crc << 1) ^ 0x07;
+            else
+                crc <<= 1;
+        }
+    }
+
+    return crc;
+}
+
 

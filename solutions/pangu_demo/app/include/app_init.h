@@ -1,6 +1,6 @@
 #ifndef __APP_INIT_H
 #define __APP_INIT_H
-#include <yoc/netmgr.h>
+#include <yoc/netmgr_service.h>
 #include <yoc/uservice.h>
 
 extern netmgr_hdl_t app_netmgr_hdl;

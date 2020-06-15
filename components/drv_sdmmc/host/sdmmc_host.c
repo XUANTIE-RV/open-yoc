@@ -144,7 +144,7 @@ static status_t SDMMCHOST_TransferFunction(SDMMCHOST_TYPE base, SDMMCHOST_TRANSF
 
     sdif_dma_config_t dmaConfig;
 
-    memset(s_sdifDmaTable[sdif], 0, sizeof(s_sdifDmaTable[0]));
+    //memset(s_sdifDmaTable[sdif], 0, sizeof(s_sdifDmaTable[0]));
     memset(&dmaConfig, 0, sizeof(dmaConfig));
 
     /* user DMA mode transfer data */

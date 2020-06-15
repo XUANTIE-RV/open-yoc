@@ -9,7 +9,6 @@
  * @date     02. June 2017
  ******************************************************************************/
 
-#include <csi_config.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <drv/irq.h>

@@ -24,6 +24,11 @@ typedef enum {
     BUTTON_EVT_END
 } button_evt_id_t;
 
+typedef enum {
+    BUTTON_TYPE_GPIO,/* GPIO按键 支持中断方式*/
+    BUTTON_TYPE_ADC, /* ADC按键 */
+} button_type_t;
+
 typedef void (*evt_cb)(button_evt_id_t event_id, char *name, void *priv);
 
 typedef struct button_param {
@@ -31,6 +36,9 @@ typedef struct button_param {
     int ld_tmout;   //min long press time
     int dd_tmout;   //max double press time interval
     int active_level;
+    const char *adc_name; //if button is adc_button, it has
+    int range; //if button is adc_button, it has
+    int vref; //if button is adc_button, it has
 } button_param_t;
 
 typedef struct button_config {
@@ -38,12 +46,13 @@ typedef struct button_config {
     int evt_flag;
     evt_cb cb;
     void *priv;
+    int type;
     char name[MAX_BUTTON_NAME];
 } button_config_t;
 
 #define MAX_COMBINATION_NUM (2)
 struct button_combinations {
-    int pin_id[MAX_COMBINATION_NUM];
+    const char *pin_name[MAX_COMBINATION_NUM];
     int pin_sum;
     int evt_flag;
     int tmout;
@@ -59,10 +68,40 @@ struct button_combinations {
 #define DOUBLE_PRESS_FLAG (1<<BUTTON_PRESS_DOUBLE)
 #define EVT_ALL_FLAG (PRESS_DOWN_FLAG | PRESS_UP_FLAG | DOUBLE_PRESS_FLAG | PRESS_LONG_DOWN_FLAG)
 
+/**
+ * @brief  button service init
+ * @return 0 on success, -1 on failed
+ */
 int button_srv_init(void);
+
+/**
+ * @brief  button table init
+ * @param  [in] b_tbl          : button table
+ * @return 0 on success, -1 on failed
+ */
 int button_init(const button_config_t b_tbl[]);
+
+/**
+ * @brief  combination button table init
+ * @param  [in] bc_tbl          : combination button table
+ * @return 0 on success, -1 on failed
+ */
 int button_combination_init(const button_combinations_t bc_tbl[]);
-int button_param_cur(int pin_id, button_param_t *p);
-int button_param_set(int pin_id, button_param_t *p);
+
+/**
+ * @brief  get button param
+ * @param  [in] name       : button name
+ * @param  [in] p          : button param
+ * @return 0 on success, -1 on failed
+ */
+int button_param_cur(char *name, button_param_t *p);
+
+/**
+ * @brief  set button param
+ * @param  [in] name       : button name
+ * @param  [in] p          : button param
+ * @return 0 on success, -1 on failed
+ */
+int button_param_set(char *name, button_param_t *p);
 
 #endif

@@ -10,7 +10,6 @@
  * @date     02. June 2017
  ******************************************************************************/
 
-#include <csi_config.h>
 #include <soc.h>
 #include <csi_core.h>
 #include <silan_pic.h>

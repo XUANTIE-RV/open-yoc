@@ -16,15 +16,5 @@ int ao_register_alsa()
     return ao_ops_register(&ao_ops_alsa);
 }
 
-/**
- * @brief  regist audio output for ipc
- * @return 0/-1
- */
-int ao_register_ipc()
-{
-    extern struct ao_ops ao_ops_ipc;
-    return ao_ops_register(&ao_ops_ipc);
-}
-
 
 

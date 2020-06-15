@@ -11,7 +11,6 @@
  * @vendor   csky
  * @chip     pangu
  ******************************************************************************/
-#include <csi_config.h>
 #include <stdint.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -28,7 +27,7 @@ static void _500udelay(void)
     uint32_t load = csi_coret_get_load();
     uint32_t start = csi_coret_get_value();
     uint32_t cur;
-    uint32_t cnt = (drv_get_cpu_freq(drv_get_cpu_id()) / 1000 / 2);
+    uint32_t cnt = (drv_get_cur_cpu_freq() / 1000 / 2);
 
     while (1) {
         cur = csi_coret_get_value();

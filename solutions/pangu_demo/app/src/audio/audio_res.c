@@ -6,6 +6,7 @@
 #include <media.h>
 
 #include "audio_res.h"
+#include "app_main.h"
 
 typedef struct _local_audio_info {
     const unsigned char *addr;
@@ -28,8 +29,8 @@ int local_audio_play(local_audio_name_t name)
     snprintf(local_url, sizeof(local_url), "mem://addr=%u&size=%u", addr, size);
 
     if (name == LOCAL_AUDIO_HELLO) {
-        return aui_player_play(MEDIA_SYSTEM, local_url, 0);
+        return app_player_play(MEDIA_SYSTEM, local_url, 0);
     } else {
-        return aui_player_play(MEDIA_SYSTEM, local_url, 1);
+        return app_player_play(MEDIA_SYSTEM, local_url, 1);
     }
 }

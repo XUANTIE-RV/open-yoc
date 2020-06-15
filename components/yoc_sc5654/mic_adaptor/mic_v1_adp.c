@@ -120,7 +120,7 @@ static int mic_adaptor_wwv_get_data(mic_t *mic, void **data, size_t *size)
     return 0;
 }
 
-static int mic_adaptor_set_param(mic_t *mic, void *hw)
+static int mic_adaptor_set_param(mic_t *mic, mic_param_t *hw)
 {
     yv_t *yv = (yv_t *)mic_get_privdata();
 
@@ -129,7 +129,7 @@ static int mic_adaptor_set_param(mic_t *mic, void *hw)
     return 0;
 }
 
-static int mic_adaptor_get_param(mic_t *mic, void *hw)
+static int mic_adaptor_get_param(mic_t *mic, mic_param_t *hw)
 {
     yv_t *yv = (yv_t *)mic_get_privdata();
 

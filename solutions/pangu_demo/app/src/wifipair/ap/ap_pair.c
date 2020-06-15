@@ -1,6 +1,5 @@
 
 
-#include <yoc_config.h>
 
 #include <stdlib.h>
 #include <string.h>
@@ -12,7 +11,7 @@
 #include <yoc/sysinfo.h>
 #include <yoc/uservice.h>
 #include <yoc/eventid.h>
-#include <yoc/netmgr.h>
+#include <yoc/netmgr_service.h>
 #include <yoc/init.h>
 
 #include "devices/wifi.h"

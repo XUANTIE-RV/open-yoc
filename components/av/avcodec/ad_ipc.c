@@ -20,27 +20,23 @@ static int _ad_ipc_open(ad_cls_t *o)
     int rc;
     struct ad_ipc_priv *priv = NULL;
     adicore_t *hdl;
-    adih_t ash;
+    adi_conf_t adi_cnf;
 
     priv = aos_zalloc(sizeof(struct ad_ipc_priv));
-    CHECK_RET_TAG_WITH_RET(NULL != priv, -1);
+    CHECK_RET_TAG_WITH_RET(priv, -1);
 
     rc = adicore_init();
     CHECK_RET_TAG_WITH_GOTO(rc == 0, err);
 
-    memset(&ash, 0, sizeof(adih_t));
-    if (o->ash.id == AVCODEC_ID_MP3) {
-        ash.id = ICORE_CODEC_ID_MP3;
-    } else if (o->ash.id == AVCODEC_ID_AAC) {
-        ash.id = ICORE_CODEC_ID_AAC;
-    } else {
-        LOGE(TAG, "%s, %d faild. id = %d", __FUNCTION__, __LINE__, o->ash.id);
-        goto err;
-    }
-    ash.extradata      = o->ash.extradata;
-    ash.extradata_size = o->ash.extradata_size;
+    rc = adicore_conf_init(&adi_cnf);
+    CHECK_RET_TAG_WITH_GOTO(rc == 0, err);
+    adi_cnf.sf             = o->ash.sf;
+    adi_cnf.block_align    = o->ash.block_align;
+    adi_cnf.bps            = o->ash.bps;
+    adi_cnf.extradata      = o->ash.extradata;
+    adi_cnf.extradata_size = o->ash.extradata_size;
 
-    hdl = adicore_open(&ash);
+    hdl = adicore_open(o->ash.id, &adi_cnf);
     CHECK_RET_TAG_WITH_GOTO(hdl, err);
     adicore_get_sf(hdl, &o->ash.sf);
 
@@ -69,26 +65,8 @@ static int _ad_ipc_decode(ad_cls_t *o, avframe_t *frame, int *got_frame, const a
 
 static int _ad_ipc_control(ad_cls_t *o, int cmd, void *arg, size_t *arg_size)
 {
-    int ret = -1;
-    struct ad_ipc_priv *priv = o->priv;
-
-    switch (cmd) {
-    case CODEC_CMD_GET_SAMPLE_FORMAT:
-        if (arg && arg_size && (*arg_size == sizeof(sf_t))) {
-            sf_t sf = 0;
-
-            ret = adicore_get_sf(priv->hdl, &sf);
-            if (ret == 0) {
-                *(sf_t*)arg = sf;
-            }
-        }
-        break;
-    default:
-        //LOGE(TAG, "%s, %d control failed. cmd = %d", __FUNCTION__, __LINE__, cmd);
-        return ret;
-    }
-
-    return ret;
+    //TODO
+    return 0;
 }
 
 static int _ad_ipc_reset(ad_cls_t *o)

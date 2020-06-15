@@ -39,7 +39,6 @@
 #define LWIP_LWIPOPTS_H
 
 //#include "lwip/arch.h"
-#include <yoc_config.h>
 
 /**
  * Include user defined options first. Anything not defined in these files
@@ -348,7 +347,6 @@ MEM_SIZE and MEMP_NUM_XXX will be invalid */
 
 #define LWIP_EXT_SIM_ARP                0
 #define LWIP_EXT_ZWP_LIMITED            0
-#define LWIP_EXT_NO_DNS_TMR             0
 
 #define LWIP_NETIF_DRV                  1
 

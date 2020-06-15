@@ -2,7 +2,6 @@
  * Copyright (C) 2018-2020 Alibaba Group Holding Limited
  */
 
-#include <yoc_config.h>
 #include "avutil/straight_fifo.h"
 
 struct straight_fifo {
@@ -96,7 +95,7 @@ int sfifo_get_rpos(sfifo_t* fifo, char **pos, uint32_t timeout)
             *pos = (char*)fifo->buf + fifo->ridx;
         }
     } else {
-        LOGI(TAG, "get rpos. weof = %d, reof = %d size = %u, widx = %d, ridx = %d, len = %d",
+        LOGD(TAG, "get rpos. weof = %d, reof = %d size = %u, widx = %d, ridx = %d, len = %d",
              fifo->weof, fifo->reof, fifo->size, fifo->widx, fifo->ridx, fifo->len);
     }
     unlock();
@@ -167,7 +166,7 @@ int sfifo_get_wpos(sfifo_t* fifo, char **pos, uint32_t timeout)
             *pos = (char*)fifo->buf + fifo->widx;
         }
     } else {
-        LOGI(TAG, "get wpos. weof = %d, reof = %d size = %u, widx = %d, ridx = %d, len = %d",
+        LOGD(TAG, "get wpos. weof = %d, reof = %d size = %u, widx = %d, ridx = %d, len = %d",
              fifo->weof, fifo->reof, fifo->size, fifo->widx, fifo->ridx, fifo->len);
     }
     unlock();

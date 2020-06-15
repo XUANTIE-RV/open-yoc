@@ -2,7 +2,6 @@
  * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
-#include <yoc_config.h>
 
 #include <stdlib.h>
 #include <string.h>
@@ -21,7 +20,8 @@
 #include <devices/device.h>
 #include <devices/devicelist.h>
 #include <devices/hal/sensor_impl.h>
-//#include <devices/dht_sensor.h>
+#include <devices/drv_sensor.h>
+#include <devices/led_rgb.h>
 
 #define SENSOR_NAME "simulate"
 //#define SENSOR_NAME DHT11_DEV_NAME

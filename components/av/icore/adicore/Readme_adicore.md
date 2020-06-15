@@ -14,7 +14,7 @@ static int _ad_ipc_open(ad_cls_t *o)
     int rc;
     struct ad_ipc_priv *priv = NULL;
     adicore_t *hdl;
-    adih_t ash;
+    adi_conf_t adi_cnf;
 
     priv = aos_zalloc(sizeof(struct ad_ipc_priv));
     CHECK_RET_TAG_WITH_RET(NULL != priv, -1);
@@ -23,20 +23,20 @@ static int _ad_ipc_open(ad_cls_t *o)
     rc = adicore_init();
     CHECK_RET_TAG_WITH_GOTO(rc == 0, err);
 
-    memset(&ash, 0, sizeof(adih_t));
+    memset(&adi_cnf, 0, sizeof(adi_conf_t));
     if (o->ash.id == AVCODEC_ID_MP3) {
-        ash.id = ICORE_CODEC_ID_MP3;
+        adi_cnf.id = ICORE_CODEC_ID_MP3;
     } else if (o->ash.id == AVCODEC_ID_AAC) {
-        ash.id = ICORE_CODEC_ID_AAC;
+        adi_cnf.id = ICORE_CODEC_ID_AAC;
     } else {
         LOGE(TAG, "%s, %d faild. id = %d", __FUNCTION__, __LINE__, o->ash.id);
         goto err;
     }
-    ash.extradata      = o->ash.extradata;
-    ash.extradata_size = o->ash.extradata_size;
+    adi_cnf.extradata      = o->ash.extradata;
+    adi_cnf.extradata_size = o->ash.extradata_size;
 
     /* 打开核间解码库 */
-    hdl = adicore_open(&ash);
+    hdl = adicore_open(&adi_cnf);
     CHECK_RET_TAG_WITH_GOTO(NULL != hdl, err);
     adicore_get_sf(hdl, &o->ash.sf);
 

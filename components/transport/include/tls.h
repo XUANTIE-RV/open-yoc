@@ -23,6 +23,8 @@
 #include "mbedtls/ssl.h"
 #include "mbedtls/certs.h"
 #include "mbedtls/x509_crt.h"
+#include "mbedtls/ctr_drbg.h"
+#include "mbedtls/entropy.h"
 #include "tperrors.h"
 
 #ifdef __cplusplus
@@ -90,11 +92,11 @@ typedef struct tls_cfg {
 typedef struct tls {
     mbedtls_ssl_context ssl;                                                    /*!< TLS/SSL context */
  
-    // mbedtls_entropy_context entropy;                                            /*!< mbedTLS entropy context structure */
+    mbedtls_entropy_context entropy;                                            /*!< mbedTLS entropy context structure */
  
-    // mbedtls_ctr_drbg_context ctr_drbg;                                          /*!< mbedTLS ctr drbg context structure.
-    //                                                                                  CTR_DRBG is deterministic random
-    //                                                                                  bit generation based on AES-256 */
+    mbedtls_ctr_drbg_context ctr_drbg;                                          /*!< mbedTLS ctr drbg context structure.
+                                                                                     CTR_DRBG is deterministic random
+                                                                                     bit generation based on AES-256 */
  
     mbedtls_ssl_config conf;                                                    /*!< TLS/SSL configuration to be shared 
                                                                                      between mbedtls_ssl_context 

@@ -1,13 +1,13 @@
 
 ## 第一部分： 基础信息
 name: aui_aliyunnls                                 # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
-description: 阿里云智能语音交互组件，提供了语音合成、语音识别等功能。 # <必选项> 建议至少20字以上
-type: common                                        # <可选项> 组件类型，为：solution, chip, board, common，缺省值 common
+version: v7.3.0                                     # <必选项> 组件版本号
+description: 专为rtos打造的语音解决方案，提供了语音合成、语义理解、本地语义端文本理解等接口。 # <必选项> 建议至少20字以上
+type: common                                        # <必选项> 组件类型，为：solution, chip, board, common
 
 tag: 核心模块                                       # <可选项> 组件分类，缺省值： ''
 keywords:                                           # <可选项> 标签，会影响到组件被搜索的效果，合理的标签很重要
   - base
-yoc_version: ['v7.2', 'v7.3']
 license: Apache license v2.0                        # <可选项> 源代码的许可证，要确保所有代码、文件的许可证不冲突。如：MIT，Apache license v2.0，BSD
 
 ## 第二部分：依赖信息
@@ -17,11 +17,7 @@ license: Apache license v2.0                        # <可选项> 源代码的�
 #   - minilibc: v7.2.0
 #   - aos: >=v7.2.0
 depends:
-  - csi: V7.2.2
-  - rhino: V7.2.2
-  - minilibc: V7.2.2
-  - aos: V7.2.2
-  - vfs: V7.2.2
+  - aui_cloud: V7.3.0
 
 ## 第四部分：编译连接信息
 # build_config:                            # <可选项> 编译配置项
@@ -45,7 +41,9 @@ build_config:
   cflag: '-Wno-nonnull-compare'
   define:
     - CONFIG_USING_TLS=1
-  include:
+  # include:
+  #   - include
+  internal_include:
     - include
   libs:
     - mind_nuithings
@@ -55,15 +53,13 @@ build_config:
 # source_file:                             # <可选项> 指定参与编译的源代码文件，支持通配符，采用相对路径
 #   - src/*.c                              # 例：组件 src 目录下所有的扩展名为 c 的源代码文件
 source_file:
-  - "*.c"
+  - src/*.c
 
 ## 第五部分：配置信息
 # def_config:                              # 组件的可配置项
 #   CONFIG_DEBUG: y
 #   CONFIG_PARAM_NOT_CHECK: y
 #   CONFIG_CLI: y
-def_config:
-    CONFIG_AUI_DEMO_ALIYUNNLS: 1
 
 ## 第六部分：安装信息
 # install:
@@ -71,9 +67,12 @@ def_config:
 #     source:                              # 安装源列表
 #      - src/*.h                           # 支持通配符，相对路径
 install:
-  - dest: "include/yoc"
+  - dest: "include"
     source:
-      - "include/yoc/*.h"
+      - "include/*.h"
+  - dest: lib
+    source:
+      - libs/<cpu>/libmind_nuithings.a
 
 ## 第七部分：导出部分
 # export:

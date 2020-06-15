@@ -45,6 +45,15 @@ int stream_register_fifo()
     return stream_ops_register(&stream_ops_fifo);
 }
 
+/**
+ * @brief  regist stream for crypto
+ * @return 0/-1
+ */
+int stream_register_crypto()
+{
+    extern struct stream_ops stream_ops_crypto;
+    return stream_ops_register(&stream_ops_crypto);
+}
 
 
 

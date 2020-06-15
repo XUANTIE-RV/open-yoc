@@ -47,6 +47,7 @@ typedef struct {
 typedef unsigned int aos_task_key_t;
 
 #define MS2TICK(ms) krhino_ms_to_ticks(ms)
+int32_t aos_irq_context(void);
 
 /**
  * Reboot AliOS.
@@ -207,6 +208,15 @@ int aos_mutex_unlock(aos_mutex_t *mutex);
  * @return  0: invalid, 1: valid.
  */
 int aos_mutex_is_valid(aos_mutex_t *mutex);
+
+/**
+ * This function will check if mutex is locked.
+ *
+ * @param[in]  mutex  pointer to the mutex.
+ *
+ * @return  0: no lock, 1: locked.
+ */
+int aos_mutex_is_locked(aos_mutex_t *mutex);
 
 /**
  * Alloc a semaphore.

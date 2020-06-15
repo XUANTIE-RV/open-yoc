@@ -1,7 +1,6 @@
 /*
  * Copyright (C) 2019-2020 Alibaba Group Holding Limited
  */
-#include <yoc_config.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -62,6 +61,8 @@ static int rhino2stderrno(int ret)
         case RHINO_WORKQUEUE_WORK_EXIST:
             return -EINVAL;
 
+        case RHINO_BLK_TIMEOUT:
+            return -ETIMEDOUT ;
         case RHINO_KOBJ_BLK:
             return -EAGAIN;
 
@@ -138,6 +139,24 @@ int aos_task_new_ext(aos_task_t *task, const char *name, void (*fn)(void *), voi
                                       stack_size / sizeof(cpu_stack_t), fn, 1u);
 
     return rhino2stderrno(ret);
+}
+
+ktask_t *debug_task_find(char *name)
+{
+#if (RHINO_CONFIG_KOBJ_LIST > 0)
+    klist_t *listnode;
+    ktask_t *task;
+
+    for (listnode = g_kobj_list.task_head.next;
+         listnode != &g_kobj_list.task_head; listnode = listnode->next) {
+        task = krhino_list_entry(listnode, ktask_t, task_stats_item);
+        if (0 == strcmp(name, task->task_name)) {
+            return task;
+        }
+    }
+#endif
+
+    return NULL;
 }
 
 void aos_task_wdt_attach(void (*will)(void *), void *args)
@@ -228,6 +247,10 @@ void aos_task_key_delete(aos_task_key_t key)
 int aos_task_setspecific(aos_task_key_t key, void *vp)
 {
     int ret;
+
+    if (!(used_bitmap & (1 << key))) {
+        return -EINVAL;
+    }
     ret = krhino_task_info_set(krhino_cur_task_get(), key, vp);
 
     return rhino2stderrno(ret);
@@ -236,6 +259,10 @@ int aos_task_setspecific(aos_task_key_t key, void *vp)
 void *aos_task_getspecific(aos_task_key_t key)
 {
     void *vp = NULL;
+
+    if (!(used_bitmap & (1 << key))) {
+        return vp;
+    }
 
     krhino_task_info_get(krhino_cur_task_get(), key, &vp);
 
@@ -323,6 +350,7 @@ int aos_mutex_is_valid(aos_mutex_t *mutex)
 
     return 1;
 }
+
 #endif
 
 #if ((RHINO_CONFIG_KOBJ_DYN_ALLOC > 0)&&(RHINO_CONFIG_SEM > 0))
@@ -1042,10 +1070,15 @@ void aos_task_yield()
     krhino_task_yield();
 }
 
+void aos_reboot_ext(int cmd)
+{
+    extern void drv_reboot(int cmd);
+    drv_reboot(cmd);
+}
+
 void aos_reboot(void)
 {
-    extern void drv_reboot(void);
-    drv_reboot();
+    aos_reboot_ext(0);
 }
 
 #define RHINO_OS_MS_PERIOD_TICK      (1000 / RHINO_CONFIG_TICKS_PER_SECOND)
@@ -1078,4 +1111,9 @@ void aos_kernel_resume(int32_t ticks)
 {
     tick_list_update((tick_i_t)ticks);
     core_sched();
+}
+
+int32_t aos_irq_context(void)
+{
+    return g_intrpt_nested_level[cpu_cur_get()] > 0u;
 }

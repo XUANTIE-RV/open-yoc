@@ -14,7 +14,6 @@
  * @tag      DRV_CK_I2S_TAG
 ******************************************************************************/
 
-#include <csi_config.h>
 #include <string.h>
 #include <drv/irq.h>
 #include <drv/i2s.h>

@@ -5602,11 +5602,6 @@ void mbedtls_ssl_init( mbedtls_ssl_context *ssl )
     memset( ssl, 0, sizeof( mbedtls_ssl_context ) );
 }
 
-void mbedtls_ssl_init_ext( mbedtls_ssl_context *ssl, int max_content_len)
-{
-    memset( ssl, 0, sizeof( mbedtls_ssl_context ) );
-}
-
 /*
  * Setup an SSL context
  */

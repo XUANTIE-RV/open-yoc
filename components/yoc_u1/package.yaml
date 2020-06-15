@@ -1,0 +1,39 @@
+name: yoc_u1
+version: v7.3.0                                     # <必选项> 组件版本号
+description: u1驱动组件
+tag: 第三方驱动
+keywords:
+  - base
+
+license: Apache license v2.0                                   # GPLv2，LGPLv2.1，MIT，Apache license v2.0，BSD
+homepage: ""
+
+type: common
+
+depends:                                       # 该组件依赖其他的组件
+  - csi: V7.3.0
+  - rhino: V7.3.0
+  - aos: V7.3.0
+  - vfs: V7.3.0
+
+source_file:
+  - './*.c'
+
+build_config:
+  include:
+    - include
+
+  cflag: ""                             # C 编译器所需要要的编译参数
+  # define:                               # 宏定义
+  #libs:
+  #  - fota_diff_dayu
+  #libpath:
+  #  - ./libs
+
+install:
+  - dest: include/devices
+    source:
+      - "include/devices/*.h"
+  - dest: lib
+    source:
+      - libs/libfota_diff_dayu.a

@@ -16,13 +16,14 @@
 #ifndef __METAL_NUTTX_MUTEX__H__
 #define __METAL_NUTTX_MUTEX__H__
 
-#include <aos/kernel.h>
+// #include <aos/kernel.h>
+#include <pthread.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-typedef aos_mutex_t metal_mutex_t;
+typedef pthread_mutex_t metal_mutex_t;
 
 /*
  * METAL_MUTEX_INIT - used for initializing an mutex elmenet in a static struct
@@ -37,33 +38,33 @@ typedef aos_mutex_t metal_mutex_t;
 
 static inline void __metal_mutex_init(metal_mutex_t *mutex)
 {
-	aos_mutex_new(mutex);
+	pthread_mutex_init(mutex, NULL);
 }
 
 static inline void __metal_mutex_deinit(metal_mutex_t *mutex)
 {
-	aos_mutex_free(mutex);
+	pthread_mutex_destroy(mutex);
 }
 
 static inline int __metal_mutex_try_acquire(metal_mutex_t *mutex)
 {
 	
-	return aos_mutex_lock(mutex, 1);
+	return pthread_mutex_trylock(mutex);
 }
 
 static inline void __metal_mutex_acquire(metal_mutex_t *mutex)
 {
-	aos_mutex_lock(mutex, AOS_WAIT_FOREVER);
+	pthread_mutex_lock(mutex);
 }
 
 static inline void __metal_mutex_release(metal_mutex_t *mutex)
 {
-	aos_mutex_unlock(mutex);
+	pthread_mutex_unlock(mutex);
 }
 
 static inline int __metal_mutex_is_acquired(metal_mutex_t *mutex)
 {
-	return aos_mutex_is_locked(mutex);
+	return 0;
 }
 
 #ifdef __cplusplus

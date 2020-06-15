@@ -13,7 +13,6 @@
  *           #include <syslog.h>
  ******************************************************************************/
 #include <stdio.h>
-#include <csi_config.h>
 
 #ifndef _SYSLOG_H_
 #define _SYSLOG_H_

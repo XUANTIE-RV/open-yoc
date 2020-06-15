@@ -1,0 +1,137 @@
+name: pangu_tee_test
+version: v7.3.0                                     # <必选项> 组件版本号
+description: 盘古TEE测试例子
+
+type: solution
+
+solution:
+  board_name: pangu_cpu0
+  cpu_id: cpu0
+  ld_script: gcc_eflash.ld
+
+depends:                                       # 该组件依赖其他的组件
+  - csi: V7.3.0
+  - rhino: V7.3.0
+  - minilibc: V7.3.0
+  - aos: V7.3.0
+  - console: V7.3.0
+  - csi_pangu: V7.3.0
+  - netmgr: V7.3.0
+  - drivers: V7.3.0
+  # - drv_wifi_rtl8723ds: V7.3.0
+  - drv_sdmmc: V7.3.0
+  - drv_snd_pangu: V7.3.0
+  - pangu_cpu0: V7.3.0 # '>' | ‘>=' | ''
+  - minialsa: V7.3.0
+  - ipc: V7.3.0
+  - posix: V7.3.0
+  # - ntp: V7.3.0
+  # - fota: V7.3.0
+  - lwip: V7.3.0
+  # - aui_cloud: V7.3.0
+  - voice: V7.3.0
+  # - record: V7.3.0
+  # - webclient: V7.3.0
+  # - websocket: V7.3.0
+  # - mic: V7.3.0
+  # - av: V7.3.0
+  - kv: V7.3.0
+  # - cjson: V7.3.0
+  # - button: V7.3.0
+  - mbedtls: V7.3.0
+  # - vfs: V7.3.0
+  # - bt: V7.3.0
+  # - drv_bt_rtl8723ds: V7.3.0
+  # - fatfs: V7.3.0
+  # - httpclient: V7.3.0
+
+# 编译参数
+build_config:
+  include:
+    - app/include
+    - app/src
+    - app/src/tee
+  libs:
+
+  libpath:
+
+  cflag: -O2 -Wall
+  cxxflag: -O2  -Wall
+  asmflag: ""
+
+  ldflag:
+
+
+# 源文件
+source_file:
+  - app/src/*.c
+  - app/src/init/*.c
+  - app/src/tee/*.c
+
+
+def_config:
+  CONFIG_DEBUG: 1
+  # CONFIG_DEBUG_MM: 1
+  CONFIG_ARCH_CSKY: 1
+  CONFIG_PARAM_NOT_CHECK: 1
+
+  CONFIG_CLI: 1
+  CONFIG_NETMGR_WIFI: 1
+
+  CONFIG_KV_SMART: 1
+  CONFIG_AT: 1
+  CONFIG_NTP: 1
+  CONFIG_USING_TLS: 1
+
+  CONFIG_TCPIP: 1
+  CONFIG_WIFI_RTL8723DS: 1
+
+  CONFIG_NON_ADDRESS_FLASH: 1
+
+  CONFIG_SOFTWDT: 1
+
+  CONFIG_TEE_CA: 1
+  # CONFIG_SYSTEM_SECURE: 1
+
+  CONFIG_KERNEL_WORKQUEUE: 1
+  CONFIG_SYSTICK_HZ: 1000
+
+  CONFIG_CPU_CK804EF: 1
+  CONFIG_CHIP_VENDOR_CSKY: 1
+  CONFIG_CHIP_PANGU: 1
+  CONFIG_CHIP_PANGU_CPU0: 1
+  CONFIG_HAVE_VIC: 1
+  CONFIG_KERNEL_RHINO: 1
+  CONFIG_ARCH_INTERRUPTSTACK: 4096
+
+  CONFIG_FFTXER_SPEEX: 0
+  CONFIG_FFTXER_IPC: 0
+  CONFIG_RESAMPLER_SILAN: 1
+  CONFIG_RESAMPLER_SPEEX: 0
+  CONFIG_RESAMPLER_IPC: 0
+  CONFIG_AEFXER_SONA: 1
+  CONFIG_AEFXER_IPC: 0
+  CONFIG_DECODER_PCM: 1
+  CONFIG_DECODER_PVMP3: 0
+  CONFIG_DECODER_FLAC: 1
+  CONFIG_DECODER_FDK: 0
+  CONFIG_DECODER_ADPCM_MS: 1
+  CONFIG_DECODER_AMRNB: 1
+  CONFIG_DECODER_AMRWB: 1
+  CONFIG_DECODER_IPC: 1
+
+  CONFIG_VENDOR_NAME: "csky"
+  CONFIG_CHIP_NAME: "pangu"
+  CONFIG_BOARD_NAME: "pangu_cpu0"
+  CONFIG_CPU: "ck804ef"
+
+  # CONFIG_LED_TASK_ON: 1
+
+
+export:
+  - dest: "<SOLUTION_PATH>/generated/data"
+    source:
+      - "firmware/kp"
+      - "firmware/tee"
+      - "firmware/boot"
+      - "firmware/config.yaml"

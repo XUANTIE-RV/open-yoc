@@ -22,5 +22,6 @@ partitions:
   - { name: imtb, address: 0x00281000, size: 0x002000 }
   - { name: prim, address: 0x00283000, load_addr: 0x02200000, size: 0x200000, update: FULL }
   - { name: kv,   address: 0x00483000, size: 0x004000 }
-  - { name: misc, address: 0x00487000, size: 0x379000 }
+  - { name: lfs,  address: 0x00487000, size: 0x40000 }
+  - { name: misc, address: 0x004C7000, size: 0x339000 }
 

@@ -12,7 +12,6 @@
  * @chip     pangu
  ******************************************************************************/
 #include <drv/common.h>
-#include "csi_config.h"
 #include "soc.h"
 #ifndef CONFIG_KERNEL_NONE
 #include <csi_kernel.h>

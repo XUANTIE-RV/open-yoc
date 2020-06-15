@@ -11,7 +11,6 @@
 
 #include <stdint.h>
 #include <csi_core.h>
-#include <csi_config.h>
 
 extern void Default_Handler(void);
 extern void (*g_irqvector[])(void);

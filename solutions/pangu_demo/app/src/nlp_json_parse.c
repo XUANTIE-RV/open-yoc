@@ -1,8 +1,7 @@
 /*
- * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ * Copyright (C) 2019-2020 Alibaba Group Holding Limited
  */
 
-#include <yoc_config.h>
 
 #include <stdlib.h>
 #include <string.h>
@@ -112,7 +111,7 @@ int aui_nlp_process_pre_check(cJSON *js, const char *json_text)
         return 0;
     }
 
-    /* aliyun asr */
+    /* aliyun rasr */
     cJSON *aliyunrt  = cJSON_GetObjectItem(js, "identify");
     if (cJSON_IsString(aliyunrt)) {
         return 0;
@@ -123,16 +122,6 @@ int aui_nlp_process_pre_check(cJSON *js, const char *json_text)
 
     if (cJSON_IsString(music_url)) {
         return 0;
-    }
-
-    /* 百度ASR返回 */
-    cJSON *results  = cJSON_GetObjectItem(js, "results_recognition");
-
-    if (cJSON_GetArraySize(results) > 0) {
-        cJSON *result_item = cJSON_GetArrayItem(results, 0);
-        if (cJSON_IsString(result_item)) {
-            return 0;
-        }
     }
 
     /* AUI 错误返回*/

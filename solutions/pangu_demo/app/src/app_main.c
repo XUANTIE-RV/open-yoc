@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ * Copyright (C) 2019-2020 Alibaba Group Holding Limited
  */
 #include <app_config.h>
 #include <stdlib.h>
@@ -37,9 +37,7 @@ static int app_aui_cmd_init(void)
     aui_nlp_process_add(&g_aui_nlp_process, aui_nlp_process_music_nlp);
     aui_nlp_process_add(&g_aui_nlp_process, aui_nlp_process_music_url);
     aui_nlp_process_add(&g_aui_nlp_process, aui_nlp_process_cmd);
-    aui_nlp_process_add(&g_aui_nlp_process, aui_nlp_process_baidu_asr);
     aui_nlp_process_add(&g_aui_nlp_process, aui_nlp_process_xf_rtasr);
-    aui_nlp_process_add(&g_aui_nlp_process, aui_nlp_process_proxy_ws_asr);
     aui_nlp_process_add(&g_aui_nlp_process, aui_nlp_process_aliyun_rasr);
     aui_nlp_process_add(&g_aui_nlp_process, aui_nlp_proc_cb_textcmd);
 
@@ -80,7 +78,7 @@ static void aui_nlp_cb(const char *json_text)
 }
 
 /* ai engine init */
-static int app_aui_nlp_init(void)
+static int app_aui_init(void)
 {
     int ret;
 
@@ -92,8 +90,10 @@ static int app_aui_nlp_init(void)
     _aui_cfg.nlp_cb      = aui_nlp_cb;
     g_aui_handler.config  = _aui_cfg;
     g_aui_handler.context = NULL;
-    g_aui_handler.asr_type = CLOUD_RASR_ALIYUN;
 
+    aui_asr_register_aliyun(&g_aui_handler);
+    aui_nlp_register_xunfei(&g_aui_handler);
+    aui_tts_register_xunfei(&g_aui_handler);
     ret = aui_cloud_init(&g_aui_handler);
 
     if (ret != 0) {
@@ -115,9 +115,11 @@ static void media_evt(int type, aui_player_evtid_t evt_id)
             case AUI_PLAYER_EVENT_ERROR:
                 local_audio_play(LOCAL_AUDIO_PLAY_ERR);
                 LOGD(TAG, "audio player error %d", AUI_PLAYER_EVENT_ERROR);
+                lpm_update();
                 break;
             case AUI_PLAYER_EVENT_FINISH:
                 LOGD(TAG, "audio player finish %d", AUI_PLAYER_EVENT_FINISH);
+                lpm_update();
                 break;
             default:
                 break;
@@ -162,8 +164,21 @@ void mic_evt_cb(int source, mic_event_id_t evt_id, void *data, int size)
                 }
             }
             break;
+
+        case MIC_EVENT_VAD: {
+            int enable = -1;
+            ret = aos_kv_getint("vad_en", &enable);
+            if ((ret == 0) && (enable == 1)) {
+                // LOGD(TAG, "MIC_EVENT_VAD");
+                lpm_update();
+            }
+            break;
+        }
+        
         case MIC_EVENT_SESSION_START:
             LOGE(TAG, "asr ok");
+
+            lpm_update();
             if (app_player_get_mute_state()) {
                 return;
             }
@@ -190,6 +205,7 @@ void mic_evt_cb(int source, mic_event_id_t evt_id, void *data, int size)
             break;
         case MIC_EVENT_SESSION_STOP:
             /* 交互结束 */
+            lpm_update();
             if (pcm_started == 1) {
                 pcm_started = 0;
                 LOGI(TAG, "asr session finish");
@@ -204,14 +220,42 @@ void mic_evt_cb(int source, mic_event_id_t evt_id, void *data, int size)
     }
 }
 
+int app_mic_is_busy(void)
+{
+    mic_state_t mic_st;
+    if (aui_mic_get_state(&mic_st) == 0) {
+        if (mic_st == MIC_STATE_SESSION) {
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
 /* mic init */
 static int app_mic_init(utask_t *task)
 {
     int ret;
+    static voice_adpator_param_t voice_param;
 
     voice_mic_register();
 
     ret = aui_mic_start(task, mic_evt_cb);
+
+    mic_param_t p;
+
+    memset(&p, 0x00, sizeof(mic_param_t));
+
+    voice_param.pcm         = "pcmC0";
+    voice_param.cts_ms      = 80;
+    voice_param.ipc_mode    = 1;
+
+    p.channels          = 1;
+    p.sample_bits       = 16;
+    p.rate              = 16000;
+    p.ext_param1        = &voice_param;
+
+    aui_mic_set_param(&p);
 
     return ret;
 }
@@ -240,7 +284,7 @@ static void cli_reg_cmd_app(void)
     test_iperf_register_cmd();
 }
 
-void main()
+int main()
 {
 extern int posix_init(void);
 extern void cxx_system_init(void);
@@ -251,6 +295,8 @@ extern void cxx_system_init(void);
     cxx_system_init();
     
     board_yoc_init();
+
+    app_lpm_init();
 
     wifi_mode_e mode = app_network_init();
 
@@ -274,7 +320,7 @@ extern void cxx_system_init(void);
     }
 
     /* 交互系统初始化 */
-    app_aui_nlp_init();
+    app_aui_init();
     app_aui_cmd_init();
     app_text_cmd_init();
 
@@ -285,5 +331,6 @@ extern void cxx_system_init(void);
     /* LED task */
     led_test_task();
 #endif
+	return 0;
 }
 

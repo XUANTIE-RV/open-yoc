@@ -10,7 +10,7 @@ void clock_alarm_init(clock_alarm_cb_t alarm_cb);
 id：闹铃id，新增闹铃设置为0，修改闹铃设置为对应闹铃id
 cfg_time：配置的闹铃绝对时间
 返回值：-3为修改的闹铃id超过最大id值；-2为新增闹铃重复；-1为新增闹铃已满；>0为闹铃id
-int clock_alarm_set(uint8_t id, clock_alarm_config_t cfg_time);
+int clock_alarm_set(uint8_t id, clock_alarm_config_t *cfg_time);
 
 获取指定id的闹铃信息
 id：指定的闹铃

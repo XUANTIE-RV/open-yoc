@@ -16,22 +16,43 @@ typedef enum {
 #define hci_open_id(name, id) device_open_id(name, id)
 #define hci_close(dev) device_close(dev)
 
-typedef void (*hci_event_cb)(hci_event_t event, uint32_t size, void *priv);
+typedef void (*hci_event_cb_t)(hci_event_t event, uint32_t size, void *priv);
 
-int hci_set_event(aos_dev_t *dev, hci_event_cb event, void *priv);
+typedef int (*hci_driver_send_cmd_t)(uint16_t opcode, uint8_t* send_data, uint32_t send_len, uint8_t* resp_data, uint32_t *resp_len);
+
+/**
+  \brief       set hci event
+  \param[in]   dev      Pointer to device object.
+  \param[in]   event    data read event callback.
+  \param[in]   priv     event callback userdata arg.
+  \return      0 on success, else on fail.
+*/
+int hci_set_event(aos_dev_t *dev, hci_event_cb_t event, void *priv);
 
 /**
   \brief       send hci format data
   \param[in]   dev      Pointer to device object.
-  \param[out]  data     data address to store data read.
+  \param[in]   data     data address to send.
   \param[in]   size     data length expected to read.
-  \return      0 on success, else on fail.
+  \return      send data len.
 */
 int hci_send(aos_dev_t *dev, void *data, uint32_t size);
 
+/**
+  \brief       recv hci format data
+  \param[in]   dev      Pointer to device object.
+  \param[in]   data     data address to read.
+  \param[in]   size     data length expected to read.
+  \return      read data len.
+*/
 int hci_recv(aos_dev_t *dev, void* data, uint32_t size);
 
-int hci_start(aos_dev_t *dev);
+/**
+  \brief       start hci driver
+  \param[in]   dev      Pointer to device object.
+  \param[out]  send_cmd sned hci command callback.
+  \return      0 on success, else on fail.
+*/
+int hci_start(aos_dev_t *dev, hci_driver_send_cmd_t send_cmd);
 
-void* hci_get_vendor_interface(aos_dev_t *dev);
 #endif

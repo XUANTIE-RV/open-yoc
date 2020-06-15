@@ -25,7 +25,6 @@ struct ad_ops {
 };
 
 struct ad_cls {
-    uint8_t                   eof; //decode is eof
     sh_audio_t                ash;
     aos_mutex_t               lock;
 
@@ -35,7 +34,6 @@ struct ad_cls {
 
 enum {
     CODEC_CMD_UNKNOWN,
-    CODEC_CMD_GET_SAMPLE_FORMAT,
 };
 
 __END_DECLS__

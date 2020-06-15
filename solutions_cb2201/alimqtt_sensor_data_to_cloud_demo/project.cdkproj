@@ -2,7 +2,7 @@
 <Project Name="alimqtt_sensor_data_to_cloud_demo" Version="1">
   <Description>aos event</Description>
   <MonitorProgress>
-    <FlashOperate>398</FlashOperate>
+    <FlashOperate>370</FlashOperate>
     <DebugLaunch>40</DebugLaunch>
   </MonitorProgress>
   <UIControl>
@@ -13,30 +13,41 @@
   </UIControl>
   <Dependencies/>
   <Chips>
-    <Chip ID="csi_ch2201" Version="V7.2.2" IsBasic="false"/>
+    <Chip ID="csi_ch2201" Version="V7.3.0" IsBasic="false"/>
   </Chips>
   <Boards>
-    <Board ID="cb2201" Version="V7.2.2" IsBasic="false"/>
+    <Board ID="cb2201" Version="V7.3.0" IsBasic="false"/>
   </Boards>
   <Packages>
-    <Package ID="csi" Version="V7.2.2" IsBasic="false"/>
-    <Package ID="minilibc" Version="V7.2.2" IsBasic="false"/>
-    <Package ID="rhino" Version="V7.2.2" IsBasic="false"/>
-    <Package ID="aos" Version="V7.2.2" IsBasic="false"/>
-    <Package ID="drivers" Version="V7.2.2" IsBasic="false"/>
-    <Package ID="drv_wifi_esp8266" Version="V7.2.2" IsBasic="false"/>
-    <Package ID="drv_eflash" Version="V7.2.2" IsBasic="false"/>
-    <Package ID="netmgr" Version="V7.2.2" IsBasic="false"/>
-    <Package ID="console" Version="V7.2.2" IsBasic="false"/>
-    <Package ID="kv" Version="V7.2.2" IsBasic="false"/>
-    <Package ID="sal" Version="V7.2.2" IsBasic="false"/>
-    <Package ID="at" Version="V7.2.2" IsBasic="false"/>
-    <Package ID="yunio" Version="V7.2.2" IsBasic="false"/>
-    <Package ID="aliot" Version="V7.2.2" IsBasic="false"/>
-    <Package ID="mbedtls" Version="V7.2.2" IsBasic="false"/>
+    <Package ID="aos" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="at" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="console" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="csi" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="drivers" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="drv_wifi_esp8266" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="drv_sensors" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="drv_leds" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="kv" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="minilibc" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="netmgr" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="rhino" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="sal" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="yunio" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="aliot" Version="V7.3.0" IsBasic="false"/>
+    <Package ID="mbedtls" Version="V7.3.0" IsBasic="false"/>
   </Packages>
   <Dependencies Name="BuildSet"/>
   <MergedToYaml>yes</MergedToYaml>
+  <DebugSessions>
+    <watchExpressions/>
+    <memoryExpressions>;;;</memoryExpressions>
+    <statistics>;;MHZ</statistics>
+    <peripheralTabs/>
+    <WatchDisplayFormat>0</WatchDisplayFormat>
+    <LocalDisplayFormat>0</LocalDisplayFormat>
+    <debugLayout/>
+    <memoryTabColSizeExpressions>100:8;100:8;100:8;100:8;</memoryTabColSizeExpressions>
+  </DebugSessions>
   <BuildConfigs>
     <BuildConfig Name="BuildSet">
       <Target>
@@ -113,7 +124,7 @@
         <CreateHexFile>yes</CreateHexFile>
         <CreateBinFile>no</CreateBinFile>
         <Preprocessor>no</Preprocessor>
-        <Disasm>no</Disasm>
+        <Disassmeble>yes</Disassmeble>
         <CallGraph>no</CallGraph>
         <Map>no</Map>
       </Output>
@@ -163,6 +174,7 @@
         <LibPath/>
         <OtherFlags>-Wl,-zmax-page-size=1024</OtherFlags>
         <AutoLDFile>no</AutoLDFile>
+        <LinkType/>
       </Linker>
       <Debug>
         <LoadApplicationAtStartup>no</LoadApplicationAtStartup>
@@ -179,6 +191,7 @@
         <ConfigICE>
           <IP>localhost</IP>
           <PORT>1025</PORT>
+          <CPUNumber>0</CPUNumber>
           <Clock>12000</Clock>
           <Delay>10</Delay>
           <WaitReset>500</WaitReset>
@@ -218,14 +231,4 @@
       </Flash>
     </BuildConfig>
   </BuildConfigs>
-  <DebugSessions>
-    <watchExpressions/>
-    <memoryExpressions>;;;</memoryExpressions>
-    <statistics>;;MHZ</statistics>
-    <peripheralTabs/>
-    <WatchDisplayFormat>0</WatchDisplayFormat>
-    <LocalDisplayFormat>0</LocalDisplayFormat>
-    <debugLayout/>
-    <memoryTabColSizeExpressions>100:8;100:8;100:8;100:8;</memoryTabColSizeExpressions>
-  </DebugSessions>
 </Project>

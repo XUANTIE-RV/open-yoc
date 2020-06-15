@@ -1,9 +1,8 @@
 /*
  * Copyright (C) 2019-2020 Alibaba Group Holding Limited
  */
-#include <yoc_config.h>
 #if defined (CONFIG_CLI) && defined (CONFIG_CLI_ADDR_OP)
-
+#include <string.h>
 #include <stdlib.h>
 #include <aos/cli.h>
 

@@ -42,6 +42,10 @@ typedef enum {
     VOCIE_BACKFLOW_DATA
 } voice_backflow_id_t;
 
+#define  VOICE_MESSAGE_ASYNC 0x00
+#define  VOICE_MESSAGE_SYNC  0x01
+#define  VOICE_MESSAGE_ACK   0x02
+
 typedef struct {
     int type;
     int seq;
@@ -72,6 +76,30 @@ typedef struct {
     void                    *data;
     int                      len;
 } voice_capture_t;
+
+typedef struct {
+    uint8_t         flag;            /** flag for MESSAGE_SYNC and MESSAGE_ACK */
+    uint16_t        command;         /** command id the service provide */
+    void           *req_data;            /** message data */
+    int             req_len;             /** message len */
+    void           *resp_data;
+    int             resp_len;
+} voice_msg_t;
+
+typedef void (*voice_msg_evt_t)(void *priv, voice_msg_t *msg);
+
+typedef struct {
+    int hdl;
+    voice_msg_evt_t cb;
+    void *priv;
+} voice_ch_t;
+
+typedef struct {
+    voice_ch_t *(*init)(voice_msg_evt_t cb, void *priv);
+    int (*msg_send)(voice_ch_t *ch, voice_msg_t *msg);
+} voice_ch_io_t;
+
+voice_ch_io_t *ipc_ch_get(void);
 
 void *voice_malloc(unsigned int size);
 void voice_free(void *data);

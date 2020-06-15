@@ -3,6 +3,7 @@
  */
 
 #include "avutil/misc.h"
+#include "avutil/url_parse.h"
 #include "avformat/avformat_utils.h"
 #include "avformat/demux.h"
 #include "stream/stream.h"
@@ -11,7 +12,6 @@
 #define TAG                    "demux"
 
 static struct {
-#define DEMUX_OPS_MAX (16)
     int                    cnt;
     const struct demux_ops *ops[DEMUX_OPS_MAX];
 } g_demuxers;
@@ -174,7 +174,7 @@ demux_cls_t* demux_open(stream_cls_t *s)
     }
     pd.buf      = buf;
     pd.filename = stream_get_url(s);
-    stream_control(s, STREAM_CMD_GET_FORMAT, &pd.avformat, &format_size);
+    url_get_item_value(stream_get_url(s), "avformat", pd.avformat, sizeof(pd.avformat));
 
     ops = _demux_probe_ops(&pd);
     if (NULL == ops) {
@@ -190,7 +190,7 @@ demux_cls_t* demux_open(stream_cls_t *s)
 
     o->s   = s;
     o->ops = ops;
-    rc = ops->open ? ops->open(o) : -1;
+    rc = ops->open(o);
     CHECK_RET_TAG_WITH_GOTO(rc == 0, err);
 
     o->bps            = o->duration > 0 ? stream_get_size(s) * 8 / (o->duration / 1000.0) : 0;
@@ -223,25 +223,22 @@ err:
  */
 int demux_read_packet(demux_cls_t *o, avpacket_t *pkt)
 {
-    int ret = 0;
+    int ret = 0, eof;
 
     CHECK_PARAM(o && pkt, -1);
     aos_mutex_lock(&o->lock, AOS_WAIT_FOREVER);
-    if (!o->eof) {
-        if (o->fpkt.len) {
-            //FIXME: the first packet already readed
-            ret = avpacket_copy(&o->fpkt, pkt);
-            CHECK_RET_TAG_WITH_GOTO(ret == 0, err);
-            avpacket_free(&o->fpkt);
-            ret = pkt->len;
-        } else {
-            ret = o->ops->read_packet ? o->ops->read_packet(o, pkt) : -1;
-            if (ret < 0) {
-                LOGE(TAG, "read failed\n");
-            } else if (ret == 0) {
-                o->eof = 1;
-                //LOGD(TAG, "read ret is 0, may be read eof. '%s'\n", stream_get_url(o->s));
-            }
+    if (o->fpkt.len) {
+        //FIXME: the first packet already readed
+        ret = avpacket_copy(&o->fpkt, pkt);
+        CHECK_RET_TAG_WITH_GOTO(ret == 0, err);
+        avpacket_free(&o->fpkt);
+        ret = pkt->len;
+    } else {
+        ret = o->ops->read_packet(o, pkt);
+        if (ret < 0) {
+            eof = stream_is_eof(o->s);
+            ret  = eof ? 0 : ret;
+            LOGI(TAG, "read packet may be eof. eof = %d, ret = %d, url = %s", eof, ret, stream_get_url(o->s));
         }
     }
 err:
@@ -253,23 +250,33 @@ err:
 /**
  * @brief  seek the demux
  * @param  [in] o
- * @param  [in] timestamp : seek time
+ * @param  [in] timestamp : seek time(ms)
  * @return 0/-1
  */
 int demux_seek(demux_cls_t *o, uint64_t timestamp)
 {
-    int ret = 0;
+    int ret = -1;
 
     CHECK_PARAM(o && timestamp >= 0, -1);
     aos_mutex_lock(&o->lock, AOS_WAIT_FOREVER);
     if (o->time_scale && stream_is_seekable(o->s)) {
-        int32_t start_pos = stream_tell(o->s);
+        if (timestamp < o->duration) {
+            int32_t start_pos = stream_tell(o->s);
+            //FIXME: start play time is not zero, release the first packet
+            if (o->fpkt.len && timestamp) {
+                avpacket_free(&o->fpkt);
+            }
 
-        ret = o->ops->seek ? o->ops->seek(o, timestamp / 1000.0 * o->time_scale) : -1;
-        if (ret < 0) {
-            stream_seek(o->s, start_pos, SEEK_SET);
-            LOGE(TAG, "seek failed, timestamp = %llums, duration = %llums", timestamp, o->duration);
+            ret = o->ops->seek(o, timestamp / 1000.0 * o->time_scale);
+            if (ret < 0) {
+                stream_seek(o->s, start_pos, SEEK_SET);
+            }
         }
+    }
+
+    if (ret < 0) {
+        LOGE(TAG, "may be not support seek. timestamp = %llums, duration = %llums, url = %s", timestamp, o->duration,
+             stream_get_url(o->s));
     }
     aos_mutex_unlock(&o->lock);
 
@@ -287,8 +294,7 @@ int demux_close(demux_cls_t *o)
 
     CHECK_PARAM(o, -1);
     aos_mutex_lock(&o->lock, AOS_WAIT_FOREVER);
-    if (o->ops->close)
-        ret = o->ops->close(o);
+    ret = o->ops->close(o);
     aos_mutex_unlock(&o->lock);
 
     aos_mutex_free(&o->lock);
@@ -322,18 +328,5 @@ int demux_control(demux_cls_t *o, int cmd, void *arg, size_t *arg_size)
 
     return ret;
 }
-
-/**
- * @brief  demux is eof whether
- * @param  [in] o
- * @return 0/1
- */
-int demux_is_eof(demux_cls_t *o)
-{
-    CHECK_PARAM(o, -1);
-
-    return o->eof;
-}
-
 
 

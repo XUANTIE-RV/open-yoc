@@ -8,7 +8,6 @@
 #define TAG    "ad"
 
 static struct {
-#define AD_OPS_MAX (16)
     int                 cnt;
     const struct ad_ops *ops[AD_OPS_MAX];
 } g_aders;
@@ -74,48 +73,61 @@ int ad_ops_register(const struct ad_ops *ops)
 }
 
 /**
+* @brief  init the ad config param
+* @param  [in] ad_cnf
+* @return 0/-1
+*/
+int ad_conf_init(ad_conf_t *ad_cnf)
+{
+    //TODO:
+    CHECK_PARAM(ad_cnf, -1);
+    memset(ad_cnf, 0, sizeof(ad_conf_t));
+    return 0;
+}
+
+/**
  * @brief  open/create one audio decoder
- * @param  [in] ash : audio stream header
+ * @param  [in] id
+ * @param  [in] ad_cnf
  * @return NULL on err
  */
-ad_cls_t* ad_open(const sh_audio_t *ash)
+ad_cls_t* ad_open(avcodec_id_t id, const ad_conf_t *ad_cnf)
 {
     int ret;
     ad_cls_t *o = NULL;
     uint8_t  *data = NULL;
 
-    CHECK_PARAM(ash, NULL);
+    CHECK_PARAM(id && ad_cnf, NULL);
     o = aos_zalloc(sizeof(ad_cls_t));
     CHECK_RET_TAG_WITH_GOTO(o, err);
 
-    o->ops = _get_ad_ops_by_id(ash->id);
-    if (NULL == o->ops) {
-        LOGE(TAG, "can't find suitable decode type. id = %d, name = %s", ash->id, get_codec_name(ash->id));
+    o->ops = _get_ad_ops_by_id(id);
+    if (!o->ops) {
+        LOGE(TAG, "can't find suitable decode type. id = %d, name = %s", id, get_codec_name(id));
         goto err;
     }
 
-    memcpy(&o->ash, ash, sizeof(sh_audio_t));
-    if (ash->extradata_size) {
-        data = aos_zalloc(ash->extradata_size);
+    if (ad_cnf->extradata_size) {
+        data = aos_zalloc(ad_cnf->extradata_size);
         CHECK_RET_TAG_WITH_GOTO(data, err);
-        memcpy(data, ash->extradata, ash->extradata_size);
+        memcpy(data, ad_cnf->extradata, ad_cnf->extradata_size);
         o->ash.extradata = data;
-        o->ash.extradata_size = ash->extradata_size;
+        o->ash.extradata_size = ad_cnf->extradata_size;
     }
-
-    LOGI(TAG, "find a decode, name = %s, id = %d", o->ops->name, ash->id);
+    o->ash.id          = id;
+    o->ash.sf          = ad_cnf->sf;
+    o->ash.block_align = ad_cnf->block_align;
+    o->ash.bps         = ad_cnf->bps;
+    LOGI(TAG, "find a decode, name = %s, id = %d", o->ops->name, id);
 
     ret = o->ops->open ? o->ops->open(o) : -1;
     CHECK_RET_TAG_WITH_GOTO(ret != -1, err);
-
     aos_mutex_new(&o->lock);
 
     return o;
-
 err:
     aos_free(data);
     aos_free(o);
-
     return NULL;
 }
 
@@ -140,21 +152,18 @@ int ad_decode(ad_cls_t *o, avframe_t *frame, int *got_frame, const avpacket_t *p
 
     aos_mutex_lock(&o->lock, AOS_WAIT_FOREVER);
     *got_frame = 0;
-    if (!o->eof) {
-        ret = o->ops->decode ? o->ops->decode(o, frame, got_frame, pkt) : -1;
-        if (ret <= 0) {
-            o->eof = 1;
-            LOGD(TAG, "decode fail, ret = %d\n", ret);
-            goto quit;
-        }
+    ret = o->ops->decode ? o->ops->decode(o, frame, got_frame, pkt) : -1;
+    if (ret <= 0) {
+        LOGD(TAG, "decode fail, ret = %d\n", ret);
+        goto quit;
+    }
 
-        if (*got_frame) {
-            frame_size = sf_get_frame_size(o->ash.sf);
-            if ((frame->linesize[0] % frame_size) != 0) {
-                LOGE(TAG, "read err. ret = %d, frame size = %d", ret, frame_size);
-                ret = -1;
-                goto quit;
-            }
+    if (*got_frame) {
+        frame_size = sf_get_frame_size(o->ash.sf);
+        if ((frame->linesize[0] % frame_size) != 0) {
+            LOGE(TAG, "read err. ret = %d, frame size = %d", ret, frame_size);
+            ret = -1;
+            goto quit;
         }
     }
 
@@ -220,17 +229,6 @@ int ad_close(ad_cls_t *o)
     aos_free(o);
 
     return ret;
-}
-
-/**
- * @brief  decode is eof whether
- * @param  [in] o
- * @return 0/1
- */
-int ad_is_eof(ad_cls_t *o)
-{
-    CHECK_PARAM(o, -1);
-    return o->eof;
 }
 
 

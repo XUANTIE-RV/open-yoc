@@ -51,7 +51,7 @@ static void play_sin(int second)
     wav_head_int[1] = 32000 * second + 36; /*wav 文件大小 - 8*/
     wav_head_int[10] = 32000 * second;     /* PCM数据字节数 */
 
-    sin_data = sin_1k; 
+    sin_data = sin_1k;
     sin_data_len = sizeof(sin_1k);
 
     fifo = nsfifo_open("fifo://sintest", O_CREAT, 16000 / 1000 * 16 / 8 * 10 * 40);
@@ -155,7 +155,7 @@ static void eq_set_params(char *eq_params)
 
             while (start < end && i < 3) {
                 while (*delim != ',' && delim < end) delim++;
-                
+
                 if (delim-start > 31 || delim-start == 0) {
                     err = 1;
                     break;

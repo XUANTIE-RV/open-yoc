@@ -15,12 +15,6 @@ __BEGIN_DECLS__
  */
 int ao_register_alsa();
 
-/**
- * @brief  regist audio output for ipc
- * @return 0/-1
- */
-int ao_register_ipc();
-
 __END_DECLS__
 
 #endif /* __OUTPUT_ALL_H__ */

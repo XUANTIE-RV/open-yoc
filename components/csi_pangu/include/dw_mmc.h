@@ -171,31 +171,31 @@ enum _sdif_command_flags {
 
 /*! @brief define the interrupt mask flags */
 enum _sdif_interrupt_mask {
-    kSDIF_CardDetect = SDIF_INTMASK_CDET_MASK,                 /*!< mask for card detect */
-    kSDIF_ResponseError = SDIF_INTMASK_RE_MASK,                /*!< command response error */
-    kSDIF_CommandDone = SDIF_INTMASK_CDONE_MASK,               /*!< command transfer over*/
-    kSDIF_DataTransferOver = SDIF_INTMASK_DTO_MASK,            /*!< data transfer over flag*/
-    kSDIF_WriteFIFORequest = SDIF_INTMASK_TXDR_MASK,           /*!< write FIFO request */
-    kSDIF_ReadFIFORequest = SDIF_INTMASK_RXDR_MASK,            /*!< read FIFO request */
-    kSDIF_ResponseCRCError = SDIF_INTMASK_RCRC_MASK,           /*!< response CRC error */
-    kSDIF_DataCRCError = SDIF_INTMASK_DCRC_MASK,               /*!< data CRC error */
-    kSDIF_ResponseTimeout = SDIF_INTMASK_RTO_MASK,             /*!< response timeout */
-    kSDIF_DataReadTimeout = SDIF_INTMASK_DRTO_MASK,            /*!< read data timeout */
-    kSDIF_DataStarvationByHostTimeout = SDIF_INTMASK_HTO_MASK, /*!< data starvation by host time out */
-    kSDIF_FIFOError = SDIF_INTMASK_FRUN_MASK,                  /*!< indicate the FIFO under run or overrun error */
-    kSDIF_HardwareLockError = SDIF_INTMASK_HLE_MASK,           /*!< hardware lock write error */
-    kSDIF_DataStartBitError = SDIF_INTMASK_SBE_MASK,           /*!< start bit error */
-    kSDIF_AutoCmdDone = SDIF_INTMASK_ACD_MASK,                 /*!< indicate the auto command done */
-    kSDIF_DataEndBitError = SDIF_INTMASK_EBE_MASK,             /*!< end bit error */
-    kSDIF_SDIOInterrupt = SDIF_INTMASK_SDIO_INT_MASK_MASK,     /*!< interrupt from the SDIO card */
+    kSDIF_CardDetect = SDIF_INTMASK_CDET_MASK,                 //0x1           /*!< mask for card detect */
+    kSDIF_ResponseError = SDIF_INTMASK_RE_MASK,                //0x2           /*!< command response error */
+    kSDIF_CommandDone = SDIF_INTMASK_CDONE_MASK,               //0x4           /*!< command transfer over*/
+    kSDIF_DataTransferOver = SDIF_INTMASK_DTO_MASK,            //0x8           /*!< data transfer over flag*/
+    kSDIF_WriteFIFORequest = SDIF_INTMASK_TXDR_MASK,           //0x10            /*!< write FIFO request */
+    kSDIF_ReadFIFORequest = SDIF_INTMASK_RXDR_MASK,            //0x20            /*!< read FIFO request */
+    kSDIF_ResponseCRCError = SDIF_INTMASK_RCRC_MASK,           //0x40            /*!< response CRC error */
+    kSDIF_DataCRCError = SDIF_INTMASK_DCRC_MASK,               //0x80            /*!< data CRC error */
+    kSDIF_ResponseTimeout = SDIF_INTMASK_RTO_MASK,             //0x100            /*!< response timeout */
+    kSDIF_DataReadTimeout = SDIF_INTMASK_DRTO_MASK,            //0x200            /*!< read data timeout */
+    kSDIF_DataStarvationByHostTimeout = SDIF_INTMASK_HTO_MASK, //0x400            /*!< data starvation by host time out */
+    kSDIF_FIFOError = SDIF_INTMASK_FRUN_MASK,                  //0x800            /*!< indicate the FIFO under run or overrun error */
+    kSDIF_HardwareLockError = SDIF_INTMASK_HLE_MASK,           //0x1000            /*!< hardware lock write error */
+    kSDIF_DataStartBitError = SDIF_INTMASK_SBE_MASK,           //0x2000            /*!< start bit error */
+    kSDIF_AutoCmdDone = SDIF_INTMASK_ACD_MASK,                 //0x4000            /*!< indicate the auto command done */
+    kSDIF_DataEndBitError = SDIF_INTMASK_EBE_MASK,             //0x8000            /*!< end bit error */
+    kSDIF_SDIOInterrupt = SDIF_INTMASK_SDIO_INT_MASK_MASK,     //0x10000            /*!< interrupt from the SDIO card */
 
     kSDIF_CommandTransferStatus = kSDIF_ResponseError | kSDIF_CommandDone | kSDIF_ResponseCRCError |
                                   kSDIF_ResponseTimeout |
-                                  kSDIF_HardwareLockError, /*!< command transfer status collection*/
+                                  kSDIF_HardwareLockError,     //(0x2 | 0x4 | 0x40 | 0x100 | 0x1000) /*!< command transfer status collection*/
     kSDIF_DataTransferStatus = kSDIF_DataTransferOver | kSDIF_WriteFIFORequest | kSDIF_ReadFIFORequest |
                                kSDIF_DataCRCError | kSDIF_DataReadTimeout | kSDIF_DataStarvationByHostTimeout |
                                kSDIF_FIFOError | kSDIF_DataStartBitError | kSDIF_DataEndBitError |
-                               kSDIF_AutoCmdDone, /*!< data transfer status collection */
+                               kSDIF_AutoCmdDone,              //(0x8 | 0x10 | 0x20 | 0x80 | 0x200 | 0x400 | 0x800 | 0x2000 | 0x8000 | 0x4000)/*!< data transfer status collection */
     kSDIF_DataTransferError =
         kSDIF_DataCRCError | kSDIF_FIFOError | kSDIF_DataStartBitError | kSDIF_DataEndBitError | kSDIF_DataReadTimeout,
     kSDIF_AllInterruptStatus = 0x1FFFFU, /*!< all interrupt mask */

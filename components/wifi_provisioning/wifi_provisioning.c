@@ -130,8 +130,12 @@ int wifi_prov_start(uint32_t method_id, wifi_prov_cb cb, uint32_t timeout_s)
     int res = 0;
 
     aos_assert(method_id);
-    aos_assert(!g_wifi_prov_started_method);
     aos_assert(cb);
+
+    if (g_wifi_prov_started_method) {
+        /* already started */
+        return -1;
+    }
 
     g_wiri_prov_cb = cb;
 
@@ -163,7 +167,10 @@ int wifi_prov_start(uint32_t method_id, wifi_prov_cb cb, uint32_t timeout_s)
 
 void wifi_prov_stop()
 {
-    aos_assert(g_wifi_prov_started_method);
+    if (g_wifi_prov_started_method == 0) {
+        /* nothing to stop */
+        return;
+    }
 
     g_wiri_prov_cb = NULL;
 
@@ -180,7 +187,6 @@ uint32_t wifi_prov_get_method_id(char *method_name)
 
     WIFI_PROV_LOCK();
     slist_for_each_entry(&g_prov_list, tmp_prov, wifi_prov_t, next) {
-        /* if we got some name retuen fail */
         if (strcmp(tmp_prov->name, method_name) == 0) {
             WIFI_PROV_UNLOCK();
             return tmp_prov->method_id;
@@ -189,4 +195,13 @@ uint32_t wifi_prov_get_method_id(char *method_name)
     WIFI_PROV_UNLOCK();
 
     return 0;
+}
+
+wifi_prov_status_t wifi_prov_get_stauts()
+{
+    if (g_wifi_prov_started_method) {
+        return WIFI_PROV_STARTED;
+    } else {
+        return WIFI_PROV_STOPED;
+    }
 }

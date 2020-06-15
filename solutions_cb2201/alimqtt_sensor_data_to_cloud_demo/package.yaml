@@ -1,31 +1,60 @@
-solution:
+version: v7.3.0
+hw_info:
+  cpu_id: ""
+  cpu_name: ""
+  vendor_name: ""
+  chip_name: ""
   board_name: cb2201
   ld_script: ""
-type: solution
+  flash_program: ""
 name: alimqtt_sensor_data_to_cloud_demo
-yoc_version: 7.2
 description: 基于cb2201的alimqtt上云示例
+tag: ""
 keywords:
   - cb2201
   - solution
-author: feimi
+author:
+  name: feimi
 license: Apache license v2.0
+homepage: https://occ.t-head.cn
+type: solution
 depends:
-  - aos: V7.2.2
-  - at: V7.2.2
-  - cb2201: V7.2.2
-  - csi_ch2201: V7.2.2
-  - console: V7.2.2
-  - csi: V7.2.2
-  - drivers: V7.2.2
-  - drv_wifi_esp8266: V7.2.2
-  - kv: V7.2.2
-  - minilibc: V7.2.2
-  - netmgr: V7.2.2
-  - rhino: V7.2.2
-  - sal: V7.2.2
-  - yunio: V7.2.2
-defconfig:
+  - aos: V7.3.0
+  - at: V7.3.0
+  - cb2201: V7.3.0
+  - console: V7.3.0
+  - csi: V7.3.0
+  - csi_ch2201: V7.3.0
+  - drivers: V7.3.0
+  - drv_leds: V7.3.0
+  - drv_sensors: V7.3.0
+  - drv_wifi_esp8266: V7.3.0
+  - kv: V7.3.0
+  - minilibc: V7.3.0
+  - netmgr: V7.3.0
+  - rhino: V7.3.0
+  - sal: V7.3.0
+  - yunio: V7.3.0
+build_config:
+  include:
+    - app/include
+    - app/src
+  internal_include:
+    - ""
+  cflag: -Os  -g  -Wall  -ffunction-sections -fdata-sections -Wno-address -Wno-unused-but-set-variable -Wno-main
+  cxxflag: -Os  -g  -Wall  -ffunction-sections -fdata-sections -Wno-address -Wno-unused-but-set-variable -Wno-main
+  asmflag: -Wa,--gdwarf2
+  define:
+    - ""
+  libs:
+    - m
+    - iot_alimqtt_tls
+  libpath:
+    - ""
+  ldflag: -Wl,-ckmap="yoc.map" -Wl,-zmax-page-size=1024
+source_file:
+  - app/src/*.c
+def_config:
   CONFIG_ARCH_CSKY: 1
   CONFIG_ARCH_INTERRUPTSTACK: 1024
   CONFIG_BOARD_NAME: cb2201
@@ -38,36 +67,9 @@ defconfig:
   CONFIG_DEBUG: 1
   CONFIG_KERNEL_RHINO: 1
   CONFIG_KV_SMART: 1
+  CONFIG_MBEDTLS_SSL_MAX_CONTENT_LEN: 4096
   CONFIG_SAL: 1
   CONFIG_SAL_ESP8266: 1
   CONFIG_TCPIP: 1
   CONFIG_TEE_CA: 1
   CONFIG_VENDOR_NAME: csky
-build_config:
-  internal_include:
-    - ""
-  include:
-    - app/include
-    - app/src
-    - include
-  cflag: -Os  -g  -Wall  -ffunction-sections -fdata-sections -Wno-address -Wno-unused-but-set-variable -Wno-main
-  cxxflag: -Os  -g  -Wall  -ffunction-sections -fdata-sections -Wno-address -Wno-unused-but-set-variable -Wno-main
-  asmflag: -Wa,--gdwarf2
-  ldflag: -Wl,-zmax-page-size=1024
-  define:
-    - ""
-  libs:
-    - m
-  libpath:
-    - ""
-source_file:
-  - app/src/app_main.c
-  - app/src/cli_cmd.c
-  - app/src/exception_handler.c
-  - app/src/init.c
-  - app/src/sensor_data.c
-link_config:
-  path: ~
-  library: ~
-hidden: false
-homepage: https://occ.t-head.cn

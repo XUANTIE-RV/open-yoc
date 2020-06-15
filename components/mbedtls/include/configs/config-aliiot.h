@@ -31,7 +31,6 @@
 #ifndef MBEDTLS_CONFIG_H
 #define MBEDTLS_CONFIG_H
 
-#include <yoc_config.h>
 /* System support */
 //#define MBEDTLS_HAVE_TIME /* Optionally used in Hello messages */
 /* Other MBEDTLS_HAVE_XXX flags irrelevant for this configuration */
@@ -39,9 +38,7 @@
 //#define MBEDTLS_NO_DEFAULT_ENTROPY_SOURCES
 //#define MBEDTLS_TEST_NULL_ENTROPY
 //#define MBEDTLS_HAVEGE_C
-//#ifdef CONFIG_CHIP_ZX297100
 //#define MBEDTLS_DEBUG_C
-//#endif
 #define MBEDTLS_PLATFORM_C
 #define MBEDTLS_PLATFORM_MEMORY
 #define MBEDTLS_TIMING_C
@@ -55,9 +52,15 @@
 //#define MBEDTLS_SSL_PROTO_DTLS        /*alicoap dtls need, psk can close */
 //#define MBEDTLS_SSL_DTLS_HELLO_VERIFY   /*alicoap dtls need, psk can close */
 
+#ifdef CONFIG_TEE_CA
+#define MBEDTLS_AES_ALT
+// #define MBEDTLS_SHA1_ALT     // FIXME: because of sha1 and sha256 cannot coexist
+#define MBEDTLS_SHA256_ALT
+#define MBEDTLS_RSA_ALT
+#endif
+
 /* mbed TLS modules */
 #define MBEDTLS_AES_C
-#define MBEDTLS_AES_ALT
 #define MBEDTLS_ASN1_PARSE_C
 #define MBEDTLS_BIGNUM_C
 // #define MBEDTLS_CCM_C
@@ -73,18 +76,11 @@
 //#define MBEDTLS_NET_C
 #define MBEDTLS_OID_C
 #define MBEDTLS_SHA1_C
-#ifndef CONFIG_CHIP_ZX297100
-#define MBEDTLS_SHA1_ALT
-#endif
 #define MBEDTLS_SHA256_C
-#ifndef CONFIG_CHIP_ZX297100
-#define MBEDTLS_SHA256_ALT
-#endif
 //#define MBEDTLS_SHA512_C
 #define MBEDTLS_PK_C
 #define MBEDTLS_PK_PARSE_C
 #define MBEDTLS_RSA_C
-#define MBEDTLS_RSA_ALT
 #define MBEDTLS_SSL_CLI_C
 //#define MBEDTLS_SSL_COOKIE_C /*alicoap dtls need, psk can close */
 //#define MBEDTLS_SSL_SRV_C

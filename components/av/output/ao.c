@@ -14,7 +14,6 @@ int g_dump_size;
 #endif
 
 static struct {
-#define AO_OPS_MAX (2)
     int                 cnt;
     const struct ao_ops *ops[AO_OPS_MAX];
     struct {
@@ -105,6 +104,22 @@ int ao_ops_register(const struct ao_ops *ops)
 
     LOGE(TAG, "ao ops regist fail\n");
     return -1;
+}
+
+/**
+ * @brief  init the ao config param
+ * @param  [in] ao_cnf
+ * @return 0/-1
+ */
+int ao_conf_init(ao_conf_t *ao_cnf)
+{
+    CHECK_PARAM(ao_cnf, -1);
+    memset(ao_cnf, 0, sizeof(ao_conf_t));
+    ao_cnf->name       = "alsa";
+    ao_cnf->period_ms  = AO_ONE_PERIOD_MS;
+    ao_cnf->period_num = AO_TOTAL_PERIOD_NUM;
+
+    return 0;
 }
 
 static avfilter_t* _ao_eqx_new(ao_cls_t *o, sf_t eq_sf)
@@ -259,61 +274,64 @@ err:
     avf_close(avf_swr2);
     return -1;
 }
+
 /**
- * @brief  open/create a audio out by name
- * @param  [in] aoh
+ * @brief  open a audio out
+ * @param  [in] sf     : audio sample format
+ * @param  [in] ao_cnf
  * @return NULL on error
  */
-ao_cls_t* ao_open(const aoh_t *aoh)
+ao_cls_t* ao_open(sf_t sf, const ao_conf_t *ao_cnf)
 {
     int rc;
     ao_cls_t *o      = NULL;
     avframe_t *frame = NULL;
 
-    CHECK_PARAM(aoh && aoh->name, NULL);
+    CHECK_PARAM(sf && ao_cnf && ao_cnf->name, NULL);
     _ao_init();
     o = aos_zalloc(sizeof(ao_cls_t));
     CHECK_RET_TAG_WITH_RET(o, NULL);
 
-    if (aoh->eq_segments && aoh->aef_conf && aoh->aef_conf_size) {
+    if (ao_cnf->eq_segments && ao_cnf->aef_conf && ao_cnf->aef_conf_size) {
         LOGE(TAG, "param faild, eq & aef can't both enabled");
         goto err;
     }
-    if (aoh->eq_segments) {
-        o->eq_params = aos_zalloc(sizeof(eqfp_t) * aoh->eq_segments);
+    if (ao_cnf->eq_segments) {
+        o->eq_params = aos_zalloc(sizeof(eqfp_t) * ao_cnf->eq_segments);
         CHECK_RET_TAG_WITH_GOTO(o->eq_params, err);
     }
-    if (aoh->aef_conf && aoh->aef_conf_size) {
-        o->aef_conf = aos_malloc(aoh->aef_conf_size);
+    if (ao_cnf->aef_conf && ao_cnf->aef_conf_size) {
+        o->aef_conf = aos_malloc(ao_cnf->aef_conf_size);
         CHECK_RET_TAG_WITH_GOTO(o->aef_conf, err);
-        memcpy(o->aef_conf, aoh->aef_conf, aoh->aef_conf_size);
-        o->aef_conf_size = aoh->aef_conf_size;
+        memcpy(o->aef_conf, ao_cnf->aef_conf, ao_cnf->aef_conf_size);
+        o->aef_conf_size = ao_cnf->aef_conf_size;
     }
 
     frame = avframe_alloc();
     CHECK_RET_TAG_WITH_GOTO(frame, err);
 
-    o->ops = _get_ao_ops_by_name(aoh->name);
+    o->ops = _get_ao_ops_by_name(ao_cnf->name);
     if (NULL == o->ops) {
-        LOGE(TAG, "ao ops get failed, name = %s\n", aoh->name);
+        LOGE(TAG, "ao ops get failed, name = %s\n", ao_cnf->name);
         goto err;
     }
     o->oframe        = frame;
-    o->ori_sf        = aoh->sf;
-    o->resample_rate = aoh->resample_rate;
-    o->eq_segments   = aoh->eq_segments;
-    o->period_ms     = aoh->period_ms ? aoh->period_ms : AO_ONE_PERIOD_MS;
-    o->period_num    = aoh->period_num ? aoh->period_num : AO_TOTAL_PERIOD_NUM;
+    o->ori_sf        = sf;
+    o->resample_rate = ao_cnf->resample_rate;
+    o->eq_segments   = ao_cnf->eq_segments;
+    o->period_ms     = ao_cnf->period_ms ? ao_cnf->period_ms : AO_ONE_PERIOD_MS;
+    o->period_num    = ao_cnf->period_num ? ao_cnf->period_num : AO_TOTAL_PERIOD_NUM;
 #if TMALL_PATCH
     o->vol_en        = 1;
 #else
-    o->vol_en        = aoh->vol_en;
+    o->vol_en        = ao_cnf->vol_en;
 #endif
-    o->vol_index     = aoh->vol_index;
+    o->vol_index     = ao_cnf->vol_index;
 
     rc = _ao_open(o);
     CHECK_RET_TAG_WITH_GOTO(rc == 0, err);
-    LOGI(TAG, "ori rate = %d, ao rate = %d", sf_get_rate(o->ori_sf), sf_get_rate(o->sf));
+    LOGD(TAG, "ori sf ==> %s", sf_get_format(o->ori_sf));
+    LOGD(TAG, "ao  sf ==> %s", sf_get_format(o->sf));
     aos_mutex_new(&o->lock);
 
     return o;

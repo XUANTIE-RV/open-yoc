@@ -13,9 +13,11 @@
 #include <soc.h>
 #include <csi_core.h>
 
-void drv_reboot(void)
+void drv_reboot(int cmd)
 {
     uint32_t sys_ctr2;
+
+    (void)cmd;
 
     __disable_irq();
 

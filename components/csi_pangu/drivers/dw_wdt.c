@@ -10,7 +10,6 @@
  * @date     02. June 2017
  ******************************************************************************/
 
-#include <csi_config.h>
 #include <stdio.h>
 #include <drv/irq.h>
 #include <drv/wdt.h>

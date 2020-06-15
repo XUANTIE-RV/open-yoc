@@ -99,12 +99,12 @@ extern struct netif xnetif[NET_IF_NUM];
 #endif
 
 #include <skbuff.h>
-#define MAX_SKB_BUF_NUM 20
-#define MAX_LOCAL_SKB_NUM 20
+#define MAX_SKB_BUF_NUM 10
+#define MAX_LOCAL_SKB_NUM 10
 struct skb_data {
     struct list_head list;
     // unsigned char buf[2132];
-    unsigned char buf[5204 + 414];
+    unsigned char buf[8690 + 8 * 1024];
     atomic_t ref;
 };
 
@@ -122,6 +122,18 @@ struct skb_buf skb_pool[MAX_LOCAL_SKB_NUM];
 /******************************************************
  *               Variables Definitions
  ******************************************************/
+
+// default config
+// int rtw_tx_agg_num = 3;
+// u8 rx_sdio_agg_num = 0xf;
+// u8 rx_sdio_agg_timeout = 0xc;
+// u8 tx_ampdu_agg_num = 0x8;
+// u8 tx_ampdu_agg_timeout = 0x50;
+extern int rtw_tx_agg_num;
+extern u8 rx_sdio_agg_num;
+extern u8 rx_sdio_agg_timeout;
+extern u8 tx_ampdu_agg_num;
+extern u8 tx_ampdu_agg_timeout;
 static internal_scan_handler_t scan_result_handler_ptr = {0, 0, 0, RTW_FALSE, 0, 0, 0, 0, 0};
 static internal_join_result_t* join_user_data;
 static unsigned char ap_bssid[6];
@@ -1198,6 +1210,7 @@ int wifi_rf_off(void)
 	return ret;
 }
 
+extern _WEAK unsigned int nr_xmitframe;
 //----------------------------------------------------------------------------//
 int wifi_on(rtw_mode_t mode)
 {
@@ -1206,6 +1219,15 @@ int wifi_on(rtw_mode_t mode)
 	int idx;
 	int devnum = 1;
 	static int event_init = 0;
+
+	rx_sdio_agg_timeout = 8;
+
+	int tx_ampdu_agg_timeout_int = 100;
+	int tx_ampdu_agg_num_int = 0x8;
+
+	nr_xmitframe = max_skb_buf_num;
+	tx_ampdu_agg_timeout = tx_ampdu_agg_timeout_int;
+	tx_ampdu_agg_num = tx_ampdu_agg_num_int;
 	
 	if(rltk_wlan_running(WLAN0_IDX)) {
 		LOGD(TAG, "\n\rWIFI is already running");
@@ -1275,6 +1297,7 @@ int wifi_on(rtw_mode_t mode)
 #if CONFIG_INIC_EN
 	inic_start();
 #endif
+	rtw_tx_agg_num = 8;
 
 	return ret;
 }

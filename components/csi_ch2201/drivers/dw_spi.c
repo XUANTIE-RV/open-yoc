@@ -8,7 +8,6 @@
  * @version  V1.0
  * @date     02. June 2017
  ******************************************************************************/
-#include <csi_config.h>
 #include <string.h>
 #include <drv/spi.h>
 #include <drv/irq.h>

@@ -12,7 +12,6 @@
 #include <stdint.h>
 #include <stdarg.h>
 #include <stdio.h>
-#include <csi_config.h>
 #include <soc.h>
 #include <csi_core.h>
 #include <drv/usart.h>

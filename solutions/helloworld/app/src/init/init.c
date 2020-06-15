@@ -1,4 +1,3 @@
-#include <yoc_config.h>
 
 #include <stdbool.h>
 #include <aos/aos.h>
@@ -17,10 +16,8 @@ const char *TAG = "INIT";
 
 static void board_pinmux_config(void)
 {
-    drv_pinmux_config(CONSOLE_TXD, 0);
-    drv_pinmux_config(CONSOLE_RXD, 0);
-    drv_pinmux_config(CONSOLE_TXD_FUNC, 0);
-    drv_pinmux_config(CONSOLE_RXD_FUNC, 0);
+    drv_pinmux_config(CONSOLE_TXD, CONSOLE_TXD_FUNC);
+    drv_pinmux_config(CONSOLE_RXD, CONSOLE_RXD_FUNC);
 }
 
 void board_init(void)

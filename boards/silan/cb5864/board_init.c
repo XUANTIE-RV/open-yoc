@@ -12,7 +12,6 @@
 #include <stdint.h>
 #include <drv/usart.h>
 #include <soc.h>
-#include <csi_config.h>
 #include <csi_core.h>
 #include <pinmux.h>
 #include "board_config.h"

@@ -15,7 +15,6 @@
  *
  ******************************************************************************/
 
-#include "yoc_config.h" /* out/config/yoc_config.h */
 #include <aos/aos.h>
 #include <sdmmc_host.h>
 #include <sdmmc_spec.h>

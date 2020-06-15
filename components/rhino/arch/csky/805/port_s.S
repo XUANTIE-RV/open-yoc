@@ -3,7 +3,6 @@
  */
 
 #include <k_config.h>
-#include <csi_config.h>
 
 #define VIC_TSPDR 0XE000EC08
 

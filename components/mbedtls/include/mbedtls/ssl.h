@@ -219,7 +219,11 @@
  * peers are using it too!
  */
 #if !defined(MBEDTLS_SSL_MAX_CONTENT_LEN)
+#ifdef CONFIG_MBEDTLS_SSL_MAX_CONTENT_LEN
+#define MBEDTLS_SSL_MAX_CONTENT_LEN         CONFIG_MBEDTLS_SSL_MAX_CONTENT_LEN
+#else
 #define MBEDTLS_SSL_MAX_CONTENT_LEN         16384   /**< Size of the input / output buffer */
+#endif
 #endif
 
 /* \} name SECTION: Module settings */
@@ -963,7 +967,6 @@ int mbedtls_ssl_get_ciphersuite_id( const char *ciphersuite_name );
  * \param ssl      SSL context
  */
 void mbedtls_ssl_init( mbedtls_ssl_context *ssl );
-void mbedtls_ssl_init_ext( mbedtls_ssl_context *ssl, int max_content_len);
 
 /**
  * \brief          Set up an SSL context for use

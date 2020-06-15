@@ -112,6 +112,11 @@ int32_t drv_get_cpu_freq(int32_t idx);
 */
 void drv_set_clk_stable_counter(uint32_t count);
 
+/**
+  \brief       get cur cpu clock
+*/
+uint32_t drv_get_cur_cpu_freq(void);
+
 #ifdef __cplusplus
 }
 #endif

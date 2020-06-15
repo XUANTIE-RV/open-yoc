@@ -280,7 +280,7 @@ static unsigned int _DTLSContext_setup(dtls_session_t *p_dtls_session, coap_dtls
 {
     int   result = 0;
 
-    mbedtls_ssl_init_ext(&p_dtls_session->context, 1024);
+    mbedtls_ssl_init(&p_dtls_session->context);
 
     result = mbedtls_ssl_setup(&p_dtls_session->context, &p_dtls_session->conf);
     DTLS_TRC("mbedtls_ssl_setup result 0x%04x\r\n", result);
@@ -327,7 +327,7 @@ dtls_session_t *_DTLSSession_init()
     //mbedtls_platform_set_calloc_free(_DTLSCalloc_wrapper, _DTLSFree_wrapper);
     if(NULL != p_dtls_session) {
         _net_init(&p_dtls_session->fd);
-        mbedtls_ssl_init_ext(&p_dtls_session->context, 1024);
+        mbedtls_ssl_init(&p_dtls_session->context);
         mbedtls_ssl_config_init(&p_dtls_session->conf);
         //mbedtls_net_init( &p_dtls_session->fd );
 

@@ -569,6 +569,7 @@ void wifi_start_sta_task(void *arg)
     } else if (security_type == RTW_SECURITY_WEP_PSK) {
         if (password_len == 0) {
             LOGE(TAG, "Security mismatch2 !\n");
+            event_publish(EVENT_WIFI_LINK_DOWN, NULL);
             goto exit;
         }
         password       = config->password;
@@ -577,6 +578,7 @@ void wifi_start_sta_task(void *arg)
     }  else {
         if (password_len == 0) {
             LOGE(TAG, "Security mismatch3 !\n");
+            event_publish(EVENT_WIFI_LINK_DOWN, NULL);
             goto exit;
         }
         password       = config->password;
@@ -596,6 +598,11 @@ void wifi_start_sta_task(void *arg)
 
     if (ret != RTW_SUCCESS) {
         LOGE(TAG, "ERROR: STA Task, wifi connect failed!: %d", ret);
+
+        if (ret == RTW_INVALID_KEY) {
+            /* password_len not match publish WIFI DOWN */
+            event_publish(EVENT_WIFI_LINK_DOWN, NULL);
+        }
         goto exit;
     }
 
@@ -1476,6 +1483,11 @@ static void rtl8723ds_cut_off_gpio(int gpio)
 }
 #endif
 
+/**
+ * @brief  register wifi driver of rtl8723 
+ * @param  [in] config
+ * @return  
+ */
 void wifi_rtl8723ds_register(rtl8723ds_gpio_pin *config)
 {
     if (config) {
@@ -1495,6 +1507,7 @@ void wifi_rtl8723ds_register(rtl8723ds_gpio_pin *config)
         csi_gpio_pin_config_mode(power_pin, GPIO_MODE_PUSH_PULL);
         csi_gpio_pin_config_direction(power_pin, GPIO_DIRECTION_OUTPUT);
         csi_gpio_pin_write(power_pin, 1);
+        aos_msleep(200);
     }
 
     /** WL_EN */

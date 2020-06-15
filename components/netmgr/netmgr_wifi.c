@@ -1,11 +1,7 @@
 /*
  * Copyright (C) 2019-2020 Alibaba Group Holding Limited
  */
-
-#include <yoc_config.h>
-
 #include <aos/aos.h>
-
 #include <yoc/uservice.h>
 #include <yoc/eventid.h>
 #include <yoc/netmgr.h>
@@ -14,17 +10,12 @@
 #include <devices/netdrv.h>
 #include <devices/wifi.h>
 
-
-
-
 typedef struct {
     netmgr_hdl_t hdl;
     wifi_ssid_psk_t ssid_psk;
 } param_ssid_psk_t;
 
 static const char *TAG = "netmgr_wifi";
-
-
 
 static int netmgr_wifi_provision(netmgr_dev_t *node)
 {
@@ -254,10 +245,8 @@ static netmgr_dev_t *netmgr_wifi_init(struct netmgr_uservice *netmgr)
             node->unprovision = netmgr_wifi_unprovision;
             node->info = netmgr_wifi_info;
             node->reset = netmgr_wifi_reset;
-            node->enable = 1;
             node->dhcp_en = 1; //wifi just support dhcp
             strcpy(node->name, "wifi");
-            node->id = 0;
 
             memset(config->ssid_psk.ssid, 0, WIFI_SSID_MAX_LEN);
             config->ssid_psk.ssid_length = WIFI_SSID_MAX_LEN;
@@ -265,7 +254,7 @@ static netmgr_dev_t *netmgr_wifi_init(struct netmgr_uservice *netmgr)
             config->ssid_psk.psk_length = WIFI_PSK_MAX_LEN;
 #ifdef CONFIG_KV_SMART
             if ( aos_kv_get(KV_WIFI_SSID, config->ssid_psk.ssid, &config->ssid_psk.ssid_length) < 0 ||
-                          aos_kv_get(KV_WIFI_PSK, config->ssid_psk.psk, &config->ssid_psk.psk_length) < 0) {
+                 aos_kv_get(KV_WIFI_PSK, config->ssid_psk.psk, &config->ssid_psk.psk_length) < 0) {
 
                 strcpy(config->ssid_psk.ssid, "CSKY-T");
                 config->ssid_psk.ssid_length = 6;
@@ -286,6 +275,11 @@ static netmgr_dev_t *netmgr_wifi_init(struct netmgr_uservice *netmgr)
 
 }
 
+/**
+ * @brief deinit the net manage handle
+ * @param  [in] hdl
+ * @return
+ */
 void netmgr_dev_wifi_deinit(netmgr_hdl_t hdl)
 {
     netmgr_dev_t *node = (netmgr_dev_t *)hdl;
@@ -301,12 +295,24 @@ void netmgr_dev_wifi_deinit(netmgr_hdl_t hdl)
     slist_del((slist_t *)node, &netmgr_svc.dev_list);
 }
 
+/**
+ * @brief net manage init for wifi
+ * @return NULL on error
+ */
 netmgr_hdl_t netmgr_dev_wifi_init()
 {
     return netmgr_wifi_init(&netmgr_svc);
 }
 
-
+/**
+ * @brief  net manage config for wifi device
+ * @param  [in] hdl
+ * @param  [in] ssid
+ * @param  [in] ssid_length
+ * @param  [in] psk
+ * @param  [in] psk_length
+ * @return 0 on success
+ */
 int netmgr_config_wifi(netmgr_hdl_t hdl, char *ssid, uint8_t ssid_length, char *psk, uint8_t psk_length)
 {
     int ret = -1;
