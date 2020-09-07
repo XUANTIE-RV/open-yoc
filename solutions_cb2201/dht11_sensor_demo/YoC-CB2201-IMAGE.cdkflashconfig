@@ -1,0 +1,48 @@
+{
+  "DebugServerSetting": {
+    "UseDDC": true,
+    "EnableTRST": false,
+    "EnableDbgSvrLog": false,
+    "ICECLk": 1200,
+    "DelayMTCR": 10
+  },
+  "FlashProgramSession": {
+    "CommandType": 0,
+    "TargetConfig": {
+      "AlgorithmFile": "CH2201_eFlash_CDK.elf",
+      "PreScriptFile": "script/flash_prog.init",
+      "EraseType": 1,
+      "EraseRangStart": 0,
+      "EraseRangLength": 4096,
+      "ConnectType": 0,
+      "Timeout": 20,
+      "LogEnable": false,
+      "ResetAndRun": true,
+      "ResetType": 1,
+      "ResetValue": 2882343476,
+      "RunMode": false,
+      "CPUSelect": 0
+    },
+    "TargetFile": {
+      "DumpFileType": 0,
+      "DumpBinFileInfo": {
+        "FilePath": "",
+        "StartAddress": 0,
+        "Length": 4096
+      },
+      "DumpHexFileInfo": {
+        "FilePath": "",
+        "StartAddress": 0,
+        "Length": 4096
+      }
+    },
+    "TargetObjectArray": [
+      {
+        "Type": 1,
+        "Verify": false,
+        "FilePath": "generated/total_image.hex",
+        "Program": true
+      }
+    ]
+  }
+}

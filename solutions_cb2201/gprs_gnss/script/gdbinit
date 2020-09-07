@@ -1,0 +1,10 @@
+#
+# Will Run this script before Start Debug 
+# 
+
+reset
+
+# Start with tee os and set to be Security Word with PSR
+set $psr=0xc0000000
+set debug-in-rom on
+

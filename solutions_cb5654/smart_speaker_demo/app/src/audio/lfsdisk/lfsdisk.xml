@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<lfsdisk>
+   <disk_size>250k</disk_size>
+   <block_size>4096</block_size>
+   <root_dir>lfs</root_dir>
+   <output>lfs.bin</output>
+   <strip>1</strip>
+</lfsdisk>

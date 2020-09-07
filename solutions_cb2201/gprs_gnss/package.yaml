@@ -1,0 +1,78 @@
+solution:
+  board_name: cb2201
+  ld_script: ""
+type: solution
+name: gprs_gnss
+version: v7.3.0                                     # <必选项> 组件版本号
+description: 基于cb2201的 gprs gnss 定位信息上传方案示例
+keywords:
+  - cb2201
+  - solution
+author: feimi
+license: Apache license v2.0
+depends:
+  - aos: V7.3.0
+  - at: V7.3.0
+  - cb2201: V7.3.0
+  - csi_ch2201: V7.3.0
+  - console: V7.3.0
+  - csi: V7.3.0
+  - drivers: V7.3.0
+  - drv_gprs_gnss_m6313: V7.3.0
+  - ers: V7.3.0
+  - kv: V7.3.0
+  - minilibc: V7.3.0
+  - netmgr: V7.3.0
+  - rhino: V7.3.0
+  - sal: V7.3.0
+  - yunio: V7.3.0
+def_config:
+  CONFIG_CHIP_CH2201: 1
+  CONFIG_TCPIP: 1
+  CONFIG_CHIP_NAME: ch2201
+  CONFIG_DEBUG_MM: 1
+  CONFIG_TEE_CA: 1
+  CONFIG_CLOUDIO_ALIMQTT: 1
+  CONFIG_AT: 1
+  CONFIG_DEBUG: 1
+  CONFIG_CPU: ck802
+  CONFIG_BOARD_NAME: cb2201
+  CONFIG_ARCH_CSKY: 1
+  CONFIG_CLI: 1
+  CONFIG_KERNEL_RHINO: 1
+  CONFIG_KV_SMART: 1
+  CONFIG_CPU_CK802: 1
+  CONFIG_ARCH_INTERRUPTSTACK: 1024
+  CONFIG_SAL: 1
+  CONFIG_VENDOR_NAME: csky
+build_config:
+  internal_include:
+    - ""
+  include:
+    - app/include
+    - app/src
+    - include
+  cflag: -Os  -g  -Wall  -ffunction-sections -fdata-sections -Wno-address -Wno-unused-but-set-variable -Wno-main
+  cxxflag: -Os  -g  -Wall  -ffunction-sections -fdata-sections -Wno-address -Wno-unused-but-set-variable -Wno-main
+  asmflag: -Wa,--gdwarf2
+  ldflag: -Wl,-zmax-page-size=1024 -Wl,-ckmap=yoc.map
+  define:
+    - ""
+  libs:
+    - m
+  libpath:
+    - ""
+source_file:
+  - app/src/app_main.c
+  - app/src/cli_cmd.c
+  - app/src/exception_handler.c
+  - app/src/init.c
+  - app/src/at_server_init.c
+  - app/src/at_cmd.c
+  - app/src/battery_drv.c
+link_config:
+  path: ~
+  library: ~
+hidden: false
+
+homepage: https://occ.t-head.cn

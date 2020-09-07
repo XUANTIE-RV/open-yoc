@@ -1,0 +1,12 @@
+#
+# Will Run this script before Start Debug 
+# 
+
+target jtag jtag://127.0.0.1:1025
+
+# Start with tee os and set to be Security Word with PSR
+set $psr=0xc0000000
+#set $pc=0x10006000
+set debug-in-rom on
+hb main
+hb trap

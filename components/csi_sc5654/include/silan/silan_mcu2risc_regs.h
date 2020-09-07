@@ -1,0 +1,36 @@
+#ifndef __SILAN_MCU2DSP_REG_H__
+#define __SILAN_MCU2DSP_REG_H__
+
+#include "silan_types.h"
+#include "silan_cxc_regs.h"
+/*Mcu2Risc*/
+
+#define	RISC_CMD		__sREG8(CXC_MBOX_BASEADDR, 0x0) 
+#define	RISC_DATA1	__sREG8(CXC_MBOX_BASEADDR, 0x1) 
+#define	RISC_DATA2	__sREG8(CXC_MBOX_BASEADDR, 0x2) 
+#define	RISC_DATA3	__sREG8(CXC_MBOX_BASEADDR, 0x3) 
+#define	RISC_DATA4	__sREG8(CXC_MBOX_BASEADDR, 0x4) 
+#define	RISC_DATA5	__sREG8(CXC_MBOX_BASEADDR, 0x5) 
+#define	RISC_DATA6	__sREG8(CXC_MBOX_BASEADDR, 0x6) 
+#define	RISC_DATA7	__sREG8(CXC_MBOX_BASEADDR, 0x7) 
+#define	RISC_DATA8	__sREG8(CXC_MBOX_BASEADDR, 0x8) 
+#define	RISC_DATA9	__sREG8(CXC_MBOX_BASEADDR, 0x9) 
+#define	RISC_DATA10	__sREG8(CXC_MBOX_BASEADDR, 0xa) 
+#define	RISC_DATA11	__sREG8(CXC_MBOX_BASEADDR, 0xb) 
+#define	RISC_DATA12	__sREG8(CXC_MBOX_BASEADDR, 0xc) 
+#define	RISC_DATA13	__sREG8(CXC_MBOX_BASEADDR, 0xd) 
+#define	RISC_DATA14	__sREG8(CXC_MBOX_BASEADDR, 0xe) 
+#define	RISC_DATA15	__sREG8(CXC_MBOX_BASEADDR, 0xf) 
+
+#define	Risc_Status		__REG8(CXC_MBOX_BASEADDR+0x70) 
+#define	RISC_ST1		  __REG8(CXC_MBOX_BASEADDR+0x71) 
+#define	Cur_Min			  __REG8(CXC_MBOX_BASEADDR+0x72) 
+#define	Cur_Sec			  __REG8(CXC_MBOX_BASEADDR+0x73) 
+#define	Work_Status		__REG8(CXC_MBOX_BASEADDR+0x74) 
+#define	Dev_Status		__REG8(CXC_MBOX_BASEADDR+0x75) 
+#define	Status_Reg1		__REG8(CXC_MBOX_BASEADDR+0x76) 
+#define	Status_Reg2		__REG8(CXC_MBOX_BASEADDR+0x77) 
+#define	AHB_Addr_0		__REG32(CXC_MBOX_BASEADDR+0x78) 
+#define	AHB_Addr_1		__REG32(CXC_MBOX_BASEADDR+0x7c) 
+
+#endif

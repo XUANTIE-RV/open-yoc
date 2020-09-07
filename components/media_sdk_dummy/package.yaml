@@ -1,0 +1,51 @@
+
+## 第一部分： 基础信息
+name: media_sdk_dummy                               # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
+version: v7.3.0                                     # <必选项> 组件版本号
+description: 语音AI的芯片SDK套件，包含网络、音播播放器、AUI框架等组件 # <必选项> 建议至少20字以上
+type: common                                        # <必选项> 组件类型，为：solution, chip, board, common
+
+tag: 核心模块                                       # <可选项> 组件分类，缺省值： ''
+license: Apache license v2.0                        # <可选项> 源代码的许可证，要确保所有代码、文件的许可证不冲突。如：MIT，Apache license v2.0，BSD
+
+depends:
+  # base component
+  - csi_dummy: V7.3.0
+  - board_dummy: V7.3.0
+  - csi: V7.3.0
+  - minilibc: V7.3.0
+  - aos: V7.3.0
+  - console: V7.3.0
+  - drivers: V7.3.0
+  - kv: V7.3.0
+  - rhino: V7.3.0
+
+  # network
+  - lwip: V7.3.0
+  - sal: V7.3.0
+  - at: V7.3.0
+  - coap: V7.3.0
+  - cjson: V7.3.0
+  - yunio: V7.3.0
+  - sntp: V7.3.0
+  - netmgr: V7.3.0
+  - mbedtls: V7.3.0
+  - httpclient: V7.3.0
+
+  # media
+  - aui_cloud: V7.3.0
+  - ipc: V7.3.0
+  - mic: V7.3.0
+  - minialsa: V7.3.0
+  - posix: V7.3.0
+  - pvmp3dec: V7.3.0
+  - record: V7.3.0
+  - transport: V7.3.0
+  - voice: V7.3.0
+  - webclient: V7.3.0
+
+  # demo soution
+  - helloworld: V7.3.0
+  - pangu_player: V7.3.0
+  - pangu_demo: V7.3.0
+

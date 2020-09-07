@@ -1,0 +1,42 @@
+name: serial
+version: v7.3.0                                     # <必选项> 组件版本号
+description: 核间通信组件
+tag: 核心模块
+keywords:
+  - ipc
+
+license: Apache license v2.0                  # GPLv2，LGPLv2.1，MIT，Apache license v2.0，BSD
+
+homepage: ""
+
+type: common
+
+depends:                                       # 该组件依赖其他的组件
+  - csi: V7.3.0
+  - rhino: V7.3.0
+  - aos: V7.3.0
+  - vfs: V7.3.0
+
+homepage: ""
+
+source_file:
+  - "pty/*.c"
+  - "serial/*.c"
+
+build_config:
+  include:
+    - include
+  cflag: "-Wno-nonnull-compare"                # C 编译器所需要要的编译参数
+  # define:                                    # 宏定义
+
+install:
+  - dest: include
+    source:
+      - "include/*.h"
+
+defconfig:
+  CONFIG_SERIAL_DMA: 1
+  CONFIG_SERIAL_REMOVABLE: 1
+  CONFIG_SERIAL_IFLOWCONTROL: 1
+  CONFIG_SERIAL_TERMIOS: 1
+  CONFIG_DISABLE_POLL: 1

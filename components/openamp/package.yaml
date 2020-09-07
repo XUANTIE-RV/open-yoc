@@ -1,0 +1,63 @@
+name: openamp
+version: v7.3.0                                     # <必选项> 组件版本号
+description:  Open Asymmetric Multi Processing
+tag: 网络组件
+keywords:
+  - ipc
+
+license: Apache license v2.0                                   # GPLv2，LGPLv2.1，MIT，Apache license v2.0，BSD
+
+homepage: ""
+
+type: common
+
+depends:                                       # 该组件依赖其他的组件
+  - csi: V7.3.0
+  - rhino: V7.3.0
+  - aos: V7.3.0
+  - posix: V7.3.0
+
+source_file:
+  - libmetal/lib/system/yoc/condition.c
+  - libmetal/lib/system/yoc/device.c
+  - libmetal/lib/system/yoc/init.c
+  - libmetal/lib/system/yoc/io.c
+  - libmetal/lib/system/yoc/irq.c
+  - libmetal/lib/system/yoc/shmem.c
+  - libmetal/lib/system/yoc/time.c
+  - libmetal/lib/system/yoc/log.c
+  - libmetal/lib/device.c
+  - libmetal/lib/dma.c
+  - libmetal/lib/init.c
+  - libmetal/lib/io.c
+  - libmetal/lib/irq.c
+  - libmetal/lib/log.c
+  - libmetal/lib/shmem.c
+  - libmetal/lib/version.c
+
+  - open-amp/lib/remoteproc/elf_loader.c
+  - open-amp/lib/remoteproc/remoteproc.c
+  - open-amp/lib/remoteproc/remoteproc_virtio.c
+  - open-amp/lib/remoteproc/rsc_table_parser.c
+  - open-amp/lib/rpmsg/rpmsg.c
+  - open-amp/lib/rpmsg/rpmsg_virtio.c
+  - open-amp/lib/virtio/virtio.c
+  - open-amp/lib/virtio/virtqueue.c
+build_config:
+  include:
+    # - libmetal/lib/compiler/gcc/
+    # - libmetal/lib/processor/csky/
+    # - libmetal/lib/system/nuttx/
+    # - libmetal/lib/
+
+    # - open-amp/lib/include/openamp/
+    - include
+    - include/metal/system/
+  cflag: ""                             # C 编译器所需要要的编译参数
+  define:                               # 宏定义
+    - METAL_INTERNAL
+
+install:
+  - dest: include
+    source:
+      - "include/ntp.h"

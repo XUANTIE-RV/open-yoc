@@ -1,0 +1,37 @@
+name: sdk_u1
+version: v7.3.0                                     # <必选项> 组件版本号
+description: 大鱼u1的SDK套件，包含各种依赖组件和demo
+tag: 核心模块
+keywords:
+
+license: Apache license v2.0                                   # GPLv2，LGPLv2.1，MIT，Apache license v2.0，BSD
+
+homepage: ""
+
+type: common
+
+depends:                                       # 该组件依赖其他的组件
+  - aos: V7.3.0
+  - console: V7.3.0
+  - csi: V7.3.0
+  - drivers: V7.3.0
+  - drv_nbiot_u1: V7.3.0
+  - minilibc: V7.3.0
+  - netmgr: V7.3.0
+  - openamp: V7.3.0
+  - rhino: V7.3.0
+  - serial: V7.3.0
+  - rptun: V7.3.0
+  - usrsock: V7.3.0
+  - yoc_u1: V7.3.0
+  - aliot: V7.3.0
+  - yunio: V7.3.0
+  - posix: V7.3.0
+  - vfs: V7.3.0
+  - mbedtls: V7.3.0
+  # boards
+  - u1: V7.3.0
+  # chip
+  - csi_u1: V7.3.0
+  # solutions
+  - u1_alicoap: V7.3.0

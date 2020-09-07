@@ -1,0 +1,8 @@
+
+#reset
+set $psr=0xc0000000
+set *(int*)0x42010300=0x03
+
+##Load yoc binary
+download ihex verify=no $(ProjectPath)generated/prim.hex
+

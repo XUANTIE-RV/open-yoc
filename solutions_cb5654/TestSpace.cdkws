@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CDK_Workspace Name="TestSpace" Database="">
+  <Project Name="alimqtt_demo_sc5654" Path="alimqtt_demo_sc5654/project.cdkproj" Active="No"/>
+  <Project Name="chip_example_sc5654" Path="chip_example_sc5654/project.cdkproj" Active="No"/>
+  <Project Name="smart_speaker_demo" Path="smart_speaker_demo/project.cdkproj" Active="Yes"/>
+  <Project Name="smart_voice_fan_demo" Path="smart_voice_fan_demo/project.cdkproj" Active="No"/>
+  <BuildMatrix>
+    <WorkspaceConfiguration Name="Debug" Selected="yes">
+      <Environment/>
+      <Project Name="alimqtt_demo_sc5654" ConfigName="BuildSet"/>
+      <Project Name="chip_example_sc5654" ConfigName="BuildSet"/>
+      <Project Name="smart_speaker_demo" ConfigName="BuildSet"/>
+      <Project Name="smart_voice_fan_demo" ConfigName="BuildSet"/>
+    </WorkspaceConfiguration>
+  </BuildMatrix>
+</CDK_Workspace>

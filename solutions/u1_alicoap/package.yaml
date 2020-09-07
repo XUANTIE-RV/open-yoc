@@ -1,0 +1,77 @@
+hw_info:
+  cpu_id: ""
+  cpu_name: ""
+  vendor_name: ""
+  chip_name: ""
+  board_name: "u1"
+  ld_script: ""
+  flash_program: ""
+def_config:
+  CONFIG_ALICOAP_PSK: 1
+  CONFIG_ARCH_CSKY: 1
+  CONFIG_ARCH_INTERRUPTSTACK: 4096
+  CONFIG_CHIP_VENDOR_CSKY: 1
+  CONFIG_CLI: 1
+  CONFIG_CLI_ADDR_OP: 1
+  CONFIG_CLOUDIO_ALICOAP: 1
+  CONFIG_MBEDTLS_SSL_MAX_CONTENT_LEN: 1024
+  CONFIG_CPU_CK802: 1
+  CONFIG_DEBUG: 1
+  CONFIG_HAVE_VIC: 1
+  CONFIG_KERNEL_RHINO: 1
+  CONFIG_KERNEL_WORKQUEUE: 1
+  CONFIG_NON_ADDRESS_FLASH: 1
+  CONFIG_PARAM_NOT_CHECK: 1
+  CONFIG_RPTUN_PRIORITY: 10
+  CONFIG_RPTUN_STACKSIZE: 2048
+  CONFIG_SYSTICK_HZ: 1000
+  CONFIG_TCPIP: 1
+  CONFIG_USING_TLS: 1
+  CONFIG_YUYU: 1
+  CONFIG_VENDOR_NAME: csky
+name: u1_alicoap
+version: v7.3.0                                     # <必选项> 组件版本号
+description: 大鱼u1 alicoap上云工程
+tag: ""
+keywords: ~
+author:
+  name: ""
+license: ""
+type: solution
+depends:
+  - aos: V7.3.0
+  - console: V7.3.0
+  - csi: V7.3.0
+  - csi_u1: V7.3.0
+  - drivers: V7.3.0
+  - drv_nbiot_u1: V7.3.0
+  - minilibc: V7.3.0
+  - netmgr: V7.3.0
+  - openamp: V7.3.0
+  - rhino: V7.3.0
+  - serial: V7.3.0
+  - rptun: V7.3.0
+  - u1: V7.3.0
+  - usrsock: V7.3.0
+  - yoc_u1: V7.3.0
+  - aliot: V7.3.0
+  - yunio: V7.3.0
+  - posix: V7.3.0
+  - vfs: V7.3.0
+  - mbedtls: V7.3.0
+
+build_config:
+  include:
+    - app/include
+  internal_include: ~
+  cflag: -Os
+  cxxflag: -Os
+  asmflag: ""
+  define: ~
+  libs:
+    - m 
+    - iot_alicoap_psk
+  libpath: ~
+  ldflag: -Wl,-ckmap="yoc.map" -Wl,-zmax-page-size=1024
+source_file:
+  - app/src/*.c

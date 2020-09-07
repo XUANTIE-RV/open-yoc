@@ -1,0 +1,25 @@
+mtb_version: 4
+chip: yunvoice
+
+diff:
+  digest_type: SHA1
+  signature_type: RSA1024
+  fota_version: 0
+  ram_buf: 50      #DEC     KB   ( max ram need)
+  flash_buf: 8     #DEC     KB   ( buffer size)
+  flash_sector: 4096 #DEC     byte ( flash sector)
+  diff_mode: 010    #BIN
+  double_control: 1
+flash:
+  base_address: 0
+  run_base_address: 0x40000000 # base address of Storage
+  sector: 4096       # Bytes
+  size: 8388608      # $(sector count) * sector
+
+partitions:
+  - { name: boot,   address: 0x000000, load_addr: 0x20000, size: 0x01E000, verify: true }
+  - { name: imtb,   address: 0x01E000, size: 0x001000 }
+  - { name: ai,     address: 0x020000, size: 0x080000, load_addr: 0x40600000, update: DIFF, verify: true }
+  - { name: prim,   address: 0x0A0000, size: 0x200000, load_addr: 0x40000000, update: DIFF, verify: true }
+  - { name: kv,     address: 0x2A0000, size: 0x008000 }
+  - { name: spiffs, address: 0x2A8000, size: 0x200000 }

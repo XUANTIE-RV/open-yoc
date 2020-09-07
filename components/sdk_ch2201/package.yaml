@@ -1,0 +1,36 @@
+name: sdk_ch2201
+version: v7.3.0                                     # <必选项> 组件版本号
+description: ch2201的sdk套件，包括各种依赖组件和demo
+tag: 核心模块
+keywords:
+
+license: Apache license v2.0                                   # GPLv2，LGPLv2.1，MIT，Apache license v2.0，BSD
+
+homepage: ""
+
+type: common
+
+depends:                                       # 该组件依赖其他的组件
+  - aos: V7.3.0
+  - kv: V7.3.0
+  - csi: V7.3.0
+  - rhino: V7.3.0
+  - minilibc: V7.3.0
+  - at: V7.3.0
+  - console: V7.3.0
+  - drivers: V7.3.0
+  - drv_sensors: V7.3.0
+  - drv_leds: V7.3.0
+  - drv_wifi_esp8266: V7.3.0
+  - netmgr: V7.3.0
+  - sal: V7.3.0
+  - yunio: V7.3.0
+  - aliot: V7.3.0
+  - mbedtls: V7.3.0
+  # boards
+  - cb2201: V7.3.0
+  # chip
+  - csi_ch2201: V7.3.0
+  # solutions
+  - alicoap_demo: V7.3.0
+  - alimqtt_sensor_data_to_cloud_demo: V7.3.0
