@@ -44,10 +44,14 @@ int adc_pin2channel(aos_dev_t *dev, int pin)
     ret = ADC_DRIVER(dev)->pin2channel(dev, pin);
     device_unlock(dev);
 
-    return ret; 
+    return ret;
 }
 
+#ifdef CONFIG_CSI_V2
+int adc_read(aos_dev_t *dev, uint8_t ch, void *output, uint32_t timeout)
+#else
 int adc_read(aos_dev_t *dev, void *output, uint32_t timeout)
+#endif
 {
     if (output == 0) {
         return -EINVAL;
@@ -58,7 +62,11 @@ int adc_read(aos_dev_t *dev, void *output, uint32_t timeout)
     ADC_VAILD(dev);
 
     device_lock(dev);
+#ifdef CONFIG_CSI_V2
+    ret = ADC_DRIVER(dev)->read(dev, ch, output, timeout);
+#else
     ret = ADC_DRIVER(dev)->read(dev, output, timeout);
+#endif
     device_unlock(dev);
 
     return ret;

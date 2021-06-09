@@ -15,6 +15,14 @@ extern "C" {
 #define SAL_PACKET_SEND_MODE_ASYNC   0
 //#define SAL_SERVER                   1
 
+#ifndef CONFIG_SAL_DEFAULT_INPUTMBOX_SIZE        
+#define CONFIG_SAL_DEFAULT_INPUTMBOX_SIZE        16
+#endif
+
+#ifndef CONFIG_SAL_DEFAULT_OUTPUTMBOX_SIZE       
+#define CONFIG_SAL_DEFAULT_OUTPUTMBOX_SIZE       8
+#endif
+
 typedef enum {
     /* WiFi */
     TCP_SERVER,
@@ -155,11 +163,24 @@ typedef struct sal_op_s {
 
 
 /**
+ * SAL init(deinit)
+ *
+**/
+int sal_init(void);
+int sal_deinit(void);
+
+/**
  * Register a module instance to the SAL
  *
  * @param[in] module the module instance
 **/
 int sal_module_register(sal_op_t *module);
+
+/**
+ * Unregister a module instance to the SAL
+ *
+**/
+int sal_module_unregister(void);
 
 /**
  * Module low level init so that it's ready to setup socket connection.

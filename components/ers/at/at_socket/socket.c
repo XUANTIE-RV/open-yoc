@@ -7,9 +7,8 @@
 #include <errno.h>
 #include <sys/socket.h>
 
-#include <aos/log.h>
 #include <aos/debug.h>
-#include <yoc/uservice.h>
+#include <uservice/uservice.h>
 
 #include "at_socket.h"
 #include "../at_internal.h"
@@ -376,7 +375,7 @@ int at_disconnect(at_conn_t *conn, int keep_server)
 
     if (!keep_server) {
         conn->status = STATS_STOP;
-    } else if (conn->type == TYPE_TCP_SERVER && conn->sockfd == 0) {
+    } else if (conn->type == TYPE_TCP_SERVER && conn->ssockfd == 0) {
         AT_LOGE(TAG, "sock close");
         return -1;
     }

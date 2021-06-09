@@ -1,0 +1,98 @@
+MEMORY
+{
+  REMAP (rwx) : ORIGIN = 0x0, LENGTH = 0xc000
+  RAM (rwx) : ORIGIN = 0x20000000, LENGTH = 0xc000
+}
+
+SECTIONS
+{
+    PROVIDE(__data_lma__ = ORIGIN(RAM));
+    PROVIDE(__vector_lma__ = ORIGIN(RAM));
+    
+    .vector :
+    {
+        . = ALIGN(4);
+        PROVIDE(__vector__start__ = .);
+        PROVIDE(__vector__end__ = .);    
+        KEEP(*(.isr_vector))
+    }>REMAP AT>RAM 
+
+    __data_lma__ = __vector_lma__ + SIZEOF(.vector);
+    
+    .data :
+    {
+        . = ALIGN(4);
+        PROVIDE(__data_start__ = .);
+        PROVIDE(__data_end__ = .);        
+        *(.data*)
+        *(.xip_banned)
+        . = ALIGN(ALIGNOF(.text));
+    }>REMAP AT>RAM 
+    
+    .text :
+    {
+        
+        KEEP(*(.init))
+        KEEP(*(.fini))
+
+/* 
+        *crtbegin.o(.ctors)
+        *crtbegin?.o(.ctors)
+        *(EXCLUDE_FILE(*crtend?.o *crtend.o) .ctors)
+        *(SORT(.ctors.*))
+        *(.ctors)
+
+
+         *crtbegin.o(.dtors)
+         *crtbegin?.o(.dtors)
+         *(EXCLUDE_FILE(*crtend?.o *crtend.o) .dtors)
+         *(SORT(.dtors.*))
+         *(.dtors)
+*/
+        *(.eh_frame*)
+        *(.text* .rodata*)
+    }>REMAP AT>RAM 
+    
+    .bss (NOLOAD):
+    {
+        __bss_start__ = .;
+        *(.bss*)
+        *(COMMON)
+        *(SECTION_RTT)
+        __bss_end__ = ALIGN(4);
+    }>REMAP
+        
+    .heap (COPY):
+    {
+        __end__ = .;
+        PROVIDE(end = .);
+        *(.heap*)
+        __HeapLimit = .;
+    }>REMAP
+
+    .reset_retain (NOLOAD) :
+    {
+        . = ALIGN(4);
+        PROVIDE(reset_retain_start = .);
+        . += 2*4;
+        PROVIDE(reset_retain_end = .);
+    }
+    
+    /* .stack_dummy section doesn't contains any symbols. It is only
+     * used for linker to calculate size of stack sections, and assign
+     * values to stack symbols later */
+    .stack_dummy (COPY):
+    {
+        *(.stack*)
+    }>REMAP
+
+    /* Set stack top to end of RAM, and stack limit move down by
+     * size of stack_dummy section */
+    __StackTop = ORIGIN(REMAP) + LENGTH(REMAP);
+    __StackLimit = __StackTop - SIZEOF(.stack_dummy);
+    PROVIDE(__stack = __StackTop);
+    
+    /* Check if data + heap + stack exceeds RAM limit */
+    ASSERT(__StackLimit >= __HeapLimit, "region RAM overflowed with stack")
+    
+}

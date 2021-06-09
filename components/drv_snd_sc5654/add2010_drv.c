@@ -10,7 +10,6 @@
  ******************************************************************************/
 #include <math.h>
 #include <aos/aos.h>
-#include <aos/log.h>
 #include <alsa/snd.h>
 #include <alsa/pcm.h>
 #include <alsa/mixer.h>

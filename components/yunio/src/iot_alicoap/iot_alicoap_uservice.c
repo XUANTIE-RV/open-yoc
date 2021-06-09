@@ -8,12 +8,11 @@
 #include <stdlib.h>
 #include <errno.h>
 
-#include <aos/log.h>
 #include <aos/kernel.h>
 #include <aos/debug.h>
 #include <yoc/nvram.h>
-#include <yoc/eventid.h>
-#include <yoc/uservice.h>
+#include <uservice/eventid.h>
+#include <uservice/uservice.h>
 #include <iot_export.h>
 #include "iot_alicoap_uservice.h"
 
@@ -211,7 +210,7 @@ static int alicoap_inter_yield(void)
 /******************
  *uService
  ******************/
-#include <yoc/uservice.h>
+#include <uservice/uservice.h>
 
 #define ALIYUN_STACK_SIZE 3072
 

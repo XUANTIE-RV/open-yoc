@@ -12,6 +12,10 @@ details. */
 #ifndef _SYS_SELECT_H
 #define _SYS_SELECT_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* We don't define fd_set and friends if we are compiling POSIX
    source, or if we have included (or may include as indicated
    by __USE_W32_SOCKETS) the W32api winsock[2].h header which
@@ -23,6 +27,7 @@ details. */
 
 #include <sys/cdefs.h>
 #include <sys/_sigset.h>
+#include <sys/time.h>
 // #include <sys/_timeval.h>
 // #include <sys/timespec.h>
 
@@ -31,6 +36,40 @@ details. */
 typedef	__sigset_t	sigset_t;
 #endif
 
+#if defined(CONFIG_SAL) || defined(CONFIG_TCPIP)
+#include <sys/socket.h>
+#else
+
+#ifndef FD_SET
+/* Make FD_SETSIZE match NUM_SOCKETS in socket.c */
+#define MEMP_NUM_NETCONN 12
+#define LWIP_SOCKET_OFFSET 20
+
+#define FD_SETSIZE    MEMP_NUM_NETCONN
+#define FDSETSAFESET(n, code) do { \
+  if (((n) - LWIP_SOCKET_OFFSET < MEMP_NUM_NETCONN) && (((int)(n) - LWIP_SOCKET_OFFSET) >= 0)) { \
+  code; }} while(0)
+#define FDSETSAFEGET(n, code) (((n) - LWIP_SOCKET_OFFSET < MEMP_NUM_NETCONN) && (((int)(n) - LWIP_SOCKET_OFFSET) >= 0) ?\
+  (code) : 0)
+#define FD_SET(n, p)  FDSETSAFESET(n, (p)->fd_bits[((n)-LWIP_SOCKET_OFFSET)/8] |=  (1 << (((n)-LWIP_SOCKET_OFFSET) & 7)))
+#define FD_CLR(n, p)  FDSETSAFESET(n, (p)->fd_bits[((n)-LWIP_SOCKET_OFFSET)/8] &= ~(1 << (((n)-LWIP_SOCKET_OFFSET) & 7)))
+#define FD_ISSET(n,p) FDSETSAFEGET(n, (p)->fd_bits[((n)-LWIP_SOCKET_OFFSET)/8] &   (1 << (((n)-LWIP_SOCKET_OFFSET) & 7)))
+#define FD_ZERO(p)    memset((void*)(p), 0, sizeof(*(p)))
+
+typedef struct fd_set
+{
+  unsigned char fd_bits [(FD_SETSIZE+7)/8];
+} fd_set;
+
+#endif
+
+#endif
+
+extern int select2(int maxfdp1, fd_set *readset, fd_set *writeset, fd_set *exceptset,
+            struct timeval *timeout, void *semaphore);
+          
+extern int select(int maxfdp1, fd_set *readset, fd_set *writeset, fd_set *exceptset,
+            struct timeval *timeout);
 #if 0
 
 #  define _SYS_TYPES_FD_SET
@@ -87,5 +126,9 @@ __END_DECLS
 #endif
 
 #endif /* !(_WINSOCK_H || _WINSOCKAPI_ || __USE_W32_SOCKETS) */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* sys/select.h */

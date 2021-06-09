@@ -509,8 +509,8 @@ void LITE_free_internal(void *ptr)
 void *LITE_malloc_routine(int size, ...)
 {
 #if WITH_MEM_STATS_PER_MODULE
-    char *module_name = NULL;
     int magic = 0;
+    char *module_name = NULL;
     va_list ap;
     va_start(ap, size);
     magic = va_arg(ap, int);
@@ -530,7 +530,6 @@ void *LITE_malloc_routine(int size, ...)
 void *LITE_calloc_routine(size_t n, size_t s, ...)
 {
 #if WITH_MEM_STATS_PER_MODULE
-
     int magic = 0;
     char *module_name = NULL;
     va_list ap;

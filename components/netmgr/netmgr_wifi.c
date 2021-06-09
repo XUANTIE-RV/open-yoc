@@ -2,13 +2,16 @@
  * Copyright (C) 2019-2020 Alibaba Group Holding Limited
  */
 #include <aos/aos.h>
-#include <yoc/uservice.h>
-#include <yoc/eventid.h>
+#include <uservice/uservice.h>
+#include <uservice/eventid.h>
 #include <yoc/netmgr.h>
 #include <yoc/netmgr_service.h>
 
 #include <devices/netdrv.h>
 #include <devices/wifi.h>
+#ifdef CONFIG_KV_SMART
+#include <aos/kv.h>
+#endif
 
 typedef struct {
     netmgr_hdl_t hdl;
@@ -293,6 +296,7 @@ void netmgr_dev_wifi_deinit(netmgr_hdl_t hdl)
     hal_wifi_deinit(dev);
     device_close(dev);
     slist_del((slist_t *)node, &netmgr_svc.dev_list);
+    aos_free(node);
 }
 
 /**

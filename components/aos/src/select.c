@@ -3,13 +3,12 @@
  */
 
 #include <aos/kernel.h>
-
-#include "lwip/opt.h"
-
-#include "lwip/sockets.h"
+#include <sys/select.h>
+//#include "lwip/opt.h"
+//#include "lwip/sockets.h"
 
 __attribute__((weak)) int select2(int maxfdp1, fd_set *readset, fd_set *writeset, fd_set *exceptset,
-                              struct timeval *timeout, void *semaphore)
+                                  struct timeval *timeout, void *semaphore)
 {
     uint32_t tomeout_ms;
 

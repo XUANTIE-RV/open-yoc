@@ -13,6 +13,7 @@ static struct {
     { "s8",      ESF_S8,       sf_make_signed(1) | sf_make_bigendian(0) | sf_make_planar(0) | sf_make_float(0) | sf_make_bit(8)       },
     { "s16le",   ESF_S16LE,    sf_make_signed(1) | sf_make_bigendian(0) | sf_make_planar(0) | sf_make_float(0) | sf_make_bit(16)      },
     { "s16be",   ESF_S16BE,    sf_make_signed(1) | sf_make_bigendian(1) | sf_make_planar(0) | sf_make_float(0) | sf_make_bit(16)      },
+    { "s24le",   ESF_S24LE,    sf_make_signed(1) | sf_make_bigendian(0) | sf_make_planar(0) | sf_make_float(0) | sf_make_bit(24)      },
     { "s32le",   ESF_S32LE,    sf_make_signed(1) | sf_make_bigendian(0) | sf_make_planar(0) | sf_make_float(0) | sf_make_bit(32)      },
     { "s32be",   ESF_S32BE,    sf_make_signed(1) | sf_make_bigendian(1) | sf_make_planar(0) | sf_make_float(0) | sf_make_bit(32)      },
     { "u8",      ESF_U8,       sf_make_signed(0) | sf_make_bigendian(0) | sf_make_planar(0) | sf_make_float(0) | sf_make_bit(8)       },
@@ -78,18 +79,19 @@ esf_t get_esf_type(sf_t sf)
 
 /**
  * @brief  get format str of sf
+ * @param  [in] buf : min of the buf is SF_FORMAT_STR_SIZE_MAX
  * @param  [in] sf
  * @return not null
  */
-char* sf_get_format(sf_t sf)
+char* sf_get_format(char buf[SF_FORMAT_STR_SIZE_MAX], sf_t sf)
 {
-    static char buf[128];
+    char *pbuf = buf;
 
-    snprintf(buf, sizeof(buf), "sf = %u, rate = %u, ch = %u, bits = %u, siged = %u, float = %u, endian = %u",
+    snprintf(pbuf, SF_FORMAT_STR_SIZE_MAX, "sf = %u, rate = %u, ch = %u, bits = %u, siged = %u, float = %u, endian = %u",
              sf, sf_get_rate(sf), sf_get_channel(sf), sf_get_bit(sf), sf_get_signed(sf), sf_get_float(sf),
              sf_get_bigendian(sf));
 
-    return buf;
+    return pbuf;
 }
 
 /**

@@ -8,7 +8,7 @@
 #include <drv/tee.h>
 #include <yoc/nvram.h>
 #include <yoc/sysinfo.h>
-#include <yoc/manifest_info.h>
+// #include <mtb.h>
 
 #ifndef SYSINFO_WEAK
 #define SYSINFO_WEAK __attribute__((weak))
@@ -53,11 +53,12 @@ char *aos_get_app_version(void)
     uint32_t len = sizeof(str_version) - 1;
 
     if (str_version[0] == 0) {
-    #ifdef CONFIG_TEE_CA
+#ifdef CONFIG_TEE_CA
         ret = csi_tee_get_sys_os_version((uint8_t *)str_version, &len);
-    #else
+#else
+        extern int get_app_version(uint8_t *out, uint32_t *out_len);
         ret = get_app_version((uint8_t *)str_version, &len);
-    #endif
+#endif
         if (ret != 0 || len >= sizeof(str_version)) {
             str_version[0] = 0;
             return NULL;
@@ -97,14 +98,18 @@ char *aos_get_device_id(void)
 
     if (cidbuf[0] == 0) {
         memset(cidbuf, 0, sizeof(cidbuf));
-    #ifdef CONFIG_TEE_CA
+#ifdef CONFIG_DEVICEID_FROM_KV
+        ret = nvram_get_val("device_id", cidbuf, sizeof(cidbuf));
+#else
+#ifdef CONFIG_TEE_CA
         {
             uint32_t len = sizeof(cidbuf) - 1;
             ret = csi_tee_get_cid((uint8_t *)cidbuf, (uint32_t *)&len);
         }
-    #else
+#else
         ret = nvram_get_val("device_id", cidbuf, sizeof(cidbuf));
-    #endif
+#endif /* CONFIG_TEE_CA */
+#endif /* CONFIG_DEVICEID_FROM_KV */
         if (ret < 0) {
             return NULL;
         }

@@ -65,7 +65,7 @@ typedef	quad_t *	qaddr_t;
 
 #if __BSD_VISIBLE
 #include <machine/endian.h>
-#include <sys/select.h>
+//#include <sys/select.h>
 #  define	physadr		physadr_t
 #  define	quad		quad_t
 
@@ -224,7 +224,7 @@ typedef	__nlink_t	nlink_t;	/* link count */
 // #endif
 
 #ifndef _USECONDS_T_DECLARED
-typedef	uint64_t	useconds_t;	/* microseconds (unsigned) */
+typedef	__useconds_t	useconds_t;	/* microseconds (unsigned) */
 #define	_USECONDS_T_DECLARED
 #endif
 

@@ -7,9 +7,8 @@
 
 #include <aos/kernel.h>
 #include <aos/kv.h>
-#include <aos/log.h>
-#include <yoc/uservice.h>
-#include <yoc/eventid.h>
+#include <uservice/uservice.h>
+#include <uservice/eventid.h>
 
 #include <clock_alarm.h>
 #include <rtc_alarm.h>
@@ -46,7 +45,8 @@ static void get_kv_config_time(uint8_t id)
     sprintf(name, "%s%02d%s", "clock_alarm_", id, "_time");
     aos_kv_getint(name, &time);
     g_clock_alarm_array[idx].time = (time_t)time;
-    if (time == 0) {
+    if (time <= 0) {
+        g_clock_alarm_array[idx].time = 0;
         g_clock_alarm_array[idx].id = 0;
         g_clock_alarm_array[idx].period = CLOCK_ALARM_PERIOD_DISABLE;
         g_clock_alarm_array[idx].enable = 0;
@@ -227,7 +227,6 @@ static void update_clock_alarm(uint8_t idx)
 
 static void config_rtc_alarm(time_t set_time, clock_alarm_period_e period)
 {
-    int week = 0;
 #ifdef CONFIG_CLOCK_ALARM_SCHEDULE
     struct tm *tm_set = convert_to_tm(set_time);
 #else
@@ -236,11 +235,9 @@ static void config_rtc_alarm(time_t set_time, clock_alarm_period_e period)
 #endif
     // LOGD(TAG, "config_rtc_alarm: time %d, period %d", set_time, period);
     if (period != CLOCK_ALARM_PERIOD_WEEK) {
-        week = -1;
-    } else {
-        week = tm_set->tm_wday;
+        tm_set->tm_wday = -1;
     }
-    rtc_set_alarm(week, tm_set->tm_mday, tm_set->tm_hour, tm_set->tm_min, tm_set->tm_sec);
+    rtc_set_alarm(tm_set);
 }
 
 static void update_clock_timer_info(time_t time_rtc_now)
@@ -283,12 +280,20 @@ static void clock_timer_callback(void *arg)
 {
     time_t time_rtc_now = rtc_get_time();
     uint8_t clock_id = (uint8_t)((int)arg);
-    LOGD(TAG,"clock alarm happen id: %d", clock_id);
 
-    update_clock_alarm(clock_id - 1);
+    if (abs(time_rtc_now - g_clock_alarm_array[clock_id - 1].time) < 3) {
+        LOGD(TAG,"clock alarm happen id: %d", clock_id);
+        update_clock_alarm(clock_id - 1);
 
-    if (g_clock_alarm_cb) {
-        g_clock_alarm_cb(clock_id);
+        if (g_clock_alarm_cb) {
+            g_clock_alarm_cb(clock_id);
+        }
+    }
+
+    for (int i = 0; i < CLOCK_ALARM_NUM; i++) {
+        if(g_clock_alarm_array[i].time < time_rtc_now) {
+            update_clock_alarm(i);
+        }
     }
 
 #ifndef CONFIG_CLOCK_ALARM_SCHEDULE
@@ -414,7 +419,10 @@ int clock_alarm_init(clock_alarm_cb_t alarm_cb)
 int clock_alarm_set(uint8_t id, clock_alarm_config_t *cfg_time)
 {
     uint8_t idx = 0;
-    time_t abs_time = convert_to_absolute_time(cfg_time);
+    time_t abs_time = 0;
+    if(NULL != cfg_time) {
+        abs_time = convert_to_absolute_time(cfg_time);
+    }
 
     if (id == 0) {
         if (abs_time == 0) {
@@ -456,12 +464,29 @@ int clock_alarm_set(uint8_t id, clock_alarm_config_t *cfg_time)
         }
 
         if (cfg_time == NULL) {
+            uint8_t mini_id = get_mini_clock_id();
+
             set_kv_config_time(id, 0, CLOCK_ALARM_PERIOD_DISABLE);
             set_kv_config_enable(id, 0);
             g_clock_alarm_array[idx].id = 0;
             g_clock_alarm_array[idx].time = 0;
             g_clock_alarm_array[idx].period = CLOCK_ALARM_PERIOD_DISABLE;
             g_clock_alarm_array[idx].enable = 0;
+
+            if (mini_id == id) {
+#ifndef CONFIG_CLOCK_ALARM_SCHEDULE
+                set_clock_alarm_status(0);
+                //restore status
+                for (int idx = 0; idx < CLOCK_ALARM_NUM; idx++) {
+                    if (g_clock_alarm_array[idx].time) {
+                        set_clock_alarm_status(1);
+                        break;
+                    }
+                }
+#endif
+                update_clock_timer_info(rtc_get_time());
+            }
+
             return 0;
         }
         if (abs_time == 0) {

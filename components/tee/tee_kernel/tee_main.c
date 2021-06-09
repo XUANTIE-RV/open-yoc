@@ -5,8 +5,8 @@
 #include <tee_addr_map.h>
 #include "tee_debug.h"
 #include "drv_trng.h"
-#include "mtb.h"
-#include "kp.h"
+#include <yoc/partition.h>
+#include "key_mgr.h"
 
 extern void rte_to_ntw(void);
 
@@ -21,16 +21,23 @@ static void tee_info_dump(void)
     TEE_LOG("Tee v%s Initliaze done, %s %s\n", version, compile_date, compile_time);
 }
 
-void jump_to_ntw(void)
+__attribute__((weak)) void jump_to_ntw(void)
 {
-    int ret;
     uint32_t static_addr = 0, load_addr = 0;
     uint32_t size;
+    partition_t partition;
+    partition_info_t *info;
+    const char *j2part = "prim";
 
-    ret = mtb_get_ntw_addr(&static_addr, &load_addr, &size);
+    partition = partition_open(j2part);
+    info = partition_info_get(partition);
+    partition_close(partition);
+    static_addr = info->base_addr + info->start_addr;
+    load_addr = info->load_addr;
+    size = info->image_size;
 
-    if (ret) {
-        TEE_LOGE("get ntw addr fail, ret %d\n", ret);
+    if (info == NULL) {
+        TEE_LOGE("get %s addr fail.\n", j2part);
     } else {
         g_ntw_addr = load_addr;
     }
@@ -39,7 +46,7 @@ void jump_to_ntw(void)
 
     memcpy((void *)load_addr, (void *)static_addr, size);
 
-    TEE_LOGI("jump to %s: 0x%x \n", NTW_IMG_NAME, g_ntw_addr);
+    TEE_LOGI("jump to 0x%x \n", g_ntw_addr);
 
     rte_to_ntw();
 }
@@ -51,10 +58,10 @@ int tee_main(void)
     console_init();
 #endif
 
-    kp_init();
+    km_init();
 
-    mtb_init();
-
+    partition_init();
+    
     tee_info_dump();
 
     jump_to_ntw();

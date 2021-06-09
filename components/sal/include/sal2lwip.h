@@ -35,7 +35,7 @@
 #define sal_now sys_now
 
 #define sal_mutex_arch_init sys_init
-#define sal_mutex_arch_free()
+#define sal_mutex_arch_free() sys_deinit()
 
 #define SAL_ARCH_DECL_PROTECT SYS_ARCH_DECL_PROTECT
 #define SAL_ARCH_PROTECT SYS_ARCH_PROTECT

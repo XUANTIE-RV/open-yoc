@@ -16,12 +16,20 @@
 
 #define MESSAGE_NUM 10
 typedef struct {
+#ifdef CONFIG_CSI_V2
+    csi_codec_output_t *hdl;
+#else
     codec_output_t *hdl;
+#endif
     int state;
 } playback_t;
 
 typedef struct {
+#ifdef CONFIG_CSI_V2
+    csi_codec_input_t *hdl;
+#else
     codec_input_t *hdl;
+#endif
     int state;
 } capture_t;
 
@@ -46,6 +54,11 @@ typedef struct {
 #define OUTPUT_WRITE_EVENT  (0x01)
 #define INPUT_READ_EVENT   (0x02)
 
+#ifdef CONFIG_CSI_V2
+static csi_codec_t codec_a;
+static ringbuffer_t output_ring_buffer;
+static ringbuffer_t input_ring_buffer;
+#endif
 static int ipc_cmd_send(ipc_t *ipc, int cmd, void *data, int len, int sync)
 {
     message_t msg;
@@ -67,7 +80,11 @@ static void playback_free(playback_t *playback)
     if (playback->state == 1) {
         csi_codec_output_stop(playback->hdl);
         csi_codec_output_close(playback->hdl);
+#ifdef CONFIG_CSI_V2
+        aos_free(playback->hdl->ring_buf);
+#else
         aos_free(playback->hdl->buf);
+#endif
         aos_free(playback->hdl);
         playback->state = 0;
         playback->hdl = 0;
@@ -94,7 +111,11 @@ static int ipc_pcmp_close(card_ipc_t *c, void *data, int len)
     return 0;
 }
 
+#ifdef CONFIG_CSI_V2
+static void codec_event_cb(csi_codec_input_t *codec, csi_codec_event_t event, void *arg)
+#else
 static void codec_event_cb(int idx, codec_event_t event, void *arg)
+#endif
 {
     card_ipc_t *c = (card_ipc_t *)arg;
 
@@ -116,7 +137,13 @@ static int ipc_pcmp_param_set(card_ipc_t *c, void *data, int len)
     printf("param(%d)(%d)(%d)(%d)(%d)\n",params->buffer_bytes, params->period_bytes, params->sample_bits, params->channels, params->rate);
     playback_free(playback);
 
+#ifdef CONFIG_CSI_V2
+    csi_codec_output_config_t output_config;;
+    csi_codec_output_t *codec = aos_zalloc(sizeof(csi_codec_output_t));
+    codec->ring_buf = &output_ring_buffer;
+#else
     codec_output_t *codec = aos_zalloc(sizeof(codec_output_t));
+#endif
     CHECK_RET_TAG_WITH_RET(NULL != codec, -1);
 
     uint8_t *send = aos_malloc(params->buffer_bytes);
@@ -124,6 +151,27 @@ static int ipc_pcmp_param_set(card_ipc_t *c, void *data, int len)
         goto pcmp_err0;
     }
 
+#ifdef CONFIG_CSI_V2
+    int ret = csi_codec_output_open(&codec_a, codec, 0);
+    if (ret != 0) {
+        goto pcmp_err1;
+    }
+
+    csi_codec_output_attach_callback(codec, codec_event_cb, NULL);
+    output_config.bit_width = params->sample_bits;
+    output_config.sample_rate = params->rate;
+    output_config.buffer = send;
+    output_config.buffer_size = params->buffer_bytes;
+    output_config.period = params->period_bytes;
+    output_config.mode = CODEC_OUTPUT_SINGLE_ENDED;
+    output_config.sound_channel_num = params->channels;
+
+    ret = csi_codec_output_config(codec, &output_config);
+    if (ret != 0) {
+        goto pcmp_err1;
+    }
+
+#else
     codec->buf = send;
     codec->buf_size = params->buffer_bytes;
     codec->cb = codec_event_cb;
@@ -148,10 +196,15 @@ static int ipc_pcmp_param_set(card_ipc_t *c, void *data, int len)
         goto pcmp_err1;
     }
 
+#endif
     csi_codec_output_start(codec);
 
+#ifdef CONFIG_CSI_V2
+    csi_codec_output_analog_gain(codec, -10);
+#else
     csi_codec_output_set_analog_left_gain(codec, -10);
     csi_codec_output_set_analog_right_gain(codec, -10);
+#endif
     playback->state = 1;
     playback->hdl = codec;
 
@@ -213,8 +266,12 @@ static int ipc_snd_set_gain(card_ipc_t *c, void *data, int len)
 
     printf("mixer(%p),(%d)(%d)\r\n", gain, gain[0], gain[1]);
     if (playback->hdl) {
+#ifdef CONFIG_CSI_V2
+        csi_codec_output_digital_gain(playback->hdl, gain[0]);
+#else
         csi_codec_output_set_digital_left_gain(playback->hdl, gain[0]);
         csi_codec_output_set_digital_right_gain(playback->hdl, gain[1]);
+#endif
     }
 
     return 0;
@@ -236,7 +293,12 @@ static void capture_free(capture_t *capture)
     if (capture->state == 1) {
         csi_codec_input_stop(capture->hdl);
         csi_codec_input_close(capture->hdl);
+
+#ifdef CONFIG_CSI_V2
+        aos_free(capture->hdl->ring_buf);
+#else
         aos_free(capture->hdl->buf);
+#endif
         aos_free(capture->hdl);
         capture->state = 0;
         capture->hdl = 0;
@@ -263,8 +325,11 @@ static int pcmc_close(aos_dev_t *dev)
     capture_free(capture);
     return 0;
 }
-
+#ifdef CONFIG_CSI_V2
+static void input_event_cb(csi_codec_input_t *i2s, csi_codec_event_t event, void *arg)
+#else
 static void input_event_cb(int idx, codec_event_t event, void *arg)
+#endif
 {
     aos_pcm_t *pcm = (aos_pcm_t *)arg;
 
@@ -282,15 +347,48 @@ static int pcmc_param_set(aos_pcm_t *pcm, struct aos_pcm_hw_params *params)
     capture_t *capture = (capture_t *)pcm->hdl;
 
     capture_free(capture);
-
+#ifdef CONFIG_CSI_V2
+    csi_codec_input_config_t input_config;
+    csi_codec_input_t *codec = aos_zalloc(sizeof(csi_codec_input_t));
+    CHECK_RET_TAG_WITH_RET(NULL != codec, -1);
+    codec->ring_buf = &input_ring_buffer;
+#else
     codec_input_t *codec = aos_zalloc(sizeof(codec_input_t));
     CHECK_RET_TAG_WITH_RET(NULL != codec, -1);
+#endif
 
     uint8_t *recv = aos_malloc(params->buffer_bytes);
     if (recv == NULL) {
         goto pcmc_err0;
     }
 
+#ifdef CONFIG_CSI_V2
+    codec->ring_buf = &input_ring_buffer;
+    int ret = csi_codec_input_open(&codec_a, codec, 0);
+    if (ret != 0) {
+        goto pcmc_err1;
+    }
+
+    /* input ch config */
+    csi_codec_input_attach_callback(codec, input_event_cb, NULL);
+    input_config.bit_width = params->sample_bits;
+    input_config.sample_rate = params->rate;
+    input_config.buffer = recv;
+    input_config.buffer_size = params->buffer_bytes;
+    input_config.period = params->period_bytes;
+    input_config.mode = CODEC_INPUT_DIFFERENCE;
+    input_config.sound_channel_num = 1;
+    ret = csi_codec_input_config(codec, &input_config);
+    if (ret != 0) {
+        goto pcmc_err1;
+    }
+
+    if (codec->ch_idx == 0) {//mic
+        csi_codec_input_analog_gain(codec, 6);
+    } else {//ref
+        csi_codec_input_analog_gain(codec, 0);
+    }
+#else
     codec->buf = recv;
     codec->buf_size = params->buffer_bytes;
     codec->cb = input_event_cb;
@@ -318,6 +416,8 @@ static int pcmc_param_set(aos_pcm_t *pcm, struct aos_pcm_hw_params *params)
     } else {//ref
         csi_codec_input_set_analog_gain(codec, 0);
     }
+#endif
+
     csi_codec_input_start(codec);
 
     capture->state = 1;
@@ -377,8 +477,17 @@ static int aos_pcm_unregister(void)
 static aos_dev_t *card_init(driver_t *drv, void *config, int id)
 {
     card_dev_t *card = (card_dev_t *)device_new(drv, sizeof(card_dev_t), id);
+#ifdef CONFIG_CSI_V2
+    csi_error_t ret;
+    ret = csi_codec_init(&codec_a, 0);
 
+    if (ret != CSI_OK) {
+        printf("csi_codec_init error\n");
+    }
+
+#else
     csi_codec_init(id);
+#endif
     aos_pcm_register();
 
     return (aos_dev_t *)card;

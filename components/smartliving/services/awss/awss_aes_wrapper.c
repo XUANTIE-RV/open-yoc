@@ -1,5 +1,6 @@
 #include "sl_config.h"
 #include "iot_import.h"
+#include "mbedtls/aes.h"
 
 #if defined(HAL_CRYPTO)
 /*
@@ -36,9 +37,9 @@ p_HAL_Aes128_t awss_Aes128_Init(
     p_aes128 = (platform_aes_t *)calloc(1, sizeof(platform_aes_t));
     if (!p_aes128) return p_aes128;
 
-    infra_aes_init(&p_aes128->ctx);
+    mbedtls_aes_init((mbedtls_aes_context*)&p_aes128->ctx);
 
-    ret = infra_aes_setkey_dec(&p_aes128->ctx, key, 128);
+    ret = mbedtls_aes_setkey_dec((mbedtls_aes_context*)&p_aes128->ctx, key, 128);
 
     if (ret == 0) {
         memcpy(p_aes128->iv, iv, 16);
@@ -59,7 +60,7 @@ int awss_Aes128_Destroy(p_HAL_Aes128_t aes)
 #if defined(INFRA_AES)
     if (!aes) return -1;
 
-    infra_aes_free(&((platform_aes_t *)aes)->ctx);
+    mbedtls_aes_free((mbedtls_aes_context*)&((platform_aes_t *)aes)->ctx);
     free(aes);
 
     return 0;
@@ -82,10 +83,10 @@ int awss_Aes128_Cbc_Decrypt(
     if (!aes || !src || !dst) return ret;
 
     for (i = 0; i < blockNum; ++i) {
-        ret = infra_aes_crypt_cbc(&p_aes128->ctx, INFRA_AES_DECRYPT, AES_BLOCK_SIZE,
+        ret = mbedtls_aes_crypt_cbc((mbedtls_aes_context*)&p_aes128->ctx, INFRA_AES_DECRYPT, AES_BLOCK_SIZE,
                                     p_aes128->iv, src, dst);
-        src += 16;
-        dst += 16;
+        src = (void *)((int)src + 16);
+        dst = (void *)((int)dst + 16);
     }
 
     return ret;
@@ -107,8 +108,8 @@ int awss_Aes128_Cfb_Decrypt(
 
     if (!aes || !src || !dst) return ret;
 
-    ret = infra_aes_setkey_enc(&p_aes128->ctx, p_aes128->key, 128);
-    ret = infra_aes_crypt_cfb128(&p_aes128->ctx, INFRA_AES_DECRYPT, length,
+    ret = mbedtls_aes_setkey_enc((mbedtls_aes_context*)&p_aes128->ctx, p_aes128->key, 128);
+    ret = mbedtls_aes_crypt_cfb128((mbedtls_aes_context*)&p_aes128->ctx, INFRA_AES_DECRYPT, length,
                                    &offset, p_aes128->iv, src, dst);
     return ret;
 #else

@@ -56,9 +56,10 @@ static int char2byte(char ch)
 * @param[in/out] buf with hex string, converted bytes will in this str also
 * @returns len of bytes
 */
-int hexstr2bytes(char *str)
+int hexstr2bytes(char *str1)
 {
     int len = 0;
+    uint8_t *str = (uint8_t *)str1;;
 
     while (isxdigit(*(str + len)) && isxdigit(*(str + len + 1))) {
         *str = char2byte(*(str + len)) * 16 + char2byte(*(str + len + 1));
@@ -140,7 +141,7 @@ int isalnumstring(const char *str)
         return 0;
     }
 
-    const char *ch = str;
+    const uint8_t *ch = (uint8_t *)str;
 
     while(*ch) {
         if (!isalnum(*ch)) {

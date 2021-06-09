@@ -2,8 +2,8 @@
  * Copyright (C) 2019-2020 Alibaba Group Holding Limited
  */
 
-#ifndef _VOICE_AP_H_
-#define _VOICE_AP_H_
+#ifndef _VOICE_H_
+#define _VOICE_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -79,6 +79,14 @@ int voice_stop(voice_t *v);
  * @return 0 on success, -1 on failed
  */
 int voice_backflow_control(voice_t *v, voice_backflow_id_t id, int flag);
+
+/**
+ * @brief  voice pcm open(close)
+ * @param  [in] timeout    : close audio time
+ * @return 0 on success, -1 on failed
+ */
+int voice_mute(voice_t *v, int timeout);
+int voice_unmute(voice_t *v);
 
 // TODO
 // event control

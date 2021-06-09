@@ -3,10 +3,13 @@
  */
 
 #include <aos/aos.h>
-#include <yoc/uservice.h>
-#include <yoc/eventid.h>
+#include <uservice/uservice.h>
+#include <uservice/eventid.h>
 #include <yoc/netmgr.h>
 #include <yoc/netmgr_service.h>
+#ifdef CONFIG_KV_SMART
+#include <aos/kv.h>
+#endif
 
 #include <devices/hal/ethernet_impl.h>
 

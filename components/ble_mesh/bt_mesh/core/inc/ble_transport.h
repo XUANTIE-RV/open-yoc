@@ -25,6 +25,13 @@
 #define TRANS_CTL_OP_FRIEND_SUB_REM    0x08
 #define TRANS_CTL_OP_FRIEND_SUB_CFM    0x09
 #define TRANS_CTL_OP_HEARTBEAT         0x0a
+/*[Genie begin] add by wenbing.cwb at 2021-01-21*/
+#ifdef CONFIG_BT_MESH_CTRL_RELAY
+#define TRANS_CTL_OP_CTRL_RELAY_STATUS 0x30
+#define TRANS_CTL_OP_CTRL_RELAY_REQ    0x31
+#define TRANS_CTL_OP_CTRL_RELAY_OPEN   0x32
+#endif
+/*[Genie end] add by wenbing.cwb at 2021-01-21*/
 
 struct bt_mesh_ctl_friend_poll {
 	u8_t  fsn;

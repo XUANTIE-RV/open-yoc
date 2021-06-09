@@ -8,6 +8,7 @@
 #include "avutil/av_typedef.h"
 #include "avutil/avpacket.h"
 #include "stream/stream_cls.h"
+#include "avformat/avparser_cls.h"
 
 __BEGIN_DECLS__
 
@@ -52,6 +53,11 @@ struct demux_cls {
     size_t                      time_scale;    ///< only for audio
     uint64_t                    duration;      ///< only for audio, ms
     track_info_t                *tracks;       ///< TODO: need call tracks_info_freep when unused
+
+    avparser_t                  *psr;
+    slist_t                     list_free;     ///< free avpacket_list for psr
+    slist_t                     list_ready;    ///< ready avpacket_list for psr
+
     void                        *priv;
     const struct demux_ops      *ops;
 };

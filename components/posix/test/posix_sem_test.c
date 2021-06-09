@@ -8,7 +8,7 @@
 #include "k_api.h"
 #include "pthread.h"
 #include "semaphore.h"
-#include "aos/log.h"
+#include "ulog/ulog.h"
 
 #define TAG "sem_test"
 

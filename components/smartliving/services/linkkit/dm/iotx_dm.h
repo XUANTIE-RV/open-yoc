@@ -81,7 +81,9 @@ typedef enum {
     IOTX_DM_EVENT_SUBDEV_UNREGISTER_REPLY,
     IOTX_DM_EVENT_TOPO_ADD_REPLY,
     IOTX_DM_EVENT_TOPO_DELETE_REPLY,
+    IOTX_DM_EVENT_SUBDEV_RESET_REPLY,
     IOTX_DM_EVENT_TOPO_GET_REPLY,
+    IOTX_DM_EVENT_TOPO_CHANGE,
     IOTX_DM_EVENT_TOPO_ADD_NOTIFY_REPLY,
     IOTX_DM_EVENT_EVENT_PROPERTY_POST_REPLY,
     IOTX_DM_EVENT_EVENT_SPECIFIC_POST_REPLY,
@@ -96,9 +98,15 @@ typedef enum {
     IOTX_DM_EVENT_FOTA_NEW_FIRMWARE,
     IOTX_DM_EVENT_NTP_RESPONSE,
     IOTX_DM_EVENT_RRPC_REQUEST,
+#ifdef LINK_VISUAL_ENABLE
+    IOTX_DM_EVENT_MODEL_LINK_VISUAL,
+#endif
     IOTX_DM_EVENT_CLOUD_ERROR,
     IOTX_DM_EVENT_THING_EVENT_NOTIFY,
     IOTX_DM_EVENT_THING_EVENT_NOTIFY_REPLY,
+#ifdef DM_UNIFIED_SERVICE_POST
+    IOTX_DM_UNIFIED_SERVICE_POST_REPLY,
+#endif
     IOTX_DM_EVENT_MAX
 } iotx_dm_event_types_t;
 
@@ -181,29 +189,39 @@ void iotx_dm_dispatch(void);
 
 int iotx_dm_post_rawdata(_IN_ int devid, _IN_ char *payload, _IN_ int payload_len);
 
-#if !defined(DEVICE_MODEL_RAWDATA_SOLO)
 int iotx_dm_set_opt(int opt, void *data);
 int iotx_dm_get_opt(int opt, void *data);
+#if !defined(DEVICE_MODEL_RAWDATA_SOLO)
 #ifdef LOG_REPORT_TO_CLOUD
     int iotx_dm_log_post(_IN_ int devid, _IN_ char *payload, _IN_ int payload_len);
 #endif
 int iotx_dm_post_property(_IN_ int devid, _IN_ char *payload, _IN_ int payload_len);
+int iotx_dm_post_property_to(_IN_ int devid, _IN_ char *payload, _IN_ int payload_len, _IN_ int sendto);
 int iotx_dm_event_notify_reply(_IN_ int devid, _IN_ char *payload, _IN_ int payload_len);
 int iotx_dm_post_event(_IN_ int devid, _IN_ char *identifier, _IN_ int identifier_len, _IN_ char *payload,
                        _IN_ int payload_len);
-
+#ifndef LINK_VISUAL_ENABLE
 int iotx_dm_send_service_response(_IN_ int devid, _IN_ char *msgid, _IN_ int msgid_len, _IN_ iotx_dm_error_code_t code,
                                   _IN_ char *identifier,
                                   _IN_ int identifier_len, _IN_ char *payload, _IN_ int payload_len, void *ctx);
+#else
+int iotx_dm_send_service_response(_IN_ int devid, _IN_ char *msgid, _IN_ int msgid_len, _IN_ iotx_dm_error_code_t code,
+                                  _IN_ char *identifier,
+                                  _IN_ int identifier_len, _IN_ char *payload, _IN_ int payload_len);
+#endif
 int iotx_dm_send_property_get_response(_IN_ int devid, _IN_ char *msgid, _IN_ int msgid_len,
                                        _IN_ iotx_dm_error_code_t code,
                                        _IN_ char *payload, _IN_ int payload_len, _IN_ void *ctx);
-int iotx_dm_send_rrpc_response(_IN_ int devid, _IN_ char *msgid, _IN_ int msgid_len, _IN_ iotx_dm_error_code_t code,
-                               _IN_ char *rrpcid, _IN_ int rrpcid_len, _IN_ char *payload, _IN_ int payload_len);
 int iotx_dm_deviceinfo_update(_IN_ int devid, _IN_ char *payload, _IN_ int payload_len);
 int iotx_dm_deviceinfo_delete(_IN_ int devid, _IN_ char *payload, _IN_ int payload_len);
+#endif
+
+int iotx_dm_send_rrpc_response(_IN_ int devid, _IN_ char *msgid, _IN_ int msgid_len, _IN_ iotx_dm_error_code_t code,
+                               _IN_ char *rrpcid, _IN_ int rrpcid_len, _IN_ char *payload, _IN_ int payload_len);
 int iotx_dm_qurey_ntp(void);
-int iotx_dm_send_aos_active(int devid);
+
+#ifdef DM_UNIFIED_SERVICE_POST
+int iotx_dm_unified_service_post(_IN_ int devid, _IN_ char *payload, _IN_ int payload_len);
 #endif
 
 int iotx_dm_cota_perform_sync(_OU_ char *buffer, _IN_ int buffer_len);
@@ -213,6 +231,15 @@ int iotx_dm_fota_request_image(_IN_ const char *version, _IN_ int buffer_len);
 
 #ifdef DEVICE_MODEL_GATEWAY
 int iotx_dm_query_topo_list(void);
+#ifdef LINK_VISUAL_ENABLE
+int iotx_dm_get_triple_by_devid(_IN_ int devid,
+                                _OU_ char **product_key,
+                                _OU_ char **device_name,
+                                _OU_ char **device_secret);
+#endif
+int iotx_dm_subdev_query(_IN_ char product_key[IOTX_PRODUCT_KEY_LEN + 1],
+                         _IN_ char device_name[IOTX_DEVICE_NAME_LEN + 1],
+                         _OU_ int *devid);
 int iotx_dm_subdev_create(_IN_ char product_key[PRODUCT_KEY_MAXLEN], _IN_ char device_name[DEVICE_NAME_MAXLEN],
                           _IN_ char device_secret[DEVICE_SECRET_MAXLEN], _OU_ int *devid);
 int iotx_dm_subdev_destroy(_IN_ int devid);
@@ -221,65 +248,16 @@ int iotx_dm_subdev_register(_IN_ int devid);
 int iotx_dm_subdev_unregister(_IN_ int devid);
 int iotx_dm_subdev_topo_add(_IN_ int devid);
 int iotx_dm_subdev_topo_del(_IN_ int devid);
+int iotx_dm_subdev_reset(_IN_ int devid);
 int iotx_dm_subdev_login(_IN_ int devid);
 int iotx_dm_subdev_logout(_IN_ int devid);
+
+int iotx_dm_subdev_connect(_IN_ int devid, _IN_ iotx_linkkit_dev_meta_info_t *subdev_list, _IN_ int subdev_total);
+int iotx_dm_multi_subdev_connect(_IN_ int devid, _IN_ iotx_linkkit_dev_meta_info_t *subdev_list, _IN_ int subdev_total);
+int iotx_dm_subdev_connect_reply(int devid, char *payload, int payload_len);
+
 int iotx_dm_get_device_type(_IN_ int devid, _OU_ int *type);
 int iotx_dm_get_device_avail_status(_IN_ int devid, _OU_ iotx_dm_dev_avail_t *status);
 int iotx_dm_get_device_status(_IN_ int devid, _OU_ iotx_dm_dev_status_t *status);
-#endif
-
-#ifdef DEPRECATED_LINKKIT
-int iotx_dm_deprecated_subdev_register(_IN_ int devid, _IN_ char device_secret[DEVICE_SECRET_MAXLEN]);
-int iotx_dm_deprecated_set_tsl(_IN_ int devid, _IN_ iotx_dm_tsl_source_t source, _IN_ const char *tsl,
-                               _IN_ int tsl_len);
-int iotx_dm_deprecated_set_property_value(_IN_ int devid, _IN_ char *key, _IN_ int key_len, _IN_ void *value,
-        _IN_ int value_len);
-int iotx_dm_deprecated_get_property_value(_IN_ int devid, _IN_ char *key, _IN_ int key_len, _IN_ void *value);
-int iotx_dm_deprecated_set_event_output_value(_IN_ int devid, _IN_ char *key, _IN_ int key_len, _IN_ void *value,
-        _IN_ int value_len);
-int iotx_dm_deprecated_get_event_output_value(_IN_ int devid, _IN_ char *key, _IN_ int key_len, _IN_ void *value);
-int iotx_dm_deprecated_get_service_input_value(_IN_ int devid, _IN_ char *key, _IN_ int key_len, _IN_ void *value);
-int iotx_dm_deprecated_set_service_output_value(_IN_ int devid, _IN_ char *key, _IN_ int key_len, _IN_ void *value,
-        _IN_ int value_len);
-int iotx_dm_deprecated_get_service_output_value(_IN_ int devid, _IN_ char *key, _IN_ int key_len, _IN_ void *value);
-
-int iotx_dm_deprecated_post_property_start(_IN_ int devid, _OU_ void **handle);
-int iotx_dm_deprecated_post_property_add(_IN_ void *handle, _IN_ char *identifier, _IN_ int identifier_len);
-int iotx_dm_deprecated_post_property_end(_IN_ void **handle);
-int iotx_dm_deprecated_post_event(_IN_ int devid, _IN_ char *identifier, _IN_ int identifier_len);
-int iotx_dm_deprecated_send_service_response(_IN_ int devid, _IN_ int msgid, _IN_ iotx_dm_error_code_t code,
-        _IN_ char *identifier,
-        _IN_ int identifier_len);
-
-int iotx_dm_deprecated_legacy_set_property_value(_IN_ int devid, _IN_ char *key, _IN_ int key_len, _IN_ void *value,
-        _IN_ char *value_str);
-int iotx_dm_deprecated_legacy_get_property_value(_IN_ int devid, _IN_ char *key, _IN_ int key_len, _IN_ void *value,
-        _IN_ char **value_str);
-int iotx_dm_deprecated_legacy_set_event_output_value(_IN_ int devid, _IN_ char *key, _IN_ int key_len, _IN_ void *value,
-        _IN_ char *value_str);
-int iotx_dm_deprecated_legacy_get_event_output_value(_IN_ int devid, _IN_ char *key, _IN_ int key_len, _IN_ void *value,
-        _IN_ char **value_str);
-int iotx_dm_deprecated_legacy_get_service_input_value(_IN_ int devid, _IN_ char *key, _IN_ int key_len,
-        _IN_ void *value,
-        _IN_ char **value_str);
-int iotx_dm_deprecated_legacy_set_service_output_value(_IN_ int devid, _IN_ char *key, _IN_ int key_len,
-        _IN_ void *value,
-        _IN_ char *value_str);
-int iotx_dm_deprecated_legacy_get_service_output_value(_IN_ int devid, _IN_ char *key, _IN_ int key_len,
-        _IN_ void *value,
-        _IN_ char **value_str);
-
-int iotx_dm_deprecated_legacy_get_pkdn_by_devid(_IN_ int devid, _OU_ char product_key[PRODUCT_KEY_MAXLEN],
-        _OU_ char device_name[DEVICE_NAME_MAXLEN]);
-int iotx_dm_deprecated_legacy_get_devid_by_pkdn(_IN_ char product_key[PRODUCT_KEY_MAXLEN],
-        _IN_ char device_name[DEVICE_NAME_MAXLEN], _OU_ int *devid);
-int iotx_dm_deprecated_legacy_get_thingid_by_devid(_IN_ int devid, _OU_ void **thing_id);
-int iotx_dm_deprecated_legacy_get_devid_by_thingid(_IN_ void *thing_id, _OU_ int *devid);
-int iotx_dm_deprecated_legacy_get_pkdn_ptr_by_devid(_IN_ int devid, _OU_ char **product_key, _OU_ char **device_name);
-int iotx_dm_deprecated_legacy_send_service_response(_IN_ int devid, _IN_ int msgid, _IN_ iotx_dm_error_code_t code,
-        _IN_ char *identifier, _IN_ int identifier_len, _IN_ char *payload, _IN_ int payload_len);
-#ifdef DEVICE_MODEL_GATEWAY
-    int iotx_dm_deprecated_subdev_register(_IN_ int devid, _IN_ char device_secret[DEVICE_SECRET_MAXLEN]);
-#endif
 #endif
 #endif

@@ -6,7 +6,6 @@
 #include <stdio.h>
 #include <aos/list.h>
 #include <aos/kernel.h>
-#include <aos/log.h>
 #include "recio.h"
 
 #define TAG "recio"

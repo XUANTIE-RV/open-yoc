@@ -160,5 +160,44 @@ int tee_core_sys_freq(tee_param params[4])
     return ret;
 }
 
+typedef enum {
+    READ_REG_OPR    = 0,
+    WRITE_REG_OPR   = 1
+} opr_reg_type_e;
+
+int tee_core_opr_reg(tee_param params[4])
+{
+    uint32_t opr = params[0].value.a;
+    uint32_t addr;
+    uint32_t val;
+    int ret = TEE_SUCCESS;
+
+    if (opr == READ_REG_OPR) {
+        addr = params[0].value.b;
+        val  = params[1].value.a;
+
+        if (addr != 0x40002000) {
+            *(uint32_t *)val = *(uint32_t *)addr;
+        } else {
+            return TEE_ERROR_BAD_PARAMETERS;
+        }
+
+    } else if (opr == WRITE_REG_OPR) {
+        addr = params[0].value.b;
+        val  = params[1].value.a;
+
+        if (addr != 0x40002000) {
+            *(uint32_t *)addr = val;
+        } else {
+            return TEE_ERROR_BAD_PARAMETERS;
+        }
+
+    } else {
+        return TEE_ERROR_BAD_PARAMETERS;
+    }
+
+    return ret;
+}
+
 #endif
 

@@ -8,7 +8,6 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <aos_spiffs.h>
-#include <aos/log.h>
 #include <aos/aos.h>
 #include <yoc/yoc.h>
 #include <vfs.h>

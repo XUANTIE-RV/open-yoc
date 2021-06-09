@@ -36,7 +36,11 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdint.h>
+#ifdef CONFIG_CSI_V2
+#include <drv/uart.h> 
+#else
 #include <drv/usart.h>
+#endif
 
 
 // define this globally (e.g. gcc -DPRINTF_INCLUDE_CONFIG_H ...) to include the

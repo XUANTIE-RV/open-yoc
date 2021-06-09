@@ -4,7 +4,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <aos/log.h>
 #include <aos/list.h>
 #include <yoc/sysinfo.h>
 

@@ -4,7 +4,6 @@
 
 #if defined(CONFIG_DECODER_AMRNB) && CONFIG_DECODER_AMRNB
 
-#include <stdbool.h>
 #include "avutil/common.h"
 #include "avformat/amr_rw.h"
 #include "avcodec/ad_cls.h"
@@ -80,7 +79,7 @@ static int _ad_amrnb_decode(ad_cls_t *o, avframe_t *frame, int *got_frame, const
 
     rc = avframe_get_buffer(frame);
     if (rc < 0) {
-        LOGD(TAG, "avframe_get_buffer failed, may be oom.  nb_samples = %u, sf=> %s", frame->nb_samples, sf_get_format(sf));
+        LOGD(TAG, "avframe_get_buffer failed, may be oom.  nb_samples = %u, sf=> %s", frame->nb_samples, sf_get_format_str(sf));
         rc = -1;
         goto quit;
     }

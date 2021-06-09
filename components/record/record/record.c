@@ -6,7 +6,6 @@
 #include <aos/kernel.h>
 #include <aos/list.h>
 #include <aos/debug.h>
-#include <aos/log.h>
 #include "yoc/record.h"
 #include "recio.h"
 
@@ -76,6 +75,7 @@ static void _record_task(void *arg)
     while(!node->quit) {
         if (node->d_rdy_func) {
             node->d_rdy_func(node->user_data);
+            aos_msleep(1);
         } else {
             aos_msleep(40);
         }

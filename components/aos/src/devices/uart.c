@@ -72,6 +72,7 @@ int uart_send(aos_dev_t *dev, const void *data, uint32_t size)
 
     UART_VAILD(dev);
 
+    //FIXME:
     device_lock(dev);
     ret = UART_DRIVER(dev)->send(dev, data, size);
     device_unlock(dev);
@@ -85,9 +86,9 @@ int uart_recv(aos_dev_t *dev, void *data, uint32_t size, unsigned int timeout_ms
 
     UART_VAILD(dev);
 
-    device_lock(dev);
+    //device_lock(dev);
     ret = UART_DRIVER(dev)->recv(dev, data, size, timeout_ms);
-    device_unlock(dev);
+    //device_unlock(dev);
 
     return ret;
 }

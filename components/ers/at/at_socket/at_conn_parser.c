@@ -4,7 +4,6 @@
 
 #include <errno.h>
 #include <aos/debug.h>
-#include <aos/log.h>
 #include <ctype.h>
 
 #include "../at_internal.h"

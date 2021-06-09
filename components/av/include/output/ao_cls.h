@@ -7,13 +7,15 @@
 
 #include "avutil/common.h"
 #include "avutil/av_typedef.h"
+#include "avutil/straight_fifo.h"
 #include "avfilter/avfilter.h"
 #include "avfilter/avfilter_all.h"
+#include "output/mixer_channel.h"
 
 __BEGIN_DECLS__
 
 #define AO_ONE_PERIOD_MS            (5)
-#define AO_TOTAL_PERIOD_NUM         (12)
+#define AO_TOTAL_PERIOD_NUM         (20)
 
 typedef struct ao_cls ao_cls_t;
 
@@ -40,8 +42,14 @@ struct ao_cls {
     uint32_t            resample_rate; ///< none zereo means need to resample
     avfilter_t          *avfc;         ///< saved the first avfilter in the chain
     avfilter_t          *avf_vol;      ///< used for soft vol config
+    avfilter_t          *avf_atempo;   ///< used for speed-play config
+    avfilter_t          *avf_aef;      ///< used for sona-aef config
     uint8_t             vol_en;        ///< soft vol scale enable
     uint8_t             vol_index;     ///< soft vol scale index (0~255)
+
+    uint8_t             atempo_play_en;///< atempo play enable
+    float               speed;         ///< atempo play speed.suggest: 0.5 ~ 2.0;
+
     uint8_t             *aef_conf;     ///< config data for aef
     size_t              aef_conf_size; ///< size of the config data for aef
     uint8_t             eq_en;         ///< used for equalizer config
@@ -49,6 +57,7 @@ struct ao_cls {
     eqfp_t              *eq_params;
     avfilter_t          *avf_eq;       ///< used for equalizer config
     avframe_t           *oframe;       ///< used for filtering
+    mixer_cnl_t         *cnl;          ///< for mixer
 
     const struct ao_ops *ops;
     aos_mutex_t         lock;

@@ -1,6 +1,6 @@
-#include <aos/log.h>
 
 //#include "lwip/ip4_addr.h"
+#include <ulog/ulog.h>
 #include "lwip/apps/dhcps.h"
 #include "lwip/tcpip.h"
 

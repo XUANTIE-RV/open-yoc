@@ -84,7 +84,7 @@ static int flash_write(netio_t *io, uint8_t *buffer, int length, int timeoutms)
         return length;
     }
 
-    LOGD(TAG, "write fail addr:%x length:%x\n", io->offset + (io->block_size << 1), length);
+    LOGD(TAG, "write fail addr:0x%x length:0x%x\n", io->offset + (io->block_size << 1), length);
     return -1;
 }
 

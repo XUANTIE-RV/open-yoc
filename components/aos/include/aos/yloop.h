@@ -67,6 +67,10 @@ extern "C" {
 #define CODE_FOTA_END               2
 #define VALUE_FOTA_UPDATED          0
 
+/** Combo event */
+#define EV_BZ_COMBO                 0x0106
+#define CODE_COMBO_AP_INFO_READY    1
+
 /** SELF RECOVER event */
 #define EV_RCV                      0x0200
 

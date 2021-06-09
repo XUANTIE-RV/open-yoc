@@ -14,10 +14,17 @@ extern "C" {
 int wifi_prov_sl_register();
 
 /** report provisioning success result to cloud, do device biding with cellphone
-  * @param report 1 for reporting; 0 for not
  */
-void sl_report_to_cloud(int report);
+void wifi_prov_sl_start_report();
 
+/** stop reporting to cloud, reporting thread would stop asyncrously
+ */
+void wifi_prov_sl_stop_report();
+
+/** set wifi connect state after provisioning
+ * @param connected 1：连接成功；0：连接失败
+ */
+void wifi_prov_sl_set_connected(int connected);
 
 #if defined(__cplusplus)
 }

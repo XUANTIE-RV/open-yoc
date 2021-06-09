@@ -2,6 +2,7 @@
  * Copyright (C) 2018-2020 Alibaba Group Holding Limited
  */
 
+#if defined(CONFIG_DEMUXER_WAV) && CONFIG_DEMUXER_WAV
 #include "avformat/avformat_utils.h"
 #include "avformat/riff_rw.h"
 #include "avformat/demux_cls.h"
@@ -12,7 +13,8 @@
 #define ONE_FRAME_MS           (20)
 
 struct wav_priv {
-    uint32_t                   pcm_size;
+    uint8_t                    is_compress;
+    uint32_t                   data_size;
     uint32_t                   pos;
     uint32_t                   fact_size;
     uint32_t                   block_align;
@@ -139,23 +141,37 @@ static int _demux_wav_open(demux_cls_t *o)
         o->ash.id = AVCODEC_ID_RAWAUDIO;
         break;
     case WAV_FORMAT_ADPCM_MS:
-        if (!priv->block_align) {
-            LOGE(TAG, "block align invalid for adpcm_ms");
-            goto err;
-        }
-        rc = _find_chunk(o->s, "fact", &priv->fact_size);
-        if (rc) {
-            LOGE(TAG, "compress formats, fact not find");
-            goto err;
-        }
-        bits            *= 4;
-        o->ash.id        = AVCODEC_ID_ADPCM_MS;
-        priv->fact_size  = stream_r32le(o->s);
+        bits              *= 4;
+        o->ash.id          = AVCODEC_ID_ADPCM_MS;
+        priv->is_compress  = 1;
+        break;
+    case WAV_FORMAT_ALAW:
+        bits              *= 2;
+        o->ash.id          = AVCODEC_ID_ALAW;
+        //FIXME: block align is 1, too small
+        priv->block_align *= 512;
+        priv->is_compress  = 1;
+        break;
+    case WAV_FORMAT_MULAW:
+        bits              *= 2;
+        o->ash.id          = AVCODEC_ID_MULAW;
+        priv->block_align *= 512;
+        priv->is_compress  = 1;
         break;
     default:
         LOGE(TAG, "unsupported format tag %u", format_tag);
         goto err;
     }
+    if (priv->is_compress) {
+        //must contains fact-chunk
+        rc = _find_chunk(o->s, "fact", &priv->fact_size);
+        if (rc) {
+            LOGE(TAG, "compress formats, fact not find");
+            goto err;
+        }
+        priv->fact_size  = stream_r32le(o->s);
+    }
+
     if ((bits != 8 && bits != 16 && bits != 24 && bits != 32 && bits != 64) || channels < 1) {
         LOGE(TAG, "unsupported wav. bits = %u, channels = %u\n", bits, channels);
         goto err;
@@ -165,17 +181,17 @@ static int _demux_wav_open(demux_cls_t *o)
     o->ash.block_align = priv->block_align;
     o->ash.sf          = sf_make_channel(channels) | sf_make_rate(rate) | sf_make_bit(bits) | sf_make_signed(bits > 8) | sf_make_float(isfloat);
 
-    rc = _find_chunk(o->s, "data", &priv->pcm_size);
+    rc = _find_chunk(o->s, "data", &priv->data_size);
     if (rc)
         goto err;
 
     priv->pos         = 0;
     priv->sec_size    = sf_get_bps(o->ash.sf) / 8;
     priv->frame_size  = sf_get_frame_size(o->ash.sf);
-    priv->pcm_size   -= priv->pcm_size % sf_get_frame_size(o->ash.sf);
+    priv->data_size  -= priv->data_size % sf_get_frame_size(o->ash.sf);
     priv->start_pos   = stream_tell(o->s);
     o->time_scale     = AV_FLICK_BASE / rate;
-    o->duration       = priv->fact_size ? priv->fact_size * 1000 / rate : 1.0 * (priv->pcm_size / priv->frame_size) / rate * 1000;
+    o->duration       = priv->fact_size ? priv->fact_size * 1000 / rate : 1.0 * (priv->data_size / priv->frame_size) / rate * 1000;
     priv->iduration   = o->duration / 1000.0 * o->time_scale;
     o->priv           = priv;
 
@@ -201,11 +217,11 @@ static int _demux_wav_read_packet(demux_cls_t *o, avpacket_t *pkt)
     sf_t sf               = o->ash.sf;
     struct wav_priv *priv = o->priv;
 
-    if (priv->pos == priv->pcm_size) {
+    if (priv->pos == priv->data_size) {
         goto eof;
     }
 
-    flen = (o->ash.id == AVCODEC_ID_ADPCM_MS) ? priv->block_align : ONE_FRAME_MS * (sf_get_rate(sf) / 1000) * sf_get_frame_size(sf);
+    flen = priv->is_compress ? priv->block_align : ONE_FRAME_MS * (sf_get_rate(sf) / 1000) * sf_get_frame_size(sf);
     if (pkt->size < flen) {
         rc = avpacket_grow(pkt, flen);
         if (rc < 0) {
@@ -213,7 +229,7 @@ static int _demux_wav_read_packet(demux_cls_t *o, avpacket_t *pkt)
             return -1;
         }
     }
-    flen = (flen > priv->pcm_size - priv->pos) ? priv->pcm_size - priv->pos : flen;
+    flen = (flen > priv->data_size - priv->pos) ? priv->data_size - priv->pos : flen;
     len = stream_read(o->s, pkt->data, flen);
     if (len == -1) {
         LOGE(TAG, "read error\n");
@@ -225,7 +241,7 @@ static int _demux_wav_read_packet(demux_cls_t *o, avpacket_t *pkt)
 
     pkt->len = len;
     if (priv->iduration > 0 && priv->start_pos >= 0) {
-        pkt->pts = 1.0 * priv->pos / priv->pcm_size * priv->iduration;
+        pkt->pts = 1.0 * priv->pos / priv->data_size * priv->iduration;
     }
     priv->pos += len;
     return len;
@@ -245,8 +261,8 @@ static int _demux_wav_seek(demux_cls_t *o, uint64_t timestamp)
         return -1;
     }
 
-    pos       = (1.0 * timestamp / priv->iduration) * priv->pcm_size;
-    pos       = (o->ash.id == AVCODEC_ID_ADPCM_MS) ? AV_ALIGN_SIZE(pos, priv->block_align) : AV_ALIGN_SIZE(pos, priv->frame_size);
+    pos       = (1.0 * timestamp / priv->iduration) * priv->data_size;
+    pos       = priv->is_compress ? AV_ALIGN_SIZE(pos, priv->block_align) : AV_ALIGN_SIZE(pos, priv->frame_size);
     new_pos   = priv->start_pos + pos;
     rc        = stream_seek(o->s, new_pos, SEEK_SET);
     priv->pos = rc == 0 ? pos : priv->pos;
@@ -273,5 +289,6 @@ const struct demux_ops demux_ops_wav = {
     .seek            = _demux_wav_seek,
     .control         = _demux_wav_control,
 };
+#endif
 
 

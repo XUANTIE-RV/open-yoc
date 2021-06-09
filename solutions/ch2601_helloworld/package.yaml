@@ -1,0 +1,42 @@
+name: ch2601_helloworld
+version: v7.4.3                                     # <必选项> 组件版本号
+description: YoC helloworld SDK
+
+type: solution
+
+hw_info:
+  cpu_id: cpu0
+  board_name: ch2601_evb
+  # board_name: board_dummy
+  # toolchain_prefix: csky-abiv2-elf
+  # cpu_name: CK805EF
+  # vendor_name: thead
+  # chip_name: 'chip_ch2201'
+  # ld_script: configs/gcc_eflash.ld.S
+
+depends:                                       # 该组件依赖其他的组件
+  - sdk_chip_ch2601: v7.4.3
+
+# 编译参数
+build_config:
+  include:
+    - app/include
+    - app/src/oled
+  cflag: -mno-ldr -mno-ext -mno-mula -mno-srri -mno-ldi -mno-addsl -mno-ldd -mno-rev -mno-condmv
+  ldflag: -Wl,-Map="yoc.map" -Wl,-zmax-page-size=1024
+
+# 源文件
+source_file:
+  - app/src/init/cli_cmd.c
+  - app/src/init/init.c
+  - app/src/main.c
+  - app/src/oled/*.c
+
+def_config:
+  CONFIG_CSI_V2: 1
+  CONFIG_ARCH_INTERRUPTSTACK: 6144
+  CONFIG_XIP: 1
+  CONFIG_CLI: 1
+  CONFIG_DEBUG: 1
+  CONFIG_SUPPORT_TSPEND: 1
+  CONFIG_CPU_E906: 1

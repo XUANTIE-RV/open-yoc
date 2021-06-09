@@ -15,10 +15,13 @@ __BEGIN_DECLS__
 typedef struct stream_conf {
     enum stream_mode          mode;
     irq_av_t                  irq;
+    uint8_t                   need_parse;               ///< 1 is default, means need parse the url. otherwise 0, means get stream by the prefix directly.
     uint32_t                  rcv_timeout;              ///< ms. 0 use default & AOS_WAIT_FOREVER means wait forever
-    uint32_t                  cache_size;               ///< size of the web cache. 0 use default
+    uint32_t                  cache_size;               ///< size of the web cache, default is SCACHE_SIZE_DEFAULT. 0 means without cache
     uint32_t                  cache_start_threshold;    ///< (0~100)start read for player when up to cache_start_threshold. 0 use default
     get_decrypt_cb_t          get_dec_cb;               ///< used for get decrypt info
+    void                      *opaque;                  ///< for stream event cb
+    stream_event_t            stream_event_cb;          ///< used for stream-event upload
 } stm_conf_t;
 
 /**
@@ -79,6 +82,13 @@ int stream_seek(stream_cls_t *o, int32_t offset, int whence);
 int stream_skip(stream_cls_t *o, int32_t offset);
 
 /**
+ * @brief  whether the stream is need quit or interrupt
+ * @param  [in] o
+ * @return 0/1
+ */
+int stream_is_interrupt(stream_cls_t *o);
+
+/**
  * @brief  close a stream
  * @param  [in] o
  * @return 0/-1
@@ -110,11 +120,18 @@ int stream_is_seekable(stream_cls_t *o);
 int stream_is_eof(stream_cls_t *o);
 
 /**
+ * @brief  stream is live or vod
+ * @param  [in] o
+ * @return 0/1
+ */
+int stream_is_live(stream_cls_t *o);
+
+/**
  * @brief  get the stream size
  * @param  [in] o
  * @return -1 on err
  */
-int stream_get_size(stream_cls_t *o);
+int64_t stream_get_size(stream_cls_t *o);
 
 /**
  * @brief  get the url
@@ -138,7 +155,7 @@ uint64_t stream_r64le(stream_cls_t *o);
  * @param  [in] o
  * @return -1 on err
  */
-int stream_tell(stream_cls_t *o);
+int64_t stream_tell(stream_cls_t *o);
 
 __END_DECLS__
 

@@ -24,27 +24,20 @@ static int _avf_swr_control(avfilter_t *avf, int cmd, void *arg, size_t *arg_siz
 static int _avf_swr_filter_frame(avfilter_t *avf, const avframe_t *in, avframe_t *out)
 {
     int rc = -1;
-    avframe_t *oframe;
     struct avfilter_swr *dobj = (struct avfilter_swr*)avf;
     swr_t *s                  = dobj->s;
 
     if (dobj->s && (in->sf == dobj->isf)) {
-        oframe = AVF_IS_SINK(avf) ? out : avf->oframe;
-        rc = swr_convert_frame(s, in, oframe);
-        if (rc > 0) {
-            rc = AVF_IS_SINK(avf) ? rc : avf_filter_frame(avf->next, oframe, out);
-        } else if (rc == 0) {
-            //FIXME: need more data & interleaved output only
-            out->nb_samples  = 0;
-            out->linesize[0] = 0;
-            return 0;
-        } else {
-            LOGE(TAG, "swr convert frame failed, rc = %d", rc);
-            return -1;
+        rc = swr_convert_frame(s, in, out);
+        if (rc <= 0) {
+            LOGD(TAG, "swr convert frame may be failed, rc = %d", rc);
+            return rc;
         }
+
+        rc = out->nb_samples;
     }
 
-    return rc > 0 ? 0 : rc;
+    return rc;
 }
 
 static int _avf_swr_uninit(avfilter_t *avf)

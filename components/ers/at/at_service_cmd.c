@@ -26,7 +26,7 @@ void at_cmd_kv_set(char *cmd, int type, char *data)
             if (atserver_scanf("%[^,],%[^\0]", key, val) == 2) {
                 int ret = aos_kv_setstring(key, (const char *)val);
 
-                if (ret == 0) {
+                if (ret >= 0) {
                     AT_BACK_OK();
                     return;
                 }

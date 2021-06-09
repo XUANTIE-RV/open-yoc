@@ -6,7 +6,7 @@
 #define DEVICE_ESP8266_H
 
 #include <stdint.h>
-
+#include <uservice/uservice.h>
 
 #ifdef __cplusplus
 extern "C" {

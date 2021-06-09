@@ -9,6 +9,7 @@
 #include <tee_srv.h>
 #include <string.h>
 
+extern int tee_core_opr_reg(tee_param params[4]);
 extern int tee_core_sys_freq(tee_param params[4]);
 extern int tee_core_cid(tee_param params[4]);
 extern int tee_core_random(tee_param params[4]);
@@ -23,6 +24,7 @@ extern int tee_core_hmac(tee_param params[4]);
 extern int tee_core_get_dev_info(tee_param params[4]);
 extern int tee_core_dev_info_sign(tee_param params[4]);
 extern int tee_core_dev_info_crypt(tee_param params[4]);
+extern int tee_core_get_boot_type(tee_param params[4]);
 
 #define  CID_TA_UUID   {0x5445455f, 0x4944, 0x325f,                             \
                        {0x53, 0x52, 0x56, 0x5f, 0x55, 0x55, 0x49, 0x44 }        \
@@ -134,12 +136,18 @@ static tee_result _cid_ta_invokecommandentrypoint(void     *sessioncontext,
             break;
 #endif
 #if (CONFIG_ALGO_LPM > 0)
+       case TEE_CMD_GET_BOOT_TYPE:
+            ret = tee_core_get_boot_type(params);
+            break;
 
         case TEE_CMD_LPM:
             ret = tee_core_lpm(params);
             break;
 #endif
 #if (CONFIG_SYS_FREQ > 0)
+        case TEE_CMD_REG_OPR:
+            ret = tee_core_opr_reg(params);
+            break;
 
         case TEE_CMD_SYS_FREQ:
             ret = tee_core_sys_freq(params);

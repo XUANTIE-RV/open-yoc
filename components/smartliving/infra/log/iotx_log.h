@@ -16,6 +16,7 @@ extern "C" {
 
 #include "iotx_log_config.h"
 
+extern char *lvl_color[];
 #define LOG_NONE_LEVEL                  (0)     /* no log printed at all */
 #define LOG_CRIT_LEVEL                  (1)     /* current application aborting */
 #define LOG_ERR_LEVEL                   (2)     /* current app-module error */
@@ -29,6 +30,7 @@ void    LITE_set_loglevel(int level);
 
 #ifdef BUILD_AOS
 #include <aos/log.h>
+#define log_flow(mod, ...)
 #define log_multi_line(level, title, fmt, payload, mark)
 #define HEXDUMP_DEBUG(buf, len)
 #define HEXDUMP_INFO(buf, len)
@@ -36,16 +38,14 @@ void    LITE_set_loglevel(int level);
 #if (CONFIG_BLDTIME_MUTE_DBGLOG)
 #define log_debug(mod, fmt, ...)
 #else
-#define log_debug(mod, fmt, ...)    aos_log_tag(mod, AOS_LL_DEBUG, fmt"\r\n", ##__VA_ARGS__)
+#define log_debug(mod, fmt, ...)    log_print(AOS_LL_V_DEBUG, mod, COL_WHE, "D", fmt, ##__VA_ARGS__)
 #endif
-#define log_flow(mod, fmt, ...)     aos_log_tag(mod, AOS_LL_DEBUG, fmt"\r\n", ##__VA_ARGS__)
-#define log_info(mod, fmt, ...)     aos_log_tag(mod, AOS_LL_INFO, fmt"\r\n", ##__VA_ARGS__)
-#define log_warning(mod, fmt, ...)  aos_log_tag(mod, AOS_LL_WARN, fmt"\r\n", ##__VA_ARGS__)
-#define log_err(mod, fmt, ...)      aos_log_tag(mod, AOS_LL_ERROR, fmt"\r\n", ##__VA_ARGS__)
-#define log_crit(mod, fmt, ...)     aos_log_tag(mod, AOS_LL_FATAL, fmt"\r\n", ##__VA_ARGS__)
-#define log_emerg(mod, fmt, ...)    aos_log_tag(mod, AOS_LL_FATAL, fmt"\r\n", ##__VA_ARGS__)
+#define log_info(mod, fmt, ...)     log_print(AOS_LL_V_INFO, mod, COL_WHE, "I", fmt, ##__VA_ARGS__)
+#define log_warning(mod, fmt, ...)  log_print(AOS_LL_V_WARN, mod, COL_BLU, "W", fmt, ##__VA_ARGS__)
+#define log_err(mod, fmt, ...)      log_print(AOS_LL_V_ERROR, mod, COL_YEL, "E", fmt, ##__VA_ARGS__)
+#define log_crit(mod, fmt, ...)     log_print(AOS_LL_V_FATAL, mod, COL_RED, "F", fmt, ##__VA_ARGS__)
 
-#else
+#else  /* not BUILD_AOS */
 int     LITE_hexdump(const char *title, const void *buf, const int len);
 
 void    LITE_syslog_routine(char *m, const char *f, const int l, const int level, const char *fmt, va_list *params);
@@ -54,8 +54,7 @@ void    LITE_syslog(char *m, const char *f, const int l, const int level, const 
 
 #if (CONFIG_BLDTIME_MUTE_DBGLOG)
 #define log_debug(mod, ...)
-#define log_flow(mod, ...)
-#define log_info(mod, ...)
+#define log_flow(mod, ...) 
 #else
 
 #if (CONFIG_RUNTIME_LOG_LEVEL <= LOG_FLOW_LEVEL)
@@ -68,14 +67,15 @@ void    LITE_syslog(char *m, const char *f, const int l, const int level, const 
 #define log_debug(mod, ...)         LITE_syslog(mod, __FUNCTION__, __LINE__, LOG_DEBUG_LEVEL, __VA_ARGS__)
 #else
 #define log_debug(mod, ...)         do {LITE_printf("[dbg] "); LITE_printf(__VA_ARGS__); LITE_printf("\r\n");} while(0)
+#endif
+
+#endif  /* CONFIG_BLDTIME_MUTE_DBGLOG */
+
 #if (CONFIG_RUNTIME_LOG_LEVEL <= LOG_INFO_LEVEL)
 #define log_info(mod, ...)          LITE_syslog(mod, __FUNCTION__, __LINE__, LOG_INFO_LEVEL, __VA_ARGS__)
 #else
 #define log_info(mod, ...)          do {LITE_printf("[inf] "); LITE_printf(__VA_ARGS__); LITE_printf("\r\n");} while(0)
 #endif
-#endif
-
-#endif  /* CONFIG_BLDTIME_MUTE_DBGLOG */
 
 #if (CONFIG_RUNTIME_LOG_LEVEL <= LOG_WARNING_LEVEL)
 #define log_warning(mod, ...)       LITE_syslog(mod, __FUNCTION__, __LINE__, LOG_WARNING_LEVEL, __VA_ARGS__)
@@ -113,8 +113,10 @@ void    LITE_rich_hexdump(const char *f, const int l,
 #define HEXDUMP_INFO(buf, len)      \
     LITE_rich_hexdump(__func__, __LINE__, LOG_INFO_LEVEL, #buf, (const void *)buf, (const int)len)
 
+#endif  /* BUILD_AOS */
+
 #if defined(__cplusplus)
 }
 #endif
-#endif
+
 #endif  /* __LITE_LOG_H__ */

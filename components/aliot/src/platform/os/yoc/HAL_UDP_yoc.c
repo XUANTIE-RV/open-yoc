@@ -1,20 +1,11 @@
 /*
  * Copyright (C) 2019-2020 Alibaba Group Holding Limited
  */
-
-
-
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <errno.h>
+#include <aos/aos.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <lwip/netdb.h>
-#include <unistd.h>
 #include <iot_import.h>
-#include <aos/log.h>
 #include <sys/select.h>
 
 #define TAG "IOT_HAL"

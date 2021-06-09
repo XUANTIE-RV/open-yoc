@@ -17,7 +17,7 @@ __BEGIN_DECLS__
 #define STREAM_BUF_SIZE_MAX      (STREAM_BUF_SIZE_MIN * 2)
 #define STREAM_CACHE_SIZE        (20 * STREAM_BUF_SIZE_MAX)
 
-#define SRCV_TIMEOUT_DEFAULT     (6*1000) ///< ms
+#define SRCV_TIMEOUT_DEFAULT     (3*1000) ///< ms
 #define SCACHE_SIZE_DEFAULT      (20 * STREAM_BUF_SIZE_MAX)
 #define SCACHE_THRESHOLD_DEFAULT (80)
 
@@ -33,10 +33,24 @@ typedef struct stream_cls stream_cls_t;
  */
 typedef int (*get_decrypt_cb_t)(const void *in, size_t ilen, void *out, size_t *olen);
 
+enum {
+    STREAM_EVENT_UNKNOWN,
+    STREAM_EVENT_UNDER_RUN,    ///< for stream-cache status
+    STREAM_EVENT_OVER_RUN,     ///< for stream-cache status
+};
+
+/**
+* @brief  stream event callback for user
+* @param  [in] opaque
+* @param  [in] event : STREAM_EVENT_XXX
+* @param  [in] data  : reserved
+* @param  [in] len   : reserved
+*/
+typedef void (*stream_event_t)(void *opaque, uint8_t event, const void *data, uint32_t len);
+
 struct stream_ops {
     const char                *name;
     uint8_t                   type;
-    uint8_t                   enable_cache;
     const char*               protocols[STREAM_PROTOCOLS_MAX];
 
     int      (*open)          (stream_cls_t *o, int mode);
@@ -54,15 +68,20 @@ struct stream_cls {
     int32_t                   buf_pos;
     int32_t                   buf_len;
 
-    int32_t                   pos;
-    int32_t                   size;                    ///< length of the stream
+    int64_t                   pos;
+    int64_t                   size;                    ///< length of the stream
 
     char                      *url;
+    uint8_t                   live;                    ///< is live or vod
     uint8_t                   eof;
     uint8_t                   quit;
     uint8_t                   seekable;
+    uint8_t                   enable_cache;
+    uint8_t                   last_event;
     irq_av_t                  irq;
     get_decrypt_cb_t          get_dec_cb;              ///< used for get decrypt info
+    void                      *opaque;                 ///< for stream event cb
+    stream_event_t            stream_event_cb;         ///< used for stream-event upload
 
     uint32_t                  rcv_timeout;             ///< ms. 0 use default & AOS_WAIT_FOREVER means wait forever
     aos_event_t               cache_quit;
@@ -84,7 +103,7 @@ struct stream_cls {
         uint32_t  to_other;
         uint32_t  cache_full;
         uint32_t  upto_cnt;
-        uint32_t  rsize;
+        int64_t   rsize;
     }                         stat;
 
     void                      *priv;

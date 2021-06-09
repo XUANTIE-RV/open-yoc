@@ -6,7 +6,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <csi_core.h>
-#include <aos/log.h>
 #include <aos/list.h>
 
 #include "ipc_v1.h"

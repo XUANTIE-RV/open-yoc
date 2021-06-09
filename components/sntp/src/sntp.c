@@ -16,7 +16,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include "lwip/apps/sntp.h"
-#include "aos/log.h"
+#include "ulog/ulog.h"
 
 #ifndef CONFIG_NTP_CTS_ZONE
 #define CTS_ZONE 8

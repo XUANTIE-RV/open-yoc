@@ -1,6 +1,5 @@
 #include <http_client.h>
 #include <aos/kernel.h>
-#include <aos/log.h>
 #include <aos/debug.h>
 
 #define TAG "https_example"

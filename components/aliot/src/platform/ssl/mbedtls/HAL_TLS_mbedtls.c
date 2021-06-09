@@ -2,10 +2,7 @@
  * Copyright (C) 2019-2020 Alibaba Group Holding Limited
  */
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <string.h>
+#include <aos/aos.h>
 #include <sys/socket.h>
 #include <sys/select.h>
 #include <lwip/netdb.h>
@@ -19,7 +16,6 @@
 #include <mbedtls/platform.h>
 #include <mbedtls/x509_crt.h>
 #include <iot_import.h>
-#include <aos/log.h>
 
 typedef struct _TLSDataParams {
     mbedtls_ssl_context ssl;          /**< mbed TLS control context. */
@@ -205,7 +201,7 @@ static int _ssl_random(void *p_rng, unsigned char *output, size_t output_len)
 {
     (void)p_rng;
 
-#if defined(CONFIG_TEE_CA)
+#if (defined(CONFIG_TEE_CA) && !defined(CONFIG_SOFT_CRYPTO))
     csi_tee_rand_generate(output, output_len);
 #else
     int i;

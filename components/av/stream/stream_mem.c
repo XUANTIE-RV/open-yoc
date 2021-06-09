@@ -2,6 +2,7 @@
  * Copyright (C) 2018-2020 Alibaba Group Holding Limited
  */
 
+#if defined(CONFIG_STREAMER_MEM) && CONFIG_STREAMER_MEM
 #include "stream/stream_cls.h"
 #include "avutil/url_parse.h"
 
@@ -21,7 +22,7 @@ static int _stream_mem_open(stream_cls_t *o, int mode)
 
     UNUSED(mode);
     priv = aos_zalloc(sizeof(struct mem_priv));
-    CHECK_RET_TAG_WITH_RET(NULL != priv, -1);
+    CHECK_RET_TAG_WITH_RET(priv, -1);
 
     rc = url_get_item_value_int(o->url, "addr", (int*)&priv->data);
     CHECK_RET_TAG_WITH_GOTO(rc == 0, err);
@@ -102,4 +103,5 @@ const struct stream_ops stream_ops_mem = {
     .seek            = _stream_mem_seek,
     .control         = _stream_mem_control,
 };
+#endif
 

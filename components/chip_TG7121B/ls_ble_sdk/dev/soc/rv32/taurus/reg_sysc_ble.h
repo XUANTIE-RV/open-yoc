@@ -1,0 +1,61 @@
+#ifndef REG_SYSC_BLE_TYPE_H_
+#define REG_SYSC_BLE_TYPE_H_
+#include <stdint.h>
+
+typedef struct
+{
+    volatile uint32_t PD_BLE_CLKG;
+    volatile uint32_t PD_BLE_SRST;
+    volatile uint32_t MDM_RF_DBG0;
+    volatile uint32_t MDM_RF_DBG1;
+    volatile uint32_t BLE_DBG;
+    volatile uint32_t WKUP_CTRL;
+}reg_sysc_ble_t;
+
+enum SYSC_BLE_REG_PD_BLE_CLKG_FIELD
+{
+    SYSC_BLE_CLKG_SET_MAC_MASK = (int)0x1,
+    SYSC_BLE_CLKG_SET_MAC_POS = 0,
+    SYSC_BLE_CLKG_CLR_MAC_MASK = (int)0x2,
+    SYSC_BLE_CLKG_CLR_MAC_POS = 1,
+    SYSC_BLE_CLKG_SET_MDM_MASK = (int)0x4,
+    SYSC_BLE_CLKG_SET_MDM_POS = 2,
+    SYSC_BLE_CLKG_CLR_MDM_MASK = (int)0x8,
+    SYSC_BLE_CLKG_CLR_MDM_POS = 3,
+    SYSC_BLE_CLKG_SET_RF_MASK = (int)0x10,
+    SYSC_BLE_CLKG_SET_RF_POS = 4,
+    SYSC_BLE_CLKG_CLR_RF_MASK = (int)0x20,
+    SYSC_BLE_CLKG_CLR_RF_POS = 5,
+};
+
+enum SYSC_BLE_REG_PD_BLE_SRST_FIELD
+{
+    SYSC_BLE_SRST_SET_MAC_N_MASK = (int)0x1,
+    SYSC_BLE_SRST_SET_MAC_N_POS = 0,
+    SYSC_BLE_SRST_CLR_MAC_N_MASK = (int)0x2,
+    SYSC_BLE_SRST_CLR_MAC_N_POS = 1,
+    SYSC_BLE_SRST_SET_MDM_N_MASK = (int)0x4,
+    SYSC_BLE_SRST_SET_MDM_N_POS = 2,
+    SYSC_BLE_SRST_CLR_MDM_N_MASK = (int)0x8,
+    SYSC_BLE_SRST_CLR_MDM_N_POS = 3,
+    SYSC_BLE_SRST_SET_RF_N_MASK = (int)0x10,
+    SYSC_BLE_SRST_SET_RF_N_POS = 4,
+    SYSC_BLE_SRST_CLR_RF_N_MASK = (int)0x20,
+    SYSC_BLE_SRST_CLR_RF_N_POS = 5,
+};
+
+enum SYSC_BLE_REG_BLE_DBG_FIELD
+{
+    SYSC_BLE_SYSC_BLE_DBG_MASK = (int)0xff,
+    SYSC_BLE_SYSC_BLE_DBG_POS = 0,
+};
+
+enum SYSC_BLE_REG_WKUP_CTRL_FIELD
+{
+    SYSC_BLE_PDBLE_WKUP_MSK_MASK = (int)0x3,
+    SYSC_BLE_PDBLE_WKUP_MSK_POS = 0,
+};
+
+#endif
+
+

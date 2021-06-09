@@ -2,8 +2,8 @@
  * Copyright (C) 2019-2020 Alibaba Group Holding Limited
  */
 
-#ifndef _VOICE_AP_H_
-#define _VOICE_AP_H_
+#ifndef _VOICE_AI_H_
+#define _VOICE_AI_H_
 
 #ifdef __cplusplus
 extern "C" {

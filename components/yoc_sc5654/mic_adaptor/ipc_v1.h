@@ -5,9 +5,7 @@
 #ifndef SC5654_IPC_H
 #define SC5654_IPC_H
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
+#include <aos/aos.h>
 
 #ifdef linux
 #include <semaphore.h>

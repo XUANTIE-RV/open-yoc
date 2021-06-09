@@ -161,7 +161,7 @@ int pthread_attr_getguardsize(const pthread_attr_t *attr, size_t *guardsize);
 int pthread_attr_setscope(pthread_attr_t *attr, int scope);
 int pthread_attr_getscope(const pthread_attr_t *attr, int *scope);
 
-	/* function in pthread.c */
+/* function in pthread.c */
 inline int pthread_attr_getname(const pthread_attr_t *attr, char *name)
 {
     return 0;
@@ -279,9 +279,9 @@ int pthread_mutexattr_getpshared(pthread_mutexattr_t *attr, int *pshared);
 #define DEFAULT_COND_SHARED PTHREAD_PROCESS_PRIVATE
 
 typedef struct pthread_condattr {
-  int     is_initialized;
-  clock_t clock;   /* specifiy clock for timeouts */
-  int     pshared; /* allow this to be shared amongst processes */
+    int     is_initialized;
+    clock_t clock;   /* specifiy clock for timeouts */
+    int     pshared; /* allow this to be shared amongst processes */
 } pthread_condattr_t;
 
 typedef struct pthread_cond {

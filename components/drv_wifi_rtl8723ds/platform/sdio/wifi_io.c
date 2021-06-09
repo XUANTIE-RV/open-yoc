@@ -199,8 +199,13 @@ int sdio_card_reset()
 
 int sdio_bus_probe()
 {
+
 #ifndef SDMMC_BASE_ADDR
+#ifdef CONFIG_CSI_V2  
+#define SDMMC_BASE_ADDR DW_SDIO0_BASE
+#else
 #define SDMMC_BASE_ADDR CSKY_SDIO0_BASE
+#endif
 #endif
     LOGD(TAG, "%s", __FUNCTION__);
     memset(&SDIO_Card, 0, sizeof(SDIO_Card));
@@ -421,7 +426,7 @@ int sdio_memcpy_toio(struct sdio_func *func, unsigned int addr, void *src, int c
     return ret;
 }
 
-uint8_t g_tmp_buf[4];
+uint8_t g_tmp_buf[32] __attribute__ ((aligned(32)));
 u8 sdio_readb(struct sdio_func *func, unsigned int addr, int *err_ret)
 {
     status_t ret;

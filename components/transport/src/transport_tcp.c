@@ -18,11 +18,10 @@
 #include "lwip/sockets.h"
 #include "lwip/dns.h"
 #include "lwip/netdb.h"
-#include <aos/log.h>
-// #include <aos/network.h>
-#include "transport_utils.h"
-#include "transport.h"
-#include "tperrors.h"
+// #include <network.h>
+#include "transport/transport_utils.h"
+#include "transport/transport.h"
+#include "transport/tperrors.h"
 
 static const char *TAG = "TRANS_TCP";
 
@@ -74,8 +73,12 @@ static int tcp_connect(transport_handle_t t, const char *host, int port, int tim
 
     transport_utils_ms_to_timeval(timeout_ms, &tv);
 
-    setsockopt(tcp->sock, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
-    setsockopt(tcp->sock, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv));
+    if (setsockopt(tcp->sock, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)) < 0) {
+        return -1;
+    }
+    if (setsockopt(tcp->sock, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv)) <0 ) {
+        return -1;
+    }
 
     LOGD(TAG, "[sock=%d],connecting to server IP:%s,Port:%d...",
              tcp->sock, ipaddr_ntoa((const ip_addr_t*)&remote_ip.sin_addr.s_addr), port);
@@ -131,8 +134,12 @@ static int tcp_poll_read(transport_handle_t t, int timeout_ms)
     if (ret > 0 && FD_ISSET(tcp->sock, &errset)) {
         int sock_errno = 0;
         uint32_t optlen = sizeof(sock_errno);
-        getsockopt(tcp->sock, SOL_SOCKET, SO_ERROR, &sock_errno, &optlen);
-        LOGE(TAG, "tcp_poll_read select error %d, errno = %s, fd = %d", sock_errno, strerror(sock_errno), tcp->sock);
+        ret = getsockopt(tcp->sock, SOL_SOCKET, SO_ERROR, &sock_errno, &optlen);
+        if (ret == 0) {
+            LOGE(TAG, "tcp_poll_read select error %d, errno = %d, fd = %d", sock_errno, (sock_errno), tcp->sock);
+        } else {
+            LOGE(TAG, "tcp_poll_read getsockopt error.");
+        }
         ret = -1;
     }
     return ret;
@@ -154,8 +161,12 @@ static int tcp_poll_write(transport_handle_t t, int timeout_ms)
     if (ret > 0 && FD_ISSET(tcp->sock, &errset)) {
         int sock_errno = 0;
         uint32_t optlen = sizeof(sock_errno);
-        getsockopt(tcp->sock, SOL_SOCKET, SO_ERROR, &sock_errno, &optlen);
-        LOGE(TAG, "tcp_poll_write select error %d, errno = %s, fd = %d", sock_errno, strerror(sock_errno), tcp->sock);
+        ret = getsockopt(tcp->sock, SOL_SOCKET, SO_ERROR, &sock_errno, &optlen);
+        if (ret == 0) {
+            LOGE(TAG, "tcp_poll_read select error %d, errno = %d, fd = %d", sock_errno, (sock_errno), tcp->sock);
+        } else {
+            LOGE(TAG, "tcp_poll_read getsockopt error.");
+        }
         ret = -1;
     }
     return ret;
@@ -184,9 +195,16 @@ static web_err_t tcp_destroy(transport_handle_t t)
 
 transport_handle_t transport_tcp_init()
 {
-    transport_handle_t t = transport_init();
-    transport_tcp_t *tcp = calloc(1, sizeof(transport_tcp_t));
-    TRANSPORT_MEM_CHECK(TAG, tcp, return NULL);
+    transport_handle_t t;
+    transport_tcp_t *tcp;
+
+    t = transport_init();
+    TRANSPORT_MEM_CHECK(TAG, t, return NULL);
+    tcp = calloc(1, sizeof(transport_tcp_t));
+    TRANSPORT_MEM_CHECK(TAG, tcp, {
+        transport_destroy(t);
+        return NULL;
+    });
     tcp->sock = -1;
     transport_set_func(t, tcp_connect, tcp_read, tcp_write, tcp_close, tcp_poll_read, tcp_poll_write, tcp_destroy);
     transport_set_context_data(t, tcp);

@@ -7,7 +7,7 @@
 
 #include "k_api.h"
 #include "pthread.h"
-#include "aos/log.h"
+#include "ulog/ulog.h"
 
 #define TAG "mutex_test"
 
@@ -172,10 +172,10 @@ void posix_pthread_mutexattr_init_case(void)
     pthread_mutexattr_init(&attr);
 
     if ((attr.type == DEFAULT_MUTEX_TYPE)
-       &&(attr.protocol == DEFAULT_MUTEX_PROCOCOL)
-       &&(attr.prioceiling == DEFAULT_MUTEX_PRIOCEILING)
-       &&(attr.pshared == DEFAULT_MUTEX_PSHARED)
-       &&(attr.is_initialized == 1)) {
+        &&(attr.protocol == DEFAULT_MUTEX_PROCOCOL)
+        &&(attr.prioceiling == DEFAULT_MUTEX_PRIOCEILING)
+        &&(attr.pshared == DEFAULT_MUTEX_PSHARED)
+        &&(attr.is_initialized == 1)) {
         flag = 1;
     } else {
         flag = 0;
@@ -203,10 +203,10 @@ void posix_pthread_mutexattr_destroy_case(void)
     pthread_mutexattr_destroy(&attr);
 
     if ((attr.type == 0)
-       &&(attr.protocol == 0)
-       &&(attr.prioceiling == 0)
-       &&(attr.pshared == 0)
-       &&(attr.is_initialized == 0)) {
+        &&(attr.protocol == 0)
+        &&(attr.prioceiling == 0)
+        &&(attr.pshared == 0)
+        &&(attr.is_initialized == 0)) {
         flag = 1;
     } else {
         flag = 0;

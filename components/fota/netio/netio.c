@@ -3,11 +3,10 @@
  */
 
 #include <string.h>
-#include <stdio.h>
+#include <aos/aos.h>
 #include <aos/list.h>
 #include <aos/kernel.h>
 #include <yoc/netio.h>
-#include <aos/log.h>
 
 #define TAG "fota"
 typedef struct fota_netio_list {
@@ -19,7 +18,7 @@ static AOS_SLIST_HEAD(netio_cls_list);
 
 int netio_register(const netio_cls_t *cls)
 {
-    netio_node_t *node = malloc(sizeof(netio_node_t));
+    netio_node_t *node = aos_malloc(sizeof(netio_node_t));
 
     if (node) {
         node->cls = cls;
@@ -36,10 +35,15 @@ netio_t *netio_open(const char *path)
     char *delim = strstr(path, "://");
     LOGD(TAG, "path:%s delim:%s\n", path, delim);
     if (delim) {
+        int len = delim - path;
         netio_node_t *node;
-        
+
+        if (strstr(path, "https")) {
+            len -= 1;
+        }
+
         slist_for_each_entry(&netio_cls_list, node, netio_node_t, next) {
-            if (strncmp(node->cls->name, path, delim - path) == 0) {
+            if (strncmp(node->cls->name, path, len) == 0) {
                 if (node->cls->open) {
                     io = aos_zalloc(sizeof(netio_t));
                     io->cls = node->cls;
@@ -49,7 +53,7 @@ netio_t *netio_open(const char *path)
                         return NULL;
                     }
                 }
-                LOGD(TAG, "open break\n");
+                LOGD(TAG, "open break,%s\n", node->cls->name);
                 break;
             }
         }

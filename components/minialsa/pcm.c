@@ -25,6 +25,10 @@ typedef struct {
 
 static void pcm_event(aos_pcm_t *pcm, int event_id, void *priv)
 {
+    if (event_id == PCM_EVT_XRUN) {
+        aos_event_set(&pcm->evt, 0, AOS_EVENT_AND);
+    }
+
     aos_event_set(&pcm->evt, event_id, AOS_EVENT_OR);
 }
 
@@ -81,6 +85,11 @@ int aos_pcm_close(aos_pcm_t *pcm)
     aos_check_return_einval(pcm);
 
     //LOGE(TAG, "pcm close");
+    //FIXME: close pcm-device first
+    aos_dev_t *dev = (aos_dev_t *)(((int)(pcm)) + sizeof(aos_pcm_t) - sizeof(aos_pcm_dev_t));
+
+    device_close(dev);
+
     aos_mutex_free(&pcm->mutex);
     aos_event_free(&pcm->evt);
 
@@ -94,10 +103,6 @@ int aos_pcm_close(aos_pcm_t *pcm)
 
     aos_free(pcm->ringbuffer.buffer);
     ringbuffer_destroy(&pcm->ringbuffer);
-
-    aos_dev_t *dev = (aos_dev_t *)(((int)(pcm)) + sizeof(aos_pcm_t) - sizeof(aos_pcm_dev_t));
-
-    device_close(dev);
 
     return 0;
 }
@@ -197,17 +202,19 @@ int aos_pcm_set_params(aos_pcm_t *pcm, int format, aos_pcm_access_t acc, unsigne
 
 int aos_pcm_hw_params(aos_pcm_t *pcm, aos_pcm_hw_params_t *params)
 {
+    int ret;
+
     aos_check_return_einval(pcm && params);
 
     hw_params(pcm)->period_bytes = (hw_params(pcm)->period_size * ( hw_params(pcm)->format / 8)) * hw_params(pcm)->channels;
     hw_params(pcm)->buffer_bytes = (hw_params(pcm)->buffer_size * ( hw_params(pcm)->format / 8)) * hw_params(pcm)->channels;
 
     PCM_LOCK(pcm);
-    pcm->ops->hw_params_set(pcm, params);
+    ret = pcm->ops->hw_params_set(pcm, params);
     pcm->state = AOS_PCM_STATE_PREPARED;
     PCM_UNLOCK(pcm);
 
-    return 0;
+    return ret;
 }
 
 int aos_pcm_sw_params_current(aos_pcm_t *pcm, aos_pcm_sw_params_t *params)
@@ -260,7 +267,7 @@ aos_pcm_sframes_t aos_pcm_writei(aos_pcm_t *pcm, const void *buffer, aos_pcm_ufr
         if (ret < w_size) {
             aos_event_get(&pcm->evt, PCM_EVT_WRITE | PCM_EVT_XRUN, AOS_EVENT_OR_CLEAR, &actl_flags, AOS_WAIT_FOREVER);
             if ((actl_flags | PCM_EVT_XRUN) == PCM_EVT_XRUN) {
-                printf("pcm write xrun\n");
+                LOGW(TAG,"pcm write PCM_EVT_XRUN\r\n");
             }
         }
 
@@ -395,11 +402,28 @@ int aos_pcm_pause(aos_pcm_t *pcm, int enable)
 int aos_pcm_wait(aos_pcm_t *pcm, int timeout)
 {
     aos_check_return_einval(pcm);
-    unsigned int actl_flags;
+    unsigned int actl_flags = 0;
 
     PCM_LOCK(pcm);
+
+    if (pcm->ops->hw_get_remain_size) {
+        int ret = pcm->ops->hw_get_remain_size(pcm);
+
+        if (ret >= (hw_params(pcm)->period_bytes) ) {
+            PCM_UNLOCK(pcm);
+            aos_event_set(&pcm->evt, 0, AOS_EVENT_AND);
+            return 0;
+        }        
+    }
+
     aos_event_get(&pcm->evt, PCM_EVT_READ | PCM_EVT_XRUN, AOS_EVENT_OR_CLEAR, &actl_flags, timeout);
     PCM_UNLOCK(pcm);
+
+    if (actl_flags & PCM_EVT_XRUN) {
+        LOGW(TAG,"pcm read PCM_EVT_XRUN\r\n");
+        aos_event_set(&pcm->evt, 0, AOS_EVENT_AND);
+        return -EPIPE;
+    }
 
     return 0;
 }
@@ -423,4 +447,31 @@ void aos_pcm_set_ops(aos_pcm_t *pcm, int direction, struct aos_pcm_ops *ops)
     aos_check_param(pcm && ops);
 
     pcm->ops = ops;
+}
+
+int aos_pcm_recover(aos_pcm_t *pcm, int err, int silent)
+{
+    if (err == (-EPIPE)) {
+        if (pcm->stream == AOS_PCM_STREAM_CAPTURE) {
+            if (silent) {
+                LOGD(TAG, "overrun occurred");
+            }
+        } else {
+            if (silent) {
+                LOGD(TAG, "underrun occurred");
+            }
+        }
+        PCM_LOCK(pcm);
+        aos_dev_t *dev = (aos_dev_t *)(((int)(pcm)) + sizeof(aos_pcm_t) - sizeof(aos_pcm_dev_t));
+
+        device_close(dev);
+        aos_event_set(&pcm->evt, 0, AOS_EVENT_AND);
+        device_open(pcm->pcm_name);
+        pcm->ops->hw_params_set(pcm, pcm->hw_params);
+        PCM_UNLOCK(pcm);
+
+        return 0;
+    }
+
+    return err;
 }

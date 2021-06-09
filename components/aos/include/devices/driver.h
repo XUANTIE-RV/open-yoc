@@ -9,7 +9,6 @@
 #include <string.h>
 
 #include <aos/list.h>
-#include <aos/log.h>
 #include <aos/debug.h>
 
 #include <devices/device.h>

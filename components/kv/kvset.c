@@ -301,9 +301,14 @@ start1:
     /* kvnode rm no mem opt, ignore call kvblock_cache_malloc */
 
     if (kv_exist) {
-        // if (node.size == size && memcmp(node.value, value, size) == 0)
-        //     return size;
+        kvblock_cache_malloc(node.block);
+        if (node.val_size == (uint16_t)size && \
+            memcmp(((void *)KVNODE_OFFSET2CACHE(&node, value_offset)), value, size) == 0) {
+            kvblock_cache_free(node.block);
+            return size;
+        }
         version = node.version;
+        kvblock_cache_free(node.block);
         if (version == 255)
             version = 0;
     }
@@ -384,7 +389,8 @@ int kv_get(kv_t *kv, const char *key, void *value, int size)
                     }
 
                     ret --; /* del first " */
-                    memcpy(value, node_value + 1, ret < size ? ret : size);
+                    ret = ret < size ? ret : size;
+                    memcpy(value, node_value + 1, ret);
 
                     kvblock_cache_free(node.block);
                     return ret;

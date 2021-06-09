@@ -267,7 +267,7 @@ static spx_int16_t compute_opt_delay(JitterBuffer *jitter)
 
 
 /** Initialise jitter buffer */
-EXPORT JitterBuffer *jitter_buffer_init(int step_size)
+JitterBuffer *jitter_buffer_init(int step_size)
 {
    JitterBuffer *jitter = (JitterBuffer*)speex_alloc(sizeof(JitterBuffer));
    if (jitter)
@@ -292,7 +292,7 @@ EXPORT JitterBuffer *jitter_buffer_init(int step_size)
 }
 
 /** Reset jitter buffer */
-EXPORT void jitter_buffer_reset(JitterBuffer *jitter)
+void jitter_buffer_reset(JitterBuffer *jitter)
 {
    int i;
    for (i=0;i<SPEEX_JITTER_MAX_BUFFER_SIZE;i++)
@@ -323,7 +323,7 @@ EXPORT void jitter_buffer_reset(JitterBuffer *jitter)
 }
 
 /** Destroy jitter buffer */
-EXPORT void jitter_buffer_destroy(JitterBuffer *jitter)
+void jitter_buffer_destroy(JitterBuffer *jitter)
 {
    jitter_buffer_reset(jitter);
    speex_free(jitter);
@@ -363,7 +363,7 @@ static void shift_timings(JitterBuffer *jitter, spx_int16_t amount)
 
 
 /** Put one packet into the jitter buffer */
-EXPORT void jitter_buffer_put(JitterBuffer *jitter, const JitterBufferPacket *packet)
+void jitter_buffer_put(JitterBuffer *jitter, const JitterBufferPacket *packet)
 {
    int i,j;
    int late;
@@ -460,7 +460,7 @@ EXPORT void jitter_buffer_put(JitterBuffer *jitter, const JitterBufferPacket *pa
 }
 
 /** Get one packet from the jitter buffer */
-EXPORT int jitter_buffer_get(JitterBuffer *jitter, JitterBufferPacket *packet, spx_int32_t desired_span, spx_int32_t *start_offset)
+int jitter_buffer_get(JitterBuffer *jitter, JitterBufferPacket *packet, spx_int32_t desired_span, spx_int32_t *start_offset)
 {
    int i;
    unsigned int j;
@@ -673,7 +673,7 @@ EXPORT int jitter_buffer_get(JitterBuffer *jitter, JitterBufferPacket *packet, s
 
 }
 
-EXPORT int jitter_buffer_get_another(JitterBuffer *jitter, JitterBufferPacket *packet)
+int jitter_buffer_get_another(JitterBuffer *jitter, JitterBufferPacket *packet)
 {
    int i, j;
    for (i=0;i<SPEEX_JITTER_MAX_BUFFER_SIZE;i++)
@@ -732,7 +732,7 @@ static int _jitter_buffer_update_delay(JitterBuffer *jitter, JitterBufferPacket 
 }
 
 /* Let the jitter buffer know it's the right time to adjust the buffering delay to the network conditions */
-EXPORT int jitter_buffer_update_delay(JitterBuffer *jitter, JitterBufferPacket *packet, spx_int32_t *start_offset)
+int jitter_buffer_update_delay(JitterBuffer *jitter, JitterBufferPacket *packet, spx_int32_t *start_offset)
 {
    /* If the programmer calls jitter_buffer_update_delay() directly,
       automatically disable auto-adjustment */
@@ -742,12 +742,12 @@ EXPORT int jitter_buffer_update_delay(JitterBuffer *jitter, JitterBufferPacket *
 }
 
 /** Get pointer timestamp of jitter buffer */
-EXPORT int jitter_buffer_get_pointer_timestamp(JitterBuffer *jitter)
+int jitter_buffer_get_pointer_timestamp(JitterBuffer *jitter)
 {
    return jitter->pointer_timestamp;
 }
 
-EXPORT void jitter_buffer_tick(JitterBuffer *jitter)
+void jitter_buffer_tick(JitterBuffer *jitter)
 {
    /* Automatically-adjust the buffering delay if requested */
    if (jitter->auto_adjust)
@@ -763,7 +763,7 @@ EXPORT void jitter_buffer_tick(JitterBuffer *jitter)
    jitter->buffered = 0;
 }
 
-EXPORT void jitter_buffer_remaining_span(JitterBuffer *jitter, spx_uint32_t rem)
+void jitter_buffer_remaining_span(JitterBuffer *jitter, spx_uint32_t rem)
 {
    /* Automatically-adjust the buffering delay if requested */
    if (jitter->auto_adjust)
@@ -776,7 +776,7 @@ EXPORT void jitter_buffer_remaining_span(JitterBuffer *jitter, spx_uint32_t rem)
 
 
 /* Used like the ioctl function to control the jitter buffer parameters */
-EXPORT int jitter_buffer_ctl(JitterBuffer *jitter, int request, void *ptr)
+int jitter_buffer_ctl(JitterBuffer *jitter, int request, void *ptr)
 {
    int count, i;
    switch(request)

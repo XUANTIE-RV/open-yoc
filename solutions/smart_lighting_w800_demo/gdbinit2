@@ -1,0 +1,6 @@
+#
+# Will Run this script before Start Debug 
+target remote 127.0.0.1:1025
+reset
+set $psr=0xe0000000
+set $pc=Reset_Handler

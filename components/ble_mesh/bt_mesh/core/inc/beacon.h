@@ -25,3 +25,4 @@ u32_t bt_mesh_get_beacon_interval(u8_t type);
 
 void bt_mesh_set_beacon_interval(u8_t type, u32_t delay);
 
+void genie_set_silent_unprov_beacon_interval(bool is_silent);

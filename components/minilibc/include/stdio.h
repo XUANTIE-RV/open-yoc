@@ -60,7 +60,7 @@ extern FILE *stdin, *stdout, *stderr;
 extern "C"{
 #endif
 
-extern int remove(char *filename);
+extern int remove(const char *filename);
 extern int rename(const char *oldname, const char *newname);
 extern FILE *tmpfile(void);
 extern char *tmpnam(char *sptr);

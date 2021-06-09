@@ -7,7 +7,6 @@
 #include <alsa/snd.h>
 #include <alsa/pcm.h>
 #include <alsa/mixer.h>
-
 #include <silan_syscfg.h>
 #include <silan_adev.h>
 #include <silan_iomux.h>
@@ -267,6 +266,7 @@ static int silan_param_set(aos_pcm_t *pcm, aos_pcm_hw_params_t *params)
         adev->adev_cfg.width = params->format;
         silan_adev_i2s_set_rate(adev, params->rate);
         pcm->hw_params->buffer_size = silan_adev_i2s_submit(adev);
+        silan_adev_i2s_start(adev);
     } else {
         silan_adev_i2s_stop(adev);
         silan_adev_i2s_revoke(adev);
@@ -303,7 +303,7 @@ static int silan_get_remain_size(aos_pcm_t *pcm)
 * silan_codec_dac_set_gain 的最大值
 * API最大限制是127，实际100左右就有较大失真，设置最大为100
 * 最后实际的最大值可由 g_valid_vol_percent 再次控制,由snd_card_register传入
-* 
+*
 */
 #define API_MAX_GAIN_VAL 100
 #define API_DB_SCALE 5000
@@ -360,17 +360,28 @@ static int silan_volume_to_dB(aos_mixer_elem_t *elem, int val)
 
 static int silan_pause(aos_pcm_t *pcm, int enable)
 {
+#if 0
     ADEV_I2S_HANDLE *adev = pcm->hdl;
 
     if(enable) {
         silan_adev_i2s_stop(adev);
-        //LOGE(TAG, "slian stop(%p)", pcm);
     } else {
         silan_adev_i2s_start(adev);
-        //LOGE(TAG, "slian start(%p)", pcm);
     }
 
     return 0;
+#else
+    //FIXME: when adev stop<->start, the admac iq lost sometimes
+    ADEV_I2S_HANDLE *pdev = pcm->hdl;
+    if (pdev->i2s_cfg.tr & I2S_TR_TO) {
+        if (enable) {
+            //FIXME: clear pcm in cache when mixing
+            silan_adev_write_clear(pdev);
+            pdev->remain_size = 0;
+        }
+    }
+    return 0;
+#endif
 }
 
 static int silan_event_set(aos_pcm_t *pcm,  pcm_event_cb cb, void *priv)
@@ -394,7 +405,7 @@ static aos_dev_t *pcm_init(driver_t *drv, void *config, int id)
     if (pcm_dev) {
         aos_pcm_drv_t *pcm_drv = (aos_pcm_drv_t *)drv;
         memset(&pcm_dev->pcm, 0x00, sizeof(aos_pcm_t));
-        pcm_dev->pcm.ops = &(pcm_drv->ops);        
+        pcm_dev->pcm.ops = &(pcm_drv->ops);
     }
 
     return (aos_dev_t *)(pcm_dev);

@@ -14,6 +14,9 @@
 #include <stdio.h>
 #include <sdmmc_host.h>
 #include <sdmmc_spec.h>
+#ifdef CONFIG_CSI_V2
+#include "drv/codec.h"
+#endif
 #include <soc.h>
 #include "sdio_lanqi_porting.h"
 
@@ -24,7 +27,6 @@ static struct rt_sdio_function_tuple  sdio_function_tuple[3];
 
 static volatile uint8_t flag_sem = 0;
 uint8_t data_data = 0;
-
 extern void aos_msleep(int ms);
 
 static const uint32_t g_tupleList[3] = {
@@ -54,7 +56,11 @@ void sdio_int_lanqi(void)
     memset(&SDIO_Card, 0, sizeof(SDIO_Card));
     memset(&mmcsd_card, 0, sizeof(mmcsd_card));
     SDIO_Card.usrParam.cd = &sdio_CardDetect;
+#ifdef CONFIG_CSI_V2
+    SDIO_Card.host.base  = (sdif_handle_t)DW_SDIO0_BASE;
+#else
     SDIO_Card.host.base  = (sdif_handle_t)SDMMC_BASE_ADDR;
+#endif
     status_t ret = SDIO_Init(&SDIO_Card);
 
     if (ret != kStatus_Success) {
@@ -79,7 +85,7 @@ void sdio_int_lanqi(void)
     mmcsd_card.sdio_function[1]->tuples->next = &sdio_function_tuple[1];
     mmcsd_card.sdio_function[1]->tuples->next->next = &sdio_function_tuple[2];
 
-    extern int sdio_wifi_probe(void * sdcard);
+    extern int sdio_wifi_probe(void *sdcard);
     sdio_wifi_probe((void *) &mmcsd_card);
 }
 int32_t sdio_io_rw_extended_block(struct rt_sdio_function *func,
@@ -248,7 +254,7 @@ ethip6_output(void *a, void *b, void *c)
 }
 
 #ifndef CONFIG_TEE_CA
-int32_t csi_tee_rand_generate(uint8_t *out, uint32_t out_len)
+__attribute__((weak)) int32_t csi_tee_rand_generate(uint8_t *out, uint32_t out_len)
 {
     return 0;
 }

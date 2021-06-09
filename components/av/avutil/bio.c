@@ -9,7 +9,7 @@ int bio_init(bio_t *bio, uint8_t *buf, size_t size)
     CHECK_PARAM(bio && buf && size, -1);
     bio->pos  = 0;
     bio->buf  = buf;
-    bio->size  = size;
+    bio->size = size;
 
     return 0;
 }

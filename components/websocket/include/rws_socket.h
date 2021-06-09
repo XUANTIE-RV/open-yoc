@@ -51,7 +51,7 @@
 #include "mbedtls/debug.h"
 #endif
 
-#include <aos/network.h>
+#include <rws_network.h>
 
 typedef int rws_socket_t;
 #define RWS_INVALID_SOCKET -1

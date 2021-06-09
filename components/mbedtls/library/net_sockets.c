@@ -19,6 +19,11 @@
  *  This file is part of mbed TLS (https://tls.mbed.org)
  */
 
+/* Enable definition of getaddrinfo() even when compiling with -std=c99. Must
+ * be set before config.h, which pulls in glibc's features.h indirectly.
+ * Harmless on other platforms. */
+#define _POSIX_C_SOURCE 200112L
+
 #if !defined(MBEDTLS_CONFIG_FILE)
 #include "mbedtls/config.h"
 #else
@@ -28,7 +33,8 @@
 #if defined(MBEDTLS_NET_C)
 
 #if !defined(unix) && !defined(__unix__) && !defined(__unix) && \
-    !defined(__APPLE__) && !defined(_WIN32) && !defined(__CSKY__)
+    !defined(__APPLE__) && !defined(_WIN32) && !defined(__QNXNTO__) && !defined(__CSKY__) && \
+    !defined(__HAIKU__) && (!defined(__riscv))
 #error "This module only works on Unix and Windows, see MBEDTLS_NET_C in config.h"
 #endif
 
@@ -45,11 +51,14 @@
 #if (defined(_WIN32) || defined(_WIN32_WCE)) && !defined(EFIX64) && \
     !defined(EFI32)
 
-#ifdef _WIN32_WINNT
+#define IS_EINTR( ret ) ( ( ret ) == WSAEINTR )
+
+#if !defined(_WIN32_WINNT) || (_WIN32_WINNT < 0x0501)
 #undef _WIN32_WINNT
-#endif
 /* Enables getaddrinfo() & Co */
 #define _WIN32_WINNT 0x0501
+#endif
+
 #include <ws2tcpip.h>
 
 #include <winsock2.h>
@@ -63,8 +72,8 @@
 #endif
 #endif /* _MSC_VER */
 
-#define read(fd,buf,len)        recv(fd,(char*)buf,(int) len,0)
-#define write(fd,buf,len)       send(fd,(char*)buf,(int) len,0)
+#define read(fd,buf,len)        recv( fd, (char*)( buf ), (int)( len ), 0 )
+#define write(fd,buf,len)       send( fd, (char*)( buf ), (int)( len ), 0 )
 #define close(fd)               closesocket(fd)
 
 static int wsa_init_done = 0;
@@ -73,7 +82,7 @@ static int wsa_init_done = 0;
 
 #include <sys/types.h>
 #include <sys/socket.h>
-//#include <netinet/in.h>
+#include <netinet/in.h>
 #include <arpa/inet.h>
 #include <sys/time.h>
 #include <unistd.h>
@@ -82,10 +91,12 @@ static int wsa_init_done = 0;
 #include <netdb.h>
 #include <errno.h>
 
+#define IS_EINTR( ret ) ( ( ret ) == EINTR )
+
 #endif /* ( _WIN32 || _WIN32_WCE ) && !EFIX64 && !EFI32 */
 
 /* Some MS functions want int and MSVC warns if we pass size_t,
- * but the standard fucntions use socklen_t, so cast only for MSVC */
+ * but the standard functions use socklen_t, so cast only for MSVC */
 #if defined(_MSC_VER)
 #define MSVC_INT_CAST   (int)
 #else
@@ -115,7 +126,7 @@ static int net_prepare( void )
         wsa_init_done = 1;
     }
 #else
-#if !defined(EFIX64) && !defined(EFI32) && !defined(__CSKY__)
+#if !defined(EFIX64) && !defined(EFI32) && !defined(__CSKY__) && (!defined(__riscv))
     signal( SIGPIPE, SIG_IGN );
 #endif
 #endif
@@ -163,11 +174,48 @@ int mbedtls_net_connect( mbedtls_net_context *ctx, const char *host,
             continue;
         }
 
+#if 1
+		{
+			//FIXME: patch for connect may be block
+			int rc, flags, fd = ctx->fd;
+
+			flags = fcntl(fd, F_GETFL, 0);
+			rc = fcntl(fd, F_SETFL, O_NONBLOCK);
+
+			rc = connect( ctx->fd, cur->ai_addr, MSVC_INT_CAST cur->ai_addrlen );
+			if (rc == 0) {
+				fcntl(fd, F_SETFL, flags);
+				ret = 0;
+				break;
+			}
+			if (errno == EISCONN) {
+				fcntl(fd, F_SETFL, flags);
+				ret = 0;
+				break;
+			} else if ((errno == EAGAIN) || (errno == EINPROGRESS)) {
+				fd_set fds;
+				struct timeval tv;
+
+				tv.tv_sec  = 3;
+				tv.tv_usec = 0;
+
+				FD_ZERO(&fds);
+				FD_SET(fd, &fds);
+				rc = select(fd + 1, NULL, &fds, NULL, &tv);
+				if (rc >= 1 && FD_ISSET(fd, &fds)) {
+					fcntl(fd, F_SETFL, flags);
+					ret = 0;
+					break;
+				}
+			}
+		}
+#else
         if( connect( ctx->fd, cur->ai_addr, MSVC_INT_CAST cur->ai_addrlen ) == 0 )
         {
             ret = 0;
             break;
         }
+#endif
 
         close( ctx->fd );
         ret = MBEDTLS_ERR_NET_CONNECT_FAILED;
@@ -270,13 +318,18 @@ static int net_would_block( const mbedtls_net_context *ctx )
  */
 static int net_would_block( const mbedtls_net_context *ctx )
 {
+    int err = errno;
+
     /*
      * Never return 'WOULD BLOCK' on a non-blocking socket
      */
     if( ( fcntl( ctx->fd, F_GETFL ) & O_NONBLOCK ) != O_NONBLOCK )
+    {
+        errno = err;
         return( 0 );
+    }
 
-    switch( errno )
+    switch( errno = err )
     {
 #if defined EAGAIN
         case EAGAIN:
@@ -395,7 +448,6 @@ int mbedtls_net_accept( mbedtls_net_context *bind_ctx,
         }
         else
         {
-#if 0
             struct sockaddr_in6 *addr6 = (struct sockaddr_in6 *) &client_addr;
             *ip_len = sizeof( addr6->sin6_addr.s6_addr );
 
@@ -403,9 +455,6 @@ int mbedtls_net_accept( mbedtls_net_context *bind_ctx,
                 return( MBEDTLS_ERR_NET_BUFFER_TOO_SMALL );
 
             memcpy( client_ip, &addr6->sin6_addr.s6_addr, *ip_len);
-#else
-    return( -1 );
-#endif
         }
     }
 
@@ -435,6 +484,72 @@ int mbedtls_net_set_nonblock( mbedtls_net_context *ctx )
 #else
     return( fcntl( ctx->fd, F_SETFL, fcntl( ctx->fd, F_GETFL ) | O_NONBLOCK ) );
 #endif
+}
+
+/*
+ * Check if data is available on the socket
+ */
+
+int mbedtls_net_poll( mbedtls_net_context *ctx, uint32_t rw, uint32_t timeout )
+{
+    int ret;
+    struct timeval tv;
+
+    fd_set read_fds;
+    fd_set write_fds;
+
+    int fd = ctx->fd;
+
+    if( fd < 0 )
+        return( MBEDTLS_ERR_NET_INVALID_CONTEXT );
+
+#if defined(__has_feature)
+#if __has_feature(memory_sanitizer)
+    /* Ensure that memory sanitizers consider read_fds and write_fds as
+     * initialized even on platforms such as Glibc/x86_64 where FD_ZERO
+     * is implemented in assembly. */
+    memset( &read_fds, 0, sizeof( read_fds ) );
+    memset( &write_fds, 0, sizeof( write_fds ) );
+#endif
+#endif
+
+    FD_ZERO( &read_fds );
+    if( rw & MBEDTLS_NET_POLL_READ )
+    {
+        rw &= ~MBEDTLS_NET_POLL_READ;
+        FD_SET( fd, &read_fds );
+    }
+
+    FD_ZERO( &write_fds );
+    if( rw & MBEDTLS_NET_POLL_WRITE )
+    {
+        rw &= ~MBEDTLS_NET_POLL_WRITE;
+        FD_SET( fd, &write_fds );
+    }
+
+    if( rw != 0 )
+        return( MBEDTLS_ERR_NET_BAD_INPUT_DATA );
+
+    tv.tv_sec  = timeout / 1000;
+    tv.tv_usec = ( timeout % 1000 ) * 1000;
+
+    do
+    {
+        ret = select( fd + 1, &read_fds, &write_fds, NULL,
+                      timeout == (uint32_t) -1 ? NULL : &tv );
+    }
+    while( IS_EINTR( ret ) );
+
+    if( ret < 0 )
+        return( MBEDTLS_ERR_NET_POLL_FAILED );
+
+    ret = 0;
+    if( FD_ISSET( fd, &read_fds ) )
+        ret |= MBEDTLS_NET_POLL_READ;
+    if( FD_ISSET( fd, &write_fds ) )
+        ret |= MBEDTLS_NET_POLL_WRITE;
+
+    return( ret );
 }
 
 /*
@@ -496,8 +611,8 @@ int mbedtls_net_recv( void *ctx, unsigned char *buf, size_t len )
 /*
  * Read at most 'len' characters, blocking for at most 'timeout' ms
  */
-int mbedtls_net_recv_timeout( void *ctx, unsigned char *buf, size_t len,
-                      uint32_t timeout )
+int mbedtls_net_recv_timeout( void *ctx, unsigned char *buf,
+                              size_t len, uint32_t timeout )
 {
     int ret;
     struct timeval tv;

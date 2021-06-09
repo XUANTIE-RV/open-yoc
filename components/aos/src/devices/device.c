@@ -131,7 +131,7 @@ aos_dev_t *device_find(const char *name, int id)
         driver_t *drv = (driver_t *)node->drv;
         aos_assert(drv);
         if (strcmp(drv->name, name) == 0 && node->id == id)
-           break;
+            break;
     }
     LIST_UNLOCK();
 
@@ -166,7 +166,7 @@ int driver_unregister(const char *name)
     if (n == NULL)
         return -ENOMEM;
 
-    aos_dev_t *dev = device_find(name, id);
+    aos_dev_t *dev = device_find(n, id);
     aos_free(n);
 
     if (dev) {
@@ -284,7 +284,7 @@ int device_lpm(aos_dev_t *dev, int pm_state)
     if (dev) {
         device_lock(dev);
         driver_t *drv = (driver_t*)dev->drv;
-        
+
         aos_check_param(drv);
         ret = DRIVER(dev)->lpm(dev, pm_state);
         device_unlock(dev);

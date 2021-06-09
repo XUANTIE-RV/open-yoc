@@ -3,7 +3,6 @@
  */
 
 #include <stdlib.h>
-#include <aos/log.h>
 
 #include <yoc/fota.h>
 #include "http.h"
@@ -60,7 +59,7 @@ http_t *http_init(const char *path)
         goto error;
     }
 
-    http->buffer = (uint8_t *)malloc(BUFFER_SIZE);
+    http->buffer = (uint8_t *)aos_malloc(BUFFER_SIZE);
     if (http->buffer == NULL) {
         goto error;
     }
@@ -83,11 +82,11 @@ http_t *http_init(const char *path)
 
 error:
     if (http) {
-        if (http->url) free(http->url);
-        if (http->path) free(http->path);
-        if (http->host) free(http->host);
-        if (http->buffer) free(http->buffer);
-        free(http);
+        if (http->url) aos_free(http->url);
+        if (http->path) aos_free(http->path);
+        if (http->host) aos_free(http->host);
+        if (http->buffer) aos_free(http->buffer);
+        aos_free(http);
     }
 
     return NULL;
@@ -149,7 +148,7 @@ int http_post(http_t *http, char *playload, int timeoutms)
 
     // LOGD(TAG, "http post sendbuffer: %s", http->buffer);
 
-    free(temp_buff);
+    aos_free(temp_buff);
 
     return http->net.net_write(&http->net, http->buffer, strlen((char*)http->buffer), timeoutms);
 }
@@ -172,7 +171,7 @@ int http_get(http_t *http, int timeoutms)
 
     // LOGD(TAG, "http get sendbuffer: %s", http->buffer);
 
-    free(temp_buff);
+    aos_free(temp_buff);
 
     return http->net.net_write(&http->net, http->buffer, strlen((char*)http->buffer), timeoutms);
 }
@@ -269,16 +268,16 @@ again:
     memset(http->buffer, 0, BUFFER_SIZE);
 
     while(recv_len < BUFFER_SIZE) {
-        len = net_read(http->net.fd, http->buffer + recv_len, BUFFER_SIZE - recv_len, timeoutms);
+        int pre_read = BUFFER_SIZE - recv_len;
+        if(pre_read > 512) {
+            pre_read = 512;
+        }
+
+        len = net_read(http->net.fd, http->buffer + recv_len, pre_read, timeoutms);
+        //printf("pre read %d\n", len);
 
         if (len <= 0) {
-            if (len < 0) {
-                if (errno == EAGAIN || errno == EINTR) {
-                    continue;
-                }
-            } else {
-                LOGE(TAG, "read len:%d", len);
-            }
+            LOGE(TAG, "net read len=%d errno=%d", len, errno);
             return -1;
         }
 
@@ -305,25 +304,28 @@ again:
         goto again;
     }
 
-    if (BUFFER_SIZE - (*head_end - (char *)http->buffer) < content_len) {
+    int head_len = (*head_end - (char *)http->buffer);
+    int total_len = content_len + head_len;
+    //int left_len = content_len + head_len - len;
+    //printf("head len %d, left_len %d, total %d, recv len %d\n", head_len, left_len, total_len, recv_len);
+
+    if ( total_len > BUFFER_SIZE ) {
+        LOGE(TAG, "total len %d", total_len);
         return -1;
     }
 
     // LOGD(TAG, "buffer: %.*s", *head_end - (char*)http_ins->buffer, http_ins->buffer);
 
-    while(recv_len < BUFFER_SIZE) {
+    while(recv_len < total_len) {
         if (content_len <= recv_len - (*head_end - (char *)http->buffer)) {
             break;
         }
 
-        len = http->net.net_read(&http->net, http->buffer + recv_len, BUFFER_SIZE - recv_len, timeoutms);
+        len = http->net.net_read(&http->net, http->buffer + recv_len, total_len - recv_len, timeoutms);
 
+        //printf("left read %d\n", len);
         if (len <= 0) {
-            if (len < 0) {
-                if (errno == EINTR || errno == EAGAIN) {
-                    continue;
-                }
-            }
+            LOGE(TAG, "net read len=%d errno=%d", len, errno);
             return -1;
         }
 
@@ -377,11 +379,11 @@ int http_deinit(http_t *http)
     if (http) {
         http->net.net_disconncet(&http->net);
 
-        if (http->url) free(http->url);
-        if (http->path) free(http->path);
-        if (http->host) free(http->host);
-        if (http->buffer) free(http->buffer);
-        free(http);        
+        if (http->url) aos_free(http->url);
+        if (http->path) aos_free(http->path);
+        if (http->host) aos_free(http->host);
+        if (http->buffer) aos_free(http->buffer);
+        aos_free(http);
     }
 
     return 0;

@@ -12,7 +12,6 @@
 #include <yoc/aui_cloud.h>
 #include <media.h>
 #include <aos/ringbuffer.h>
-#include <aos/log.h>
 #include <aos/debug.h>
 
 #include "cJSON.h"
@@ -30,11 +29,10 @@
 
 #define MIT_ASR_TASK_QUIT_EVT (0x01)
 
-static int wwv_enable = 0;
-static aui_wwv_cb_t wwv_result_cb = NULL;
-static NuiThingsConfig mit_dialog_config = {0};
+mit_account_info_t g_mit_account_info;
 
-char *asr_buf;
+static NuiThingsConfig mit_dialog_config = {0};
+static char *          asr_buf           = NULL;
 // long int test_asr_len = 0;
 
 typedef enum mit_status {
@@ -60,16 +58,42 @@ typedef struct mit_context {
 } mit_context_t;
 
 typedef struct mit_kws_data {
-    volatile int     do_wwv;         // need to do wwv
-    volatile int     data_valid;
-    char    *data;
-    size_t  len;
-    size_t  pos;
+    volatile int do_wwv; // need to do wwv
+    volatile int data_valid;
+    char *       data;
+    size_t       len;
+    size_t       pos;
 } mit_kws_data_t;
 
-static int              bufferLocked = 0;
-static mit_kws_data_t   g_mit_kws;
-static aos_event_t      asr_task_quit;
+static int            bufferLocked = 0;
+static mit_kws_data_t g_mit_kws;
+static aos_event_t    asr_task_quit;
+
+static void get_session_id(char *buff, const int number)
+{
+
+    char rand_string[] = "0123456789abcdeffdecba9876543210";
+    char ss[3]         = {0};
+
+    /* use mac addr as first 12 bytes */
+    // get_hex_mac(buff);
+
+    /* use random number as last 12 bytes */
+    struct timeval time_now; //= {0};
+    gettimeofday(&time_now, NULL);
+    long time_mil = 0;
+    time_mil      = time_now.tv_sec * 1000 + time_now.tv_usec / 1000;
+    srand(((unsigned int)time_mil));
+
+    // for (int i = 1; i <= (number - 12); i++) {
+    for (int i = 1; i <= number; i++) {
+        memset(ss, 0x0, 3);
+        sprintf(ss, "%c", rand_string[(int)(32.0 * rand() / (RAND_MAX + 1.0))]);
+        strcat(buff, ss);
+    }
+    
+    //LOGD(TAG, "get_uuid_static_app:%s", buff);
+}
 
 static int mit_asr_event_cb(void *user_data, NuiThingsEvent event, int dialog_finish)
 {
@@ -79,10 +103,9 @@ static int mit_asr_event_cb(void *user_data, NuiThingsEvent event, int dialog_fi
     char *data;
 
     aui_t *        aui     = (aui_t *)user_data;
-    mit_context_t *context = (mit_context_t *)aui->context;
+    mit_context_t *context = (mit_context_t *)aui->ops.asr->priv;
 
-    LOGD(TAG, "call %s(>>event: %d(%s)<<)", __FUNCTION__, event,
-         nui_things_event_get_str(event));
+    LOGD(TAG, "call %s(>>event: %d(%s)<<)", __FUNCTION__, event, nui_things_event_get_str(event));
 
     switch (event) {
         case kNuiThingsEventWwv:
@@ -105,17 +128,18 @@ static int mit_asr_event_cb(void *user_data, NuiThingsEvent event, int dialog_fi
 
         case kNuiThingsEventAsrPartialResult:
             /* do tts connect in advance to reduce dialog delay */
-            aui_cloud_start_tts(aui);
+            // mit_start_tts(aui);
             break;
 
         case kNuiThingsEventAsrResult:
-            context->status = context->status == MIT_STATE_FINISH ? MIT_STATE_RESULT : MIT_STATE_CLOUD_RESULT;
+            context->status =
+                context->status == MIT_STATE_FINISH ? MIT_STATE_RESULT : MIT_STATE_CLOUD_RESULT;
             LOGD(TAG, "asr result %s", context->status == MIT_STATE_RESULT ? "local" : "cloud");
 
             size = nui_things_info_get_length(kNuiThingsInfoTypeAsr);
             if (size < 0) {
                 LOGE(TAG, "nui things len1 error %d", size);
-                context->err    = MIT_ASR_PARSE_FAIL;
+                context->err = MIT_ASR_PARSE_FAIL;
                 return ret;
             }
 
@@ -126,11 +150,12 @@ static int mit_asr_event_cb(void *user_data, NuiThingsEvent event, int dialog_fi
             ret        = nui_things_info_get(kNuiThingsInfoTypeAsr, data, size);
             if (0 == ret) {
                 LOGD(TAG, "get asr info %s\n", data);
-                if (aui->config.nlp_cb)
-                    aui->config.nlp_cb(data);
-            } else {
-                LOGE(TAG, "get asr info error:%d\n", ret);
-                context->err    = MIT_ASR_PARSE_FAIL;
+                if (aui->cb.asr_cb) {
+                    aui->cb.asr_cb((void *)data, strlen(data), aui->cb.asr_priv);
+                } else {
+                    LOGE(TAG, "get asr info error:%d\n", ret);
+                    context->err = MIT_ASR_PARSE_FAIL;
+                }
             }
             // LOGD(TAG, "get asr result %s", data);
 
@@ -159,8 +184,9 @@ static int mit_asr_event_cb(void *user_data, NuiThingsEvent event, int dialog_fi
                     goto END_CB;
                 }
 
-                if (aui->config.nlp_cb)
-                    aui->config.nlp_cb(data);
+                if (aui->cb.asr_cb) {
+                    aui->cb.asr_cb((void *)data, strlen(data), aui->cb.asr_priv);
+                }
 
                 free(data);
             } else {
@@ -173,15 +199,19 @@ static int mit_asr_event_cb(void *user_data, NuiThingsEvent event, int dialog_fi
 
         case kNuiThingsEventWwvConfirm:
             LOGD(TAG, "kws voice confirmed");
-            if (wwv_result_cb) {
-                wwv_result_cb(AUI_WWV_CONFIRM);
+            if (aui->cb.asr_cb) {
+                char text[60] = {0};
+                snprintf(text, 60, "{\"aui_kws_result\":%d}", AUI_KWS_CONFIRM);
+                aui->cb.asr_cb((void *)text, strlen(text), aui->cb.asr_priv);
             }
             break;
 
         case kNuiThingsEventWwvReject:
             LOGD(TAG, "mit %s event error", "wwvreject");
-            if (wwv_result_cb) {
-                wwv_result_cb(AUI_WWV_REJECT);
+            if (aui->cb.asr_cb) {
+                char text[60] = {0};
+                snprintf(text, 60, "{\"aui_kws_result\":%d,\"msg\":宝拉宝拉}", AUI_KWS_REJECT);
+                aui->cb.asr_cb((void *)text, strlen(text), aui->cb.asr_priv);
             }
             break;
 
@@ -189,7 +219,10 @@ static int mit_asr_event_cb(void *user_data, NuiThingsEvent event, int dialog_fi
             aui_cloud_stop_tts(aui);
 
             if (context->status == MIT_STATE_CLOUD_RESULT || context->status == MIT_STATE_ONGOING) {
-                aui->config.nlp_cb("{\"aui_result\":-1,\"msg\":\"asr parse error\"}");
+                if (aui->cb.asr_cb) {
+                    const char *text = "{\"aui_result\":-1,\"msg\":\"asr parse error\"}";
+                    aui->cb.asr_cb((void *)text, strlen(text), aui->cb.asr_priv);
+                }
             }
             LOGD(TAG, "mit %s event error", "asr");
             context->err    = MIT_ASR_PARSE_FAIL; // TODO assign different error type
@@ -212,7 +245,7 @@ static int mit_wwv_provide_data_cb(void *user_data, NuiThingsVoiceData *data)
     }
 
     if (!g_mit_kws.data_valid) {
-        for (int i = 0; i < 30; i ++) {
+        for (int i = 0; i < 30; i++) {
             aos_msleep(20);
             if (g_mit_kws.data_valid) {
                 break;
@@ -239,13 +272,13 @@ static int mit_wwv_provide_data_cb(void *user_data, NuiThingsVoiceData *data)
             ret          = g_mit_kws.len - g_mit_kws.pos;
 
             g_mit_kws.data_valid = 0;
-            g_mit_kws.do_wwv    = 0;
+            g_mit_kws.do_wwv     = 0;
             LOGD(TAG, "wwv data end.");
         }
     } else {
-        g_mit_kws.data_valid    = 0;
-        g_mit_kws.do_wwv        = 0;
-        ret             = -1;
+        g_mit_kws.data_valid = 0;
+        g_mit_kws.do_wwv     = 0;
+        ret                  = -1;
         LOGW(TAG, "wwv provide data cb err");
     }
 
@@ -256,7 +289,7 @@ static int mit_asr_provide_data_cb(void *user_data, char *buffer, int len)
 {
     int            ret     = 0;
     aui_t *        aui     = (aui_t *)user_data;
-    mit_context_t *context = (mit_context_t *)aui->context;
+    mit_context_t *context = (mit_context_t *)aui->ops.asr->priv;
     //LOGD(TAG, "call %s(%p, %d) [start]",__FUNCTION__, buffer, len);
 
     if (context->status == MIT_STATE_ONGOING) {
@@ -278,7 +311,7 @@ static int mit_asr_provide_data_cb(void *user_data, char *buffer, int len)
 static void tsk_wait_for_mit_consuming(void *arg)
 {
     aui_t *        aui         = (aui_t *)arg;
-    mit_context_t *context     = (mit_context_t *)aui->context;
+    mit_context_t *context     = (mit_context_t *)aui->ops.asr->priv;
     int            timeout_cnt = 0;
 
     // wait for data streaming finish, timeout in 5 s
@@ -291,7 +324,7 @@ static void tsk_wait_for_mit_consuming(void *arg)
             break;
     }
 
-    if (context->err == MIT_ASR_SUCCESS) {
+    if (context->status != MIT_STATE_END && context->err == MIT_ASR_SUCCESS) {
         // stop the mit asr to get the final result
         LOGD(TAG, "stop mit asr");
         nui_things_stop(0);
@@ -315,11 +348,17 @@ static void tsk_wait_for_mit_consuming(void *arg)
         LOGD(TAG, "result error %d", context->err);
         switch (context->err) {
             case MIT_ASR_NETWORK_ERR:
-                aui->config.nlp_cb(
-                    "{\"aui_result\":-101,\"msg\":\"mit cloud connect fail(ENETUNREACH)\"}");
+                if (aui->cb.asr_cb) {
+                    const char *data = "{\"aui_result\":-101,\"msg\":\"mit cloud connect fail(ENETUNREACH)\"}";
+                    aui->cb.asr_cb((void *)data, strlen(data), aui->cb.asr_priv);
+                }
+
                 break;
             case MIT_ASR_PARSE_FAIL:
-                aui->config.nlp_cb("{\"aui_result\":-1,\"msg\":\"asr parse error\"}");
+                if (aui->cb.asr_cb) {
+                    const char *data = "{\"aui_result\":-1,\"msg\":\"asr parse error\"}";
+                    aui->cb.asr_cb((void *)data, strlen(data), aui->cb.asr_priv);
+                }
                 break;
             default:
                 break;
@@ -349,65 +388,65 @@ static int nui_things_return_data_main(void *              user_data,
     return ret;
 }
 
-mit_account_info_t g_mit_account_info;
 static int mit_asr_set_account(aui_t *aui)
 {
-    cJSON *j_info = NULL;
-    char *json_account_info = NULL;
+    cJSON *j_info            = NULL;
+    char * json_account_info = NULL;
 
     aos_check_param(aui);
 
     json_account_info = (char *)aui->config.js_account;
 
-    j_info                  = cJSON_Parse(json_account_info);
-    cJSON *device_uuid      = cJSON_GetObjectItem(j_info, "device_uuid");
-    cJSON *asr_app_key      = cJSON_GetObjectItem(j_info, "asr_app_key");
-    cJSON *asr_token        = cJSON_GetObjectItem(j_info, "asr_token");
-    cJSON *asr_url          = cJSON_GetObjectItem(j_info, "asr_url");
-    cJSON *tts_app_key      = cJSON_GetObjectItem(j_info, "tts_app_key");
-    cJSON *tts_token        = cJSON_GetObjectItem(j_info, "tts_token");
-    cJSON *tts_url          = cJSON_GetObjectItem(j_info, "tts_url");
-    cJSON *tts_key_id       = cJSON_GetObjectItem(j_info, "tts_key_id");
-    cJSON *tts_key_secret   = cJSON_GetObjectItem(j_info, "tts_key_secret");
+    j_info                = cJSON_Parse(json_account_info);
+    cJSON *device_uuid    = cJSON_GetObjectItem(j_info, "device_uuid");
+    cJSON *asr_app_key    = cJSON_GetObjectItem(j_info, "asr_app_key");
+    cJSON *asr_token      = cJSON_GetObjectItem(j_info, "asr_token");
+    cJSON *asr_url        = cJSON_GetObjectItem(j_info, "asr_url");
+    cJSON *tts_app_key    = cJSON_GetObjectItem(j_info, "tts_app_key");
+    cJSON *tts_token      = cJSON_GetObjectItem(j_info, "tts_token");
+    cJSON *tts_url        = cJSON_GetObjectItem(j_info, "tts_url");
+    cJSON *tts_key_id     = cJSON_GetObjectItem(j_info, "tts_key_id");
+    cJSON *tts_key_secret = cJSON_GetObjectItem(j_info, "tts_key_secret");
+    cJSON *dialog_context = cJSON_GetObjectItem(j_info, "dialog_context");
 
-    CHECK_RET_TAG_WITH_GOTO(
-        j_info &&
-        device_uuid && cJSON_IsString(device_uuid) &&
-        asr_app_key && cJSON_IsString(asr_app_key) &&
-        asr_token && cJSON_IsString(asr_token) &&
-        asr_url && cJSON_IsString(asr_url) &&
-        tts_app_key && cJSON_IsString(tts_app_key) &&
-        tts_token && cJSON_IsString(tts_token) &&
-        tts_url && cJSON_IsString(tts_url),
-        ERR
-    );
+    CHECK_RET_TAG_WITH_GOTO(j_info && device_uuid && cJSON_IsString(device_uuid) && asr_app_key &&
+                                cJSON_IsString(asr_app_key) && asr_token &&
+                                cJSON_IsString(asr_token) && asr_url && cJSON_IsString(asr_url) &&
+                                tts_app_key && cJSON_IsString(tts_app_key) && tts_token &&
+                                cJSON_IsString(tts_token) && tts_url && cJSON_IsString(tts_url),
+                            ERR);
 
-    g_mit_account_info.device_uuid  = device_uuid->valuestring;
-    g_mit_account_info.asr_app_key  = asr_app_key->valuestring;
-    g_mit_account_info.asr_token    = asr_token->valuestring;
-    g_mit_account_info.asr_url      = asr_url->valuestring;
-    g_mit_account_info.tts_app_key  = tts_app_key->valuestring;
-    g_mit_account_info.tts_token    = tts_token->valuestring;
-    g_mit_account_info.tts_url      = tts_url->valuestring;
+    g_mit_account_info.device_uuid    = device_uuid->valuestring;
+    g_mit_account_info.asr_app_key    = asr_app_key->valuestring;
+    g_mit_account_info.asr_token      = asr_token->valuestring;
+    g_mit_account_info.asr_url        = asr_url->valuestring;
+    g_mit_account_info.tts_app_key    = tts_app_key->valuestring;
+    g_mit_account_info.tts_token      = tts_token->valuestring;
+    g_mit_account_info.tts_url        = tts_url->valuestring;
+    g_mit_account_info.dialog_context = dialog_context->valuestring;
 
-    if ((tts_key_id && cJSON_IsString(tts_key_id)) && (tts_key_secret && cJSON_IsString(tts_key_secret))) {
-        g_mit_account_info.tts_key_id      = tts_key_id->valuestring;
-        g_mit_account_info.tts_key_secret  = tts_key_secret->valuestring;
+    if ((tts_key_id && cJSON_IsString(tts_key_id)) &&
+        (tts_key_secret && cJSON_IsString(tts_key_secret))) {
+        g_mit_account_info.tts_key_id     = tts_key_id->valuestring;
+        g_mit_account_info.tts_key_secret = tts_key_secret->valuestring;
     }
 
-    mit_dialog_config.device_uuid       = g_mit_account_info.device_uuid;
-    mit_dialog_config.app_key           = g_mit_account_info.asr_app_key;
-    mit_dialog_config.token             = g_mit_account_info.asr_token;
-    mit_dialog_config.url               = g_mit_account_info.asr_url;
-	mit_dialog_config.enable_vad_cloud  = aui->config.cloud_vad;//1;
+    mit_dialog_config.device_uuid        = g_mit_account_info.device_uuid;
+    mit_dialog_config.app_key            = g_mit_account_info.asr_app_key;
+    mit_dialog_config.token              = g_mit_account_info.asr_token;
+    mit_dialog_config.url                = g_mit_account_info.asr_url;
+    mit_dialog_config.enable_vad_cloud   = aui->config.cloud_vad; //1;
+    mit_dialog_config.dialog_context     = g_mit_account_info.dialog_context;
+    mit_dialog_config.enable_vad_cloud   = aui->config.cloud_vad; //1;//enable cloud nn vad
+    mit_dialog_config.enable_decoder_vad = 1;                     //1;// enable cloud decoder vad
     return 0;
 
 ERR:
     if (j_info) {
         cJSON_Delete(j_info);
     }
-    
-    return -1; 
+
+    return -1;
 }
 
 /** init only once with multiple talks */
@@ -422,13 +461,13 @@ static int mit_asr_init(aui_t *aui)
     aos_check_mem(asr_buf);
 
     ringbuffer_create(&context->rbuf, asr_buf, MIT_ASR_BUFFER_SIZE);
-    context->err    = MIT_ASR_SUCCESS;
-    aui->context    = context;
-    context->status = MIT_STATE_END;
+    context->err         = MIT_ASR_SUCCESS;
+    aui->ops.asr->priv   = context;
+    context->status      = MIT_STATE_END;
 
-    g_mit_kws.do_wwv    = 0;
+    g_mit_kws.do_wwv     = 0;
     g_mit_kws.data_valid = 0;
-    g_mit_kws.pos       = 0;
+    g_mit_kws.pos        = 0;
 
     /* mit sdk struct */
     NuiThingsListener   mit_listener;
@@ -447,10 +486,15 @@ static int mit_asr_init(aui_t *aui)
     mit_init_config.enable_kws          = 0;
     mit_init_config.enable_vad          = 1;
     mit_init_config.log_level           = 4;
-	mit_init_config.log_link_enable   = 0;
-	
+    mit_init_config.log_link_enable     = 0;
+
     mit_asr_set_account(aui);
 
+    if (!mit_dialog_config.session_id) {
+        mit_dialog_config.session_id = (char *)aos_zalloc_check(32 + 1);
+    }
+
+    get_session_id(mit_dialog_config.session_id, 32);
     // log_setLevel(1);//Warning
 
     int ret;
@@ -460,132 +504,130 @@ static int mit_asr_init(aui_t *aui)
     return nui_things_init(&mit_init_config);
 }
 
-static int mit_set_session_id(aui_t *aui, const char *session_id)
-{
-    aos_check_return_einval(aui && session_id);
-
-    if (!mit_dialog_config.session_id) {
-        mit_dialog_config.session_id = (char *)aos_zalloc_check(32 + 1);
-    }
-
-    memcpy(mit_dialog_config.session_id, session_id, 32);
-    return 0;
-}
-
-static int mit_enable_wwv(aui_t *aui, int enable)
-{
-    mit_dialog_config.enable_wwv = wwv_enable && enable;
-    if (1 == mit_dialog_config.enable_wwv) {
-        mit_dialog_config.kws_format = "pcm";
-        mit_dialog_config.kws_model  = "gushiji-baola";
-        mit_dialog_config.kws_word   = "宝拉宝拉";
-    }
-
-    g_mit_kws.do_wwv    = enable;
-    g_mit_kws.data_valid = 0;
-
-    return 0;
-}
-
 static int mit_start_pcm(aui_t *aui)
 {
     aos_check_return_einval(aui);
 
-    mit_context_t *context = (mit_context_t *)aui->context;
+    if (aui->asr_type == 1) {
+        mit_dialog_config.enable_wwv = 1;
+        mit_dialog_config.kws_format = "pcm";
+        mit_dialog_config.kws_model  = "gushiji-baola";
+        mit_dialog_config.kws_word   = "宝拉宝拉";
+        g_mit_kws.do_wwv             = 1;
+    } else {
+        mit_context_t *context = (mit_context_t *)aui->ops.asr->priv;
 
-    aos_event_set(&asr_task_quit, 0, AOS_EVENT_AND);
+        g_mit_kws.data_valid = 0;
+        aos_event_set(&asr_task_quit, 0, AOS_EVENT_AND);
 
-    mit_status_t stat = context->status;
-    if (stat != MIT_STATE_END) {
-        unsigned int flag;
-        
-        context->status = MIT_STATE_END;
-        nui_things_stop(1);
+        mit_status_t stat = context->status;
+        if (stat != MIT_STATE_END) {
+            unsigned int flag;
 
-        if (stat == MIT_STATE_FINISH) {
-            aos_event_get(&asr_task_quit, MIT_ASR_TASK_QUIT_EVT, AOS_EVENT_OR_CLEAR, &flag,
-                          AOS_WAIT_FOREVER);
+            context->status = MIT_STATE_END;
+            nui_things_stop(1);
+
+            if (stat == MIT_STATE_FINISH) {
+                aos_event_get(&asr_task_quit, MIT_ASR_TASK_QUIT_EVT, AOS_EVENT_OR_CLEAR, &flag,
+                            AOS_WAIT_FOREVER);
+            }
         }
+
+        // clear the ring buffer space
+        ringbuffer_clear(&context->rbuf);
+
+        LOGD(TAG, "session_id=%s", mit_dialog_config.session_id);
+
+        if (0 != nui_things_start(&mit_dialog_config)) {
+            LOGW(TAG, "nui_things_start return error");
+            context->err    = MIT_ASR_NETWORK_ERR;
+            context->status = MIT_STATE_END;
+            nui_things_stop(1);
+            return -1;
+        }
+
+        aui_cloud_stop_tts(aui);
+
+        context->status = MIT_STATE_ONGOING;
+        context->err    = MIT_ASR_SUCCESS;
+        bufferLocked    = 0;
+
+        LOGD(TAG, "nui_things_start success");        
     }
-
-    // clear the ring buffer space
-    ringbuffer_clear(&context->rbuf);
-
-    LOGD(TAG, "session_id=%s", mit_dialog_config.session_id);
-
-    if (0 != nui_things_start(&mit_dialog_config)) {
-        LOGW(TAG, "nui_things_start return error");
-        context->err    = MIT_ASR_NETWORK_ERR;
-        context->status = MIT_STATE_END;
-        nui_things_stop(1);
-        return -1;
-    }
-
-    aui_cloud_stop_tts(aui);
-
-    context->status     = MIT_STATE_ONGOING;
-    context->err        = MIT_ASR_SUCCESS;
-    bufferLocked        = 0;
-
-    LOGD(TAG, "nui_things_start success");
 
     return 0;
 }
 
 static int mit_push_pcm(aui_t *aui, void *data, size_t size)
 {
-    aos_check_return_einval(aui);
-    int            ret     = -1;
-    mit_context_t *context = (mit_context_t *)aui->context;
+    aos_check_return_einval(aui && data && size);
 
-    if (context->status != MIT_STATE_ONGOING) {
+    int ret = 0;
+
+    if (aui->asr_type == 1) {
+        g_mit_kws.data_valid = 1;
+        g_mit_kws.data       = data;
+        g_mit_kws.len        = size;
+        g_mit_kws.pos        = 0;
+    } else {
+        mit_context_t *context = (mit_context_t *)aui->ops.asr->priv;
+        ret                    = -1;
+        if (context->status != MIT_STATE_ONGOING) {
+            return 0;
+        }
+
+        if (context->err != MIT_ASR_SUCCESS) {
+            ret = -1;
+            goto END_SOURCE_PCM;
+        }
+
+        if (bufferLocked || ringbuffer_full(&context->rbuf)) {
+            if (!bufferLocked) {
+                LOGD(TAG, "buffer locked");
+            }
+            bufferLocked = 1;
+            return 0;
+        }
+
+        ringbuffer_write(&context->rbuf, (uint8_t *)data, size);
+        // LOGD(TAG, "mit asr buf left %d", mit_rbuf_available_space(&context->rbuf));
+
         return 0;
+
+    END_SOURCE_PCM:
+        if (ret < 0)
+            LOGE(TAG, "Source PCM Error\n");        
     }
 
-    if (context->err != MIT_ASR_SUCCESS) {
-        ret = -1;
-        goto END_SOURCE_PCM;
-    }
-
-    if (bufferLocked || ringbuffer_full(&context->rbuf)) {
-        LOGD(TAG, "buffer locked");
-        bufferLocked = 1;
-        return 0;
-    }
-
-    ringbuffer_write(&context->rbuf, (uint8_t *)data, size);
-    // LOGD(TAG, "mit asr buf left %d", mit_rbuf_available_space(&context->rbuf));
-
-    return 0;
-
-END_SOURCE_PCM:
-    if (ret < 0)
-        LOGE(TAG, "Source PCM Error\n");
     return ret;
 }
 
 static int mit_stop_pcm(aui_t *aui)
 {
     aos_check_return_einval(aui);
-    mit_context_t *context = (mit_context_t *)aui->context;
+    if (aui->asr_type == 1) {
+    
+    } else {
+        mit_context_t *context = (mit_context_t *)aui->ops.asr->priv;
 
-    if (context->status == MIT_STATE_RESULT) {
-        return 0;
-    } else if (context->status != MIT_STATE_ONGOING) {
-        return -1;
+        if (context->status == MIT_STATE_RESULT) {
+            return 0;
+        } else if (context->status != MIT_STATE_ONGOING) {
+            return -1;
+        }
+
+        context->status = MIT_STATE_FINISH;
+
+        // create a task to wait for streaming the rest of the buffer
+        aos_task_t task_handle;
+        if (0 != aos_task_new_ext(&task_handle, "wait_mit", tsk_wait_for_mit_consuming, aui, 2 * 1024,
+                                AOS_DEFAULT_APP_PRI)) {
+            LOGE(TAG, "Create tsk_wait_for_mit_consuming failed.");
+            return -1;
+        }
+
+        LOGD(TAG, "MIT source pcm finish");        
     }
-
-    context->status = MIT_STATE_FINISH;
-
-    // create a task to wait for streaming the rest of the buffer
-    aos_task_t task_handle;
-    if (0 != aos_task_new_ext(&task_handle, "wait_mit", tsk_wait_for_mit_consuming, aui, 2 * 1024,
-                              AOS_DEFAULT_APP_PRI)) {
-        LOGE(TAG, "Create tsk_wait_for_mit_consuming failed.");
-        return -1;
-    }
-
-    LOGD(TAG, "MIT source pcm finish");
 
     return 0;
 }
@@ -593,38 +635,23 @@ static int mit_stop_pcm(aui_t *aui)
 static int mit_force_stop(aui_t *aui)
 {
     aos_check_return_einval(aui);
-    mit_context_t *context = (mit_context_t *)aui->context;
-    mit_status_t stat = context->status;
-    unsigned int flags;
+    if (aui->asr_type == 1) {
 
-    g_mit_kws.do_wwv = 0;
-    g_mit_kws.data_valid = 0;
-    context->status = MIT_STATE_END;
-    nui_things_stop(1);
+    } else {
+        mit_context_t *context = (mit_context_t *)aui->ops.asr->priv;
+        mit_status_t   stat    = context->status;
+        unsigned int   flags;
 
-    if (stat == MIT_STATE_FINISH) {
-        aos_event_get(&asr_task_quit, MIT_ASR_TASK_QUIT_EVT, AOS_EVENT_OR_CLEAR, &flags, AOS_WAIT_FOREVER);
+        g_mit_kws.do_wwv     = 0;
+        g_mit_kws.data_valid = 0;
+        context->status      = MIT_STATE_END;
+        nui_things_stop(1);
+
+        if (stat == MIT_STATE_FINISH) {
+            aos_event_get(&asr_task_quit, MIT_ASR_TASK_QUIT_EVT, AOS_EVENT_OR_CLEAR, &flags,
+                        AOS_WAIT_FOREVER);
+        }
     }
-
-    return 0;
-}
-
-static int mit_init_wwv(aui_t *aui, aui_wwv_cb_t cb)
-{
-    aos_check_return_einval(cb);
-
-    wwv_result_cb = cb;
-    wwv_enable = 1;
-    return 0;
-}
-
-static int mit_push_wwv_data(aui_t *aui, void *data, size_t size)
-{
-    aos_check_return_einval(data);
-    g_mit_kws.data_valid    = 1;
-    g_mit_kws.data          = data;
-    g_mit_kws.len           = size;
-    g_mit_kws.pos           = 0;    
 
     return 0;
 }
@@ -633,27 +660,22 @@ static int mit_push_wwv_data(aui_t *aui, void *data, size_t size)
 // FIXME: just for compile
 // 因为mit库里面需要用到这个函数
 #include <mbedtls/ssl.h>
-void mbedtls_ssl_init_ext( mbedtls_ssl_context *ssl, int len)
+void mbedtls_ssl_init_ext(mbedtls_ssl_context *ssl, int len)
 {
     mbedtls_ssl_init(ssl);
 }
 #endif
 
 static aui_asr_cls_t mit_asr_cls = {
-    .init = mit_asr_init,
-    .set_session_id = mit_set_session_id,
-    .start = mit_start_pcm,
-    .enable_wwv = mit_enable_wwv,
-    .push_data = mit_push_pcm,
+    .init           = mit_asr_init,
+    .start          = mit_start_pcm,
+    .push_data      = mit_push_pcm,
     .stop_push_data = mit_stop_pcm,
-    .stop = mit_force_stop,
-    .init_wwv = mit_init_wwv,
-    .push_wwv_data = mit_push_wwv_data,
+    .stop           = mit_force_stop
 };
 
-void aui_asr_register_mit(aui_t *aui)
+void aui_asr_register_mit(aui_t *aui, aui_asr_cb_t cb, void *priv)
 {
-    if (aui) {
-        aui->ops.asr = &mit_asr_cls;
-    }
+    aos_check_param(aui);
+    aui_cloud_asr_register(aui, &mit_asr_cls, cb, priv);
 }

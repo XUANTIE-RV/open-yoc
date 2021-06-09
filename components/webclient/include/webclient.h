@@ -21,7 +21,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
-#include <aos/log.h>
 #include <aos/kernel.h>
 #include <aos/debug.h>
 
@@ -170,9 +169,6 @@ int webclient_handle_response(struct webclient_session *session);
 
 
 void *http_wget(const char *url, size_t *size);
-
-const char *get_longitude();
-const char *get_latitude();
 
 #ifdef  __cplusplus
     }

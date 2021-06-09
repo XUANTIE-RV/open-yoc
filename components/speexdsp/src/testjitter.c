@@ -46,7 +46,7 @@ void jitterFill(JitterBuffer *jb) {
    }
 }
 
-int main()
+int main(void)
 {
    char buffer[65536];
    JitterBufferPacket in, out;

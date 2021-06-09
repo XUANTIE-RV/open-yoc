@@ -1,0 +1,55 @@
+## 第一部分： 基础信息
+name: test_lwip
+version: v7.4.3                                    # <必选项> 组件版本号
+description: lwip test solution
+
+type: solution
+ 
+sdk_chip:
+  - sdk_chip_pangu: v7.4.3
+
+## 第二部分：依赖信息
+#           指定该组件依赖的组件及版本，版本支持条件比较，支持：>=v1.0, >v1.0, ==v1.0, <=v1.0, <v1.0, v1.0
+#           未指定条件时，默认为 ==，如 v1.0 与 ==v1.0
+# sdk_chip:                                # <可选项> 该组件依赖sdk组件，合理的依赖才能保证组件能编译、使用
+#   - sdk_chip_csky_dummy: v7.4.3
+#   - sdk_chip_riscv_dummy: v7.4.3
+# depends:                                 # <可选项> 该组件依赖其他的组件，合理的依赖才能保证组件能编译、使用
+#   - minilibc: v7.2.0
+#   - aos: >=v7.2.0
+depends:                                       # 该组件依赖其他的组件
+  - cli: v7.4.3
+  - sdk_chip_pangu: v7.4.3
+  - netmgr: v7.4.3
+  - lwip: v7.4.3
+  - drv_wifi_rtl8723ds: v7.4.3
+
+## 第三部分：板级信息
+hw_info:
+
+## 第四部分：编译连接信息
+build_config:
+  cflag: '-O2 -Wall'
+  cxxflag: '-O2  -Wall'
+  ldflag: '-Wl,-zmax-page-size=1024 -mhard-float -Wl,-ckmap="yoc.map"'
+  include:
+    - app/include
+    - app/src
+  libs:
+    - m
+
+# 源文件
+source_file:
+  - app/src/*.c
+  - app/src/lwip_test/*.c
+  - app/src/init/*.c
+
+
+def_config:
+  CONFIG_INIT_TASK_STACK_SIZE: 2048
+  CONFIG_ARCH_INTERRUPTSTACK: 1024
+  CONFIG_CLI: 1
+  CONFIG_DEBUG: 1
+  CONFIG_TCPIP: 1
+  CONFIG_USING_TLS: 1
+  CONFIG_KV_SMART: 1

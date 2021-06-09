@@ -61,8 +61,11 @@ void pm_config_mask(uint32_t lpm_dev_mask);
 void pm_config_policy(pm_policy_t policy);
 pm_policy_t pm_get_policy(void);
 void pm_agree_halt(uint32_t ms);
+#ifdef CONFIG_CSI_V2
+void setup_wake_irq(csi_gpio_t *handle, csi_gpio_mode_t mode);
+#else
 void setup_wake_irq(gpio_pin_handle_t handle, gpio_irq_mode_e mode);
-
+#endif
 
 #ifdef __cplusplus
 }

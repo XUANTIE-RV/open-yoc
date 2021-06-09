@@ -7,7 +7,7 @@
 
 #include "k_api.h"
 #include "pthread.h"
-#include "aos/log.h"
+#include "ulog/ulog.h"
 
 #define TAG "attr_test"
 
@@ -65,14 +65,14 @@ void posix_pthread_attr_init_case(void)
     pthread_attr_init(&attr);
 
     if ((attr.stacksize == DEFAULT_THREAD_STACK_SIZE)
-       &&(attr.schedparam.sched_priority == DEFAULT_THREAD_PRIORITY)
-       &&(attr.schedparam.slice == DEFAULT_THREAD_SLICE)
-       &&(attr.detachstate == PTHREAD_CREATE_JOINABLE)
-       &&(attr.contentionscope == PTHREAD_SCOPE_SYSTEM)
-       &&(attr.inheritsched == PTHREAD_EXPLICIT_SCHED)
-       &&(attr.guardsize == 0)
-       &&(attr.stackaddr == NULL)
-       &&(attr.is_initialized == 1)) {
+        &&(attr.schedparam.sched_priority == DEFAULT_THREAD_PRIORITY)
+        &&(attr.schedparam.slice == DEFAULT_THREAD_SLICE)
+        &&(attr.detachstate == PTHREAD_CREATE_JOINABLE)
+        &&(attr.contentionscope == PTHREAD_SCOPE_SYSTEM)
+        &&(attr.inheritsched == PTHREAD_EXPLICIT_SCHED)
+        &&(attr.guardsize == 0)
+        &&(attr.stackaddr == NULL)
+        &&(attr.is_initialized == 1)) {
         flag = 1;
     } else {
         flag = 0;
@@ -100,14 +100,14 @@ void posix_pthread_attr_destroy_case(void)
     pthread_attr_destroy(&attr);
 
     if ((attr.stacksize == 0)
-       &&(attr.schedparam.sched_priority == 0)
-       &&(attr.schedparam.slice == 0)
-       &&(attr.detachstate == 0)
-       &&(attr.contentionscope == 0)
-       &&(attr.inheritsched == 0)
-       &&(attr.guardsize == 0)
-       &&(attr.stackaddr == NULL)
-       &&(attr.is_initialized == 0)) {
+        &&(attr.schedparam.sched_priority == 0)
+        &&(attr.schedparam.slice == 0)
+        &&(attr.detachstate == 0)
+        &&(attr.contentionscope == 0)
+        &&(attr.inheritsched == 0)
+        &&(attr.guardsize == 0)
+        &&(attr.stackaddr == NULL)
+        &&(attr.is_initialized == 0)) {
         flag = 1;
     } else {
         flag = 0;

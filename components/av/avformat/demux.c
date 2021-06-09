@@ -4,10 +4,11 @@
 
 #include "avutil/misc.h"
 #include "avutil/url_parse.h"
+#include "avutil/path.h"
+#include "stream/stream.h"
 #include "avformat/avformat_utils.h"
 #include "avformat/demux.h"
-#include "stream/stream.h"
-#include "avutil/path.h"
+#include "avformat/avparser.h"
 
 #define TAG                    "demux"
 
@@ -92,8 +93,8 @@ const struct demux_ops* _demux_probe_ops(const avprobe_data_t *pd)
 
     //FIXME
     for (i = 0; i < g_demuxers.cnt; i++) {
-        ops        = g_demuxers.ops[i];
-        exts       = ops->extensions;
+        ops  = g_demuxers.ops[i];
+        exts = ops->extensions;
 
         score = ops->read_probe ? ops->read_probe(pd) : 0;
         if (score > score_max) {
@@ -187,13 +188,17 @@ demux_cls_t* demux_open(stream_cls_t *s)
     o = aos_zalloc(sizeof(demux_cls_t));
     CHECK_RET_TAG_WITH_GOTO(o, err);
     avpacket_init(&o->fpkt);
+    slist_init(&o->list_free);
+    slist_init(&o->list_ready);
 
     o->s   = s;
     o->ops = ops;
     rc = ops->open(o);
     CHECK_RET_TAG_WITH_GOTO(rc == 0, err);
 
-    o->bps            = o->duration > 0 ? stream_get_size(s) * 8 / (o->duration / 1000.0) : 0;
+    o->psr = avparser_open(o->ash.id, o->ash.extradata, o->ash.extradata_size);
+    o->bps = o->duration > 0 ? stream_get_size(s) * 8 / (o->duration / 1000.0) : 0;
+
     track->codec_id   = o->ash.id;
     track->codec_name = strdup(get_codec_name(track->codec_id));
     track->duration   = o->duration;
@@ -209,6 +214,7 @@ err:
     track_info_free(track);
     aos_free(buf);
     if (o) {
+        avparser_close(o->psr);
         avpacket_free(&o->fpkt);
         aos_free(o);
     }
@@ -223,28 +229,107 @@ err:
  */
 int demux_read_packet(demux_cls_t *o, avpacket_t *pkt)
 {
-    int ret = 0, eof;
+    int rc = 0, eof;
+    slist_t *tmp;
+    avparser_t *psr;
+    avpacket_t *psr_pkt;
 
     CHECK_PARAM(o && pkt, -1);
     aos_mutex_lock(&o->lock, AOS_WAIT_FOREVER);
-    if (o->fpkt.len) {
-        //FIXME: the first packet already readed
-        ret = avpacket_copy(&o->fpkt, pkt);
-        CHECK_RET_TAG_WITH_GOTO(ret == 0, err);
-        avpacket_free(&o->fpkt);
-        ret = pkt->len;
-    } else {
-        ret = o->ops->read_packet(o, pkt);
-        if (ret < 0) {
-            eof = stream_is_eof(o->s);
-            ret  = eof ? 0 : ret;
-            LOGI(TAG, "read packet may be eof. eof = %d, ret = %d, url = %s", eof, ret, stream_get_url(o->s));
+    psr      = o->psr;
+    pkt->len = 0;
+
+read_try:
+    if (slist_empty(&o->list_ready)) {
+        if (o->fpkt.len) {
+            //FIXME: the first packet already readed
+            rc = avpacket_copy(&o->fpkt, pkt);
+            CHECK_RET_TAG_WITH_GOTO(rc == 0, err);
+            avpacket_free(&o->fpkt);
+        } else {
+            rc = o->ops->read_packet(o, pkt);
+            if (rc < 0) {
+                eof = stream_is_eof(o->s);
+                rc  = eof ? 0 : rc;
+                LOGI(TAG, "read packet may be eof. eof = %d, rc = %d, url = %s", eof, rc, stream_get_url(o->s));
+                goto err;
+            }
         }
+
+        if (psr && rc >= 0 && pkt->len > 0) {
+            uint8_t *obuf;
+            size_t osize, isize = pkt->len, ipos = 0, offset = 0;
+
+            while (isize > 0) {
+                rc = avparser_parse(psr, pkt->data + offset, isize, &ipos, &obuf, &osize);
+                CHECK_RET_TAG_WITH_GOTO(rc == 0, err);
+
+                if (slist_empty(&o->list_free)) {
+                    psr_pkt = aos_zalloc(sizeof(avpacket_t));
+                    rc = avpacket_new(psr_pkt, osize);
+                    CHECK_RET_TAG_WITH_GOTO(rc == 0, err);
+                } else {
+                    slist_for_each_entry_safe(&o->list_free, tmp, psr_pkt, avpacket_t, node) {
+                        rc = avpacket_grow(psr_pkt, osize);
+                        CHECK_RET_TAG_WITH_GOTO(rc == 0, err);
+
+                        slist_del(&psr_pkt->node, &o->list_free);
+                        break;
+                    }
+                }
+                psr_pkt->len = osize;
+                psr_pkt->pts = pkt->pts;
+                memcpy(psr_pkt->data, obuf, osize);
+                slist_add_tail(&psr_pkt->node, &o->list_ready);
+
+                offset += ipos;
+                isize  -= ipos;
+            }
+
+            goto read_try;
+        }
+    } else {
+        slist_for_each_entry_safe(&o->list_ready, tmp, psr_pkt, avpacket_t, node) {
+            rc = avpacket_grow(pkt, psr_pkt->len);
+            CHECK_RET_TAG_WITH_GOTO(rc == 0, err);
+
+            slist_del(&psr_pkt->node, &o->list_ready);
+            break;
+        }
+
+        pkt->len = psr_pkt->len;
+        pkt->pts = psr_pkt->pts;
+        memcpy(pkt->data, psr_pkt->data, psr_pkt->len);
+        slist_add_tail(&psr_pkt->node, &o->list_free);
     }
+
+    rc = pkt->len;
 err:
     aos_mutex_unlock(&o->lock);
 
-    return ret;
+    return rc;
+}
+
+static void _free_psr_packets(demux_cls_t *o)
+{
+    slist_t *tmp;
+    avpacket_t *psr_pkt;
+
+    if (!slist_empty(&o->list_ready)) {
+        slist_for_each_entry_safe(&o->list_ready, tmp, psr_pkt, avpacket_t, node) {
+            slist_del(&psr_pkt->node, &o->list_ready);
+            avpacket_free(psr_pkt);
+            aos_free(psr_pkt);
+        }
+    }
+
+    if (!slist_empty(&o->list_free)) {
+        slist_for_each_entry_safe(&o->list_free, tmp, psr_pkt, avpacket_t, node) {
+            slist_del(&psr_pkt->node, &o->list_free);
+            avpacket_free(psr_pkt);
+            aos_free(psr_pkt);
+        }
+    }
 }
 
 /**
@@ -261,7 +346,10 @@ int demux_seek(demux_cls_t *o, uint64_t timestamp)
     aos_mutex_lock(&o->lock, AOS_WAIT_FOREVER);
     if (o->time_scale && stream_is_seekable(o->s)) {
         if (timestamp < o->duration) {
+            slist_t *tmp;
+            avpacket_t *psr_pkt;
             int32_t start_pos = stream_tell(o->s);
+
             //FIXME: start play time is not zero, release the first packet
             if (o->fpkt.len && timestamp) {
                 avpacket_free(&o->fpkt);
@@ -270,7 +358,16 @@ int demux_seek(demux_cls_t *o, uint64_t timestamp)
             ret = o->ops->seek(o, timestamp / 1000.0 * o->time_scale);
             if (ret < 0) {
                 stream_seek(o->s, start_pos, SEEK_SET);
+            } else {
+                if (!slist_empty(&o->list_ready)) {
+                    slist_for_each_entry_safe(&o->list_ready, tmp, psr_pkt, avpacket_t, node) {
+                        slist_del(&psr_pkt->node, &o->list_ready);
+                        slist_add_tail(&psr_pkt->node, &o->list_free);
+                    }
+                }
             }
+        } else {
+            AV_ERRNO_SET(AV_ERRNO_SEEK_FAILD);
         }
     }
 
@@ -298,6 +395,8 @@ int demux_close(demux_cls_t *o)
     aos_mutex_unlock(&o->lock);
 
     aos_mutex_free(&o->lock);
+    _free_psr_packets(o);
+    avparser_close(o->psr);
     avpacket_free(&o->fpkt);
     tracks_info_freep(&o->tracks);
     aos_free(o->ash.extradata);

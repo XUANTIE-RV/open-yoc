@@ -16,9 +16,16 @@
 extern "C" {
 #endif
 
+#ifndef _USECONDS_T_DECLARED
+typedef	uint32_t	useconds_t;	/* microseconds (unsigned) */
+#define	_USECONDS_T_DECLARED
+#endif
+
 #define OK              0
 typedef int             pid_t;
 typedef uint32_t        clock_t;
+typedef long            ssize_t;
+typedef uint32_t        mode_t;
 
 #ifdef __cplusplus
 }

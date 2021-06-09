@@ -17,6 +17,7 @@ typedef struct {
     char *tts_url;
     char *tts_key_id;
     char *tts_key_secret;
+    char *dialog_context;
 }  mit_account_info_t;
 
 extern mit_account_info_t g_mit_account_info;

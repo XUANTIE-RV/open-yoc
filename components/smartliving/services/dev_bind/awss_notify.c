@@ -10,8 +10,10 @@
 #include "awss_notify.h"
 #include "awss_event.h"
 #include "awss_timer.h"
+#include "awss_utils.h"
 #include "awss_cmp.h"
 #include "awss_log.h"
+#include "awss_reset.h"
 #include "platform.h"
 #include "passwd.h"
 #include "os.h"
@@ -114,50 +116,65 @@ static int awss_suc_notify_resp(void *context, int result,
 static int awss_notify_response(int type, int result, void *message)
 {
     uint8_t i = 0;
+    uint8_t code;
 
     awss_flow("%s, type:%d,result:%u\r\n", __func__, type, result);
 
-    if (message == NULL)
-        return -1;
+    if (message == NULL) {
+        return STATE_WIFI_COAP_RSP_INVALID;
+    }
 
-    if (result != 0)
-        return 0;
+    if (result != 0) {
+        //awss_err("result = %d", result);
+        return STATE_WIFI_COAP_RSP_INVALID;
+    }
 
-    if (awss_cmp_get_coap_code(message) >= 0x60)
-        return 0;
+    code = awss_cmp_get_coap_code(message);
+    if (code >= 0x60) {
+        //awss_err("code:%02x", code);
+        return STATE_WIFI_COAP_RSP_INVALID;
+    }
 
     do {
         int val = 0;
         int len = 0, mlen = 0;
         char *payload = NULL, *elem = NULL;
 
-        if ((payload = awss_cmp_get_coap_payload(message, &len)) == NULL ||
-            len > 0x40 || len == 0) {
-            return 0;
+        if ((payload = awss_cmp_get_coap_payload(message, &len)) == NULL || len > 0x40 || len == 0) {
+            awss_err("payload invalid , len =%d", len);
+            return STATE_WIFI_COAP_RSP_INVALID;
         }
 
         awss_debug("payload:%s\r\n", payload);
 
         elem = json_get_value_by_name(payload, len, AWSS_JSON_ID, &mlen, 0);
-        if (elem == NULL)
-            return 0;
+        if (elem == NULL) {
+            awss_err("no id in payload");
+            return STATE_WIFI_COAP_RSP_INVALID;
+        }
 
         val = atoi(elem);
-        if (val != 123 && val > g_notify_id)
-            return 0;
+        if (val != 123 && val > g_notify_id) {
+            return STATE_WIFI_COAP_RSP_INVALID;
+        }
 
         elem = json_get_value_by_name(payload, len, AWSS_JSON_CODE, &mlen, 0);
-        if (elem == NULL)
-            return 0;
+        if (elem == NULL) {
+            awss_err("no code in payload");
+            return STATE_WIFI_COAP_RSP_INVALID;
+        }
 
         val = atoi(elem);
-        if (val != 200)
-            return 0;
+        if (val != 200) {
+            awss_err("code = %s", val);
+            return STATE_WIFI_COAP_RSP_INVALID;
+        }
     } while (0);
 
     for (i = 0; i < sizeof(notify_map) / sizeof(notify_map[0]); i ++) {
-        if (notify_map[i].notify_type != type)
+        if (notify_map[i].notify_type != type) {
             continue;
+        }
 
         awss_notify_resp[type] = 1;
         break;
@@ -177,9 +194,11 @@ int awss_notify_dev_info(int type, int count)
     do {
         void *cb = NULL;
         char *method = NULL, *topic = NULL;
+        char rand_str[RANDOM_MAX_LEN * 2 + 1] = {0};
         for (i = 0; i < sizeof(notify_map) / sizeof(notify_map[0]); i ++) {
-            if (notify_map[i].notify_type != type)
+            if (notify_map[i].notify_type != type) {
                 continue;
+            }
 
             method = notify_map[i].notify_method;
             topic = notify_map[i].notify_topic;
@@ -205,13 +224,17 @@ int awss_notify_dev_info(int type, int count)
         awss_build_dev_info(type, dev_info, DEV_INFO_LEN_MAX);
 
         snprintf(buf, DEV_INFO_LEN_MAX - 1, AWSS_DEV_NOTIFY_FMT, ++ g_notify_id, method, dev_info);
+        utils_hex_to_str(g_aes_random, RANDOM_MAX_LEN, rand_str, sizeof(rand_str));
+        if (type == AWSS_NOTIFY_SUCCESS) {
+            dump_awss_status(STATE_WIFI_SENT_CONNECTAP_NOTIFY, "connect ap notify");
+        } else if (type == AWSS_NOTIFY_DEV_RAND_SIGN) {
 
+        }
         awss_info("topic:%s\n", topic);
         awss_debug("payload:%s\n", buf);
         for (i = 0; i < count; i ++) {
             int ret = awss_cmp_coap_send(buf, strlen(buf), &notify_sa, topic, cb, &g_notify_msg_id[type]);
-            (void)ret;
-            awss_info("send notify %s", ret == 0 ? "success" : "fail");
+            awss_info("coap send notify %s", ret == 0 ? "success" : "fail");
             if (count > 1)
                 os_msleep(200 + 100 * i);
 
@@ -220,8 +243,12 @@ int awss_notify_dev_info(int type, int count)
         }
     } while (0);
 
-    if (buf) os_free(buf);
-    if (dev_info) os_free(dev_info);
+    if (buf) {
+        os_free(buf);
+    }
+    if (dev_info) {
+        os_free(dev_info);
+    }
 
     return awss_notify_resp[type];
 }
@@ -234,7 +261,7 @@ static int awss_process_get_devinfo()
 {
     char *buf = NULL;
     char *dev_info = NULL;
-
+    int ret;
     if (awss_report_token_suc == 0) {
         awss_debug("try to report token to cloud");
         HAL_Timer_Start(get_devinfo_timer, AWSS_CHECK_RESP_TIME);
@@ -243,29 +270,35 @@ static int awss_process_get_devinfo()
 
     if (coap_session_ctx == NULL) {
         awss_debug("no get req");
-        return -1;
+        return STATE_USER_INPUT_NULL_POINTER;
     }
 
     do {
         int len = 0, id_len = 0;
         char *msg = NULL, *id = NULL;
         char req_msg_id[MSG_REQ_ID_LEN + 1];
+        char rand_str[RANDOM_MAX_LEN * 2 + 1] = {0};
         struct coap_session_ctx_t *ctx = (struct coap_session_ctx_t *)coap_session_ctx;
 
         buf = os_zalloc(DEV_INFO_LEN_MAX);
-        if (buf == NULL)
+        if (buf == NULL) {
+            ret = STATE_SYS_DEPEND_MALLOC;
             goto GET_DEV_INFO_ERR;
-
+        }
         dev_info = os_zalloc(DEV_INFO_LEN_MAX);
-        if (dev_info == NULL)
+        if (dev_info == NULL) {
+            ret = STATE_SYS_DEPEND_MALLOC;
             goto GET_DEV_INFO_ERR;
-
+        }
         msg = awss_cmp_get_coap_payload(ctx->request, &len);
-        if (msg == NULL)
+        if (msg == NULL) {
+            ret = STATE_BIND_COAP_MSG_INVALID;
             goto GET_DEV_INFO_ERR;
+        }
 
         id = json_get_value_by_name(msg, len, "id", &id_len, 0);
-        if(id_len > MSG_REQ_ID_LEN) {
+        if (id_len > MSG_REQ_ID_LEN) {
+            ret = STATE_BIND_COAP_MSG_INVALID;
             goto GET_DEV_INFO_ERR;
         }
 
@@ -278,6 +311,8 @@ static int awss_process_get_devinfo()
         snprintf(buf, DEV_INFO_LEN_MAX - 1, AWSS_ACK_FMT, req_msg_id, 200, dev_info);
         os_free(dev_info);
 
+        utils_hex_to_str(g_aes_random, RANDOM_MAX_LEN, rand_str, sizeof(rand_str));
+        dump_dev_bind_status(STATE_BIND_SENT_TOKEN_RESP, dev_info);
         awss_info("sending message to app: %s", buf);
         char topic[TOPIC_LEN_MAX] = { 0 };
         if (ctx->is_mcast) {
@@ -289,8 +324,10 @@ static int awss_process_get_devinfo()
         /*before tx to app, clear token suc flag*/
         awss_update_token();
 
-        if (0 != awss_cmp_coap_send_resp(buf, strlen(buf), ctx->remote, topic, ctx->request, NULL, NULL, 0))
+        if ((ret = awss_cmp_coap_send_resp(buf, strlen(buf), ctx->remote, topic, ctx->request, NULL, NULL, 0)) < 0) {
+            dump_dev_bind_status(STATE_BIND_APP_GET_TOKEN_RESP_FAIL, topic);
             awss_err("sending failed.");
+        }
 
         os_free(buf);
         awss_release_coap_ctx(coap_session_ctx);
@@ -302,15 +339,20 @@ static int awss_process_get_devinfo()
     return 0;
 
 GET_DEV_INFO_ERR:
+    dump_dev_bind_status(STATE_BIND_APP_GET_TOKEN_RESP_FAIL, "get token response fail");
     awss_release_coap_ctx(coap_session_ctx);
     coap_session_ctx = NULL;
     awss_stop_timer(get_devinfo_timer);
     get_devinfo_timer = NULL;
 
-    if (buf) os_free(buf);
-    if (dev_info) os_free(dev_info);
+    if (buf) {
+        os_free(buf);
+    }
+    if (dev_info) {
+        os_free(dev_info);
+    }
 
-    return -1;
+    return ret;
 }
 
 static int online_get_device_info(void *ctx, void *resource, void *remote,
@@ -320,31 +362,32 @@ static int online_get_device_info(void *ctx, void *resource, void *remote,
     /*
      * if cloud is not ready, don't response token
      */
+    dump_dev_bind_status(STATE_BIND_RECV_TOKEN_QUERY, "recv token query");
 #ifdef DEVICE_MODEL_ENABLED
-    extern int awss_check_reset();
-    if(awss_check_reset()) {
-        return -1;
+    if (awss_check_reset(NULL)) {
+        dump_dev_bind_status(STATE_BIND_RST_IN_PROGRESS, "need do reset");
+        return STATE_BIND_RST_IN_PROGRESS;
     }
 #endif
     /*
      * if the last one is not finished, drop current request
      */
     if (coap_session_ctx != NULL) {
-        awss_debug("no req");
-        return -1;
+        dump_dev_bind_status(STATE_BIND_COAP_INIT_FAIL, "recv get dev info fail");
+        return STATE_BIND_COAP_INIT_FAIL;
     }
     /*
      * copy coap session context
      */
     coap_session_ctx = awss_cpy_coap_ctx(request, remote, is_mcast);
     if (coap_session_ctx == NULL) {
-        awss_err("cpy req ctx fail");
-        return -1;
+        dump_dev_bind_status(STATE_BIND_COAP_INIT_FAIL, "cpy req ctx fail");
+        return STATE_BIND_COAP_INIT_FAIL;
     }
 
     timeout = awss_token_timeout();
     if (timeout) {
-        produce_random(aes_random, sizeof(aes_random));
+        produce_random(g_aes_random, sizeof(g_aes_random));
         awss_report_token();
     }
 
@@ -384,12 +427,13 @@ static int __awss_dev_bind_notify()
 
     if (dev_bind_notify_mutex == NULL) {
         dev_bind_notify_mutex = HAL_MutexCreate();
-        if (dev_bind_notify_mutex == NULL)
-            return -1;
+        if (dev_bind_notify_mutex == NULL) {
+            return STATE_USER_INPUT_NULL_POINTER;
+        }
     }
 
     if (dev_bind_cnt == 0)
-        awss_event_post(AWSS_BIND_NOTIFY);
+        awss_event_post(IOTX_AWSS_BIND_NOTIFY);
 
     HAL_MutexLock(dev_bind_notify_mutex);
 
@@ -400,11 +444,11 @@ static int __awss_dev_bind_notify()
             break;
 
         for (i = 0; i < RANDOM_MAX_LEN; i ++)
-            if (aes_random[i] != 0x00)
+            if (g_aes_random[i] != 0x00)
                 break;
 
         if (i >= RANDOM_MAX_LEN)
-            produce_random(aes_random, sizeof(aes_random));
+            produce_random(g_aes_random, sizeof(g_aes_random));
 
         if (awss_token_timeout() == 0) {
             awss_notify_dev_info(AWSS_NOTIFY_DEV_BIND_TOKEN, 1);
@@ -492,16 +536,17 @@ static int suc_interval = 0;
 static char suc_cnt = 0;
 static int __awss_suc_notify()
 {
-    awss_debug("resp:%d\r\n", awss_notify_resp[AWSS_NOTIFY_SUCCESS]);
+    awss_debug("awss notify resp:%d\r\n", awss_notify_resp[AWSS_NOTIFY_SUCCESS]);
 
     if (success_notify_mutex == NULL) {
         success_notify_mutex = HAL_MutexCreate();
-        if (success_notify_mutex == NULL)
-            return -1;
+        if (success_notify_mutex == NULL) {
+            return STATE_SYS_DEPEND_MUTEX_CREATE;
+        }
     }
 
     if (suc_cnt == 0)
-        awss_event_post(AWSS_SUC_NOTIFY);
+        awss_event_post(IOTX_AWSS_SUC_NOTIFY);
 
     HAL_MutexLock(success_notify_mutex);
 
@@ -522,6 +567,10 @@ static int __awss_suc_notify()
             return 0;
         }
     } while (0);
+
+    if (awss_notify_resp[AWSS_NOTIFY_SUCCESS] == 0) {
+        dump_awss_status(STATE_WIFI_SENT_CONNECTAP_NOTI_TIMEOUT, "__awss_suc_notify %d timeout", suc_cnt);
+    }
 
     awss_cmp_coap_cancel_packet(g_notify_msg_id[AWSS_NOTIFY_SUCCESS]);
     g_notify_msg_id[AWSS_NOTIFY_SUCCESS] = 0;
@@ -583,8 +632,9 @@ static int __awss_devinfo_notify()
 {
     if (devinfo_notify_mutex == NULL) {
         devinfo_notify_mutex = HAL_MutexCreate();
-        if (devinfo_notify_mutex == NULL)
-            return -1;
+        if (devinfo_notify_mutex == NULL) {
+            return STATE_SYS_DEPEND_MUTEX_CREATE;
+        }
     }
     HAL_MutexLock(devinfo_notify_mutex);
 

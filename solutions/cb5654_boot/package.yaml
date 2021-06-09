@@ -1,0 +1,62 @@
+name: cb5654_boot
+version: v7.4.3                                     # <必选项> 组件版本号
+description: BootLoader for sc5654
+
+type: solution
+
+hw_info:
+  chip_name: chip_sc5654
+  cpu_name: CK803ef
+  ld_script: ckcpu.flash.boot.ld.S
+
+depends:                                       # 该组件依赖其他的组件
+  - csi: v7.4.3
+  - chip_sc5654: v7.4.3
+  - boot: v7.4.3
+  - partition: v7.4.3
+  - sec_crypto: v7.4.3
+  # - key_mgr: v7.4.3
+
+# 编译参数
+build_config:
+  internal_include:
+    - board
+  include:
+    - app/include
+  libs:
+    - diff_dc_naf
+    # - diff_dc_naf_dbg    # diff debug
+  libpath: ""
+  cflag: -g2 -Os -ffunction-sections -fdata-sections -Wpointer-arith -Wall -Wl,-EL -fno-inline-functions -nostdlib -fno-builtin -mistack -fno-strict-aliasing -fno-strength-reduce
+  cxxflag: -g2 -Os -ffunction-sections -fdata-sections -Wpointer-arith -Wall -Wl,-EL -fno-inline-functions -nostdlib -fno-builtin -mistack -fno-strict-aliasing -fno-strength-reduce
+  asmflag: ""
+  ldflag: -Wl,-zmax-page-size=1024 -mhard-float -Wl,-ckmap="boot.map"
+
+
+# 源文件
+source_file:
+  - app/src/*.c
+  - board/*.c
+  - porting/*.c
+
+def_config:
+  CONFIG_DEBUG: 2
+  CONFIG_CLI_USART_BAUD: 115200
+  # CONFIG_NO_OTA_UPGRADE: 1
+  # CONFIG_OTA_NO_DIFF: 1
+  CONFIG_PARITION_NO_VERIFY: 1
+  CONFIG_NOT_SUPORRT_SASC: 1
+  CONFIG_TB_KP: 0
+  CONFIG_MANTB_VERSION: 4
+  CONFIG_NON_ADDRESS_FLASH: 1
+  CONFIG_CPU: ck803ef
+  CONFIG_CPU_CK803EF: 1
+  CONFIG_VENDOR_NAME: silan
+  CONFIG_ARCH_INTERRUPTSTACK: 32768
+  CONFIG_DISABLE_IRQ: 1
+  RSA_USING_ID2KEY: 1
+  #sec_crypto
+  #CONFIG_SEC_CRYPTO_AES_SW: 1
+  CONFIG_SEC_CRYPTO_SHA_SW: 1
+  CONFIG_SEC_CRYPTO_RSA_SW: 1
+  #CONFIG_SEC_CRYPTO_RNG_SW: 1

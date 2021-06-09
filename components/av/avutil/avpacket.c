@@ -12,10 +12,7 @@
 int avpacket_init(avpacket_t *pkt)
 {
     CHECK_PARAM(pkt, -1);
-    pkt->len  = 0;
-    pkt->pts  = 0;
-    pkt->size = 0;
-    pkt->data = NULL;
+    memset(pkt, 0, sizeof(avpacket_t));
 
     return 0;
 }
@@ -31,9 +28,9 @@ int avpacket_new(avpacket_t *pkt, size_t size)
     int rc = -1;
 
     CHECK_PARAM(pkt && size, -1);
+    memset(pkt, 0, sizeof(avpacket_t));
     pkt->data = aos_zalloc(size);
     if (pkt->data) {
-        pkt->len  = 0;
         pkt->size = size;
         rc        = 0;
     }
@@ -75,8 +72,8 @@ int avpacket_grow(avpacket_t *pkt, size_t size)
 int avpacket_copy(const avpacket_t *spkt, avpacket_t *dpkt)
 {
     int rc;
-    CHECK_PARAM(spkt && spkt->len && spkt->data && dpkt, -1);
 
+    CHECK_PARAM(spkt && spkt->len && spkt->data && dpkt, -1);
     rc = avpacket_grow(dpkt, spkt->len);
     if (rc == 0) {
         dpkt->len = spkt->len;

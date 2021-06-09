@@ -33,7 +33,7 @@
 #include "mbedtls/platform.h"
 #include "mbedtls/x509_crt.h"
 #include "iot_import.h"
-#include "aos/log.h"
+#include <ulog/ulog.h>
 
 typedef struct _TLSDataParams {
     mbedtls_ssl_context ssl;          /**< mbed TLS control context. */

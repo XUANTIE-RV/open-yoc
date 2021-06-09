@@ -4,15 +4,14 @@
 
 #include <yoc/fota.h>
 #include <yoc/netio.h>
-#include <aos/network.h>
+#include <network.h>
 #include <aos/kv.h>
 #include <aos/version.h>
 #include <yoc/sysinfo.h>
 #include "../http/http.h"
-#include <yoc/eventid.h>
-#include <yoc/uservice.h>
+#include <uservice/eventid.h>
+#include <uservice/uservice.h>
 #include <yoc/fota.h>
-#include <aos/log.h>
 
 #define COP_IMG_URL "cop_img_url"
 #define COP_VERSION "cop_version"
@@ -74,14 +73,14 @@ static int coap_version_check(fota_info_t *info)
         char url[80];
         if (aos_kv_getstring(FW_URL_KEY, url, 80) > 0) {
             if (info->fota_url) {
-                free(info->fota_url);
+                aos_free(info->fota_url);
                 info->fota_url = NULL;
             }
             info->fota_url = strdup(url);
             // LOGD(TAG, "get path pass");
         } else if (data->url != NULL){
             if (info->fota_url) {
-                free(info->fota_url);
+                aos_free(info->fota_url);
                 info->fota_url = NULL;
             }
             info->fota_url = strdup(data->url);
@@ -91,7 +90,7 @@ static int coap_version_check(fota_info_t *info)
             LOGE(TAG, "get url fail");
         }
         if (data->url) {
-            free(data->url);
+            aos_free(data->url);
             data->url = NULL;
         }
         g_update = 0;

@@ -5,7 +5,6 @@
 #if defined(CONFIG_CHIP_ZX297100)
 #include <stdio.h>
 #include <stdlib.h>
-#include <aos/log.h>
 #include "at_internal.h"
 #include "oss_nv.h"
 

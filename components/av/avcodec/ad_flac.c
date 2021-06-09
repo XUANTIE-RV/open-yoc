@@ -15,6 +15,8 @@
 
 #define DEC_IBUF_SIZE_MIN      (FLAC_FRAME_SIZE_DEFAULT)
 
+#define OUTPUT_24_16_ENABLE
+
 struct ad_flac_priv {
     FLAC__StreamDecoder        *dec;
     struct flac_stream_info    si;
@@ -156,7 +158,13 @@ static int _ad_flac_open(ad_cls_t *o)
     CHECK_RET_TAG_WITH_GOTO(rc == 0, err);
     if (priv->si_find) {
         struct flac_stream_info *si = &priv->si;
+
+#ifdef OUTPUT_24_16_ENABLE
+        int bits = si->bits == 24 ? 16 : si->bits;
+        o->ash.sf = sf_make_channel(si->channels) | sf_make_rate(si->rate) | sf_make_bit(bits) | sf_make_signed(1);
+#else
         o->ash.sf = sf_make_channel(si->channels) | sf_make_rate(si->rate) | sf_make_bit(si->bits) | sf_make_signed(1);
+#endif
     }
     o->priv = priv;
 
@@ -169,7 +177,7 @@ err:
 static int _ad_flac_decode(ad_cls_t *o, avframe_t *frame, int *got_frame, const avpacket_t *pkt)
 {
     sf_t sf;
-    int ret = -1, i;
+    int ret = -1, i, bits;
     struct ad_flac_priv *priv = o->priv;
     FLAC__StreamDecoder *dec  = priv->dec;
     FLAC__FrameHeader *fhdr   = &priv->fhdr;
@@ -189,12 +197,11 @@ static int _ad_flac_decode(ad_cls_t *o, avframe_t *frame, int *got_frame, const 
         goto quit;
     }
 
-    if (!(fhdr->channels == 1 || fhdr->channels == 2) && (fhdr->bits_per_sample == 8 || fhdr->bits_per_sample == 16)) {
-        LOGE(TAG, "only support ch 1 or 2, bits 8 or 16 for flac now");
-        goto quit;
-    }
-
-    sf = sf_make_channel(fhdr->channels) | sf_make_rate(fhdr->sample_rate) | sf_make_bit(fhdr->bits_per_sample) | sf_make_signed(1);
+    bits = fhdr->bits_per_sample;
+#ifdef OUTPUT_24_16_ENABLE
+    bits = bits == 24 ? 16 : bits;
+#endif
+    sf = sf_make_channel(fhdr->channels) | sf_make_rate(fhdr->sample_rate) | sf_make_bit(bits) | sf_make_signed(1);
     if (!((!o->ash.sf || o->ash.sf == sf) && sf && priv->opbuf[0])) {
         LOGE(TAG, "decode  failed, %u, %u, 0x%x", o->ash.sf, sf, priv->opbuf[0]);
         goto quit;
@@ -233,7 +240,38 @@ static int _ad_flac_decode(ad_cls_t *o, avframe_t *frame, int *got_frame, const 
             *d++ = priv->opbuf[0][i];
             *d++ = priv->opbuf[1][i];
         }
+#ifdef OUTPUT_24_16_ENABLE
+    } else if (fhdr->channels == 1 && fhdr->bits_per_sample == 24) {
+        int16_t *d = (int16_t*)frame->data[0];
+        for(i = 0; i < fhdr->blocksize; i++) {
+            *d++ = priv->opbuf[0][i] >> 8;
+        }
+    } else if (fhdr->channels == 2 && fhdr->bits_per_sample == 24) {
+        int16_t *d = (int16_t*)frame->data[0];
+        for(i = 0; i < fhdr->blocksize; i++) {
+            *d++ = priv->opbuf[0][i] >> 8;
+            *d++ = priv->opbuf[1][i] >> 8;
+        }
     }
+#else
+    } else if (fhdr->channels == 1 && fhdr->bits_per_sample == 24)
+    {
+        int8_t *d = (int8_t*)frame->data[0];
+        for(i = 0; i < fhdr->blocksize; i++) {
+            memcpy(d, &priv->opbuf[0][i], 3);
+            d += 3;
+        }
+    } else if (fhdr->channels == 2 && fhdr->bits_per_sample == 24)
+    {
+        int8_t *d = (int8_t*)frame->data[0];
+        for(i = 0; i < fhdr->blocksize; i++) {
+            memcpy(d, &priv->opbuf[0][i], 3);
+            d += 3;
+            memcpy(d, &priv->opbuf[1][i], 3);
+            d += 3;
+        }
+    }
+#endif
     *got_frame = 1;
     ret = pkt->len;
 

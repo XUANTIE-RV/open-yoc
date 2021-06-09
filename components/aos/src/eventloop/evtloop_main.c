@@ -7,7 +7,6 @@
 #include <stdbool.h>
 #include <sys/time.h>
 
-#include <aos/log.h>
 #include <aos/yloop.h>
 #include <aos/kernel.h>
 #include <aos/list.h>
@@ -62,7 +61,7 @@ extern void event_read_cb(void);
 
 aos_loop_t aos_loop_init(void)
 {
-    memset(&g_main_ctx, 0 , sizeof(eventloop_ctx_t));
+    memset(&g_main_ctx, 0, sizeof(eventloop_ctx_t));
 
     g_main_ctx.reader.poll = event_poll;
     g_main_ctx.reader.cb = event_read_cb;

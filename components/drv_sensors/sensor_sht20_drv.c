@@ -14,8 +14,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <drv/iic.h>
-#include <pin.h>
-#include <aos/log.h>
+#include <board.h>
 #include <aos/kernel.h>
 
 #include <devices/iic.h>

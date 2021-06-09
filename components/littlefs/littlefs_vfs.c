@@ -2,24 +2,14 @@
  * Copyright (C) 2019-2020 Alibaba Group Holding Limited
  */
 
-#include <fcntl.h>
-#include <pthread.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/stat.h>
-
-#include "lfs.h"
-
-#include "aos/errno.h"
-#include "aos/kernel.h"
-
 #include <vfs.h>
 #include <vfs_inode.h>
 #include <vfs_file.h>
 #include <vfs_register.h>
-
 #include <yoc/partition.h>
+
+#include "lfs.h"
+#include "littlefs_vfs.h"
 
 #define WAIT_FOREVER 0xFFFFFFFF
 
@@ -251,7 +241,7 @@ static int32_t lfs_vfs_close(file_t *fp)
     return res;
 }
 
-static int32_t lfs_vfs_read(file_t *fp, char *buf, uint32_t len)
+static ssize_t lfs_vfs_read(file_t *fp, char *buf, size_t len)
 {
     int nbytes;
 
@@ -264,7 +254,7 @@ static int32_t lfs_vfs_read(file_t *fp, char *buf, uint32_t len)
     return nbytes;
 }
 
-static int32_t lfs_vfs_write(file_t *fp, const char *buf, uint32_t len)
+static ssize_t lfs_vfs_write(file_t *fp, const char *buf, size_t len)
 {
     int nbytes;
 

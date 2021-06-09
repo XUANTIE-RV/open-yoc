@@ -5,7 +5,7 @@
 #ifndef __RESAMPLE_CLS_H__
 #define __RESAMPLE_CLS_H__
 
-#include <aos/aos.h>
+#include "avutil/common.h"
 
 __BEGIN_DECLS__
 

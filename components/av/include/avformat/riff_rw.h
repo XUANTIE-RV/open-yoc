@@ -14,6 +14,8 @@ __BEGIN_DECLS__
 #define WAV_FORMAT_PCM         (0x0001U)
 #define WAV_FORMAT_ADPCM_MS    (0x0002U)
 #define WAV_FORMAT_FLOAT       (0x0003U)
+#define WAV_FORMAT_ALAW        (0x0006U)
+#define WAV_FORMAT_MULAW       (0x0007U)
 #define WAV_FORMAT_WMAV1       (0x0160U)
 #define WAV_FORMAT_WMAV2       (0x0161U)
 #define WAV_FORMAT_EXTENSIBLE  (0xfffeU)

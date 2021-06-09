@@ -24,6 +24,8 @@ typedef struct ao_conf {
     uint32_t                  resample_rate; ///< none zereo means need to resample
     uint8_t                   vol_en;        ///< soft vol scale enable
     uint8_t                   vol_index;     ///< soft vol scale index (0~255)
+    uint8_t                   atempo_play_en;///< atempo play enable
+    float                     speed;         ///< atempo play speed.suggest: 0.5 ~ 2.0;
 } ao_conf_t;
 
 /**

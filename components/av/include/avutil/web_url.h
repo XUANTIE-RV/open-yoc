@@ -5,7 +5,6 @@
 #ifndef __WEB_URL_H__
 #define __WEB_URL_H__
 
-#include <aos/log.h>
 #include <aos/kernel.h>
 #include <aos/debug.h>
 #include <aos/aos.h>

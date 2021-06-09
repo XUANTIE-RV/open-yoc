@@ -137,12 +137,12 @@ char* four_2_str(uint32_t val)
 }
 
 /**
-* @brief  crc8(x8+x2+x+1)
+* @brief  crc8(x8+x2+x+1), CRC_8_ATM
 * @param  [in] data
 * @param  [in] len
-* @return 0 if ok
+* @return
 */
-uint8_t av_crc8(uint8_t *data, size_t len)
+uint8_t av_crc8(const uint8_t *data, size_t len)
 {
     int i;
     uint8_t crc = 0;
@@ -160,4 +160,52 @@ uint8_t av_crc8(uint8_t *data, size_t len)
     return crc;
 }
 
+/**
+* @brief  crc32(x32+x26+x23+x22+x16+x12+x11+x10+x8+x7+x5+x4+x2+x+1), CRC_32_IEEE
+* @param  [in] data
+* @param  [in] len
+* @return
+*/
+uint32_t av_crc32(const uint8_t *data, size_t len)
+{
+    int i;
+    uint32_t crc = 0xffffffff;
+
+    while (len--) {
+        crc ^= (uint32_t)(*data++) << 24;
+
+        for (i = 0; i < 8; ++i) {
+            if ( crc & 0x80000000 )
+                crc = (crc << 1) ^ 0x04C11DB7;
+            else
+                crc <<= 1;
+        }
+    }
+
+    return crc;
+}
+
+/**
+* @brief  crc32(x32+x26+x23+x22+x16+x12+x11+x10+x8+x7+x5+x4+x2+x+1), CRC_32_IEEE_LE
+* @param  [in] data
+* @param  [in] len
+* @return
+*/
+uint32_t av_crc32_le(uint8_t *data, size_t len)
+{
+    int i;
+    uint32_t crc = 0xffffffff;
+
+    while (len--) {
+        crc ^= *data++;
+        for (i = 0; i < 8; ++i) {
+            if (crc & 1)
+                crc = (crc >> 1) ^ 0xEDB88320;
+            else
+                crc = (crc >> 1);
+        }
+    }
+
+    return ~crc;
+}
 

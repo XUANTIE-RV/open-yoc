@@ -1,7 +1,6 @@
 #include <time.h>
 #include <stdint.h>
 #include <aos/kernel.h>
-#include <aos/log.h>
 #include <aos/ringbuffer.h>
 #include <yoc/record.h>
 

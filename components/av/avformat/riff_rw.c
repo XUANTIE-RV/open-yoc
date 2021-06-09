@@ -7,12 +7,12 @@
 #include "avformat/riff_rw.h"
 
 static const avcodec_tag_t g_codec_tags_wav[] = {
-    { AVCODEC_ID_RAWAUDIO    , WAV_FORMAT_PCM          },
-    { AVCODEC_ID_ADPCM_MS    , WAV_FORMAT_ADPCM_MS     },
-    { AVCODEC_ID_RAWAUDIO    , WAV_FORMAT_FLOAT        },
-    { AVCODEC_ID_WMAV1       , WAV_FORMAT_WMAV1        },
-    { AVCODEC_ID_WMAV2       , WAV_FORMAT_WMAV2        },
-    { AVCODEC_ID_UNKNOWN     , 0                       },
+    { AVCODEC_ID_RAWAUDIO, WAV_FORMAT_PCM          },
+    { AVCODEC_ID_ADPCM_MS, WAV_FORMAT_ADPCM_MS     },
+    { AVCODEC_ID_RAWAUDIO, WAV_FORMAT_FLOAT        },
+    { AVCODEC_ID_WMAV1, WAV_FORMAT_WMAV1        },
+    { AVCODEC_ID_WMAV2, WAV_FORMAT_WMAV2        },
+    { AVCODEC_ID_UNKNOWN, 0                       },
 };
 
 /**

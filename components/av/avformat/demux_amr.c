@@ -2,6 +2,7 @@
  * Copyright (C) 2018-2020 Alibaba Group Holding Limited
  */
 
+#if defined(CONFIG_DEMUXER_AMR) && CONFIG_DEMUXER_AMR
 #include "avformat/avformat_utils.h"
 #include "avformat/amr_rw.h"
 #include "avformat/demux_cls.h"
@@ -174,4 +175,5 @@ const struct demux_ops demux_ops_amr = {
     .seek            = _demux_amr_seek,
     .control         = _demux_amr_control,
 };
+#endif
 

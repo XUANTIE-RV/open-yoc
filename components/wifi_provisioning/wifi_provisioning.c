@@ -80,7 +80,7 @@ static void wifi_prov_callback(uint32_t method_id, wifi_prov_event_t event, wifi
         memcpy(&ctx->result, result, sizeof(wifi_prov_result_t));
 
         /* create a task to avoid deallock */
-        aos_check(!aos_task_new("prov_result", result_task, ctx, 2048), EIO);
+        aos_check(!aos_task_new("prov_result", result_task, ctx, 1024*3), EIO);
     }
 }
 
@@ -96,7 +96,7 @@ static void prov_timer_entry(void *timer, void *arg)
     ctx->event = WIFI_PROV_EVENT_TIMEOUT;
 
     /* create a task to avoid deallock */
-    aos_check(!aos_task_new("prov_result", result_task, ctx, 2048), EIO);
+    aos_check(!aos_task_new("prov_result", result_task, ctx, 1024*3), EIO);
 }
 
 int wifi_prov_method_register(wifi_prov_t *prov)
@@ -137,13 +137,16 @@ int wifi_prov_start(uint32_t method_id, wifi_prov_cb cb, uint32_t timeout_s)
         return -1;
     }
 
+    if (timeout_s <= 0)
+        return -1;
+
     g_wiri_prov_cb = cb;
 
     WIFI_PROV_LOCK();
     slist_for_each_entry(&g_prov_list, tmp_prov, wifi_prov_t, next) {
         if (tmp_prov->method_id & method_id) {
             method_id &= ~tmp_prov->method_id;
-            if (tmp_prov->start(wifi_prov_callback)) {
+            if (0 != tmp_prov->start(wifi_prov_callback)) {
                 res |= tmp_prov->method_id;
             } else {
                 g_wifi_prov_started_method |= tmp_prov->method_id;
@@ -172,6 +175,10 @@ void wifi_prov_stop()
         return;
     }
 
+    if (g_wiri_prov_cb != NULL) {
+        g_wiri_prov_cb(0, WIFI_PROV_EVENT_TIMEOUT, NULL);
+    }
+
     g_wiri_prov_cb = NULL;
 
     _stop_method(g_wifi_prov_started_method);
@@ -197,7 +204,7 @@ uint32_t wifi_prov_get_method_id(char *method_name)
     return 0;
 }
 
-wifi_prov_status_t wifi_prov_get_stauts()
+wifi_prov_status_t wifi_prov_get_status()
 {
     if (g_wifi_prov_started_method) {
         return WIFI_PROV_STARTED;

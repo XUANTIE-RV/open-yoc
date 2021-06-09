@@ -6,7 +6,6 @@
 #include <stdbool.h>
 #include <errno.h>
 #include <aos/yloop.h>
-#include <aos/log.h>
 #include <aos/list.h>
 #include "evtloop_main.h"
 
@@ -50,8 +49,8 @@ static void handle_events(input_event_t *event)
 
     if (event->type == EV_SYS && event->code == CODE_NULL && event->value == VALUE_NULL) {
         return;
-    } else if (event->type == EV_ALL && event->code == CODE_NULL && event->value == VALUE_NULL){
-        LOGD("loop", "loop run test");
+    } else if (event->type == EV_ALL && event->code == CODE_NULL && event->value == VALUE_NULL) {
+        //LOGD("loop", "loop run test");
         return;
     }
 
@@ -159,7 +158,7 @@ int aos_unregister_event_filter(uint16_t type, aos_event_cb cb, void *priv)
             return 0;
         }
     }
-    
+
     return -ENOMEM;
 }
 /*

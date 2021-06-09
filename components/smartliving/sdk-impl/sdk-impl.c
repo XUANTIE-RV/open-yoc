@@ -2,10 +2,11 @@
  * Copyright (C) 2015-2018 Alibaba Group Holding Limited
  */
 
-#include "sdk-impl_internal.h"
 #include "sl_config.h"
 
-#if defined(DEVICE_MODEL_ENABLED) && !defined(DEPRECATED_LINKKIT)
+#include "sdk-impl_internal.h"
+
+#if defined(DEVICE_MODEL_ENABLED)
     #include "iotx_dm.h"
 #endif
 
@@ -134,31 +135,38 @@ int IOT_Ioctl(int option, void *data)
         sdk_err("Invalid Parameter");
         return FAIL_RETURN;
     }
-
+    
     switch (option) {
         case IOTX_IOCTL_SET_REGION: {
-            ctx->domain_type = *(int *)data;
-            iotx_guider_set_region(*(int *)data);
+            ctx->domain_type = *(iotx_cloud_region_types_t *)data;
 
             res = SUCCESS_RETURN;
         }
         break;
         case IOTX_IOCTL_GET_REGION: {
-            *(int *)data = ctx->domain_type;
+            *(iotx_cloud_region_types_t *)data = ctx->domain_type;
 
             res = SUCCESS_RETURN;
         }
         break;
         case IOTX_IOCTL_SET_MQTT_DOMAIN: {
-            ctx->domain_type = GUIDER_REGION_CUSTOM;
-            iotx_guider_set_region(GUIDER_REGION_CUSTOM);
+            ctx->domain_type = IOTX_CLOUD_REGION_CUSTOM;
 
             res = iotx_guider_set_custom_domain(GUIDER_DOMAIN_MQTT, (const char *)data);
         }
         break;
+        case IOTX_IOCTL_SET_MQTT_PORT: {
+            ctx->mqtt_port_num = *(uint16_t *)data;
+            res = SUCCESS_RETURN;
+        }
+        break;
+        case IOTX_IOCTL_SET_ENV: {
+            ctx->env = *(uint16_t *)data;
+            res = SUCCESS_RETURN;
+        }
+        break;
         case IOTX_IOCTL_SET_HTTP_DOMAIN: {
-            ctx->domain_type = GUIDER_REGION_CUSTOM;
-            iotx_guider_set_region(GUIDER_REGION_CUSTOM);
+            ctx->domain_type = IOTX_CLOUD_REGION_CUSTOM;
 
             res = iotx_guider_set_custom_domain(GUIDER_DOMAIN_HTTP, (const char *)data);
         }
@@ -175,7 +183,7 @@ int IOT_Ioctl(int option, void *data)
             res = SUCCESS_RETURN;
         }
         break;
-#if defined(DEVICE_MODEL_ENABLED) && !defined(DEPRECATED_LINKKIT)
+#if defined(DEVICE_MODEL_ENABLED)
 #if !defined(DEVICE_MODEL_RAWDATA_SOLO)
         case IOTX_IOCTL_RECV_EVENT_REPLY:
         case IOTX_IOCTL_RECV_PROP_REPLY: {

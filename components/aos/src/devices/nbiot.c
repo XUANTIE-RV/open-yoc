@@ -2,6 +2,7 @@
  * Copyright (C) 2020 FishSemi Inc. All rights reserved.
  */
 
+#if defined(CONFIG_SAL)
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
@@ -145,3 +146,4 @@ int hal_nbiot_set_signal_strength_ind(aos_dev_t *dev, int status)
 
     return ret;
 }
+#endif

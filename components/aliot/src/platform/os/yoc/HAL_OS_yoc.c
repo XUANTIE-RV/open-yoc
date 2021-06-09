@@ -15,7 +15,7 @@
 
 #include "iot_import.h"
 //#include "iotx_hal_internal.h"
-#include <csi_kernel.h>
+#include <aos/kernel.h>
 #include <drv/tee.h>
 
 static char _product_key[PRODUCT_KEY_LEN + 1];
@@ -45,7 +45,7 @@ int HAL_GetFirmwareVesion(_OU_ char *version)
 
 int HAL_Kv_Set(const char *key, const void *val, int len, int sync)
 {
-    #if 0
+#if 0
     if (!kvfile) {
         kvfile = kv_open("/tmp/kvfile.db");
         if (!kvfile) {
@@ -54,13 +54,13 @@ int HAL_Kv_Set(const char *key, const void *val, int len, int sync)
     }
 
     return kv_set_blob(kvfile, (char *)key, (char *)val, len);
-    #endif
+#endif
     return -1;
 }
 
 int HAL_Kv_Get(const char *key, void *buffer, int *buffer_len)
 {
-    #if 0
+#if 0
     if (!kvfile) {
         kvfile = kv_open("/tmp/kvfile.db");
         if (!kvfile) {
@@ -69,13 +69,13 @@ int HAL_Kv_Get(const char *key, void *buffer, int *buffer_len)
     }
 
     return kv_get_blob(kvfile, (char *)key, buffer, buffer_len);
-    #endif
+#endif
     return -1;
 }
 
 int HAL_Kv_Del(const char *key)
 {
-    #if 0
+#if 0
     if (!kvfile) {
         kvfile = kv_open("/tmp/kvfile.db");
         if (!kvfile) {
@@ -84,29 +84,39 @@ int HAL_Kv_Del(const char *key)
     }
 
     return kv_del(kvfile, (char *)key);
-    #endif
+#endif
     return -1;
 }
 
 
 void *HAL_MutexCreate(void)
 {
-    return csi_kernel_mutex_new();
+    aos_mutex_t *mutex = aos_malloc_check(sizeof(aos_mutex_t));;
+
+    int ret = aos_mutex_new(mutex);
+
+    if (ret < 0) {
+        aos_free(mutex);
+        mutex = NULL;
+    }
+
+    return mutex;
 }
 
 void HAL_MutexDestroy(void *mutex)
 {
-    csi_kernel_mutex_del(mutex);
+    aos_mutex_free(mutex);
+    aos_free(mutex);
 }
 
 void HAL_MutexLock(void *mutex)
 {
-    csi_kernel_mutex_lock(mutex, -1);
+    aos_mutex_lock(mutex, AOS_WAIT_FOREVER);
 }
 
 void HAL_MutexUnlock(void *mutex)
 {
-    csi_kernel_mutex_unlock(mutex);
+    aos_mutex_unlock(mutex);
 }
 
 void *HAL_Malloc(uint32_t size)

@@ -9,28 +9,45 @@
 extern "C" {
 #endif
 
-#include <stddef.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
 #include <aos/list.h>
 #include <yoc/netio.h>
-#define FOTA_POS    "fota_pos"
-#define BUFFER_SIZE 2048
+
 #define FW_URL_KEY  "FW_URL_KEY"
 
-typedef enum fota_event {
-    FOTA_EVENT_VERSION = 0,
-    FOTA_EVENT_START = 1,
-    FOTA_EVENT_FAIL = 2,
-    FOTA_EVENT_FINISH = 3,
+#ifndef CONFIG_FOTA_TASK_STACK_SIZE
+#define CONFIG_FOTA_TASK_STACK_SIZE (4 * 1024)
+#endif
+
+// use httpclient
+#ifndef CONFIG_FOTA_USE_HTTPC
+#define CONFIG_FOTA_USE_HTTPC 0
+#endif
+
+typedef enum {
+    FOTA_EVENT_START = 0,       /*!< Start the fota version check and download steps */
+    FOTA_EVENT_VERSION,         /*!< Check version from server ok */
+    FOTA_EVENT_PROGRESS,        /*!< Downloading the fota data */
+    FOTA_EVENT_FAIL,            /*!< This event occurs when there are any errors during execution */
+    FOTA_EVENT_VERIFY,          /*!< verify fota data */
+    FOTA_EVENT_FINISH,          /*!< fota download flow finish */
+    FOTA_EVENT_QUIT             /*!< Fota task quit */
 } fota_event_e;
 
+typedef enum {
+    FOTA_ERROR_NULL = 0,
+    FOTA_ERROR_VERSION_CHECK,
+    FOTA_ERROR_NET_SEEK,
+    FOTA_ERROR_NET_READ,
+    FOTA_ERROR_WRITE,
+    FOTA_ERROR_MALLOC,
+    FOTA_ERROR_VERIFY
+} fota_error_code_e;
+
 typedef enum fota_status {
-    FOTA_INIT = 1,
-    FOTA_DOWNLOAD = 2,
-    FOTA_STOP = 3,
-    FOTA_FINISH = 4,
+    FOTA_INIT = 1,          /*!< create fota task, wait for version check */
+    FOTA_DOWNLOAD = 2,      /*!< start to download fota data */
+    FOTA_ABORT = 3,         /*!< read or write exception */
+    FOTA_FINISH = 4,        /*!< download finish */
 } fota_status_e ;
 
 typedef struct fota_data {
@@ -53,41 +70,35 @@ typedef struct fota_cls {
 typedef int (*fota_event_cb_t)(void *fota, fota_event_e event);   ///< fota Event call back.
 
 typedef struct fota {
-    const fota_cls_t *cls;
+    const fota_cls_t *cls;          /*!< the fota server ops */
 
-    netio_t *from;
-    netio_t *to;
-    fota_status_e status;
-    char *from_path;
-    char *to_path;
-    uint8_t *buffer;
-    int offset;
-    int quit;
-    aos_task_t task;
-    aos_sem_t sem;
-    aos_event_t do_check_event;
-    fota_event_cb_t event_cb;
-    int auto_check_en;
-    int running;
-    int timeoutms;
-    int retry_count;
-    int sleep_time;
-    void *private;
+    netio_t *from;                  /*!< the read netio handle */
+    netio_t *to;                    /*!< the write netio handle */
+    fota_status_e status;           /*!< the fota status, see enum `fota_status_e` */
+    char *from_path;                /*!< where the fota data read from, url format */
+    char *to_path;                  /*!< where the fota data write to, url format*/
+    uint8_t *buffer;                /*!< buffer for reading data from net */
+    int offset;                     /*!< downloaded data bytes */
+    int total_size;                 /*!< total length of fota data */
+    int quit;                       /*!< fota task quit flag */
+    aos_task_t task;                /*!< fota task handle */
+    aos_sem_t sem;                  /*!< semaphore for waiting fota task quit */
+    aos_event_t do_check_event;     /*!< the event for checking version loop or force */
+    fota_event_cb_t event_cb;       /*!< the event callback */
+    fota_error_code_e error_code;   /*!< fota error code, get it when event occurs */
+    int auto_check_en;              /*!< whether check version automatic */
+    int timeoutms;                  /*!< read timeout, millisecond */
+    int retry_count;                /*!< when download abort, it will retry to download again in retry_count times */
+    int sleep_time;                 /*!< the sleep time for auto-check task */
+    void *private;                  /*!< user data context */
 } fota_t;
 
 typedef struct {
-    int timeoutms;
-    int retry_count;
-    int sleep_time;
-    int auto_check_en;
+    int timeoutms;              /*!< read timeout, millisecond */
+    int retry_count;            /*!< when download abort, it will retry to download again in retry_count times */
+    int sleep_time;             /*!< the sleep time for auto-check task */
+    int auto_check_en;          /*!< whether check version automatic */
 } fota_config_t;
-
-/**
- * @brief  开始下载镜像
- * @param  [in] fota: fota 句柄
- * @return 0 on success, -1 on failed
- */
-int fota_upgrade(fota_t *fota);
 
 /**
  * @brief  强制检测版本
@@ -108,18 +119,6 @@ int fota_start(fota_t *fota);
  * @return 0 on success, -1 on failed
  */
 int fota_stop(fota_t *fota);
-
-/**
- * @brief  FOTA完成，调用用户实现的finish接口
- * @param  [in] fota: fota 句柄
- */
-void fota_finish(fota_t *fota);
-
-/**
- * @brief  FOTA失败，调用用户实现的fail接口，并释放FOTA资源,但不释放FOTA句柄
- * @param  [in] fota: fota 句柄
- */
-void fota_fail(fota_t *fota);
 
 /**
  * @brief  配置FOTA参数
@@ -183,6 +182,12 @@ int fota_register_coap(void);
  * @return 0 on success, -1 on failed
  */
 int fota_register(const fota_cls_t *cls);
+
+/**
+ * @brief  对已经下载好的FOTA数据进行校验
+ * @return 0 on success, -1 on failed
+ */
+int fota_data_verify(void);
 
 #ifdef __cplusplus
 }

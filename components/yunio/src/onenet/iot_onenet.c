@@ -10,11 +10,10 @@
 #include <errno.h>
 
 #include <aos/kernel.h>
-#include <aos/log.h>
 #include <aos/debug.h>
 #include <yoc/iot.h>
-#include <yoc/uservice.h>
-#include <yoc/eventid.h>
+#include <uservice/uservice.h>
+#include <uservice/eventid.h>
 #include <yoc/udata.h>
 
 #include "iot_onenet_api.h"

@@ -2,7 +2,9 @@
  * Copyright (C) 2018-2020 Alibaba Group Holding Limited
  */
 
+#if defined(CONFIG_DEMUXER_MP3) && CONFIG_DEMUXER_MP3
 #include "avformat/avformat_utils.h"
+#include "avformat/mp3_rw.h"
 #include "avformat/demux_cls.h"
 #include "stream/stream.h"
 
@@ -214,4 +216,5 @@ const struct demux_ops demux_ops_mp3 = {
     .seek            = _demux_mp3_seek,
     .control         = _demux_mp3_control,
 };
+#endif
 

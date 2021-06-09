@@ -54,15 +54,19 @@ int ringbuffer_write(dev_ringbuf_t *ringbuffer, uint8_t *data, uint32_t length)
 
     int i = 0;
 
+    if (ringbuffer_available_write_space(ringbuffer) < length) {
+        length = ringbuffer_available_write_space(ringbuffer);
+    }
+
     for (i = 0; i < length; i++) {
-        if (ringbuffer_full(ringbuffer)) {
-            break;
-        }
 
         ringbuffer->buffer[ringbuffer->widx] = data[i];
 
         ringbuffer->widx++;
-        ringbuffer->widx %= (ringbuffer->length + 1);
+
+        if (ringbuffer->widx >= ringbuffer->length + 1) {
+            ringbuffer->widx = 0;
+        }
     }
 
     /* return real write len */
@@ -93,7 +97,10 @@ int ringbuffer_read(dev_ringbuf_t *ringbuffer, uint8_t *target, uint32_t amount)
         target[i] = ringbuffer->buffer[ringbuffer->ridx];
 
         ringbuffer->ridx++;
-        ringbuffer->ridx %= (ringbuffer->length + 1);
+
+        if (ringbuffer->ridx >= ringbuffer->length + 1) {
+            ringbuffer->ridx = 0;
+        }
     }
 
     return copy_sz;

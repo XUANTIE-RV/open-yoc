@@ -8,8 +8,9 @@
 
 #include <aos/aos.h>
 #include <yoc/atparser.h>
+#include "yoc/at_port.h"
 
-
+#include "internal.h"
 
 #ifdef LF
     #undef LF
@@ -76,7 +77,7 @@ typedef struct {
 
 struct atparser_uservice {
     //comm begin
-    aos_dev_t *uart_dev;
+    void *uart_dev;
     int timeout;
     const char *output_terminator;
     char dbg_on;
@@ -101,8 +102,10 @@ struct atparser_uservice {
     rpc_t oob_cmd;
     //uservice end
     aos_mutex_t mutex;
+    at_channel_t *channel;
 };
 
+extern at_channel_t uart_channel;
 #define ATPARSER_LOCK(at) aos_mutex_lock(&(at->mutex), AOS_WAIT_FOREVER)
 #define ATPARSER_UNLOCK(at) aos_mutex_unlock(&(at->mutex))
 
@@ -111,12 +114,12 @@ static int atparser_data_push(atparser_uservice_t *at);
 static int detch_oob(atparser_uservice_t *at, int *offset);
 
 
-#define atparser_uart_send(at, data, size, timeout) uart_send(at->uart_dev, data, size)
-#define atparser_uart_recv(at, data, size, timeout) uart_recv(at->uart_dev, data, size, timeout)
+#define atparser_channel_send(at, data, size, timeout) at->channel->send(at->uart_dev, data, size)
+#define atparser_channel_recv(at, data, size, timeout) at->channel->recv(at->uart_dev, data, size, timeout)
 
-static void uart_event(aos_dev_t *dev, int id, void *priv)
+static void uart_event(int id, void *priv)
 {
-    if (id == USART_EVENT_READ) {
+    if (id == AT_CHANNEL_EVENT_READ) {
         atparser_uservice_t *at = (atparser_uservice_t *)priv;
 
         if (at->have_uart_event < 2) {
@@ -143,20 +146,71 @@ atparser_uservice_t *atparser_init(utask_t *task, const char *name, uart_config_
     at->max_size = BUF_MAX_SIZE;
     at->step_size = BUF_STEP_SIZE;
     at->buffer = aos_malloc_check(BUF_MIN_SIZE);
+    at->channel = &uart_channel;
 
     at->timeout = 8000;
     at->output_terminator = "\r\n";
     slist_init(&at->oob_head);
 
-    at->uart_dev = uart_open(name);
+    at->uart_dev = at->channel->init(name, config);
 
     if (at->uart_dev == NULL) {
         goto fail_0;
     }
 
-    uart_set_buffer_size(at->uart_dev, 1024*2);
-    if (config) {
-        uart_config(at->uart_dev, config);
+    // uart_set_buffer_size(at->uart_dev, 1024*2);
+    // if (config) {
+    //     uart_config(at->uart_dev, config);
+    // }
+
+    at->srv = uservice_new("atparser", atparser_process_rpc, at);
+
+    if (at->srv == NULL) {
+        uart_close(at->uart_dev);
+        goto fail_0;
+    }
+
+    utask_add(task, at->srv);
+    at->channel->set_event(at->uart_dev, uart_event, at);
+
+    aos_mutex_new(&at->mutex);
+
+    return at;
+
+fail_0:
+    aos_free(at->buffer);
+    aos_free(at);
+
+    return NULL;
+}
+
+atparser_uservice_t *atparser_channel_init(utask_t *task, const char *name, void *config, at_channel_t *channel)
+{
+    atparser_uservice_t *at;
+
+    aos_check_return_val(task && channel, NULL);
+
+    at = aos_zalloc(sizeof(atparser_uservice_t));
+
+    if (at == NULL) {
+        return NULL;
+    }
+
+    at->buffer_size = BUF_MIN_SIZE;
+    at->min_size = BUF_MIN_SIZE;
+    at->max_size = BUF_MAX_SIZE;
+    at->step_size = BUF_STEP_SIZE;
+    at->buffer = aos_malloc_check(BUF_MIN_SIZE);
+    at->channel = channel;
+
+    at->timeout = 8000;
+    at->output_terminator = "\r\n";
+    slist_init(&at->oob_head);
+
+    at->uart_dev = at->channel->init(name, config);
+
+    if (at->uart_dev == NULL) {
+        goto fail_0;
     }
 
     at->srv = uservice_new("atparser", atparser_process_rpc, at);
@@ -167,7 +221,7 @@ atparser_uservice_t *atparser_init(utask_t *task, const char *name, uart_config_
     }
 
     utask_add(task, at->srv);
-    uart_set_event(at->uart_dev, uart_event, at);
+    at->channel->set_event(at->uart_dev, uart_event, at);
 
     aos_mutex_new(&at->mutex);
 
@@ -364,7 +418,7 @@ static int write_cmd_handle(atparser_uservice_t *at, rpc_t *rpc)
 {
     write_data_t *param = (write_data_t *)rpc_get_point(rpc);
 
-    atparser_uart_send(at, param->data, param->size, at->timeout);
+    atparser_channel_send(at, param->data, param->size, at->timeout);
 
     return 0;
 }
@@ -459,7 +513,7 @@ static int full_buffer(atparser_uservice_t *at)
     int expected_size;
 
     expected_size = at->buffer_size - at->recv_size - 1;
-    recv_size = atparser_uart_recv(at, at->buffer + at->recv_size, expected_size, 0);
+    recv_size = atparser_channel_recv(at, at->buffer + at->recv_size, expected_size, 0);
     at->recv_size += recv_size;
     return recv_size;
 }
@@ -527,7 +581,6 @@ static int analysis_line(atparser_uservice_t *at, const char *response, va_list 
         } else {
             if(at->dbg_on) {
                 LOGI("atparser","line(%s), format(%s), count=%d\n", line, format, count);
-                // asm("bkpt");
             }
             aos_free(format);
             return -EINVAL;
@@ -625,8 +678,8 @@ static int send_cmd_handle(atparser_uservice_t *at, rpc_t *rpc)
     char *param = (char *)rpc_get_point(rpc);
 
     if (param) {
-        atparser_uart_send(at, param, strlen(param), at->timeout);
-        atparser_uart_send(at, at->output_terminator, strlen(at->output_terminator), at->timeout);
+        atparser_channel_send(at, param, strlen(param), at->timeout);
+        atparser_channel_send(at, at->output_terminator, strlen(at->output_terminator), at->timeout);
         at->mode = CMD_MODE;
         at->cmd_mode_flag = 1;
     }

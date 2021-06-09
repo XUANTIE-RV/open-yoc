@@ -2,6 +2,7 @@
  * Copyright (C) 2018-2020 Alibaba Group Holding Limited
  */
 
+#if defined(CONFIG_STREAMER_FILE) && CONFIG_STREAMER_FILE
 #include "stream/stream_cls.h"
 #include "vfs.h"
 
@@ -49,10 +50,10 @@ static int _stream_file_open(stream_cls_t *o, int mode)
 
     UNUSED(mode);
     priv = aos_zalloc(sizeof(struct file_priv));
-    CHECK_RET_TAG_WITH_RET(NULL != priv, -1);
+    CHECK_RET_TAG_WITH_RET(priv, -1);
 
     path = _get_file_name(o->url);
-    CHECK_RET_TAG_WITH_GOTO(path != NULL, err);
+    CHECK_RET_TAG_WITH_GOTO(path, err);
 
     ret = aos_stat(path, &st);
     CHECK_RET_TAG_WITH_GOTO(ret == 0, err);
@@ -78,6 +79,7 @@ static int _stream_file_close(stream_cls_t *o)
     struct file_priv *priv = o->priv;
 
     aos_close(priv->fd);
+    aos_free(priv->path);
     aos_free(priv);
     o->priv = NULL;
 
@@ -105,7 +107,7 @@ static int _stream_file_seek(stream_cls_t *o, int32_t pos)
         return -1;
     }
 
-    return  aos_lseek(priv->fd, pos, 0);
+    return aos_lseek(priv->fd, pos, 0);
 }
 
 static int _stream_file_control(stream_cls_t *o, int cmd, void *arg, size_t *arg_size)
@@ -126,4 +128,5 @@ const struct stream_ops stream_ops_file = {
     .seek            = _stream_file_seek,
     .control         = _stream_file_control,
 };
+#endif
 

@@ -18,13 +18,13 @@ int tee_core_manifest_info(tee_param params[4])
     char *name = params[1].memref.buffer;
 
     if (0 == strncmp(name, OS_VERSION_S, sizeof(OS_VERSION_S))) {
-        return mtb_get_os_version(buf, (uint32_t *)size);
+        return get_app_version(buf, (uint32_t *)size);
     }
 
     if (0 == strncmp(name, SYS_PARTION, sizeof(SYS_PARTION))) {
-        return mtb_get_partition_buf(buf, (uint32_t *)size);
+        return get_sys_partition(buf, (uint32_t *)size);
     }
 
-    return mtb_get_img_buf(buf, (uint32_t *)size, name);
+    return mtb_get_img_info_buf(buf, (uint32_t *)size, name);
 }
 

@@ -66,7 +66,7 @@ int flash_program(aos_dev_t *dev, int32_t dstaddr, const void *srcbuf, int32_t b
 int flash_erase(aos_dev_t *dev, int32_t addroff, int32_t blkcnt)
 {
     int ret;
-    
+
     FLASH_VAILD(dev);
 
     device_lock(dev);

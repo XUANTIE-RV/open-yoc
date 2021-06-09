@@ -1,0 +1,20 @@
+Import("env")
+src = [
+    'exception_entry.S',
+    'exception_isr.c',
+    'sleep_asm.S',
+    'delay_asm.S',
+    'uart_msp.c',
+    'cpu.c',
+    'platform.c',
+    'io_config.c',
+    'lsqspi_msp.c',
+]
+inc = [
+    '.',
+]
+
+src_files = File(env.subst(src))
+inc_dirs = Dir(inc)
+env['LINKSCRIPT'] = File(env.subst("link_script.txt"))
+Return("src_files","inc_dirs")

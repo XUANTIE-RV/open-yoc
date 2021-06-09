@@ -9,7 +9,7 @@
 #include <devices/driver.h>
 
 typedef enum {
-  HCI_EVENT_READ,
+    HCI_EVENT_READ,
 } hci_event_t;
 
 #define hci_open(name) device_open(name)

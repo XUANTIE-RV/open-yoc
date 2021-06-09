@@ -146,15 +146,15 @@ int ad_decode(ad_cls_t *o, avframe_t *frame, int *got_frame, const avpacket_t *p
     int frame_size;
 
     if (!(o && frame && got_frame && pkt && pkt->data && pkt->size)) {
-        LOGE(TAG, "param err, %s\n", __FUNCTION__);
+        LOGE(TAG, "param err, %s", __FUNCTION__);
         return -1;
     }
 
     aos_mutex_lock(&o->lock, AOS_WAIT_FOREVER);
     *got_frame = 0;
-    ret = o->ops->decode ? o->ops->decode(o, frame, got_frame, pkt) : -1;
+    ret = o->ops->decode(o, frame, got_frame, pkt);
     if (ret <= 0) {
-        LOGD(TAG, "decode fail, ret = %d\n", ret);
+        LOGD(TAG, "decode fail, ret = %d", ret);
         goto quit;
     }
 
@@ -219,10 +219,7 @@ int ad_close(ad_cls_t *o)
     int ret = -1;
 
     CHECK_PARAM(o, -1);
-    aos_mutex_lock(&o->lock, AOS_WAIT_FOREVER);
-    if (o->ops->close)
-        ret = o->ops->close(o);
-    aos_mutex_unlock(&o->lock);
+    ret = o->ops->close(o);
 
     aos_mutex_free(&o->lock);
     aos_free(o->ash.extradata);

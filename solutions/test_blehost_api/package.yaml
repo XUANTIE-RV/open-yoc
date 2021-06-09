@@ -1,0 +1,57 @@
+type: solution
+name: test_blehost_api
+version: v7.4.3
+description: ble sdk api
+license: Apache license v2.0
+solution:                              #用户修改为对应board和chip
+  board_name: phy6220_evb
+  ld_script: ""
+
+sdk_chip:
+  - sdk_chip_phy6220: v7.4.3
+depends:
+  - ble_host: v7.4.3
+  - cli: v7.4.3
+  - sdk_chip_phy6220: v7.4.3
+
+def_config:
+  CONFIG_KV_SMART: 1
+  CONFIG_BT: 1
+  CONFIG_CLI: 1
+  CONFIG_DEBUG: 1
+  CONFIG_KERNEL_RHINO: 1
+  CONFIG_BT_L2CAP_RX_MTU: 31
+  CONFIG_BT_L2CAP_TX_MTU: 31
+  CONFIG_INIT_TASK_STACK_SIZE: 1024
+  CONFIG_KERNEL_TIMER_STACK_SIZE: 1024
+  RHINO_CONFIG_TIMER_MSG_NUM: 10
+  CLI_CONFIG_STACK_SIZE: 1024
+  CONFIG_BT_PERIPHERAL: 1
+  CONFIG_BT_SMP: 1
+  CONFIG_BT_OBSERVER: 1
+  CONFIG_BT_CENTRAL: 1
+  CONFIG_UART_RB_SIZE: 128
+  CONFIG_BT_SETTINGS: 1
+  CONFIG_BT_GATT_CLIENT: 1
+  CONFIG_BT_RX_STACK_SIZE: 512
+  CONFIG_BT_WHITELIST: 1
+build_config:
+  internal_include:
+    - ""
+  include:
+    - app/include
+    - app/src
+  ldflag: -Wl,-ckmap="yoc.map" -Wl,-zmax-page-size=1024 -u jump_table_base ./misc/rom_ck802.elf.ck802sym
+source_file:
+    - app/src/main.c
+    - app/src/yunit_test_main.c
+    - app/src/yunit.c
+    - app/src/api_test.c
+    - app/src/init/*.c
+    - app/src/ble_sdk_host_test/*.c
+
+link_config:
+  path: ~
+  library: ~
+hidden: false
+homepage: https://occ.t-head.cn

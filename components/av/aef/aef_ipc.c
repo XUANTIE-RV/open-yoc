@@ -5,26 +5,26 @@
 #if defined(CONFIG_AEFXER_IPC) && CONFIG_AEFXER_IPC
 
 #include "aef/aef_cls.h"
-#include "aeficore.h"
+#include "aef_icore.h"
 
 #define TAG                   "aef_ipc"
 
 struct aef_ipc_priv {
-    aeficore_t                 *hdl;
+    aef_icore_t                 *hdl;
 };
 
 static int _aef_ipc_init(aefx_t *aef)
 {
     int rc;
-    aeficore_t *hdl = NULL;
+    aef_icore_t *hdl = NULL;
     struct aef_ipc_priv *priv = NULL;
 
-    rc = aeficore_init();
+    rc = aef_icore_init();
     CHECK_RET_TAG_WITH_RET(rc == 0, -1);
 
     priv = aos_zalloc(sizeof(struct aef_ipc_priv));
     CHECK_RET_TAG_WITH_RET(priv, -1);
-    hdl = aeficore_new(aef->rate, aef->conf, aef->conf_size, aef->nsamples_max);
+    hdl = aef_icore_new(aef->rate, aef->conf, aef->conf_size, aef->nsamples_max);
     CHECK_RET_TAG_WITH_GOTO(hdl, err);
 
     priv->hdl = hdl;
@@ -40,7 +40,7 @@ static int _aef_ipc_process(aefx_t *aef, const int16_t *in, int16_t *out, size_t
     int rc = -1;
     struct aef_ipc_priv *priv = aef->priv;
 
-    rc = aeficore_process(priv->hdl, in, out, nb_samples);
+    rc = aef_icore_process(priv->hdl, in, out, nb_samples);
 
     return rc;
 }
@@ -49,7 +49,7 @@ static int _aef_ipc_uninit(aefx_t *aef)
 {
     struct aef_ipc_priv *priv = aef->priv;
 
-    aeficore_free(priv->hdl);
+    aef_icore_free(priv->hdl);
     aos_free(priv);
     aef->priv = NULL;
     return 0;

@@ -29,6 +29,25 @@ __attribute__((weak)) void _tw_to_stop(void)
     return;
 }
 
+int tee_core_get_boot_type(tee_param params[4])
+{
+    uint32_t *bt = (uint32_t *)params[0].value.a;
+    uint32_t *bt_len = (uint32_t *)params[0].value.b;
+    uint32_t tmp;
+
+    if (*(volatile uint32_t *)0x40002000 & 0x20) {
+        *bt = 1;
+        tmp = *(volatile uint32_t *)0x40002000;
+        *(volatile uint32_t *)0x40002000 = tmp & ~(0x20);
+    } else {
+        *bt = 0;
+    }
+
+    *bt_len = sizeof(uint32_t);
+
+    return TEE_SUCCESS;
+}
+
 int tee_core_lpm(tee_param params[4])
 {
 #ifdef CONFIG_PLATFORM_HOBBIT1_2

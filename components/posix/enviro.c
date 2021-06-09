@@ -25,25 +25,28 @@ static _pthread_environ_t *env_new(const char *envname, const char *envval)
     _pthread_environ_t *penv = NULL;
 
     /* malloc _pthread_environ_t */
-    penv = krhino_mm_alloc(sizeof(_pthread_environ_t), __builtin_return_address(0));
+    penv = krhino_mm_alloc(sizeof(_pthread_environ_t));
     if (penv == NULL) {
         return NULL;
     }
+    _alloc_trace(penv, (size_t)__builtin_return_address(0));
 
     /* malloc envname and copy the envname */
-    penv->envname = krhino_mm_alloc(strlen(envname) + 1, __builtin_return_address(0));
+    penv->envname = krhino_mm_alloc(strlen(envname) + 1);
     if (penv->envname == NULL) {
         return NULL;
     }
+    _alloc_trace(penv->envname, (size_t)__builtin_return_address(0));
 
     strcpy(penv->envname, envname);
 
     /* malloc envval and copy the envval */
-    penv->envval = krhino_mm_alloc(strlen(envval) + 1, __builtin_return_address(0));
+    penv->envval = krhino_mm_alloc(strlen(envval) + 1);
     if (penv->envval == NULL) {
         return NULL;
     }
 
+    _alloc_trace(penv->envval, (size_t)__builtin_return_address(0));
     strcpy(penv->envval, envval);
 
     penv->next = NULL;
@@ -108,14 +111,15 @@ int setenv(const char *envname, const char *envval, int overwrite)
             /* if the environment variable named by envname already exists and the value of overwrite is non-zero,
                the function shall return success and the environment shall be updated */
             if (overwrite != 0) {
-                penv->envval = krhino_mm_realloc(penv->envval ,strlen(envval) + 1, __builtin_return_address(0));
+                penv->envval = krhino_mm_realloc(penv->envval ,strlen(envval) + 1);
+                _alloc_trace(penv->envval, (size_t)__builtin_return_address(0));
                 strcpy(penv->envval, envval);
 
                 krhino_mutex_unlock(&g_enviro_mutex);
                 return 0;
             } else {
-            /* If the environment variable named by envname already exists and the value of overwrite is zero, the
-               function shall return success and the environment shall remain unchanged */
+                /* If the environment variable named by envname already exists and the value of overwrite is zero, the
+                   function shall return success and the environment shall remain unchanged */
                 krhino_mutex_unlock(&g_enviro_mutex);
                 return 0;
             }
@@ -237,10 +241,11 @@ int putenv(char *string)
             envval = &string[pos + 1];
 
             /* malloc a memory to save envname */
-            envname = krhino_mm_alloc(pos + 1, __builtin_return_address(0));
+            envname = krhino_mm_alloc(pos + 1);
             if (envname == NULL) {
                 return -1;
             }
+            _alloc_trace(envname, (size_t)__builtin_return_address(0));
 
             /* copy envname */
             strncpy(envname, string, pos);
@@ -287,102 +292,102 @@ long sysconf(int name)
     long val = 0;
 
     switch (name) {
-        case _SC_JOB_CONTROL :
-            val = _POSIX_JOB_CONTROL;
-            break;
-        case _SC_SAVED_IDS :
-            val = _POSIX_SAVED_IDS;
-            break;
-            case _SC_VERSION :
-            val = _POSIX_VERSION;
-            break;
-            case _SC_ASYNCHRONOUS_IO :
-            val = _POSIX_ASYNCHRONOUS_IO;
-            break;
-            case _SC_FSYNC :
-            val = _POSIX_FSYNC;
-            break;
-            case _SC_MAPPED_FILES :
-            val = _POSIX_MAPPED_FILES;
-            break;
-            case _SC_MEMLOCK :
-            val = _POSIX_MEMLOCK;
-            break;
-            case _SC_MEMLOCK_RANGE :
-            val = _POSIX_MEMLOCK_RANGE;
-            break;
-            case _SC_MEMORY_PROTECTION :
-            val = _POSIX_MEMORY_PROTECTION;
-            break;
-            case _SC_MESSAGE_PASSING :
-            val = _POSIX_MESSAGE_PASSING;
-            break;
-            case _SC_PRIORITIZED_IO :
-            val = _POSIX_PRIORITIZED_IO;
-            break;
-            case _SC_REALTIME_SIGNALS :
-            val = _POSIX_REALTIME_SIGNALS;
-            break;
-            case _SC_SEMAPHORES :
-            val = _POSIX_SEMAPHORES;
-            break;
-            case _SC_SYNCHRONIZED_IO :
-            val = _POSIX_SYNCHRONIZED_IO;
-            break;
-            case _SC_TIMERS :
-            val = _POSIX_TIMERS;
-            break;
-            case _SC_BARRIERS :
-            val = _POSIX_BARRIERS;
-            break;
-            case _SC_READER_WRITER_LOCKS :
-            val = _POSIX_READER_WRITER_LOCKS;
-            break;
-            case _SC_SPIN_LOCKS :
-            val = _POSIX_SPIN_LOCKS;
-            break;
-            case _SC_THREADS :
-            val = _POSIX_THREADS;
-            break;
-            case _SC_THREAD_ATTR_STACKADDR :
-            val = _POSIX_THREAD_ATTR_STACKADDR;
-            break;
-            case _SC_THREAD_ATTR_STACKSIZE :
-            val = _POSIX_THREAD_ATTR_STACKSIZE;
-            break;
-            case _SC_THREAD_PRIORITY_SCHEDULING :
-            val = _POSIX_THREAD_PRIORITY_SCHEDULING;
-            break;
-            case _SC_THREAD_PRIO_INHERIT :
-            val = _POSIX_THREAD_PRIO_INHERIT;
-            break;
-            case _SC_THREAD_PRIO_PROTECT :
-            val = _POSIX_THREAD_PRIO_PROTECT;
-            break;
-            case _SC_THREAD_PROCESS_SHARED :
-            val = _POSIX_THREAD_PROCESS_SHARED;
-            break;
-            case _SC_THREAD_SAFE_FUNCTIONS :
-            val = _POSIX_THREAD_SAFE_FUNCTIONS;
-            break;
-            case _SC_SPAWN :
-            val = _POSIX_SPAWN;
-            break;
-            case _SC_TIMEOUTS :
-            val = _POSIX_TIMEOUTS;
-            break;
-            case _SC_CPUTIME :
-            val = _POSIX_CPUTIME;
-            break;
-            case _SC_THREAD_CPUTIME :
-            val = _POSIX_THREAD_CPUTIME;
-            break;
-            case _SC_ADVISORY_INFO :
-            val = _POSIX_ADVISORY_INFO;
-            break;
-        default:
-            val = -1;
-            break;
+    case _SC_JOB_CONTROL :
+        val = _POSIX_JOB_CONTROL;
+        break;
+    case _SC_SAVED_IDS :
+        val = _POSIX_SAVED_IDS;
+        break;
+    case _SC_VERSION :
+        val = _POSIX_VERSION;
+        break;
+    case _SC_ASYNCHRONOUS_IO :
+        val = _POSIX_ASYNCHRONOUS_IO;
+        break;
+    case _SC_FSYNC :
+        val = _POSIX_FSYNC;
+        break;
+    case _SC_MAPPED_FILES :
+        val = _POSIX_MAPPED_FILES;
+        break;
+    case _SC_MEMLOCK :
+        val = _POSIX_MEMLOCK;
+        break;
+    case _SC_MEMLOCK_RANGE :
+        val = _POSIX_MEMLOCK_RANGE;
+        break;
+    case _SC_MEMORY_PROTECTION :
+        val = _POSIX_MEMORY_PROTECTION;
+        break;
+    case _SC_MESSAGE_PASSING :
+        val = _POSIX_MESSAGE_PASSING;
+        break;
+    case _SC_PRIORITIZED_IO :
+        val = _POSIX_PRIORITIZED_IO;
+        break;
+    case _SC_REALTIME_SIGNALS :
+        val = _POSIX_REALTIME_SIGNALS;
+        break;
+    case _SC_SEMAPHORES :
+        val = _POSIX_SEMAPHORES;
+        break;
+    case _SC_SYNCHRONIZED_IO :
+        val = _POSIX_SYNCHRONIZED_IO;
+        break;
+    case _SC_TIMERS :
+        val = _POSIX_TIMERS;
+        break;
+    case _SC_BARRIERS :
+        val = _POSIX_BARRIERS;
+        break;
+    case _SC_READER_WRITER_LOCKS :
+        val = _POSIX_READER_WRITER_LOCKS;
+        break;
+    case _SC_SPIN_LOCKS :
+        val = _POSIX_SPIN_LOCKS;
+        break;
+    case _SC_THREADS :
+        val = _POSIX_THREADS;
+        break;
+    case _SC_THREAD_ATTR_STACKADDR :
+        val = _POSIX_THREAD_ATTR_STACKADDR;
+        break;
+    case _SC_THREAD_ATTR_STACKSIZE :
+        val = _POSIX_THREAD_ATTR_STACKSIZE;
+        break;
+    case _SC_THREAD_PRIORITY_SCHEDULING :
+        val = _POSIX_THREAD_PRIORITY_SCHEDULING;
+        break;
+    case _SC_THREAD_PRIO_INHERIT :
+        val = _POSIX_THREAD_PRIO_INHERIT;
+        break;
+    case _SC_THREAD_PRIO_PROTECT :
+        val = _POSIX_THREAD_PRIO_PROTECT;
+        break;
+    case _SC_THREAD_PROCESS_SHARED :
+        val = _POSIX_THREAD_PROCESS_SHARED;
+        break;
+    case _SC_THREAD_SAFE_FUNCTIONS :
+        val = _POSIX_THREAD_SAFE_FUNCTIONS;
+        break;
+    case _SC_SPAWN :
+        val = _POSIX_SPAWN;
+        break;
+    case _SC_TIMEOUTS :
+        val = _POSIX_TIMEOUTS;
+        break;
+    case _SC_CPUTIME :
+        val = _POSIX_CPUTIME;
+        break;
+    case _SC_THREAD_CPUTIME :
+        val = _POSIX_THREAD_CPUTIME;
+        break;
+    case _SC_ADVISORY_INFO :
+        val = _POSIX_ADVISORY_INFO;
+        break;
+    default:
+        val = -1;
+        break;
     }
 
     return val;

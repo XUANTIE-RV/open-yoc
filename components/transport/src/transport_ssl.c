@@ -15,12 +15,11 @@
 #include <string.h>
 #include <stdlib.h>
 #include <sys/select.h>
-#include <aos/log.h>
 #include <aos/kernel.h>
-#include "tls.h"
-#include "transport.h"
-#include "transport_ssl.h"
-#include "transport_utils.h"
+#include "transport/tls.h"
+#include "transport/transport.h"
+#include "transport/transport_ssl.h"
+#include "transport/transport_utils.h"
 
 static const char *TAG = "TRANS_SSL";
 
@@ -103,12 +102,12 @@ static int ssl_write(transport_handle_t t, const char *buffer, int len, int time
     transport_ssl_t *ssl = transport_get_context_data(t);
 
     if ((poll = transport_poll_write(t, timeout_ms)) <= 0) {
-        LOGW(TAG, "Poll timeout or error, errno=%s, fd=%d, timeout_ms=%d", strerror(errno), ssl->tls->sockfd, timeout_ms);
+        LOGW(TAG, "Poll timeout or error, errno=%d, fd=%d, timeout_ms=%d", errno, ssl->tls->sockfd, timeout_ms);
         return poll;
     }
     ret = tls_conn_write(ssl->tls, (const unsigned char *) buffer, len);
     if (ret < 0) {
-        LOGE(TAG, "tls_conn_write error, errno=%s", strerror(errno));
+        LOGE(TAG, "tls_conn_write error, errno=%d", errno);
     }
     return ret;
 }
@@ -126,7 +125,7 @@ static int ssl_read(transport_handle_t t, char *buffer, int len, int timeout_ms)
     }
     ret = tls_conn_read(ssl->tls, (unsigned char *)buffer, len, timeout_ms);
     if (ret < 0) {
-        LOGE(TAG, "tls_conn_read error, errno=%s", strerror(errno));
+        LOGE(TAG, "tls_conn_read error, errno=%d", errno);
     }
     if (ret == 0) {
         ret = -1;
@@ -190,9 +189,16 @@ void transport_ssl_set_client_key_data(transport_handle_t t, const char *data, i
 
 transport_handle_t transport_ssl_init()
 {
-    transport_handle_t t = transport_init();
-    transport_ssl_t *ssl = calloc(1, sizeof(transport_ssl_t));
-    TRANSPORT_MEM_CHECK(TAG, ssl, return NULL);
+    transport_handle_t t;
+    transport_ssl_t *ssl;
+
+    t = transport_init();
+    TRANSPORT_MEM_CHECK(TAG, t, return NULL);
+    ssl = calloc(1, sizeof(transport_ssl_t));
+    TRANSPORT_MEM_CHECK(TAG, ssl, {
+        transport_destroy(t);
+        return NULL;
+    });
     transport_set_context_data(t, ssl);
     transport_set_func(t, ssl_connect, ssl_read, ssl_write, ssl_close, ssl_poll_read, ssl_poll_write, ssl_destroy);
     transport_set_async_connect_func(t, ssl_connect_async);

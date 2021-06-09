@@ -2,6 +2,7 @@
  * Copyright (C) 2018-2020 Alibaba Group Holding Limited
  */
 
+#if defined(CONFIG_STREAMER_FIFO) && CONFIG_STREAMER_FIFO
 #include "stream/stream_cls.h"
 #include "avutil/named_straightfifo.h"
 #include "avutil/url_parse.h"
@@ -15,12 +16,13 @@ struct sfifo_priv {
 /* url example: fifo://tts/1?avformat=rawaudio&avcodec=pcm_s16le&channel=2&rate=44100&size=1024 */
 static int _stream_fifo_open(stream_cls_t *o, int mode)
 {
+    int size;
     nsfifo_t *fifo          = NULL;
     struct sfifo_priv *priv = NULL;
 
     UNUSED(mode);
     priv = aos_zalloc(sizeof(struct sfifo_priv));
-    CHECK_RET_TAG_WITH_RET(NULL != priv, -1);
+    CHECK_RET_TAG_WITH_RET(priv, -1);
 
     fifo = nsfifo_open(o->url, O_RDONLY);
     if (NULL == fifo) {
@@ -28,10 +30,11 @@ static int _stream_fifo_open(stream_cls_t *o, int mode)
         goto err;
     }
 
-    url_get_item_value_int(o->url, "size", &o->size);
+    url_get_item_value_int(o->url, "size", &size);
 
     priv->fifo = fifo;
     o->priv    = priv;
+    o->size    = size;
     return 0;
 err:
     if (fifo)
@@ -122,4 +125,5 @@ const struct stream_ops stream_ops_fifo = {
     //.seek            = _stream_fifo_seek,
     .control         = _stream_fifo_control,
 };
+#endif
 

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CDK_Workspace Name="genie_mesh_switches" Database="">
+  <Project Name="genie_mesh_switches" Path="../genie_mesh_switches.cdkproj" Active="Yes"/>
+  <BuildMatrix>
+    <WorkspaceConfiguration Name="Debug" Selected="yes">
+      <Environment/>
+      <Project Name="genie_mesh_switches" ConfigName="BuildSet"/>
+    </WorkspaceConfiguration>
+  </BuildMatrix>
+  <DefaultPackPath>$(CDKPath)/CSKY/PACK</DefaultPackPath>
+</CDK_Workspace>

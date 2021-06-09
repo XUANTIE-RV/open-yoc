@@ -92,14 +92,12 @@ static int _avf_vol_control(avfilter_t *avf, int cmd, void *arg, size_t *arg_siz
 static int _avf_vol_filter_frame(avfilter_t *avf, const avframe_t *in, avframe_t *out)
 {
     int rc = -1;
-    avframe_t *oframe;
     struct avfilter_vol *dobj = (struct avfilter_vol*)avf;
 
     if (get_esf_type(in->sf) == ESF_S16LE) {
-        oframe             = AVF_IS_SINK(avf) ? out : avf->oframe;
-        oframe->sf         = in->sf;
-        oframe->nb_samples = in->nb_samples;
-        rc = avframe_get_buffer(oframe);
+        out->sf         = in->sf;
+        out->nb_samples = in->nb_samples;
+        rc = avframe_get_buffer(out);
         if (rc < 0) {
             LOGE(TAG, "may be oom, rc = %d", rc);
             return -1;
@@ -107,18 +105,18 @@ static int _avf_vol_filter_frame(avfilter_t *avf, const avframe_t *in, avframe_t
 #if TMALL_PATCH
         {
             dobj->vol_index = tmall_vol_get();
-            rc = vol_scale((const int16_t*)in->data[0], in->nb_samples, (int16_t*)oframe->data[0], dobj->vol_index);
+            rc = vol_scale((const int16_t*)in->data[0], in->nb_samples, (int16_t*)out->data[0], dobj->vol_index);
             CHECK_RET_TAG_WITH_RET(rc == 0, -1);
         }
 #else
-        rc = vol_scale((const int16_t*)in->data[0], in->nb_samples, (int16_t*)oframe->data[0], dobj->vol_index);
+        rc = vol_scale((const int16_t*)in->data[0], in->nb_samples, (int16_t*)out->data[0], dobj->vol_index);
         CHECK_RET_TAG_WITH_RET(rc == 0, -1);
 #endif
 
-        rc = AVF_IS_SINK(avf) ? rc : avf_filter_frame(avf->next, oframe, out);
+        rc = out->nb_samples;
     }
 
-    return rc > 0 ? 0 : rc;
+    return rc;
 }
 
 static int _avf_vol_uninit(avfilter_t *avf)

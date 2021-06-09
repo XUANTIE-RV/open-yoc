@@ -35,6 +35,22 @@ err:
 }
 
 /**
+ * @brief  bypass enable
+ * @param  [in] avf
+ * @param  [in] bypass : 0 or 1
+ * @return 0/-1
+ */
+int avf_set_bypass(avfilter_t *avf, int bypass)
+{
+    CHECK_PARAM(avf, -1);
+    aos_mutex_lock(&avf->lock, AOS_WAIT_FOREVER);
+    avf->bypass = bypass;
+    aos_mutex_unlock(&avf->lock);
+
+    return 0;
+}
+
+/**
  * @brief  control the filter
  * @param  [in] avf
  * @param  [in] cmd          : command id of the filter
@@ -95,18 +111,41 @@ int avf_link_tail(avfilter_t *head, avfilter_t *tail)
  * @param  [in] avf : the avfilter
  * @param  [in] in
  * @param  [in] out
- * @return 0/-1
+ * @return number of samples output per channel, -1 on error
  */
 int avf_filter_frame(avfilter_t *avf, const avframe_t *in, avframe_t *out)
 {
     int rc = -1;
+    avframe_t *oframe;
 
     CHECK_PARAM(avf && in && out, -1);
     aos_mutex_lock(&avf->lock, AOS_WAIT_FOREVER);
-    rc = avf->ops->filter_frame(avf, in, out);
+    oframe = AVF_IS_SINK(avf) ? out : avf->oframe;
+    avframe_clear(oframe);
+
+    if (AVF_IS_SINK(avf)) {
+        if (avf->bypass) {
+            rc = avframe_copy_from(in, oframe);
+            if (rc < 0) {
+                LOGE(TAG, "may be oom, rc = %d, filter name = %s", rc, avf->inst_name);
+                goto quit;
+            }
+            rc = oframe->nb_samples;
+        } else {
+            rc = avf->ops->filter_frame(avf, in, oframe);
+        }
+    } else {
+        if (avf->bypass) {
+            rc = avf_filter_frame(avf->next, in, out);
+        } else {
+            rc = avf->ops->filter_frame(avf, in, oframe);
+            rc = rc > 0 ? avf_filter_frame(avf->next, (const avframe_t*)oframe, out) : rc;
+        }
+    }
+quit:
     aos_mutex_unlock(&avf->lock);
 
-    return rc > 0 ? 0 : rc;
+    return rc;
 }
 
 /**

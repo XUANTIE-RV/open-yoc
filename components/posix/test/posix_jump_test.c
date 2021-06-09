@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <setjmp.h>
 
-#include "aos/log.h"
+#include "ulog/ulog.h"
 
 #define TAG "jump_test"
 
@@ -34,7 +34,7 @@ void posix_jump_test_case(void)
         LOGI(TAG, "first time through");
         banana();
     } else {
-    /* the second para of longjmp is 1, so ret = 1, and this branch will run */
+        /* the second para of longjmp is 1, so ret = 1, and this branch will run */
         LOGI(TAG, "jump back");
         LOGI(TAG, "posix jump test OK !");
     }

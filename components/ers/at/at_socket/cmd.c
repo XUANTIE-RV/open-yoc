@@ -6,7 +6,6 @@
 #include <stdio.h>
 
 #include <aos/debug.h>
-#include <aos/log.h>
 
 #include "at_socket.h"
 #include "../at_internal.h"
@@ -104,6 +103,12 @@ void at_cmd_cip_stop(char *cmd, int type, char *data)
                     }
                     return;
                 } else {
+                    at_conn_t *at_conn = conn_find_by_id(cid);
+                    if (at_conn->type == TYPE_TCP_SERVER) {
+                        at_disconnect(at_conn, 0);
+                        AT_BACK_OK();
+                        return;
+                    }
                     if (at_count_conn() == 0) {
                         AT_BACK_RET_ERR(cmd, AT_ERR_STATUS);
                         return;

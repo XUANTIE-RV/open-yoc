@@ -5,6 +5,8 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
+#ifndef __PROV_H
+#define __PROV_H
 
 void bt_mesh_pb_adv_recv(struct net_buf_simple *buf);
 
@@ -20,3 +22,5 @@ int bt_mesh_prov_init(const struct bt_mesh_prov *prov);
 
 void bt_mesh_prov_complete(u16_t net_idx, u16_t addr);
 void bt_mesh_prov_reset(void);
+
+#endif

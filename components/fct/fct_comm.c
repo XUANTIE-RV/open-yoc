@@ -7,7 +7,7 @@
 #include <aos/debug.h>
 #include <aos/kernel.h>
 #include <aos/list.h>
-#include <yoc/uservice.h>
+#include <uservice/uservice.h>
 // #include <yoc/cli.h>
 // #include <yoc/init.h>
 #include <devices/uart.h>

@@ -6,8 +6,16 @@
 #define __AVFORMAT_ALL_H__
 
 #include <aos/aos.h>
+#include "avutil/av_config.h"
 
 __BEGIN_DECLS__
+
+#define REGISTER_DEMUXER(X, x)                                          \
+    {                                                                   \
+        extern int demux_register_##x();                                \
+        if (CONFIG_DEMUXER_##X)                                         \
+            demux_register_##x();                                       \
+    }
 
 /**
  * @brief  regist demux for wav
@@ -58,25 +66,56 @@ int demux_register_asf();
 int demux_register_amr();
 
 /**
+ * @brief  regist demux for ts
+ * @return 0/-1
+ */
+int demux_register_ts();
+
+/**
+ * @brief  regist demux for ogg
+ * @return 0/-1
+ */
+int demux_register_ogg();
+
+/**
  * @brief  regist all demuxer
  * @return 0/-1
  */
 static inline int demux_register_all()
 {
-    int rc = 0;
+#if defined(CONFIG_DEMUXER_WAV)
+    REGISTER_DEMUXER(WAV, wav);
+#endif
+#if defined(CONFIG_DEMUXER_MP3)
+    REGISTER_DEMUXER(MP3, mp3);
+#endif
+#if defined(CONFIG_DEMUXER_MP4) && defined(CONFIG_USING_TLS)
+    REGISTER_DEMUXER(MP4, mp4);
+#endif
+#if defined(CONFIG_DEMUXER_ADTS)
+    REGISTER_DEMUXER(ADTS, adts);
+#endif
+#if defined(CONFIG_DEMUXER_RAWAUDIO)
+    REGISTER_DEMUXER(RAWAUDIO, rawaudio);
+#endif
+#if defined(CONFIG_DEMUXER_FLAC)
+    REGISTER_DEMUXER(FLAC, flac);
+#endif
+#if defined(CONFIG_DEMUXER_ASF)
+    REGISTER_DEMUXER(ASF, asf);
+#endif
+#if defined(CONFIG_DEMUXER_AMR)
+    REGISTER_DEMUXER(AMR, amr);
+#endif
+#if defined(CONFIG_DEMUXER_TS)
+    REGISTER_DEMUXER(TS, ts);
+#endif
+#if defined(CONFIG_DEMUXER_OGG)
+    REGISTER_DEMUXER(OGG, ogg);
+#endif
 
-    rc |= demux_register_wav();
-    rc |= demux_register_mp3();
-    rc |= demux_register_mp4();
-    rc |= demux_register_adts();
-    rc |= demux_register_rawaudio();
-    rc |= demux_register_flac();
-    rc |= demux_register_asf();
-    rc |= demux_register_amr();
-
-    return rc;
+    return 0;
 }
-
 
 __END_DECLS__
 

@@ -4,8 +4,8 @@
 
 #include <stdlib.h>
 #include <aos/aos.h>
-#include <aos/log.h>
 #include <yoc/mic.h>
+#include <yoc/mic_port.h>
 #include <yv_ap.h>
 
 typedef struct {
@@ -18,12 +18,32 @@ typedef struct {
 
 static wwv_data_t wwv_data __attribute__ ((aligned(64)));
 static int yv_debug_mode = 0;
+static yv_pcm_param_t yv_param;
 
 #define SHM_ID_WWV_DATA     0x1001
 
+static mic_event_t mic_event;
+
+static void mic_adaptor_event_cb(void *priv, mic_event_id_t evt_id, void *data, int size)
+{
+    if (evt_id == (int)YV_KWS_EVT) {
+        mic_event(priv, MIC_EVENT_KWS_DATA, wwv_data.data, wwv_data.len);
+        wwv_data.data_valid = 0;      // put data as invalid when got
+    } else if (evt_id == (int)YV_ASR_EVT) {
+        mic_kws_t kws;
+
+        memset(&kws, 0, sizeof(mic_kws_t));
+        kws.id = *(int*)data;
+        mic_event(priv, MIC_EVENT_SESSION_START, (void*)&kws, sizeof(mic_kws_t));
+    } else {
+        mic_event(priv, evt_id, data, size);
+    }
+}
+
 static int mic_adaptor_init(mic_t *mic, mic_event_t event)
 {
-    yv_t *yv = yv_init(event, (void*)mic);
+    mic_event = event;
+    yv_t *yv = yv_init(mic_adaptor_event_cb, (void*)mic);
 
     if (yv == NULL) {
         return -1;
@@ -43,11 +63,15 @@ static int mic_adaptor_deinit(mic_t *mic)
     return 0;
 }
 
-static int mic_adaptor_kws_control(mic_t *mic, int flag)
+static int mic_adaptor_event_control(mic_t *mic, int flag)
 {
     yv_t *yv = (yv_t *)mic_get_privdata();
 
-    yv_kws_enable(yv, flag);
+    if (flag & MIC_EVENT_KWS_FLAG) {
+        // yv_kws_enable(yv, flag);
+        wwv_data.wwv_enable = flag;
+        yv_config_share_memory(yv, SHM_ID_WWV_DATA, &wwv_data, sizeof(wwv_data_t));
+    }
 
     return 0;
 }
@@ -61,7 +85,7 @@ static int mic_adaptor_kws_wake(mic_t *mic, int flag)
     return 0;
 }
 
-static int mic_adaptor_pcm_data_control(mic_t *mic, int flag)
+static int mic_adaptor_pcm_data_control(mic_t *mic, int type, int enable)
 {
     if (yv_debug_mode == 2) {
         return -1;
@@ -69,7 +93,7 @@ static int mic_adaptor_pcm_data_control(mic_t *mic, int flag)
 
     yv_t *yv = (yv_t *)mic_get_privdata();
 
-    yv_pcm_enable(yv, flag);
+    yv_pcm_enable(yv, enable);
 
     return 0;
 }
@@ -98,58 +122,49 @@ static int mic_adaptor_debug_control(mic_t *mic, int flag)
     return 0;
 }
 
-static int mic_adaptor_wwv_enable(mic_t *mic, int flag)
-{
-    yv_t *yv = (yv_t *)mic_get_privdata();
-
-    wwv_data.wwv_enable = flag;
-    yv_config_share_memory(yv, SHM_ID_WWV_DATA, &wwv_data, sizeof(wwv_data_t));
-
-    return 0;
-}
-
-static int mic_adaptor_wwv_get_data(mic_t *mic, void **data, size_t *size)
-{
-    if (!wwv_data.wwv_enable || !wwv_data.data_valid) {
-        return -1;
-    }
-    
-    *data = wwv_data.data;
-    *size = wwv_data.len;
-    wwv_data.data_valid = 0;      // put data as invalid when got
-    return 0;
-}
-
 static int mic_adaptor_set_param(mic_t *mic, mic_param_t *hw)
 {
+    // yv_t *yv = (yv_t *)mic_get_privdata();
+
+    yv_param.channels = hw->channels;
+    yv_param.max_time_ms = hw->max_time_ms;
+    yv_param.rate     = hw->rate;
+    yv_param.sample_bits = hw->sample_bits;
+    yv_param.sentence_time_ms = hw->sentence_time_ms;
+    yv_param.noack_time_ms = hw->noack_time_ms;
+
     yv_t *yv = (yv_t *)mic_get_privdata();
-
-    yv_pcm_param_set(yv, hw);
-
+    yv_pcm_param_set(yv, &yv_param);
     return 0;
 }
 
-static int mic_adaptor_get_param(mic_t *mic, mic_param_t *hw)
+int mic_adaptor_ai_ctl(mic_t *mic, int cmd, void *param)
 {
-    yv_t *yv = (yv_t *)mic_get_privdata();
+    if (cmd == MIC_CTRL_SET_VAD_PARAM) {
+        mic_vad_param_t *p = (mic_vad_param_t*)param;
 
-    yv_pcm_param_get(yv, hw);
+        yv_param.vadmode = p->vadmode;
+        yv_param.vadswitch = p->vadswitch;
+        yv_param.vadfilter = p->vadfilter;
+    } else if (cmd == MIC_CTRL_SET_AEC_PARAM) {
+        mic_aec_param_t *p = (mic_aec_param_t *)param;
+
+        yv_param.nsmode = p->nsmode;
+        yv_param.aecmode = p->aecmode;
+    }
 
     return 0;
 }
+
 
 static mic_ops_t mic_adp_ops = {
     .init = mic_adaptor_init,
     .deinit = mic_adaptor_deinit,
-    .kws_control = mic_adaptor_kws_control,
-    .kws_wake = mic_adaptor_kws_wake,
-    .wwv_enable = mic_adaptor_wwv_enable,
-    .wwv_get_data = mic_adaptor_wwv_get_data,
     .pcm_data_control = mic_adaptor_pcm_data_control,
-    .pcm_aec_control = mic_adaptor_pcm_aec_control,
+    .set_param = mic_adaptor_set_param,
+    .ai_ctl = mic_adaptor_ai_ctl,
     .debug_control = mic_adaptor_debug_control,
-    .pcm_set_param = mic_adaptor_set_param,
-    .pcm_get_param = mic_adaptor_get_param,
+    .event_control = mic_adaptor_event_control,
 };
 
 void mic_thead_v1_register(void)

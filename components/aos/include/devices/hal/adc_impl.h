@@ -18,7 +18,11 @@ typedef struct adc_driver {
     driver_t drv;
     int (*config)(aos_dev_t *dev, hal_adc_config_t *config);
     int (*pin2channel)(aos_dev_t *dev, int pin);
+#ifdef CONFIG_CSI_V2
+    int (*read)(aos_dev_t *dev, uint8_t ch, void *output, uint32_t timeout);
+#else
     int (*read)(aos_dev_t *dev, void *output, uint32_t timeout);
+#endif
 } adc_driver_t;
 
 #ifdef __cplusplus

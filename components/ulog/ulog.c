@@ -1,332 +1,271 @@
 /*
- * Copyright (c) 2006-2018, RT-Thread Development Team
- *
- * SPDX-License-Identifier: Apache-2.0
- *
- * Change Logs:
- * Date           Author       Notes
- * 2018-08-25     armink       the first version
+ * Copyright (C) 2015-2019 Alibaba Group Holding Limited
  */
 
-#include "ulog.h"
-#include "ulog_defs.h"
-#include <aos/log.h>
-#include <aos/kernel.h>
-#include <aos/ringblk_buf.h>
-#include <aos/debug.h>
-#include "serf/minilibc_stdio.h"
-#include <stdio.h>
-#include <stdint.h>
-#include <string.h>
 #include <stdarg.h>
-#include <time.h>
-#include <sys/time.h>
+#include <stdio.h>
+#include <string.h>
 
-#define _ALIGN(size, align)           (((size) + (align) - 1) & ~((align) - 1))
+#include "ulog/ulog.h"
+#include "aos/kernel.h"
+#include "ulog_api.h"
+#include "ulog_ring_fifo.h"
+#include "aos/errno.h"
+static char serverity_name[LOG_NONE] = { 'V', 'A', 'F', 'E', 'W', 'T', 'I', 'D' };
 
-#define ULOG_ASYNC_OUTPUT_THREAD_STACK  (4 * 1024)
-#ifndef ULOG_ASYNC_OUTPUT_BUF_SIZE
-#define ULOG_ASYNC_OUTPUT_BUF_SIZE      (64 * 1024)
-#endif
-/* the number which is max stored line logs */
-#ifndef ULOG_ASYNC_OUTPUT_STORE_LINES
-#define ULOG_ASYNC_OUTPUT_STORE_LINES  (ULOG_ASYNC_OUTPUT_BUF_SIZE * 3 / 2 / ULOG_LINE_BUF_SIZE)
-#endif
-struct _ulog
-{
-    int         init_ok;
-    aos_mutex_t output_locker;
-    /* all backends */
-    slist_t     backend_list;
-    /* the thread log's line buffer */
-    char        log_buf_th[ULOG_LINE_BUF_SIZE];
+#define UNKNOWN_BUF ""
 
-#ifdef ULOG_USING_ASYNC_OUTPUT
-    rbb_t           async_rbb;
-    aos_task_t      async_th;
-    aos_sem_t       async_notice;
-    aos_sem_t       async_sem_finish;
-    int             async_th_run;
+/* stop filter, any level <= stop_filter_level(value >= this value) will be abonded */
+static uint8_t stop_filter_level[ulog_session_size] = {
+    STOP_FILTER_DEFAULT,
+
+#if ULOG_POP_CLOUD_ENABLE
+    STOP_FILTER_CLOUD,
 #endif
+
+#if ULOG_POP_FS_ENABLE
+    STOP_FILTER_FS,
+#endif
+
+#if ULOG_POP_UDP_ENABLE
+    STOP_FILTER_UDP,
+#endif
+
 };
-typedef struct _ulog ulog_t;
-static ulog_t t_ulog = { 0 };
 
-void ulog_output_to_all_backend(const char *log, int size)
+static uint8_t push_stop_filter_level = LOG_EMERG;
+
+
+/* Prefix <248>~<255> */
+/* using type char instead of int8_t which align with the prototype of string operation function */
+
+#ifdef ULOG_CONFIG_ASYNC
+static char ulog_buf[ULOG_SIZE];
+#endif
+
+bool check_pass_pop_out(const ulog_session_type_t session, const uint8_t level)
 {
-    slist_t *node;
-    ulog_backend_t backend;
-
-    if (!t_ulog.init_ok)
-        return;
-
-    /* output for all backends */
-    for (node = slist_first(&t_ulog.backend_list); node; node = slist_next(node))
-    {
-        backend = slist_entry(node, struct ulog_backend, list);
-        if (backend && backend->output)
-            backend->output(backend, log, size);
-    }
-}
-static void output_lock(void)
-{
-    aos_mutex_lock(&t_ulog.output_locker, AOS_WAIT_FOREVER);
+    return (stop_filter_level[session]>level);
 }
 
-static void output_unlock(void)
+uint8_t ulog_stop_filter_level(const ulog_session_type_t session)
 {
-    aos_mutex_unlock(&t_ulog.output_locker);
+    return stop_filter_level[session];
 }
 
-static void do_output(const char *log_buf, int log_len)
+int aos_set_log_level(aos_log_level_t log_level)
 {
-#ifdef ULOG_USING_ASYNC_OUTPUT
-    rbb_blk_t log_blk;
-    ulog_frame_t log_frame;
-
-    /* allocate log frame */
-    log_blk = rbb_blk_alloc(t_ulog.async_rbb, _ALIGN(sizeof(struct ulog_frame) + log_len, 4));
-    if (log_blk)
-    {
-        /* package the log frame */
-        log_frame = (ulog_frame_t) log_blk->buf;
-        // FIXME:
-        log_frame->magic = ULOG_FRAME_MAGIC;
-        log_frame->log_len = log_len;
-        log_frame->log = (const char *)log_blk->buf + sizeof(struct ulog_frame);
-        /* copy log data */
-        memcpy(log_blk->buf + sizeof(struct ulog_frame), log_buf, log_len);
-        /* put the block */
-        rbb_blk_put(log_blk);
-        /* send a notice */
-        aos_sem_signal(&t_ulog.async_notice);
-    }
-    else
-    {
-        static int already_output = 0;
-        if (already_output == 0)
-        {
-            printf("Warning: There is no enough buffer for saving async log,"
-                    " please increase the ULOG_ASYNC_OUTPUT_BUF_SIZE option.\n");
-            already_output = 1;
+    int rc = -EINVAL;
+    if(log_init) {
+        if (log_level <= AOS_LL_DEBUG) {
+            on_filter_level_changes(ulog_session_std, log_level + 1);
+            rc = 0;
         }
     }
+    return rc;
+}
+
+int aos_log_hexdump(const char *tag, char *buffer, int len)
+{
+    int i;
+
+    printf("[%s]\n", tag);
+    printf("0x0000: ");
+    for (i = 0; i < len; i++) {
+        printf("0x%02x ", buffer[i]);
+
+        if (i % 8 == 7) {
+            printf("\n");
+            printf("0x%04x: ", i + 1);
+        }
+    }
+
+    printf("\n");
+    return 0;
+}
+
+char* get_sync_stop_level()
+{
+#ifdef CONFIG_LOGMACRO_SILENT
+    return "NDEBUG mode active";
 #else
-    ulog_output_to_all_backend(log_buf, log_len);
-#endif /* ULOG_USING_ASYNC_OUTPUT */
-}
-
-extern int g_syslog_level;
-extern const char const g_yoc_log_string[];
-int aos_log_tag(const char *tag, int log_level, const char *fmt, ...)
-{
-    struct timespec ts;
-    int ret;
-    int offset = 0;
-    char *log_buf;
-    int log_len = 0;
-    va_list args;
-
-    if (log_level > g_syslog_level ) {
-        return -1;
-    }
-
-    output_lock();
-
-    log_buf = t_ulog.log_buf_th;
-
-    if (tag != NULL) {
-        /* Get the current time */
-        ret = clock_gettime(CLOCK_MONOTONIC, &ts);
-
-        if (ret == 0) {
-            snprintf(log_buf, ULOG_LINE_BUF_SIZE, "[%6d.%06d][%c][%-8s]", 
-                        ts.tv_sec, (int)ts.tv_nsec / 1000, g_yoc_log_string[log_level], tag);
-        } else {
-            snprintf(log_buf, ULOG_LINE_BUF_SIZE, "[%c][%-8s]", g_yoc_log_string[log_level], tag);
-        }
-        offset = strlen(log_buf);
-    }
-
-    va_start(args, fmt);
-    int fmt_result = vsnprintf(&log_buf[offset], ULOG_LINE_BUF_SIZE - offset, fmt, args);
-    va_end(args);
-    if (fmt_result > -1 && fmt_result + offset < ULOG_LINE_BUF_SIZE) {
-        log_len = fmt_result + offset;
+    if (stop_filter_level[ulog_session_std] == LOG_NONE) {
+        return "all log recorded";
+    } else if (stop_filter_level[ulog_session_std] == LOG_EMERG) {
+        return "all log stop";
     } else {
-        log_len = ULOG_LINE_BUF_SIZE;
-        log_buf[ULOG_LINE_BUF_SIZE - 1] = '\n';
+        static char buf[32];
+        snprintf(buf, 24, "current log level %c",serverity_name[stop_filter_level[ulog_session_std]-1]);
+        return buf;
     }
-    /* do log output */
-    do_output(log_buf, log_len);
-
-    output_unlock();
-
-    return 0;
+#endif
 }
 
-int ulog_backend_register(ulog_backend_t backend, const char *name)
-{
-    aos_assert(backend);
-    aos_assert(name);
-    aos_assert(t_ulog.init_ok);
-    aos_assert(backend->output);
-
-    if (backend->init)
-    {
-        backend->init(backend);
-    }
-
-    memcpy(backend->name, name, ULOG_NAME_MAX);
-
-    // slist_add_tail(&t_ulog.backend_list, &backend->list);
-    slist_add_tail(&backend->list, &t_ulog.backend_list);
-
-    return 0;
-}
-
-int ulog_backend_unregister(ulog_backend_t backend)
-{
-    aos_assert(backend);
-    aos_assert(t_ulog.init_ok);
-
-    if (backend->deinit)
-    {
-        backend->deinit(backend);
-    }
-
-    slist_remove(&t_ulog.backend_list, &backend->list);
-
-    return 0;
-}
-
-#ifdef ULOG_USING_ASYNC_OUTPUT
-/**
- * asynchronous output logs to all backends
- *
- * @note you must call this function when ULOG_ASYNC_OUTPUT_BY_THREAD is disable
+#if SYNC_DETAIL_COLOR
+/*
+ * color def.
+ * see http://stackoverflow.com/questions/3585846/color-text-in-terminal-applications-in-unix
  */
-void ulog_async_output(void)
-{
-    rbb_blk_t log_blk;
-    ulog_frame_t log_frame;
+#define COL_DEF "\x1B[0m"  /* white */
+#define COL_RED "\x1B[31m" /* red */
+#define COL_GRE "\x1B[32m" /* green */
+#define COL_BLU "\x1B[34m" /* blue */
+#define COL_YEL "\x1B[33m" /* yellow */
+#define COL_WHE "\x1B[37m" /* white */
+#define COL_CYN "\x1B[36m"
+#define COL_MAG "\x1B[35m"
 
-    while ((log_blk = rbb_blk_get(t_ulog.async_rbb)) != NULL)
-    {
-        log_frame = (ulog_frame_t) log_blk->buf;
-        if (log_frame->magic == ULOG_FRAME_MAGIC)
-        {
-            /* output to all backends */
-            ulog_output_to_all_backend(log_frame->log, log_frame->log_len);
-        }
-        rbb_blk_free(t_ulog.async_rbb, log_blk);
+static char log_col_list[LOG_NONE][12] = {
+    COL_DEF, COL_RED, COL_RED, COL_RED, COL_BLU, COL_GRE, COL_GRE, COL_WHE
+};
+static char* log_col_def(const unsigned char level)
+{
+    if(level<LOG_NONE) {
+        return log_col_list[level];
+    } else {
+        return log_col_list[0];
     }
 }
-
-static void async_output_thread_entry(void *param)
-{
-    while (t_ulog.async_th_run)
-    {
-        aos_sem_wait(&t_ulog.async_notice, AOS_WAIT_FOREVER);
-        ulog_async_output();
-    }
-    aos_task_exit(0);
-    aos_sem_free(&t_ulog.async_notice);
-    aos_sem_signal(&t_ulog.async_sem_finish);
-}
-#endif /* ULOG_USING_ASYNC_OUTPUT */
-
-/**
- * flush all backends's log
- */
-void ulog_flush(void)
-{
-    slist_t *node;
-    ulog_backend_t backend;
-
-    if (!t_ulog.init_ok)
-        return;
-
-#ifdef ULOG_USING_ASYNC_OUTPUT
-    ulog_async_output();
+#else
+#define log_col_def(x) ""
 #endif
 
-    /* flush all backends */
-    for (node = slist_first(&t_ulog.backend_list); node; node = slist_next(node))
-    {
-        backend = slist_entry(node, struct ulog_backend, list);
-        if (backend->flush)
-        {
-            backend->flush(backend);
-        }
-    }
-}
-
-int ulog_init(void)
-{
-    if (t_ulog.init_ok)
-        return 0;
-
-    aos_mutex_new(&t_ulog.output_locker);
-    slist_init(&t_ulog.backend_list);
-
-#ifdef ULOG_USING_ASYNC_OUTPUT
-    aos_assert(ULOG_ASYNC_OUTPUT_STORE_LINES >= 2);
-    /* async output ring block buffer */
-    t_ulog.async_rbb = rbb_create(_ALIGN(ULOG_ASYNC_OUTPUT_BUF_SIZE, 4), ULOG_ASYNC_OUTPUT_STORE_LINES);
-    if (t_ulog.async_rbb == NULL)
-    {
-        printf("Error: ulog init failed! No memory for async rbb.\n");
-        aos_mutex_free(&t_ulog.output_locker);
-        return -ENOMEM;
-    }
-    /* async output thread */
-    t_ulog.async_th_run = 1;
-    aos_task_new_ext(&t_ulog.async_th, "ulog_async", async_output_thread_entry, &t_ulog, ULOG_ASYNC_OUTPUT_THREAD_STACK, 40);
-    if (t_ulog.async_th.hdl == NULL)
-    {
-        printf("Error: ulog init failed! No memory for async output thread.\n");
-        aos_mutex_free(&t_ulog.output_locker);
-        rbb_destroy(t_ulog.async_rbb);
-        return -ENOMEM;
-    }
-
-    aos_sem_new(&t_ulog.async_notice, 0);
-    aos_sem_new(&t_ulog.async_sem_finish, 0);
-#endif /* ULOG_USING_ASYNC_OUTPUT */
-
-    t_ulog.init_ok = 1;
-
-    return 0;
-}
-
-void ulog_deinit(void)
-{
-    slist_t *node;
-    ulog_backend_t backend;
-
-    if (!t_ulog.init_ok)
-        return;
-
-    /* deinit all backends */
-    for (node = slist_first(&t_ulog.backend_list); node; node = slist_next(node))
-    {
-        backend = slist_entry(node, struct ulog_backend, list);
-        if (backend->deinit)
-        {
-            backend->deinit(backend);
-        }
-    }
-
-    aos_mutex_free(&t_ulog.output_locker);
-
-#ifdef ULOG_USING_ASYNC_OUTPUT
-    aos_sem_signal(&t_ulog.async_notice);
-    t_ulog.async_th_run = 0;
-    aos_sem_wait(&t_ulog.async_sem_finish, AOS_WAIT_FOREVER);
-    aos_sem_free(&t_ulog.async_sem_finish);
-    rbb_destroy(t_ulog.async_rbb);
+#ifdef ULOG_CONFIG_ASYNC
+static uint8_t get_lowest_level(const ulog_session_type_t start);
 #endif
 
-    t_ulog.init_ok = 0;
+int ulog(const unsigned char s, const char *mod, const char *f, const unsigned long l, const char *fmt, ...)
+{
+    int rc = -1;
+    if (log_init &&
+        (s < push_stop_filter_level) ) {
+        char log_time[24];
+        if (log_get_mutex()) {
+            const char* rpt_mod = NULL;
+            if ((mod == NULL) || (0 == strlen(mod))) {
+                rpt_mod = UNKNOWN_BUF;
+            } else {
+                rpt_mod = mod;
+            }
+#ifdef ULOG_CONFIG_ASYNC
+            uint8_t facility = FACILITY_NORMAL_LOG;
+            if(strlen(rpt_mod)==0 || 0==strncmp("MQTT",rpt_mod, 4)) {
+                facility = FACILITY_NORMAL_LOG_NO_POP_CLOUD;
+            }
+
+            snprintf(ulog_buf,ULOG_HEADER_TYPE_LEN+1,"<%03d>",s+(facility&0xF8));
+
+#if SYNC_LOG_DETAILS
+            snprintf(&ulog_buf[ULOG_HEADER_TYPE_LEN], ULOG_SIZE-ULOG_HEADER_TYPE_LEN, "%s[%s]<%c>%s %s[%d]: ",
+                     log_col_def(s),
+                     ulog_format_time(log_time, 24), serverity_name[s],  rpt_mod,
+                     trim_file_path(f),
+                     (int)l);
+#else /* !SYNC_LOG_DETAILS */
+            snprintf(&ulog_buf[ULOG_HEADER_TYPE_LEN], ULOG_SIZE-ULOG_HEADER_TYPE_LEN, "[%s]<%c>%s ",
+                     ulog_format_time(log_time, 24), serverity_name[s],  rpt_mod);
+#endif
+
+            va_list args;
+            va_start(args, fmt);
+            rc = vsnprintf(&ulog_buf[strlen(ulog_buf)], ULOG_SIZE-strlen(ulog_buf), fmt, args);
+            va_end(args);
+            rc = rc<ULOG_SIZE-1?rc:ULOG_SIZE-1;
+
+            bool skip_session_std = false;
+#if !LOG_DIR_ASYNC
+            if(s < stop_filter_level[ulog_session_std]) {
+                skip_session_std = true;
+                puts(&ulog_buf[LOG_PREFIX_LEN]);
+            }
+#endif
+            if(!skip_session_std || (s<get_lowest_level(ulog_session_std))) {
+                uring_fifo_push_s(ulog_buf, strlen(ulog_buf)+1);
+            }
+
+#else /* !ULOG_CONFIG_ASYNC */
+
+#if SYNC_LOG_DETAILS
+            printf("%s[%s]<%c>%s %s[%d]: ",
+                   log_col_def(s),
+                   ulog_format_time(log_time, 24), serverity_name[s],  rpt_mod,
+                   trim_file_path(f),
+                   (int)l);
+#else /* !SYNC_LOG_DETAILS */
+            printf("[%s]<%c>%s ",
+                   ulog_format_time(log_time, 24), serverity_name[s],  rpt_mod);
+
+#endif /* SYNC_LOG_DETAILS */
+
+            va_list args;
+            va_start(args, fmt);
+            rc = vprintf(fmt, args);
+            va_end(args);
+            fflush(stdout);
+            printf("\r\n");
+#endif /* if def ULOG_CONFIG_ASYNC */
+            log_release_mutex();
+        }
+    }
+    return rc;
 }
+
+void on_sync_filter_level_change(const ulog_session_type_t session, const char level)
+{
+    if ('N' == level) {
+        on_filter_level_changes(session, LOG_EMERG);
+    } else {
+        int8_t i = 0;
+        for (; i < LOG_NONE; i++) {
+            if (serverity_name[i] == level) {
+                on_filter_level_changes(session, i+1);
+                break;
+            }
+        }
+    }
+}
+
+void on_filter_level_changes(const ulog_session_type_t session, const uint8_t level)
+{
+    bool next_handle = true;
+    if (session == ulog_session_size) {/* only happen on init, get the initial push level */
+        push_stop_filter_level = LOG_EMERG;
+    } else if (session < ulog_session_size && level <= LOG_NONE) {
+        stop_filter_level[session] = level;
+
+        /* suppose we use update session sf(stop filter) as push filter, this value will be updated below */
+        push_stop_filter_level = stop_filter_level[session];
+    } else {
+        next_handle = false;
+    }
+    if (next_handle) {
+        uint8_t i = 0;
+        for (; i < ulog_session_size; i++) {
+            if (push_stop_filter_level < stop_filter_level[i]) {
+                push_stop_filter_level = stop_filter_level[i];
+            }
+        }
+    }
+}
+
+#ifdef ULOG_CONFIG_ASYNC
+static uint8_t get_lowest_level(const ulog_session_type_t start)
+{
+    uint8_t i = start+1;
+    uint8_t lowest_level = LOG_EMERG;
+    for(; i<ulog_session_size; i++) {
+        if(lowest_level<stop_filter_level[i]) {
+            lowest_level = stop_filter_level[i];
+        }
+    }
+    return lowest_level;
+}
+#endif
+
+void on_filter_change(const ulog_session_type_t session, const char level)
+{
+    if(session<ulog_session_size && level<=LOG_NONE) {
+        on_filter_level_changes(session, level);
+    }
+}
+

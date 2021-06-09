@@ -14,6 +14,7 @@ enum {
     AO_CMD_EQ_ENABLE,        ///< equalizer enable, may be not support for some hardware.
     AO_CMD_EQ_SET_PARAM,     ///< equalizer param config, may be not support for some hardware.
     AO_CMD_VOL_SET,          ///< soft vol
+    AO_CMD_ATEMPO_SET_SPEED, ///< atempo play speed set
 };
 
 /* equalizer typedef below */
@@ -32,6 +33,9 @@ typedef struct {
 typedef struct {
     uint8_t                   vol_index;      ///< soft vol scale index (0~255)
 } ovol_set_t;
+
+//AO_CMD_ATEMPO_SET_SPEED
+/* float speed; */
 
 __END_DECLS__
 

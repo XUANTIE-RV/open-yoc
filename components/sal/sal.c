@@ -6,7 +6,6 @@
 #include <string.h>
 #include <assert.h>
 
-#include <aos/log.h>
 #include <aos/debug.h>
 
 #include <sal.h>
@@ -32,6 +31,13 @@ int sal_module_register(sal_op_t *module)
     // }
 
     g_sal_module = module;
+
+    return 0;
+}
+
+int sal_module_unregister(void)
+{
+    g_sal_module = NULL;
 
     return 0;
 }
@@ -66,7 +72,7 @@ int sal_module_deinit(void)
 {
     int err = 0;
 
-    aos_check_return_einval(g_sal_module && !g_sal_module->init);
+    aos_check_return_einval(g_sal_module);
 
     // if (NULL == g_sal_module) {
     //     SAL_LOGE(TAG, "sal module deinit fail for there is no sal module registered yet \n");
@@ -78,7 +84,9 @@ int sal_module_deinit(void)
     //     return -1;
     // }
 
-    err = g_sal_module->deinit();
+    if (g_sal_module->deinit) {
+        err = g_sal_module->deinit();
+    }
 
     if (err) {
         SAL_LOGE(TAG, "deinit", err);

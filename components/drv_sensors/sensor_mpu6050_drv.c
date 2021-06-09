@@ -13,8 +13,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <errno.h>
-#include <pin.h>
-#include <aos/log.h>
+#include <board.h>
 
 #include <devices/iic.h>
 

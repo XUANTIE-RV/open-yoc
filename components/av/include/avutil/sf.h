@@ -61,6 +61,7 @@ typedef enum {
     ESF_S8,                    ///< signed 8 bits
     ESF_S16LE,                 ///< signed 16 bits, little endian
     ESF_S16BE,                 ///< signed 16 bits, big endian
+    ESF_S24LE,                 ///< signed 16 bits, little endian
     ESF_S32LE,                 ///< signed 32 bits, little endian
     ESF_S32BE,                 ///< signed 32 bits, big endian
     ESF_U8,                    ///< unsigned 8 bits
@@ -115,12 +116,17 @@ esf_t get_esf_type(sf_t sf);
  */
 const char* get_sf_name(sf_t sf);
 
+#define SF_FORMAT_STR_SIZE_MAX    (128)
+
 /**
  * @brief  get format str of sf
+ * @param  [in] buf : min of the buf is SF_FORMAT_STR_SIZE_MAX
  * @param  [in] sf
  * @return not null
  */
-char* sf_get_format(sf_t sf);
+char* sf_get_format(char buf[SF_FORMAT_STR_SIZE_MAX], sf_t sf);
+
+#define sf_get_format_str(sf) sf_get_format((char[SF_FORMAT_STR_SIZE_MAX]){0}, sf)
 
 /**
  * @brief  get esf name

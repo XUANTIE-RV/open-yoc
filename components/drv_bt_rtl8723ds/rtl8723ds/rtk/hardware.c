@@ -29,7 +29,6 @@
 #define LOG_TAG "bt_hwcfg"
 #define RTKBT_RELEASE_NAME "20171130_BT_ANDROID_7.0"
 
-#include <aos/log.h>
 #include <aos/aos.h>
 #include <stdlib.h>
 #include <stdint.h>

@@ -10,18 +10,24 @@ extern "C" {
 #endif
 
 #include <features.h>
+#include <sys/types.h>
+
+#define F_OK    0
+#define R_OK    4
+#define W_OK    2
+#define X_OK    1
+
 #ifndef __off_t_defined 
 typedef  int __off_t;
 #define __off_t_defined 
 #endif
 typedef __off_t off_t;
 typedef int __pid_t;
-typedef int ssize_t;
 
 /* there is no function achieve */
-extern int write (int __fd, __const void *__buf, int __n);
-extern int read (int __fd, void *__buf,int __nbytes);
-extern int lseek (int __fd, int __offset, int __whence);
+extern ssize_t write (int __fd, __const void *__buf, int __n);
+extern ssize_t read (int __fd, void *__buf,int __nbytes);
+extern off_t lseek (int __fd, int __offset, int __whence);
 
 
 extern int close (int __fd);

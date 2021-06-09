@@ -27,8 +27,7 @@
 extern "C" {
 #endif
 
-enum rbb_status
-{
+enum rbb_status {
     /* unused status when first initialize or after blk_free() */
     RBB_BLK_UNUSED,
     /* initialized status after blk_alloc() */
@@ -43,8 +42,7 @@ typedef enum rbb_status rbb_status_t;
 /**
  * the block of rbb
  */
-struct rbb_blk
-{
+struct rbb_blk {
     rbb_status_t status :8;
     /* less then 2^24 */
     size_t size :24;
@@ -56,8 +54,7 @@ typedef struct rbb_blk *rbb_blk_t;
 /**
  * Rbb block queue: the blocks (from block1->buf to blockn->buf) memory which on this queue is continuous.
  */
-struct rbb_blk_queue
-{
+struct rbb_blk_queue {
     rbb_blk_t blocks;
     size_t blk_num;
 };
@@ -66,8 +63,7 @@ typedef struct rbb_blk_queue *rbb_blk_queue_t;
 /**
  * ring block buffer
  */
-struct _rbb
-{
+struct _rbb {
     uint8_t *buf;
     size_t buf_size;
     /* all of blocks */

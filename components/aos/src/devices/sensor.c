@@ -7,7 +7,6 @@
 #include <unistd.h>
 #include <errno.h>
 
-#include <aos/log.h>
 #include <devices/hal/sensor_impl.h>
 
 #define SENSOR_DRIVER(dev)  ((sensor_driver_t*)(dev->drv))

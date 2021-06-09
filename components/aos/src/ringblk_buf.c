@@ -37,8 +37,7 @@ void rbb_init(rbb_t rbb, uint8_t *buf, size_t buf_size, rbb_blk_t block_set, siz
     rbb->blk_max_num = blk_max_num;
     slist_init(&rbb->blk_list);
     /* initialize block status */
-    for (i = 0; i < blk_max_num; i++)
-    {
+    for (i = 0; i < blk_max_num; i++) {
         block_set[i].status = RBB_BLK_UNUSED;
     }
 }
@@ -59,21 +58,18 @@ rbb_t rbb_create(size_t buf_size, size_t blk_max_num)
     rbb_blk_t blk_set;
 
     rbb = (rbb_t)aos_malloc(sizeof(struct _rbb));
-    if (!rbb)
-    {
+    if (!rbb) {
         return NULL;
     }
 
     buf = (uint8_t *)aos_malloc(buf_size);
-    if (!buf)
-    {
+    if (!buf) {
         aos_free(rbb);
         return NULL;
     }
 
     blk_set = (rbb_blk_t)aos_malloc(sizeof(struct rbb_blk) * blk_max_num);
-    if (!blk_set)
-    {
+    if (!blk_set) {
         aos_free(buf);
         aos_free(rbb);
         return NULL;
@@ -105,10 +101,8 @@ static rbb_blk_t find_empty_blk_in_set(rbb_t rbb)
 
     aos_assert(rbb);
 
-    for (i = 0; i < rbb->blk_max_num; i ++)
-    {
-        if (rbb->blk_set[i].status == RBB_BLK_UNUSED)
-        {
+    for (i = 0; i < rbb->blk_max_num; i ++) {
+        if (rbb->blk_set[i].status == RBB_BLK_UNUSED) {
             return &rbb->blk_set[i];
         }
     }
@@ -137,14 +131,11 @@ rbb_blk_t rbb_blk_alloc(rbb_t rbb, size_t blk_size)
 
     new = find_empty_blk_in_set(rbb);
 
-    if (slist_entry_number(&rbb->blk_list) < rbb->blk_max_num && new)
-    {
-        if (slist_entry_number(&rbb->blk_list) > 0)
-        {
+    if (slist_entry_number(&rbb->blk_list) < rbb->blk_max_num && new) {
+        if (slist_entry_number(&rbb->blk_list) > 0) {
             head = slist_first_entry(&rbb->blk_list, struct rbb_blk, list);
             tail = slist_tail_entry(&rbb->blk_list, struct rbb_blk, list);
-            if (head->buf <= tail->buf)
-            {
+            if (head->buf <= tail->buf) {
                 /**
                  *                      head                     tail
                  * +--------------------------------------+-----------------+------------------+
@@ -155,30 +146,23 @@ rbb_blk_t rbb_blk_alloc(rbb_t rbb, size_t blk_size)
                 empty1 = (rbb->buf + rbb->buf_size) - (tail->buf + tail->size);
                 empty2 = head->buf - rbb->buf;
 
-                if (empty1 >= blk_size)
-                {
+                if (empty1 >= blk_size) {
                     // slist_add_tail(&rbb->blk_list, &new->list);
                     slist_add_tail(&new->list, &rbb->blk_list);
                     new->status = RBB_BLK_INITED;
                     new->buf = tail->buf + tail->size;
                     new->size = blk_size;
-                }
-                else if (empty2 >= blk_size)
-                {
+                } else if (empty2 >= blk_size) {
                     // slist_add_tail(&rbb->blk_list, &new->list);
                     slist_add_tail(&new->list, &rbb->blk_list);
                     new->status = RBB_BLK_INITED;
                     new->buf = rbb->buf;
                     new->size = blk_size;
-                }
-                else
-                {
+                } else {
                     /* no space */
                     new = NULL;
                 }
-            }
-            else
-            {
+            } else {
                 /**
                  *        tail                                              head
                  * +----------------+-------------------------------------+--------+-----------+
@@ -188,23 +172,18 @@ rbb_blk_t rbb_blk_alloc(rbb_t rbb, size_t blk_size)
                  */
                 empty1 = head->buf - (tail->buf + tail->size);
 
-                if (empty1 >= blk_size)
-                {
+                if (empty1 >= blk_size) {
                     // slist_add_tail(&rbb->blk_list, &new->list);
                     slist_add_tail(&new->list, &rbb->blk_list);
                     new->status = RBB_BLK_INITED;
                     new->buf = tail->buf + tail->size;
                     new->size = blk_size;
-                }
-                else
-                {
+                } else {
                     /* no space */
                     new = NULL;
                 }
             }
-        }
-        else
-        {
+        } else {
             /* the list is empty */
             // slist_add_tail(&rbb->blk_list, &new->list);
             slist_add_tail(&new->list, &rbb->blk_list);
@@ -212,9 +191,7 @@ rbb_blk_t rbb_blk_alloc(rbb_t rbb, size_t blk_size)
             new->buf = rbb->buf;
             new->size = blk_size;
         }
-    }
-    else
-    {
+    } else {
         new = NULL;
     }
 
@@ -253,11 +230,9 @@ rbb_blk_t rbb_blk_get(rbb_t rbb)
         return 0;
 
 
-    for (node = slist_first(&rbb->blk_list); node; node = slist_next(node))
-    {
+    for (node = slist_first(&rbb->blk_list); node; node = slist_next(node)) {
         block = slist_entry(node, struct rbb_blk, list);
-        if (block->status == RBB_BLK_PUT)
-        {
+        if (block->status == RBB_BLK_PUT) {
             block->status = RBB_BLK_GET;
             goto __exit;
         }
@@ -353,26 +328,19 @@ size_t rbb_blk_queue_get(rbb_t rbb, size_t queue_data_len, rbb_blk_queue_t blk_q
         return 0;
 
 
-    for (node = slist_first(&rbb->blk_list); node; node = slist_next(node))
-    {
-        if (!last_block)
-        {
+    for (node = slist_first(&rbb->blk_list); node; node = slist_next(node)) {
+        if (!last_block) {
             last_block = slist_entry(node, struct rbb_blk, list);
-            if (last_block->status == RBB_BLK_PUT)
-            {
+            if (last_block->status == RBB_BLK_PUT) {
                 /* save the first put status block to queue */
                 blk_queue->blocks = last_block;
                 blk_queue->blk_num = 0;
-            }
-            else
-            {
+            } else {
                 /* the first block must be put status */
                 last_block = NULL;
                 continue;
             }
-        }
-        else
-        {
+        } else {
             block = slist_entry(node, struct rbb_blk, list);
             /*
              * these following conditions will break the loop:
@@ -382,8 +350,7 @@ size_t rbb_blk_queue_get(rbb_t rbb, size_t queue_data_len, rbb_blk_queue_t blk_q
              */
             if (block->status != RBB_BLK_PUT ||
                 last_block->buf > block->buf ||
-                data_total_size + block->size > queue_data_len)
-            {
+                data_total_size + block->size > queue_data_len) {
                 break;
             }
             /* backup last block */
@@ -412,8 +379,7 @@ size_t rbb_blk_queue_len(rbb_blk_queue_t blk_queue)
 
     aos_assert(blk_queue);
 
-    for (i = 0; i < blk_queue->blk_num; i++)
-    {
+    for (i = 0; i < blk_queue->blk_num; i++) {
         data_total_size += blk_queue->blocks[i].size;
     }
 
@@ -447,8 +413,7 @@ void rbb_blk_queue_free(rbb_t rbb, rbb_blk_queue_t blk_queue)
     aos_assert(rbb);
     aos_assert(blk_queue);
 
-    for (i = 0; i < blk_queue->blk_num; i++)
-    {
+    for (i = 0; i < blk_queue->blk_num; i++) {
         rbb_blk_free(rbb, &blk_queue->blocks[i]);
     }
 }
@@ -472,28 +437,22 @@ size_t rbb_next_blk_queue_len(rbb_t rbb)
     if (slist_empty(&rbb->blk_list))
         return 0;
 
-    for (node = slist_first(&rbb->blk_list); node; node = slist_next(node))
-    {
-        if (!last_block)
-        {
+    for (node = slist_first(&rbb->blk_list); node; node = slist_next(node)) {
+        if (!last_block) {
             last_block = slist_entry(node, struct rbb_blk, list);
-            if (last_block->status != RBB_BLK_PUT)
-            {
+            if (last_block->status != RBB_BLK_PUT) {
                 /* the first block must be put status */
                 last_block = NULL;
                 continue;
             }
-        }
-        else
-        {
+        } else {
             block = slist_entry(node, struct rbb_blk, list);
             /*
              * these following conditions will break the loop:
              * 1. the current block is not put status
              * 2. the last block and current block is not continuous
              */
-            if (block->status != RBB_BLK_PUT || last_block->buf > block->buf)
-            {
+            if (block->status != RBB_BLK_PUT || last_block->buf > block->buf) {
                 break;
             }
             /* backup last block */

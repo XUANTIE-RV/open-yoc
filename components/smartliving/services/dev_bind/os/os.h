@@ -31,15 +31,6 @@ extern "C" {
 #define OS_DEVICE_NAME_LEN      DEVICE_NAME_LEN
 #define OS_DEVICE_SECRET_LEN    DEVICE_SECRET_LEN
 
-#if 0
-#ifndef in_range
-#define in_range(c, lo, up)     ((uint8_t)(c) >= (lo) && (uint8_t)(c) <= (up))
-#define isdigit(c)              in_range(c, '0', '9')
-#define isxdigit(c)             (isdigit(c) || in_range(c, 'a', 'f') || in_range(c, 'A', 'F'))
-#define islower(c)              in_range(c, 'a', 'z')
-#define isspace(c)              ((c) == ' ' || (c) == '\f' || (c) == '\n' || (c) == '\r' || (c) == '\t' || (c) == '\v')
-#endif
-#endif
 /***************************************** Misc Interface *****************************************/
 
 /** @defgroup group_misc misc
@@ -547,6 +538,26 @@ static inline int os_get_conn_encrypt_type(void)
 }
 
 /**
+ * @brief   Get rssi and channel of current link
+ *
+ * @param[out] p_rssi: rssi value of current link
+ * @param[out] p_channel: channel of current link
+ * 
+ * @return
+   @verbatim
+     = 0: succeeded
+     = -1: failed
+   @endverbatim
+ * @see None.
+ * @note None.
+ * @note awss use this API to get rssi and channel of current link
+ */
+static inline int os_get_conn_link_stat(int *p_rssi, int *p_channel)
+{
+    return platform_get_conn_link_stat(p_rssi, p_channel);
+}
+
+/**
  * @brief Get WIFI MAC string with format like: XX:XX:XX:XX:XX:XX.
  *
  * @param[out] mac_str @n Buffer for using to store wifi MAC string.
@@ -555,6 +566,7 @@ static inline int os_get_conn_encrypt_type(void)
  * @note this func will format mac address string uppercase
  */
 char *os_wifi_get_mac_str(char mac_str[OS_MAC_LEN]);
+
 char *os_wifi_str2mac(char mac_str[OS_MAC_LEN], char mac[OS_ETH_ALEN]);
 
 /**

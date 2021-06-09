@@ -4,7 +4,6 @@
 
 #include <stdlib.h>
 #include <ctype.h>
-#include <aos/log.h>
 
 #include "at_internal.h"
 

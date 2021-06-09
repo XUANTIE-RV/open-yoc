@@ -16,7 +16,7 @@
 #ifndef _HTTP_UTILS_H_
 #define _HTTP_UTILS_H_
 #include <sys/time.h>
-#include <aos/log.h>
+#include <ulog/ulog.h>
 
 #ifdef __cplusplus
 extern "C" {

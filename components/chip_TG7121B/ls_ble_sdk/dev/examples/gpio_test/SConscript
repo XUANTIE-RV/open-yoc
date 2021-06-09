@@ -1,0 +1,9 @@
+Import('app_build')
+
+src = [
+    'main.c'
+]
+inc = [
+    '.'
+]
+app_build('gpio_test',src,inc)

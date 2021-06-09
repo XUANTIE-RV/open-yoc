@@ -5,8 +5,8 @@
 #if defined(__cplusplus)  /* If this is a C++ compiler, use C linkage */
 extern "C" {
 #endif
-
 #include "sl_config.h"
+
 #ifdef AWSS_SUPPORT_APLIST
 #include <stdio.h>
 #include <stdint.h>
@@ -110,6 +110,21 @@ struct ap_info *zconfig_get_apinfo(uint8_t *mac)
     return NULL;
 }
 
+struct ap_info *zconfig_get_apinfo_by_3_byte_mac(uint8_t *last_3_Byte_mac)
+{
+    int i;
+    uint8_t *local_mac;
+
+    for (i = 1; i < zconfig_aplist_num; i++) {
+        local_mac = (uint8_t *)(zconfig_aplist[i].mac) + 3;
+        if (!memcmp(local_mac, last_3_Byte_mac, ETH_ALEN - 3)) {
+            return &zconfig_aplist[i];
+        }
+    }
+
+    return NULL;
+}
+
 struct ap_info *zconfig_get_apinfo_by_ssid(uint8_t *ssid)
 {
     int i;
@@ -194,6 +209,7 @@ struct ap_info *zconfig_get_apinfo_by_ssid_suffix(uint8_t *ssid_suffix)
  *     0/success, -1/invalid params(empty ssid/bssid)
  */
 
+extern char zconfig_is_utf8(const char *ansi_str, int length);
 int awss_save_apinfo(uint8_t *ssid, uint8_t *bssid, uint8_t channel, uint8_t auth,
                      uint8_t pairwise_cipher, uint8_t group_cipher, signed char rssi)
 {
@@ -297,10 +313,30 @@ int awss_save_apinfo(uint8_t *ssid, uint8_t *bssid, uint8_t channel, uint8_t aut
 #if defined(AWSS_SUPPORT_ADHA) || defined(AWSS_SUPPORT_AHA)
         adha = adha_aplist->cnt;
 #endif
-        awss_trace("[%d] ssid:%s, mac:%02x%02x%02x%02x%02x%02x, chn:%d, rssi:%d, adha:%d\r\n",
-        i, ssid, bssid[0], bssid[1], bssid[2],
-        bssid[3], bssid[4], bssid[5], channel,
-        rssi > 0 ? rssi - 256 : rssi, adha);
+        dump_awss_status(STATE_WIFI_CHAN_SCAN, "[%d] ssid:%s, mac:%02x%02x%02x%02x%02x%02x, chn:%d, rssi:%d, adha:%d",
+               i, ssid, bssid[0], bssid[1], bssid[2],
+               bssid[3], bssid[4], bssid[5], channel,
+               rssi > 0 ? rssi - 256 : rssi, adha);
+        #ifdef DEV_OFFLINE_LOG_ENABLE
+        signed char _rssi = rssi > 0 ? rssi - 256 : rssi;
+
+        if (i < 33 && _rssi > -70)
+        {
+            if (ssid && (strlen((const char*)ssid) > 0))
+            {
+                diagnosis_offline_log(LOG_LEVEL_I, "ssid:%s rssi:%d ch:%d\r\n", ssid, _rssi, channel);
+            }
+            else
+            {
+                awss_trace("ssid is invalid");
+            }
+
+            if (0 == zconfig_is_utf8((const char *)ssid, strlen((const char*)ssid)))
+            {
+                awss_trace("ssid:%s is not utf8", ssid);
+            }
+        }
+        #endif
     } while (0);
     /*
      * if chn already locked(zc_bssid set),
@@ -413,7 +449,7 @@ int awss_ieee80211_aplist_process(uint8_t *mgmt_header, int len, int link_type, 
         return ALINK_INVALID;
 	}
 
-    ret = ieee80211_get_bssid(mgmt_header, bssid);
+    ret = aw_ieee80211_get_bssid(mgmt_header, bssid);
     if (ret < 0) {
         return ALINK_INVALID;
 	}
@@ -446,26 +482,6 @@ int awss_ieee80211_aplist_process(uint8_t *mgmt_header, int len, int link_type, 
                      pairwise_cipher, group_cipher, rssi);
     return ALINK_INVALID;
 }
-
-struct ap_info *zconfig_get_apinfo_by_3_byte_mac(uint8_t *last_3_Byte_mac)
-{
-    int i;
-    uint8_t *local_mac;
-
-    if(NULL == last_3_Byte_mac) {
-        return NULL;
-    }
-
-    for (i = 1; i < zconfig_aplist_num; i++) {
-        local_mac = (uint8_t *)(zconfig_aplist[i].mac) + 3;
-        if (!memcmp(local_mac, last_3_Byte_mac, ETH_ALEN - 3)) {
-            return &zconfig_aplist[i];
-        }
-    }
-
-    return NULL;
-}
-
 
 #endif
 

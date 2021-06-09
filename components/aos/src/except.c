@@ -11,10 +11,10 @@
 static void except_process_function(int errno, const char *file, int line, const char *func_name, void *caller)
 {
 #ifdef CONFIG_DEBUG
-    printf("Except! errno is %s, function: %s at %s:%d, caller: 0x%p\n", strerror(errno), func_name, file, line, caller);
+    printf("Except! errno is %s, function: %s at %s:%d, caller: %p\n", strerror(errno), func_name, file, line, caller);
     while(1);
 #else
-    printf("Except! errno is %s, caller: 0x%p\n", strerror(errno), caller);
+    printf("Except! errno is %s, caller: %p\n", strerror(errno), caller);
     aos_reboot();
 #endif
 }

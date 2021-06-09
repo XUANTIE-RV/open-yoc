@@ -51,6 +51,10 @@ typedef enum avcodec_id {
     AVCODEC_ID_WMAV2          = (1 << 6),
     AVCODEC_ID_AMRNB          = (1 << 7),
     AVCODEC_ID_AMRWB          = (1 << 8),
+    AVCODEC_ID_OPUS           = (1 << 9),
+    AVCODEC_ID_SPEEX          = (1 << 10),
+    AVCODEC_ID_ALAW           = (1 << 11),
+    AVCODEC_ID_MULAW          = (1 << 12),
 } avcodec_id_t;
 
 typedef struct {
@@ -68,6 +72,8 @@ enum {
     AVFORMAT_TYPE_FLAC,
     AVFORMAT_TYPE_ASF,
     AVFORMAT_TYPE_AMR,
+    AVFORMAT_TYPE_TS,
+    AVFORMAT_TYPE_OGG,
 };
 
 typedef struct sh_audio {

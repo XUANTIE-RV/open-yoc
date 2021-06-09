@@ -7,7 +7,11 @@
 
 #include <aos/aos.h>
 #include <aos/list.h>
+#ifdef CONFIG_CSI_V2
+#include <drv/gpio_pin.h>
+#endif
 
+#define ADC_NAME_MAX (10)
 typedef struct button_ops {
     int (*init)(button_t *b);
     int (*deinit)(button_t *b);
@@ -16,25 +20,74 @@ typedef struct button_ops {
     int (*irq_enable)(button_t *b);
 } button_ops_t;
 
+typedef struct gpio_button_param {
+    int                 pin_id;
+#ifdef CONFIG_CSI_V2
+    csi_gpio_pin_t      pin_hdl;
+#else
+    gpio_pin_handle_t   pin_hdl;
+#endif
+    button_gpio_level_t active_level;
+} gpio_button_param_t;
+
+typedef struct adc_button_param {
+    char    adc_name[ADC_NAME_MAX];
+    int     channel;
+    int     range;
+    int     vref;
+} adc_button_param_t;
+
 struct button {
-    slist_t next;
-    long long t_ms;
-    long long st_ms;    //enter irq time
-    int pin_id;
-    gpio_pin_handle_t *pin_hdl;
-    int repeat;
-    int state;
-    int evt_id;
-    int old_evt_id;
-    int active;
-    int irq_flag;
-    int evt_flag;
-    evt_cb cb;
-    void *priv;
-    int bc_flag;
-    button_ops_t *ops;
-    button_param_t param;
-    char name[MAX_BUTTON_NAME];
+    slist_t         next;
+    int             repeat;
+    int             state;
+    int             old_evt_id;
+    int             active;
+    int             irq_flag;
+    bool            is_pressed;
+    int             button_id;
+    int             type;
+    int            *press_time;
+    int             press_time_subscript;
+    int             press_time_cnt;
+    int             event_id;
+    int             event_flag;
+    long long       happened_ms; //event happen tick
+    long long       st_ms;    //enter irq time
+    button_ops_t   *ops;
+    void           *param;
 };
+
+typedef button_evt_t event_pool_elem_t;
+
+typedef struct event_node {
+    slist_t             next;
+    int                 event_id;
+    int                 start_time;
+    button_evt_t       *buttons;
+    int                 button_count;
+    int                 event_depth;
+    int                 pending;
+    button_evt_cb_t     evt_cb;
+    void               *priv;
+} event_node_t;
+
+typedef struct button_srv {
+    aos_timer_t         tmr;
+    int                 start_tmr;
+    int                 adc_flag;
+    int                 inited;
+    slist_t             button_head;
+    slist_t             event_node_head;
+    int                 event_pool_depth;
+    event_pool_elem_t  *event_pool;
+    int                 event_pool_size;
+    long long           happened_ms; //event last happen tick
+} button_srv_t;
+
+extern button_ops_t gpio_ops;
+extern button_ops_t adc_ops;
+extern button_srv_t g_button_srv;
+void button_irq(button_t *button);
 
 #endif

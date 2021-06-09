@@ -1,0 +1,42 @@
+#! armcc -E
+
+#define FLASH_BASE 0x18000000
+#define FLASH_BASE_USER 0x1803d000
+#define FLASH_SIZE 0x40000
+#define FLASH_END (FLASH_BASE + FLASH_SIZE)
+#define RAM_BASE 0
+#define RAM_SIZE 0xc000
+#define RAM_END (RAM_BASE + RAM_SIZE)
+
+LR_FLASH FLASH_BASE_USER FLASH_SIZE{
+    VECTOR_CODE RAM_BASE{
+        *(RESET, +First)
+    }
+    RESET_RETAIN_DATA +0 UNINIT EMPTY 0x8
+    {
+        
+    }
+    RAM_DATA_CODE +0 RAM_SIZE{
+        *(+RW)
+        *(.xip_banned)
+        *(:gdef:__aeabi_memcpy)
+    }
+    
+    FLASH_CODE FLASH_BASE_USER+ImageLength(RAM_DATA_CODE)+ImageLength(VECTOR_CODE) ALIGN 0x4{
+        *(InRoot$$Sections)
+        *(+RO)
+    }
+    ScatterAssert(ImageLimit(FLASH_CODE) <= FLASH_END)
+    
+    BSS ImageLimit(RAM_DATA_CODE) ALIGN 0x4
+    {
+        *(SECTION_RTT)
+        *(+ZI)
+    }
+    HEAP_STACK +0 UNINIT
+    {
+        *(HEAP)
+        *(STACK)
+    } 
+    ScatterAssert(ImageLimit(HEAP_STACK)<=RAM_END)
+}

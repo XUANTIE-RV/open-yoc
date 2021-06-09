@@ -95,9 +95,9 @@ static int pcm_alsa_start(voice_pcm_t *p)
 
 #ifdef VOICE_DEBUG
 int g_hello_offset = 0;
-static int pcm_recv(aos_pcm_t *pcm, void *data , int len, int access)
+static int pcm_recv(aos_pcm_t *pcm, void *data, int len, int access)
 {
-     if ((len + g_hello_offset) >= local_audio_nhxb_len) {
+    if ((len + g_hello_offset) >= local_audio_nhxb_len) {
         g_hello_offset = 0;
     }
 
@@ -109,12 +109,17 @@ static int pcm_recv(aos_pcm_t *pcm, void *data , int len, int access)
 }
 #else
 // static char test_data[1024*4];
-static int pcm_recv(aos_pcm_t *pcm, void *data , int len, int access)
+static int pcm_recv(aos_pcm_t *pcm, void *data, int len, int access)
 {
     int ret = -1;
 
     while (1) {
-        aos_pcm_wait(pcm, AOS_WAIT_FOREVER);
+        ret = aos_pcm_wait(pcm, AOS_WAIT_FOREVER);
+
+        if (ret < 0) {
+            aos_pcm_recover(pcm, ret, 1);
+            continue;
+        }
 
         if (access) {
             // ret = aos_pcm_readi(pcm, (void *)test_data, aos_pcm_bytes_to_frames(pcm, len));
@@ -140,6 +145,10 @@ static void pcm_buffer_init(voice_pcm_t *pcm)
     int mic_len = 0;
     int ref_len = 0;
 
+    if (pcm == NULL || pcm->mic == NULL || pcm->ref == NULL) {
+        return;
+    }
+
     if (pcm->mic) {
         voice_pcm_param_t *p = pcm->mic->param;
         mic_len = p->period_bytes;
@@ -152,10 +161,10 @@ static void pcm_buffer_init(voice_pcm_t *pcm)
 
     pcm->data = voice_malloc(mic_len + ref_len);
     pcm->len = mic_len + ref_len;
-    pcm->mic->data = pcm->data;
     pcm->mic->len = mic_len;
+    pcm->mic->data = pcm->data;
 
-    if (pcm->ref->param) {
+    if (pcm && pcm->ref && pcm->ref->param) {
         pcm->ref->data = (char *)pcm->data + mic_len;
         pcm->ref->len = ref_len;
     }

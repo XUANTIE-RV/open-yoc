@@ -7,16 +7,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include <aos/aos.h>
-
 #include <sal.h>
-
 #include <devices/wifi.h>
 #include <devices/hal/wifi_impl.h>
 
 #include "esp8266.h"
 #include "esp8266_api.h"
-
-#include "pin.h"
+#include "board.h"
 #include "drv/gpio.h"
 
 #define WIFI_SSID_MAX_LEN 32
@@ -73,7 +70,6 @@ static esp_wifi_param_t        esp8266_param;
 
 static gpio_pin_handle_t *smart_pin = NULL;
 
-extern void sal_init(void);
 
 static void smartcfg_int_handle(int32_t idx)
 {
@@ -118,6 +114,9 @@ static int esp8266_dev_open(aos_dev_t *dev)
 static int esp8266_dev_close(aos_dev_t *dev)
 {
     //power off device
+    sal_deinit();
+
+    sal_module_unregister();
     return 0;
 }
 

@@ -66,7 +66,11 @@ typedef enum {
 	kMitRtosAlg2MicFixed = 3,
 	kMitRtosAlg2MicBssFloat = 4,
 	kMitRtosAlg2Mic1AecFloat = 5,
-	kMitRtosAlg2MicFloatThead2ed = 6,
+	kMitRtosAlg1Mic1AecFloat = 6,
+	kMitRtosAlg2MicFloatThead2ed = 7,
+	kMitRtosAlgBSS = 8,
+	kMitRtosAlgPMWFPG = 9,
+	kMitRtosAlgAECBSS = 10
 }MitRtosAlgType;
 
 typedef enum {
@@ -142,6 +146,15 @@ const char * mit_rtos_vadstate_get_string(MitRotsVadResult vad_result);
 
 /*定义唤醒信息*/
 typedef struct {
+	int noise_energy;  //噪声能量
+	int speech_energy; //语音能量
+	int snr;           //信噪比
+	int confidence;    //置信度
+}MitRtosDataKwsInfo_t;
+
+
+/*定义唤醒信息*/
+typedef struct {
 	int index;      //the index of all channels
 	char * data;    //唤醒词切分数据缓存指针 [reserved]
 	int length;     //唤醒词切分数据长度      [reserved]
@@ -149,6 +162,8 @@ typedef struct {
 	int confidence; //唤醒词打分
 	short cc_confidence;//reserved
 	char do_wwv;    //本次唤醒是否需要进行二次确认验证。输出到用户使用
+	//int energy;     //唤醒语音的能量信息
+	MitRtosDataKwsInfo_t kws_info;
 }MitRtosDataKws;
 
 
@@ -283,6 +298,14 @@ typedef enum {
 }MitRotsPlayState;
 int mit_rtos_set_playstate(MitRotsPlayState play_state , int hw_delay, int record_buffer_len);
 
+
+/*使用内部语音数组，进行唤醒检测验证。唤醒成功返回1，唤醒失败返回0.出错返回负值
+ * fe_enable、vad_enable、kws_enable： 算法模块使能与否，默认1即可。
+ * rtf_log_mode,调试模式，主要用于显示算法模块的RTF 0x20，或者出错时打印较多内部信息0x01。 
+ * alg_type 算法类型。
+ * 唤醒成功，返回1. 唤醒失败，返回0.出错返回负值。
+*/
+int mit_rtos_selfcheck(int fe_enable, int vad_enable, int kws_enable, int rtf_log_mode, MitRtosAlgType alg_type);
 
 #ifdef __cplusplus 
 }

@@ -17,7 +17,6 @@ char *LITE_json_value_of(char *key, char *src, ...)
     char       *key_iter;
     char       *key_next;
     char       *src_iter;
-
     int         key_len;
     int         value_len = -1;
     int         src_iter_len;
@@ -69,7 +68,6 @@ char *LITE_json_value_of(char *key, char *src, ...)
 #else
     ret = LITE_malloc((value_len + 1) * sizeof(char));
 #endif
-
     if (NULL == ret) {
         return NULL;
     }

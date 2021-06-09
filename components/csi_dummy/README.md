@@ -1,1 +1,0 @@
-# XXX Chip CSI driver

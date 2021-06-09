@@ -6,8 +6,16 @@
 #define __STREAM_ALL_H__
 
 #include <aos/aos.h>
+#include "avutil/av_config.h"
 
 __BEGIN_DECLS__
+
+#define REGISTER_STREAMER(X, x)                                          \
+    {                                                                    \
+        extern int stream_register_##x();                                \
+        if (CONFIG_STREAMER_##X)                                         \
+            stream_register_##x();                                       \
+    }
 
 /**
  * @brief  regist stream for memory
@@ -40,20 +48,37 @@ int stream_register_fifo();
 int stream_register_crypto();
 
 /**
+ * @brief  regist stream for hls
+ * @return 0/-1
+ */
+int stream_register_hls();
+
+/**
  * @brief  regist all streamer
  * @return 0/-1
  */
 static inline int stream_register_all()
 {
-    int rc = 0;
+#if defined(CONFIG_STREAMER_MEM)
+    REGISTER_STREAMER(MEM, mem);
+#endif
+#if defined(CONFIG_STREAMER_FILE)
+    REGISTER_STREAMER(FILE, file);
+#endif
+#if defined(CONFIG_STREAMER_HTTP)
+    REGISTER_STREAMER(HTTP, http);
+#endif
+#if defined(CONFIG_STREAMER_FIFO)
+    REGISTER_STREAMER(FIFO, fifo);
+#endif
+#if defined(CONFIG_STREAMER_CRYPTO) && defined(CONFIG_USING_TLS)
+    REGISTER_STREAMER(CRYPTO, crypto);
+#endif
+#if defined(CONFIG_STREAMER_HLS)
+    REGISTER_STREAMER(HLS, hls);
+#endif
 
-    rc |= stream_register_mem();
-    rc |= stream_register_file();
-    rc |= stream_register_http();
-    rc |= stream_register_fifo();
-    rc |= stream_register_crypto();
-
-    return rc;
+    return 0;
 }
 
 __END_DECLS__

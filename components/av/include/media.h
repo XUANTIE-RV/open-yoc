@@ -6,7 +6,7 @@
 #define __YOC_MEDIA_H__
 
 #include <aos/list.h>
-#include <yoc/uservice.h>
+#include <uservice/uservice.h>
 #include <avutil/eq_typedef.h>
 
 #ifdef __cplusplus
@@ -38,18 +38,25 @@ typedef enum {
 typedef enum {
     AUI_PLAYER_EVENT_ERROR,
     AUI_PLAYER_EVENT_START,
-    AUI_PLAYER_EVENT_FINISH
+    AUI_PLAYER_EVENT_FINISH,
+    AUI_PLAYER_EVENT_RESUME,
+    AUI_PLAYER_EVENT_UNDER_RUN,    ///< for stream-cache status
+    AUI_PLAYER_EVENT_OVER_RUN,     ///< for stream-cache status
 } aui_player_evtid_t;
 
 typedef int (*media_key_cb_t)(const void *in, size_t ilen, void *out, size_t *olen);
 
 typedef struct {
+    uint8_t   vol_en;              ///< soft vol scale enable
+    uint8_t   vol_index;           ///< soft vol scale index (0~255)
+    uint8_t   *aef_conf;           ///< config data for aef
+    size_t    aef_conf_size;       ///< size of the config data for aef
     uint32_t  resample_rate;
     uint32_t  web_cache_size;      ///< size of the web cache. 0 use default
     uint32_t  web_start_threshold; ///< (0~100)start read for player when up to cache_start_threshold. 0 use default
     uint32_t  snd_period_ms;       ///< period cache size(ms) for audio out. 0 means use default
     uint32_t  snd_period_num;      ///< number of period_ms. total cache size for ao is (period_num * period_ms * (rate / 1000) * 2 * (16/8)). 0 means use default
-
+    float     speed;               ///< atempo play speed.suggest: 0.5 ~ 2.0;
 } aui_player_config_t;
 
 typedef struct {
@@ -191,11 +198,18 @@ aui_player_state_t aui_player_get_state(int type);
 int aui_player_resume_music(void);
 
 /**
+ * @brief  init the default config value before configure
+ * @param  [in] config
+ * @return 0/-1
+ */
+int aui_player_config_init(aui_player_config_t *config);
+
+/**
  * 配置参数
  *
  * @return 0:成功
  */
-int aui_player_config(aui_player_config_t *config);
+int aui_player_config(const aui_player_config_t *config);
 
 /**
  * 配置参数
@@ -222,6 +236,24 @@ int aui_player_key_config(media_key_cb_t cb);
  * @return 0:成功
  */
 int aui_player_get_time(int type, aui_play_time_t *t);
+
+/**
+ * 获取播放速度
+ *
+ * @param type 支持MEDIA_MUSIC,MEDIA_SYSTEM
+ * @param speed : [PLAY_SPEED_MIN ~ PLAY_SPEED_MAX]
+ * @return 0:成功
+ */
+int aui_player_get_speed(int type, float *speed);
+
+/**
+ * 设置播放速度
+ *
+ * @param type 支持MEDIA_MUSIC,MEDIA_SYSTEM
+ * @param speed : [PLAY_SPEED_MIN ~ PLAY_SPEED_MAX]
+ * @return 0:成功
+ */
+int aui_player_set_speed(int type, float speed);
 
 #ifdef __cplusplus
 }

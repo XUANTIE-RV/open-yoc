@@ -1,0 +1,9 @@
+int ConfigTargetSettings(void) {
+    JLINK_ExecCommand("SetRTTSearchRanges 0x0 0xc000");
+    return 0;
+}
+
+int AfterResetTarget() {
+    JLINK_MEM_WriteU32(0x40021004,0x80000008);
+    return 0;
+}

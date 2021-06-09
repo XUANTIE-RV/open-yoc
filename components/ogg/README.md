@@ -1,14 +1,131 @@
-## 简介
+# Ogg
 
-Ogg是一种多媒体容器格式，并且是Xiph.org多媒体编解码器的本机文件和流格式。 与所有Xiph.org技术一样，它是一种开放格式，任何人都可以免费使用。
+[![Travis Build Status](https://travis-ci.org/xiph/ogg.svg?branch=master)](https://travis-ci.org/xiph/ogg)
+[![Jenkins Build Status](https://mf4.xiph.org/jenkins/job/libogg/badge/icon)](https://mf4.xiph.org/jenkins/job/libogg/)
+[![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/github/xiph/ogg?branch=master&svg=true)](https://ci.appveyor.com/project/rillian/ogg)
 
-与大多数容器格式一样，它封装原始压缩数据，并允许将音频和视频数据交织到一个方便的格式内。 容器格式的其他示例包括Quicktime .mov，MPEG程序流和AVI。
+Ogg project codecs use the Ogg bitstream format to arrange the raw,
+compressed bitstream into a more robust, useful form. For example,
+the Ogg bitstream makes seeking, time stamping and error recovery
+possible, as well as mixing several sepearate, concurrent media
+streams into a single physical bitstream.
 
-除了封装和交织多个数据流外，Ogg还提供了包成帧，错误检测和周期性时间戳，用于以较小的有限百分比比特率开销进行查找。
+## What's here ##
+This source distribution includes libogg and nothing else. Other modules
+(eg, the modules libvorbis, vorbis-tools for the Vorbis music codec,
+libtheora for the Theora video codec) contain the codec libraries for
+use with Ogg bitstreams.
 
-Ogg是一个面向流的容器，这意味着它可以一次性编写和读取，使其自然适用于Internet流传输并在处理管道中使用。 与其他基于文件的容器格式相比，主要的差异是面向流的设计。
+Directory:
 
-# 参考资料
+- `src` The source for libogg, a BSD-license inplementation of the public domain Ogg bitstream format
 
-- [官方资料](https://xiph.org/ogg/)
+- `include` Library API headers
 
+- `doc` Ogg specification and libogg API documents
+
+- `win32` Win32 projects and build automation
+
+- `macosx` Mac OS X project and build files
+
+## Contact ##
+
+The Ogg homepage is located at https://www.xiph.org/ogg/ .
+Up to date technical documents, contact information, source code and
+pre-built utilities may be found there.
+
+## Building ##
+
+#### Building from tarball distributions ####
+
+    ./configure
+    make
+
+and optionally (as root):
+
+    make install
+
+This will install the Ogg libraries (static and shared) into
+/usr/local/lib, includes into /usr/local/include and API
+documentation into /usr/local/share/doc.
+
+#### Building from repository source ####
+
+A standard svn build should consist of nothing more than:
+
+    ./autogen.sh
+    ./configure
+    make
+
+and as root if desired :
+
+    make install
+
+#### Building on Windows ####
+
+Use the project file in the win32 directory. It should compile out of the box.
+
+#### Cross-compiling from Linux to Windows ####
+
+It is also possible to cross compile from Linux to windows using the MinGW
+cross tools and even to run the test suite under Wine, the Linux/*nix
+windows emulator.
+
+On Debian and Ubuntu systems, these cross compiler tools can be installed
+by doing:
+
+    sudo apt-get mingw32 mingw32-binutils mingw32-runtime wine
+
+Once these tools are installed its possible to compile and test by
+executing the following commands, or something similar depending on
+your system:
+
+    ./configure --host=i586-mingw32msvc --target=i586-mingw32msvc --build=i586-linux
+    make
+    make check
+
+(Build instructions for Ogg codecs such as vorbis are similar and may
+be found in those source modules' README files)
+
+## Building with CMake ##
+
+Ogg supports building using [CMake](http://www.cmake.org/). CMake is a meta build system that generates native projects for each platform.
+To generate projects just run cmake replacing `YOUR-PROJECT-GENERATOR` with a proper generator from a list [here](http://www.cmake.org/cmake/help/v3.2/manual/cmake-generators.7.html):
+
+    cmake -G YOUR-PROJECT-GENERATOR .
+
+Note that by default cmake generates projects that will build static libraries.
+To generate projects that will build dynamic library use `BUILD_SHARED_LIBS` option like this:
+
+    cmake -G YOUR-PROJECT-GENERATOR -DBUILD_SHARED_LIBS=1 .
+
+After projects are generated use them as usual
+
+#### Building on Windows ####
+
+Use proper generator for your Visual Studio version like:
+
+    cmake -G "Visual Studio 12 2013" .
+
+#### Building on Mac OS X ####
+
+Use Xcode generator. To build framework run:
+
+    cmake -G Xcode -DBUILD_FRAMEWORK=1 .
+
+#### Building on Linux ####
+
+Use Makefile generator which is default one.
+
+    cmake .
+    make
+
+## License ##
+
+THIS FILE IS PART OF THE OggVorbis SOFTWARE CODEC SOURCE CODE.
+USE, DISTRIBUTION AND REPRODUCTION OF THIS LIBRARY SOURCE IS
+GOVERNED BY A BSD-STYLE SOURCE LICENSE INCLUDED WITH THIS SOURCE
+IN 'COPYING'. PLEASE READ THESE TERMS BEFORE DISTRIBUTING.
+
+THE OggVorbis SOURCE CODE IS COPYRIGHT (C) 1994-2015
+by the Xiph.Org Foundation https://www.xiph.org/

@@ -3,7 +3,6 @@
  */
 
 #include "MQTTPacket.h"
-
 #include "iotx_mqtt_internal.h"
 #include <string.h>
 

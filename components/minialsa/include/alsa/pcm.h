@@ -175,6 +175,7 @@ int aos_pcm_hw_params_any(aos_pcm_t *pcm, aos_pcm_hw_params_t *params);
 int aos_pcm_hw_params(aos_pcm_t *pcm, aos_pcm_hw_params_t *params);
 int aos_pcm_prepare(aos_pcm_t *pcm);
 int aos_pcm_wait(aos_pcm_t *pcm, int timeout);
+int aos_pcm_recover(aos_pcm_t *pcm, int err, int silent);
 
 int aos_pcm_hw_params_set_channels(aos_pcm_t *pcm, aos_pcm_hw_params_t *params, unsigned int val);
 int aos_pcm_hw_params_set_rate(aos_pcm_t *pcm, aos_pcm_hw_params_t *params, unsigned int val, int dir);

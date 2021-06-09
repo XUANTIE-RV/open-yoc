@@ -6,10 +6,9 @@
 #include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
-#include "pinmux.h"
 #include <aos/aos.h>
 #include <aos/debug.h>
-#include <yoc/uservice.h>
+#include <uservice/uservice.h>
 #include <devices/netdrv.h>
 
 #include <lwip/apps/dhcps.h>
@@ -24,15 +23,20 @@
 
 #include "wifi_io.h"
 #include "drv/gpio.h"
+#ifdef CONFIG_CSI_V2
+#include "drv/pin.h"
+#else
+#include "pinmux.h"
 #include "pin_name.h"
-
+#endif
+#include <ulog/ulog.h>
 
 #include "wifi_constants.h"
 #include "wifi_conf.h"
 
 #include "rtl8723ds_devops.h"
 
-#define MAX_AP_RECORD 50
+#define MAX_AP_RECORD 100
 #define IEEE80211_FCTL_TODS 0x0100
 #define IEEE80211_FCTL_FROMDS 0x0200
 #define IEEE80211_FTYPE_MGMT 0x0000
@@ -62,7 +66,11 @@ static wifi_promiscuous_cb_t g_monitor_cb;
 static wifi_event_func *     g_evt_func;
 static wifi_config_t         g_config;
 static rtl8723ds_gpio_pin    g_gpio_config;
+#ifdef CONFIG_CSI_V2
+csi_gpio_t  *                power_pin;
+#else
 static gpio_pin_handle_t     power_pin;
+#endif
 static aos_dev_t *               wifi_evt_dev;
 static wifi_ap_record_t *    ap_records;
 static int                   scan_count;
@@ -234,7 +242,15 @@ static int rtl8723ds_stop_dhcp(aos_dev_t *dev)
 static int rtl8723ds_set_ipaddr(aos_dev_t *dev, const ip_addr_t *ipaddr, const ip_addr_t *netmask,
                                 const ip_addr_t *gw)
 {
-    return -1;
+    DRIVER_INVALID_RETURN_VAL;
+
+    struct netif *netif = &xnetif[0]; //netif_find("en0");
+    aos_check_return_einval(netif && ipaddr && netmask && gw);
+
+    netif_set_ipaddr(netif, (ip4_addr_t *)ip_2_ip4(ipaddr));
+    netif_set_netmask(netif, (ip4_addr_t *)ip_2_ip4(netmask));
+    netif_set_gw(netif, (ip4_addr_t *)ip_2_ip4(gw));
+    return 0;
 }
 
 static int rtl8723ds_get_ipaddr(aos_dev_t *dev, ip_addr_t *ipaddr, ip_addr_t *netmask, ip_addr_t *gw)
@@ -533,7 +549,9 @@ void wifi_start_sta_task(void *arg)
         LOGD(TAG, "@@@@@@@@@@@@@@ Connection Success @@@@@@@@@@@@@@\n");
         netif_set_link_up(&xnetif[0]);
         event_publish(EVENT_WIFI_LINK_UP, NULL);
-        goto exit;
+        wifi_reg_event_handler(WIFI_EVENT_DISCONNECT, rtl8723ds_wifi_disconn_hdl, NULL);
+        sta_task_running = 0;
+        return;
     }
 
     wifi_set_sta_mode();
@@ -599,11 +617,14 @@ void wifi_start_sta_task(void *arg)
     if (ret != RTW_SUCCESS) {
         LOGE(TAG, "ERROR: STA Task, wifi connect failed!: %d", ret);
 
-        if (ret == RTW_INVALID_KEY) {
+        if (ret == RTW_INVALID_KEY || ret == RTW_TIMEOUT || ret == RTW_NOMEM) {
             /* password_len not match publish WIFI DOWN */
             event_publish(EVENT_WIFI_LINK_DOWN, NULL);
         }
         goto exit;
+    } else {
+        sta_task_running = 0;
+        return;
     }
 
 exit:
@@ -827,6 +848,7 @@ int rtl8723ds_deinit(aos_dev_t *dev)
     wifi_unreg_event_handler(WIFI_EVENT_DISCONNECT, rtl8723ds_wifi_disconn_hdl);
     wifi_unreg_event_handler(WIFI_EVENT_FOURWAY_HANDSHAKE_DONE, rtl8723ds_wifi_handshake_done_hdl);
     wifi_unreg_event_handler(WIFI_EVENT_CONNECT, rtl8723ds_wifi_connected_hdl);
+    netif_set_link_down(&xnetif[0]);
     return wifi_off();
 }
 
@@ -875,6 +897,7 @@ int rtl8723ds_stop(aos_dev_t *dev)
         aos_msleep(1000);
     }
 
+    netif_set_link_down(&xnetif[0]);
     return wifi_off();
 }
 
@@ -893,6 +916,7 @@ int rtl8723ds_reset(aos_dev_t *dev)
     wifi_unreg_event_handler(WIFI_EVENT_DISCONNECT, rtl8723ds_wifi_disconn_hdl);
     wifi_unreg_event_handler(WIFI_EVENT_FOURWAY_HANDSHAKE_DONE, rtl8723ds_wifi_handshake_done_hdl);
     wifi_unreg_event_handler(WIFI_EVENT_CONNECT, rtl8723ds_wifi_connected_hdl);
+    netif_set_link_down(&xnetif[0]);
     return wifi_off();
 }
 
@@ -1497,6 +1521,26 @@ void wifi_rtl8723ds_register(rtl8723ds_gpio_pin *config)
         return;
     }
 
+#ifdef CONFIG_CSI_V2
+     extern csi_gpio_t chip_gpio_handler;
+    if (config->power != 0xFFFFFFFF) {
+        LOGD(TAG, "pull up WLAN power\n");
+        csi_pin_set_mux(g_gpio_config.power, PIN_FUNC_GPIO);
+        uint32_t pin_mask = csi_pin_get_gpio_channel(g_gpio_config.power);
+        csi_gpio_mode(&chip_gpio_handler, pin_mask, GPIO_MODE_PUSH_PULL);
+        csi_gpio_dir(&chip_gpio_handler, pin_mask, GPIO_DIRECTION_OUTPUT);
+        csi_gpio_write(&chip_gpio_handler, pin_mask, 1);
+        aos_msleep(200);
+    }
+    if (config->wl_en != 0xFFFFFFFF) {
+        LOGD(TAG, "Init WLAN enable\n");
+        csi_pin_set_mux(g_gpio_config.wl_en, PIN_FUNC_GPIO);
+        uint32_t pin_mask = csi_pin_get_gpio_channel(g_gpio_config.wl_en);
+        csi_gpio_mode(&chip_gpio_handler, pin_mask, GPIO_MODE_PUSH_PULL);
+        csi_gpio_dir(&chip_gpio_handler, pin_mask, GPIO_DIRECTION_OUTPUT);
+        csi_gpio_write(&chip_gpio_handler, pin_mask, 1);
+    }
+#else
     gpio_pin_handle_t wl_en_pin;
 
     /** main power up*/
@@ -1504,7 +1548,7 @@ void wifi_rtl8723ds_register(rtl8723ds_gpio_pin *config)
         LOGD(TAG, "pull up WLAN power\n");
         drv_pinmux_config(g_gpio_config.power, PIN_FUNC_GPIO);
         power_pin = csi_gpio_pin_initialize(g_gpio_config.power, NULL);
-        csi_gpio_pin_config_mode(power_pin, GPIO_MODE_PUSH_PULL);
+        csi_gpio_pin_config_mode(power_pin, GPIO_MODE_PULLNONE);
         csi_gpio_pin_config_direction(power_pin, GPIO_DIRECTION_OUTPUT);
         csi_gpio_pin_write(power_pin, 1);
         aos_msleep(200);
@@ -1515,10 +1559,14 @@ void wifi_rtl8723ds_register(rtl8723ds_gpio_pin *config)
         LOGD(TAG, "Init WLAN enable\n");
         drv_pinmux_config(g_gpio_config.wl_en, PIN_FUNC_GPIO);
         wl_en_pin = csi_gpio_pin_initialize(g_gpio_config.wl_en, NULL);
-        csi_gpio_pin_config_mode(wl_en_pin, GPIO_MODE_PUSH_PULL);
+        csi_gpio_pin_config_mode(wl_en_pin, GPIO_MODE_PULLNONE);
         csi_gpio_pin_config_direction(wl_en_pin, GPIO_DIRECTION_OUTPUT);
+        csi_gpio_pin_write(wl_en_pin, 0);
+        aos_msleep(50);
         csi_gpio_pin_write(wl_en_pin, 1);
+        aos_msleep(50);
     }
+#endif    
 
     extern SDIO_BUS_OPS rtw_sdio_bus_ops;
     rtw_sdio_bus_ops.bus_probe();

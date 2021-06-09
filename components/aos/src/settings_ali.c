@@ -10,7 +10,6 @@
 #include <ctype.h>
 #include <errno.h>
 #include <aos/debug.h>
-#include <aos/log.h>
 #include <yoc/nvram.h>
 #include <drv/tee.h>
 
@@ -23,8 +22,8 @@
 #define NAME_BUFFER_SIZE 108
 
 int nvram_get_iot_info(char *product_key, uint32_t *product_key_len, char *device_name,
-                           uint32_t *device_name_len, char *device_secret,
-                           uint32_t *device_secret_len)
+                       uint32_t *device_name_len, char *device_secret,
+                       uint32_t *device_secret_len)
 {
     int ret = -1;
     if (product_key == NULL || product_key_len == NULL || device_name == NULL ||
@@ -35,21 +34,21 @@ int nvram_get_iot_info(char *product_key, uint32_t *product_key_len, char *devic
     /* get alicoap device_info from factory setting area */
     ret = nvram_get_val(PRODUCTKEY, product_key, *product_key_len);
     if (ret <= 0) {
-        LOGE(TAG, "PRODUCTKEY");
+        printf("PRODUCTKEY");
         goto do_error;
     }
     product_key[ret] = '\0';
 
     ret = nvram_get_val(DEVICENAME, device_name, *device_name_len);
     if (ret <= 0) {
-        LOGE(TAG, "DEVICENAME");
+        printf("DEVICENAME");
         goto do_error;
     }
     device_name[ret] = '\0';
 
     ret = nvram_get_val(DEVICESECRET, device_secret, *device_secret_len);
     if (ret <= 0) {
-        LOGE(TAG, "DEVICESECRET");
+        printf("DEVICESECRET");
         goto do_error;
     }
     device_secret[ret] = '\0';

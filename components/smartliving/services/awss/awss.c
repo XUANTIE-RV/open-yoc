@@ -47,17 +47,17 @@ int awss_success_notify(void)
 int awss_start(pair_success_callback pair_cb)
 {
     int pair_success = -1;
-
+	
     if (awss_stopped == 0) {
-        awss_debug("awss already running\n");
-        return -1;
+        dump_awss_status(STATE_WIFI_IN_PROGRESS, "awss already running");
+        return STATE_WIFI_IN_PROGRESS;
     }
 
     awss_stopped = 0;
-    awss_event_post(AWSS_START);
+    awss_event_post(IOTX_AWSS_START);
 
-    // do {
-    pair_success = __awss_start(pair_cb);
+    do {
+        pair_success = __awss_start(pair_cb);
 #if defined(AWSS_SUPPORT_ADHA) || defined(AWSS_SUPPORT_AHA)
         do {
             char ssid[PLATFORM_MAX_SSID_LEN + 1] = {0};
@@ -131,22 +131,23 @@ int awss_start(pair_success_callback pair_cb)
                     break;
                 }
             }
-            awss_event_post(AWSS_ENABLE_TIMEOUT);
+            awss_event_post(IOTX_AWSS_ENABLE_TIMEOUT);
             __awss_start();
         } while (1);
 #endif
-    //     if (awss_stopped) {
-    //         break;
-    //     }
+        if (awss_stopped) {
+            break;
+        }
 
-    //     if (os_sys_net_is_ready()) {
-    //         break;
-    //     }
-    // } while (1);
+        if (os_sys_net_is_ready()) {
+            break;
+        }
+    } while (1);
 
-    // if (awss_stopped ) {
-    //     retunr -1
-    // }
+    if (awss_stopped) {
+        dump_awss_status(STATE_WIFI_FORCE_STOPPED, "awss stopped in %s", __func__);
+        return STATE_WIFI_FORCE_STOPPED;
+    }
 
 #ifdef AWSS_SUPPORT_AHA
     awss_close_aha_monitor();
@@ -155,12 +156,9 @@ int awss_start(pair_success_callback pair_cb)
     awss_close_adha_monitor();
 #endif
 
-    if (pair_success == 0) {
-        awss_success_notify();
-    }
-
+    awss_success_notify();
     awss_stopped = 1;
-
+	
     return pair_success;
 }
 
@@ -184,10 +182,13 @@ int awss_stop(void)
 
 static void awss_press_timeout(void)
 {
-    awss_stop_timer(press_timer);
-    press_timer = NULL;
+    if (NULL != press_timer) {
+        awss_stop_timer(press_timer);
+        press_timer = NULL;
+    }
+    
     if (g_user_press) {
-        awss_event_post(AWSS_ENABLE_TIMEOUT);
+        awss_event_post(IOTX_AWSS_ENABLE_TIMEOUT);
     }
     g_user_press = 0;
 }
@@ -200,13 +201,17 @@ int awss_config_press(void)
 
     g_user_press = 1;
 
-    awss_event_post(AWSS_ENABLE);
+    awss_event_post(IOTX_AWSS_ENABLE);
 
+    #ifdef DEV_STATEMACHINE_ENABLE
+    dev_awss_state_set(AWSS_PATTERN_DEV_AP_CONFIG, AWSS_STATE_START);
+    #endif
+    
     if (press_timer == NULL) {
         press_timer = HAL_Timer_Create("press", (void (*)(void *))awss_press_timeout, NULL);
     }
     if (press_timer == NULL) {
-        return -1;
+        return STATE_SYS_DEPEND_TIMER_CREATE;
     }
 
     HAL_Timer_Stop(press_timer);
@@ -216,7 +221,7 @@ int awss_config_press(void)
     }
     HAL_Timer_Start(press_timer, timeout);
 
-    return 0;
+    return STATE_SUCCESS;
 }
 
 uint8_t awss_get_config_press(void)

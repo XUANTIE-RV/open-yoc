@@ -7,21 +7,14 @@
 
 #include <drv/gpio.h>
 
-#define LOW_LEVEL (0)
-#define HIGH_LEVEL (1)
-
 typedef struct button button_t;
-typedef struct button_combinations button_combinations_t;
 
-#define MAX_BUTTON_NAME (20)
 typedef enum {
     BUTTON_PRESS_DOWN = 0,
     BUTTON_PRESS_UP,
     BUTTON_PRESS_LONG_DOWN,
     BUTTON_PRESS_DOUBLE,
-    BUTTON_COMBINATION,
-
-    BUTTON_EVT_END
+    BUTTON_PRESS_TRIPLE
 } button_evt_id_t;
 
 typedef enum {
@@ -29,79 +22,61 @@ typedef enum {
     BUTTON_TYPE_ADC, /* ADC按键 */
 } button_type_t;
 
-typedef void (*evt_cb)(button_evt_id_t event_id, char *name, void *priv);
+typedef enum {
+    LOW_LEVEL = 0,
+    HIGH_LEVEL
+} button_gpio_level_t;
 
-typedef struct button_param {
-    int st_tmout;   //min pin active level time(soft elimination buffeting time)
-    int ld_tmout;   //min long press time
-    int dd_tmout;   //max double press time interval
-    int active_level;
-    const char *adc_name; //if button is adc_button, it has
-    int range; //if button is adc_button, it has
-    int vref; //if button is adc_button, it has
-} button_param_t;
+typedef void (*button_evt_cb_t)(int evt_id, void *priv);
 
-typedef struct button_config {
-    int pin_id;
-    int evt_flag;
-    evt_cb cb;
-    void *priv;
-    int type;
-    char name[MAX_BUTTON_NAME];
-} button_config_t;
-
-#define MAX_COMBINATION_NUM (2)
-struct button_combinations {
-    const char *pin_name[MAX_COMBINATION_NUM];
-    int pin_sum;
-    int evt_flag;
-    int tmout;
-    evt_cb cb;
-    void *priv;
-    char name[MAX_BUTTON_NAME];
-};
-
-
-#define PRESS_DOWN_FLAG (1<<BUTTON_PRESS_DOWN)
-#define PRESS_UP_FLAG (1<<BUTTON_PRESS_UP)
-#define PRESS_LONG_DOWN_FLAG (1<<BUTTON_PRESS_LONG_DOWN)
-#define DOUBLE_PRESS_FLAG (1<<BUTTON_PRESS_DOUBLE)
-#define EVT_ALL_FLAG (PRESS_DOWN_FLAG | PRESS_UP_FLAG | DOUBLE_PRESS_FLAG | PRESS_LONG_DOWN_FLAG)
+typedef struct {
+    int             button_id;  //按键id
+    button_evt_id_t event_id;   //按键事件
+    int             press_time; //当按键事件为长按时，为长按事件
+} button_evt_t;
 
 /**
- * @brief  button service init
+ * @brief  button init
  * @return 0 on success, -1 on failed
  */
-int button_srv_init(void);
+int button_init(void);
+
+/**
+ * @brief  button deinit
+ * @return 0 on success, -1 on failed
+ */
+int button_deinit(void);
 
 /**
  * @brief  button table init
- * @param  [in] b_tbl          : button table
+ * @param  [in] button_id        : button id
+ * @param  [in] gpio_pin         : gpio pin
+ * @param  [in] active_level     : active level
  * @return 0 on success, -1 on failed
  */
-int button_init(const button_config_t b_tbl[]);
+int button_add_gpio(int button_id, int gpio_pin, button_gpio_level_t active_level);
 
 /**
- * @brief  combination button table init
- * @param  [in] bc_tbl          : combination button table
+ * @brief  add adc button
+ * @param  [in] button_id        : button id
+ * @param  [in] adc_name         : adc device name
+ * @param  [in] adc_channel      : adc channel
+ * @param  [in] vol_ref          : adc voltage reference
+ * @param  [in] vol_range        : adc voltage range
  * @return 0 on success, -1 on failed
  */
-int button_combination_init(const button_combinations_t bc_tbl[]);
+int button_add_adc(int button_id, char *adc_name, int adc_channel, int vol_ref, int vol_range);
 
 /**
- * @brief  get button param
- * @param  [in] name       : button name
- * @param  [in] p          : button param
+ * @brief  button add event
+ * @param  [in] evt_id           : user event id
+ * @param  [in] buttons          : button table
+ * @param  [in] button_count     : button count
+ * @param  [in] evt_cb           : event callback
+ * @param  [in] priv             : user private
  * @return 0 on success, -1 on failed
  */
-int button_param_cur(char *name, button_param_t *p);
+int button_add_event(int evt_id, button_evt_t *buttons, int button_count, button_evt_cb_t evt_cb, void *priv);
 
-/**
- * @brief  set button param
- * @param  [in] name       : button name
- * @param  [in] p          : button param
- * @return 0 on success, -1 on failed
- */
-int button_param_set(char *name, button_param_t *p);
 
 #endif

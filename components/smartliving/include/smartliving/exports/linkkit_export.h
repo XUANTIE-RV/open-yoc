@@ -361,7 +361,7 @@ DLL_IOT_API int being_deprecated linkkit_invoke_fota_service(void *data_buf, int
  *
  * @return 0 when success, -1 when fail.
  */
-DLL_IOT_API int being_deprecated linkkit_ntp_time_request(void (*ntp_reply_cb)(const char *ntp_offset_time_ms));
+DLL_IOT_API int linkkit_ntp_time_request(void (*ntp_reply_cb)(const char *ntp_offset_time_ms));
 
 #ifdef __cplusplus
 }

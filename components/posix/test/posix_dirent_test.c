@@ -9,7 +9,7 @@
 #include "k_api.h"
 #include "dirent.h"
 #include "ramfs_types.h"
-#include "aos/log.h"
+#include "ulog/ulog.h"
 
 #define TAG "drient_test"
 #define MAX_PATH_BYTES 32
@@ -149,8 +149,7 @@ void posix_dirent_creat_case(void)
         return;
     }
 
-    for (i = 0; i < 10; i++)
-    {
+    for (i = 0; i < 10; i++) {
         if (buf_r[i] != (i + 1)) {
             LOGI(TAG, "%s test failed5 !\n", casename);
             return;
@@ -169,8 +168,7 @@ void posix_dirent_creat_case(void)
         return;
     }
 
-    for (i = 0; i < 5; i++)
-    {
+    for (i = 0; i < 5; i++) {
         if (buf_r[i] != (i + 1 + 5)) {
             LOGI(TAG, "%s test failed8 !\n", casename);
             return;
@@ -227,8 +225,7 @@ void posix_dirent_remove_case(void)
         return;
     }
 
-    for (i = 0; i < 10; i++)
-    {
+    for (i = 0; i < 10; i++) {
         if (buf_r[i] != (i + 1)) {
             LOGI(TAG, "%s test failed5 !\n", casename);
             return;
@@ -498,8 +495,7 @@ void posix_dirent_rename_case(void)
         return;
     }
 
-    for (i = 0; i < 10; i++)
-    {
+    for (i = 0; i < 10; i++) {
         if (buf_r[i] != (i + 1)) {
             LOGI(TAG, "%s test failed5 !\n", casename);
             return;
@@ -528,8 +524,7 @@ void posix_dirent_rename_case(void)
         return;
     }
 
-    for (i = 0; i < 10; i++)
-    {
+    for (i = 0; i < 10; i++) {
         if (buf_r[i] != (i + 1)) {
             LOGI(TAG, "%s test failed9 !\n", casename);
             return;
@@ -676,8 +671,7 @@ void posix_dirent_stat_case(void)
         return;
     }
 
-    for (i = 0; i < 10; i++)
-    {
+    for (i = 0; i < 10; i++) {
         if (buf_r[i] != (i + 1)) {
             LOGI(TAG, "%s test failed5 !\n", casename);
             return;
@@ -773,8 +767,7 @@ void posix_dirent_link_case(void)
         return;
     }
 
-    for (i = 0; i < 10; i++)
-    {
+    for (i = 0; i < 10; i++) {
         if (buf_r[i] != (i + 1)) {
             LOGI(TAG, "%s test failed5 !\n", casename);
             return;
@@ -809,8 +802,7 @@ void posix_dirent_link_case(void)
         return;
     }
 
-    for (i = 0; i < 10; i++)
-    {
+    for (i = 0; i < 10; i++) {
         if (buf_r[i] != (i + 1)) {
             LOGI(TAG, "%s test failed9 !\n", casename);
             return;
@@ -833,15 +825,14 @@ void posix_dirent_link_case(void)
         return;
     }
 
-    for (i = 0; i < 10; i++)
-    {
+    for (i = 0; i < 10; i++) {
         if (buf_r[i] != (i + 1)) {
             LOGI(TAG, "%s test failed12 !\n", casename);
             return;
         }
     }
 
-    close(fh); 
+    close(fh);
 
     /*******************************************************************************/
     ret = unlink("/ramfs/file2");
@@ -864,8 +855,7 @@ void posix_dirent_link_case(void)
         return;
     }
 
-    for (i = 0; i < 10; i++)
-    {
+    for (i = 0; i < 10; i++) {
         if (buf_r[i] != (i + 1)) {
             LOGI(TAG, "%s test failed16 !\n", casename);
             return;
@@ -888,8 +878,7 @@ void posix_dirent_link_case(void)
         return;
     }
 
-    for (i = 0; i < 10; i++)
-    {
+    for (i = 0; i < 10; i++) {
         if (buf_r[i] != (i + 1)) {
             LOGI(TAG, "%s test failed19 !\n", casename);
             return;
@@ -915,7 +904,7 @@ void posix_dirent_link_case(void)
     }
 
     /*****************************************************/
-   fh = open("/ramfs/file3", 2);
+    fh = open("/ramfs/file3", 2);
     if (fh < 0) {
         LOGI(TAG, "%s test failed22 !\n", casename);
         return;
@@ -928,8 +917,7 @@ void posix_dirent_link_case(void)
         return;
     }
 
-    for (i = 0; i < 10; i++)
-    {
+    for (i = 0; i < 10; i++) {
         if (buf_r[i] != (i + 1)) {
             LOGI(TAG, "%s test failed24 !\n", casename);
             return;
@@ -952,8 +940,7 @@ void posix_dirent_link_case(void)
         return;
     }
 
-    for (i = 0; i < 10; i++)
-    {
+    for (i = 0; i < 10; i++) {
         if (buf_r[i] != (i + 1)) {
             LOGI(TAG, "%s test failed27 !\n", casename);
             return;
@@ -1062,8 +1049,7 @@ void posix_dirent_fopen_case(void)
         return;
     }
 
-    for (i = 0; i < 10; i++)
-    {
+    for (i = 0; i < 10; i++) {
         if (buf_r[i] != (i + 1)) {
             LOGI(TAG, "%s test failed5 !\n", casename);
             return;
@@ -1128,8 +1114,7 @@ void posix_dirent_fseek_case(void)
         return;
     }
 
-    for (i = 0; i < 5; i++)
-    {
+    for (i = 0; i < 5; i++) {
         if (buf_r[i] != (i + 6)) {
             LOGI(TAG, "%s test failed16 !\n", casename);
             return;
@@ -1138,7 +1123,7 @@ void posix_dirent_fseek_case(void)
 
     fclose(file1);
 
-   /*******************************************************************************/
+    /*******************************************************************************/
 
     file1 = fopen("/ramfs/file1", "wb+");
     if (file1 == NULL) {
@@ -1158,8 +1143,7 @@ void posix_dirent_fseek_case(void)
         return;
     }
 
-    for (i = 0; i < 5; i++)
-    {
+    for (i = 0; i < 5; i++) {
         if (buf_r[i] != (i + 6)) {
             LOGI(TAG, "%s test failed10 !\n", casename);
             return;
@@ -1226,8 +1210,7 @@ void posix_dirent_fsetpos_case(void)
         return;
     }
 
-    for (i = 0; i < 5; i++)
-    {
+    for (i = 0; i < 5; i++) {
         if (buf_r[i] != (i + 6)) {
             LOGI(TAG, "%s test failed6 !\n", casename);
             return;
@@ -1293,8 +1276,7 @@ void posix_dirent_ftell_case(void)
         return;
     }
 
-    for (i = 0; i < 10; i++)
-    {
+    for (i = 0; i < 10; i++) {
         if (buf_r[i] != (i + 1)) {
             LOGI(TAG, "%s test failed5 !\n", casename);
             return;
@@ -1357,8 +1339,7 @@ void posix_dirent_rewind_case(void)
         return;
     }
 
-    for (i = 0; i < 10; i++)
-    {
+    for (i = 0; i < 10; i++) {
         if (buf_r[i] != (i + 1)) {
             LOGI(TAG, "%s test failed3 !\n", casename);
             return;

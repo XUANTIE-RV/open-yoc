@@ -41,7 +41,7 @@
 
 #define NN 256
 
-int main()
+int main(void)
 {
    spx_uint32_t i;
    short *in;

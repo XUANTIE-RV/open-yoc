@@ -8,20 +8,30 @@
 
 #include <yoc/button.h>
 
+#ifdef CONFIG_CSI_V2
+#include <soc.h>
+#else
 #include <pinmux.h>
+#endif
 
 #include "internal.h"
 
 #define MIN_ST_TMOUT (60)
-#define MIN_LD_TMOUT (2000)
-#define MAX_DD_TMOUT (1000)
+#define MAX_EVENT_TMOUT (500)
+
+#define BUTTON_SCAN_TIME (20)
 
 
 #define BUTTON_OPS(b, fn) \
-        if (b->ops->fn) \
-            b->ops->fn(b)
+    if (b->ops->fn) \
+        b->ops->fn(b)
 
 #define TAG "button"
+
+static event_node_t *event_find(event_pool_elem_t *elem);
+static int event_manage(void);
+static int event_pool_clean(event_node_t *e_node);
+static button_t *button_find(int button_id);
 
 typedef enum {
     NONE,
@@ -31,25 +41,7 @@ typedef enum {
     END,
 } button_state;
 
-typedef struct button_srv {
-    aos_timer_t tmr;
-    int         adc_flag;
-    int         inited;
-    slist_t     head;
-} button_srv_t;
-
-#define b_param(b) (b->param)
-
 button_srv_t g_button_srv;
-#define BUTTON_EVT(button) \
-    do {\
-        if(button->evt_flag & (1 << button->evt_id)) {\
-            button->cb(button->evt_id, button->name, button->priv);\
-        }\
-    } while(0)
-
-static button_t *button_find(int pin_id);
-static button_t *button_find_by_name(const char *name);
 
 static void irq_disable(button_t *button)
 {
@@ -78,15 +70,16 @@ static int reset(button_t *button)
 {
     button->state = NONE;
     button->active = 0;
+    button->press_time_subscript = 0;
 
     return 0;
 }
 
-static int none_hdl(button_t *button, int level)
+static int none_hdl(button_t *button)
 {
-    if (level == b_param(button).active_level) {
+    if (button->is_pressed) {
         button->state = START;
-        aos_timer_start(&g_button_srv.tmr);
+        g_button_srv.start_tmr = 1;
     } else {
         irq_enable(button);
     }
@@ -94,15 +87,15 @@ static int none_hdl(button_t *button, int level)
     return 0;
 }
 
-static int start_hdl(button_t *button, int level)
+static int start_hdl(button_t *button)
 {
-    if (level == b_param(button).active_level) {
-        if ((aos_now_ms() - button->st_ms) >= b_param(button).st_tmout) {
+    if (button->is_pressed) {
+        if ((aos_now_ms() - button->st_ms) >= MIN_ST_TMOUT) {
             // button->active = 1;
             button->state = CNT;
         }
 
-        aos_timer_start(&g_button_srv.tmr);
+        g_button_srv.start_tmr = 1;
     } else {
         reset(button);
         irq_enable(button);
@@ -111,91 +104,47 @@ static int start_hdl(button_t *button, int level)
     return 0;
 }
 
-static int cnt_hdl(button_t *button, int level)
+static int cnt_hdl(button_t *button)
 {
-    if (level == b_param(button).active_level) {
-        if ((aos_now_ms() - button->st_ms) >= b_param(button).ld_tmout) {
-            button->state = HIGH;
+    if (button->is_pressed && button->press_time_cnt) {
+        if ((aos_now_ms() - button->st_ms) >= button->press_time[button->press_time_subscript]) {
             button->active = 1;
-            button->evt_id = BUTTON_PRESS_LONG_DOWN;
+            button->event_id = BUTTON_PRESS_LONG_DOWN;
+            button->press_time_subscript ++;
+
+            if (button->press_time_subscript >= button->press_time_cnt) {
+                button->state = HIGH;
+            }
         }
 
-        aos_timer_start(&g_button_srv.tmr);
+        g_button_srv.start_tmr = 1;
     } else {
         button->state = HIGH;
         button->active = 1;
-        button->evt_id = BUTTON_PRESS_DOWN;
-        aos_timer_start(&g_button_srv.tmr);
+        button->event_id = BUTTON_PRESS_DOWN;
+        g_button_srv.start_tmr = 1;
         button->old_evt_id = BUTTON_PRESS_DOWN;
     }
 
     return 0;
 }
 
-static int high_hdl(button_t *button, int level)
+static int high_hdl(button_t *button)
 {
-    if (level == HIGH_LEVEL) {
+    if (!button->is_pressed) {
         button->state = END;
         button->active = 1;
 
-        if (button->evt_id == BUTTON_PRESS_LONG_DOWN) {
-            button->evt_id = BUTTON_EVT_END;
+        if (button->event_id == BUTTON_PRESS_LONG_DOWN) {
+            button->event_id = -1;
         } else {
-            button->evt_id = BUTTON_PRESS_UP;
+            button->event_id = BUTTON_PRESS_UP;
         }
 
-        if (button->old_evt_id == BUTTON_PRESS_DOWN) {
-            button->t_ms = aos_now_ms();
-        }
-
-        irq_enable(button);
+        g_button_srv.start_tmr = 1;
+        // irq_enable(button);
     } else {
-        aos_timer_start(&g_button_srv.tmr);
-    }
-
-    return 0;
-}
-
-static int update_repeat(button_t *button)
-{
-    if (button->state == NONE && button->old_evt_id == BUTTON_PRESS_DOWN \
-        && (button->evt_flag & DOUBLE_PRESS_FLAG)) {
-        long long past = aos_now_ms() - button->t_ms;
-
-        if (past < b_param(button).dd_tmout) {
-            button->repeat = 1;
-        } else {
-            button->repeat = 0;
-        }
-    }
-
-    return 0;
-}
-
-static int event_call(button_t *button)
-{
-    if (button->active >= 1) {
-        if (button->repeat == 0) {
-            BUTTON_EVT(button);
-            button->active = 0;
-
-            if (button->state == END) {
-                reset(button);
-            }
-
-        } else {
-            if (button->evt_id == BUTTON_PRESS_DOWN || button->evt_id == BUTTON_PRESS_LONG_DOWN) {
-                button->evt_id = BUTTON_PRESS_DOUBLE;
-                button->old_evt_id = BUTTON_PRESS_DOUBLE;
-            }
-
-            button->repeat = 0;
-            BUTTON_EVT(button);
-
-            if (button->state == END) {
-                reset(button);
-            }
-        }
+        g_button_srv.start_tmr = 1;
     }
 
     return 0;
@@ -206,374 +155,69 @@ static int read_level(button_t *button)
     if (button->ops->read) {
         return (button->ops->read(button));
     }
+
     return -1;
 }
 
-#define BC_SRV_QUEUE_MAX (4)
-typedef struct _bc {
-    int count;
-    button_combinations_t b;
-} bc_t;
-
-typedef struct {
-    const char *b_name;
-    int evt_id;
-} bc_msg_t;
-typedef struct _bc_srv {
-    aos_queue_t queue;
-    int bc_num;
-    int bc_max_bit;
-    bc_msg_t queue_buf[BC_SRV_QUEUE_MAX];
-    bc_t *bc;
-} bc_srv_t;
-
-static bc_srv_t g_srv_bc;
-
-static int bc_do_time(void)
-{
-    int tmout = AOS_WAIT_FOREVER;
-
-    for (int i = 0; i < g_srv_bc.bc_num; i++) {
-        bc_t *bc = g_srv_bc.bc + i;
-
-        if (bc->count != 0) {
-            if (tmout != AOS_WAIT_FOREVER) {
-                tmout = tmout < bc->b.tmout ? tmout : bc->b.tmout;
-            } else {
-                tmout = bc->b.tmout;
-            }
-        }
-    }
-
-    return tmout;
-}
-
-static int bc_trigger(const char *name, int evt_id)
-{
-    bc_msg_t msg;
-
-    msg.b_name = name;
-    msg.evt_id = evt_id;
-
-    int ret = aos_queue_send(&g_srv_bc.queue, &msg, sizeof(bc_msg_t));
-
-    return ret;
-}
-
-static int bc_wait(int tmout, bc_msg_t *msg)
-{
-    unsigned int count;
-    return aos_queue_recv(&g_srv_bc.queue, tmout, msg, &count);
-}
-
-static void bc_button_disable(bc_t *bc)
-{
-    for (int j = 0; j < MAX_COMBINATION_NUM; j ++) {
-        button_t *b = button_find_by_name(bc->b.pin_name[j]);
-        reset(b);
-        irq_enable(b);
-    }
-}
-
-static bc_t *bc_do_event(bc_msg_t *msg)
-{
-    const char *name = msg->b_name;
-    int evt_id = msg->evt_id;
-
-    for (int i = 0; i < g_srv_bc.bc_num; i++) {
-        bc_t *bc = g_srv_bc.bc + i;
-
-        for (int j = 0; j < MAX_COMBINATION_NUM; j ++) {
-            if (strcmp(bc->b.pin_name[j], name) == 0) {
-                bc->count |= 1 << j;
-
-                if ((bc->count == g_srv_bc.bc_max_bit) && ((1 << evt_id) & bc->b.evt_flag)) {
-                    if (bc->b.cb) {
-                        bc->b.cb(BUTTON_COMBINATION, bc->b.name, bc->b.priv);
-                    }
-                    bc->count = 0;
-                    return bc;
-                }
-            }
-        }
-    }
-
-    return NULL;
-}
-static void bc_event_hdl(bc_msg_t *msg)
-{
-    bc_t *bc = bc_do_event(msg);
-
-    if (bc)
-        bc_button_disable(bc);
-}
-
-static bc_t *bc_find(const char *name)
-{
-    bc_t *bc;
-
-    for (int i = 0; i < g_srv_bc.bc_num; i++) {
-        bc = g_srv_bc.bc + i;
-
-        for (int j = 0; j < MAX_COMBINATION_NUM; j ++) {
-            if (strcmp(bc->b.pin_name[j], name) == 0) {
-                return bc;
-            }
-        }
-    }
-
-    return NULL;
-}
-
-static void bc_button_hdl(void)
-{
-    for (int i = 0; i < g_srv_bc.bc_num; i++) {
-        bc_t *bc = g_srv_bc.bc + i;
-
-        if (bc->count != 0) {
-            for (int j = 0; j < MAX_COMBINATION_NUM; j ++) {
-                if (bc->count & (1 << j)) {
-                    button_t *button = button_find_by_name(bc->b.pin_name[j]);
-                    event_call(button);
-                }
-            }
-
-            bc->count = 0;
-        }
-    }
-}
-
-static void _bc_hdl(void *priv)
-{
-    int tmout;
-    int ret   = -1;
-    bc_msg_t msg;
-
-    while (1) {
-        tmout = bc_do_time();
-        ret = bc_wait(tmout, &msg);
-
-        if (ret == 0) {
-            bc_event_hdl(&msg);
-        } else {
-            bc_button_hdl();
-        }
-    }
-}
-
-static int bc_name_is_duplicate(const button_combinations_t bc_tbl[])
-{
-    char *name;
-    int ret = 0;
-    int i = 0;
-
-    while (!ret) {
-
-        if (bc_tbl[i].cb == NULL && bc_tbl[i].pin_sum == 0) {
-            ret = 0;
-            break;
-        }
-
-        name = (char *)bc_tbl[i].name;
-        for (int j = i+1; bc_tbl[j].cb != NULL && bc_tbl[j].pin_sum != 0; j++) {
-            if (strcmp(name, bc_tbl[j].name) == 0) {
-                ret = 1;
-                break;
-            }
-        }
-
-        i ++;
-    }
-
-    return ret;
-}
-
-static int bc_tbl_check(const button_combinations_t *bc_tbl)
-{
-    if (bc_tbl->cb == NULL) {
-        return -1;
-    }
-
-    if (((bc_tbl->evt_flag & EVT_ALL_FLAG) == 0) || ((bc_tbl->evt_flag & ~EVT_ALL_FLAG) != 0)) {
-        return -1;
-    }
-
-    if (bc_tbl->name[0] == 0) {
-        return -1;
-    }
-
-    if (bc_tbl->pin_sum > MAX_COMBINATION_NUM || bc_tbl->pin_sum < 2) {
-        return -1;
-    }
-
-    for (int j = 0; j < bc_tbl->pin_sum; j++) {
-        if (bc_tbl->pin_name[j] == NULL) {
-            return -1;
-        }
-    }
-
-    return 0;
-}
-
-int button_combination_init(const button_combinations_t bc_tbl[])
-{
-    int i = 0;
-    int j = 0;
-    int ret = -1;
-
-    if (g_srv_bc.bc_num || (bc_tbl[0].cb == NULL && bc_tbl[0].pin_sum == 0)) {
-        goto bc_err0;
-    }
-
-    if (bc_name_is_duplicate(bc_tbl)) {
-        goto bc_err0;
-    }
-
-    for (j = 0; j < MAX_COMBINATION_NUM; j++) {
-        g_srv_bc.bc_max_bit |= 1 << j;
-    }
-
-    button_t *b[MAX_COMBINATION_NUM];
-    button_t *button;
-
-    while (1) {
-        if (bc_tbl[i].cb == NULL && bc_tbl[i].pin_sum == 0) {
-            ret = 0;
-            break;
-        }
-
-        if (bc_tbl_check(&bc_tbl[i])) {
-            ret = -1;
-            goto bc_err0;
-        }
-
-        button = button_find_by_name(bc_tbl[i].name);
-        if (button != NULL) {
-            ret = -1;
-            goto bc_err0;
-        }
-
-        for (j = 0; j < bc_tbl[i].pin_sum; j++) {
-            b[j] = button_find_by_name(bc_tbl[i].pin_name[j]);
-
-            if (b[j] == NULL || ((b[j]->evt_flag & bc_tbl[i].evt_flag) == 0)) {
-                ret = -1;
-                goto bc_err0;
-            }
-        }
-
-        for (j = 0; j < bc_tbl[i].pin_sum; j++) {
-            b[j]->bc_flag = 1;
-        }
-
-        i ++;
-    }
-
-    if (ret == 0) {
-        g_srv_bc.bc_num = i;
-        g_srv_bc.bc     = aos_zalloc_check(sizeof(bc_t) * i);
-    } else {
-        goto bc_err0;
-    }
-
-    for (i = 0; i < g_srv_bc.bc_num; i++) {
-        bc_t *bc = g_srv_bc.bc + i;
-        memcpy(&bc->b, bc_tbl + i, sizeof(button_combinations_t));
-    }
-
-    ret = aos_queue_new(&g_srv_bc.queue, g_srv_bc.queue_buf, BC_SRV_QUEUE_MAX * sizeof(bc_msg_t), sizeof(bc_msg_t));
-
-    if (ret < 0) {
-        ret = -1;
-        goto bc_err1;
-    }
-
-    aos_task_t task;
-    ret = aos_task_new_ext(&task, "button_bc", _bc_hdl, NULL, 2 * 1024, AOS_DEFAULT_APP_PRI - 8);
-
-    if (ret < 0) {
-        ret = -1;
-        goto bc_err2;
-    }
-
-    return 0;
-bc_err2:
-    aos_queue_free(&g_srv_bc.queue);
-bc_err1:
-    aos_free(g_srv_bc.bc);
-bc_err0:
-
-    return ret;
-}
 /*
     ----|
 */
 static int _button_hdl(button_t *button)
 {
-    int level;
+    button->is_pressed = read_level(button);
 
-    update_repeat(button);
-
-    level = read_level(button);
-
-    // LOGD(TAG, "level:%d state:%d", level, button->state);
-
-    aos_timer_stop(&g_button_srv.tmr);
+    // LOGD(TAG, "is_pressed:%d state:%d",  button->is_pressed, button->state);
 
     switch (button->state) {
         case NONE:
-            none_hdl(button, level);
+            none_hdl(button);
             break;
 
         case START:
-            start_hdl(button, level);
+            start_hdl(button);
             break;
 
         case CNT:
-            cnt_hdl(button, level);
+            cnt_hdl(button);
             break;
 
         case HIGH:
-            high_hdl(button, level);
+            high_hdl(button);
             break;
 
         default:
             reset(button);
+            irq_enable(button);
             break;
     }
 
-    // LOGD(TAG, "state:%d", button->state);
+    // LOGD(TAG, "state:%d, name:%d active:%d evt:%d", button->state, button->button_id, button->active, button->event_id);
 
-    if (button->bc_flag && button->active == 1) {
-        bc_t *bc = bc_find(button->name);
-
-        if (bc && (bc->b.evt_flag & (1 << button->evt_id))) {
-            int ret = bc_trigger(button->name, button->evt_id);
-
-            if (ret >= 0) {
-                button->active ++;
-            }
-
-            return 0;
+    if (button->active) {
+        if ((button->event_flag & (1 << button->event_id)) == 0) {
+            button->active = 0;
         }
     }
 
-    if (button->active == 1) {
-        event_call(button);
+    if (button->active) {
+        button->happened_ms = aos_now_ms();
     }
 
     return 0;
 }
 
-void button_adc_sttime_check(void)
+static void button_adc_sttime_check(void)
 {
-    button_t *b;
+    button_t *b = NULL;
 
-    slist_for_each_entry(&g_button_srv.head, b, button_t, next) {
-        if (b->param.adc_name != NULL && b->irq_flag == 0 && b->st_ms == 0) {
-            int level = b->ops->read(b);
+    slist_for_each_entry(&g_button_srv.button_head, b, button_t, next) {
+        button_ops_t *ops = &adc_ops;
 
-            if (level == b_param(b).active_level) {
+        if ((b->ops == ops) && b->irq_flag == 0 && b->st_ms == 0) {
+            bool is_pressed = b->ops->read(b);
+
+            if (is_pressed) {
+                b->is_pressed = true;
                 b->st_ms = aos_now_ms();
                 b->irq_flag = 1;
             }
@@ -581,68 +225,211 @@ void button_adc_sttime_check(void)
     }
 }
 
+static int event_pool_add(button_t *b)
+{
+    if (g_button_srv.event_pool_depth >= g_button_srv.event_pool_size) {
+        return -1;
+    }
+
+    event_pool_elem_t *event_elem = &g_button_srv.event_pool[g_button_srv.event_pool_depth];
+
+    event_elem->button_id  = b->button_id;
+    event_elem->event_id   = b->event_id;
+
+    if (b->press_time_subscript) {
+        event_elem->press_time = b->press_time[b->press_time_subscript - 1];
+    } else {
+        event_elem->press_time = 0;
+    }
+
+    g_button_srv.event_pool_depth ++;
+    b->active = 0;
+
+    return 0;
+}
+
+static int event_param_check(button_evt_t *buttons, int button_count)
+{
+    for (int i = 0; i < button_count; i ++) {
+        if (button_find(buttons[i].button_id) == NULL) {
+
+            return -1;
+        }
+    }
+
+    event_node_t *e_node;
+    slist_for_each_entry(&g_button_srv.event_node_head, e_node, event_node_t, next) {
+        if ((button_count == e_node->button_count) && (memcmp(e_node->buttons, buttons, sizeof(button_evt_t)*button_count) == 0)) {
+            return -1;         
+        }
+    }
+
+    return 0;
+}
+
+static button_t *button_find(int button_id)
+{
+    button_t *b = NULL;
+
+    slist_for_each_entry(&g_button_srv.button_head, b, button_t, next) {
+        if (b->button_id == button_id) {
+            break;
+        }
+    }
+
+    return b;
+}
+
+static int event_pool_reset(void)
+{
+    event_node_t *node;
+    event_node_t *e_sub = NULL;
+
+    int cnt = 0;
+    slist_for_each_entry(&g_button_srv.event_node_head, node, event_node_t, next) {
+        if (node->button_count == g_button_srv.event_pool_depth) {
+            int ret = memcmp(node->buttons, g_button_srv.event_pool, \
+                             sizeof(event_pool_elem_t) * node->button_count);
+
+            if (ret == 0) {
+                node->event_depth = node->button_count;
+
+                if (node->button_count > cnt) {
+                    e_sub = node;
+                }
+            }
+        }
+    }
+
+    if (e_sub) {
+        if (e_sub->event_depth == e_sub->button_count) {
+            e_sub->evt_cb(e_sub->event_id, e_sub->priv);
+            event_pool_clean(e_sub);
+        }
+    }
+
+    if (e_sub == NULL && g_button_srv.event_pool_depth) {
+
+        for (int i = 0; i < g_button_srv.event_pool_depth; i++) {
+            event_pool_elem_t *event_elem = &g_button_srv.event_pool[i];
+            event_node_t *e_node = event_find(event_elem);
+
+            if (e_node) {
+                e_node->evt_cb(e_node->event_id, e_node->priv);
+            }
+        }
+    }
+    event_pool_clean(NULL);
+
+    return 0;
+}
+
+static int event_pool_clean(event_node_t *e_node)
+{
+    if (e_node == NULL) {
+        g_button_srv.event_pool_depth = 0;
+    } else {
+        int depth = g_button_srv.event_pool_depth - e_node->button_count;
+
+        g_button_srv.event_pool_depth = depth;
+        memcpy(g_button_srv.event_pool, &g_button_srv.event_pool[e_node->button_count], depth*sizeof(button_evt_t));
+    }
+    return 0;
+}
+
+static int event_manage(void)
+{
+    event_node_t *node;
+    event_node_t *e_sub = NULL;
+
+    int cnt = 0;
+    slist_for_each_entry(&g_button_srv.event_node_head, node, event_node_t, next) {
+        if (node->button_count >= g_button_srv.event_pool_depth) {
+            int ret = memcmp(node->buttons, g_button_srv.event_pool, \
+                             sizeof(event_pool_elem_t) * g_button_srv.event_pool_depth);
+
+            if (ret == 0) {
+                node->event_depth = g_button_srv.event_pool_depth;
+
+                if (node->button_count > cnt) {
+                    e_sub = node;
+                }
+            }
+        }
+    }
+
+    if (e_sub) {
+        if (e_sub->event_depth == e_sub->button_count) {
+            e_sub->evt_cb(e_sub->event_id, e_sub->priv);
+            event_pool_clean(e_sub);
+        }
+    }
+
+    if (e_sub == NULL && g_button_srv.event_pool_depth) {
+        slist_for_each_entry(&g_button_srv.event_node_head, node, event_node_t, next) {
+            if (node->button_count == (g_button_srv.event_pool_depth - 1)) {
+                int ret = memcmp(node->buttons, g_button_srv.event_pool, \
+                                 sizeof(event_pool_elem_t) * (g_button_srv.event_pool_depth - 1));
+
+                if (ret == 0) {
+                    node->evt_cb(node->event_id, node->priv);
+                    event_pool_clean(node);
+                    break;
+                }
+            }
+        }
+    }
+
+    return 0;
+}
+
 static void button_timer_entry(void *timer, void *arg)
 {
-    button_t *b;
+    button_t *b = NULL;
     int cnt = 0;
+
+    g_button_srv.start_tmr = 0;
+    aos_timer_stop(&g_button_srv.tmr);
+
+    if (g_button_srv.event_pool_depth) {
+        if ((aos_now_ms() - g_button_srv.happened_ms) >= MAX_EVENT_TMOUT) {
+            event_pool_reset();
+        }
+    }
 
     button_adc_sttime_check();
 
-    slist_for_each_entry(&g_button_srv.head, b, button_t, next) {
+    slist_for_each_entry(&g_button_srv.button_head, b, button_t, next) {
         if (b->irq_flag == 1 || b->state > 0) {
-            _button_hdl(b);
             b->irq_flag = 0;
+            _button_hdl(b);
+
+            if (b->active == 1) {
+                if ((g_button_srv.happened_ms == 0) || ((b->happened_ms - g_button_srv.happened_ms) < MAX_EVENT_TMOUT)) {
+                    g_button_srv.happened_ms = b->happened_ms;
+                    if (event_pool_add(b) < 0) {
+                        event_pool_reset();
+                    }
+                    event_manage();
+                } else {
+                    g_button_srv.happened_ms = b->happened_ms;
+                    event_pool_reset();
+                    event_pool_add(b);
+                    event_manage();
+                }
+
+                if (g_button_srv.event_pool_depth == 0) {
+                    g_button_srv.happened_ms = 0;
+                }
+            }
             cnt ++;
         }
     }
 
-    if (cnt == 0) {
-        aos_timer_stop(&g_button_srv.tmr);
-    }
-
-    if (g_button_srv.adc_flag) {
+    // LOGE(TAG, "timer is %s\n", g_button_srv.start_tmr? "continue" : "stop");
+    if (g_button_srv.adc_flag || g_button_srv.start_tmr || g_button_srv.event_pool_depth) {
         aos_timer_start(&g_button_srv.tmr);
     }
-}
-
-static button_t *button_find_by_name(const char *name)
-{
-    button_t *b;
-
-    slist_for_each_entry(&g_button_srv.head, b, button_t, next) {
-        if (strcmp(name, b->name) == 0) {
-            return b;
-        }
-    }
-
-    return NULL;
-}
-
-static button_t *button_find(int pin_id)
-{
-    button_t *b;
-
-    slist_for_each_entry(&g_button_srv.head, b, button_t, next) {
-        if (b->pin_id == pin_id) {
-            return b;
-        }
-    }
-
-    return NULL;
-}
-
-static int button_new(button_t **button)
-{
-    *button = aos_zalloc(sizeof(button_t));
-
-    return *button == NULL ? -1 : 0;
-}
-
-static int button_add(button_t *button)
-{
-    slist_add_tail(&button->next, &g_button_srv.head);
-
-    return 0;
 }
 
 static int button_set_ops(button_t *button, button_ops_t *ops)
@@ -652,289 +439,381 @@ static int button_set_ops(button_t *button, button_ops_t *ops)
     return 0;
 }
 
-static int button_param_init(button_t *button)
+static int button_new(button_t **b, int type)
 {
-    button_param_t *p = &button->param;
+    *b = aos_zalloc_check(sizeof(button_t));
 
-    p->active_level = LOW_LEVEL;
-    p->st_tmout = MIN_ST_TMOUT;
-    p->ld_tmout = MIN_LD_TMOUT;
-    p->dd_tmout = MAX_DD_TMOUT;
-
-    return 0;
-}
-
-// csi pin start
-static void pin_event(int32_t idx)
-{
-    button_t *button = NULL;
-
-    button = button_find(idx);
-
-    if (button != NULL) {
-        button_irq(button);
-    }
-}
-
-static gpio_pin_handle_t *csi_gpio_init(int pin_id, button_t *button)
-{
-    gpio_pin_handle_t *pin_hdl;
-
-    drv_pinmux_config(pin_id, PIN_FUNC_GPIO);
-
-    pin_hdl = csi_gpio_pin_initialize(pin_id, pin_event);
-    // csi_gpio_pin_set_evt_priv(pin_hdl, button);
-    csi_gpio_pin_config_direction(pin_hdl, GPIO_DIRECTION_INPUT);
-    csi_gpio_pin_set_irq(pin_hdl, GPIO_IRQ_MODE_FALLING_EDGE, 0);
-
-    return pin_hdl;
-}
-
-static int csi_irq_disable(button_t *button)
-{
-    csi_gpio_pin_set_irq(button->pin_hdl, GPIO_IRQ_MODE_FALLING_EDGE, 0);
-
-    return 0;
-}
-
-static int csi_irq_enable(button_t *button)
-{
-    csi_gpio_pin_set_irq(button->pin_hdl, GPIO_IRQ_MODE_FALLING_EDGE, 1);
-
-    return 0;
-}
-
-static int csi_pin_read(button_t *button)
-{
-    bool val;
-
-    csi_gpio_pin_read(button->pin_hdl, &val);
-
-    return (val == false) ? LOW_LEVEL : HIGH_LEVEL;
-}
-
-static int csi_pin_init(button_t *button)
-{
-    button->pin_hdl = csi_gpio_init(button->pin_id, button);
-    csi_gpio_pin_set_irq(button->pin_hdl, GPIO_IRQ_MODE_FALLING_EDGE, 1);
-
-    return 0;
-}
-
-static button_ops_t gpio_ops = {
-    .init = csi_pin_init,
-    .read = csi_pin_read,
-    .irq_disable = csi_irq_disable,
-    .irq_enable = csi_irq_enable,
-};
-// csi pin end
-
-#include <drv/adc.h>
-#include <devices/adc.h>
-
-int button_adc_check(button_t *b, int vol)
-{
-    int range = b_param(b).range;
-    int vref  = b_param(b).vref;
-
-    if (vol < (vref + range) && vol > (vref - range)) {
-        return 0;
+    if (type == BUTTON_TYPE_GPIO) {
+        (*b)->param = aos_zalloc_check(sizeof(gpio_button_param_t));
+    } else if (type == BUTTON_TYPE_ADC) {
+        (*b)->param = aos_zalloc_check(sizeof(adc_button_param_t));
     } else {
-        return 1;
-    }
-}
-
-static int button_adc_read(button_t *b)
-{
-    int ret, vol;
-    uint32_t ch = 0;
-    hal_adc_config_t config;
-
-    aos_dev_t *dev = adc_open(b_param(b).adc_name);
-    ch = adc_pin2channel(dev, b->pin_id);
-    adc_config_default(&config);
-    config.channel = &ch;
-    ret = adc_config(dev, &config);
-
-    if(ret == 0) {
-        ret = adc_read(dev, &vol, 0);
+        aos_free(*b);
+        *b = NULL;
     }
 
-    adc_close(dev);
+    if (*b) {
+        (*b)->event_id = -1;
+    }
 
-    return button_adc_check(b, vol);
+    return *b == NULL ? -1 : 0;
 }
 
-static int button_adc_enable(button_t *button)
+static int button_destroy(button_t *b)
 {
-    button->st_ms = 0;
+    if (b->press_time) {
+        aos_free(b->press_time);
+    }
+    aos_free(b->param);
+    aos_free(b);
+    return 0;
+}
+
+static int button_add(button_t *b)
+{
+    slist_add_tail(&b->next, &g_button_srv.button_head);
 
     return 0;
 }
 
-static int button_adc_disable(button_t *button)
+static int button_remove(button_t *b)
 {
-    button->st_ms = -1;
+    slist_del(&b->next, &g_button_srv.button_head);
 
     return 0;
 }
 
-static button_ops_t adc_ops = {
-    .read = button_adc_read,
-    .irq_enable = button_adc_enable,
-    .irq_disable = button_adc_disable,
-};
-
-static int button_param_check(button_t *button, button_param_t *p)
+static int event_new(event_node_t **e_node, int button_cnt)
 {
-    if (p ->active_level != 0 && p ->active_level != 1) {
-        return -1;
+    *e_node = aos_zalloc_check(sizeof(event_node_t));
+
+    (*e_node)->buttons = aos_zalloc_check(sizeof(button_evt_t) * button_cnt);
+
+    return 0;
+}
+
+static int event_destory(event_node_t *e_node)
+{
+    aos_free(e_node->buttons);
+    aos_free(e_node);
+
+    return 0;
+}
+
+static int event_add(event_node_t *e_node)
+{
+    slist_add_tail(&e_node->next, &g_button_srv.event_node_head);
+
+    return 0;
+}
+
+static int buttton_check(int button_id)
+{
+    button_t *b = NULL;
+
+    b = button_find(button_id);
+
+    return b == NULL? 0 : -1;
+}
+
+static int event_remove(event_node_t *e_node)
+{
+    slist_del(&e_node->next, &g_button_srv.event_node_head);
+
+    return 0;
+}
+
+static event_node_t *event_find(event_pool_elem_t *elem)
+{
+    event_node_t *e_node;
+
+    slist_for_each_entry(&g_button_srv.event_node_head, e_node, event_node_t, next) {
+        if ((e_node->button_count == 1) && (0 == memcmp(elem, e_node->buttons, sizeof(event_pool_elem_t)))) {
+            return e_node;
+        }
     }
 
-    if (p->dd_tmout < 0) {
-        return -1;
-    }
+    return NULL;
+}
 
-    if (p->ld_tmout < 0) {
-        return -1;
-    }
+static int event_check(int evt_id)
+{
+    event_node_t *e_node;
 
-    if (button->ops == &adc_ops) {
-        if (p->adc_name == NULL || p->vref <= 0 || p->range < 0) {
+    slist_for_each_entry(&g_button_srv.event_node_head, e_node, event_node_t, next) {
+        if (e_node->event_id == evt_id) {
             return -1;
         }
     }
-    return 0;
-}
-
-static int button_table_check(const button_config_t *b_tbl)
-{
-    if (b_tbl == NULL) {
-        return -1;
-    }
-
-    if (b_tbl->cb == NULL) {
-        return -1;
-    }
-
-    if (((b_tbl->evt_flag & EVT_ALL_FLAG) == 0) || ((b_tbl->evt_flag & ~EVT_ALL_FLAG) != 0)) {
-        return -1;
-    }
-
-    if (b_tbl->name[0] == 0) {
-        return -1;
-    }
-
-    if (b_tbl->pin_id < 0) {
-        return -1;
-    }
-
-    if (b_tbl->type != BUTTON_TYPE_ADC && b_tbl->type != BUTTON_TYPE_GPIO) {
-        return -1;
-    }
 
     return 0;
 }
 
-int button_param_cur(char *name, button_param_t *p)
+static int event_buttons_count(button_evt_t *buttons, int button_conut)
 {
-    aos_check_return_einval(name && p);
+    int cnt = 0;
 
-    button_t *button = button_find_by_name(name);
-
-    if (button) {
-        memcpy(p, &button->param, sizeof(button_param_t));
-        return 0;
-    } else {
-        return -1;
-    }
-}
-
-int button_param_set(char *name, button_param_t *p)
-{
-    aos_check_return_einval(name && p);
-
-    button_t *button = button_find_by_name(name);
-
-    if (button) {
-        if (button_param_check(button, p) == 0) {
-            memcpy(&button->param, p, sizeof(button_param_t));
-            return 0;            
-        }
-    }
-
-    return -1;
-}
-
-int button_init(const button_config_t b_tbl[])
-{
-    button_t *button;
-    int ret;
-
-    if (b_tbl == NULL || (b_tbl[0].evt_flag == 0 && b_tbl[0].cb == NULL)) {
-        return -1;
-    }
-
-    int i = 0;
-
-    while (1) {
-        if (b_tbl[i].evt_flag == 0 && b_tbl[i].cb == NULL) {
-            ret = 0;
-            break;
-        }
-
-        if (button_table_check(&b_tbl[i]) < 0) {
-            ret = -1;
-            break;
-        }
-
-        button = button_find_by_name(b_tbl[i].name);
-        if (button != NULL) {
-            ret = -1;
-            break;
-        }
-
-        ret = button_new(&button);
-
-        if (ret == 0) {
-            button->pin_id = b_tbl[i].pin_id;
-            button->evt_flag = b_tbl[i].evt_flag;
-            button->cb = b_tbl[i].cb;
-            button->priv = b_tbl[i].priv;
-            button_add(button);
-            button->evt_id = BUTTON_EVT_END;
-            button->old_evt_id = BUTTON_EVT_END;
-            strlcpy(button->name, b_tbl[i].name, MAX_BUTTON_NAME);
-            if (b_tbl[i].type == BUTTON_TYPE_ADC) {
-                g_button_srv.adc_flag = 1;
-                button_set_ops(button, &adc_ops);
-            } else {
-                button_set_ops(button, &gpio_ops);
-            }
-            button_param_init(button);
-            BUTTON_OPS(button, init);
-            i ++;
+    for (int i = 0; i < button_conut; i++) {
+        if (buttons[i].event_id == BUTTON_PRESS_DOUBLE || buttons[i].event_id == BUTTON_PRESS_TRIPLE) {
+            cnt += ((buttons[i].event_id - 1) * 2);
         } else {
+            cnt ++;
+        }
+    }
+
+    return cnt;
+}
+
+static int event_copy(event_node_t *e_node, button_evt_t *buttons, int button_conut)
+{
+    button_evt_t *b_dec = e_node->buttons;
+    int offset = 0;;
+
+    for (int i = 0; i < button_conut; i++) {
+        if (buttons[i].event_id == BUTTON_PRESS_DOUBLE || buttons[i].event_id == BUTTON_PRESS_TRIPLE) {
+            int count = buttons[i].event_id - 1;
+
+            for (int j = 0; j < count; j++) {
+                b_dec[offset + j * 2].event_id    =  BUTTON_PRESS_DOWN;
+                b_dec[offset + j * 2].button_id   = buttons[i].button_id;
+                b_dec[offset + j * 2 + 1].event_id  =  BUTTON_PRESS_UP;
+                b_dec[offset + j * 2 + 1].button_id = buttons[i].button_id;
+            }
+
+            offset += (count * 2);
+        } else {
+            memcpy(&b_dec[offset], &buttons[i], sizeof(button_evt_t));
+
+            if (buttons[i].event_id != BUTTON_PRESS_LONG_DOWN) {
+                b_dec[offset].press_time = 0;
+            }
+
+            offset ++;
+        }
+    }
+
+    return 0;
+}
+
+static int event_pool_new(int event_pool_size)
+{
+    if (event_pool_size > g_button_srv.event_pool_size) {
+        g_button_srv.event_pool      = aos_realloc_check(g_button_srv.event_pool, sizeof(button_evt_t) * event_pool_size);
+        g_button_srv.event_pool_size = event_pool_size;
+        memset(g_button_srv.event_pool, 0x00, sizeof(button_evt_t) * event_pool_size);
+    }
+
+    return 0;
+}
+
+static void bubbleSort(int *arr, int n)
+{
+    for (int i = 0; i < n - 1; i++) {
+        for (int j = 0; j < n - i - 1; j++) {
+            //如果前面的数比后面大，进行交换
+            if (arr[j] > arr[j + 1]) {
+                int temp = arr[j];
+                arr[j] = arr[j + 1];
+                arr[j + 1] = temp;
+            }
+        }
+    }
+}
+
+static int button_longpress_check(button_t *b, int press_time)
+{
+    int ret = 0;
+
+    for (int i = 0; i < b->press_time_cnt; i++) {
+        if (press_time == b->press_time[i]) {
             ret = -1;
             break;
         }
     }
 
-    if (g_button_srv.adc_flag && ret == 0) {
-        aos_timer_start(&g_button_srv.tmr);
-    }
     return ret;
 }
 
-int button_srv_init(void)
+static int event_map_button(event_node_t *e_node)
 {
-    if (g_button_srv.inited) {
+    int button_count = e_node->button_count;
+    button_evt_t *buttons = e_node->buttons;
+    int ret = 0;
+
+    for (int i = 0; i < button_count; i++) {
+        button_t *b = button_find(buttons[i].button_id);
+
+        ret = 0;
+        if (buttons[i].event_id == BUTTON_PRESS_LONG_DOWN) {
+            ret = button_longpress_check(b, buttons[i].press_time);
+        }
+
+        if (ret < 0) {
+            continue;
+        }
+
+        if (buttons[i].event_id == BUTTON_PRESS_DOUBLE || buttons[i].event_id == BUTTON_PRESS_TRIPLE) {
+            b->event_flag |= (1 << BUTTON_PRESS_DOWN);
+            b->event_flag |= (1 << BUTTON_PRESS_UP);
+        } else {
+            b->event_flag |= (1 << buttons[i].event_id);
+        }
+
+        if (buttons[i].event_id == BUTTON_PRESS_LONG_DOWN) {
+            b->press_time_cnt ++;
+            b->press_time = aos_realloc_check(b->press_time, sizeof(int) * b->press_time_cnt);
+            b->press_time[b->press_time_cnt - 1] = buttons[i].press_time;
+            bubbleSort(b->press_time, b->press_time_cnt);
+        }
+    }
+
+    return ret;
+}
+
+int button_add_gpio(int button_id, int gpio_pin, button_gpio_level_t active_level)
+{
+    button_t *b;
+    aos_check_return_einval((gpio_pin >= 0) && ((active_level == LOW_LEVEL) || (active_level == HIGH_LEVEL)));
+
+    int ret = buttton_check(button_id);
+
+    if (ret < 0) {
+        return -EINVAL;
+    }
+
+    ret = button_new(&b, BUTTON_TYPE_GPIO);
+
+    if (!ret) {
+        b->button_id = button_id;
+
+        gpio_button_param_t *param = (gpio_button_param_t *)b->param;
+
+        param->pin_id       = gpio_pin;
+        param->active_level = active_level;
+
+        button_add(b);
+        button_set_ops(b, &gpio_ops);
+        BUTTON_OPS(b, init);
+    }
+
+    return ret;
+}
+
+int button_add_adc(int button_id, char *adc_name, int adc_channel, int vol_ref, int vol_range)
+{
+    button_t *b;
+    aos_check_return_einval(adc_name && vol_ref);
+
+    int ret = buttton_check(button_id);
+
+    if (ret < 0) {
+        return -EINVAL;
+    }
+
+    ret = button_new(&b, BUTTON_TYPE_ADC);
+
+    if (!ret) {
+        b->button_id = button_id;
+
+        adc_button_param_t *param = (adc_button_param_t *)b->param;
+
+        strncpy(param->adc_name, adc_name, ADC_NAME_MAX - 1);
+        param->adc_name[ADC_NAME_MAX - 1] = '\0';
+        param->channel  = adc_channel;
+        param->vref     = vol_ref;
+        param->range    = vol_range;
+
+        button_add(b);
+        button_set_ops(b, &adc_ops);
+        BUTTON_OPS(b, init);
+        g_button_srv.adc_flag = 1;
+        aos_timer_start(&g_button_srv.tmr);
+    }
+
+    return ret;
+}
+
+int button_add_event(int evt_id, button_evt_t *buttons, int button_count, button_evt_cb_t evt_cb, void *priv)
+{
+    event_node_t *e_node;
+
+    aos_check_return_einval(buttons && button_count && evt_cb && button_count < 4);
+    int ret = event_check(evt_id);
+
+    if (ret < 0) {
+        return -EINVAL;
+    }
+
+    ret = event_param_check(buttons, button_count);
+    
+    if (ret < 0) {
+        LOGE(TAG, "button event(%d) add failed!", evt_id);
         return -1;
     }
-    aos_timer_new(&g_button_srv.tmr, button_timer_entry, NULL, 20, 0);
+
+    int cnt = event_buttons_count(buttons, button_count);
+    
+    ret = event_new(&e_node, cnt);
+
+    if (!ret) {
+        e_node->event_id     = evt_id;
+        e_node->evt_cb       = evt_cb;
+        e_node->priv         = priv;
+        e_node->button_count = cnt;
+        
+        event_copy(e_node, buttons, button_count);
+        event_add(e_node);
+        event_pool_new(cnt);
+        event_map_button(e_node);
+    }
+
+    return ret;
+}
+
+int button_init(void)
+{
+    if (g_button_srv.inited) {
+        LOGE(TAG, "button had inited!");
+        return -1;
+    }
+
+    memset(&g_button_srv, 0x00, sizeof(g_button_srv));
+    aos_timer_new(&g_button_srv.tmr, button_timer_entry, NULL, BUTTON_SCAN_TIME, 0);
     aos_timer_stop(&g_button_srv.tmr);
-    slist_init(&g_button_srv.head);
+    slist_init(&g_button_srv.button_head);
+    slist_init(&g_button_srv.event_node_head);
     g_button_srv.inited = 1;
 
+    return 0;
+}
+
+int button_deinit(void)
+{
+    if (!g_button_srv.inited) {
+        LOGE(TAG, "button not inited!");
+        return -1;
+    }
+
+    aos_timer_stop(&g_button_srv.tmr);
+    aos_timer_free(&g_button_srv.tmr);
+
+    button_t *b = NULL;
+    slist_t *temp;
+    slist_for_each_entry_safe(&g_button_srv.button_head, temp, b, button_t, next) {
+        BUTTON_OPS(b, deinit);
+
+        button_remove(b);
+        button_destroy(b);
+    }
+
+    event_node_t *e_node = NULL;
+    slist_for_each_entry_safe(&g_button_srv.event_node_head, temp, e_node, event_node_t, next) {
+        event_remove(e_node);
+        event_destory(e_node);
+    }
+
+    aos_free(g_button_srv.event_pool);
+    g_button_srv.event_pool_size = 0;
+    g_button_srv.inited = 0;
     return 0;
 }

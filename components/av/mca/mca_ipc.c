@@ -2,13 +2,14 @@
  * Copyright (C) 2018-2020 Alibaba Group Holding Limited
  */
 
+#if defined(CONFIG_MCAXER_IPC) && CONFIG_MCAXER_IPC
 #include "mca/mca_cls.h"
-#include "mcaicore.h"
+#include "mca_icore.h"
 
 #define TAG                   "mca_ipc"
 
 struct mca_ipc_priv {
-    mcaicore_t                *hdl;
+    mca_icore_t                *hdl;
 };
 
 static int _mca_ipc_init(mcax_t *mca, int32_t type)
@@ -17,12 +18,12 @@ static int _mca_ipc_init(mcax_t *mca, int32_t type)
     void *hdl = NULL;
     struct mca_ipc_priv *priv = NULL;
 
-    rc = mcaicore_init();
+    rc = mca_icore_init();
     CHECK_RET_TAG_WITH_RET(rc == 0, -1);
 
     priv = aos_zalloc(sizeof(struct mca_ipc_priv));
     CHECK_RET_TAG_WITH_RET(priv, -1);
-    hdl = mcaicore_new(type);
+    hdl = mca_icore_new(type);
     CHECK_RET_TAG_WITH_GOTO(hdl, err);
 
     priv->hdl = hdl;
@@ -37,7 +38,7 @@ static int _mca_ipc_iir_fxp32_coeff32_config(mcax_t *mca, const fxp32_t *coeff)
 {
     struct mca_ipc_priv *priv = mca->priv;
 
-    mcaicore_iir_fxp32_coeff32_config(priv->hdl, coeff);
+    mca_icore_iir_fxp32_coeff32_config(priv->hdl, coeff);
 
     return 0;
 }
@@ -47,7 +48,7 @@ static int _mca_ipc_iir_fxp32(mcax_t *mca, const fxp32_t *input, size_t input_si
 {
     struct mca_ipc_priv *priv = mca->priv;
 
-    mcaicore_iir_fxp32(priv->hdl, input, input_size, yn1, yn2, output);
+    mca_icore_iir_fxp32(priv->hdl, input, input_size, yn1, yn2, output);
 
     return 0;
 }
@@ -56,7 +57,7 @@ static int _mca_ipc_uninit(mcax_t *mca)
 {
     struct mca_ipc_priv *priv = mca->priv;
 
-    mcaicore_free(priv->hdl);
+    mca_icore_free(priv->hdl);
     aos_free(priv);
     mca->priv = NULL;
     return 0;
@@ -70,4 +71,5 @@ const struct mcax_ops mcax_ops_ipc = {
     .iir_fxp32                        = _mca_ipc_iir_fxp32,
     .uninit                           = _mca_ipc_uninit,
 };
+#endif
 

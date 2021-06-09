@@ -7,7 +7,7 @@
 
 #define NN 160
 
-int main()
+int main(void)
 {
    short in[NN];
    int i;

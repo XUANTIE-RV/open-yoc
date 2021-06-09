@@ -4,6 +4,7 @@
 
 #include <aos/debug.h>
 #include "avutil/misc.h"
+#include "avutil/path.h"
 #include "avutil/byte_rw.h"
 #include "stream/stream.h"
 
@@ -11,12 +12,17 @@
 
 #define CACHE_TASK_QUIT_EVT  (0x01)
 
+#define STREAM_EVENT_CALL(s, type, data, len) \
+	do { \
+		if (s && s->stream_event_cb) \
+			s->stream_event_cb(s->opaque, type, data, len); \
+	} while(0)
+
 static struct {
     int                     cnt;
     const struct stream_ops *ops[STREAM_OPS_MAX];
 } g_streamers;
 
-#if 0
 static const struct stream_ops* _get_stream_ops_by_type(uint8_t type)
 {
     int i;
@@ -27,11 +33,9 @@ static const struct stream_ops* _get_stream_ops_by_type(uint8_t type)
         }
     }
 
-    LOGE(TAG, "get stream ops err, type = %d\n", type);
-
+    LOGE(TAG, "get stream ops err, type = %d", type);
     return NULL;
 }
-#endif
 
 static const struct stream_ops* _get_stream_ops_by_url(const char *url)
 {
@@ -57,7 +61,7 @@ static const struct stream_ops* _get_stream_ops_by_url(const char *url)
     }
 
 err:
-    LOGE(TAG, "get stream ops err, url = %s\n", url);
+    LOGE(TAG, "get stream ops err, url = %s", url);
 
     return NULL;
 }
@@ -98,7 +102,7 @@ static int _cache_stream_fill_buf(stream_cls_t *o)
     int rlen, remain, dlen, count = 0, first = 1;
     sfifo_t *fifo = o->fifo;
 
-    //LOGI(TAG, "======>>> pos = %10d, cache_pos = %10d, diff = %d", o->pos, o->cache_pos, o->cache_pos - o->pos);
+    //LOGI(TAG, "======>>> pos = %10lld, cache_pos = %10d, diff = %d", o->pos, o->cache_pos, o->cache_pos - o->pos);
     while (count < STREAM_BUF_SIZE_MAX) {
         rlen = sfifo_get_rpos(fifo, &pos, (o->rcv_timeout == AOS_WAIT_FOREVER) ? 2 * 1000 : o->rcv_timeout);
         if (o->irq.handler && o->irq.handler(o->irq.arg)) {
@@ -109,7 +113,7 @@ static int _cache_stream_fill_buf(stream_cls_t *o)
         sfifo_get_eof(fifo, NULL, &weof);
         if (rlen <= 0) {
             if (weof) {
-                LOGI(TAG, "write eof. url = %s", o->url);
+                LOGD(TAG, "write eof. url = %s", o->url);
                 break;
             }
 
@@ -128,13 +132,16 @@ static int _cache_stream_fill_buf(stream_cls_t *o)
                 if (dlen < (o->cache_size * o->cache_start_threshold / 100.0)) {
                     if (first) {
                         first = 0;
+                        LOGD(TAG, "upto cache threshold, pos = %10lld, cache_pos = %10d, diff = %d", o->pos, o->cache_pos, o->cache_pos - o->pos);
                         o->stat.upto_cnt++;
-                        LOGD(TAG, "upto cache threshold, pos = %10d, cache_pos = %10d, diff = %d", o->pos, o->cache_pos, o->cache_pos - o->pos);
                     }
                     aos_msleep(100);
                     continue;
                 } else {
                     o->cache_start_upto = 1;
+                    if (o->last_event == STREAM_EVENT_UNDER_RUN)
+                        o->last_event = STREAM_EVENT_OVER_RUN;
+                    STREAM_EVENT_CALL(o, o->last_event, NULL, 0);
                 }
             } else {
                 if (dlen <= STREAM_BUF_SIZE_MAX) {
@@ -142,7 +149,9 @@ static int _cache_stream_fill_buf(stream_cls_t *o)
                     if (first) {
                         first = 0;
                         o->stat.upto_cnt++;
-                        LOGD(TAG, "upto cache threshold, pos = %10d, cache_pos = %10d, diff = %d", o->pos, o->cache_pos, o->cache_pos - o->pos);
+                        LOGD(TAG, "upto cache threshold, pos = %10lld, cache_pos = %10d, diff = %d", o->pos, o->cache_pos, o->cache_pos - o->pos);
+                        o->last_event = STREAM_EVENT_UNDER_RUN;
+                        STREAM_EVENT_CALL(o, o->last_event, NULL, 0);
                     }
                     aos_msleep(100);
                     continue;
@@ -162,29 +171,29 @@ static int _cache_stream_fill_buf(stream_cls_t *o)
 
 static int _stream_fill_buf(stream_cls_t *o)
 {
-    int ret = -1;
+    int ret = -1, len = 0;
 
     CHECK_PARAM(o && (!o->eof), -1);
-    o->buf_pos = 0;
-    o->buf_len = 0;
-    if (o->ops->enable_cache) {
+    if (o->enable_cache) {
         ret = _cache_stream_fill_buf(o);
-        o->buf_len = ret > 0 ? ret : o->buf_len;
+        len = ret > 0 ? ret : len;
     } else {
-        while (o->buf_len < STREAM_BUF_SIZE_MAX) {
-            ret = o->ops->read(o, o->buf + o->buf_len, STREAM_BUF_SIZE_MAX - o->buf_len);
+        while (len < STREAM_BUF_SIZE_MAX) {
+            ret = o->ops->read(o, o->buf + len, STREAM_BUF_SIZE_MAX - len);
             if (ret <= 0) {
-                LOGD(TAG, "read ret = %d, may be read eof, buf_pos = %d. '%s'", ret, o->buf_pos, o->url);
+                LOGD(TAG, "read ret = %d, may be read eof, len = %d. '%s'", ret, len, o->url);
                 break;
             } else {
-                o->buf_len += ret;
+                len += ret;
             }
         }
     }
 
-    if (o->buf_len > 0) {
-        o->pos += o->buf_len;
-        ret     = o->buf_len;
+    if (len > 0) {
+        o->buf_pos  = 0;
+        o->buf_len  = len;
+        o->pos     += len;
+        ret         = len;
     }
 
     return ret;
@@ -194,15 +203,15 @@ static void _scache_task(void *arg)
 {
     char *pos;
     uint8_t reof = 0;
-    int rc, rlen, wlen;
+    int rc = -1, rlen, wlen;
     stream_cls_t *o = (stream_cls_t*)arg;
     sfifo_t *fifo   = o->fifo;
 
-    while (CACHE_STATUS_STOPED != o->cache_status) {
+    while (CACHE_STATUS_STOPED != o->cache_status && !stream_is_interrupt(o)) {
         wlen = sfifo_get_wpos(fifo, &pos, AOS_WAIT_FOREVER);
         sfifo_get_eof(fifo, &reof, NULL);
         if (!((wlen > 0) && (CACHE_STATUS_STOPED != o->cache_status) && (!reof))) {
-            LOGD(TAG, "cache task break. wlen = %d, status = %d, reof = %d\n", wlen, o->cache_status, reof);
+            LOGD(TAG, "cache task break. wlen = %d, status = %d, reof = %d", wlen, o->cache_status, reof);
             break;
         }
 
@@ -258,6 +267,7 @@ int stream_conf_init(stm_conf_t *stm_cnf)
     CHECK_PARAM(stm_cnf, -1);
     memset(stm_cnf, 0, sizeof(stm_conf_t));
     stm_cnf->mode                  = STREAM_READ;
+    stm_cnf->need_parse            = 1;
     stm_cnf->cache_size            = SCACHE_SIZE_DEFAULT;
     stm_cnf->cache_start_threshold = SCACHE_THRESHOLD_DEFAULT;
     stm_cnf->rcv_timeout           = SRCV_TIMEOUT_DEFAULT;
@@ -274,6 +284,7 @@ int stream_conf_init(stm_conf_t *stm_cnf)
 stream_cls_t* stream_open(const char *url, const stm_conf_t *stm_cnf)
 {
     int ret;
+    const char *ext;
     char *name      = NULL;
     stream_cls_t *o = NULL;
     sfifo_t *fifo   = NULL;
@@ -282,16 +293,24 @@ stream_cls_t* stream_open(const char *url, const stm_conf_t *stm_cnf)
     CHECK_PARAM(url && stm_cnf && stm_cnf->cache_start_threshold <= 100, NULL);
     name = strdup(url);
     CHECK_RET_TAG_WITH_GOTO(name, err);
-    ops = _get_stream_ops_by_url(name);
+
+    //FIXME:
+    ext = get_extension(name);
+    if (ext && stm_cnf->need_parse && (strncasecmp(ext, "m3u", 3) == 0))
+        ops = _get_stream_ops_by_type(STREAM_TYPE_HLS);
+    else
+        ops = _get_stream_ops_by_url(name);
     CHECK_RET_TAG_WITH_GOTO(ops, err);
+
     o = aos_zalloc(sizeof(stream_cls_t));
     CHECK_RET_TAG_WITH_GOTO(o, err);
-
     o->url                   = name;
     o->ops                   = ops;
     o->seekable              = ops->seek ? 1 : 0;
     o->irq                   = stm_cnf->irq;
     o->get_dec_cb            = stm_cnf->get_dec_cb;
+    o->opaque                = stm_cnf->opaque;
+    o->stream_event_cb       = stm_cnf->stream_event_cb;
     o->cache_size            = stm_cnf->cache_size ? stm_cnf->cache_size : SCACHE_SIZE_DEFAULT;
     o->cache_start_threshold = stm_cnf->cache_start_threshold ? stm_cnf->cache_start_threshold : SCACHE_THRESHOLD_DEFAULT;
     o->rcv_timeout           = stm_cnf->rcv_timeout ? stm_cnf->rcv_timeout : SRCV_TIMEOUT_DEFAULT;
@@ -303,7 +322,7 @@ stream_cls_t* stream_open(const char *url, const stm_conf_t *stm_cnf)
         goto err;
     }
 
-    if (o->ops->enable_cache) {
+    if (o->enable_cache) {
         fifo = sfifo_create(o->cache_size);
         if (!fifo) {
             o->ops->close(o);
@@ -343,7 +362,8 @@ int stream_read(stream_cls_t *o, uint8_t *buf, size_t count)
     unsigned long delta = 0;
     struct timeval t1 = {0}, t2 = {0};
 
-    CHECK_PARAM(o && (!o->eof), -1);
+    CHECK_PARAM(o && buf && count, -1);
+    CHECK_PARAM(!o->eof, 0);
     gettimeofday(&t1, NULL);
     while (len > 0) {
         int rc;
@@ -412,7 +432,7 @@ int stream_write(stream_cls_t *o, const uint8_t *buf, size_t count)
     aos_mutex_lock(&o->lock, AOS_WAIT_FOREVER);
     ret = o->ops->write ? o->ops->write(o, buf, count) : -1;
     if (ret < 0) {
-        LOGE(TAG, "write failed\n");
+        LOGE(TAG, "write failed");
     }
     aos_mutex_unlock(&o->lock);
 
@@ -424,7 +444,7 @@ static int _inner_stream_seek(stream_cls_t *o, int32_t pos)
     int rc;
     unsigned int flag;
 
-    if (o->ops->enable_cache) {
+    if (o->enable_cache) {
         sfifo_set_eof(o->fifo, 1, 1);
         if (o->cache_status == CACHE_STATUS_RUNNING) {
             o->cache_status = CACHE_STATUS_STOPED;
@@ -435,11 +455,11 @@ static int _inner_stream_seek(stream_cls_t *o, int32_t pos)
     }
 
     rc = o->seekable ? o->ops->seek(o, pos) : -1;
-    if (rc == 0) {
+    if (rc >= 0) {
         o->buf_len = 0;
         o->buf_pos = 0;
         o->pos     = pos;
-        if (o->ops->enable_cache) {
+        if (o->enable_cache) {
             o->cache_status = CACHE_STATUS_RUNNING;
             aos_event_set(&o->cache_quit, 0, AOS_EVENT_AND);
             o->stat.rsize = pos;
@@ -491,7 +511,7 @@ int stream_seek(stream_cls_t *o, int32_t offset, int whence)
         }
     } else {
         //FW
-        if (o->ops->enable_cache) {
+        if (o->enable_cache) {
             int newpos;
             //FIXME: read from cache for FW. this cost may be less than seek
             if (pos - o->pos <= o->cache_size) {
@@ -523,7 +543,7 @@ int stream_seek(stream_cls_t *o, int32_t offset, int whence)
 
 quit:
     aos_mutex_unlock(&o->lock);
-    return rc;
+    return rc >= 0 ? 0 : rc;
 }
 
 /**
@@ -538,6 +558,23 @@ int stream_skip(stream_cls_t *o, int32_t offset)
 }
 
 /**
+ * @brief  whether the stream is need quit or interrupt
+ * @param  [in] o
+ * @return 0/1
+ */
+int stream_is_interrupt(stream_cls_t *o)
+{
+    int rc = 0;
+
+    CHECK_PARAM(o, rc);
+    if (o->quit || (o->irq.handler && o->irq.handler(o->irq.arg))) {
+        rc = 1;
+    }
+
+    return rc;
+}
+
+/**
  * @brief  close a stream
  * @param  [in] o
  * @return 0/-1
@@ -548,8 +585,9 @@ int stream_close(stream_cls_t *o)
     unsigned int flag;
 
     CHECK_PARAM(o, -1);
+    o->quit = 1;
     aos_mutex_lock(&o->lock, AOS_WAIT_FOREVER);
-    if (o->ops->enable_cache) {
+    if (o->enable_cache) {
         sfifo_set_eof(o->fifo, 1, 1);
         if (o->cache_status == CACHE_STATUS_RUNNING) {
             o->cache_status = CACHE_STATUS_STOPED;
@@ -560,14 +598,14 @@ int stream_close(stream_cls_t *o)
     ret = o->ops->close(o);
     LOGI(TAG, "stream stat: to_4000ms = %u, to_2000ms = %u, to_1000ms = %u, to_500ms = %u, to_200ms = %u, "
          "to_100ms = %u, to_50ms = %u, to_20ms = %u, to_other = %u, "
-         "cache_full = %u, upto_cnt = %u, rsize = %d, size = %d, url = %s\n",
+         "cache_full = %u, upto_cnt = %u, rsize = %lld, size = %lld, url = %s",
          o->stat.to_4000ms,  o->stat.to_2000ms, o->stat.to_1000ms,o->stat.to_500ms, o->stat.to_200ms,
          o->stat.to_100ms, o->stat.to_50ms, o->stat.to_20ms, o->stat.to_other,
          o->stat.cache_full, o->stat.upto_cnt, o->stat.rsize, o->size, o->url);
     aos_mutex_unlock(&o->lock);
 
     aos_mutex_free(&o->lock);
-    if (o->ops->enable_cache) {
+    if (o->enable_cache) {
         sfifo_destroy(o->fifo);
         aos_event_free(&o->cache_quit);
     }
@@ -624,11 +662,22 @@ int stream_is_eof(stream_cls_t *o)
 }
 
 /**
+ * @brief  stream is live or vod
+ * @param  [in] o
+ * @return 0/1
+ */
+int stream_is_live(stream_cls_t *o)
+{
+    CHECK_PARAM(o, -1);
+    return o->live;
+}
+
+/**
  * @brief  get the stream size
  * @param  [in] o
  * @return -1 on err
  */
-int stream_get_size(stream_cls_t *o)
+int64_t stream_get_size(stream_cls_t *o)
 {
     CHECK_PARAM(o, -1);
     return o->size;
@@ -776,7 +825,7 @@ uint64_t stream_r64le(stream_cls_t *o)
  * @param  [in] o
  * @return -1 on err
  */
-int stream_tell(stream_cls_t *o)
+int64_t stream_tell(stream_cls_t *o)
 {
     CHECK_PARAM(o, -1);
     return o->pos - (o->buf_len - o->buf_pos);

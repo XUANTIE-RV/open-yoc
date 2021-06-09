@@ -2,7 +2,8 @@
  * Copyright (C) 2018-2020 Alibaba Group Holding Limited
  */
 
-#include "stream/stream_cls.h"
+#if defined(CONFIG_STREAMER_HTTP) && CONFIG_STREAMER_HTTP
+#include "stream/stream.h"
 #include "avutil/socket_rw.h"
 #include "avutil/web.h"
 
@@ -38,6 +39,7 @@ static int _stream_http_open(stream_cls_t *o, int mode)
     priv->session   = session;
     o->size         = atoi(val);
     o->priv         = priv;
+    o->enable_cache = 1;
 
     return 0;
 err:
@@ -65,8 +67,20 @@ static int _stream_http_read(stream_cls_t *o, uint8_t *buf, size_t count)
 {
     int rc;
     struct http_priv *priv = o->priv;
+    int min_timeout = 1000, cnt, retry_cnt = 0;
 
-    rc = wsession_read(priv->session, (char*)buf, count, o->rcv_timeout);
+    cnt = o->rcv_timeout / min_timeout;
+    cnt = cnt > 0 ? cnt : 1;
+
+retry:
+    rc = wsession_read(priv->session, (char*)buf, count, min_timeout);
+    if (rc < 0) {
+        AV_ERRNO_SET(AV_ERRNO_READ_FAILD);
+    } else if (rc == 0) {
+        if (!stream_is_interrupt(o) && retry_cnt++ < cnt) {
+            goto retry;
+        }
+    }
 
     return rc;
 }
@@ -103,7 +117,6 @@ static int _stream_http_control(stream_cls_t *o, int cmd, void *arg, size_t *arg
 const struct stream_ops stream_ops_http = {
     .name            = "http",
     .type            = STREAM_TYPE_HTTP,
-    .enable_cache    = 1,
     .protocols       = { "http", "https", NULL },
 
     .open            = _stream_http_open,
@@ -113,4 +126,5 @@ const struct stream_ops stream_ops_http = {
     .seek            = _stream_http_seek,
     .control         = _stream_http_control,
 };
+#endif
 

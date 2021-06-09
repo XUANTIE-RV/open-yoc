@@ -70,10 +70,11 @@ int iotx_cm_connect(int fd, uint32_t timeout)
         return -1;
     }
     iotx_cm_connect_fp connect_func;
+    
     HAL_MutexLock(fd_lock);
     connect_func = _cm_fd[fd]->connect_func;
     HAL_MutexUnlock(fd_lock);
-
+    
     iotx_event_post(IOTX_CONN_CLOUD);
 
     int ret = connect_func(timeout);
@@ -98,7 +99,6 @@ int iotx_cm_connect(int fd, uint32_t timeout)
     } else {
         iotx_event_post(IOTX_CONN_CLOUD_FAIL);
     }
-
 
     return ret;
 }
@@ -209,12 +209,18 @@ int iotx_cm_close(int fd)
         return -1;
     }
 
-    if (--inited_conn_num == 0) {
+    if (inited_conn_num > 0) {
+        inited_conn_num--;
+    }
+
+    if (inited_conn_num == 0) {
 #if (CONFIG_SDK_THREAD_COST == 1)
         while (!yield_task_leave) {
             HAL_SleepMs(10);
         }
-        HAL_ThreadDelete(yield_thread);
+        if (yield_thread != NULL) {
+            HAL_ThreadDelete(yield_thread);
+        }
 #endif
     }
 
@@ -222,7 +228,7 @@ int iotx_cm_close(int fd)
     HAL_MutexLock(fd_lock);
     close_func = _cm_fd[fd]->close_func;
     HAL_MutexUnlock(fd_lock);
-    if (close_func() != 0) {
+    if (close_func == NULL || close_func() != 0) {
         return -1;
     }
     if (_recycle_fd(fd) != 0) {

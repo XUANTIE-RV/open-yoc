@@ -47,27 +47,27 @@ web_url_t* web_url_new(const char *url)
     } else {
         wurl->path = strdup("/");
     }
-    CHECK_RET_WITH_GOTO(wurl->path != NULL, err);
+    CHECK_RET_WITH_GOTO(wurl->path, err);
 
     at = strchr(str, '@');
     if (at && (!path_start || (at < path_start))) {
         host_start = at + 1;
         colon = strchr(str, ':');
-        CHECK_RET_WITH_GOTO(colon != NULL, err);
+        CHECK_RET_WITH_GOTO(colon, err);
 
         wurl->user = strndup(str, colon - str);
-        CHECK_RET_WITH_GOTO(wurl->user != NULL, err);
+        CHECK_RET_WITH_GOTO(wurl->user, err);
         CHECK_RET_WITH_GOTO(strlen(wurl->user) < URL_USERNAME_LEN_MAX, err);
 
         wurl->passwd = strndup(colon + 1, at - (colon + 1));
-        CHECK_RET_WITH_GOTO(wurl->passwd != NULL, err);
+        CHECK_RET_WITH_GOTO(wurl->passwd, err);
         CHECK_RET_WITH_GOTO(strlen(wurl->passwd) < URL_PASSWD_LEN_MAX, err);
     }
 
     colon = strchr(host_start, ':');
     if (colon && (!path_start || (colon < path_start))) {
         wurl->host = strndup(host_start, colon - host_start);
-        CHECK_RET_WITH_GOTO(wurl->host != NULL, err);
+        CHECK_RET_WITH_GOTO(wurl->host, err);
         colon++;
         start = colon;
 
@@ -89,7 +89,7 @@ web_url_t* web_url_new(const char *url)
         } else {
             wurl->host = strdup(host_start);
         }
-        CHECK_RET_WITH_GOTO(wurl->host != NULL, err);
+        CHECK_RET_WITH_GOTO(wurl->host, err);
     }
 
     return wurl;

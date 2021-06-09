@@ -5,7 +5,7 @@
 #ifndef __MCA_CLS_H__
 #define __MCA_CLS_H__
 
-#include <aos/aos.h>
+#include "avutil/common.h"
 #include "mca/csky_mca.h"
 
 __BEGIN_DECLS__

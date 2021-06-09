@@ -30,6 +30,11 @@ extern "C" {
 #define BT_MESH_KEY_UNUSED        0xffff
 #define BT_MESH_KEY_DEV           0xfffe
 
+/*[Genie begin] add by lgy at 2020-09-10*/
+#define BT_MESH_ADDR_TMALL_GENIE 0xf000
+#define BT_MESH_ADDR_GENIE_ALL_NODES 0xcfff
+/*[Genie end] add by lgy at 2020-09-10*/
+
 /** Helper to define a mesh element within an array.
  *
  *  In case the element has no SIG or Vendor models the helper
@@ -422,9 +427,12 @@ struct bt_mesh_elem *bt_mesh_model_elem(struct bt_mesh_model *mod);
 struct bt_mesh_model *bt_mesh_model_find_vnd(struct bt_mesh_elem *elem,
 					     u16_t company, u16_t id);
 
-u16_t bt_mesh_model_get_netkey_id(void);
+u16_t bt_mesh_model_get_netkey_id(struct bt_mesh_elem *elem);
 
-u16_t bt_mesh_model_get_appkey_id(void);
+u16_t bt_mesh_model_get_appkey_id(struct bt_mesh_elem *elem,  struct bt_mesh_model *p_model);
+
+/* Find local element based on element id */
+struct bt_mesh_elem *bt_mesh_elem_find_by_id(u8_t id);
 
 /** Node Composition */
 struct bt_mesh_comp {

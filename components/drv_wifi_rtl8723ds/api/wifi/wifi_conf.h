@@ -280,6 +280,10 @@ int wifi_set_mac_address(char * mac);
  */
 int wifi_get_mac_address(char * mac);
 
+int bt_get_mac_address(char *mac);
+
+int bt_set_mac_address(char *mac);
+
 /**
  * @brief Enable Wi-Fi powersave mode.
  * @param  None

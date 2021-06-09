@@ -10,19 +10,26 @@
 #include "stream/stream_all.h"
 #include "avformat/avformat_all.h"
 #include "avcodec/avcodec_all.h"
+#include "output/ao.h"
 #include "output/output_all.h"
 #include "aef/eq_all.h"
 #include "aef/aef_all.h"
+#include "atempo/atempo_all.h"
 #include "swresample/resample_all.h"
 #include "player_ioctl.h"
 
 __BEGIN_DECLS__
+
+#define PLAY_SPEED_MIN         (0.5)
+#define PLAY_SPEED_MAX         (2.0)
 
 enum {
     PLAYER_EVENT_UNKNOWN,
     PLAYER_EVENT_ERROR,
     PLAYER_EVENT_START,
     PLAYER_EVENT_FINISH,
+    PLAYER_EVENT_UNDER_RUN,    ///< for stream-cache status
+    PLAYER_EVENT_OVER_RUN,     ///< for stream-cache status
 };
 
 typedef struct player_cb player_t;
@@ -53,6 +60,8 @@ typedef struct player_conf {
     uint8_t                   vol_en;        ///< soft vol scale enable
     uint8_t                   vol_index;     ///< soft vol scale index (0~255)
     uint8_t                   eq_segments;   ///< equalizer segments number. 0 means don't need eq. TODO: not support yet!
+    uint8_t                   atempo_play_en;///< atempo play enable
+    float                     speed;         ///< atempo play speed.suggest: 0.5 ~ 2.0;
     uint8_t                   *aef_conf;     ///< config data for aef
     size_t                    aef_conf_size; ///< size of the config data for aef
     uint32_t                  resample_rate; ///< none zereo means need to resample
@@ -170,6 +179,22 @@ int player_get_vol(player_t *player, uint8_t *vol);
  * @return 0/-1
  */
 int player_set_vol(player_t *player, uint8_t vol);
+
+/**
+ * @brief  get play speed of the player
+ * @param  [in] player
+ * @param  [out] speed
+ * @return 0/-1
+ */
+int player_get_speed(player_t *player, float *speed);
+
+/**
+ * @brief  set play speed of the player
+ * @param  [in] player
+ * @param  [in] speed : [PLAY_SPEED_MIN ~ PLAY_SPEED_MAX]
+ * @return 0/-1
+ */
+int player_set_speed(player_t *player, float speed);
 
 __END_DECLS__
 

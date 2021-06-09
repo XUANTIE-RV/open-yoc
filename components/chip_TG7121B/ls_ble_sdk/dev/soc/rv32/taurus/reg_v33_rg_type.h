@@ -1,0 +1,280 @@
+#ifndef REG_V33_RG_TYPE_H_
+#define REG_V33_RG_TYPE_H_
+#include <stdint.h>
+
+typedef struct
+{
+    volatile uint32_t SFT_CTRL00;
+    volatile uint32_t SFT_CTRL01;
+    volatile uint32_t SFT_CTRL02;
+    volatile uint32_t SFT_CTRL03;
+    volatile uint32_t MISC_CTRL0;
+    volatile uint32_t TRIM0;
+    volatile uint32_t DCDC_CTRL0;
+    volatile uint32_t DCDC_CTRL1;
+    volatile uint32_t MISC_CTRL1;
+    volatile uint32_t WKUP_CTRL;
+    volatile uint32_t RST_SFT;
+    volatile uint32_t CLKG_SRST;
+    volatile uint32_t RST_SRC_CLR;
+    volatile uint32_t WKUP_TIM;
+    volatile uint32_t PMU_SET_VAL;
+    volatile uint32_t PWR_CTRL;
+    volatile uint32_t EXTI_CTRL0;
+    volatile uint32_t RESERVED0[1];
+    volatile uint32_t EXTI_CTRL1;
+    volatile uint32_t RESERVED1[1];
+    volatile uint32_t EXTI_CTRL2;
+    volatile uint32_t RESERVED2[3];
+    volatile uint32_t GPIO_INTR;
+    volatile uint32_t RESERVED3[1];
+    volatile uint32_t GPIO_INTR_RAW;
+    volatile uint32_t RESERVED4[1];
+    volatile uint32_t PMU_CTRL;
+    volatile uint32_t RST_SRC;
+    volatile uint32_t EXT_INTR;
+}reg_v33_rg_t;
+
+enum V33_RG_REG_SFT_CTRL00_FIELD
+{
+    V33_RG_SFT_CTRL00_MASK = (int)0xffffffff,
+    V33_RG_SFT_CTRL00_POS = 0,
+};
+
+enum V33_RG_REG_SFT_CTRL01_FIELD
+{
+    V33_RG_SFT_CTRL01_MASK = (int)0xffffffff,
+    V33_RG_SFT_CTRL01_POS = 0,
+};
+
+enum V33_RG_REG_SFT_CTRL02_FIELD
+{
+    V33_RG_SFT_CTRL02_MASK = (int)0xffffffff,
+    V33_RG_SFT_CTRL02_POS = 0,
+};
+
+enum V33_RG_REG_SFT_CTRL03_FIELD
+{
+    V33_RG_SFT_CTRL03_MASK = (int)0xffffffff,
+    V33_RG_SFT_CTRL03_POS = 0,
+};
+
+enum V33_RG_REG_MISC_CTRL0_FIELD
+{
+    V33_RG_LVD33_INTR_EN_MASK = (int)0x1,
+    V33_RG_LVD33_INTR_EN_POS = 0,
+    V33_RG_LVD33_POL_MASK = (int)0x2,
+    V33_RG_LVD33_POL_POS = 1,
+    V33_RG_LVD33_INTR_CLR_MASK = (int)0x4,
+    V33_RG_LVD33_INTR_CLR_POS = 2,
+    V33_RG_LVD33_INTR_MASK = (int)0x40,
+    V33_RG_LVD33_INTR_POS = 6,
+    V33_RG_LVD33_DTCT_MASK = (int)0x80,
+    V33_RG_LVD33_DTCT_POS = 7,
+    V33_RG_MAC_SLP_INTR_EN_MASK = (int)0x100,
+    V33_RG_MAC_SLP_INTR_EN_POS = 8,
+    V33_RG_MAC_SLP_INTR_CLR_MASK = (int)0x200,
+    V33_RG_MAC_SLP_INTR_CLR_POS = 9,
+    V33_RG_MAC_SLP_INTR_MASK = (int)0x400,
+    V33_RG_MAC_SLP_INTR_POS = 10,
+    V33_RG_LKRST_TIM_MASK = (int)0x3f0000,
+    V33_RG_LKRST_TIM_POS = 16,
+    V33_RG_LKRST_EN_MASK = (int)0x400000,
+    V33_RG_LKRST_EN_POS = 22,
+    V33_RG_LKRST_POL_MASK = (int)0x800000,
+    V33_RG_LKRST_POL_POS = 23,
+};
+
+enum V33_RG_REG_TRIM0_FIELD
+{
+    V33_RG_SPI_CODE_MASK = (int)0xfff,
+    V33_RG_SPI_CODE_POS = 0,
+    V33_RG_SPI_CODE_EN_MASK = (int)0x1000,
+    V33_RG_SPI_CODE_EN_POS = 12,
+    V33_RG_RCO_I_ADJ_MASK = (int)0x10000,
+    V33_RG_RCO_I_ADJ_POS = 16,
+    V33_RG_LPLDO_TRIM_MASK = (int)0xf00000,
+    V33_RG_LPLDO_TRIM_POS = 20,
+};
+
+enum V33_RG_REG_DCDC_CTRL0_FIELD
+{
+    V33_RG_DCDC_CTRL0_MASK = (int)0xffffffff,
+    V33_RG_DCDC_CTRL0_POS = 0,
+};
+
+enum V33_RG_REG_DCDC_CTRL1_FIELD
+{
+    V33_RG_DCDC_CTRL1_MASK = (int)0x3f,
+    V33_RG_DCDC_CTRL1_POS = 0,
+};
+
+enum V33_RG_REG_MISC_CTRL1_FIELD
+{
+    V33_RG_LATCH_GPIO_MASK = (int)0x1,
+    V33_RG_LATCH_GPIO_POS = 0,
+    V33_RG_PD_GPIO_MASK = (int)0x2,
+    V33_RG_PD_GPIO_POS = 1,
+    V33_RG_PD_ADC12_MASK = (int)0x4,
+    V33_RG_PD_ADC12_POS = 2,
+    V33_RG_PD_AMIC_MASK = (int)0x8,
+    V33_RG_PD_AMIC_POS = 3,
+    V33_RG_PD_TK_MASK = (int)0x10,
+    V33_RG_PD_TK_POS = 4,
+    V33_RG_BOR_EN_MASK = (int)0x20,
+    V33_RG_BOR_EN_POS = 5,
+    V33_RG_BAT_DTCT_EN_MASK = (int)0x40,
+    V33_RG_BAT_DTCT_EN_POS = 6,
+};
+
+enum V33_RG_REG_WKUP_CTRL_FIELD
+{
+    V33_RG_WKUP_MSK_MASK = (int)0x3f,
+    V33_RG_WKUP_MSK_POS = 0,
+    V33_RG_SWD_IO_WKUP_EN_MASK = (int)0x30000,
+    V33_RG_SWD_IO_WKUP_EN_POS = 16,
+};
+
+enum V33_RG_REG_RST_SFT_FIELD
+{
+    V33_RG_RST_FROM_SFT_MASK = (int)0x1,
+    V33_RG_RST_FROM_SFT_POS = 0,
+};
+
+enum V33_RG_REG_CLKG_SRST_FIELD
+{
+    V33_RG_CLKG_SET_TIM_MASK = (int)0x1,
+    V33_RG_CLKG_SET_TIM_POS = 0,
+    V33_RG_CLKG_CLR_TIM_MASK = (int)0x2,
+    V33_RG_CLKG_CLR_TIM_POS = 1,
+    V33_RG_CLKG_SET_WDT_MASK = (int)0x4,
+    V33_RG_CLKG_SET_WDT_POS = 2,
+    V33_RG_CLKG_CLR_WDT_MASK = (int)0x8,
+    V33_RG_CLKG_CLR_WDT_POS = 3,
+    V33_RG_CLKG_SET_RTC_MASK = (int)0x10,
+    V33_RG_CLKG_SET_RTC_POS = 4,
+    V33_RG_CLKG_CLR_RTC_MASK = (int)0x20,
+    V33_RG_CLKG_CLR_RTC_POS = 5,
+    V33_RG_CLKG_SET_MAC_SLP_MASK = (int)0x40,
+    V33_RG_CLKG_SET_MAC_SLP_POS = 6,
+    V33_RG_CLKG_CLR_MAC_SLP_MASK = (int)0x80,
+    V33_RG_CLKG_CLR_MAC_SLP_POS = 7,
+    V33_RG_SRST_SET_MAC_SLP_N_MASK = (int)0x10000,
+    V33_RG_SRST_SET_MAC_SLP_N_POS = 16,
+    V33_RG_SRST_CLR_MAC_SLP_N_MASK = (int)0x20000,
+    V33_RG_SRST_CLR_MAC_SLP_N_POS = 17,
+};
+
+enum V33_RG_REG_RST_SRC_CLR_FIELD
+{
+    V33_RG_RST_SRC_CLR_MASK = (int)0x1,
+    V33_RG_RST_SRC_CLR_POS = 0,
+};
+
+enum V33_RG_REG_WKUP_TIM_FIELD
+{
+    V33_RG_STB_CLK_M1_MASK = (int)0xff,
+    V33_RG_STB_CLK_M1_POS = 0,
+    V33_RG_STB_DCDC_M1_MASK = (int)0xf00,
+    V33_RG_STB_DCDC_M1_POS = 8,
+    V33_RG_STB_LDO_M1_MASK = (int)0xf000,
+    V33_RG_STB_LDO_M1_POS = 12,
+};
+
+enum V33_RG_REG_PMU_SET_VAL_FIELD
+{
+    V33_RG_PMU_SET_DCDC_BYP_MASK = (int)0x10,
+    V33_RG_PMU_SET_DCDC_BYP_POS = 4,
+    V33_RG_PMU_SET_DCDC_PWM_MASK = (int)0x20,
+    V33_RG_PMU_SET_DCDC_PWM_POS = 5,
+    V33_RG_PMU_SET_DCDC_PFM_MASK = (int)0x40,
+    V33_RG_PMU_SET_DCDC_PFM_POS = 6,
+    V33_RG_PMU_SET_DCDC_FLT_MASK = (int)0x80,
+    V33_RG_PMU_SET_DCDC_FLT_POS = 7,
+    V33_RG_PMU_SET_TGGL_MASK = (int)0x80000000,
+    V33_RG_PMU_SET_TGGL_POS = 31,
+};
+
+enum V33_RG_REG_PWR_CTRL_FIELD
+{
+    V33_RG_LPLDO_PD_EN_MASK = (int)0x1,
+    V33_RG_LPLDO_PD_EN_POS = 0,
+    V33_RG_HPLDO_PD_EN_MASK = (int)0x2,
+    V33_RG_HPLDO_PD_EN_POS = 1,
+    V33_RG_PWRSW_PD_EN_MASK = (int)0x4,
+    V33_RG_PWRSW_PD_EN_POS = 2,
+    V33_RG_DCDC_PDPU_EN_MASK = (int)0x8,
+    V33_RG_DCDC_PDPU_EN_POS = 3,
+    V33_RG_DCDC_PDPU_MD_MASK = (int)0x10,
+    V33_RG_DCDC_PDPU_MD_POS = 4,
+    V33_RG_LSI_PD_EN_MASK = (int)0x20,
+    V33_RG_LSI_PD_EN_POS = 5,
+    V33_RG_HSE_PD_EN_MASK = (int)0x40,
+    V33_RG_HSE_PD_EN_POS = 6,
+    V33_RG_HSE_BUF_PD_EN_MASK = (int)0x80,
+    V33_RG_HSE_BUF_PD_EN_POS = 7,
+    V33_RG_SRAM_DS_EN_MASK = (int)0x100,
+    V33_RG_SRAM_DS_EN_POS = 8,
+};
+
+enum V33_RG_REG_EXTI_CTRL0_FIELD
+{
+    V33_RG_GPIOA_INTR_EN_MASK = (int)0xffff,
+    V33_RG_GPIOA_INTR_EN_POS = 0,
+    V33_RG_GPIOB_INTR_EN_MASK = (int)0x3ff0000,
+    V33_RG_GPIOB_INTR_EN_POS = 16,
+};
+
+enum V33_RG_REG_EXTI_CTRL1_FIELD
+{
+    V33_RG_GPIOA_INTR_POL_MASK = (int)0xffff,
+    V33_RG_GPIOA_INTR_POL_POS = 0,
+    V33_RG_GPIOB_INTR_POL_MASK = (int)0x3ff0000,
+    V33_RG_GPIOB_INTR_POL_POS = 16,
+};
+
+enum V33_RG_REG_EXTI_CTRL2_FIELD
+{
+    V33_RG_GPIOA_INTR_CLR_MASK = (int)0xffff,
+    V33_RG_GPIOA_INTR_CLR_POS = 0,
+    V33_RG_GPIOB_INTR_CLR_MASK = (int)0x3ff0000,
+    V33_RG_GPIOB_INTR_CLR_POS = 16,
+};
+
+enum V33_RG_REG_GPIO_INTR_FIELD
+{
+    V33_RG_GPIOA_INTR_MASK = (int)0xffff,
+    V33_RG_GPIOA_INTR_POS = 0,
+    V33_RG_GPIOB_INTR_MASK = (int)0x3ff0000,
+    V33_RG_GPIOB_INTR_POS = 16,
+};
+
+enum V33_RG_REG_GPIO_INTR_RAW_FIELD
+{
+    V33_RG_GPIOA_INTR_RAW_MASK = (int)0xffff,
+    V33_RG_GPIOA_INTR_RAW_POS = 0,
+    V33_RG_GPIOB_INTR_RAW_MASK = (int)0x3ff0000,
+    V33_RG_GPIOB_INTR_RAW_POS = 16,
+};
+
+enum V33_RG_REG_PMU_CTRL_FIELD
+{
+    V33_RG_PMU_CTRL_STAT_MASK = (int)0xf0,
+    V33_RG_PMU_CTRL_STAT_POS = 4,
+};
+
+enum V33_RG_REG_RST_SRC_FIELD
+{
+    V33_RG_RST_SRC_MASK = (int)0x7f,
+    V33_RG_RST_SRC_POS = 0,
+};
+
+enum V33_RG_REG_EXT_INTR_FIELD
+{
+    V33_RG_EXT_INTR_MASK = (int)0x1,
+    V33_RG_EXT_INTR_POS = 0,
+};
+
+#endif
+
+

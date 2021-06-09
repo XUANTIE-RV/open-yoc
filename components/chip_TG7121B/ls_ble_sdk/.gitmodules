@@ -1,0 +1,9 @@
+[submodule "dev/stack"]
+	path = dev/stack
+	url = http://10.10.20.8/diffusion/STACK/ble_sdk_stack.git
+[submodule "dev/examples/mesh_app"]
+	path = dev/examples/mesh_app
+	url = http://10.10.20.8/diffusion/M/mesh_app.git
+[submodule "dev/bootloader/boot_rom"]
+	path = dev/bootloader/boot_rom
+	url = http://10.10.20.8/diffusion/BROM/boot_rom.git

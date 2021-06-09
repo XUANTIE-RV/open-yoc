@@ -36,12 +36,15 @@
     #include "iotx_alcs.h"
 #endif
 
+#ifdef MQTT_SHADOW
+#include "dm_shadow.h"
+#include "awss_reset.h"
+#endif
+
 /* DM Header File */
 #include "iotx_dm_config.h"
 #include "iotx_dm.h"
 #include "dm_utils.h"
-#include "dm_shadow.h"
-#include "dm_tsl_alink.h"
 #include "dm_message_cache.h"
 #include "dm_opt.h"
 #include "dm_ota.h"
@@ -71,7 +74,7 @@
     #define DM_URI_OFFSET 0
 #endif
 
-#if 1
+#if 0
     #define dm_log_emerg(...)     log_emerg("DM", __VA_ARGS__)
     #define dm_log_crit(...)      log_crit("DM", __VA_ARGS__)
     #define dm_log_err(...)       log_err("DM", __VA_ARGS__)

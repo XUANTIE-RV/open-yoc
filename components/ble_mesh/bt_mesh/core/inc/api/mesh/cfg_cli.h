@@ -251,6 +251,16 @@ int bt_mesh_cfg_hb_pub_set(u16_t net_idx, u16_t addr,
 int bt_mesh_cfg_hb_pub_get(u16_t net_idx, u16_t addr,
 			   struct bt_mesh_cfg_hb_pub *pub, u8_t *status);
 
+/*[Genie begin] add by wenbing.cwb at 2021-01-21*/
+#ifdef CONFIG_BT_MESH_CTRL_RELAY
+int bt_mesh_cfg_ctrl_relay_get(u16_t net_idx, u16_t addr,
+							   struct ctrl_relay_param *cr, u8_t *status);
+
+int bt_mesh_cfg_ctrl_relay_set(u16_t net_idx, u16_t addr,
+							   const struct ctrl_relay_param *cr, u8_t *status);
+#endif
+/*[Genie end] add by wenbing.cwb at 2021-01-21*/
+
 s32_t bt_mesh_cfg_cli_timeout_get(void);
 void bt_mesh_cfg_cli_timeout_set(s32_t timeout);
 

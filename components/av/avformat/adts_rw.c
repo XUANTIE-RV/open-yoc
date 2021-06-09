@@ -60,6 +60,32 @@ int adts_hdr_get(const uint8_t* buf, struct adts_hdr *hinfo)
 }
 
 /**
+ * @brief  encode the adts hdr from m4a config
+ * @param  [in] m4ac
+ * @param  [in] hdr[ADTS_HDR_SIZE]
+ * @param  [in] fsize : size of aac frame
+ * @return 0/-1
+ */
+int adts_hdr_encode(const m4a_cnf_t *m4ac, uint8_t hdr[ADTS_HDR_SIZE], size_t fsize)
+{
+    int size = ADTS_HDR_SIZE;
+
+    CHECK_PARAM(m4ac && hdr && fsize, -1);
+    size += fsize;
+    memset(hdr, 0, ADTS_HDR_SIZE);
+
+    hdr[0] = 0xff;
+    hdr[1] = 0xf1;
+    hdr[2] = ((m4ac->object_type - 1) << 6) | (m4ac->sample_idx << 2) | (m4ac->ch_conf & 0x4);
+    hdr[3] = ((m4ac->ch_conf & 0x3) << 6) | ((size >> 11) & 0x3);
+    hdr[4] = (size >> 3) & 0xff;
+    hdr[5] = ((size & 0x7) << 5) | ((0x7ff & 0x1f0) >> 4);
+    hdr[6] = (0x7ff & 0x3f) << 2;
+
+    return 0;
+}
+
+/**
  * @brief  sync the adts
  * @param  [in] rcb      : read byte callback
  * @param  [in] opaque   : in param of the callback

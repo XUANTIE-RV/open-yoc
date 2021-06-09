@@ -94,8 +94,11 @@ static web_err_t http_header_new_item(http_header_handle_t header, const char *k
     STAILQ_INSERT_TAIL(header, item, next);
     return WEB_OK;
 _header_new_item_exit:
-    free(item->key);
-    free(item->value);
+    if (item->key)
+        free(item->key);
+    if (item->value)
+        free(item->value);
+    free(item);
     return WEB_ERR_NO_MEM;
 }
 
@@ -158,9 +161,9 @@ int http_header_set_format(http_header_handle_t header, const char *key, const c
     va_list argptr;
     int len = 0;
     char *buf = NULL;
+
     va_start(argptr, format);
     len = vasprintf(&buf, format, argptr);
-    HTTP_MEM_CHECK(TAG, buf, return 0);
     va_end(argptr);
     if (buf == NULL) {
         return 0;

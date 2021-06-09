@@ -1,0 +1,3 @@
+[submodule "ls_ble_sdk"]
+	path = ls_ble_sdk
+	url = http://10.10.20.8/diffusion/BLE/ble_sdk_app.git

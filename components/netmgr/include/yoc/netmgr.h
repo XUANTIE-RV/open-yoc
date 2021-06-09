@@ -5,7 +5,7 @@
 #ifndef YOC_NET_MGR_H
 #define YOC_NET_MGR_H
 
-#include <yoc/event.h>
+#include <uservice/event.h>
 #include <sys/socket.h>
 #include <devices/netdrv.h>
 

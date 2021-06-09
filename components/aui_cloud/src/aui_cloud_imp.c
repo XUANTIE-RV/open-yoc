@@ -8,50 +8,33 @@
 
 #define TAG "CLOUD"
 
-int aui_cloud_init(aui_t *aui)
+aui_t *aui_cloud_init(aui_config_t *config)
+{
+    aos_check_param(config);
+
+    aui_t *aui = aos_zalloc_check(sizeof(aui_t));
+
+    memcpy(&aui->config, config, sizeof(aui_config_t));
+
+    return aui;
+}
+
+int aui_cloud_deinit(aui_t *aui)
 {
     aos_check_param(aui);
-
-    if (aui->ops.asr) {
-        if (aui->ops.asr->init) {
-            if (aui->ops.asr->init(aui))
-                return -1;            
-        }
-    }
-    if (aui->ops.nlp) {
-        if (aui->ops.nlp->init) {
-            if (aui->ops.nlp->init(aui))
-                return -1;
-        }
-    }
-    if (aui->ops.tts) {
-        if (aui->ops.tts->init) {
-            if (aui->ops.tts->init(aui))
-                return -1;
-        }
-    }
+    
+    aos_free(aui);
 
     return 0;
 }
 
-int aui_cloud_enable_wwv(aui_t *aui, int enable)
+int aui_cloud_start_audio(aui_t *aui, int type)
 {
     int ret = -1;
 
     aos_check_param(aui);
 
-    if (aui->ops.asr && aui->ops.asr->enable_wwv)
-        ret = aui->ops.asr->enable_wwv(aui, enable);
-
-    return ret;
-}
-
-int aui_cloud_start_pcm(aui_t *aui)
-{
-    int ret = -1;
-
-    aos_check_param(aui);
-
+    aui->asr_type = type;
     if (aui->ops.asr) {
         if (aui->ops.asr->start)
             ret = aui->ops.asr->start(aui);
@@ -60,9 +43,9 @@ int aui_cloud_start_pcm(aui_t *aui)
 }
 
 /**
-    Start to input PCM buffer to internal buffer
+    Start to input audio buffer to internal buffer
 */
-int aui_cloud_push_pcm(aui_t *aui, void *data, size_t size)
+int aui_cloud_push_audio(aui_t *aui, void *data, size_t size)
 {
     int ret = -1;
 
@@ -81,7 +64,7 @@ int aui_cloud_push_pcm(aui_t *aui, void *data, size_t size)
 /**
     Finished the buffer input
 */
-int aui_cloud_stop_pcm(aui_t *aui)
+int aui_cloud_stop_audio(aui_t *aui)
 {
     int ret = -1;
 
@@ -95,56 +78,21 @@ int aui_cloud_stop_pcm(aui_t *aui)
     return ret;
 }
 
-int aui_cloud_set_asr_session_id(aui_t *aui, const char *session_id)
-{
-    int ret = -1;
-
-    aos_check_param(aui && session_id);
-
-    if (aui->ops.asr && aui->ops.asr->set_session_id)
-        ret = aui->ops.asr->set_session_id(aui, session_id);
-
-    return ret;
-}
-
 int aui_cloud_stop(aui_t *aui)
 {
+    int ret = 0;
     if (aui->ops.asr) {
         if (aui->ops.asr->stop)
-            aui->ops.asr->stop(aui);
+            ret = aui->ops.asr->stop(aui);
     }
     if (aui->ops.nlp) {
         if (aui->ops.nlp->stop)
-            aui->ops.nlp->stop(aui);
+            ret = aui->ops.nlp->stop(aui);
     }
     if (aui->ops.tts) {
         if (aui->ops.tts->stop)
-            aui->ops.tts->stop(aui);
+            ret = aui->ops.tts->stop(aui);
     }
-    return 0;
-}
-
-int aui_cloud_init_wwv(aui_t *aui, aui_wwv_cb_t cb)
-{
-    int ret = -1;
-
-    aos_check_param(aui && cb);
-
-    if (aui->ops.asr && aui->ops.asr->init_wwv)
-        ret = aui->ops.asr->init_wwv(aui, cb);
-
-    return ret;
-}
-
-int aui_cloud_push_wwv_data(aui_t *aui, void *data, size_t size)
-{
-    int ret = -1;
-
-    aos_check_param(aui && data && size);
-
-    if (aui->ops.asr && aui->ops.asr->push_wwv_data)
-        ret = aui->ops.asr->push_wwv_data(aui, data, size);
-
     return ret;
 }
 
@@ -171,13 +119,9 @@ int aui_cloud_push_text(aui_t *aui, char *text)
         LOGI(TAG, "get music url start");
     } else {
         LOGI(TAG, "nlp start");
-        ret = aui_textcmd_matchnlp(aui, text);
-        if (ret < 0) {
-            /** process normal NLP */
-            if (aui->ops.nlp) {
-                if (aui->ops.nlp->push_text)
-                    ret = aui->ops.nlp->push_text(aui, text);
-            }
+        /** process normal NLP */
+        if (aui->ops.nlp && aui->ops.nlp->push_text) {
+            ret = aui->ops.nlp->push_text(aui, text);
         }
     }
 
@@ -208,29 +152,15 @@ int aui_cloud_start_tts(aui_t *aui)
     return ret;
 }
 
-void aui_cloud_set_tts_status_listener(aui_t *aui, aui_tts_cb_t stat_cb)
-{
-    aos_check_param(aui);
-
-    if (aui->ops.tts) {
-        if (aui->ops.tts->set_status_listener)
-            aui->ops.tts->set_status_listener(aui, stat_cb);
-    } 
-}
-
-int aui_cloud_req_tts(aui_t *aui, const char *text, const char *player_fifo_name)
+int aui_cloud_req_tts(aui_t *aui, const char *text)
 {
     int ret = -1;
     
     aos_check_param(aui);
     aos_check_param(text);
 
-    if (NULL == player_fifo_name) {
-        player_fifo_name = "fifo://tts/1";
-    }
-    if (aui->ops.tts) {
-        if (aui->ops.tts->req_tts)
-            ret = aui->ops.tts->req_tts(aui, text, player_fifo_name);
+    if (aui->ops.tts && aui->ops.tts->req_tts) {
+        ret = aui->ops.tts->req_tts(aui, text);
     }
     return ret;
 }
@@ -245,4 +175,94 @@ int aui_cloud_stop_tts(aui_t *aui)
         ret = aui->ops.tts->stop(aui);
 
     return ret;
+}
+
+int aui_cloud_asr_unregister(aui_t *aui)
+{
+    aos_check_param(aui);
+
+    int ret = 0;
+
+    if (aui->ops.asr && aui->ops.asr->deinit) {
+        ret = aui->ops.asr->deinit(aui);
+    }
+
+    aui->ops.asr = NULL;
+
+    return ret;
+}
+
+int aui_cloud_nlp_unregister(aui_t *aui)
+{
+    aos_check_param(aui);
+
+    int ret = 0;
+
+    if (aui->ops.nlp && aui->ops.nlp->deinit) {
+        ret = aui->ops.nlp->deinit(aui);
+    }
+
+    aui->ops.nlp = NULL;
+
+    return ret;
+}
+
+int aui_cloud_tts_unregister(aui_t *aui)
+{
+    aos_check_param(aui);
+
+    int ret = 0;
+
+    if (aui->ops.tts && aui->ops.tts->deinit) {
+        ret = aui->ops.tts->deinit(aui);
+    }
+
+    aui->ops.tts = NULL;
+
+    return ret;
+}
+
+int aui_cloud_asr_register(aui_t *aui, aui_asr_cls_t *ops, aui_asr_cb_t cb, void *priv)
+{
+    aos_check_param(aui && ops && cb);
+
+    aui->ops.asr = ops;
+    aui->cb.asr_cb = cb;
+    aui->cb.asr_priv = priv;
+    
+    if (aui->ops.asr->init) {
+        return aui->ops.asr->init(aui);
+    } else {
+        return 0;
+    }
+}
+
+int aui_cloud_nlp_register(aui_t *aui, aui_nlp_cls_t *ops, aui_nlp_cb_t cb, void *priv)
+{
+    aos_check_param(aui && ops && cb);
+
+    aui->ops.nlp = ops;
+    aui->cb.nlp_cb = cb;
+    aui->cb.nlp_priv = priv;
+    
+    if (aui->ops.nlp->init) {
+        return aui->ops.nlp->init(aui);
+    } else {
+        return 0;
+    }
+}
+
+int aui_cloud_tts_register(aui_t *aui, aui_tts_cls_t *ops, aui_tts_cb_t cb, void *priv)
+{
+    aos_check_param(aui && ops && cb);
+
+    aui->ops.tts = ops;
+    aui->cb.tts_cb = cb;
+    aui->cb.tts_priv = priv;
+
+    if (aui->ops.tts->init) {
+        return aui->ops.tts->init(aui);
+    } else {
+        return 0;
+    }
 }

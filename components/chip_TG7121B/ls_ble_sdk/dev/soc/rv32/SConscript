@@ -1,0 +1,16 @@
+Import('env')
+
+src = [
+    'int_call_asm.S',
+    'swint_handler.c',
+]
+inc = [
+    '.',
+]
+
+taurus_src,taurus_inc = SConscript(dirs='taurus',exports = ['env'])
+src_files = File(src) + taurus_src
+inc_dirs = Dir(inc) + taurus_inc
+start_files = File(['startup.c'])
+
+Return("src_files","inc_dirs","start_files")

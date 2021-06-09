@@ -5,7 +5,7 @@
 #ifndef __HTTP_H__
 #define __HTTP_H__
 
-#include <aos/network.h>
+#include "util/network.h"
 
 #ifdef __cplusplus
 extern "C" {

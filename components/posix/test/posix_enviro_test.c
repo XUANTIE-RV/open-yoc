@@ -8,7 +8,7 @@
 #include "k_api.h"
 #include "pthread.h"
 #include "enviro.h"
-#include "aos/log.h"
+#include "ulog/ulog.h"
 #define TAG "enviro_test"
 
 static char *envname[5] = {"os", "version", "component", "author", "email"};
@@ -222,8 +222,7 @@ static void *demo_task4(void *arg)
         if (count == 2) {
             LOGI(TAG, "unsetenv\n");
 
-            for (i = 3; i < 5; ++i)
-            {
+            for (i = 3; i < 5; ++i) {
                 ret = unsetenv(envname[i]);
                 if (ret != 0) {
                     succeed_flag = 0;

@@ -21,7 +21,22 @@ typedef enum {
     YV_EVT_ID_END
 } yv_evt_id_t;
 
-typedef struct mic_pcm_param yv_pcm_param_t;
+typedef struct yv_pcm_param {
+    int   sample_bits;      /* 采样精度 默认16bit*/
+    int   channels;         /* 采样通道数 默认1*/
+    int   rate;             /* 采样率 默认16K*/
+    int   nsmode;           /* 去噪等级参数  0~3 非线性处理等级逐步加强，其他值无非线性处理 */
+    int   aecmode;          /* 回音消除等级  0~3 非线性处理等级逐步加强，其他值无非线性处理 */
+    int   vadmode;          /* VAD等级 0~3 等级逐步加强 */
+    int   sentence_time_ms; /* 有语音断句时间 */
+    int   noack_time_ms;    /* 无语音超时时间 */
+    int   max_time_ms;      /* 唤醒后总超时时间 */
+    void *ext_param1;       /* 预留 */
+    void *ext_param2;       /* 预留 */
+    int   vadswitch;        /* 0 关闭VAD，1 打开, 2 打开起点关闭尾点 */
+    int   vadfilter;        /* VAD过滤器类型， 0 关闭过滤器， 1~3 不同过滤器类型 */
+} yv_pcm_param_t;
+
 typedef struct _yv_ap_ yv_t;
 
 //init

@@ -97,7 +97,7 @@ int HAL_Aes128_Cbc_Decrypt(
 
     return ret;
 }
-#if defined(MBEDTLS_CIPHER_MODE_CFB)
+#if 1//defined(MBEDTLS_CIPHER_MODE_CFB)
 int HAL_Aes128_Cfb_Encrypt(
             _IN_ p_HAL_Aes128_t aes,
             _IN_ const void *src,
@@ -116,7 +116,7 @@ int HAL_Aes128_Cfb_Encrypt(
 }
 #endif
 
-#if defined(MBEDTLS_CIPHER_MODE_CFB)
+#if 1//defined(MBEDTLS_CIPHER_MODE_CFB)
 int HAL_Aes128_Cfb_Decrypt(
             _IN_ p_HAL_Aes128_t aes,
             _IN_ const void *src,

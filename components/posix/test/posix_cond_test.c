@@ -7,7 +7,7 @@
 
 #include "k_api.h"
 #include "pthread.h"
-#include "aos/log.h"
+#include "ulog/ulog.h"
 
 #define TAG "sem_test"
 
@@ -124,8 +124,8 @@ void posix_pthread_condattr_init_case(void)
     pthread_condattr_init(&attr);
 
     if ((attr.clock == DEFAULT_COND_CLOCK)
-       &&(attr.pshared == DEFAULT_COND_SHARED)
-       &&(attr.is_initialized == 1)) {
+        &&(attr.pshared == DEFAULT_COND_SHARED)
+        &&(attr.is_initialized == 1)) {
         flag = 1;
     } else {
         flag = 0;
@@ -153,8 +153,8 @@ void posix_pthread_condattr_destroy_case(void)
     pthread_condattr_destroy(&attr);
 
     if ((attr.clock == 0)
-       &&(attr.pshared == 0)
-       &&(attr.is_initialized == 0)) {
+        &&(attr.pshared == 0)
+        &&(attr.is_initialized == 0)) {
         flag = 1;
     } else {
         flag = 0;

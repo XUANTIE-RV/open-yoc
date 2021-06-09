@@ -134,7 +134,9 @@ static rws_socket ws_rec_init(const char *url)
 	}
 	
     sock = rws_socket_create();
-	aos_check_return_val(sock, NULL);
+	if (sock == NULL) {
+		goto err;
+	}
 
     LOGD(TAG, "ws init, path==%s, port:%d", uri, port);
     rws_socket_set_url(sock, "ws", uri, port, "/");

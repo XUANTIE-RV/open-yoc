@@ -135,6 +135,23 @@ typedef struct {
     bool                        use_global_ca_store;      /*!< Use a global ca_store for all the connections in which this bool is set. */
 } http_client_config_t;
 
+/**
+ * Enum for the HTTP status codes.
+ */
+typedef enum {
+    /* 3xx - Redirection */
+    HttpStatus_MovedPermanently  = 301,
+    HttpStatus_Found             = 302,
+    HttpStatus_TemporaryRedirect = 307,
+
+    /* 4xx - Client Error */
+    HttpStatus_Unauthorized      = 401,
+    HttpStatus_Forbidden         = 403,
+    HttpStatus_NotFound          = 404,
+
+    /* 5xx - Server Error */
+    HttpStatus_InternalError     = 500
+} HttpStatus_Code;
 
 /**
  * @brief      Start a HTTP session
@@ -412,6 +429,43 @@ http_errors_t http_client_cleanup(http_client_handle_t client);
  */
 http_client_transport_t http_client_get_transport_type(http_client_handle_t client);
 
+/**
+ * @brief      Set redirection URL.
+ *             When received the 30x code from the server, the client stores the redirect URL provided by the server.
+ *             This function will set the current URL to redirect to enable client to execute the redirection request.
+ *
+ * @param[in]  client  The http_client handle
+ *
+ * @return
+ *     - HTTP_CLI_OK
+ *     - HTTP_CLI_FAIL
+ */
+http_errors_t http_client_set_redirection(http_client_handle_t client);
+
+/**
+ * @brief      Checks if entire data in the response has been read without any error.
+ *
+ * @param[in]  client   The http_client handle
+ *
+ * @return
+ *     - true
+ *     - false
+ */
+bool http_client_is_complete_data_received(http_client_handle_t client);
+
+/**
+ * @brief      Helper API to read larger data chunks
+ *             This is a helper API which internally calls `http_client_read` multiple times till the end of data is reached or till the buffer gets full.
+ *
+ * @param[in]  client   The http_client handle
+ * @param      buffer   The buffer
+ * @param[in]  len      The buffer length
+ *
+ * @return
+ *     - Length of data was read
+ */
+
+int http_client_read_response(http_client_handle_t client, char *buffer, int len);
 
 #ifdef __cplusplus
 }

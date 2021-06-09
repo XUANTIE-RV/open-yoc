@@ -1,267 +1,254 @@
-## 简介
+/* FLAC - Free Lossless Audio Codec
+ * Copyright (C) 2001-2009  Josh Coalson
+ * Copyright (C) 2011-2016  Xiph.Org Foundation
+ *
+ * This file is part the FLAC project.  FLAC is comprised of several
+ * components distributed under different licenses.  The codec libraries
+ * are distributed under Xiph.Org's BSD-like license (see the file
+ * COPYING.Xiph in this distribution).  All other programs, libraries, and
+ * plugins are distributed under the LGPL or GPL (see COPYING.LGPL and
+ * COPYING.GPL).  The documentation is distributed under the Gnu FDL (see
+ * COPYING.FDL).  Each file in the FLAC distribution contains at the top the
+ * terms under which it may be distributed.
+ *
+ * Since this particular file is relevant to all components of FLAC,
+ * it may be distributed under the Xiph.Org license, which is the least
+ * restrictive of those mentioned above.  See the file COPYING.Xiph in this
+ * distribution.
+ */
 
-FLAC(FreeLossless Audio Codec)是一套自由的音频压缩编解码器. 
-不同于其它有损音频压缩格式，FLAC格式不会破坏任何原有的音频资讯。这种压缩类似于ZIP的方式，但FLAC是专门针对PCM音频特点设计的压缩格式，其压缩率要大于ZIP方式。FLAC是一种非专有的，不受专利影响，开放源码，并且完全免>费的无损音频压缩格式，它的编码算法相当成熟，已经通过了严格的测试，被很多软件以及硬件音频产品所支持，如支持大多数的操作系统，包括Windows、Unix类系统、Mac等等，应用在移动多媒体播放器、汽车音响、家用音响等等设备。
-FLAC编解码复杂度比较低，对计算要求不高，在普通的硬件平台就可以轻松实现实时解码播放.
-FLAC有专门的项目组维护，可以在https://xiph.org/flac下载完整的FLAC编解码源码，对于C开发环境，其对应的库为libFLAC。
 
-## 相关接口
+FLAC is an Open Source lossless audio codec developed by Josh Coalson from 2001
+to 2009.
 
-具体接口使用请参见stream_decoder.h中的说明。
+From January 2012 FLAC is being maintained by Erik de Castro Lopo under the
+auspices of the Xiph.org Foundation.
 
-## 如何使用
+FLAC is comprised of
+  * `libFLAC', a library which implements reference encoders and
+    decoders for native FLAC and Ogg FLAC, and a metadata interface
+  * `libFLAC++', a C++ object wrapper library around libFLAC
+  * `flac', a command-line program for encoding and decoding files
+  * `metaflac', a command-line program for viewing and editing FLAC
+    metadata
+  * player plugin for XMMS
+  * user and API documentation
 
-### flac解码示例
+The libraries (libFLAC, libFLAC++) are
+licensed under Xiph.org's BSD-like license (see COPYING.Xiph).  All other
+programs and plugins are licensed under the GNU General Public License
+(see COPYING.GPL).  The documentation is licensed under the GNU Free
+Documentation License (see COPYING.FDL).
 
-```c
-#include "FLAC/stream_decoder.h"
-#define DEC_IBUF_SIZE_MIN      (FLAC_FRAME_SIZE_DEFAULT)
 
-struct ad_flac_priv {
-    FLAC__StreamDecoder        *dec;
-    struct flac_stream_info    si;
-    uint8_t                    si_find;       ///< may be not have stream info
+===============================================================================
+FLAC - 1.3.2 - Contents
+===============================================================================
 
-    uint8_t                    *ibuf;
-    size_t                     ipos;          ///< pos of read or write
-    size_t                     isize;         ///< valid data size
-    size_t                     icap;          ///< cap size
+- Introduction
+- Prerequisites
+- Note to embedded developers
+- Building in a GNU environment
+- Building with Makefile.lite
+- Building with MSVC
+- Building on Mac OS X
 
-    FLAC__FrameHeader          fhdr;
-    FLAC__int32                *opbuf[2];     ///< output pointer: 2 channels max support.
-};
 
-static FLAC__StreamDecoderReadStatus _read_callback(const FLAC__StreamDecoder *decoder, FLAC__byte buffer[], size_t *bytes, void *client_data)
-{
-    UNUSED(decoder);
-    int rc = *bytes, remain;
-    struct ad_flac_priv *priv = client_data;
+===============================================================================
+Introduction
+===============================================================================
 
-    remain = priv->isize - priv->ipos;
-    rc = rc > remain ? remain : rc;
-    if (rc > 0) {
-        memcpy(buffer, priv->ibuf + priv->ipos, rc);
-        priv->ipos += rc;
-        remain     -= rc;
-        if (remain > 0) {
-            memmove(priv->ibuf, priv->ibuf + priv->ipos, remain);
-        }
-        priv->isize = remain;
-        priv->ipos  = 0;
-    }
-    *bytes = rc;
+This is the source release for the FLAC project.  See
 
-    return (rc == 0 ? FLAC__STREAM_DECODER_READ_STATUS_END_OF_STREAM : FLAC__STREAM_DECODER_READ_STATUS_CONTINUE);
-}
+	doc/html/index.html
 
-static FLAC__StreamDecoderWriteStatus _write_callback(const FLAC__StreamDecoder *decoder, const FLAC__Frame *frame,
-        const FLAC__int32 * const buffer[], void *client_data)
-{
-    //FIXME:
-    UNUSED(decoder);
-    struct ad_flac_priv *priv   = client_data;
+for full documentation.
 
-    priv->fhdr = frame->header;
-    if (!(frame->header.blocksize && frame->header.channels && (frame->header.channels <= 2) && frame->header.bits_per_sample)) {
-        LOGE(TAG, "write callback err: blocksize = %u, channels = %u, bits = %u", frame->header.blocksize,
-             frame->header.channels, frame->header.bits_per_sample);
-        return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
-    }
+A brief description of the directory tree:
 
-    memcpy(priv->opbuf, buffer, sizeof(const FLAC__int32 * const) * frame->header.channels);
-    return FLAC__STREAM_DECODER_WRITE_STATUS_CONTINUE;
-}
+	doc/          the HTML documentation
+	examples/     example programs demonstrating the use of libFLAC and libFLAC++
+	include/      public include files for libFLAC and libFLAC++
+	man/          the man pages for `flac' and `metaflac'
+	src/          the source code and private headers
+	test/         the test scripts
 
-static void _metadata_callback(const FLAC__StreamDecoder *decoder, const FLAC__StreamMetadata *metadata, void *client_data)
-{
-    UNUSED(decoder);
-    if(metadata->type == FLAC__METADATA_TYPE_STREAMINFO) {
-        struct ad_flac_priv *priv   = client_data;
-        struct flac_stream_info *si = &priv->si;
+If you have questions about building FLAC that this document does not answer,
+please submit them at the following tracker so this document can be improved:
 
-        si->nb_samples = metadata->data.stream_info.total_samples;
-        si->rate       = metadata->data.stream_info.sample_rate;
-        si->channels   = metadata->data.stream_info.channels;
-        si->bits       = metadata->data.stream_info.bits_per_sample;
-    }
-}
+	https://sourceforge.net/p/flac/support-requests/
 
-static void _error_callback(const FLAC__StreamDecoder *decoder, FLAC__StreamDecoderErrorStatus status, void *client_data)
-{
-    UNUSED(decoder);
-    UNUSED(client_data);
-}
 
-static int _flac_open(struct ad_flac_priv *priv, uint8_t *extradata, size_t extradata_size)
-{
-    int rc;
-    FLAC__StreamDecoderInitStatus init_status;
-    uint8_t *ibuf               = NULL;
-    FLAC__StreamDecoder *dec    = NULL;
-    struct flac_stream_info *si = &priv->si;
+===============================================================================
+Prerequisites
+===============================================================================
 
-    dec = FLAC__stream_decoder_new();
+To build FLAC with support for Ogg FLAC you must have built and installed
+libogg according to the specific instructions below.  You must have
+libogg 1.1.2 or greater, or there will be seeking problems with Ogg FLAC.
 
-    init_status = FLAC__stream_decoder_init_stream(
-                      dec,
-                      _read_callback,
-                      NULL /* seek_callback */,
-                      NULL /* tell_callback */,
-                      NULL /* length_callback */,
-                      NULL /* eof_callback */,
-                      _write_callback,
-                      _metadata_callback,
-                      _error_callback,
-                      (void *)priv);
+If you are building on x86 and want the assembly optimizations, you will
+need to have NASM >= 0.98.30 installed according to the specific instructions
+below.
 
-    if (extradata_size && extradata && !priv->si_find) {
-        rc = flac_parse_si((const uint8_t*)extradata, si);
-        si->fsize_min = si->fsize_min ? si->fsize_min : FLAC_FRAME_SIZE_DEFAULT;
-        si->fsize_max = si->fsize_max ? si->fsize_max : FLAC_FRAME_SIZE_DEFAULT;
-        priv->si_find = 1;
-    }
 
-    //FIXME:
-    if (!priv->ibuf) {
-        size_t isize = si->fsize_max * 2;
+===============================================================================
+Note to embedded developers
+===============================================================================
 
-        isize = isize > DEC_IBUF_SIZE_MIN ? isize : DEC_IBUF_SIZE_MIN;
-        ibuf  = aos_zalloc(isize);
+libFLAC has grown larger over time as more functionality has been
+included, but much of it may be unnecessary for a particular embedded
+implementation.  Unused parts may be pruned by some simple editing of
+configure.ac and src/libFLAC/Makefile.am; the following dependency
+graph shows which modules may be pruned without breaking things
+further down:
 
-        priv->ibuf = ibuf;
-        priv->icap = isize;
-    }
+metadata.h
+	stream_decoder.h
+	format.h
 
-    priv->dec = dec;
-    return 0;
-err:
-    aos_free(ibuf);
-    FLAC__stream_decoder_delete(dec);
-    return -1;
-}
+stream_encoder.h
+	stream_decoder.h
+	format.h
 
-static int _ad_flac_open(ad_cls_t *o)
-{
-    int rc;
-    struct ad_flac_priv *priv;
+stream_decoder.h
+	format.h
 
-    priv = aos_zalloc(sizeof(struct ad_flac_priv));
+In other words, for pure decoding applications, both the stream encoder
+and metadata editing interfaces can be safely removed.
 
-    rc = _flac_open(priv, o->ash.extradata, o->ash.extradata_size);
-    if (priv->si_find) {
-        struct flac_stream_info *si = &priv->si;
-        o->ash.sf = sf_make_channel(si->channels) | sf_make_rate(si->rate) | sf_make_bit(si->bits) | sf_make_signed(1);
-    }
-    o->priv = priv;
+There is a section dedicated to embedded use in the libFLAC API
+HTML documentation (see doc/html/api/index.html).
 
-    return 0;
-err:
-    aos_free(priv);
-    return -1;
-}
+Also, there are several places in the libFLAC code with comments marked
+with "OPT:" where a #define can be changed to enable code that might be
+faster on a specific platform.  Experimenting with these can yield faster
+binaries.
 
-static int _ad_flac_decode(ad_cls_t *o, avframe_t *frame, int *got_frame, const avpacket_t *pkt)
-{
-    sf_t sf;
-    int ret = -1, i;
-    struct ad_flac_priv *priv = o->priv;
-    FLAC__StreamDecoder *dec  = priv->dec;
-    FLAC__FrameHeader *fhdr   = &priv->fhdr;
 
-    if (pkt->len > priv->icap - priv->isize) {
-        goto quit;
-    }
+===============================================================================
+Building in a GNU environment
+===============================================================================
 
-    memcpy(priv->ibuf + priv->isize, pkt->data, pkt->len);
-    priv->isize += pkt->len;
+FLAC uses autoconf and libtool for configuring and building.
+Better documentation for these will be forthcoming, but in
+general, this should work:
 
-    memset(priv->opbuf, 0, sizeof(priv->opbuf));
-    memset(fhdr, 0, sizeof(FLAC__FrameHeader));
-    if (!FLAC__stream_decoder_process_single(dec)) {
-        goto quit;
-    }
+./configure && make && make check && make install
 
-    if (!(fhdr->channels == 1 || fhdr->channels == 2) && (fhdr->bits_per_sample == 8 || fhdr->bits_per_sample == 16)) {
-        goto quit;
-    }
+The 'make check' step is optional; omit it to skip all the tests,
+which can take several hours and use around 70-80 megs of disk space.
+Even though it will stop with an explicit message on any failure, it
+does print out a lot of stuff so you might want to capture the output
+to a file if you're having a problem.  Also, don't run 'make check'
+as root because it confuses some of the tests.
 
-    sf = sf_make_channel(fhdr->channels) | sf_make_rate(fhdr->sample_rate) | sf_make_bit(fhdr->bits_per_sample) | sf_make_signed(1);
-    if (!((!o->ash.sf || o->ash.sf == sf) && sf && priv->opbuf[0])) {
-        goto quit;
-    }
+NOTE: Despite our best efforts it's entirely possible to have
+problems when using older versions of autoconf, automake, or
+libtool.  If you have the latest versions and still can't get it
+to work, see the next section on Makefile.lite.
 
-    o->ash.sf         = sf;
-    frame->sf         = sf;
-    frame->nb_samples = fhdr->blocksize;
+There are a few FLAC-specific arguments you can give to
+`configure':
 
-    ret = avframe_get_buffer(frame);
-    if (ret < 0) {
-        goto quit;
-    }
+--enable-debug : Builds everything with debug symbols and some
+extra (and more verbose) error checking.
 
-    /* write decoded PCM samples */
-    if (fhdr->channels == 1 && fhdr->bits_per_sample == 8) {
-        int8_t *d = (int8_t*)frame->data[0];
-        for(i = 0; i < fhdr->blocksize; i++) {
-            *d++ = priv->opbuf[0][i];
-        }
-    } else if (fhdr->channels == 2 && fhdr->bits_per_sample == 8) {
-        int8_t *d = (int8_t*)frame->data[0];
-        for(i = 0; i < fhdr->blocksize; i++) {
-            *d++ = priv->opbuf[0][i];
-            *d++ = priv->opbuf[1][i];
-        }
-    } else if (fhdr->channels == 1 && fhdr->bits_per_sample == 16) {
-        int16_t *d = (int16_t*)frame->data[0];
-        for(i = 0; i < fhdr->blocksize; i++) {
-            *d++ = priv->opbuf[0][i];
-        }
-    } else if (fhdr->channels == 2 && fhdr->bits_per_sample == 16) {
-        int16_t *d = (int16_t*)frame->data[0];
-        for(i = 0; i < fhdr->blocksize; i++) {
-            *d++ = priv->opbuf[0][i];
-            *d++ = priv->opbuf[1][i];
-        }
-    }
-    *got_frame = 1;
-    ret = pkt->len;
+--disable-asm-optimizations : Disables the compilation of the
+assembly routines.  Many routines have assembly versions for
+speed and `configure' is pretty good about knowing what is
+supported, but you can use this option to build only from the
+C sources.  May be necessary for building on OS X (Intel).
 
-quit:
-    return ret;
-}
+--enable-sse : If you are building for an x86 CPU that supports
+SSE instructions, you can enable some of the faster routines
+if your operating system also supports SSE instructions.  flac
+can tell if the CPU supports the instructions but currently has
+no way to test if the OS does, so if it does, you must pass
+this argument to configure to use the SSE routines.  If flac
+crashes when built with this option you will have to go back and
+configure without --enable-sse.  Note that
+--disable-asm-optimizations implies --disable-sse.
 
-static int _ad_flac_control(ad_cls_t *o, int cmd, void *arg, size_t *arg_size)
-{
-    //TODO
-    return 0;
-}
+--enable-local-xmms-plugin : Installs the FLAC XMMS plugin in
+$HOME/.xmms/Plugins, instead of the global XMMS plugin area
+(usually /usr/lib/xmms/Input).
 
-static int _ad_flac_reset(ad_cls_t *o)
-{
-    int rc;
-    struct ad_flac_priv *priv = o->priv;
-    FLAC__StreamDecoder* dec  = priv->dec;
+--with-ogg=
+--with-xmms-prefix=
+--with-libiconv-prefix=
+Use these if you have these packages but configure can't find them.
 
-    FLAC__stream_decoder_delete(dec);
-    priv->dec   = NULL;
-    priv->isize = 0;
-    priv->ipos  = 0;
-    rc = _flac_open(priv, o->ash.extradata, o->ash.extradata_size);
+If you want to build completely from scratch (i.e. starting with just
+configure.ac and Makefile.am) you should be able to just run 'autogen.sh'
+but make sure and read the comments in that file first.
 
-    return rc;
-}
 
-static int _ad_flac_close(ad_cls_t *o)
-{
-    struct ad_flac_priv *priv = o->priv;
-    FLAC__StreamDecoder* dec  = priv->dec;
+===============================================================================
+Building with Makefile.lite
+===============================================================================
 
-    FLAC__stream_decoder_delete(dec);
+There is a more lightweight build system for do-it-yourself-ers.
+It is also useful if configure isn't working, which may be the
+case since lately we've had some problems with different versions
+of automake and libtool.  The Makefile.lite system should work
+on GNU systems with few or no adjustments.
 
-    aos_free(priv);
-    aos_free(priv->ibuf);
-    o->priv = NULL;
-    return 0;
-}
-```
+From the top level just 'make -f Makefile.lite'.  You can
+specify zero or one optional target from 'release', 'debug',
+'test', or 'clean'.  The default is 'release'.  There is no
+'install' target but everything you need will end up in the
+obj/ directory.
 
+If you are not on an x86 system or you don't have nasm, you
+may have to change the DEFINES in src/libFLAC/Makefile.lite.  If
+you don't have nasm, remove -DFLAC__HAS_NASM.  If your target is
+not an x86, change -DFLAC__CPU_IA32 to -DFLAC__CPU_UNKNOWN.
+
+
+===============================================================================
+Building with MSVC
+===============================================================================
+
+There are .vcproj projects and a master FLAC.sln solution to build all
+the libraries and executables with MSVC 2005 or newer.
+
+Prerequisite: you must have the Ogg libraries installed as described
+later.
+
+Prerequisite: you must have nasm installed, and nasm.exe must be in
+your PATH, or the path to nasm.exe must be added to the list of
+directories for executable files in the MSVC global options.
+
+To build everything, run Visual Studio, do File|Open and open FLAC.sln.
+From the dropdown in the toolbar, select "Release" instead of "Debug",
+then do Build|Build Solution.
+
+This will build all libraries both statically (e.g.
+objs\release\lib\libFLAC_static.lib) and as DLLs (e.g.
+objs\release\lib\libFLAC.dll), and it will build all binaries, statically
+linked (e.g. objs\release\bin\flac.exe).
+
+Everything will end up in the "objs" directory.  DLLs and .exe files
+are all that are needed and can be copied to an installation area and
+added to the PATH.
+
+By default the code is configured with Ogg support. Before building FLAC
+you will need to get the Ogg source distribution
+(see http://xiph.org/downloads/), build libogg_static.lib (load
+win32\libogg_static.sln, change solution configuration to "Release" and
+code generation to "Multi-threaded (/MT)", then build), copy libogg_static.lib
+into FLAC's 'objs\release\lib' directory, and copy the entire include\ogg tree
+into FLAC's 'include' directory (so that there is an 'ogg' directory in FLAC's
+'include' directory with the files ogg.h, os_types.h and config_types.h).
+
+If you want to build without Ogg support, instead edit all .vcproj files
+and remove any "FLAC__HAS_OGG" definitions.
+
+
+===============================================================================
+Building on Mac OS X
+===============================================================================
+
+If you have Fink or a recent version of OS X with the proper autotools,
+the GNU flow above should work.

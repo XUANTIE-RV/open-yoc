@@ -2,6 +2,7 @@
  * Copyright (C) 2018-2020 Alibaba Group Holding Limited
  */
 
+#if defined(CONFIG_MCAXER_LOCAL) && CONFIG_MCAXER_LOCAL
 #include "avutil/common.h"
 #include "avutil/av_typedef.h"
 #include "mca/mca_cls.h"
@@ -87,4 +88,5 @@ const struct mcax_ops mcax_ops_local = {
     .iir_fxp32                        = _mca_local_iir_fxp32,
     .uninit                           = _mca_local_uninit,
 };
+#endif
 

@@ -43,7 +43,7 @@
 #define INBLOCK 1024
 #define RATE 48000
 
-int main()
+int main(void)
 {
    spx_uint32_t i;
    float *fin, *fout;

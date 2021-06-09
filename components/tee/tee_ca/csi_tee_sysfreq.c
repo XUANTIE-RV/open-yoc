@@ -41,5 +41,36 @@ int32_t csi_tee_get_sys_freq(uint32_t *clk_val)
     return tee_send(TEE_CMD_SYS_FREQ, p, t);
 
 }
+
+typedef enum {
+    READ_REG_OPR    = 0,
+    WRITE_REG_OPR   = 1
+} opr_reg_type_e;
+
+int32_t csi_tee_read_reg(uint32_t addr, uint32_t *val)
+{
+    teec_parameter p[4];
+    uint32_t t;
+
+    TEEC_2PARAMS(p, READ_REG_OPR, addr, val, 0);
+
+    t = TEEC_PARAM_TYPES(TEEC_MEMREF_TEMP_INPUT, TEEC_MEMREF_TEMP_INPUT, \
+                         TEEC_MEMREF_TEMP_OUTPUT, TEEC_NONE);
+
+    return tee_send(TEE_CMD_REG_OPR, p, t);
+}
+
+int32_t csi_tee_write_reg(uint32_t addr, uint32_t val)
+{
+    teec_parameter p[4];
+    uint32_t t;
+
+    TEEC_2PARAMS(p, WRITE_REG_OPR, addr, val, 0);
+
+    t = TEEC_PARAM_TYPES(TEEC_MEMREF_TEMP_INPUT, TEEC_MEMREF_TEMP_INPUT, \
+                         TEEC_MEMREF_TEMP_INPUT, TEEC_NONE);
+
+    return tee_send(TEE_CMD_REG_OPR, p, t);
+}
 #endif
 

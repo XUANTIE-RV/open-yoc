@@ -2,7 +2,9 @@
  * Copyright (C) 2018-2020 Alibaba Group Holding Limited
  */
 
+#if defined(CONFIG_DEMUXER_FLAC) && CONFIG_DEMUXER_FLAC
 #include "avformat/avformat_utils.h"
+#include "avformat/flac_rw.h"
 #include "avformat/demux_cls.h"
 #include "stream/stream.h"
 
@@ -22,6 +24,7 @@ struct flac_priv {
     struct flac_stream_info    si;
     fsb_t                      fsb;
 
+    int32_t                    sync_hdr_max;
     int32_t                    start_pos;
     int32_t                    flac_size;        ///< not contain the ID3 size, etc
     size_t                     bsize_fixed;      ///< block size
@@ -92,9 +95,10 @@ static int _demux_flac_open(demux_cls_t *o)
         LOGE(TAG, "stream info not found");
         goto err;
     }
-    priv->fsb.data = aos_malloc(FLAC_SYNC_HDR_MAX);
+    priv->sync_hdr_max = si->fsize_max >= FLAC_SYNC_HDR_MAX ? si->fsize_max + 128 : FLAC_SYNC_HDR_MAX;
+    priv->fsb.data     = aos_malloc(priv->sync_hdr_max);
     CHECK_RET_TAG_WITH_GOTO(priv->fsb.data, err);
-    priv->fsb.cap          = FLAC_SYNC_HDR_MAX;
+    priv->fsb.cap          = priv->sync_hdr_max;
     priv->fsb.offset_sync1 = -1;
     priv->fsb.offset_sync2 = -1;
     priv->bsize_fixed      = si->bsize_min == si->bsize_max ? si->bsize_min : 0;
@@ -180,7 +184,7 @@ static int _demux_flac_read_packet(demux_cls_t *o, avpacket_t *pkt)
         fsb->size += rc;
 
 resync:
-    rc = flac_sync(_sync_read_stream, fsb, FLAC_SYNC_HDR_MAX, hdr, hinfo);
+    rc = flac_sync(_sync_read_stream, fsb, priv->sync_hdr_max, hdr, hinfo);
     if (rc < 0) {
         /* may be the last packet */
         if (fsb->offset_sync1 >= 0 && (fsb->size - fsb->offset_sync1 > 0) && stream_is_eof(o->s)) {
@@ -290,4 +294,5 @@ const struct demux_ops demux_ops_flac = {
     .seek            = _demux_flac_seek,
     .control         = _demux_flac_control,
 };
+#endif
 

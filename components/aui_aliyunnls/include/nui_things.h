@@ -18,6 +18,7 @@ extern "C"
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "nui_things_common_event.h"
 #include "nui_things_define.h"
 #include "nui_things_config.h"
 #include "mit_rtos.h"
@@ -102,6 +103,8 @@ typedef struct  {
   FunNuiThingsReturnData put_data_callback;
   FunNuiThingsProvideDataNls need_data_callback_wwv;
   FunNuiThingsProvideDataNls need_data_callback_nls;
+
+  FunNuiThingsCommonEvent common_event_callback;
   void *user_data;
 }NuiThingsListener;
 	
@@ -115,6 +118,11 @@ typedef struct {
 
 	int log_level;
 	int log_link_enable;//是否开启全链路统计log打印 
+
+	char * key_id;     //业务方鉴权所需阿里云账号id
+	char * key_secret; //业务方鉴权所需阿里云账号secret
+	char * app_key;    //业务方鉴权所需appkey
+	char * sdk_code;   //业务方鉴权所需售卖码sdk_code
 } NuiThingsInitConfig;
 
 

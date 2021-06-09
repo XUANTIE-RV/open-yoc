@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2015-2018 Alibaba Group Holding Limited
  */
-#include "sl_config.h"
+#include "sl_config.h" 
 #include <stdio.h>
 #include "iot_import.h"
 #include "awss_cmp.h"
@@ -12,9 +12,7 @@
 #include "awss_statis.h"
 #endif
 
-#ifdef DEVICE_MODEL_ENABLED
 #include "awss_reset.h"
-#endif
 
 #if defined(__cplusplus)  /* If this is a C++ compiler, use C linkage */
 extern "C"
@@ -23,18 +21,19 @@ extern "C"
 
 static void *awss_bind_mutex = NULL;
 
-#ifdef DEVICE_MODEL_ENABLED
-extern int awss_report_reset_to_cloud();
-#endif
+static uint8_t awss_bind_inited = 0;
 
 int awss_start_bind()
 {
-    int awss_bind_inited = 0;        // static
+    char module_name[MID_STRLEN_MAX] = {0};
+
+    memset(module_name, 0, sizeof(module_name));
+    HAL_GetModuleID(module_name);
 
     if (awss_bind_mutex == NULL) {
         awss_bind_mutex = HAL_MutexCreate();
         if (awss_bind_mutex == NULL)
-            return -1;
+            return STATE_SYS_DEPEND_MUTEX_CREATE;
     }
 
     HAL_MutexLock(awss_bind_mutex);
@@ -54,53 +53,48 @@ int awss_start_bind()
     awss_registrar_init();
 #endif
     AWSS_DISP_STATIS();
-    AWSS_REPORT_STATIS("RDA5981");
+    AWSS_REPORT_STATIS(module_name);
 #endif
     AWSS_DB_DISP_STATIS();
-    AWSS_DB_REPORT_STATIS("RDA5981");
+    AWSS_DB_REPORT_STATIS(module_name);
     awss_bind_inited = 1;
     HAL_MutexUnlock(awss_bind_mutex);
     return 0;
 }
 
+extern iotx_vendor_dev_reset_type_t g_reset_type;
 int awss_report_cloud()
 {
+    int ret;
     if (awss_bind_mutex == NULL) {
         awss_bind_mutex = HAL_MutexCreate();
-        if (awss_bind_mutex == NULL)
-            return -1;
+        if (awss_bind_mutex == NULL) {
+            return STATE_SYS_DEPEND_MUTEX_CREATE;
+        }
     }
 
     HAL_MutexLock(awss_bind_mutex);
     awss_cmp_online_init();
-    HAL_MutexUnlock(awss_bind_mutex);
-#ifdef DEVICE_MODEL_ENABLED
-    if(awss_check_reset()) {
-        return awss_report_reset_to_cloud();
-    }
-#endif
-    awss_start_bind();
-    return 0;
+	HAL_MutexUnlock(awss_bind_mutex);
+
+    ret = awss_start_bind();
+    return ret;
 }
 
-int awss_bind_deinit()
+void awss_bind_deinit()
 {
-    if (awss_bind_mutex)
+    if (awss_bind_mutex) {
         HAL_MutexLock(awss_bind_mutex);
-
-#ifdef DEVICE_MODEL_ENABLED
+    }
     awss_stop_report_reset();
-#endif
     awss_stop_report_token();
-    awss_cmp_online_deinit();
-
     awss_dev_bind_notify_stop();
-
+	awss_cmp_online_deinit();
     awss_cmp_local_deinit(1);
 #ifdef WIFI_PROVISION_ENABLED
 #ifndef AWSS_DISABLE_REGISTRAR
-    extern void awss_registrar_deinit(void);
-    awss_registrar_deinit();
+    //extern void awss_registrar_deinit(void);
+    //awss_registrar_deinit();
 #endif
     AWSS_CLEAR_STATIS();
 #endif
@@ -112,8 +106,7 @@ int awss_bind_deinit()
     }
 
     awss_bind_mutex = NULL;
-
-    return 0;
+    awss_bind_inited = 0;
 }
 
 #if defined(__cplusplus)  /* If this is a C++ compiler, use C linkage */

@@ -90,7 +90,7 @@ int iic_slave_recv(aos_dev_t *dev, void *data, uint32_t size, uint32_t timeout)
 }
 
 int iic_mem_write(aos_dev_t *dev, uint16_t dev_addr, uint16_t mem_addr, uint16_t mem_addr_size,\
-                    const void *data, uint32_t size, uint32_t timeout)
+                  const void *data, uint32_t size, uint32_t timeout)
 {
     int ret;
 
@@ -104,7 +104,7 @@ int iic_mem_write(aos_dev_t *dev, uint16_t dev_addr, uint16_t mem_addr, uint16_t
 }
 
 int iic_mem_read(aos_dev_t *dev, uint16_t dev_addr, uint16_t mem_addr, uint16_t mem_addr_size,\
-                    void *data, uint32_t size, uint32_t timeout)
+                 void *data, uint32_t size, uint32_t timeout)
 {
     int ret;
 

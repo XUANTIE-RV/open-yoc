@@ -9,7 +9,6 @@
 #include <errno.h>
 
 #include <aos/kernel.h>
-#include <aos/log.h>
 
 #include <cis_api.h>
 #include "cis_internals.h"

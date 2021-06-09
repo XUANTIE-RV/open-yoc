@@ -25,10 +25,10 @@ static int _ad_tmall_open(ad_cls_t *o)
     void *hdl;
 
     priv = aos_zalloc(sizeof(struct ad_tmall_priv));
-    CHECK_RET_TAG_WITH_RET(NULL != priv, -1);
+    CHECK_RET_TAG_WITH_RET(priv, -1);
 
     pool = aos_zalloc(ADTMALL_FRAME_POOL_SIZE);
-    CHECK_RET_TAG_WITH_GOTO(NULL != pool, err);
+    CHECK_RET_TAG_WITH_GOTO(pool, err);
 
     if (o->ash.id == AVCODEC_ID_MP3) {
         format = AG_AUDIO_FORMAT_MP3;

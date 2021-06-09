@@ -27,7 +27,6 @@
 #define LOG_TAG "bt_userial_vendor"
 // #include "bt_trace.h"
 #include <aos/debug.h>
-#include <aos/log.h>
 #include <fcntl.h>
 #include <errno.h>
 #include <stdio.h>

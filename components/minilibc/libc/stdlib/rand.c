@@ -1,5 +1,6 @@
 #include <stdint.h>
 #ifdef CONFIG_TEE_CA
+#ifndef CONFIG_SOFT_CRYPTO
 #include <drv/tee.h>
 int rand(void)
 {
@@ -14,4 +15,5 @@ void srand(unsigned int seed)
 {
     return;
 }
+#endif
 #endif

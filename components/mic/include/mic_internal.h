@@ -5,6 +5,7 @@
 #ifndef __MIC_INTERNAL_H__
 #define __MIC_INTERNAL_H__
 
+#include <aos/aos.h>
 
 #define MIC_REC_COUNT 3
 

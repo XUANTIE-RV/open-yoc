@@ -5,12 +5,12 @@
 #if defined(CONFIG_FFTXER_IPC) && CONFIG_FFTXER_IPC
 
 #include "tfft/fft_cls.h"
-#include "ffticore.h"
+#include "fft_icore.h"
 
 #define TAG                   "fft_ipc"
 
 struct fft_ipc_priv {
-    ffticore_t                *hdl;
+    fft_icore_t                *hdl;
 };
 
 static int _fft_ipc_init(fftx_t *fft, size_t size)
@@ -19,12 +19,12 @@ static int _fft_ipc_init(fftx_t *fft, size_t size)
     void *hdl = NULL;
     struct fft_ipc_priv *priv = NULL;
 
-    rc = ffticore_init();
+    rc = fft_icore_init();
     CHECK_RET_TAG_WITH_RET(rc == 0, -1);
 
     priv = aos_zalloc(sizeof(struct fft_ipc_priv));
     CHECK_RET_TAG_WITH_RET(priv, -1);
-    hdl = ffticore_new(size);
+    hdl = fft_icore_new(size);
     CHECK_RET_TAG_WITH_GOTO(hdl, err);
 
     priv->hdl = hdl;
@@ -39,7 +39,7 @@ static int _fft_ipc_forward(fftx_t *fft, const int16_t *in, int16_t *out)
 {
     struct fft_ipc_priv *priv = fft->priv;
 
-    ffticore_forward(priv->hdl, in, out);
+    fft_icore_forward(priv->hdl, in, out);
 
     return 0;
 }
@@ -48,7 +48,7 @@ static int _fft_ipc_backward(fftx_t *fft, const int16_t *in, int16_t *out)
 {
     struct fft_ipc_priv *priv = fft->priv;
 
-    ffticore_backward(priv->hdl, in, out);
+    fft_icore_backward(priv->hdl, in, out);
 
     return 0;
 }
@@ -57,7 +57,7 @@ static int _fft_ipc_uninit(fftx_t *fft)
 {
     struct fft_ipc_priv *priv = fft->priv;
 
-    ffticore_free(priv->hdl);
+    fft_icore_free(priv->hdl);
     aos_free(priv);
     fft->priv = NULL;
     return 0;

@@ -1,0 +1,247 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Project Name="test_netmgr" Version="1">
+  <Description>YoC test netmgr</Description>
+  <MonitorProgress>
+    <FlashOperate>230</FlashOperate>
+    <DebugLaunch>42</DebugLaunch>
+  </MonitorProgress>
+  <Chips>
+    <Chip ID="chip_pangu" Version="v7.4.y" IsBasic="false"/>
+  </Chips>
+  <Boards>
+    <Board ID="pangu_cpu0_evb" Version="v7.4.y" IsBasic="false"/>
+  </Boards>
+  <Packages>
+    <Package ID="aos" Version="v7.4.y" IsBasic="false"/>
+    <Package ID="rhino" Version="v7.4.y" IsBasic="false"/>
+    <Package ID="netmgr" Version="v7.4.y" IsBasic="false"/>
+    <Package ID="cli" Version="v7.4.y" IsBasic="false"/>
+    <Package ID="uservice" Version="v7.4.y" IsBasic="false"/>
+    <Package ID="kv" Version="v7.4.y" IsBasic="false"/>
+    <Package ID="minilibc" Version="v7.4.y" IsBasic="false"/>
+    <Package ID="drv_wifi_rtl8723ds" Version="v7.4.y" IsBasic="false"/>
+    <Package ID="csi" Version="v7.4.y" IsBasic="false"/>
+    <Package ID="lwip" Version="v7.4.y" IsBasic="false"/>
+    <Package ID="drivers" Version="v7.4.y" IsBasic="false"/>
+    <Package ID="sdk_chip_pangu" Version="v7.4.y" IsBasic="false"/>
+    <Package ID="rhino_arch" Version="v7.4.y" IsBasic="false"/>
+    <Package ID="rhino_pwrmgmt" Version="v7.4.y" IsBasic="false"/>
+    <Package ID="chip_pangu" Version="v7.4.y" IsBasic="false"/>
+    <Package ID="pangu_cpu0_evb" Version="v7.4.y" IsBasic="false"/>
+    <Package ID="hal_csi" Version="v7.4.y" IsBasic="false"/>
+    <Package ID="aos_hal" Version="v7.4.y" IsBasic="false"/>
+    <Package ID="ulog" Version="v7.4.y" IsBasic="false"/>
+    <Package ID="drv_sdmmc" Version="v7.4.y" IsBasic="false"/>
+    <Package ID="drv_snd_pangu" Version="v7.4.y" IsBasic="false"/>
+    <Package ID="ipc" Version="v7.4.y" IsBasic="false"/>
+    <Package ID="minialsa" Version="v7.4.y" IsBasic="false"/>
+    <Package ID="posix" Version="v7.4.y" IsBasic="false"/>
+    <Package ID="vfs" Version="v7.4.y" IsBasic="false"/>
+    <Package ID="mbedtls" Version="v7.4.y" IsBasic="false"/>
+    <Package ID="sec_crypto" Version="v7.4.y" IsBasic="false"/>
+    <Package ID="fota" Version="v7.4.y" IsBasic="false"/>
+    <Package ID="partition" Version="v7.4.y" IsBasic="false"/>
+    <Package ID="httpclient" Version="v7.4.y" IsBasic="false"/>
+    <Package ID="transport" Version="v7.4.y" IsBasic="false"/>
+    <Package ID="cjson" Version="v7.4.y" IsBasic="false"/>
+    <Package ID="webclient" Version="v7.4.y" IsBasic="false"/>
+    <Package ID="websocket" Version="v7.4.y" IsBasic="false"/>
+    <Package ID="button" Version="v7.4.y" IsBasic="false"/>
+  </Packages>
+  <MergedToYaml>yes</MergedToYaml>
+  <DebugSessions>
+    <watchExpressions/>
+    <memoryExpressions>;;;</memoryExpressions>
+    <statistics>;;MHZ</statistics>
+    <peripheralTabs/>
+    <WatchDisplayFormat>0</WatchDisplayFormat>
+    <LocalDisplayFormat>0</LocalDisplayFormat>
+    <debugLayout/>
+    <memoryTabColSizeExpressions>100:8;100:8;100:8;100:8;</memoryTabColSizeExpressions>
+  </DebugSessions>
+  <BuildConfigs>
+    <BuildConfig Name="BuildSet">
+      <Target>
+        <ROMBank Selected="1">
+          <ROM1>
+            <InUse>yes</InUse>
+            <Start>0x20000000</Start>
+            <Size>0x1000</Size>
+          </ROM1>
+          <ROM2>
+            <InUse>no</InUse>
+            <Start/>
+            <Size/>
+          </ROM2>
+          <ROM3>
+            <InUse>no</InUse>
+            <Start/>
+            <Size/>
+          </ROM3>
+          <ROM4>
+            <InUse>no</InUse>
+            <Start/>
+            <Size/>
+          </ROM4>
+          <ROM5>
+            <InUse>no</InUse>
+            <Start/>
+            <Size/>
+          </ROM5>
+        </ROMBank>
+        <RAMBank>
+          <RAM1>
+            <InUse>no</InUse>
+            <Start>0x20001000</Start>
+            <Size>0x1000</Size>
+            <Init>yes</Init>
+          </RAM1>
+          <RAM2>
+            <InUse>no</InUse>
+            <Start/>
+            <Size/>
+            <Init>yes</Init>
+          </RAM2>
+          <RAM3>
+            <InUse>no</InUse>
+            <Start/>
+            <Size/>
+            <Init>yes</Init>
+          </RAM3>
+          <RAM4>
+            <InUse>no</InUse>
+            <Start/>
+            <Size/>
+            <Init>yes</Init>
+          </RAM4>
+          <RAM5>
+            <InUse>no</InUse>
+            <Start/>
+            <Size/>
+            <Init>yes</Init>
+          </RAM5>
+        </RAMBank>
+        <CPU>CK804ef</CPU>
+        <UseMiniLib>yes</UseMiniLib>
+        <Endian>little</Endian>
+        <UseHardFloat>yes</UseHardFloat>
+        <UseEnhancedLRW>no</UseEnhancedLRW>
+        <UseContinueBuild>no</UseContinueBuild>
+        <UseSemiHost>no</UseSemiHost>
+      </Target>
+      <Output>
+        <OutputName>$(ProjectName)</OutputName>
+        <Type>Executable</Type>
+        <CreateHexFile>yes</CreateHexFile>
+        <CreateBinFile>no</CreateBinFile>
+        <Preprocessor>no</Preprocessor>
+        <Disassmeble>yes</Disassmeble>
+        <CallGraph>no</CallGraph>
+        <Map>no</Map>
+      </Output>
+      <User>
+        <BeforeCompile>
+          <RunUserProg>no</RunUserProg>
+          <UserProgName/>
+        </BeforeCompile>
+        <BeforeMake>
+          <RunUserProg>yes</RunUserProg>
+          <UserProgName>"$(ProjectPath)/script/pre_build.sh"</UserProgName>
+        </BeforeMake>
+        <AfterMake>
+          <RunUserProg>yes</RunUserProg>
+          <UserProgName>"$(ProjectPath)/script/aft_build.sh"</UserProgName>
+        </AfterMake>
+      </User>
+      <Compiler>
+        <Define>CONFIG_INIT_TASK_STACK_SIZE=2048;CONFIG_KERNEL_WORKQUEUE=1;CONFIG_SYSTICK_HZ=100;CONFIG_KERNEL_RHINO=1;AOS_COMP_CLI=1;CLI_CONFIG_INBUF_SIZE=256;CLI_CONFIG_OUTBUF_SIZE=512;CLI_CONFIG_MAX_COMMANDS=64;CLI_CONFIG_MAX_ARG_NUM=16;CLI_CONFIG_MAX_ONCECMD_NUM=4;CLI_CONFIG_TASK_PRIORITY=60;CONFIG_TCPIP=1;CONFIG_UART_RECV_BUF_SIZE=1024;CONFIG_FOTA_IMG_AUTHENTICITY_NOT_CHECK=1;CONFIG_CJSON_WITHOUT_DOUBLE="y";CONFIG_CSI_V2=1;CONFIG_CSI="csi2";CONFIG_NON_ADDRESS_FLASH=1;CONFIG_ARCH_CSKY=1;CONFIG_ARCH_INTERRUPTSTACK=1024;CONFIG_CHIP_PANGU_CPU0=1;CONFIG_CHIP_PANGU=1;CONFIG_VENDOR_NAME="thead";CONFIG_CPU="ck804ef";CONFIG_CSKY_CORETIM=1;CONFIG_HAVE_VIC=1;STDIO_UART=1;CONFIG_TEE_CA=1;MBEDTLS_AES_ALT=1;MBEDTLS_SHA256_ALT=1;MBEDTLS_RSA_ALT=1;CONFIG_FOTA_BUFFER_SIZE=4096;CONFIG_IDLE_TASK_STACK_SIZE=128;CONFIG_CLI=1;CONFIG_DEBUG=1;CONFIG_USING_TLS=1;CONFIG_KV_SMART=1;__AOST_AOS_COMP_CLI__=1;__AOST_CLI_CONFIG_INBUF_SIZE__=256;__AOST_CLI_CONFIG_OUTBUF_SIZE__=512;__AOST_CLI_CONFIG_MAX_COMMANDS__=64;__AOST_CLI_CONFIG_MAX_ARG_NUM__=16;__AOST_CLI_CONFIG_MAX_ONCECMD_NUM__=4;__AOST_CLI_CONFIG_TASK_PRIORITY__=60;__AOST_STDIO_UART__=1;__AOST_MBEDTLS_AES_ALT__=1;__AOST_MBEDTLS_SHA256_ALT__=1;__AOST_MBEDTLS_RSA_ALT__=1;__AOST_CPU__="CK804EF";__AOST_ARCH__="CSKY";__ARCH___=1;__CPU_CK804EF__=1;__AOST_CPU0__=True;__AOST_CHIP__="CHIP_PANGU";__AOST_BOARD__="PANGU_CPU0_EVB";__AOST_ALGORITHMS_PATH__="/mnt/d/YOC/0114/components/chip_pangu/PanGu_CK804EF_QSPIFlash_CDK.elf";__AOST_CHIP_PATH__="/mnt/d/YOC/0114/components/chip_pangu";__AOST_BOARD_PATH__="/mnt/d/YOC/0114/boards/pangu_cpu0_evb";__AOST_SOLUTION_PATH__="/mnt/d/YOC/0114/solutions/test_netmgr";</Define>
+        <Undefine/>
+        <Optim>Optimize (-Os)</Optim>
+        <DebugLevel>Default (-g)</DebugLevel>
+        <IncludePath>$(ProjectPath)/src;$(ProjectPath)/include</IncludePath>
+        <OtherFlags>-Wa,-melrw -nostdlib -mistack -Wpointer-arith -Wundef -Wall -Wl,-EL -ffunction-sections -fdata-sections -fno-inline-functions -fno-builtin -fno-strict-aliasing -fno-strength-reduce</OtherFlags>
+        <Verbose>no</Verbose>
+        <Ansi>no</Ansi>
+        <Syntax>no</Syntax>
+        <Pedantic>no</Pedantic>
+        <PedanticErr>no</PedanticErr>
+        <InhibitWarn>no</InhibitWarn>
+        <AllWarn>yes</AllWarn>
+        <WarnErr>no</WarnErr>
+        <OneElfS>no</OneElfS>
+        <Fstrict>no</Fstrict>
+      </Compiler>
+      <Asm>
+        <Define>CONFIG_INIT_TASK_STACK_SIZE=2048;CONFIG_KERNEL_WORKQUEUE=1;CONFIG_SYSTICK_HZ=100;CONFIG_KERNEL_RHINO=1;AOS_COMP_CLI=1;CLI_CONFIG_INBUF_SIZE=256;CLI_CONFIG_OUTBUF_SIZE=512;CLI_CONFIG_MAX_COMMANDS=64;CLI_CONFIG_MAX_ARG_NUM=16;CLI_CONFIG_MAX_ONCECMD_NUM=4;CLI_CONFIG_TASK_PRIORITY=60;CONFIG_TCPIP=1;CONFIG_UART_RECV_BUF_SIZE=1024;CONFIG_FOTA_IMG_AUTHENTICITY_NOT_CHECK=1;CONFIG_CJSON_WITHOUT_DOUBLE="y";CONFIG_CSI_V2=1;CONFIG_CSI="csi2";CONFIG_NON_ADDRESS_FLASH=1;CONFIG_ARCH_CSKY=1;CONFIG_ARCH_INTERRUPTSTACK=1024;CONFIG_CHIP_PANGU_CPU0=1;CONFIG_CHIP_PANGU=1;CONFIG_VENDOR_NAME="thead";CONFIG_CPU="ck804ef";CONFIG_CSKY_CORETIM=1;CONFIG_HAVE_VIC=1;STDIO_UART=1;CONFIG_TEE_CA=1;MBEDTLS_AES_ALT=1;MBEDTLS_SHA256_ALT=1;MBEDTLS_RSA_ALT=1;CONFIG_FOTA_BUFFER_SIZE=4096;CONFIG_IDLE_TASK_STACK_SIZE=128;CONFIG_CLI=1;CONFIG_DEBUG=1;CONFIG_USING_TLS=1;CONFIG_KV_SMART=1;__AOST_AOS_COMP_CLI__=1;__AOST_CLI_CONFIG_INBUF_SIZE__=256;__AOST_CLI_CONFIG_OUTBUF_SIZE__=512;__AOST_CLI_CONFIG_MAX_COMMANDS__=64;__AOST_CLI_CONFIG_MAX_ARG_NUM__=16;__AOST_CLI_CONFIG_MAX_ONCECMD_NUM__=4;__AOST_CLI_CONFIG_TASK_PRIORITY__=60;__AOST_STDIO_UART__=1;__AOST_MBEDTLS_AES_ALT__=1;__AOST_MBEDTLS_SHA256_ALT__=1;__AOST_MBEDTLS_RSA_ALT__=1;__AOST_CPU__="CK804EF";__AOST_ARCH__="CSKY";__ARCH___=1;__CPU_CK804EF__=1;__AOST_CPU0__=True;__AOST_CHIP__="CHIP_PANGU";__AOST_BOARD__="PANGU_CPU0_EVB";__AOST_ALGORITHMS_PATH__="/mnt/d/YOC/0114/components/chip_pangu/PanGu_CK804EF_QSPIFlash_CDK.elf";__AOST_CHIP_PATH__="/mnt/d/YOC/0114/components/chip_pangu";__AOST_BOARD_PATH__="/mnt/d/YOC/0114/boards/pangu_cpu0_evb";__AOST_SOLUTION_PATH__="/mnt/d/YOC/0114/solutions/test_netmgr";</Define>
+        <Undefine/>
+        <IncludePath>$(ProjectPath)/src;$(ProjectPath)/include</IncludePath>
+        <OtherFlags/>
+        <DebugLevel>gdwarf2</DebugLevel>
+      </Asm>
+      <Linker>
+        <Garbage>yes</Garbage>
+        <LDFile>$(ProjectPath)/gcc_eflash.ld</LDFile>
+        <LibName/>
+        <LibPath/>
+        <OtherFlags>-Wl,-zmax-page-size=1024 -mhard-float -Wl,-ckmap="yoc.map" -Wl,-ckmap="yoc.map" -Wl,-zmax-page-size=1024</OtherFlags>
+        <AutoLDFile>no</AutoLDFile>
+        <LinkType/>
+      </Linker>
+      <Debug>
+        <LoadApplicationAtStartup>no</LoadApplicationAtStartup>
+        <Connector>ICE</Connector>
+        <StopAt>no</StopAt>
+        <StopAtText>main</StopAtText>
+        <InitFile>$(ProjectPath)/script/gdbinit</InitFile>
+        <AutoRun>no</AutoRun>
+        <ResetType>Hard Reset</ResetType>
+        <SoftResetVal/>
+        <ResetAfterLoad>no</ResetAfterLoad>
+        <Dumpcore>no</Dumpcore>
+        <DumpcoreText>$(ProjectPath)/$(ProjectName).cdkcore</DumpcoreText>
+        <ConfigICE>
+          <IP>localhost</IP>
+          <PORT>1025</PORT>
+          <CPUNumber>0</CPUNumber>
+          <Clock>12000</Clock>
+          <Delay>10</Delay>
+          <WaitReset>500</WaitReset>
+          <DDC>yes</DDC>
+          <TRST>no</TRST>
+          <DebugPrint>no</DebugPrint>
+          <Connect>Normal</Connect>
+          <ResetType>Soft Reset</ResetType>
+          <SoftResetVal>0</SoftResetVal>
+          <RTOSType>Bare Metal</RTOSType>
+          <DownloadToFlash>yes</DownloadToFlash>
+          <ResetAfterConnect>no</ResetAfterConnect>
+          <GDBName/>
+          <GDBServerType>Local</GDBServerType>
+          <OtherFlags/>
+        </ConfigICE>
+        <ConfigSIM>
+          <SIMTarget>soccfg/cskyv2/rhea802.xml</SIMTarget>
+          <OtherFlags/>
+          <NoGraphic>yes</NoGraphic>
+          <Log>no</Log>
+          <SimTrace>no</SimTrace>
+        </ConfigSIM>
+      </Debug>
+      <Flash>
+        <InitFile>$(ProjectPath)/script/flash.init</InitFile>
+        <Erase>Erase Sectors</Erase>
+        <Algorithms Path="">/mnt/d/YOC/0114/components/chip_pangu/PanGu_CK804EF_QSPIFlash_CDK.elf</Algorithms>
+        <Program>yes</Program>
+        <Verify>yes</Verify>
+        <ResetAndRun>no</ResetAndRun>
+        <ResetType>Soft Reset</ResetType>
+        <SoftResetVal/>
+        <External>no</External>
+        <Command/>
+        <Arguments/>
+      </Flash>
+    </BuildConfig>
+  </BuildConfigs>
+  <Dependencies Name="BuildSet"/>
+  <PackPathes>$(ProjectPath)/../../components|$(ProjectPath)/../../boards|$(ProjectPath)/Boards|$(ProjectPath)/Chips|$(ProjectPath)/Packages</PackPathes>
+</Project>

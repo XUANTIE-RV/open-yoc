@@ -1,6 +1,5 @@
 #include <stdlib.h>
 #include <aos/aos.h>
-#include <aos/log.h>
 #include <yoc/mic.h>
 
 #include "huwen_yv_ap.h"

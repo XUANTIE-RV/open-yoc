@@ -1,0 +1,7 @@
+Import('env')
+
+soc_src,soc_inc,soc_start_src = SConscript(dirs= env['BASE_ARCH'],exports = ['env'])
+soc_src += File(['flash_svcall.c'])
+soc_inc += Dir(['.'])
+
+Return('soc_src','soc_inc','soc_start_src')

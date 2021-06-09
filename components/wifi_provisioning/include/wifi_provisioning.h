@@ -68,7 +68,7 @@ uint32_t wifi_prov_get_method_id(char *method_name);
 /** get prov satus
   * @return prov status.
  */
-wifi_prov_status_t wifi_prov_get_stauts();
+wifi_prov_status_t wifi_prov_get_status();
 
 #ifdef __cplusplus
 }

@@ -27,6 +27,11 @@
 extern "C" {
 #endif
 
+#ifndef _TIME_T_DECLARED
+#define _TIME_T_DECLARED
+typedef int32_t  time_t;
+#endif
+
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/

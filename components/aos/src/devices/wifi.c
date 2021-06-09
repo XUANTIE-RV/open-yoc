@@ -2,6 +2,7 @@
  * Copyright (C) 2019-2020 Alibaba Group Holding Limited
  */
 
+#if defined(CONFIG_SAL) || defined(CONFIG_TCPIP)
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
@@ -100,7 +101,7 @@ int hal_wifi_install_event_cb(aos_dev_t *dev, wifi_event_func *evt_cb)
 
 int hal_wifi_set_protocol(aos_dev_t *dev, uint8_t protocol_bitmap)
 {
-	int ret;
+    int ret;
 
     WIFI_VALID(dev);
 
@@ -113,7 +114,7 @@ int hal_wifi_set_protocol(aos_dev_t *dev, uint8_t protocol_bitmap)
 
 int hal_wifi_get_protocol(aos_dev_t *dev, uint8_t *protocol_bitmap)
 {
-	int ret;
+    int ret;
 
     WIFI_VALID(dev);
 
@@ -343,7 +344,7 @@ int hal_wifi_ap_get_sta_list(aos_dev_t *dev, wifi_sta_list_t *sta)
 
 }
 
-	
+
 int hal_wifi_start_monitor(aos_dev_t *dev, wifi_promiscuous_cb_t cb)
 {
     int ret;
@@ -431,7 +432,5 @@ int hal_wifi_set_smartcfg(aos_dev_t *dev, int enable)
 
     return ret;
 }
-
-
-
+#endif
 

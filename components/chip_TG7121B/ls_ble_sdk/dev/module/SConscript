@@ -1,0 +1,36 @@
+Import('env')
+src = [
+    'common/common.c',
+    'crc/crc16.c',
+    'debug/log.c',
+    'debug/ls_dbg.c',
+    'debug/$BASE_ARCH/$COMPILER/ls_dbg_asm.S',
+    'debug/RTT/SEGGER_RTT_printf.c',
+    'debug/RTT/SEGGER_RTT.c',
+    'static_buffer/linked_buffer.c',
+    'static_buffer/fifo.c',
+    'tinyfs/tinyfs_nvm.c',
+    'tinyfs/tinyfs_write_cache.c',
+    'tinyfs/tinyfs.c',
+    'tinycrypt/lib/source/sha256.c',
+    'tinycrypt/lib/source/utils.c',
+    'tinycrypt/lib/source/ecc.c',
+    'tinycrypt/lib/source/ecc_dsa.c',
+    'tinycrypt/lib/source/ecc_platform_specific.c',
+    'adpcm/adpcm.c',
+]
+inc = [
+    'crc',
+    'debug',
+    'debug/RTT',
+    'static_buffer',
+    'tinyfs',
+    'tinycrypt/lib/include',
+    'ble',
+    'ble/prf',
+    'common',
+    'adpcm',
+]
+src_files = File(env.subst(src))
+inc_dirs = Dir(inc)
+Return("src_files","inc_dirs")

@@ -30,9 +30,9 @@ extern "C" {
 #endif
 
 /* broadcast mac address */
-uint8_t br_mac[ETH_ALEN];
+const uint8_t br_mac[ETH_ALEN] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
 /* all zero mac address */
-uint8_t zero_mac[ETH_ALEN];
+const uint8_t zero_mac[ETH_ALEN] = {0, 0, 0, 0, 0, 0};
 
 /* which channel lock at */
 uint8_t zconfig_channel_locked = INVALID_CHANNEL;/* locked channel */
@@ -150,11 +150,11 @@ uint8_t zconfig_callback_channel_locked(uint8_t channel)
     return 0;
 }
 
-uint8_t zconfig_callback_over(uint8_t *ssid, uint8_t *passwd, uint8_t *bssid, uint8_t *token)
+uint8_t zconfig_callback_over(uint8_t *ssid, uint8_t *passwd, uint8_t *bssid, uint8_t *token, uint8_t *token_type)
 {
     uint8_t auth = ZC_AUTH_TYPE_INVALID, encry = ZC_ENC_TYPE_INVALID, channel = 0;
 
-    awss_info("zconfig done. ssid:%s, mac:%02x%02x%02x%02x%02x%02x\r\n",
+    dump_awss_status(STATE_WIFI_PASSWD_DECODE_SUCCESS, "zconfig done. ssid:%s, mac:%02x%02x%02x%02x%02x%02x",
                ssid, bssid[0], bssid[1], bssid[2], bssid[3], bssid[4], bssid[5]);
 
     if (zconfig_finished) {
@@ -165,11 +165,11 @@ uint8_t zconfig_callback_over(uint8_t *ssid, uint8_t *passwd, uint8_t *bssid, ui
     awss_get_auth_info(ssid, bssid, &auth, &encry, &channel);
 #endif
 
-    zconfig_got_ssid_passwd_callback(ssid, passwd, bssid, token, auth, encry, channel);
+    zconfig_got_ssid_passwd_callback(ssid, passwd, bssid, token, auth, encry, channel, *token_type);
 
     zconfig_finished = 1;
 
-    // os_awss_close_monitor();
+    //os_awss_close_monitor();
 
     return 0;
 }
@@ -185,9 +185,7 @@ void zconfig_set_state(uint8_t state, uint8_t tods, uint8_t channel)
             zconfig_callback_channel_locked(channel);
             break;
         case STATE_CHN_LOCKED_BY_BR:
-#ifdef AWSS_SUPPORT_SMARTCONFIG_MCAST
         case STATE_CHN_LOCKED_BY_MCAST:
-#endif
             //locked state used by br frame
             zconfig_callback_channel_locked(zc_channel ? zc_channel : channel);
             break;
@@ -201,7 +199,7 @@ void zconfig_set_state(uint8_t state, uint8_t tods, uint8_t channel)
             if (!is_channel_locked()) {
                 zconfig_callback_channel_locked(channel);
             }
-            zconfig_callback_over(zc_ssid, zc_passwd, zc_bssid, zc_token);
+            zconfig_callback_over(zc_ssid, zc_passwd, zc_bssid, zc_token, zc_token_type);
             break;
         default:
             break;
@@ -227,27 +225,6 @@ void zconfig_set_state(uint8_t state, uint8_t tods, uint8_t channel)
 }
 
 /*
-    pkt_data & pkt_length:
-        radio_hdr + 80211 hdr + payload, without fcs(4B)
-    return:
-        PKG_INVALID -- invalid pkt,
-        PKG_START_FRAME -- start frame,
-        PKG_DATA_FRAME -- data frame,
-        PKG_ALINK_ROUTER -- alink router,
-        PKG_GROUP_FRAME -- group frame,
-        PKG_BC_FRAME -- broadcast frame
-*/
-int is_invalid_pkg(void *pkt_data, uint32_t pkt_length)
-{
-#define MIN_PKG         (33)
-#define MAX_PKG         (1480 + 56 + 200)
-    if (pkt_length < MIN_PKG || pkt_length > MAX_PKG) {
-        return 1;
-    }
-    return 0;
-}
-
-/*
  * zconfig_recv_callback()
  *
  * ieee80211 package parser
@@ -268,7 +245,7 @@ int zconfig_recv_callback(void *pkt_data, uint32_t pkt_length, uint8_t channel,
     }
 
     /* useless, will be removed */
-    if (is_invalid_pkg(pkt_data, pkt_length)) {
+    if (ieee80211_is_invalid_pkg(pkt_data, pkt_length)) {
         return PKG_INVALID;
     }
 
@@ -286,9 +263,6 @@ void zconfig_init()
 
     zconfig_channel_locked = INVALID_CHANNEL;
     zconfig_finished = 0;
-
-    memset(br_mac, 0xff, ETH_ALEN);
-    memset(zero_mac, 0x00, ETH_ALEN);
 
     zconfig_data = (struct zconfig_data *)os_zalloc(sizeof(struct zconfig_data));
     if (zconfig_data == NULL) {

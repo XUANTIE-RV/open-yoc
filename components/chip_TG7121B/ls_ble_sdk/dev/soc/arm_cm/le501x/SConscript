@@ -1,0 +1,31 @@
+Import("env")
+src = [
+    'cpu.c',
+    'platform.c',
+    'stack_var.c',
+    'compiler/$COMPILER/sleep_asm.S',
+    'compiler/$COMPILER/svcall_asm.S',
+    'compiler/$COMPILER/delay_asm.S',
+    'integration/lsqspi_msp.c',
+    'integration/uart_msp.c',
+    'integration/spi_msp.c',
+    'integration/modem_rf_le501x.c',
+    'integration/calc_acc.c',
+    'integration/lscache_msp.c',
+    'integration/io_config.c',
+    'integration/rtc_param.c',
+    'sleep.c',
+    'sys_stat.c',
+]
+inc = [
+    '.',
+    'integration',
+]
+start_src = [
+    'compiler/$COMPILER/startup.S',
+]
+src_files = File(env.subst(src))
+inc_dirs = Dir(inc)
+start_files = File(env.subst(start_src))
+env['LINKSCRIPT'] = File(env.subst("compiler/$COMPILER/link_script.txt"))
+Return("src_files","inc_dirs","start_files")

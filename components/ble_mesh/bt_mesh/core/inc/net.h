@@ -5,6 +5,8 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
+#ifndef _MESH_NET_H_
+#define _MESH_NET_H_
 
 #define BT_MESH_NET_FLAG_KR       BIT(0)
 #define BT_MESH_NET_FLAG_IVU      BIT(1)
@@ -275,13 +277,13 @@ struct bt_mesh_net {
 	/* Provisioner and node share arguments from 'iv_index' to 'local_queue' + 'ivu_complete' */
 
 	/* Application keys stored by provisioner */
-	struct bt_mesh_app_key p_app_keys[CONFIG_BT_MESH_PROVISIONER_APP_KEY_COUNT];
+	//struct bt_mesh_app_key p_app_keys[CONFIG_BT_MESH_PROVISIONER_APP_KEY_COUNT];
 
 	/* Next app_idx can be assigned */
 	u16_t p_app_idx_next;
 
 	/* Network keys stored by provisioner */
-	struct bt_mesh_subnet p_sub[CONFIG_BT_MESH_PROVISIONER_SUBNET_COUNT];
+	//struct bt_mesh_subnet p_sub[CONFIG_BT_MESH_PROVISIONER_SUBNET_COUNT];
 
 	/* Next net_idx can be assigned */
 	u16_t p_net_idx_next;
@@ -404,3 +406,5 @@ struct friend_cred *friend_cred_create(struct bt_mesh_subnet *sub, u16_t addr,
 				       u16_t lpn_counter, u16_t frnd_counter);
 void friend_cred_clear(struct friend_cred *cred);
 int friend_cred_del(u16_t net_idx, u16_t addr);
+
+#endif

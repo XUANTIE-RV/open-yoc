@@ -1,0 +1,21 @@
+
+## 第一部分： 基础信息
+name: sdk_genie_mesh                                    # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
+version: v7.4.4                                     # <必选项> 组件版本号
+description: genie mesh sdk套件，包括其所支持的demo   # <必选项> 建议至少20字以上
+type: common                                        # <必选项> 组件类型，为：solution, chip, board, common, sdk
+
+tag: 核心模块                                       # <可选项> 组件分类，缺省值： ''
+license: Apache license v2.0                        # <可选项> 源代码的许可证，要确保所有代码、文件的许可证不冲突。如：MIT，Apache license v2.0，BSD
+
+## 第二部分：依赖信息
+#           指定该组件依赖的组件及版本，版本支持条件比较，支持：>=v1.0, >v1.0, ==v1.0, <=v1.0, <v1.0, v1.0
+#           未指定条件时，默认为 ==，如 v1.0 与 ==v1.0
+# depends:                                 # <可选项> 该组件依赖其他的组件，合理的依赖才能保证组件能编译、使用
+#   - minilibc: v7.2.0
+#   - aos: >=v7.2.0
+depends:
+  # solutions
+  - genie_mesh_light_ctl: v7.4.4
+  - genie_mesh_node_ctl: v7.4.4
+  - genie_mesh_switches: v7.4.4

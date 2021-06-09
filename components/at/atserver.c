@@ -2,14 +2,9 @@
  * Copyright (C) 2019-2020 Alibaba Group Holding Limited
  */
 
-#include <stdio.h>
-#include <string.h>
-#include <errno.h>
-
 #include <aos/aos.h>
-#include <devices/uart.h>
-#include <devices/netdrv.h>
 #include <yoc/atserver.h>
+#include "yoc/at_port.h"
 
 #define TAG "atserver"
 
@@ -64,10 +59,13 @@ typedef struct atserver {
     const char       *output_terminator;
     slist_t          cmd_head;
     uservice_t       *srv;
-    aos_dev_t            *uart_dev;
+    void             *uart_dev;
     aos_mutex_t      mutex;
     atserver_mode_t  at_mode;
+    at_channel_t    *channel;
 } atserver_uservice_t;
+
+extern at_channel_t uart_channel;
 
 typedef enum {
     ATSERVER_SEND_CMD,
@@ -85,14 +83,21 @@ static int atserver_process_rpc(void *context, rpc_t *rpc);
 
 static atserver_uservice_t g_atserver;
 
-static inline int atserver_uart_send(const char *data, size_t size, size_t timeout) {
-    return uart_send(g_atserver.uart_dev, data, size);
+static int atserver_uart_send(const char *data, size_t size, size_t timeout) 
+{
+    if (size == 0) {
+        return 0;
+    }
+
+    int ret = g_atserver.channel->send(g_atserver.uart_dev, (void *)data, size);
+
+    return ret;
 }
 
 int atserver_uart_recv(char *data)
 {
     if (g_atserver.uart_inc == g_atserver.uart_count) {
-        int ret = uart_recv(g_atserver.uart_dev, g_atserver.uart_buffer, UART_BUF_SIZE, 0);
+        int ret = g_atserver.channel->recv(g_atserver.uart_dev, g_atserver.uart_buffer, UART_BUF_SIZE, 0);
         if (ret > 0) {
             g_atserver.uart_count = ret;
             g_atserver.uart_inc = 0;
@@ -108,9 +113,9 @@ int atserver_uart_recv(char *data)
     return 0;
 }
 
-static void uart_event(aos_dev_t *dev, int event_id, void *priv)
+static void uart_event(int event_id, void *priv)
 {
-    if (event_id == USART_EVENT_READ) {
+    if (event_id == AT_CHANNEL_EVENT_READ) {
         if (g_atserver.have_uart_event < 2) {
             uservice_call_async(g_atserver.srv, ATSERVER_INTERRUPT_CMD, NULL, 0);
             g_atserver.have_uart_event++;
@@ -124,15 +129,13 @@ int atserver_init(utask_t *task, const char *name, uart_config_t *config)
 
     memset(&g_atserver, 0, sizeof(atserver_uservice_t));
 
+    g_atserver.channel = &uart_channel;
     //uart init
-    g_atserver.uart_dev = uart_open(name);
+    g_atserver.uart_dev = g_atserver.channel->init(name, config);
 
     if (g_atserver.uart_dev == NULL) {
         return -1;
     }
-    if (config)
-        uart_config(g_atserver.uart_dev, config);
-    uart_set_buffer_size(g_atserver.uart_dev, 256);
 
     g_atserver.buffer_size = BUFFER_MIN_SIZE;
     g_atserver.buffer = aos_malloc(BUFFER_MIN_SIZE);
@@ -149,7 +152,7 @@ int atserver_init(utask_t *task, const char *name, uart_config_t *config)
 
     utask_add(task, g_atserver.srv);
 
-    uart_set_event(g_atserver.uart_dev, uart_event, NULL);
+    g_atserver.channel->set_event(g_atserver.uart_dev, uart_event, NULL);
 
     aos_mutex_new(&g_atserver.mutex);
 
@@ -667,7 +670,7 @@ int atserver_sendv(const char *command, va_list args)
     int ret = -EINVAL;
     char *send_buf = NULL;
 
-    aos_check_return_einval(command && args);
+    aos_check_return_einval(command);
 
     if (vasprintf(&send_buf, command, args) >= 0) {
         ret = atserver_uart_send(send_buf, strlen(send_buf), g_atserver.timeout);

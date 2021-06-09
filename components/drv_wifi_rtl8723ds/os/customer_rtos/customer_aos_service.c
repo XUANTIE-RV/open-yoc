@@ -816,7 +816,7 @@ static int _aos_create_task(struct task_struct *ptask, const char *name,
 #endif
 
     int ret = 0;
-    ret = aos_task_new_ext((aos_task_t*)&ptask->task, name, func, thctx, stack_size * 4, AOS_DEFAULT_APP_PRI - priority + 8);
+    ret = aos_task_new_ext((aos_task_t*)&ptask->task, name, func, thctx, stack_size * 8, AOS_DEFAULT_APP_PRI - priority + 8);
 
     ptask->task_name = name;
 
@@ -870,6 +870,21 @@ typedef struct atimer_t {
     TIMER_FUN pxCallbackFunction;
     void *arg;
 } atimer;
+#define TIMER_NUM 100
+
+static atimer g_wifi_timer[TIMER_NUM] = {0};
+
+atimer *_get_timer()
+{
+    int i;
+    for (i = 0; i < TIMER_NUM; i++) {
+        if (g_wifi_timer[i].pxCallbackFunction == NULL) {
+            return &g_wifi_timer[i];
+        }
+    }
+    asm("bkpt");
+    return NULL;
+}
 
 void timer_callback_wrapper(void *ktimer, void *atimer_handle)
 {
@@ -896,7 +911,7 @@ _timerHandle _aos_timerCreate(const signed char *pcTimerName,
 
     int ms = krhino_ticks_to_ms(xTimerPeriodInTicks);
 
-    atimer *timer = aos_malloc_check(sizeof(atimer));
+    atimer *timer = _get_timer();
     timer->pxCallbackFunction = pxCallbackFunction;
     timer->arg = timer;
 
@@ -922,30 +937,9 @@ u32 _aos_timerDelete(_timerHandle xTimer,
 #if DBG_OS_API
     printf("[AOS]%s handle=%x\n", __FUNCTION__, xTimer);
 #endif
-
-    /**
-     * aos_timer_stop is async operation,
-     * this is to avoid freeing user data before timer really stopps
-    */
-    int ret;
-    ktimer_t *ktimer = timer->timer.hdl;
-
-    do {
-        ret = aos_timer_stop(&timer->timer);
-        if (ret != 0) {
-            aos_msleep(10);
-        } else {
-            break;
-        }
-    } while (1);
-
-    while (ktimer->timer_state != TIMER_DEACTIVE) {
-        aos_msleep(10);
-    }
-    /***********************/
+    timer->pxCallbackFunction = NULL;
 
     aos_timer_free(&timer->timer);
-    aos_free(timer);
 
     return _SUCCESS;
 }

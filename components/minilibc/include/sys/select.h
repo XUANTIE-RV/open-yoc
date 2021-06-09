@@ -5,14 +5,13 @@ extern "C" {
 #endif
 
 #include <sys/time.h>
+#if defined(CONFIG_SAL) || defined(CONFIG_TCPIP)
 #include <sys/socket.h>
-
-#if 0
-/* FD_SET used for lwip_select */
-#ifndef FD_SET
-#undef  FD_SETSIZE
+#else
 /* Make FD_SETSIZE match NUM_SOCKETS in socket.c */
-#define MEMP_NUM_NETCONN 128
+#define MEMP_NUM_NETCONN 12
+#define LWIP_SOCKET_OFFSET 20
+
 #define FD_SETSIZE    MEMP_NUM_NETCONN
 #define FDSETSAFESET(n, code) do { \
   if (((n) - LWIP_SOCKET_OFFSET < MEMP_NUM_NETCONN) && (((int)(n) - LWIP_SOCKET_OFFSET) >= 0)) { \
@@ -28,12 +27,6 @@ typedef struct fd_set
 {
   unsigned char fd_bits [(FD_SETSIZE+7)/8];
 } fd_set;
-
-#elif LWIP_SOCKET_OFFSET
-#error LWIP_SOCKET_OFFSET does not work with external FD_SET!
-#elif FD_SETSIZE < MEMP_NUM_NETCONN
-#error "external FD_SETSIZE too small for number of sockets"
-#endif /* FD_SET */
 #endif
 
 extern int select2(int maxfdp1, fd_set *readset, fd_set *writeset, fd_set *exceptset,

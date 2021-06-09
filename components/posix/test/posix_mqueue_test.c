@@ -8,7 +8,7 @@
 #include "k_api.h"
 #include "pthread.h"
 #include "mqueue.h"
-#include "aos/log.h"
+#include "ulog/ulog.h"
 
 #define TAG "mqueue_test"
 
@@ -20,7 +20,8 @@ static char recv_buf[1024];
 static int  succeed_flag = 1;
 
 static char *test_msg[TOTAL_MSG_NUM] = {"os=AliOS Things", "version=v2.1", "component=osal.posix",
-                                        "author=Jason","email=jason_sophia@aliyun.com"};
+                                        "author=Jason","email=jason_sophia@aliyun.com"
+                                       };
 
 static void posix_mqueue_case1(void);
 static void posix_mqueue_case2(void);

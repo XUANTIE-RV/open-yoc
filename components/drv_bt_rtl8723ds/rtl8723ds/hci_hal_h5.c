@@ -29,8 +29,14 @@
 #include <devices/device.h>
 #include <devices/driver.h>
 #include <drv/gpio.h>
+#ifdef CONFIG_CSI_V2
+#include <soc.h>
+#include <drv/pin.h>
+#include <drv/gpio_pin.h>
+#else
 #include <pin_name.h>
 #include <pinmux.h>
+#endif
 #include <devices/hci.h>
 
 #include "bt_vendor_rtk.h"
@@ -75,7 +81,17 @@ static int h5_hal_open(aos_dev_t *dev)
         USERIAL_HW_FLOW_CTRL_OFF,
         g_uart_id
     };
+#ifdef CONFIG_CSI_V2
+    csi_gpio_pin_t gpio;
 
+    csi_pin_set_mux(g_bt_dis_pin,   PIN_FUNC_GPIO);
+    csi_gpio_pin_init(&gpio, g_bt_dis_pin);
+    // aos_check(&gpio, EIO);
+    csi_gpio_pin_dir(&gpio, GPIO_DIRECTION_OUTPUT);
+    csi_gpio_pin_write(&gpio, 0);
+    aos_msleep(200);
+    csi_gpio_pin_write(&gpio, 1);
+#else
     gpio_pin_handle_t gpio;
 
     drv_pinmux_config(g_bt_dis_pin, PIN_FUNC_GPIO);
@@ -86,6 +102,7 @@ static int h5_hal_open(aos_dev_t *dev)
     csi_gpio_pin_write(gpio, 0);
     aos_msleep(200);
     csi_gpio_pin_write(gpio, 1);
+#endif
     aos_msleep(500);
 
     aos_check(!aos_event_new(&g_uart_event, 0), EIO);

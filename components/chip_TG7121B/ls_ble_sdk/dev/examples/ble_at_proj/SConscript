@@ -1,0 +1,10 @@
+Import('app_build')
+src = [
+    'main.c',
+    'at_cmd_parse.c',
+    'at_recv_cmd.c',
+]
+inc = [
+    '.'
+]
+app_build('ble_at_proj',src,inc)

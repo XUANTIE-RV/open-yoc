@@ -6,6 +6,7 @@
 #define __AVCODEC_ALL_H__
 
 #include <aos/aos.h>
+#include "avutil/av_config.h"
 #include "avcodec/ad.h"
 #include "avcodec/avcodec.h"
 
@@ -61,6 +62,30 @@ int ad_register_amrnb();
 int ad_register_amrwb();
 
 /**
+ * @brief  regist ad for opus
+ * @return 0/-1
+ */
+int ad_register_opus();
+
+/**
+ * @brief  regist ad for speex
+ * @return 0/-1
+ */
+int ad_register_speex();
+
+/**
+ * @brief  regist ad for alaw
+ * @return 0/-1
+ */
+int ad_register_alaw();
+
+/**
+ * @brief  regist ad for mulaw
+ * @return 0/-1
+ */
+int ad_register_mulaw();
+
+/**
  * @brief  regist all decoder
  * @return 0/-1
  */
@@ -83,6 +108,18 @@ static inline int ad_register_all()
 #endif
 #if defined(CONFIG_DECODER_AMRWB)
     REGISTER_DECODER(AMRWB, amrwb);
+#endif
+#if defined(CONFIG_DECODER_OPUS)
+    REGISTER_DECODER(OPUS, opus);
+#endif
+#if defined(CONFIG_DECODER_SPEEX)
+    REGISTER_DECODER(SPEEX, speex);
+#endif
+#if defined(CONFIG_DECODER_ALAW)
+    REGISTER_DECODER(ALAW, alaw);
+#endif
+#if defined(CONFIG_DECODER_MULAW)
+    REGISTER_DECODER(MULAW, mulaw);
 #endif
 #if defined(CONFIG_DECODER_IPC)
     REGISTER_DECODER(IPC, ipc);

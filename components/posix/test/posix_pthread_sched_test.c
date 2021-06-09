@@ -7,7 +7,7 @@
 
 #include "k_api.h"
 #include "pthread.h"
-#include "aos/log.h"
+#include "ulog/ulog.h"
 
 #define TAG "sched_test"
 

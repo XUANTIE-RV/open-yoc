@@ -272,24 +272,31 @@ static void http_client_handle(void *args)
                 LOGD(TAG, "Normal browser fix + symbol");
             }
 
-            char *decoded_content = url_decode(content);
-            LOGD(TAG, "prov string=%s", decoded_content);
-
             char *ssid_pos = NULL;
             char *ssid_end = NULL;
             char *pass_pos = NULL;
-            if (decoded_content) {
-                ssid_pos = strstr(decoded_content, "SSID=");
+            char *ssid_decoded = NULL;
+            char *pass_decoded = NULL;
+
+            pass_pos = strstr(content, "PASS=");
+            
+            if (pass_pos) {
+                ssid_end = pass_pos - 1;
+                *ssid_end = 0;
+                pass_decoded = url_decode(pass_pos);
+                pass_pos = pass_decoded;
             }
-            if (ssid_pos) {
-                ssid_end = strstr(ssid_pos, "&");
-            }
-            if (decoded_content) {
-                pass_pos = strstr(decoded_content, "PASS=");
+
+            ssid_decoded = url_decode(content);
+            LOGD(TAG, "prov string=%s", ssid_decoded);
+
+            if (ssid_decoded) {
+                ssid_pos = strstr(ssid_decoded, "SSID=");
             }
 
             if (ssid_pos == NULL || pass_pos == NULL || ssid_end == NULL) {
-                free(decoded_content);
+                free(ssid_decoded);
+                free(pass_decoded);
                 free(content);
                 goto Exit;
             }
@@ -307,7 +314,8 @@ static void http_client_handle(void *args)
             sendall(iNewSockFD, http_header, strlen((char *)http_header), 0);
             sendall(iNewSockFD, (uint8_t*)ok_html, strlen(ok_html), 0);
 
-            free(decoded_content);
+            free(ssid_decoded);
+            free(pass_decoded);
             free(content);
             goto Exit;
         }
@@ -562,8 +570,12 @@ static void process_query(int fd)
         return;
     }
 
-    if(shdr->rcode != 0)
-        sendto(fd, sbuffer, sizeof(DNS_HDR), 0, (struct sockaddr*)&source, sizeof(struct sockaddr_in));
+    if(shdr->rcode != 0) {
+        int ret = sendto(fd, sbuffer, sizeof(DNS_HDR), 0, (struct sockaddr*)&source, sizeof(struct sockaddr_in));
+        if (ret < 0) {
+            LOGE(TAG, "process_query sendto error.");
+        }
+    }
 }
 
 static void dns_server_entry(void *arg)

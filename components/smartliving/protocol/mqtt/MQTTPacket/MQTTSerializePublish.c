@@ -123,7 +123,8 @@ exit:
 //  return MQTTSerialize_ack(buf, buflen, PUBACK, 0, packetid);
 // }
 
-#if WITH_MQTT_QOS2_PACKET
+#if defined(WITH_MQTT_QOS2_PACKET) && WITH_MQTT_QOS2_PACKET
+
 /**
   * Serializes a pubrel packet into the supplied buffer.
   * @param buf the buffer into which the packet will be serialized

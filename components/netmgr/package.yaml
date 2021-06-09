@@ -1,10 +1,9 @@
 
 ## 第一部分： 基础信息
 name: netmgr                                        # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
-version: v7.3.0                                     # <必选项> 组件版本号
+version: v7.4.3                                     # <必选项> 组件版本号
 description: 网络管理服务,负责所有网络的联网管理功能  # <必选项> 建议至少20字以上
-type: common                                        # <必选项> 组件类型，为：solution, chip, board, common
-
+type: common                                        # <必选项> 组件类型，为：solution, chip, board, common, sdk
 tag: 核心模块                                       # <可选项> 组件分类，缺省值： ''
 keywords:                                           # <可选项> 标签，会影响到组件被搜索的效果，合理的标签很重要
   - base
@@ -38,25 +37,30 @@ license: Apache license v2.0                        # <可选项> 源代码的�
 build_config:
   include:
     - include
+  internal_include:                      # <可选项> 编译时，影响编译器的-I 参数 ,组件内有效
+    - activation
 
 # source_file:                             # <可选项> 指定参与编译的源代码文件，支持通配符，采用相对路径
 #   - src/*.c                              # 例：组件 src 目录下所有的扩展名为 c 的源代码文件
 source_file:
-  - "netmgr_service.c"
-  - "netmgr_eth.c"
-  - "netmgr_wifi.c"
-  - "netmgr_gprs.c"
-  - "netmgr_nbiot.c"
+  - netmgr_service.c
+  - netmgr_eth.c
+  - netmgr_wifi.c
+  - netmgr_gprs.c
+  - netmgr_nbiot.c
+  - cli_ifconfig.c ? <AOS_COMP_CLI>
+  - activation/*.c ? <AOS_COMP_ACTIVATION>
 
 ## 第五部分：配置信息
-# def_config:                              # 组件的可配置项
+def_config:                              # 组件的可配置项
 #   CONFIG_DEBUG: y
 #   CONFIG_PARAM_NOT_CHECK: y
 #   CONFIG_CLI: y
+  # AOS_COMP_ACTIVATION: y
 
 ## 第六部分：安装信息
 # install:
-#   - dest: include/                       # 安装的目的路径 dest是相当路径，通常是相对于YoC SDK 安装目录
+#   - dest: include/                       # 安装的目的路径 dest是相对路径，通常是相对于YoC SDK 安装目录
 #     source:                              # 安装源列表
 #      - src/*.h                           # 支持通配符，相对路径
 install:
@@ -66,7 +70,7 @@ install:
 
 ## 第七部分：导出部分
 # export:
-#   - dest: "<SOLUTION_PATH>/generated/data" # 安装的目的路径 dest是相当路径
+#   - dest: "<SOLUTION_PATH>/generated/data" # 安装的目的路径 dest是相对路径
 #     source:                                # 安装源列表
 #       - "bootimgs/boot"
 #       - "bootimgs/tee"

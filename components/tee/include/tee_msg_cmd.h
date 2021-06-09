@@ -48,6 +48,8 @@
 #define TEE_CMD_IMG_VERIFY              0x16
 #define TEE_CMD_DEV_INFO_CRYPT          0x17
 #define TEE_CMD_SYS_FREQ                0x18
+#define TEE_CMD_GET_BOOT_TYPE           0x19
+#define TEE_CMD_REG_OPR                 0x1a
 
 #define TEE_CMD_XOR                     0xE0
 #endif

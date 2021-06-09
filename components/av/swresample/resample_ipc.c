@@ -5,27 +5,27 @@
 #if defined(CONFIG_RESAMPLER_IPC) && CONFIG_RESAMPLER_IPC
 
 #include "swresample/resample_cls.h"
-#include "resicore.h"
+#include "res_icore.h"
 
 #define TAG                   "res_ipc"
 
 struct res_ipc_priv {
-    resicore_t                *hdl;
+    res_icore_t                *hdl;
 };
 
 static int _resample_ipc_init(resx_t *r)
 {
     int rc;
-    resicore_t *hdl = NULL;
+    res_icore_t *hdl = NULL;
     struct res_ipc_priv *priv;
 
-    rc = resicore_init();
+    rc = res_icore_init();
     CHECK_RET_TAG_WITH_RET(rc == 0, -1);
 
     priv = aos_zalloc(sizeof(struct res_ipc_priv));
     CHECK_RET_TAG_WITH_RET(priv, -1);
 
-    hdl = resicore_new(r->irate, r->orate, r->channels, r->bits);
+    hdl = res_icore_new(r->irate, r->orate, r->channels, r->bits);
     CHECK_RET_TAG_WITH_GOTO(hdl, err);
 
     priv->hdl  = hdl;
@@ -41,9 +41,9 @@ static int _resample_ipc_convert(resx_t *r, void **out, size_t nb_osamples, cons
 {
     int rc;
     struct res_ipc_priv *priv = r->priv;
-    resicore_t *hdl           = priv->hdl;
+    res_icore_t *hdl           = priv->hdl;
 
-    rc = resicore_convert(hdl, out, nb_osamples, in, nb_isamples);
+    rc = res_icore_convert(hdl, out, nb_osamples, in, nb_isamples);
 
     return rc;
 }
@@ -51,9 +51,9 @@ static int _resample_ipc_convert(resx_t *r, void **out, size_t nb_osamples, cons
 static int _resample_ipc_uninit(resx_t *r)
 {
     struct res_ipc_priv *priv = r->priv;
-    resicore_t *hdl           = priv->hdl;
+    res_icore_t *hdl           = priv->hdl;
 
-    resicore_free(hdl);
+    res_icore_free(hdl);
     aos_free(priv);
     r->priv = NULL;
     return 0;

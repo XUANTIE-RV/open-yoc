@@ -11,6 +11,7 @@
 #include <drv/codec.h>
 #include <aos/list.h>
 
+#include "h2h_copy.h"
 #include "voice.h"
 
 #define TAG "Vap"
@@ -30,6 +31,8 @@ struct __voice {
     voice_ch_t              *ch;
     voice_ch_io_t           *ops;
     voice_pcm_t             *pcm;
+    int                      mute_flag;
+    int                      mute_timeout;
 };
 
 static int voice_msg_send(voice_t *v, int cmd, void *data, int len, int sync)
@@ -76,7 +79,15 @@ static void voice_data_send(void *priv, void *data, int len)
 {
     voice_t *v = (voice_t *)priv;
 
-    voice_msg_send(v, VOICE_PCM_CMD, data, len, 1);
+    if (v->mute_flag == 0) {
+        voice_msg_send(v, VOICE_PCM_CMD, data, len, 1);
+    } else {
+        if (v->mute_timeout != AOS_WAIT_FOREVER && aos_now_ms() > v->mute_timeout) {
+            voice_msg_send(v, VOICE_PCM_CMD, data, len, 1);
+            v->mute_timeout = 0;
+            v->mute_flag = 0;
+        }
+    }
 }
 
 static void voice_pcm_param_init(voice_t *v)
@@ -94,6 +105,9 @@ static void voice_pcm_param_init(voice_t *v)
     // voice_dcache_writeback((uint32_t *)v, sizeof(voice_t));
     voice_dcache_writeback((uint32_t *)v->mic_param, sizeof(voice_pcm_param_t));
     voice_dcache_writeback((uint32_t *)v->ref_param, sizeof(voice_pcm_param_t));
+#ifdef CONFIG_CHIP_PANGU
+    v->param.shm_addr = h2h_copy_shm_addr_get();
+#endif
     voice_msg_send(v, VOICE_PCM_PARAM_SET_CMD, (void *)v, sizeof(voice_t), 1);
     if (v->param.ipc_mode == 1) {
         v->pcm = pcm_init(voice_data_send, v);
@@ -132,12 +146,16 @@ voice_t *voice_init(voice_evt_t cb, void *priv)
     v->cb = cb;
     v->priv = priv;
     // ai_init();
+#ifdef CONFIG_CHIP_PANGU
+    h2h_copy_init();
+#endif
 
     return v;
 }
 
 void voice_deinit(voice_t *v)
-{//TODO
+{
+    //TODO
     voice_ch_deinit(v);
     pcm_deinit(v->pcm);
     aos_free(v);
@@ -195,5 +213,24 @@ int voice_backflow_control(voice_t *v, voice_backflow_id_t id, int flag)
 
     voice_msg_send(v, VOICE_BACKFLOW_CONTROL_CMD, &tmep, 4, 1);
 
+    return 0;
+}
+
+int voice_mute(voice_t *v, int timeout)
+{
+    v->mute_flag = 1;
+    if (timeout != AOS_WAIT_FOREVER) {
+        v->mute_timeout = timeout + aos_now_ms();
+    } else {
+        v->mute_timeout = AOS_WAIT_FOREVER;
+    }
+
+    return 0;
+}
+
+int voice_unmute(voice_t *v)
+{
+    v->mute_flag = 0;
+    v->mute_timeout = 0;
     return 0;
 }

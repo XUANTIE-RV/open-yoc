@@ -2,7 +2,6 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-#include <aos/log.h>
 
 #include "webclient.h"
 

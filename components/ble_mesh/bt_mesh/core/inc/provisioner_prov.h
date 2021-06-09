@@ -433,10 +433,10 @@ auto_appkey_config* get_node_autoconfig_info(u16_t unicast_addr);
 
 int bt_mesh_provisioner_local_provision();
 
+int bt_mesh_provisioner_add_node(struct node_info * node_info, uint8_t dev_key [ 16 ]);
+
 #endif /* CONFIG_BT_MESH_PROVISIONER */
 
-#ifdef CONFIG_BT_MESH_PROVISIONER_ADD_NODE_MANU
-int provisioner_add_node_manu(struct node_info * node_info, uint8_t dev_key [ 16 ]);
-#endif
+
 
 #endif /* #ifndef _PROVISIONER_PROV_H_ */

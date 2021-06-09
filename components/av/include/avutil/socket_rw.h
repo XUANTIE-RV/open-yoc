@@ -6,7 +6,6 @@
 #define __SOCKET_RW_H__
 
 #include <aos/types.h>
-#include <aos/log.h>
 #include <aos/kernel.h>
 #include <aos/debug.h>
 

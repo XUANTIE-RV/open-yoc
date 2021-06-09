@@ -48,6 +48,13 @@ typedef struct _pthread_tcb {
     void  *return_value;
 } _pthread_tcb_t;
 
+RHINO_INLINE void _alloc_trace(void *addr, size_t allocator)
+{
+#if (RHINO_CONFIG_MM_DEBUG > 0u && RHINO_CONFIG_GCC_RETADDR > 0u)
+    krhino_owner_attach(addr, allocator);
+#endif
+}
+
 RHINO_INLINE _pthread_tcb_t *_pthread_get_tcb(pthread_t thread)
 {
     _pthread_tcb_t *ptcb;

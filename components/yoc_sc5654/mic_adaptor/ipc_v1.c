@@ -5,7 +5,6 @@
 #include <unistd.h>
 #include <string.h>
 
-#include <aos/log.h>
 
 #include "ipc_v1.h"
 #define TAG "IPC"

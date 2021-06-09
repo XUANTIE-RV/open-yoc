@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 #if defined(CONFIG_USING_TLS)
-#include "tls.h"
+#include "transport/tls.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -20,7 +20,6 @@
 #include <sys/select.h>
 #include <arpa/inet.h>
 #include <aos/errno.h>
-#include <aos/log.h>
 #include "mbedtls/error.h"
 
 #if defined(MBEDTLS_DEBUG_C)
@@ -62,7 +61,7 @@ static void _ssl_debug(void *ctx, int level, const char *file, int line, const c
         LOGD(TAG1, "%s:%d %s", file, line, str);
         break;
     case 4:
-        LOGV(TAG1, "%s:%d %s", file, line, str);
+        LOGD(TAG1, "%s:%d %s", file, line, str);
         break;
     default:
         LOGE(TAG1, "Unexpected log level %d: %s", level, str);
@@ -77,42 +76,19 @@ static ssize_t tcp_read(tls_t *tls, char *data, size_t datalen, uint32_t timeout
 
 static ssize_t tls_read(tls_t *tls, char *data, size_t datalen, uint32_t timeout_ms)
 {
-    uint32_t        readLen = 0;
-    static int      net_status = 0;
-    int             ret = -1;
+    int ret;
 
     LOGD(TAG, "tls read...");
     mbedtls_ssl_conf_read_timeout(&(tls->conf), timeout_ms);
-    while (readLen < datalen) {
-        ret = mbedtls_ssl_read(&(tls->ssl), (unsigned char *)(data + readLen), (datalen - readLen));
-        if (ret > 0) {
-            readLen += ret;
-            net_status = 0;
-        } else if (ret == 0) {
-            /* if ret is 0 and net_status is -2, indicate the connection is closed during last call */
-            return (net_status == -2) ? net_status : readLen;
-        } else {
-            if (MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY == ret) {
-                LOGE(TAG, "peer close -0x%04x", -ret);
-                net_status = -2; /* connection is closed */
-                break;
-            } else if ((MBEDTLS_ERR_SSL_TIMEOUT == ret)
-                       || (MBEDTLS_ERR_SSL_CONN_EOF == ret)
-                       || (MBEDTLS_ERR_SSL_SESSION_TICKET_EXPIRED == ret)
-                       || (MBEDTLS_ERR_SSL_NON_FATAL == ret)) {
-                /* read already complete */
-                /* if call mbedtls_ssl_read again, it will return 0 (means EOF) */
 
-                return readLen;
-            } else {
-                LOGE(TAG, "recv -0x%04x", -ret);
-                net_status = -1;
-                return -1; /* Connection error */
-            }
+    while (1) {
+        ret = mbedtls_ssl_read(&(tls->ssl), (unsigned char *)data, datalen);
+        if (ret != MBEDTLS_ERR_SSL_WANT_READ) {
+            break;
         }
     }
 
-    return (readLen > 0) ? readLen : net_status;
+    return ret;
 }
 
 static void ms_to_timeval(int timeout_ms, struct timeval *tv)
@@ -256,7 +232,7 @@ static int create_ssl_handle(tls_t *tls, const char *hostname, size_t hostlen, c
 
     mbedtls_ssl_conf_max_version(&tls->conf, MBEDTLS_SSL_MAJOR_VERSION_3, MBEDTLS_SSL_MINOR_VERSION_3);
     mbedtls_ssl_conf_min_version(&tls->conf, MBEDTLS_SSL_MAJOR_VERSION_3, MBEDTLS_SSL_MINOR_VERSION_3);
-    
+
 #ifdef CONFIG_MBEDTLS_SSL_ALPN
     if (cfg->alpn_protos) {
         mbedtls_ssl_conf_alpn_protocols(&tls->conf, cfg->alpn_protos);

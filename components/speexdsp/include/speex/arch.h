@@ -35,7 +35,13 @@
 #ifndef ARCH_H
 #define ARCH_H
 
+#ifdef HAVE_CONFIG_H
 #include "speex/config.h"
+#endif
+
+#if !(defined (FLOATING_POINT) || defined(FIXED_POINT))
+#define FIXED_POINT
+#endif
 
 /* A couple test to catch stupid option combinations */
 #ifdef FIXED_POINT

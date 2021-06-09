@@ -7,7 +7,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <aos/kernel.h>
-#include <aos/log.h>
 #include <aos/yloop.h>
 
 #include <yoc/atparser.h>
@@ -874,9 +873,14 @@ void esp8266_set_timeout(int ms)
     atparser_set_timeout(g_atparser_uservice_t, ms);
 }
 
+static int sim800_module_inited = 0;
 int esp8266_module_init(utask_t *task, esp_wifi_param_t *param)
 {
     uart_config_t config;
+
+    if (sim800_module_inited) {
+        return 0;
+    }
 
     if (task == NULL) {
         task = utask_new("esp8266", 1 * 1024, QUEUE_MSG_COUNT, AOS_DEFAULT_APP_PRI + 4);
@@ -911,6 +915,8 @@ int esp8266_module_init(utask_t *task, esp_wifi_param_t *param)
     atparser_oob_create(g_atparser_uservice_t, "WIFI DISCONNECT", _disconnect_handler, NULL);
     atparser_oob_create(g_atparser_uservice_t, "link is not valid", _disconnect_handler, NULL);
     atparser_oob_create(g_atparser_uservice_t, "+IPD,", _recv_data_handler, NULL);
+
+    sim800_module_inited = 1;
 
     return 0;
 }

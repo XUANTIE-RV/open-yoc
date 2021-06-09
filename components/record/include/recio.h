@@ -5,7 +5,7 @@
 #ifndef __RECIO_H__
 #define __RECIO_H__
 
-
+#include <aos/aos.h>
 
 typedef struct recio_cls recio_cls_t;
 

@@ -9,6 +9,8 @@
 #include "avfilter/avfilter_aef.h"
 #include "avfilter/avfilter_vol.h"
 #include "avfilter/avfilter_swr.h"
+#include "avfilter/avfilter_atempo.h"
+#include "avfilter/avfilter_atempo2.h"
 
 #endif /* __AVFILTER_ALL_H__ */
 

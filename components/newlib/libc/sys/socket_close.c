@@ -2,6 +2,7 @@
  * Copyright (C) 2019-2020 Alibaba Group Holding Limited
  */
 
+#if defined(CONFIG_SAL) || defined(CONFIG_TCPIP)
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -85,4 +86,6 @@ int fcntl(int fd, int cmd, ...)
 
     return ret;
 }
+#endif
+
 #endif

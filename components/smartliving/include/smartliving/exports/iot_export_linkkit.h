@@ -10,7 +10,22 @@ extern "C" {
 #endif
 
 #include "smartliving/iot_export.h"
-// #include "iot_import.h"
+
+#define PRODUCT_KEY_MAXLEN          (20 + 1)
+#define DEVICE_NAME_MAXLEN          (32 + 1)
+#define DEVICE_SECRET_MAXLEN        (64 + 1)
+#define PRODUCT_SECRET_MAXLEN       (64 + 1)
+
+#ifdef DEVICE_MODEL_GATEWAY
+typedef enum _gateway_subdev_event_e
+{
+    ITM_EVENT_TOPO_DELETE_REPLY,
+    ITM_EVENT_SUBDEV_RESET_REPLY,
+    ITM_EVENT_TOPO_ADD_REPLY,
+    ITM_EVENT_COMBINE_LOGIN_REPLY,
+    ITM_EVENT_COMBINE_LOGOUT_REPLY
+}gateway_subdev_event_e;
+#endif
 
 typedef enum {
     IOTX_LINKKIT_DEV_TYPE_MASTER,
@@ -44,12 +59,24 @@ typedef enum {
     /* only for slave device, send logout request to cloud */
     ITM_MSG_LOGOUT,
 
+    /* only for slave device, send delete topo request to cloud */
+    ITM_MSG_DELETE_TOPO,
+
+    /* connect subdev use new way*/
+    ITM_MSG_CONNECT_SUBDEV,
+
     /* query ntp time from cloud */
     ITM_MSG_QUERY_TIMESTAMP,
 
     /* only for master device, query topo list */
     ITM_MSG_QUERY_TOPOLIST,
 
+    /* only for master device, request reset subdev */
+    ITM_MSG_SUBDEV_RESET,
+
+    /* only for master device, qurey subdev device id*/
+    ITM_MSG_QUERY_SUBDEV_ID,
+    
     /* only for master device, qurey firmware ota data */
     ITM_MSG_QUERY_FOTA_DATA,
 
@@ -64,6 +91,11 @@ typedef enum {
 
     /* reply event notify to cloud */
     ITM_MSG_EVENT_NOTIFY_REPLY,
+
+#ifdef DM_UNIFIED_SERVICE_POST
+    /* post data to cloud and this this unify method*/
+    ITM_MSG_UNIFIED_SERVICE_POST,
+#endif
 
     IOTX_LINKKIT_MSG_MAX
 } iotx_linkkit_msg_type_t;
@@ -113,6 +145,27 @@ DLL_IOT_API void IOT_Linkkit_Yield(int timeout_ms);
  */
 DLL_IOT_API int IOT_Linkkit_Close(int devid);
 
+
+/**
+ * @brief Report message to cloud
+ *
+ * @param devid. device identifier.
+ * @param msg_type. message type. see iotx_linkkit_msg_type_t, as follows:
+ *        ITM_MSG_POST_PROPERTY
+ *        ITM_MSG_DEVICEINFO_UPDATE
+ *        ITM_MSG_DEVICEINFO_DELETE
+ *        ITM_MSG_POST_RAW_DATA
+ *        ITM_MSG_LOGIN
+ *        ITM_MSG_LOGOUT
+ *
+ * @param payload. message payload.
+ * @param payload_len. message payload length.
+ *
+ * @return success: 0 or message id (>=1), fail: -1.
+ *
+ */
+DLL_IOT_API int IOT_Linkkit_Report_Ext(int devid, iotx_linkkit_msg_type_t msg_type, unsigned char *payload,
+                                   int payload_len, int sento);
 /**
  * @brief Report message to cloud
  *

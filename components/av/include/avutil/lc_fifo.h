@@ -9,6 +9,7 @@
 #include <aos/kernel.h>
 #include <aos/aos.h>
 #include <aos/ringbuffer.h>
+#include "avutil/common.h"
 
 __BEGIN_DECLS__
 

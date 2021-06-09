@@ -12,12 +12,13 @@
 #include <k_api.h>
 #include <aos/version.h>
 #include <aos/kernel.h>
-#include <aos/log.h>
-#include <aos/aos.h>
+#include <ulog/ulog.h>
 
 #include "iot_import.h"
 //#include "iotx_hal_internal.h"
-#include <csi_kernel.h>
+#include <aos/kernel.h>
+#include <aos/debug.h>
+#include <aos/kv.h>
 // #include <drv_tee.h>
 
 #define TAG "OSYOC"
@@ -44,47 +45,17 @@ int HAL_GetFirmwareVersion(_OU_ char *version)
 
 int HAL_Kv_Set(const char *key, const void *val, int len, int sync)
 {
-    #if 0
-    if (!kvfile) {
-        kvfile = kv_open("/tmp/kvfile.db");
-        if (!kvfile) {
-            return -1;
-        }
-    }
-
-    return kv_set_blob(kvfile, (char *)key, (char *)val, len);
-    #endif
-    return -1;
+    return aos_kv_set(key, (void*)val, len, sync);
 }
 
 int HAL_Kv_Get(const char *key, void *buffer, int *buffer_len)
 {
-    #if 0
-    if (!kvfile) {
-        kvfile = kv_open("/tmp/kvfile.db");
-        if (!kvfile) {
-            return -1;
-        }
-    }
-
-    return kv_get_blob(kvfile, (char *)key, buffer, buffer_len);
-    #endif
-    return -1;
+    return aos_kv_get(key, buffer, buffer_len);
 }
 
 int HAL_Kv_Del(const char *key)
 {
-    #if 0
-    if (!kvfile) {
-        kvfile = kv_open("/tmp/kvfile.db");
-        if (!kvfile) {
-            return -1;
-        }
-    }
-
-    return kv_del(kvfile, (char *)key);
-    #endif
-    return -1;
+    return aos_kv_del(key);
 }
 
 /**
@@ -181,22 +152,32 @@ int HAL_ThreadCreate(_OU_ void **thread_handle,
 
 void *HAL_MutexCreate(void)
 {
-    return csi_kernel_mutex_new();
+    aos_mutex_t *mutex = aos_malloc_check(sizeof(aos_mutex_t));;
+    
+    int ret = aos_mutex_new(mutex);
+
+    if (ret < 0) {
+        aos_free(mutex);
+        mutex = NULL;
+    }
+    
+    return mutex;
 }
 
 void HAL_MutexDestroy(void *mutex)
 {
-    csi_kernel_mutex_del(mutex);
+    aos_mutex_free(mutex);
+    aos_free(mutex);
 }
 
 void HAL_MutexLock(void *mutex)
 {
-    csi_kernel_mutex_lock(mutex, -1);
+    aos_mutex_lock(mutex, -1);
 }
 
 void HAL_MutexUnlock(void *mutex)
 {
-    csi_kernel_mutex_unlock(mutex);
+    aos_mutex_unlock(mutex);
 }
 
 void *HAL_Malloc(uint32_t size)
@@ -267,8 +248,13 @@ static char _device_secret[DEVICE_SECRET_LEN + 1];
 
 int HAL_GetPartnerID(_OU_ char pid_str[PID_STRLEN_MAX])
 {
-    return 0;
+    memset(pid_str, 0x0, PID_STRLEN_MAX);
+
+    strcpy(pid_str, "example.demo.partner-id");
+
+    return strlen(pid_str);
 }
+
 
 #if 0
 char *HAL_GetChipID(char *cid_str)
@@ -317,10 +303,10 @@ int HAL_GetDeviceSecret(char device_secret[DEVICE_SECRET_LEN])
     memset(device_secret, 0x0, DEVICE_SECRET_LEN + 1);
     strncpy(device_secret, _device_secret, len);
 
-    return len;
+    return strlen(_device_secret);
 }
 
-int HAL_GetProductKey(char product_key[PRODUCT_KEY_LEN])
+int HAL_GetProductKey(char product_key[PRODUCT_KEY_LEN + 1])
 {
     int len = strlen(_product_key);
     if(len == 0) {
@@ -331,7 +317,7 @@ int HAL_GetProductKey(char product_key[PRODUCT_KEY_LEN])
 
     strncpy(product_key, _product_key, len);
 
-    return len;
+    return strlen(_product_key);
 }
 
 int HAL_GetProductSecret(char *product_secret)
@@ -345,12 +331,12 @@ int HAL_GetProductSecret(char *product_secret)
     memset(product_secret, 0x0, PRODUCT_SECRET_LEN + 1);
     strncpy(product_secret, _product_secret, len);
 
-    return len;
+    return strlen(_product_secret);
 }
 
 int HAL_SetDeviceName(char *device_name)
 {
-	int  len;
+    int  len;
     if(device_name == NULL) {
         return -1;
     }
@@ -459,21 +445,14 @@ char *HAL_GetTimeStr(char *buf, int len)
 
 void HAL_Srandom(uint32_t seed)
 {
+    long int curtime = time(NULL);
+    srand(((unsigned int)curtime));
     return;
 }
 
 uint32_t HAL_Random(uint32_t region)
 {
-    uint32_t output;
-#if defined(CONFIG_TEE_CA)
-    csi_tee_rand_generate((uint8_t*)&output, 4);
-#else
-    static uint32_t rnd = 0x12345;
-
-    output = rnd * 0xFFFF777;
-    rnd = output;
-#endif
-    return (region > 0) ? (output % region) : 0;
+    return (rand() % region);
 }
 
 int HAL_Vsnprintf(char *str, const int len, const char *format, va_list ap)
@@ -483,8 +462,11 @@ int HAL_Vsnprintf(char *str, const int len, const char *format, va_list ap)
 
 int HAL_GetModuleID(char *mid_str)
 {
-    return 0;
+    memset(mid_str, 0x0, MID_STRLEN_MAX);
+    strcpy(mid_str, "example.demo.module-id");
+    return strlen(mid_str);
 }
+
 
 #define NETIF_INFO  "yoc-wifi"
 int HAL_GetNetifInfo(char *nif_str)
@@ -577,6 +559,7 @@ static void awss_timer_task(void *args)
 {
     int sleep_time;
     int no_task_cnt = 0;
+    timer_data_t *cur = NULL;
 
     while (1) {
         if (!data_list) {
@@ -592,11 +575,11 @@ static void awss_timer_task(void *args)
         sleep_time = 10;
         HAL_MutexLock(mutex);
 
-        timer_data_t *cur = data_list;
+        cur = data_list;
         while (cur != NULL) {
             if (cur->isactive && cur->expect_time + 1 <= krhino_sys_tick_get()) {
-                cur->cb(cur->user_data);
                 cur->isactive = 0;
+                cur->cb(cur->user_data);
             }
             cur = cur->next;
         }
@@ -615,7 +598,7 @@ void *HAL_Timer_Create(const char *name, void (*func)(void *), void *user_data)
     if (!tsk) {
         mutex = HAL_MutexCreate();
         tsk = (aos_task_t *)aos_malloc_check(sizeof(aos_task_t));
-        aos_task_new_ext(tsk, "AWSS_TIMER", awss_timer_task, NULL, 1024 * 4, 20);
+        aos_task_new_ext(tsk, "AWSS_TIMER", awss_timer_task, NULL, 1024 * 2, 20);
     }
 
     timer_data_t *node = (timer_data_t *)aos_malloc(sizeof(timer_data_t));
@@ -663,10 +646,6 @@ int HAL_Timer_Start(void *timer, int ms)
 {
     CHECK_PARAM(timer, -1);
 
-    if (timer == NULL) {
-        return -1;
-    }
-
     HAL_MutexLock(mutex);
     timer_data_t *cur = data_list;
     while (cur != NULL) {
@@ -687,10 +666,6 @@ int HAL_Timer_Stop(void *timer)
 {
     CHECK_PARAM(timer, -1);
 
-    if (timer == NULL) {
-        return -1;
-    }
-
     HAL_MutexLock(mutex);
     timer_data_t *cur = data_list;
     while (cur != NULL) {
@@ -710,5 +685,3 @@ void HAL_Reboot()
 {
     aos_reboot();
 }
-
-

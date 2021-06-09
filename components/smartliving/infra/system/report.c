@@ -18,9 +18,10 @@
 #else
     #define VERSION_DEBUG(...)
 #endif
+#define    VERSION_INFO(...)    log_info("version", __VA_ARGS__)
 #define    VERSION_ERR(...)    log_err("version", __VA_ARGS__)
 
-static unsigned int g_report_id = 0;
+unsigned int g_report_id = 0;
 
 int iotx_report_id(void)
 {
@@ -92,8 +93,6 @@ void aos_get_version_hex(unsigned char version[VERSION_NUM_SIZE])
     version[3] = 0x00;
 }
 #endif
-
-
 
 // aos will implement this function
 #if defined(BUILD_AOS)
@@ -194,7 +193,7 @@ int iotx_report_devinfo(void *pclient)
     if (ret <= 0 || ret >= NIF_STRLEN_MAX) {
         VERSION_ERR("the network interface info set failed or not set, writen len is %d", ret);
         const char *default_network_info = "invalid network interface info";
-        strncpy(network_interfaces, default_network_info, strlen(default_network_info));
+        strncpy(network_interfaces, default_network_info, sizeof(network_interfaces));
     }
 
     msg_len = strlen(DEVICE_INFO_UPDATE_FMT) + 10 + strlen(LINKKIT_VERSION) + AOS_ACTIVE_INFO_LEN + \
@@ -223,7 +222,7 @@ int iotx_report_devinfo(void *pclient)
     VERSION_DEBUG("devinfo report data: %s", msg);
 
     if (info_report_func != NULL) {
-        info_report_func(pclient, topic_name, 1, msg, strlen(msg));
+        ret = info_report_func(pclient, topic_name, 1, msg, strlen(msg));
     }
 
     SYS_REPORT_FREE(msg);
@@ -278,6 +277,22 @@ int iotx_report_firmware_version(void *pclient)
     }
     VERSION_DEBUG("firmware report topic: %s", topic_name);
 
+#if defined (SUPPORT_MCU_OTA)
+    char mcu_ver[16] = {0};
+    int len = sizeof(mcu_ver);
+    aos_kv_get("mcu_version", mcu_ver, &len);
+    if (0 == strlen(mcu_ver)) {
+        strcpy((char *)mcu_ver, "mcu-1.0.0");
+        VERSION_ERR("use default MCU version:%s\n", mcu_ver);
+    }
+    /* firmware report message json data generate */
+    ret = HAL_Snprintf(msg,
+                       FIRMWARE_VERSION_MSG_LEN,
+                       "{\"id\":\"%d\",\"params\":{\"version\":\"%s-%s\"}}",
+                       iotx_report_id(),
+                       mcu_ver, version
+                      );
+#else
     /* firmware report message json data generate */
     ret = HAL_Snprintf(msg,
                        FIRMWARE_VERSION_MSG_LEN,
@@ -285,6 +300,7 @@ int iotx_report_firmware_version(void *pclient)
                        iotx_report_id(),
                        version
                       );
+#endif
     if (ret <= 0) {
         VERSION_ERR("firmware report message json data generate err");
         return FAIL_RETURN;
@@ -295,7 +311,7 @@ int iotx_report_firmware_version(void *pclient)
 
     if (ret < 0) {
         VERSION_ERR("publish failed");
-        return FAIL_RETURN;
+        return ret;
     }
 
     VERSION_DEBUG("firmware version report finished, iotx_publish() = %d", ret);
@@ -382,7 +398,7 @@ int iotx_report_mid(void *pclient)
 
     VERSION_DEBUG("MID Report: finished, IOT_MQTT_Publish() = %d", ret);
 #else
-    VERSION_ERR("No report MID because which has been reported within client id");
+    VERSION_INFO("No report MID because which has been reported within client id");
 #endif
 
     return SUCCESS_RETURN;

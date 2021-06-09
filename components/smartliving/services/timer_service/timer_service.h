@@ -9,17 +9,15 @@
 extern "C" {
 #endif
 
-#include "iot_export.h"
+#include "iot_export_timer.h"
+#include "iotx_log.h"
 
-// mv to app mk file
-// #define ENABLE_COUNTDOWN_LIST
-// #define ENABLE_LOCALTIMER
-// #define ENABLE_PERIOD_TIMER
-// #define ENABLE_RANDOM_TIMER
+#define TS "timer_serv"
+#define TS_ERR(...)           log_err(TS, __VA_ARGS__)
+#define TS_WRN(...)           log_warning(TS, __VA_ARGS__)
+#define TS_INFO(...)          log_info(TS, __VA_ARGS__)
+#define TS_DEBUG(...)         log_debug(TS, __VA_ARGS__)
 
-#define NUM_OF_LOCALTIMER 5
-
-#define DAYS_OF_WEEK    7
 #define HOURS_OF_DAY    24
 #define MINUTES_OF_HOUR 60
 #define SECONDS_OF_MINUTE   60
@@ -27,13 +25,13 @@ extern "C" {
 #define SUNDAY          1556956800       //2019/5/5 0:0:0 sunday
 #define SECONDS_OF_DAY  86400
 
-
-#define STRING_MAX_LEN  64
 #define DEFAULT_TIMEZONEOFFSET    8  // BEIJING
 
+#ifdef ENABLE_COUNTDOWN
 #define NUM_OF_COUNTDOWN_TARGET 1
 #define COUNTDOWN_TARGET_INIT() \
     const char *countdown_target_list[NUM_OF_COUNTDOWN_TARGET] = { "PowerSwitch"}
+#endif
 
 typedef enum timer_service_type {
     COUNT_DOWN,
@@ -67,6 +65,7 @@ const char *str_prop_name[]={
                         #endif
                             ""};
 
+#ifdef ENABLE_COUNTDOWN
 typedef struct countdown {
     int value_list[NUM_OF_COUNTDOWN_TARGET];
     int time_left;
@@ -75,6 +74,7 @@ typedef struct countdown {
     int is_running;
     char timeStamp[20];
 } countdown_t;
+#endif
 
 #ifdef ENABLE_COUNTDOWN_LIST
 #define NUM_OF_COUNTDOWNLIST 10
@@ -88,11 +88,13 @@ typedef struct countdown_list {
     int action;
 } countdown_list_t;
 #endif
+
 #ifdef ENABLE_LOCALTIMER
+#define NUM_OF_LOCALTIMER 5
 #define NUM_OF_LOCAL_TIMER_TARGET 5
 typedef struct local_timer {
     int value_list[NUM_OF_LOCAL_TIMER_TARGET];
-    char cron_timer[STRING_MAX_LEN];
+    char cron_timer[32];
     char targets[STRING_MAX_LEN];
     int offset[DAYS_OF_WEEK];
     int enable;
@@ -101,7 +103,7 @@ typedef struct local_timer {
     int timezone_offset;
     int repeat;
 } local_timer_t;
-#endif 
+#endif
 
 #ifdef ENABLE_PERIOD_TIMER
 #define NUM_OF_PERIOD_TIMER 1
@@ -136,12 +138,12 @@ typedef struct random_timer {
 } random_timer_t;
 #endif
 
-#define EXAMPLE_TRACE(...)                               \
-    do {                                                     \
-        HAL_Printf("\033[1;32;40m%s.%d: ", __func__, __LINE__);  \
-        HAL_Printf(__VA_ARGS__);                                 \
-        HAL_Printf("\033[0m\r\n");                                   \
-    } while (0)
+// #define EXAMPLE_TRACE(...)                               \
+//     do {                                                     \
+//         HAL_Printf("\033[1;32;40m%s.%d: ", __func__, __LINE__);  \
+//         HAL_Printf(__VA_ARGS__);                                 \
+//         HAL_Printf("\033[0m\r\n");                                   \
+//     } while (0)
 
 #if defined(__cplusplus)
 }								/* extern "C" */

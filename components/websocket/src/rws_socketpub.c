@@ -174,7 +174,7 @@ rws_socket rws_socket_create(void)
     s->max_send_append_size = RWS_MAX_SEND_APPEND_SIZE;
     s->send_append_size = 0;
 
-    network_init(&s->n);
+    rws_net_init(&s->n);
 
     static const char * info = "librws ver: " TO_STRING(RWS_VERSION_MAJOR) "." TO_STRING(RWS_VERSION_MINOR) "." TO_STRING(RWS_VERSION_PATCH) "\n";
     rws_socket_check_info(info);
@@ -191,6 +191,10 @@ void rws_socket_delete(rws_socket s)
         rws_free_clean((void**)&s->work_thread);
     }
 
+#ifdef WEBSOCKET_SSL_ENABLE
+    if(s->ssl)
+        rws_ssl_close(s);
+#endif /* WEBSOCKET_SSL_ENABLE */
     rws_string_delete_clean(&s->sec_ws_accept);
 
     rws_free_clean(&s->received);

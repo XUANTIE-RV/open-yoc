@@ -8,12 +8,11 @@
 #include <stdlib.h>
 #include <errno.h>
 
-#include <aos/log.h>
 #include <aos/kernel.h>
 #include <aos/debug.h>
 #include <yoc/nvram.h>
-#include <yoc/eventid.h>
-#include <yoc/uservice.h>
+#include <uservice/eventid.h>
+#include <uservice/uservice.h>
 
 #include "drv/tee.h"
 #include "iot_import.h"
@@ -272,7 +271,11 @@ static int alimqtt_inter_subscribe(const char *topic, subscribe_cb_t cb, void *p
  *uService
  ******************/
 #ifdef CONFIG_TEE_CA
+#ifdef CONFIG_SOFT_CRYPTO
+#define ALIYUN_STACK_SIZE (1024 * 6)
+#else
 #define ALIYUN_STACK_SIZE 2564
+#endif
 #else
 #define ALIYUN_STACK_SIZE (1024 * 6)
 #endif

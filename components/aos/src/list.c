@@ -23,21 +23,21 @@ void slist_del(slist_t *node, slist_t *head)
 
 int slist_entry_number(slist_t *queue)
 {
-	int num;
+    int num;
     slist_t *cur = queue;
-    for (num=0;cur->next;cur=cur->next, num++)
-		;
+    for (num=0; cur->next; cur=cur->next, num++)
+        ;
 
     return num;
 }
 
 int dlist_entry_number(dlist_t *queue)
 {
-	int num;
-	dlist_t *cur = queue;
-	for (num=0;cur->next != queue;cur=cur->next, num++)
-		;
+    int num;
+    dlist_t *cur = queue;
+    for (num=0; cur->next != queue; cur=cur->next, num++)
+        ;
 
-	return num;
+    return num;
 }
 

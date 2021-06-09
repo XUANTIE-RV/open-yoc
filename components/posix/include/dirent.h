@@ -31,9 +31,14 @@ extern "C"
 // FIXME:
 #ifdef TMP_MAX
 #undef TMP_MAX
+#endif
 #define TMP_MAX      1024
+
+#ifdef PATH_MAX
+#undef PATH_MAX
 #endif
 #define PATH_MAX     64
+
 #define NAME_MAX     64
 #define FILESIZEBITS (NAME_MAX * 8)
 #define LINK_MAX     0

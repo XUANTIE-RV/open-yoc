@@ -1,10 +1,9 @@
 
 ## 第一部分： 基础信息
 name: smartliving                                   # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
-version: v7.3.0                                     # <必选项> 组件版本号
+version: v7.4.3                                     # <必选项> 组件版本号
 description: 阿里飞燕智能生活SDK                    # <必选项> 建议至少20字以上
-type: common                                        # <必选项> 组件类型，为：solution, chip, board, common
-
+type: common                                        # <必选项> 组件类型，为：solution, chip, board, common, sdk
 tag: 通用组件                                       # <可选项> 组件分类，缺省值： ''
 keywords:                                           # <可选项> 标签，会影响到组件被搜索的效果，合理的标签很重要
   - base
@@ -13,15 +12,17 @@ license: Apache license v2.0                        # <可选项> 源代码的�
 ## 第二部分：依赖信息
 #           指定该组件依赖的组件及版本，版本支持条件比较，支持：>=v1.0, >v1.0, ==v1.0, <=v1.0, <v1.0, v1.0
 #           未指定条件时，默认为 ==，如 v1.0 与 ==v1.0
+# sdk_chip:                                # <可选项> 该组件依赖sdk组件，合理的依赖才能保证组件能编译、使用
+#   - sdk_chip_csky_dummy: v7.4.3
+#   - sdk_chip_riscv_dummy: v7.4.3
 # depends:                                 # <可选项> 该组件依赖其他的组件，合理的依赖才能保证组件能编译、使用
 #   - minilibc: v7.2.0
 #   - aos: >=v7.2.0
 depends:
-  - csi: V7.3.0
-  - rhino: V7.3.0
-  - aos: V7.3.0
-  - lwip: V7.3.0
-  - wifi_provisioning: V7.3.0
+  - aos: v7.4.3
+  - lwip: v7.4.3
+  - wifi_provisioning: v7.4.3
+  - mbedtls: v7.4.3
 
 ## 第四部分：编译连接信息
 # build_config:                            # <可选项> 编译配置项
@@ -42,6 +43,8 @@ depends:
 #   libpath:                               # 指定静态库所在的路径（相对于该组件路径）
 #     - libs                               #   -Llibs
 build_config:
+  cflag: >
+    -Wno-nonnull-compare -Wno-unused-function -Wno-unused-variable
   include:
     - include
   internal_include:
@@ -57,7 +60,6 @@ build_config:
     - protocol/mqtt
     - protocol/mqtt/MQTTPacket
     - sdk-impl
-    - sdk-impl/deprecated_linkkit
     - services/awss
     - services/dev_bind
     - services/dev_bind/os
@@ -69,6 +71,8 @@ build_config:
     - services/linkkit/dm/client
     - services/linkkit/dm/server
     - services/timer_service
+    - services/dev_diagnosis
+    - services/ota
 
 # source_file:                             # <可选项> 指定参与编译的源代码文件，支持通配符，采用相对路径
 #   - src/*.c                              # 例：组件 src 目录下所有的扩展名为 c 的源代码文件
@@ -87,7 +91,6 @@ source_file:
   - "infra/utils/digest/utils_md5.c"
   - "infra/utils/digest/utils_sha1.c"
   - "infra/utils/digest/utils_sha256.c"
-  - "infra/utils/misc/infra_aes.c"
   - "infra/utils/misc/json_parser.c"
   - "infra/utils/misc/json_token.c"
   - "infra/utils/misc/lite-cjson.c"
@@ -123,9 +126,8 @@ source_file:
   - "protocol/mqtt/MQTTPacket/MQTTSerializePublish.c"
   - "protocol/mqtt/MQTTPacket/MQTTSubscribeClient.c"
   - "protocol/mqtt/MQTTPacket/MQTTUnsubscribeClient.c"
-  - "sdk-impl/deprecated_linkkit/impl_gateway.c"
-  - "sdk-impl/deprecated_linkkit/impl_ntp.c"
-  - "sdk-impl/deprecated_linkkit/impl_solo.c"
+  - "sdk-impl/impl_ntp.c"
+  - "sdk-impl/sdk_reset.c"
   - "sdk-impl/impl_dynreg.c"
   - "sdk-impl/impl_linkkit.c"
   - "sdk-impl/impl_logpost.c"
@@ -150,11 +152,12 @@ source_file:
   - "services/awss/awss_wifimgr.c"
   - "services/awss/awss_wps.c"
   - "services/awss/connect_ap.c"
-  - "services/awss/mcast_smartconfig.c"
+  - "services/awss/awss_smartconfig_mcast.c"
   - "services/awss/zconfig_ieee80211.c"
   - "services/awss/zconfig_protocol.c"
   - "services/awss/zconfig_utils.c"
   - "services/awss/zconfig_vendor_common.c"
+  - "services/awss/awss_ap_scan.c"
   - "services/dev_bind/awss_bind.c"
   - "services/dev_bind/awss_bind_statis.c"
   - "services/dev_bind/awss_cmp_coap.c"
@@ -185,11 +188,14 @@ source_file:
   - "services/linkkit/dm/dm_opt.c"
   - "services/linkkit/dm/dm_ota.c"
   - "services/linkkit/dm/dm_shadow.c"
-  - "services/linkkit/dm/dm_tsl_alink.c"
   - "services/linkkit/dm/dm_utils.c"
   - "services/linkkit/dm/server/dm_server.c"
   - "services/linkkit/dm/server/dm_server_adapter.c"
-  - "services/timer_service/ccronexpr.c"
+  - "services/ota/impl/ota_fetch.c"
+  - "services/ota/impl/ota_lib.c"
+  - "services/ota/prot/ota_coap.c"
+  - "services/ota/prot/ota_mqtt.c"
+  - "services/ota/iotx_ota.c"
   - "services/timer_service/timer_service.c"
 
 ## 第五部分：配置信息
@@ -200,17 +206,23 @@ source_file:
 
 ## 第六部分：安装信息
 # install:
-#   - dest: include/                       # 安装的目的路径 dest是相当路径，通常是相对于YoC SDK 安装目录
+#   - dest: include/                       # 安装的目的路径 dest是相对路径，通常是相对于YoC SDK 安装目录
 #     source:                              # 安装源列表
 #      - src/*.h                           # 支持通配符，相对路径
 install:
   - dest: "include/smartliving"
     source:
       - "include/smartliving/*.h"
+  - dest: "include/smartliving/exports"
+    source:
+      - "include/smartliving/exports/*.h"
+  - dest: "include/smartliving/imports"
+    source:
+      - "include/smartliving/imports/*.h"
 
 ## 第七部分：导出部分
 # export:
-#   - dest: "<SOLUTION_PATH>/generated/data" # 安装的目的路径 dest是相当路径
+#   - dest: "<SOLUTION_PATH>/generated/data" # 安装的目的路径 dest是相对路径
 #     source:                                # 安装源列表
 #       - "bootimgs/boot"
 #       - "bootimgs/tee"

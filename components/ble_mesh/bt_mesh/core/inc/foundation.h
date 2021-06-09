@@ -92,6 +92,13 @@
 #define OP_SIG_MOD_APP_LIST                BT_MESH_MODEL_OP_2(0x80, 0x4c)
 #define OP_VND_MOD_APP_GET                 BT_MESH_MODEL_OP_2(0x80, 0x4d)
 #define OP_VND_MOD_APP_LIST                BT_MESH_MODEL_OP_2(0x80, 0x4e)
+/*[Genie begin] add by wenbing.cwb at 2021-01-21*/
+#ifdef CONFIG_BT_MESH_CTRL_RELAY
+#define OP_CTRL_RELAY_CONF_GET             BT_MESH_MODEL_OP_2(0x80, 0x70)
+#define OP_CTRL_RELAY_CONF_SET             BT_MESH_MODEL_OP_2(0x80, 0x71)
+#define OP_CTRL_RELAY_CONF_STATUS          BT_MESH_MODEL_OP_2(0x80, 0x72)
+#endif
+/*[Genie end] add by wenbing.cwb at 2021-01-21*/
 
 #define STATUS_SUCCESS                     0x00
 #define STATUS_INVALID_ADDRESS             0x01

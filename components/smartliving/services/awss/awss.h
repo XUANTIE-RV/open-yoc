@@ -20,7 +20,7 @@ extern "C"
  * @retval  0 : sucess
  * @note: awss_report_cloud must been called to enable wifi setup service
  */
-// DLL_IOT_API int awss_start(void);
+DLL_IOT_API int awss_start(pair_success_callback pair_cb);
 
 /**
  * @brief   stop wifi setup service
@@ -30,7 +30,7 @@ extern "C"
  * @note
  *      if awss_stop is called before exit of awss_start, awss and notify will stop.
  */
-// DLL_IOT_API int awss_stop(void);
+DLL_IOT_API int awss_stop(void);
 
 /**
  * @brief   make sure user touches device belong to themselves

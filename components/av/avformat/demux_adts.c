@@ -2,7 +2,9 @@
  * Copyright (C) 2018-2020 Alibaba Group Holding Limited
  */
 
+#if defined(CONFIG_DEMUXER_ADTS) && CONFIG_DEMUXER_ADTS
 #include "avformat/avformat_utils.h"
+#include "avformat/adts_rw.h"
 #include "avformat/demux_cls.h"
 #include "stream/stream.h"
 
@@ -18,7 +20,7 @@ struct adts_priv {
 static int _demux_adts_probe(const avprobe_data_t *pd)
 {
     int rc;
-    int score = 0;
+    int score = 0, max;
     bio_t bio;
     uint8_t hdr[ADTS_HDR_SIZE] = {0};
     struct adts_hdr hinfo = {0};
@@ -27,13 +29,14 @@ static int _demux_adts_probe(const avprobe_data_t *pd)
     bio_read(&bio, hdr, ADTS_HDR_SIZE);
     rc = adts_sync(sync_read_bio, &bio, ADTS_SYNC_HDR_MAX, hdr, &hinfo);
     if (rc >= 0) {
+        max = rc == 0 ? AVPROBE_SCORE_MAX : AVPROBE_SCORE_AGAIN;
         /* judge twice */
         memset(hdr, 0, sizeof(hdr));
         bio_skip(&bio, hinfo.flen - ADTS_HDR_SIZE);
         bio_read(&bio, hdr, ADTS_HDR_SIZE);
         rc = adts_hdr_get(hdr, &hinfo);
-        score = rc == 0 ? AVPROBE_SCORE_MAX : AVPROBE_SCORE_GUESS;
-        LOGI(TAG, "adts probe ok, sync_cnt = %d, score = %d", rc, score);
+        score = rc == 0 ? max : 0;
+        LOGD(TAG, "adts probe result: sync_cnt = %d, score = %d", rc, score);
     }
 
     return score;
@@ -187,4 +190,5 @@ const struct demux_ops demux_ops_adts = {
     .seek            = _demux_adts_seek,
     .control         = _demux_adts_control,
 };
+#endif
 

@@ -4,11 +4,10 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <aos/log.h>
 #include <aos/list.h>
 #include <aos/debug.h>
 #include <yoc/nvram.h>
-#include <yoc/uservice.h>
+#include <uservice/uservice.h>
 #include <yoc/udata.h>
 
 #include <yoc/iot.h>

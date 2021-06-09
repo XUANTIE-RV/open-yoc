@@ -2,7 +2,8 @@
  * Copyright (C) 2015-2018 Alibaba Group Holding Limited
  */
 
-#if WITH_UDP_NTP_CLIENT
+#if defined (WITH_UDP_NTP_CLIENT) && WITH_UDP_NTP_CLIENT
+
 #include <stdint.h>
 #include "utils_epoch_time.h"
 #include "iotx_utils_internal.h"

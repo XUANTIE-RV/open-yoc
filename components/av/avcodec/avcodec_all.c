@@ -86,4 +86,43 @@ int ad_register_amrwb()
     return ad_ops_register(&ad_ops_amrwb);
 }
 
+/**
+ * @brief  regist ad for opus
+ * @return 0/-1
+ */
+int ad_register_opus()
+{
+    extern struct ad_ops ad_ops_opus;
+    return ad_ops_register(&ad_ops_opus);
+}
+
+/**
+ * @brief  regist ad for speex
+ * @return 0/-1
+ */
+int ad_register_speex()
+{
+    extern struct ad_ops ad_ops_speex;
+    return ad_ops_register(&ad_ops_speex);
+}
+
+/**
+ * @brief  regist ad for alaw
+ * @return 0/-1
+ */
+int ad_register_alaw()
+{
+    extern struct ad_ops ad_ops_alaw;
+    return ad_ops_register(&ad_ops_alaw);
+}
+
+/**
+ * @brief  regist ad for mulaw
+ * @return 0/-1
+ */
+int ad_register_mulaw()
+{
+    extern struct ad_ops ad_ops_mulaw;
+    return ad_ops_register(&ad_ops_mulaw);
+}
 

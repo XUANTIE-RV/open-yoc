@@ -9,6 +9,7 @@
 #include <ipc.h>
 #include <csi_core.h>
 
+#include "h2h_copy.h"
 #include "voice_ai.h"
 
 #define voice_ops(v) v->ai_ops
@@ -86,8 +87,6 @@ static void pcm_backflow_update(voice_t *v, void *data, int len)
     int data_id = ((temp) >> 16) & 0xffff;
 
     v->backflow_enable[data_id] = temp & 0xffff;
-    v->silence_tmout = 1000;
-    v->vad_time_stamp = 0;
 }
 
 // static void pcm_update(void *priv, void *data, int len)
@@ -116,15 +115,19 @@ static void voice_param_set(voice_t *v, void *data, int len)
     memcpy(v->mic_param, ap->mic_param, sizeof(voice_pcm_param_t));
 
     if (ap->ref_param != NULL) {
-    if (v->ref_param == NULL) {
-        v->ref_param = aos_zalloc_check(sizeof(voice_pcm_param_t));
-    }
+        if (v->ref_param == NULL) {
+            v->ref_param = aos_zalloc_check(sizeof(voice_pcm_param_t));
+        }
         memcpy(v->ref_param, ap->ref_param, sizeof(voice_pcm_param_t));
     } else {
         v->ref_param = NULL;
     }
 
     memcpy(&v->param, &ap->param, sizeof(voice_param_t));
+
+#ifdef CONFIG_CHIP_PANGU
+    h2h_copy_shm_addr_set(v->param.shm_addr);
+#endif
 }
 
 static void voice_ch_init(voice_t *v)
@@ -143,18 +146,18 @@ static void voice_msg_process(void *priv, voice_msg_t *msg)
     voice_t *v = (voice_t *)priv;
 
     switch (cmd) {
-        case VOICE_PCM_CMD:
+    case VOICE_PCM_CMD:
         if (v->param.ipc_mode == 1) {
             pcm_data_update(v, msg->req_data, msg->req_len);
         }
         break;
-        case VOICE_BACKFLOW_CONTROL_CMD:
+    case VOICE_BACKFLOW_CONTROL_CMD:
         pcm_backflow_update(v, msg->req_data, msg->req_len);
         break;
-        case VOICE_CP_START_CMD:
+    case VOICE_CP_START_CMD:
         voice_cp_start(v, msg->req_data, msg->req_len);
         break;
-        case VOICE_PCM_PARAM_SET_CMD:
+    case VOICE_PCM_PARAM_SET_CMD:
         voice_param_set(v, msg->req_data, msg->req_len);
         break;
     }
@@ -246,8 +249,8 @@ static void voice_entry(void *p)
                         voice_evt_send(v, VOICE_SILENCE_CMD, NULL, 0);
                         v->vad_time_stamp = 0;
                         v->silence_start = 0;
-                }
-            } else {
+                    }
+                } else {
                     v->vad_time_stamp = aos_now_ms();
                 }
             } else {
@@ -262,8 +265,8 @@ static void voice_entry(void *p)
             }
 
             if (voice_ops(v)->asr && voice_ops(v)->asr(v->priv, vad_out, ms) > 0) {
-                v->silence_start = 1;
-                v->silence_tmout = 2000;
+                v->silence_start  = 1;
+                v->silence_tmout  = 2000;
                 v->vad_time_stamp = 0;
                 voice_evt_send(v, VOICE_KWS_CMD, NULL, 0);
             }
@@ -291,6 +294,9 @@ voice_t *voice_ai_init(void *priv, voice_cts_ops_t *ops)
         aos_free(v);
         return NULL;
     }
+#ifdef CONFIG_CHIP_PANGU
+    h2h_copy_ai_init();
+#endif
 
     return v;
 }

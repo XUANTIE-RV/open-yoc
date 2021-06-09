@@ -1,0 +1,49 @@
+name: ble_uart_profile_client_demo
+version: v7.4.3
+description: YoC BLE UART PROFILE CLIENT SDK
+type: solution
+solution:
+  board_name: phy6220_evb
+  ld_script: ""
+# toolchain_prefix: csky-abiv2-elf
+# cpu_name: CK802EF
+# vendor_name: csky
+# chip_name: 'phy6220_evb'
+# ld_script: configs/gcc_eflash.ld.S
+depends:
+  - ble_host: v7.4.3
+  # Chip SDK
+  - sdk_chip_phy6220: v7.4.3
+# board components
+# 编译参数
+build_config:
+  include:
+    - app/include
+  internal_include: ~
+  cflag: -Os  -g
+  cxxflag: -Os  -g
+  asmflag: ""
+  define: ~
+  libs: ~
+  libpath: ~
+  ldflag: -Wl,-ckmap="yoc.map" -Wl,-zmax-page-size=1024 -u jump_table_base ./misc/rom_ck802.elf.ck802sym
+# 源文件
+source_file:
+  - app/src/*.c
+  - app/src/init/*.c
+yoc_version: ""
+keywords: ~
+author: ""
+license: ""
+defconfig:
+  CONFIG_ARCH_INTERRUPTSTACK: 1024
+  CONFIG_BT_CENTRAL: 1
+  CONFIG_BT_GATT_CLIENT: 1
+  CONFIG_BT_RX_STACK_SIZE: 2048
+  CONFIG_DEBUG: 1
+  CONFIG_INIT_TASK_STACK_SIZE: 1024
+  CONFIG_KERNEL_TIMER_STACK_SIZE: 1024
+#  CONFIG_BT_DEBUG_LOG: 1
+link_config:
+  path: ~
+  library: ~

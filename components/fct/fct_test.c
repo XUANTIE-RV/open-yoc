@@ -3,12 +3,11 @@
  */
 
 #include <aos/kernel.h>
-#include <aos/log.h>
 #include <aos/list.h>
 #include <aos/debug.h>
 #include <ctype.h>
 #include <string.h>
-#include <yoc/uservice.h>
+#include <uservice/uservice.h>
 
 #include "fct.h"
 #include "fct_comm.h"

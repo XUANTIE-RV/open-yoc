@@ -143,7 +143,7 @@ extern "C" {
  * is equivalent to open with O_WRONLY|O_CREAT|O_TRUNC.
  */
 
-#define creat(path, mode) open(path, O_WRONLY|O_CREAT|O_TRUNC, mode)
+//#define creat(path, mode) open(path, O_WRONLY|O_CREAT|O_TRUNC, mode)
 
 /********************************************************************************
  * Public Type Definitions

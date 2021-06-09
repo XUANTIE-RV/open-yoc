@@ -27,6 +27,13 @@ extern "C" {
  *  @{
  */
 
+#define PLATFORM_SOCKET_MAXNUMS         (10)
+#define PLATFORM_WAIT_INFINITE          (~0)
+#define PLATFORM_INVALID_FD             ((void *)-1)
+
+#define STR_LONG_LEN                    (128)
+
+
 /* ssid: 32 octets at most, include the NULL-terminated */
 #define PLATFORM_MAX_SSID_LEN           (HAL_MAX_SSID_LEN)
 /* password: 8-63 ascii */
@@ -526,6 +533,7 @@ typedef awss_wifi_scan_result_cb_t platform_wifi_scan_result_cb_t;
  */
 #define platform_aes128_init awss_Aes128_Init    // HAL_Aes128_Init
 
+
 /**
  * @brief release AES struct.
  *
@@ -539,6 +547,8 @@ typedef awss_wifi_scan_result_cb_t platform_wifi_scan_result_cb_t;
  * @note None.
  */
 #define platform_aes128_destroy awss_Aes128_Destroy    // HAL_Aes128_Destroy
+
+
 
 /**
  * @brief encrypt data with aes (cbc/128bit key).
@@ -574,6 +584,7 @@ typedef awss_wifi_scan_result_cb_t platform_wifi_scan_result_cb_t;
  */
 #define platform_aes128_cbc_decrypt awss_Aes128_Cbc_Decrypt    // HAL_Aes128_Cbc_Decrypt
 
+
 /**
  * @brief encrypt data with aes (cfb/128bit key).
  *
@@ -607,6 +618,7 @@ typedef awss_wifi_scan_result_cb_t platform_wifi_scan_result_cb_t;
  * @note None.
  */
 #define platform_aes128_cfb_decrypt awss_Aes128_Cfb_Decrypt    // HAL_Aes128_Cfb_Decrypt
+
 
 /**
  * @brief get the information of the connected AP.
@@ -658,6 +670,23 @@ typedef awss_wifi_scan_result_cb_t platform_wifi_scan_result_cb_t;
  * @see None.
  */
 #define platform_get_conn_encrypt_type HAL_Awss_Get_Conn_Encrypt_Type
+
+/**
+ * @brief   Get rssi and channel of current link
+ *
+ * @param[out] p_rssi: rssi value of current link
+ * @param[out] p_channel: channel of current link
+ * 
+ * @return
+   @verbatim
+     = 0: succeeded
+     = -1: failed
+   @endverbatim
+ * @see None.
+ * @note None.
+ * @note awss use this API to get rssi and channel of current link
+ */
+#define platform_get_conn_link_stat HAL_Wifi_Get_Link_Stat
 
 /** @} */ //end of platform__awss
 

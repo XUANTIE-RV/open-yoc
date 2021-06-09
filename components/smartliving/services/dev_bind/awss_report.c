@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2015-2018 Alibaba Group Holding Limited
  */
-#include "sl_config.h"
+#include "sl_config.h" 
 #include <stdint.h>
 #include "json_parser.h"
 #include "awss_cmp.h"
@@ -27,9 +27,9 @@ volatile char awss_report_token_suc = 0;
 volatile char awss_report_token_cnt = 0;
 static char awss_report_id = 0;
 #ifdef WIFI_PROVISION_ENABLED
-static uint8_t switchap_bssid[ETH_ALEN] = {0};
 static char switchap_ssid[OS_MAX_SSID_LEN] = {0};
 static char switchap_passwd[OS_MAX_PASSWD_LEN] = {0};
+static uint8_t switchap_bssid[ETH_ALEN] = {0};
 static void *switchap_timer = NULL;
 #endif
 
@@ -72,7 +72,7 @@ int awss_update_token()
     HAL_Timer_Start(report_token_timer, 10);
     awss_info("update token");
 
-    produce_random(aes_random, sizeof(aes_random));
+    produce_random(g_aes_random, sizeof(g_aes_random));
     return 0;
 }
 
@@ -100,22 +100,23 @@ void awss_report_token_reply(void *pcontext, void *pclient, void *msg)
     ret = awss_cmp_mqtt_get_payload(msg, &payload, &payload_len);
 
     if (ret != 0 || payload == NULL || payload_len == 0) {
+        dump_dev_bind_status(STATE_BIND_MQTT_RSP_INVALID, "null pointer");
         return;
     }
 
     id = json_get_value_by_name(payload, payload_len, AWSS_JSON_ID, &len, NULL);
     if (id == NULL) {
+        dump_dev_bind_status(STATE_BIND_MQTT_RSP_INVALID, "no id");
         return;
     }
 
-    if (id == NULL) {
-        return;
-    }
     reply_id = atoi(id);
     if (reply_id + 1 < awss_report_id) {
+        dump_dev_bind_status(STATE_BIND_MQTT_MSGID_INVALID, "reply id invalid");
         return;
     }
     awss_info("%s\r\n", __func__);
+    dump_dev_bind_status(STATE_BIND_REPORT_TOKEN_SUCCESS, "report token success");
     awss_report_token_suc = 1;
     iotx_event_post(IOTX_CONN_REPORT_TOKEN_SUC);
     awss_stop_timer(report_token_timer);
@@ -284,7 +285,7 @@ static int awss_switch_ap_online()
     memset(switchap_passwd, 0, sizeof(switchap_passwd));
 
     reboot_timer = HAL_Timer_Create("rb_timer", (void (*)(void *))awss_reboot_system, NULL);
-    HAL_Timer_Start(reboot_timer, 1000);
+    HAL_Timer_Start(reboot_timer, 1000);;
 
     return 0;
 }
@@ -302,8 +303,12 @@ static int awss_reboot_system()
 static int awss_report_token_to_cloud()
 {
 #define REPORT_TOKEN_PARAM_LEN  (64)
+#define REPORT_TOKEN_STATE_MSG_LEN  (64)
+    char token_state_msg[REPORT_TOKEN_STATE_MSG_LEN];
+
     if (awss_report_token_suc) { // success ,no need to report
-        return 0;
+        dump_dev_bind_status(STATE_BIND_ALREADY_RESET, "bind token already report success");
+        return STATE_BIND_ALREADY_REPORT;
     }
 
     AWSS_DB_UPDATE_STATIS(AWSS_DB_STATIS_START);
@@ -315,7 +320,8 @@ static int awss_report_token_to_cloud()
         awss_stop_timer(report_token_timer);
         report_token_timer = NULL;
         awss_info("try %d times fail", awss_report_token_cnt);
-        return -2;
+        dump_dev_bind_status(STATE_BIND_REPORT_TOKEN_TIMEOUT, "report token timeout");
+        return STATE_BIND_REPORT_TOKEN_TIMEOUT;
     }
 
     if (report_token_timer == NULL) {
@@ -329,31 +335,27 @@ static int awss_report_token_to_cloud()
     char *packet = os_zalloc(packet_len + 1);
     if (packet == NULL) {
         awss_err("alloc mem(%d) failed", packet_len);
-        return -1;
+        return STATE_SYS_DEPEND_MALLOC;
     }
 
     do {
         // reduce stack used
         uint8_t i;
+        bind_token_type_t token_type;
         char id_str[MSG_REQ_ID_LEN] = {0};
         char param[REPORT_TOKEN_PARAM_LEN] = {0};
-        char token_str[(RANDOM_MAX_LEN << 1) + 1] = {0};
-
-        for (i = 0; i < sizeof(aes_random); i ++)  // check aes_random is initialed or not
-            if (aes_random[i] != 0x00) {
-                break;
-            }
-
-        if (i >= sizeof(aes_random)) { // aes_random needs to be initialed
-            produce_random(aes_random, sizeof(aes_random));
-        }
+        unsigned char token_str[RANDOM_STR_MAX_LEN] = {0};
 
         awss_report_token_time = os_get_time_ms();
 
         snprintf(id_str, MSG_REQ_ID_LEN - 1, "\"%u\"", awss_report_id ++);
-        utils_hex_to_str(aes_random, RANDOM_MAX_LEN, token_str, sizeof(token_str) - 1);
+
+        awss_get_token(token_str, RANDOM_STR_MAX_LEN, &token_type);
         snprintf(param, REPORT_TOKEN_PARAM_LEN - 1, "{\"token\":\"%s\"}", token_str);
         awss_build_packet(AWSS_CMP_PKT_TYPE_REQ, id_str, ILOP_VER, METHOD_MATCH_REPORT, param, 0, packet, &packet_len);
+
+        HAL_Snprintf(token_state_msg, REPORT_TOKEN_STATE_MSG_LEN, "report token:%s to cloud", token_str);
+        dump_dev_bind_status(STATE_BIND_REPORT_TOKEN, token_state_msg);        
     } while (0);
 
     awss_debug("report token:%s\r\n", packet);
@@ -361,7 +363,12 @@ static int awss_report_token_to_cloud()
     awss_build_topic(TOPIC_MATCH_REPORT, topic, TOPIC_LEN_MAX);
 
     int ret = awss_cmp_mqtt_send(topic, packet, packet_len, 1);
+
     awss_info("report token res:%d\r\n", ret);
+    if (ret < 0) {
+        // if ret > 0, means send success, and ret value is msg id
+        dump_dev_bind_status(STATE_BIND_REPORT_TOKEN_FAIL, "report token fail, reason(%d)", ret);
+    }
     os_free(packet);
 
     return ret;
@@ -382,7 +389,8 @@ int awss_stop_report_token()
         report_token_timer = NULL;
     }
 
-    memset(aes_random, 0x00, sizeof(aes_random));
+    memset(g_aes_random, 0x00, sizeof(g_aes_random));
+    g_token_type = TOKEN_TYPE_INVALID;
 
     return 0;
 }

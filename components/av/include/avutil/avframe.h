@@ -33,6 +33,13 @@ typedef struct avframe {
 avframe_t *avframe_alloc();
 
 /**
+ * @brief  clear nb_samples, sf, linesize, etc. mpool & data point reserved otherwise.
+ * @param  [in] frame
+ * @return
+ */
+void avframe_clear(avframe_t *frame);
+
+/**
  * @brief  free res of the frame
  * @param  [in] frame
  * @return
@@ -52,7 +59,7 @@ int avframe_get_buffer(avframe_t *frame);
  * @param  [in] to
  * @return 0/-1
  */
-int avframe_copy_from(avframe_t *from, avframe_t *to);
+int avframe_copy_from(const avframe_t *from, avframe_t *to);
 
 /**
  * @brief  set memory pool of the frame, the data source is from the mem pool

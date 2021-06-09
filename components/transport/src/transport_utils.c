@@ -4,7 +4,7 @@
 #include <stdio.h>
 
 #include "drv/tee.h"
-#include "transport_utils.h"
+#include "transport/transport_utils.h"
 
 void transport_utils_ms_to_timeval(int timeout_ms, struct timeval *tv)
 {

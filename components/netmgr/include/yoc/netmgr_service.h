@@ -7,8 +7,8 @@
 
 #include <aos/aos.h>
 
-#include <yoc/uservice.h>
-#include <yoc/event.h>
+#include <uservice/uservice.h>
+#include <uservice/event.h>
 
 #include <yoc/netmgr.h>
 

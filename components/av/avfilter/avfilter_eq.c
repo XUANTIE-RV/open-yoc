@@ -42,26 +42,24 @@ static int _avf_eq_control(avfilter_t *avf, int cmd, void *arg, size_t *arg_size
 static int _avf_eq_filter_frame(avfilter_t *avf, const avframe_t *in, avframe_t *out)
 {
     int rc = -1;
-    avframe_t *oframe;
     struct avfilter_eq *dobj = (struct avfilter_eq*)avf;
     eqx_t *eq                = dobj->eq;
 
     if (eq && (in->sf == dobj->sf)) {
-        oframe             = AVF_IS_SINK(avf) ? out : avf->oframe;
-        oframe->sf         = dobj->sf;
-        oframe->nb_samples = in->nb_samples;
-        rc = avframe_get_buffer(oframe);
+        out->sf         = dobj->sf;
+        out->nb_samples = in->nb_samples;
+        rc = avframe_get_buffer(out);
         if (rc < 0) {
             LOGE(TAG, "may be oom, rc = %d", rc);
             return -1;
         }
-        rc = eqx_process(eq, (const int16_t*)in->data[0], (int16_t*)oframe->data[0], in->nb_samples);
+        rc = eqx_process(eq, (const int16_t*)in->data[0], (int16_t*)out->data[0], in->nb_samples);
         CHECK_RET_TAG_WITH_RET(rc == 0, -1);
 
-        rc = AVF_IS_SINK(avf) ? rc : avf_filter_frame(avf->next, oframe, out);
+        rc = out->nb_samples;
     }
 
-    return rc > 0 ? 0 : rc;
+    return rc;
 }
 
 static int _avf_eq_uninit(avfilter_t *avf)

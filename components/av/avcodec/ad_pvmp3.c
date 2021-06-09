@@ -4,13 +4,12 @@
 
 #if defined(CONFIG_DECODER_PVMP3) && CONFIG_DECODER_PVMP3
 
-#include <stdbool.h>
 #include "avutil/common.h"
 #include "avcodec/ad_cls.h"
 #include "pvmp3decoder_api.h"
 
 #define TAG                    "ad_pvmp3"
-#define PVMP3DEC_OBUF_SIZE     (4608 * 2)
+#define PVMP3DEC_OBUF_SIZE     (4608 * 1.2)
 
 struct ad_pvmp3_priv {
     void                     *obuf;  // buf for output

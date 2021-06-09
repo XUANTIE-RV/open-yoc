@@ -82,7 +82,7 @@ struct SpeexDecorrState_ {
 
 
 
-EXPORT SpeexDecorrState *speex_decorrelate_new(int rate, int channels, int frame_size)
+SpeexDecorrState *speex_decorrelate_new(int rate, int channels, int frame_size)
 {
    int i, ch;
    SpeexDecorrState *st = speex_alloc(sizeof(SpeexDecorrState));
@@ -138,7 +138,7 @@ static unsigned int irand(int *seed)
 }
 
 
-EXPORT void speex_decorrelate(SpeexDecorrState *st, const spx_int16_t *in, spx_int16_t *out, int strength)
+void speex_decorrelate(SpeexDecorrState *st, const spx_int16_t *in, spx_int16_t *out, int strength)
 {
    int ch;
    float amount;
@@ -277,7 +277,7 @@ EXPORT void speex_decorrelate(SpeexDecorrState *st, const spx_int16_t *in, spx_i
    }
 }
 
-EXPORT void speex_decorrelate_destroy(SpeexDecorrState *st)
+void speex_decorrelate_destroy(SpeexDecorrState *st)
 {
 #ifdef VORBIS_PSYCHO
    vorbis_psy_destroy(st->psy);

@@ -807,13 +807,7 @@ void rws_socket_close(rws_socket s)
 {
     s->received_len = 0;
     if (s->socket != RWS_INVALID_SOCKET) {
-#ifdef WEBSOCKET_SSL_ENABLE
-        if(s->scheme && strcmp(s->scheme, "wss") == 0)
-            rws_ssl_close(s);
-        else
-#endif /* WEBSOCKET_SSL_ENABLE */
-            RWS_SOCK_CLOSE(s->socket);
-
+        RWS_SOCK_CLOSE(s->socket);
         s->socket = RWS_INVALID_SOCKET;
     }
     s->is_connected = rws_false;
@@ -1260,6 +1254,7 @@ int rws_ssl_close(rws_socket s)
     mbedtls_entropy_free(&ssl->entropy);
 
     rws_free(ssl);
+    s->ssl = NULL;
     return 0;
 }
 #endif

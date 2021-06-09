@@ -110,8 +110,8 @@ int pthread_cond_timedwait(pthread_cond_t *cond, pthread_mutex_t *mutex, const s
     if (abstime == NULL) {
         ticks = MAX_TIMER_TICKS;
     } else {
-        ticks = (abstime->tv_sec - now.tv_sec) * RHINO_CONFIG_TICKS_PER_SECOND +
-                ((abstime->tv_nsec - now.tv_usec*1000) / 1000000) / (1000 / RHINO_CONFIG_TICKS_PER_SECOND);        
+        ticks = ((tick_t)(abstime->tv_sec - now.tv_sec)) * RHINO_CONFIG_TICKS_PER_SECOND +
+                ((abstime->tv_nsec - now.tv_usec*1000) / 1000000) / (1000 / RHINO_CONFIG_TICKS_PER_SECOND);
     }
 
     /* Obtain the protection mutex, and increment the number of waiters.

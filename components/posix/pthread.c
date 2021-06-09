@@ -29,7 +29,7 @@ void pthread_cleanup_pop(int execute)
 
     ptcb = _pthread_get_tcb(krhino_cur_task_get());
 
-    if (execute > 0) {
+    if (ptcb && execute > 0) {
         cleanup = ptcb->cleanup;
         if (cleanup != NULL) {
             ptcb->cleanup = cleanup->prev;
@@ -48,14 +48,16 @@ void pthread_cleanup_push(void (*routine)(void *), void *arg)
     _pthread_cleanup_t *cleanup;
 
     ptcb = _pthread_get_tcb(krhino_cur_task_get());
+    if (ptcb) {
+        cleanup = (_pthread_cleanup_t *)krhino_mm_alloc(sizeof(_pthread_cleanup_t));
+        if (cleanup != NULL) {
+            cleanup->cleanup_routine = routine;
+            cleanup->para            = arg;
+            cleanup->prev            = ptcb->cleanup;
 
-    cleanup = (_pthread_cleanup_t *)krhino_mm_alloc(sizeof(_pthread_cleanup_t), __builtin_return_address(0));
-    if (cleanup != NULL) {
-        cleanup->cleanup_routine = routine;
-        cleanup->para            = arg;
-        cleanup->prev            = ptcb->cleanup;
-
-        ptcb->cleanup = cleanup;
+            ptcb->cleanup = cleanup;
+            _alloc_trace(cleanup, (size_t)__builtin_return_address(0));
+        }
     }
 }
 
@@ -73,11 +75,12 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr,
     }
 
     /* create _pthread_tcb_t */
-    ptcb = (_pthread_tcb_t *)krhino_mm_alloc(sizeof(_pthread_tcb_t), __builtin_return_address(0));
-    if (ptcb == 0) {
+    ptcb = (_pthread_tcb_t *)krhino_mm_alloc(sizeof(_pthread_tcb_t));
+    if (ptcb == NULL) {
         return -1;
     }
 
+    _alloc_trace(ptcb, (size_t)__builtin_return_address(0));
     memset(ptcb, 0, sizeof(_pthread_tcb_t));
 
     ptcb->canceled     = 0;
@@ -107,17 +110,18 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr,
 
     /* get stack addr */
     if (ptcb->attr.stackaddr == 0) {
-        stack = (void *)krhino_mm_alloc(ptcb->attr.stacksize, __builtin_return_address(0));
+        stack = (void *)krhino_mm_alloc(ptcb->attr.stacksize);
         if (stack == NULL) {
             krhino_mm_free(ptcb);
             return -1;
         }
+        _alloc_trace(stack, (size_t)__builtin_return_address(0));
     } else {
         stack = (void *)(ptcb->attr.stackaddr);
     }
 
     /* create ktask_t */
-    ptcb->tid = krhino_mm_alloc(sizeof(ktask_t), __builtin_return_address(0));
+    ptcb->tid = krhino_mm_alloc(sizeof(ktask_t));
     if (ptcb->tid == NULL) {
         if (ptcb->attr.stackaddr == 0) {
             krhino_mm_free(stack);
@@ -126,6 +130,7 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr,
         krhino_mm_free(ptcb);
         return -1;
     }
+    _alloc_trace(ptcb->tid, (size_t)__builtin_return_address(0));
 
     if (ptcb->attr.detachstate == PTHREAD_CREATE_JOINABLE) {
         ret = krhino_sem_dyn_create(&ptcb->join_sem, "join_sem", 0);
@@ -401,8 +406,7 @@ int pthread_once(pthread_once_t *once_control, void (*init_routine)(void))
         return -1;
     }
 
-    if (*once_control == PTHREAD_ONCE_INIT)
-    {
+    if (*once_control == PTHREAD_ONCE_INIT) {
         *once_control = !PTHREAD_ONCE_INIT;
 
         krhino_mutex_unlock(&g_pthread_mutex);

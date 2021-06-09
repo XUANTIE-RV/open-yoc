@@ -37,7 +37,7 @@ typedef struct wifi_driver {
     int (*set_lpm)(aos_dev_t *dev, wifi_lpm_mode_t mode); //ps on/pff
     int (*get_lpm)(aos_dev_t *dev, wifi_lpm_mode_t *mode);
     int (*power_on)(aos_dev_t *dev); //the wifi module power on/off
-    int (*power_off)(aos_dev_t *dev); 
+    int (*power_off)(aos_dev_t *dev);
 
     /** connection APIs */
     int (*start_scan)(aos_dev_t *dev, wifi_scan_config_t *config, bool block);

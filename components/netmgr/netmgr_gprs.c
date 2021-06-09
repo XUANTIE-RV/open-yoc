@@ -3,16 +3,16 @@
  */
 
 #include <aos/aos.h>
-#include <yoc/uservice.h>
-#include <yoc/eventid.h>
+#include <uservice/uservice.h>
+#include <uservice/eventid.h>
 #include <devices/netdrv.h>
 
 #include <yoc/netmgr.h>
 #include <yoc/netmgr_service.h>
 #include <devices/hal/gprs_impl.h>
-
-
-
+#ifdef CONFIG_KV_SMART
+#include <aos/kv.h>
+#endif
 typedef struct {
     netmgr_hdl_t hdl;
     gprs_setting_t config;

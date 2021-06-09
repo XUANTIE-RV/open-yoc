@@ -9,14 +9,22 @@
  * @date     02. June 2017
  ******************************************************************************/
 
-#include <aos/log.h>
-#include <aos/kv.h>
 #include <yoc/sysinfo.h>
 #include <yoc/yoc.h>
 
-#define INIT_TASK_STACK_SIZE 8192
+#ifdef CONFIG_OS_TRACE 
+#include <trcTrig.h>
+#include <trcKernelPort.h>
+#endif
 
-extern int main();
+
+#ifndef CONFIG_INIT_TASK_STACK_SIZE
+#define INIT_TASK_STACK_SIZE 8192
+#else
+#define INIT_TASK_STACK_SIZE CONFIG_INIT_TASK_STACK_SIZE
+#endif
+static aos_task_t app_task_handle;
+extern int main(void);
 static void application_task_entry(void *arg)
 {
     main();
@@ -24,20 +32,22 @@ static void application_task_entry(void *arg)
     aos_task_exit(0);
 }
 
-//
 void base_init()
 {
 
 }
 
-int entry_c(void)
+int pre_main(void)
+
 {
     /* kernel init */
     aos_init();
+#ifdef CONFIG_OS_TRACE 
+    trace_init_data();
+#endif
 
     /* init task */
-    aos_task_t task_handle;
-    aos_task_new_ext(&task_handle, "app_task", application_task_entry,
+    aos_task_new_ext(&app_task_handle, "app_task", application_task_entry,
                      NULL, INIT_TASK_STACK_SIZE, AOS_DEFAULT_APP_PRI);
 
     /* kernel start */

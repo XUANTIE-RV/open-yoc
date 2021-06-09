@@ -1,0 +1,6 @@
+#
+# Will Run this script before Start Debug 
+# 
+
+target remote localhost:1234
+lo

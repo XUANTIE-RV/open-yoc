@@ -12,29 +12,28 @@ teec_result tee_send(uint32_t cmd_id, teec_parameter params[4], uint32_t params_
     teec_operation op;
     const teec_uuid tee_cid_uuid = TEE_CID_SRV_UUID;
 
+    TEE_ENTRY_LOCK();
+
     memset(&op, 0, sizeof(teec_operation));
     memset(&session, 0, sizeof(teec_session));
-    TEE_ENTRY_LOCK();
-    ret = teec_opensession(&session, &tee_cid_uuid, NULL);
-    TEE_ENTRY_UNLOCK();
 
+    ret = teec_opensession(&session, &tee_cid_uuid, NULL);
     if (ret != TEEC_SUCCESS) {
+        TEE_ENTRY_UNLOCK();
         return ret;
     }
 
     op.paramtypes = params_type;
     memcpy(op.params, params, sizeof(teec_parameter) * 4);
 
-    TEE_ENTRY_LOCK();
     ret = teec_invokecommand(&session, cmd_id, &op);
-    TEE_ENTRY_UNLOCK();
-
     if (ret != TEEC_SUCCESS) {
+        TEE_ENTRY_UNLOCK();
         return ret;
     }
 
-    TEE_ENTRY_LOCK();
     teec_closesession(&session);
+
     TEE_ENTRY_UNLOCK();
 
     return 0;

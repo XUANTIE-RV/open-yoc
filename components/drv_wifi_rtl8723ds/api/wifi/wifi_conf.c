@@ -99,12 +99,12 @@ extern struct netif xnetif[NET_IF_NUM];
 #endif
 
 #include <skbuff.h>
-#define MAX_SKB_BUF_NUM 10
-#define MAX_LOCAL_SKB_NUM 10
+#define MAX_SKB_BUF_NUM 15
+#define MAX_LOCAL_SKB_NUM 15
 struct skb_data {
     struct list_head list;
     // unsigned char buf[2132];
-    unsigned char buf[8690 + 8 * 1024];
+	unsigned char buf[8690 + 8 * 1024 + 14] __attribute__((aligned(32)));
     atomic_t ref;
 };
 
@@ -114,10 +114,10 @@ struct skb_buf {
 };
 
 int max_skb_buf_num = MAX_SKB_BUF_NUM;
-struct skb_data skb_data_pool[MAX_SKB_BUF_NUM];
+struct skb_data skb_data_pool[MAX_SKB_BUF_NUM] __attribute__ ((aligned(32)));
 
 int max_local_skb_num = MAX_LOCAL_SKB_NUM;
-struct skb_buf skb_pool[MAX_LOCAL_SKB_NUM];
+struct skb_buf skb_pool[MAX_LOCAL_SKB_NUM] __attribute__ ((aligned(32)));
 
 /******************************************************
  *               Variables Definitions
@@ -129,6 +129,15 @@ struct skb_buf skb_pool[MAX_LOCAL_SKB_NUM];
 // u8 rx_sdio_agg_timeout = 0xc;
 // u8 tx_ampdu_agg_num = 0x8;
 // u8 tx_ampdu_agg_timeout = 0x50;
+// u32 array_mp_8723d_phy_reg_pg[] = {
+//   0, 0, 0, 0x00000e08, 0x0000ff00, 0x00003200,
+//   0, 0, 0, 0x0000086c, 0xffffff00, 0x32323200,
+//   0, 0, 0, 0x00000e00, 0xffffffff, 0x32343434,
+//   0, 0, 0, 0x00000e04, 0xffffffff, 0x28303032,
+//   0, 0, 0, 0x00000e10, 0xffffffff, 0x30323234,
+//   0, 0, 0, 0x00000e14, 0xffffffff, 0x26282830
+// };
+extern u32 array_mp_8723d_phy_reg_pg[];
 extern int rtw_tx_agg_num;
 extern u8 rx_sdio_agg_num;
 extern u8 rx_sdio_agg_timeout;
@@ -1220,6 +1229,22 @@ int wifi_on(rtw_mode_t mode)
 	int devnum = 1;
 	static int event_init = 0;
 
+	/* tx power by rate */
+	// TXAGC codeword (H-byte->L-byte)={1M}
+	array_mp_8723d_phy_reg_pg[5] = 0x00003200;
+	// TXAGC codeword (H-byte->L-byte)={11M 5.5M 2M}
+	array_mp_8723d_phy_reg_pg[11] = 0x32323200;
+	// TXAGC codeword (H-byte->L-byte)={18M 12M 9M 6M}
+	array_mp_8723d_phy_reg_pg[17] = 0x32323232;
+	// TXAGC codeword (H-byte->L-byte)={54M 48M 36M 24M}
+	// array_mp_8723d_phy_reg_pg[23] = 0x32323232;
+	array_mp_8723d_phy_reg_pg[23] = 0x30323232;
+	// TXAGC codeword (H-byte->L-byte)=HT_{MCS3 MCS2 MCS1 MCS0}
+	array_mp_8723d_phy_reg_pg[29] = 0x30303030;
+	// TXAGC codeword (H-byte->L-byte)=HT_{MCS7 MCS6 MCS5 MCS4}
+	array_mp_8723d_phy_reg_pg[35] = 0x28303030;
+	// array_mp_8723d_phy_reg_pg[35] = 0x30303030;
+
 	rx_sdio_agg_timeout = 8;
 
 	int tx_ampdu_agg_timeout_int = 100;
@@ -1246,7 +1271,7 @@ int wifi_on(rtw_mode_t mode)
 
 	// set wifi mib
 	wifi_set_mib();
-	LOGD(TAG, "\n\rInitializing WIFI ...");
+	LOGD(TAG, "Initializing WIFI ...");
 	for(idx=0;idx<devnum;idx++){
 		ret = rltk_wlan_init(idx, mode);
 		if(ret <0)
@@ -1258,7 +1283,7 @@ int wifi_on(rtw_mode_t mode)
 		if(ret == 0) _wifi_is_on = 1;
 		device_mutex_unlock(RT_DEV_LOCK_WLAN);
 		if(ret <0){
-			LOGD(TAG, "\n\rERROR: Start WIFI Failed!");
+			LOGD(TAG, "ERROR: Start WIFI Failed!");
 			rltk_wlan_deinit();
 			return ret;
 		}
@@ -1266,13 +1291,13 @@ int wifi_on(rtw_mode_t mode)
 
 	while(1) {
 		if(rltk_wlan_running(devnum-1)) {
-			LOGD(TAG, "\n\rWIFI initialized\n");
+			LOGD(TAG, "WIFI initialized\n");
 			wifi_set_country_code();
 			break;
 		}
 
 		if(timeout == 0) {
-			LOGD(TAG, "\n\rERROR: Init WIFI timeout!");
+			LOGD(TAG, "ERROR: Init WIFI timeout!");
 			break;
 		}
 
@@ -1316,7 +1341,7 @@ int wifi_off(void)
 
 	if((rltk_wlan_running(WLAN0_IDX) == 0) &&
 		(rltk_wlan_running(WLAN1_IDX) == 0)) {
-		LOGD(TAG, "\n\rWIFI is not running");
+		LOGD(TAG, "WIFI is not running");
         offing = 0;
 		return 0;
 	}
@@ -1334,7 +1359,7 @@ int wifi_off(void)
 	if((wifi_mode ==  RTW_MODE_AP) || (wifi_mode == RTW_MODE_STA_AP))
 		wpas_wps_deinit();
 #endif
-	LOGD(TAG, "\n\rDeinitializing WIFI ...");
+	LOGD(TAG, "Deinitializing WIFI ...");
 	device_mutex_lock(RT_DEV_LOCK_WLAN);
 
 	rltk_wlan_deinit();
@@ -1345,12 +1370,12 @@ int wifi_off(void)
 	while(1) {
 		if((rltk_wlan_running(WLAN0_IDX) == 0) &&
 			(rltk_wlan_running(WLAN1_IDX) == 0)) {
-			LOGD(TAG, "\n\rWIFI deinitialized");
+			LOGD(TAG, "WIFI deinitialized");
 			break;
 		}
 
 		if(timeout == 0) {
-			LOGD(TAG, "\n\rERROR: Deinit WIFI timeout!");
+			LOGD(TAG, "ERROR: Deinit WIFI timeout!");
 			break;
 		}
 

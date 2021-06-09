@@ -1,0 +1,5 @@
+#reset
+set $psr=0xc0000000
+
+##Load yoc binary
+download ihex $(ProjectPath)generated/total_image.hex

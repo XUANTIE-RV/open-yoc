@@ -5,14 +5,16 @@
 #ifndef YOC_NETIO_H
 #define YOC_NETIO_H
 
-#include <stddef.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
+#include <aos/aos.h>
 #include <aos/list.h>
-
 #include <aos/kernel.h>
-#include <aos/network.h>
+
+#ifndef CONFIG_FOTA_BUFFER_SIZE
+#define CONFIG_FOTA_BUFFER_SIZE 512
+#define BUFFER_SIZE 2048
+#else
+#define BUFFER_SIZE (CONFIG_FOTA_BUFFER_SIZE * 2)
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -21,12 +23,12 @@ extern "C" {
 typedef struct netio_cls netio_cls_t;
 
 typedef struct {
-    const netio_cls_t *cls;
-    size_t offset;
-    size_t size;
-    size_t block_size;
+    const netio_cls_t *cls;     /*!< netio ops */
+    size_t offset;              /*!< offset for seek */
+    size_t size;                /*!< file size or partition size */
+    size_t block_size;          /*!< the size for transmission(sector size) */
 
-    void *private;
+    void *private;              /*!< user data */
 } netio_t;
 
 struct netio_cls {
@@ -38,7 +40,8 @@ struct netio_cls {
     int (*write)(netio_t *io, uint8_t *buffer, int length, int timeoutms);
     int (*remove)(netio_t *io);
     int (*seek)(netio_t *io, size_t offset, int whence);
-    // int (*getinfo)(netio_t *io, fota_info_t *info);
+
+    void *private;
 };
 
 /**
@@ -53,6 +56,13 @@ int netio_register(const netio_cls_t *cls);
  * @return 0 on success, -1 on failed
  */
 int netio_register_http(void);
+
+/**
+ * @brief  将http client操作功能注册到netio
+ * @param  [in] cert: https证书，可以为NULL
+ * @return 0 on success, -1 on failed
+ */
+int netio_register_httpc(const char *cert);
 
 /**
  * @brief  将flash操作功能注册到netio

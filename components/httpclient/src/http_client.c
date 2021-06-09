@@ -17,16 +17,16 @@
 #include "http_utils.h"
 #include "http_parser.h"
 #include "http_auth.h"
-#include "transport_tcp.h"
-#include "tperrors.h"
-#include "aos/log.h"
+#include "transport/transport_tcp.h"
+#include "transport/tperrors.h"
+#include "ulog/ulog.h"
 #include "aos/debug.h"
 
 #include <string.h>
 #include <stdio.h>
 
 #ifdef CONFIG_USING_TLS
-#include "transport_ssl.h"
+#include "transport/transport_ssl.h"
 #endif
 
 static const char *TAG = "HTTP_CLIENT";
@@ -105,7 +105,7 @@ struct http_client {
     http_data_t                 *request;
     http_data_t                 *response;
     void                        *user_data;
-    http_auth_data_t        *auth_data;
+    http_auth_data_t            *auth_data;
     char                        *post_data;
     char                        *location;
     char                        *auth_header;
@@ -158,20 +158,6 @@ static const char *HTTP_METHOD_MAPPING[] = {
     "UNSUBSCRIBE",
     "OPTIONS"
 };
-
-/**
- * Enum for the HTTP status codes.
- */
-enum HttpStatus_Code
-{
-    /* 3xx - Redirection */
-    HttpStatus_MovedPermanently  = 301,
-    HttpStatus_Found             = 302,
-
-    /* 4xx - Client Error */
-    HttpStatus_Unauthorized      = 401
-};
-
 
 static web_err_t http_client_request_send(http_client_handle_t client, int write_len);
 static web_err_t http_client_connect(http_client_handle_t client);
@@ -262,7 +248,7 @@ static int http_on_headers_complete(http_parser *parser)
 static int http_on_body(http_parser *parser, const char *at, size_t length)
 {
     http_client_t *client = parser->data;
-    LOGD(TAG, "http_on_body %d", length);
+    // LOGD(TAG, "http_on_body %d", length);
     client->response->buffer->raw_data = (char *)at;
     if (client->response->buffer->output_ptr) {
         memcpy(client->response->buffer->output_ptr, (char *)at, length);
@@ -618,6 +604,18 @@ web_err_t http_client_cleanup(http_client_handle_t client)
     return WEB_OK;
 }
 
+http_errors_t http_client_set_redirection(http_client_handle_t client)
+{
+    if (client == NULL) {
+        return HTTP_CLI_ERR_INVALID_ARG;
+    }
+    if (client->location == NULL) {
+        return HTTP_CLI_ERR_INVALID_ARG;
+    }
+    LOGD(TAG, "Redirect to %s", client->location);
+    return http_client_set_url(client, client->location);
+}
+
 static web_err_t http_check_response(http_client_handle_t client)
 {
     char *auth_header = NULL;
@@ -629,6 +627,7 @@ static web_err_t http_check_response(http_client_handle_t client)
     switch (client->response->status_code) {
         case HttpStatus_MovedPermanently:
         case HttpStatus_Found:
+        case HttpStatus_TemporaryRedirect:
             LOGI(TAG, "Redirect to %s", client->location);
             http_client_set_url(client, client->location);
             client->redirect_counter ++;
@@ -674,6 +673,7 @@ static web_err_t http_check_response(http_client_handle_t client)
 web_err_t http_client_set_url(http_client_handle_t client, const char *url)
 {
     char *old_host = NULL;
+    char *old_path = NULL;
     struct http_parser_url purl;
     int old_port;
 
@@ -700,7 +700,10 @@ web_err_t http_client_set_url(http_client_handle_t client, const char *url)
 
     if (is_absolute_url) {
         http_utils_assign_string(&client->connection_info.host, url + purl.field_data[UF_HOST].off, purl.field_data[UF_HOST].len);
-        HTTP_MEM_CHECK(TAG, client->connection_info.host, return WEB_ERR_NO_MEM);
+        HTTP_MEM_CHECK(TAG, client->connection_info.host, {
+            if (old_host) free(old_host);
+            return WEB_ERR_NO_MEM;
+        });
     }
     // Close the connection if host was changed
     if (old_host && client->connection_info.host
@@ -763,14 +766,31 @@ web_err_t http_client_set_url(http_client_handle_t client, const char *url)
         client->connection_info.password = NULL;
     }
 
-
+    if (client->connection_info.path) {
+        old_path = strdup(client->connection_info.path);
+    }
     //Reset path and query if there are no information
     if (purl.field_data[UF_PATH].len) {
         http_utils_assign_string(&client->connection_info.path, url + purl.field_data[UF_PATH].off, purl.field_data[UF_PATH].len);
     } else {
         http_utils_assign_string(&client->connection_info.path, "/", 0);
     }
-    HTTP_MEM_CHECK(TAG, client->connection_info.path, return WEB_ERR_NO_MEM);
+    LOGD(TAG, "###path:%s", client->connection_info.path);
+    HTTP_MEM_CHECK(TAG, client->connection_info.path, {
+        if (old_path) free(old_path);
+        return WEB_ERR_NO_MEM;
+    });
+
+    // Close the connection if path was changed
+    if (old_path && client->connection_info.path
+            && strcasecmp(old_path, (const void *)client->connection_info.path) != 0) {
+        LOGD(TAG, "New path assign = %s", client->connection_info.path);
+        http_client_close(client);
+    }
+    if (old_path) {
+        free(old_path);
+        old_path = NULL;
+    }
 
     if (purl.field_data[UF_QUERY].len) {
         http_utils_assign_string(&client->connection_info.query, url + purl.field_data[UF_QUERY].off, purl.field_data[UF_QUERY].len);
@@ -808,6 +828,22 @@ static int http_client_get_data(http_client_handle_t client)
         http_parser_execute(client->parser, client->parser_settings, res_buffer->data, rlen);
     }
     return rlen;
+}
+
+bool http_client_is_complete_data_received(http_client_handle_t client)
+{
+    if (client->response->is_chunked) {
+        if (!client->is_chunk_complete) {
+            LOGD(TAG, "Chunks were not completely read");
+            return false;
+        }
+    } else {
+        if (client->response->data_process != client->response->content_length) {
+            LOGD(TAG, "Data processed %d != Data specified in content length %d", client->response->data_process, client->response->content_length);
+            return false;
+        }
+    }
+    return true;
 }
 
 int http_client_read(http_client_handle_t client, char *buffer, int len)
@@ -1253,4 +1289,17 @@ http_client_transport_t http_client_get_transport_type(http_client_handle_t clie
     } else {
         return HTTP_TRANSPORT_UNKNOWN;
     }
+}
+
+int http_client_read_response(http_client_handle_t client, char *buffer, int len)
+{
+    int read_len = 0;
+    while (read_len < len) {
+        int data_read = http_client_read(client, buffer + read_len, len - read_len);
+        if (data_read <= 0) {
+            return read_len;
+        }
+        read_len += data_read;
+    }
+    return read_len;
 }

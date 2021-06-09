@@ -2,7 +2,7 @@
  * Copyright (C) 2018-2020 Alibaba Group Holding Limited
  */
 
-#ifdef AV_USING_TLS
+#if defined(CONFIG_STREAMER_CRYPTO) && CONFIG_STREAMER_CRYPTO && defined(CONFIG_USING_TLS)
 #include "avutil/misc.h"
 #include "avutil/url_parse.h"
 #include "stream/stream.h"

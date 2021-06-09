@@ -17,6 +17,15 @@ extern "C" {
 #define voice_dcache_writeback csi_dcache_clean_range
 #define voice_dcache_invalidate csi_dcache_invalid_range
 
+#define H2H_TIMER_ID (7)
+
+#ifdef CONFIG_CSI_V1
+#define H2H_TIMER_IRQ_NUM (TIMER2_INT1_IRQn)
+#else
+#define H2H_TIMER_IRQ_NUM (DW_TIMER2_INT1_IRQn)
+#endif
+
+
 typedef struct __voice voice_t;
 typedef struct __voice_pcm voice_pcm_t;
 typedef void (*voice_pcm_send)(void *priv, void *data, int len);
@@ -65,8 +74,11 @@ typedef struct {
 } voice_pcm_param_t;
 
 typedef struct {
-    int cts_ms;
-    int ipc_mode;
+    int     cts_ms;
+    int     ipc_mode;
+    void   *ai_param;     // 算法侧参数配置
+    int     ai_param_len;
+    void   *shm_addr;
 } voice_param_t;
 
 typedef struct {

@@ -5,7 +5,7 @@
 #include "aos/kernel.h"
 #include "pthread.h"
 #include "k_api.h"
-#include "aos/log.h"
+#include "ulog/ulog.h"
 
 #define TAG "tsd_test"
 

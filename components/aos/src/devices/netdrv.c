@@ -2,6 +2,7 @@
  * Copyright (C) 2019-2020 Alibaba Group Holding Limited
  */
 
+#if defined(CONFIG_SAL) || defined(CONFIG_TCPIP)
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
@@ -231,3 +232,5 @@ int hal_net_unsubscribe(aos_dev_t *dev, uint32_t event, event_callback_t cb, voi
 
     return ret;
 }
+#endif
+

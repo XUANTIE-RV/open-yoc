@@ -5,7 +5,7 @@
 
 #include <aos/aos.h>
 #include <vfs.h>
-//#include <aos/network.h>
+//#include <network.h>
 #include <vfs_conf.h>
 #include <vfs_err.h>
 #include <vfs_inode.h>
@@ -30,7 +30,7 @@ extern aos_mutex_t g_vfs_mutex;
 #define NEED_WAIT_IO
 #endif
 
-#include <aos/network.h>
+#include <network.h>
 
 #ifdef CONFIG_NO_TCPIP
 

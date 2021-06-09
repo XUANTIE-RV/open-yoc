@@ -5,7 +5,6 @@
 
 
 #include "sl_config.h"
-
 #include <stdlib.h>
 
 #ifdef SUPPORT_TLS

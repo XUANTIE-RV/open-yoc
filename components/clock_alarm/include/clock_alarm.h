@@ -4,8 +4,7 @@
 #ifndef _CLOCK_ALARM_H_
 #define _CLOCK_ALARM_H_
 
-#include <stdbool.h>
-#include <stdint.h>
+#include <aos/aos.h>
 
 typedef enum {
     CLOCK_ALARM_ONCE = 0,       /* 仅一次*/

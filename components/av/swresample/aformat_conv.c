@@ -3,6 +3,7 @@
  */
 
 #include "avutil/misc.h"
+#include "avutil/byte_rw.h"
 #include "swresample/aformat_conv.h"
 
 #define TAG                   "afconv"
@@ -99,6 +100,24 @@ static int _afconv_ESF_U16LEP_to_ESF_S16LE(afconv_t *ac, void **out, size_t nb_o
     return -1;
 }
 
+static int _afconv_ESF_S24LE_to_ESF_S16LE(afconv_t *ac, void **out, size_t nb_osamples, const void **in, size_t nb_isamples)
+{
+    int i, j = 0;
+    int sample;
+    int16_t *d        = out[0];
+    uint8_t *s        = (uint8_t*)in[0];
+    size_t nb_samples = nb_isamples * ac->channels;
+
+    for (i = 0; i < nb_samples; i++) {
+        sample  = byte_r24le(s) << 8;
+        sample  = sample >> 16;
+        d[j++]  = sample;
+        s      += 3;
+    }
+
+    return nb_isamples;
+}
+
 static int _afconv_ESF_S32LE_to_ESF_S16LE(afconv_t *ac, void **out, size_t nb_osamples, const void **in, size_t nb_isamples)
 {
     int i, j = 0;
@@ -175,6 +194,7 @@ static void _set_aconv_generic(afconv_t *ac)
     SET_ACONV_FUNC(ac, ESF_S16LE, ESF_U8P);
     SET_ACONV_FUNC(ac, ESF_S16LE, ESF_U16LEP);
 
+    SET_ACONV_FUNC(ac, ESF_S16LE, ESF_S24LE);
     SET_ACONV_FUNC(ac, ESF_S16LE, ESF_S32LE);
 
     SET_ACONV_FUNC(ac, ESF_S16LE, ESF_F32LE);

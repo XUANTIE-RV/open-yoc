@@ -16,12 +16,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <aos/log.h>
-// #include <aos/network.h>
 #include <aos/queue.h>
 
-#include "transport.h"
-#include "transport_utils.h"
+#include "transport/transport.h"
+#include "transport/transport_utils.h"
 
 static const char *TAG = "TRANSPORT";
 
@@ -44,7 +42,6 @@ struct transport_item_t {
     connect_async_func _connect_async;      /*!< non-blocking connect function of this transport */
     payload_transfer_func  _parent_transfer;       /*!< Function returning underlying transport layer */
 
-    // network_t       n;
     STAILQ_ENTRY(transport_item_t) next;
 };
 
@@ -125,7 +122,6 @@ web_err_t transport_list_clean(transport_list_handle_t list)
 transport_handle_t transport_init()
 {
     transport_handle_t t = calloc(1, sizeof(struct transport_item_t));
-    // network_init(&t->n);
     TRANSPORT_MEM_CHECK(TAG, t, return NULL);
     return t;
 }

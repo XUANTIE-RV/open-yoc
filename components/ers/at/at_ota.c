@@ -7,7 +7,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
-#include <aos/log.h>
 #include <fota_host_api.h>
 #include "at_internal.h"
 

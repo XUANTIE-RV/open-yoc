@@ -14,7 +14,7 @@ int dict_init(dict_t *d, int capacity)
 {
     if (d && (capacity > 0)) {
         keyval_t *c = aos_zalloc(sizeof(keyval_t) * capacity);
-        CHECK_RET_WITH_RET(c != NULL, -1);
+        CHECK_RET_WITH_RET(c, -1);
 
         d->keyvals = c;
         d->count   = 0;
@@ -45,7 +45,7 @@ int dict_increase(dict_t *d, size_t inc)
         keyval_t *keyvals;
 
         keyvals = aos_realloc(d->keyvals, sizeof(keyval_t) * capacity);
-        CHECK_RET_WITH_RET(keyvals != NULL, -1);
+        CHECK_RET_WITH_RET(keyvals, -1);
 
         d->alloc   = capacity;
         d->keyvals = keyvals;
@@ -155,7 +155,7 @@ int dict_shrink(dict_t *d)
 
     if (d->alloc > d->count) {
         keyval_t *keyvals = aos_realloc(d->keyvals, sizeof(keyval_t) * d->count);
-        CHECK_RET_WITH_RET(keyvals != NULL, -1);
+        CHECK_RET_WITH_RET(keyvals, -1);
 
         d->alloc   = d->count;
         d->keyvals = keyvals;

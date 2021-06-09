@@ -4,9 +4,7 @@
 #ifndef _RTC_ALARM_H_
 #define _RTC_ALARM_H_
 
-#include <stdbool.h>
-#include <stdint.h>
-
+#include <aos/aos.h>
 
 /**
  * 初始化rtc
@@ -47,11 +45,11 @@ time_t rtc_get_time(void);
 /**
  * 设置及使能rtc
  *
- * @param[in]  week
+ * @param[in]  tm_set
  * 
  *
  * @return  无.
  */
-void rtc_set_alarm(int32_t week, int day, int32_t hour, int32_t min, int32_t sec);
+void rtc_set_alarm(struct tm *tm_set);
 
 #endif

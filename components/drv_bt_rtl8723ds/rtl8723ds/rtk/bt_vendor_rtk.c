@@ -29,7 +29,6 @@
 
 #include <stdio.h>
 
-#include <aos/log.h>
 #include <aos/kernel.h>
 
 #include "userial_vendor.h"

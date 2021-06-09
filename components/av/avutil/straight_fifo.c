@@ -78,7 +78,7 @@ int sfifo_get_rpos(sfifo_t* fifo, char **pos, uint32_t timeout)
         rc = aos_event_get(&fifo->evt, SFIFO_READ_EVENT, AOS_EVENT_OR_CLEAR, &flag, timeout);
         if (rc < 0) {
             /* maybe timeout */
-            LOGE(TAG, "get rpos err. may be timeout. timeout = %u, rc = %d", timeout, rc);
+            //LOGE(TAG, "get rpos err. may be timeout. timeout = %u, rc = %d", timeout, rc);
             return -1;
         }
         lock();
@@ -95,8 +95,8 @@ int sfifo_get_rpos(sfifo_t* fifo, char **pos, uint32_t timeout)
             *pos = (char*)fifo->buf + fifo->ridx;
         }
     } else {
-        LOGD(TAG, "get rpos. weof = %d, reof = %d size = %u, widx = %d, ridx = %d, len = %d",
-             fifo->weof, fifo->reof, fifo->size, fifo->widx, fifo->ridx, fifo->len);
+        //LOGD(TAG, "get rpos. weof = %d, reof = %d size = %u, widx = %d, ridx = %d, len = %d",
+        //    fifo->weof, fifo->reof, fifo->size, fifo->widx, fifo->ridx, fifo->len);
     }
     unlock();
 
@@ -122,8 +122,8 @@ int sfifo_set_rpos(sfifo_t* fifo, size_t count)
         aos_event_set(&fifo->evt, SFIFO_WRITE_EVENT, AOS_EVENT_OR);
         rc = 0;
     } else {
-        LOGE(TAG, "set rpos err. count = %u, size = %u, widx = %d, ridx = %d, len = %d",
-             count, fifo->size, fifo->widx, fifo->ridx, fifo->len);
+        //LOGE(TAG, "set rpos err. count = %u, size = %u, widx = %d, ridx = %d, len = %d",
+        //     count, fifo->size, fifo->widx, fifo->ridx, fifo->len);
     }
     unlock();
 
@@ -149,7 +149,7 @@ int sfifo_get_wpos(sfifo_t* fifo, char **pos, uint32_t timeout)
         rc = aos_event_get(&fifo->evt, SFIFO_WRITE_EVENT, AOS_EVENT_OR_CLEAR, &flag, timeout);
         if (rc < 0) {
             /* maybe timeout */
-            LOGE(TAG, "get wpos err. may be timeout. timeout = %u, rc = %d", timeout, rc);
+            //LOGE(TAG, "get wpos err. may be timeout. timeout = %u, rc = %d", timeout, rc);
             return -1;
         }
         lock();
@@ -166,8 +166,8 @@ int sfifo_get_wpos(sfifo_t* fifo, char **pos, uint32_t timeout)
             *pos = (char*)fifo->buf + fifo->widx;
         }
     } else {
-        LOGD(TAG, "get wpos. weof = %d, reof = %d size = %u, widx = %d, ridx = %d, len = %d",
-             fifo->weof, fifo->reof, fifo->size, fifo->widx, fifo->ridx, fifo->len);
+        //LOGD(TAG, "get wpos. weof = %d, reof = %d size = %u, widx = %d, ridx = %d, len = %d",
+        //     fifo->weof, fifo->reof, fifo->size, fifo->widx, fifo->ridx, fifo->len);
     }
     unlock();
 
@@ -193,8 +193,8 @@ int sfifo_set_wpos(sfifo_t* fifo, size_t count)
         aos_event_set(&fifo->evt, SFIFO_READ_EVENT, AOS_EVENT_OR);
         rc = 0;
     } else {
-        LOGE(TAG, "set wpos err. count = %u, size = %u, widx = %d, ridx = %d, len = %d",
-             count, fifo->size, fifo->widx, fifo->ridx, fifo->len);
+        //LOGE(TAG, "set wpos err. count = %u, size = %u, widx = %d, ridx = %d, len = %d",
+        //     count, fifo->size, fifo->widx, fifo->ridx, fifo->len);
     }
     unlock();
 

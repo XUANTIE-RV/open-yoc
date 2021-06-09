@@ -12,7 +12,7 @@
 #include <sys/time.h>
 #include <aos/version.h>
 #include <aos/kernel.h>
-
+#include <aos/kv.h>
 #include "iot_import.h"
 
 #include "devices/wifi.h"
@@ -220,5 +220,19 @@ int HAL_Wifi_Get_Ap_Info(char ssid[HAL_MAX_SSID_LEN],char passwd[HAL_MAX_PASSWD_
 	}
 
 	return 0;
+}
+
+int HAL_Wifi_Send_80211_Raw_Frame(_IN_ enum HAL_Awss_Frame_Type type,
+                                  _IN_ uint8_t *buffer, _IN_ int len)
+{
+    return 0;
+}
+
+int HAL_Wifi_Enable_Mgmt_Frame_Filter(
+            _IN_ uint32_t filter_mask,
+            _IN_OPT_ uint8_t vendor_oui[3],
+            _IN_ awss_wifi_mgmt_frame_cb_t callback)
+{
+    return 0;
 }
 

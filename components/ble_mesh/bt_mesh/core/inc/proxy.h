@@ -20,6 +20,7 @@ int bt_mesh_proxy_prov_disable(bool disconnect);
 int bt_mesh_proxy_gatt_enable(void);
 int bt_mesh_proxy_gatt_disable(void);
 void bt_mesh_proxy_gatt_disconnect(void);
+uint8_t is_proxy_connected();
 
 void bt_mesh_proxy_beacon_send(struct bt_mesh_subnet *sub);
 

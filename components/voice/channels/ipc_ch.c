@@ -13,6 +13,7 @@
 
 #include <voice_def.h>
 
+extern uint32_t soc_get_cpu_id(void);
 extern int32_t drv_get_cpu_id(void);
 message_t g_msg_cp;
 
@@ -54,7 +55,11 @@ static int ipc_msg_send(voice_ch_t *ch, voice_msg_t *msg)
 static voice_ch_t *ipc_init(voice_msg_evt_t cb, void *priv)
 {
     voice_ch_t *ch = aos_malloc_check( sizeof(voice_ch_t));
+#ifdef CONFIG_CSI_V2
+    int cpu_id = soc_get_cpu_id();
+#else
     int cpu_id = drv_get_cpu_id();
+#endif
     int dec_cpu_id;
 
     dec_cpu_id = cpu_id == 0? 2 : 0;

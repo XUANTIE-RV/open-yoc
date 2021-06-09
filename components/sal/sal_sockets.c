@@ -7,7 +7,6 @@
 #include <string.h>
 #include <stdbool.h>
 #include <stdarg.h>
-
 #include <aos/aos.h>
 
 #include "lwip/opt.h"
@@ -46,9 +45,6 @@
 #define IP_MULTICAST_TTL   5
 #define IP_MULTICAST_IF    6
 #define IP_MULTICAST_LOOP  7
-
-#define SAL_DEFAULT_INPUTMBOX_SIZE        16
-#define SAL_DEFAULT_OUTPUTMBOX_SIZE       8
 
 #define SAL_SO_SNDRCVTIMEO_GET_MS(optval) ((((const struct timeval *)(optval))->tv_sec * 1000U) + (((const struct timeval *)(optval))->tv_usec / 1000U))
 
@@ -247,6 +243,11 @@ sal_mutex_t    lock_sal_core;
 #define UNLOCK_SAL_CORE  sal_mutex_unlock(&lock_sal_core)
 
 void sal_deal_event(int s, enum netconn_evt evt);
+
+static bool sal_init_done = 0;
+#if SAL_PACKET_SEND_MODE_ASYNC
+static bool sal_send_async_running = 0;
+#endif
 
 static u16_t sal_tcp_new_port(void)
 {
@@ -633,35 +634,35 @@ static int salpcb_new(sal_netconn_t *conn)
     }
 
     switch (NETCONNTYPE_GROUP(conn->type)) {
-        case NETCONN_RAW:
-            conn->pcb.raw = aos_zalloc(sizeof(struct raw_pcb));
+    case NETCONN_RAW:
+        conn->pcb.raw = aos_zalloc(sizeof(struct raw_pcb));
 
-            if (NULL == conn->pcb.raw) {
-                return ERR_MEM;
-            }
+        if (NULL == conn->pcb.raw) {
+            return ERR_MEM;
+        }
 
-            break;
+        break;
 
-        case NETCONN_UDP:
-            conn->pcb.udp = aos_zalloc(sizeof(struct udp_pcb));
+    case NETCONN_UDP:
+        conn->pcb.udp = aos_zalloc(sizeof(struct udp_pcb));
 
-            if (NULL == conn->pcb.udp) {
-                return ERR_MEM;
-            }
+        if (NULL == conn->pcb.udp) {
+            return ERR_MEM;
+        }
 
-            break;
+        break;
 
-        case NETCONN_TCP:
-            conn->pcb.tcp = aos_zalloc(sizeof(struct tcp_pcb));
+    case NETCONN_TCP:
+        conn->pcb.tcp = aos_zalloc(sizeof(struct tcp_pcb));
 
-            if (NULL == conn->pcb.tcp) {
-                return ERR_MEM;
-            }
+        if (NULL == conn->pcb.tcp) {
+            return ERR_MEM;
+        }
 
-            break;
+        break;
 
-        default:
-            return ERR_VAL;
+    default:
+        return ERR_VAL;
     }
 
     return ERR_OK;
@@ -747,7 +748,6 @@ static sal_netconn_t *salnetconn_new(enum netconn_type t)
     err_t         err = ERR_OK;
 
     conn = (sal_netconn_t *)aos_zalloc(sizeof(sal_netconn_t));
-
     if (conn == NULL) {
         SAL_ERROR("salnetconn_new fail to new net conn \n");
         return NULL;
@@ -756,15 +756,15 @@ static sal_netconn_t *salnetconn_new(enum netconn_type t)
     conn->type = t;
     conn->socket = -1;
 
-    if (sal_mbox_new(&conn->recvmbox, SAL_DEFAULT_INPUTMBOX_SIZE) != ERR_OK) {
-        SAL_ERROR("fai to new conn input mail box, size is %d \n", SAL_DEFAULT_INPUTMBOX_SIZE);
+    if (sal_mbox_new(&conn->recvmbox, CONFIG_SAL_DEFAULT_INPUTMBOX_SIZE) != ERR_OK) {
+        SAL_ERROR("fai to new conn input mail box, size is %d \n", CONFIG_SAL_DEFAULT_INPUTMBOX_SIZE);
         goto err;
     }
 
 #if SAL_PACKET_SEND_MODE_ASYNC
 
-    if (sal_mbox_new(&conn->sendmbox, SAL_DEFAULT_OUTPUTMBOX_SIZE) != ERR_OK) {
-        SAL_ERROR("fai to new conn input mail box, size is %d \n", SAL_DEFAULT_INPUTMBOX_SIZE);
+    if (sal_mbox_new(&conn->sendmbox, CONFIG_SAL_DEFAULT_OUTPUTMBOX_SIZE) != ERR_OK) {
+        SAL_ERROR("fai to new conn input mail box, size is %d \n", CONFIG_SAL_DEFAULT_INPUTMBOX_SIZE);
         goto err;
     }
 
@@ -773,8 +773,8 @@ static sal_netconn_t *salnetconn_new(enum netconn_type t)
 #ifdef  SAL_SERVER
 
     if (conn->type == NETCONN_TCP && !fromaccept) {
-        if (sal_mbox_new(&conn->acceptmbox, SAL_DEFAULT_OUTPUTMBOX_SIZE) != ERR_OK) {
-            SAL_ERROR("fai to new conn input mail box, size is %d \n", SAL_DEFAULT_INPUTMBOX_SIZE);
+        if (sal_mbox_new(&conn->acceptmbox, CONFIG_SAL_DEFAULT_OUTPUTMBOX_SIZE) != ERR_OK) {
+            SAL_ERROR("fai to new conn input mail box, size is %d \n", CONFIG_SAL_DEFAULT_INPUTMBOX_SIZE);
             goto err;
         }
     }
@@ -829,17 +829,17 @@ static err_t salnetconn_delete(sal_netconn_t *conn)
 
     if (NULL != conn->pcb.tcp) {
         switch (NETCONNTYPE_GROUP(conn->type)) {
-            case NETCONN_TCP:
-                sal_tcp_remove(conn->pcb.tcp);
-                break;
+        case NETCONN_TCP:
+            sal_tcp_remove(conn->pcb.tcp);
+            break;
 
-            case NETCONN_UDP:
-                sal_udp_remove(conn->pcb.udp);
-                break;
+        case NETCONN_UDP:
+            sal_udp_remove(conn->pcb.udp);
+            break;
 
-            default:
-                SAL_ERROR("Unsupported connect type 0x%x\n", conn->type);
-                break;
+        default:
+            SAL_ERROR("Unsupported connect type 0x%x\n", conn->type);
+            break;
         }
 
         //already free in sal_tcp_remove & sal_udp_remove
@@ -851,6 +851,14 @@ static err_t salnetconn_delete(sal_netconn_t *conn)
     sock = get_socket(s);
 
     if (sock) {
+        sal_netbuf_t *mem = sock->lastdata;
+        if (mem != NULL) {
+            if (mem->payload) {
+                free(mem->payload);
+                mem->payload = NULL;
+            }
+            free(mem);
+        }
         sock->conn = NULL;
     }
 
@@ -889,63 +897,63 @@ static err_t salnetconn_connect(sal_netconn_t *conn, int8_t *addr, u16_t port)
     }
 
     switch (NETCONNTYPE_GROUP(conn->type)) {
-        case NETCONN_UDP:
-            if (strcmp(IPADDR_BROADCAST_STRING, statconn.addr) != 0) {
-                statconn.type = UDP_UNICAST;
-            } else {
-                statconn.type = UDP_BROADCAST;
+    case NETCONN_UDP:
+        if (strcmp(IPADDR_BROADCAST_STRING, statconn.addr) != 0) {
+            statconn.type = UDP_UNICAST;
+        } else {
+            statconn.type = UDP_BROADCAST;
+        }
+
+        if (conn->pcb.udp->local_port == 0) {
+            statconn.l_port = sal_udp_new_port();
+        } else {
+            statconn.l_port = conn->pcb.udp->local_port;
+        }
+
+        err = sal_module_start(&statconn);
+
+        if (ERR_OK != err) {
+            SAL_ERROR("fail to setup udp connect, remote is %s port is %d.\n", statconn.addr, port);
+            return -1;
+        }
+
+        if (conn->pcb.udp->local_port == 0) {
+            err = sal_udp_bind(conn->pcb.udp, NULL, statconn.l_port);
+
+            if (err != ERR_OK) {
+                SAL_ERROR("sal_connect udp pcb %p bind local port %d fail.\n", conn->pcb.udp, statconn.l_port);
+                return err;
             }
+        }
 
-            if (conn->pcb.udp->local_port == 0) {
-                statconn.l_port = sal_udp_new_port();
-            } else {
-                statconn.l_port = conn->pcb.udp->local_port;
-            }
+        if (ip4addr_aton(statconn.addr, (ip4_addr_t *)ip_2_ip4(&remoteipaddr))) {
+            memcpy(remoteip, &remoteipaddr, sizeof(ip_addr_t));
+        }
 
-            err = sal_module_start(&statconn);
+        ip_addr_set_ipaddr(&(conn->pcb.udp->remote_ip), remoteip);
+        conn->pcb.udp->remote_port = port;
+        break;
 
-            if (ERR_OK != err) {
-                SAL_ERROR("fail to setup udp connect, remote is %s port is %d.\n", statconn.addr, port);
-                return -1;
-            }
+    case NETCONN_TCP:
+        statconn.type = TCP_CLIENT;
+        err = sal_module_start(&statconn);
 
-            if (conn->pcb.udp->local_port == 0) {
-                err = sal_udp_bind(conn->pcb.udp, NULL, statconn.l_port);
+        if (ERR_OK != err) {
+            SAL_ERROR("fail to setup tcp connect, remote is %s port is %d.\n", statconn.addr, port);
+            return -1;
+        }
 
-                if (err != ERR_OK) {
-                    SAL_ERROR("sal_connect udp pcb %p bind local port %d fail.\n", conn->pcb.udp, statconn.l_port);
-                    return err;
-                }
-            }
+        if (ip4addr_aton(statconn.addr, (ip4_addr_t *)ip_2_ip4(&remoteipaddr))) {
+            memcpy(remoteip, &remoteipaddr, sizeof(ip_addr_t));
+        }
 
-            if (ip4addr_aton(statconn.addr, (ip4_addr_t *)ip_2_ip4(&remoteipaddr))) {
-                memcpy(remoteip, &remoteipaddr, sizeof(ip_addr_t));
-            }
+        ip_addr_set_ipaddr(&(conn->pcb.tcp->remote_ip), remoteip);
+        conn->pcb.tcp->remote_port = port;
+        break;
 
-            ip_addr_set_ipaddr(&(conn->pcb.udp->remote_ip), remoteip);
-            conn->pcb.udp->remote_port = port;
-            break;
-
-        case NETCONN_TCP:
-            statconn.type = TCP_CLIENT;
-            err = sal_module_start(&statconn);
-
-            if (ERR_OK != err) {
-                SAL_ERROR("fail to setup tcp connect, remote is %s port is %d.\n", statconn.addr, port);
-                return -1;
-            }
-
-            if (ip4addr_aton(statconn.addr, (ip4_addr_t *)ip_2_ip4(&remoteipaddr))) {
-                memcpy(remoteip, &remoteipaddr, sizeof(ip_addr_t));
-            }
-
-            ip_addr_set_ipaddr(&(conn->pcb.tcp->remote_ip), remoteip);
-            conn->pcb.tcp->remote_port = port;
-            break;
-
-        default:
-            SAL_ERROR("Unsupported sal connection type.\n");
-            return ERR_ARG;
+    default:
+        SAL_ERROR("Unsupported sal connection type.\n");
+        return ERR_ARG;
     }
 
     /*init socket send event*/
@@ -953,7 +961,7 @@ static err_t salnetconn_connect(sal_netconn_t *conn, int8_t *addr, u16_t port)
     struct sal_sock *sock;
 
     sock = get_socket(conn->socket);
-    sock->sendevent = SAL_DEFAULT_OUTPUTMBOX_SIZE;
+    sock->sendevent = CONFIG_SAL_DEFAULT_OUTPUTMBOX_SIZE;
 #else
     sal_deal_event(conn->socket, NETCONN_EVT_SENDPLUS);
 #endif
@@ -1026,46 +1034,46 @@ static err_t salnetconn_bind(sal_netconn_t *conn, const ip_addr_t *addr, u16_t p
     }
 
     switch (NETCONNTYPE_GROUP(conn->type)) {
-        case NETCONN_UDP:
-            err = sal_udp_bind(conn->pcb.udp, addr, port);
+    case NETCONN_UDP:
+        err = sal_udp_bind(conn->pcb.udp, addr, port);
 
-            if (err != ERR_OK) {
-                SAL_ERROR("salnetconn_bind sock %d udp bind fail\n.", conn->socket);
-                return err;
-            }
+        if (err != ERR_OK) {
+            SAL_ERROR("salnetconn_bind sock %d udp bind fail\n.", conn->socket);
+            return err;
+        }
 
 #ifdef SAL_SERVER
-            statconn.fd = conn->socket;
-            statconn.addr = srcaddr;
-            statconn.r_port = port; // TODO: remote port now equals to local port
-            statconn.l_port = port;
-            statconn.type = UDP_UNICAST;
+        statconn.fd = conn->socket;
+        statconn.addr = srcaddr;
+        statconn.r_port = port; // TODO: remote port now equals to local port
+        statconn.l_port = port;
+        statconn.type = UDP_UNICAST;
 
-            err = sal_module_start(&statconn);
+        err = sal_module_start(&statconn);
 
-            if (ERR_OK != err) {
-                SAL_ERROR("fail to setup udp bind, local port is %d.\n", port);
-                return -1;
-            }
+        if (ERR_OK != err) {
+            SAL_ERROR("fail to setup udp bind, local port is %d.\n", port);
+            return -1;
+        }
 
 #endif
-            break;
+        break;
 
-        case NETCONN_TCP:
-            err = sal_tcp_bind(conn->pcb.tcp, addr, port);
+    case NETCONN_TCP:
+        err = sal_tcp_bind(conn->pcb.tcp, addr, port);
 
-            if (err != ERR_OK) {
-                SAL_ERROR("salnetconn_bind sock %d tcp bind fail\n.", conn->socket);
-                return err;
-            }
+        if (err != ERR_OK) {
+            SAL_ERROR("salnetconn_bind sock %d tcp bind fail\n.", conn->socket);
+            return err;
+        }
 
-            break;
+        break;
 
-        case NETCONN_RAW:
-        default:
-            /*for now wifi module did not support raw socket yet*/
-            SAL_ERROR("salnetconn_bind invalid connect type %d.\n", NETCONNTYPE_GROUP(conn->type));
-            return ERR_VAL;
+    case NETCONN_RAW:
+    default:
+        /*for now wifi module did not support raw socket yet*/
+        SAL_ERROR("salnetconn_bind invalid connect type %d.\n", NETCONNTYPE_GROUP(conn->type));
+        return ERR_VAL;
     }
 
     return ERR_OK;
@@ -1082,13 +1090,20 @@ static err_t salnetconn_recv_data(sal_netconn_t *conn, sal_netbuf_t **new_buf)
         return ERR_ARG;
     }
 
-    if (conn->state == NETCONN_CLOSE) {
-        return ERR_CLSD;
-    }
-
     if (!sal_mbox_valid(&conn->recvmbox)) {
         SAL_ERROR("socket %d connect invalid recvmbox\n", conn->socket);
         return ERR_CONN;
+    }
+
+    if (conn->state == NETCONN_CLOSE) {
+        ret = sal_arch_mbox_tryfetch(&conn->recvmbox, &buf);
+        if (ret == SYS_MBOX_EMPTY) {
+            return ERR_CLSD;
+        } else {
+            sal_deal_event(conn->socket, NETCONN_EVT_RCVMINUS);
+            *new_buf = buf;
+            return ERR_OK;
+        }
     }
 
     ret = sal_arch_mbox_fetch(&conn->recvmbox, &buf, conn->recv_timeout);
@@ -1605,8 +1620,8 @@ static int sal_selscan(int maxfdp1, fd_set *readset_in, fd_set *writeset_in,
     return nready;
 }
 
-int sal_recvfrom(int s, void *mem, size_t len, int flags,
-                 struct sockaddr *from, socklen_t *fromlen)
+ssize_t sal_recvfrom(int s, void *mem, size_t len, int flags,
+                     struct sockaddr *from, socklen_t *fromlen)
 {
     struct sal_sock        *pstsock = NULL;
     sal_netbuf_t           *buf = NULL;
@@ -1650,7 +1665,9 @@ int sal_recvfrom(int s, void *mem, size_t len, int flags,
             }
 
             err = salnetconn_recv_data(pstsock->conn, &buf);
-            SAL_DEBUG("sal_recvfrom neconn_recv err=%d, netbuf=%p\n", err, buf);
+            if (err < 0) {
+                SAL_ERROR("sal_recvfrom neconn_recv err=%d, netbuf=%p\r\n", err, buf);
+            }
 
             if (err == ERR_CLSD) {
                 return 0;
@@ -1667,6 +1684,7 @@ int sal_recvfrom(int s, void *mem, size_t len, int flags,
             }
 
             pstsock->lastdata = buf;
+            pstsock->lastoffset = 0;
         }
 
         buflen = buf->len;
@@ -1685,6 +1703,11 @@ int sal_recvfrom(int s, void *mem, size_t len, int flags,
 
         if (NETCONNTYPE_GROUP(pstsock->conn->type) == NETCONN_TCP) {
             if (len < copylen) {
+                pstsock->lastdata = NULL;
+                pstsock->lastoffset = 0;
+                free(buf->payload);
+                free(buf);
+                buf = NULL;
                 SAL_ERROR("invalid copylen %d, len = %d, it would underflow\n", copylen, len);
                 return -1;
             }
@@ -1739,13 +1762,13 @@ int sal_read(int s, void *mem, int len)
     return sal_recvfrom(s, mem, len, 0, NULL, NULL);
 }
 
-int sal_recv(int s, void *mem, size_t len, int flags)
+ssize_t sal_recv(int s, void *mem, size_t len, int flags)
 {
     return sal_recvfrom(s, mem, len, flags, NULL, NULL);
 }
 
-int sal_sendto(int s, const void *data, size_t size, int flags,
-               const struct sockaddr *to, socklen_t tolen)
+ssize_t sal_sendto(int s, const void *data, size_t size, int flags,
+                   const struct sockaddr *to, socklen_t tolen)
 {
     struct sal_sock *pstsalsock = NULL;
     err_t           err = ERR_OK;
@@ -1763,7 +1786,6 @@ int sal_sendto(int s, const void *data, size_t size, int flags,
     }
 
     pstsalsock = get_socket(s);
-
     if (NULL == pstsalsock) {
         SAL_ERROR("sal_sendto fail to get sal socket by fd %d \n", s);
         return ERR_ARG;
@@ -1773,7 +1795,6 @@ int sal_sendto(int s, const void *data, size_t size, int flags,
         SAL_ERROR("sal_sendto sal socket %d conn is null\n", s);
         return ERR_ARG;
     }
-
 
     /* TODO have no consider tcp server send to client*/
     if (NETCONNTYPE_GROUP(pstsalsock->conn->type) == NETCONN_TCP) {
@@ -1809,16 +1830,13 @@ int sal_sendto(int s, const void *data, size_t size, int flags,
 
 #if SAL_PACKET_SEND_MODE_ASYNC
     sal_outputbuf_t *buf = NULL;
-
     buf = (sal_outputbuf_t *)aos_zalloc(sizeof(sal_outputbuf_t));
-
     if (NULL == buf) {
         SAL_ERROR("memory is not enough, malloc size %d fail\n", sizeof(sal_outputbuf_t));
         return -1;
     }
 
     buf->payload = aos_malloc(size);
-
     if (NULL == buf->payload) {
         free(buf);
         SAL_ERROR("memory is no enough, malloc size %d fail\n", size);
@@ -1853,7 +1871,7 @@ int sal_sendto(int s, const void *data, size_t size, int flags,
     return size;
 }
 
-int sal_send(int s, const void *data, size_t size, int flags)
+ssize_t sal_send(int s, const void *data, size_t size, int flags)
 {
     SAL_DEBUG("sal_send(%d, flags=0x%x)\n", s, flags);
 
@@ -1899,7 +1917,6 @@ static int salnetconn_packet_input(sal_netconn_t *conn, void *data, size_t len, 
     }
 
     buf = (sal_netbuf_t *)aos_zalloc(sizeof(sal_netbuf_t));
-
     if (NULL == buf) {
         SAL_ERROR("memory is not enough, malloc size %d fail\n", sizeof(sal_netbuf_t));
         return -1;
@@ -1907,7 +1924,6 @@ static int salnetconn_packet_input(sal_netconn_t *conn, void *data, size_t len, 
 
 
     buf->payload = aos_malloc(len);
-
     if (NULL == buf->payload) {
         free(buf);
         SAL_ERROR("memory is no enough, malloc size %d fail\n", len);
@@ -2073,6 +2089,10 @@ int sal_packet_input(int s, void *data, size_t len, char remote_ip[16], uint16_t
         return -1;
     }
 
+    if (sock->conn->state == NETCONN_CLOSE) {
+        return 0;
+    }
+
     if (sock->conn == NULL) {
         SAL_ERROR("socket %d invalid for haven't creat connnet yet\n");
         return -1;
@@ -2133,7 +2153,7 @@ int sal_packet_close(int s)
     sock = get_socket(s);
     sock->conn->state = NETCONN_CLOSE;
 
-    sal_deal_event(s, NETCONN_EVT_RCVPLUS);
+    // sal_deal_event(s, NETCONN_EVT_RCVPLUS);
 
     return 0;
 }
@@ -2153,29 +2173,29 @@ void sal_deal_event(int s, enum netconn_evt evt)
 
     /* Set event as required */
     switch (evt) {
-        case NETCONN_EVT_RCVPLUS:
-            sock->rcvevent++;
-            break;
+    case NETCONN_EVT_RCVPLUS:
+        sock->rcvevent++;
+        break;
 
-        case NETCONN_EVT_RCVMINUS:
-            sock->rcvevent--;
-            break;
+    case NETCONN_EVT_RCVMINUS:
+        sock->rcvevent--;
+        break;
 
-        case NETCONN_EVT_SENDPLUS:
-            sock->sendevent++;
-            break;
+    case NETCONN_EVT_SENDPLUS:
+        sock->sendevent++;
+        break;
 
-        case NETCONN_EVT_SENDMINUS:
-            sock->sendevent--;
-            break;
+    case NETCONN_EVT_SENDMINUS:
+        sock->sendevent--;
+        break;
 
-        case NETCONN_EVT_ERROR:
-            sock->errevent = 1;
-            break;
+    case NETCONN_EVT_ERROR:
+        sock->errevent = 1;
+        break;
 
-        default:
-            SAL_ASSERT("unknown event", 0);
-            break;
+    default:
+        SAL_ASSERT("unknown event", 0);
+        break;
     }
 
     if (sock->select_waiting == 0) {
@@ -2298,31 +2318,31 @@ int sal_socket(int domain, int type, int protocol)
 
     /* create a netconn */
     switch (type) {
-        case SOCK_RAW://暂不支持
-            set_errno(EINVAL);
-            UNLOCK_SAL_CORE;
-            return -1;
+    case SOCK_RAW://暂不支持
+        set_errno(EINVAL);
+        UNLOCK_SAL_CORE;
+        return -1;
 
-        case SOCK_DGRAM:
+    case SOCK_DGRAM:
 #ifdef SAL_SERVER
-            conn = salnetconn_new(NETCONN_UDP, false);
+        conn = salnetconn_new(NETCONN_UDP, false);
 #else
-            conn = salnetconn_new(NETCONN_UDP);
+        conn = salnetconn_new(NETCONN_UDP);
 #endif
-            break;
+        break;
 
-        case SOCK_STREAM:
+    case SOCK_STREAM:
 #ifdef SAL_SERVER
-            conn = salnetconn_new(NETCONN_TCP, false);
+        conn = salnetconn_new(NETCONN_TCP, false);
 #else
-            conn = salnetconn_new(NETCONN_TCP);
+        conn = salnetconn_new(NETCONN_TCP);
 #endif
-            break;
+        break;
 
-        default:
-            set_errno(EINVAL);
-            UNLOCK_SAL_CORE;
-            return -1;
+    default:
+        set_errno(EINVAL);
+        UNLOCK_SAL_CORE;
+        return -1;
     }
 
     if (!conn) {
@@ -2356,7 +2376,7 @@ static void sal_packet_output(void *arg)
     sal_outputbuf_t *outputmem = NULL;
     struct sal_sock *pstsalsock = NULL;
 
-    while (true) {
+    while (sal_send_async_running) {
         for (fd = 0; fd < MEMP_NUM_NETCONN; fd++) {
             pstsalsock = get_socket(fd);
 
@@ -2393,8 +2413,6 @@ static void sal_packet_output(void *arg)
 /* Call this during the init process. */
 int sal_init(void)
 {
-    static bool sal_init_done = 0;
-
     if (sal_init_done) {
         SAL_ERROR("sal have already init done\n");
         return 0;
@@ -2412,7 +2430,8 @@ int sal_init(void)
 #if SAL_PACKET_SEND_MODE_ASYNC
     aos_task_t  task;
 
-    if (aos_task_new_ext(&task, "sal_xmit", sal_packet_output, NULL, 2048, AOS_DEFAULT_APP_PRI - 4)) {
+    sal_send_async_running = 1;
+    if (aos_task_new_ext(&task, "sal_xmit", sal_packet_output, &sal_send_async_running, 2048, AOS_DEFAULT_APP_PRI - 4)) {
         sal_mutex_arch_free();
         sal_mutex_free(&lock_sal_core);
         SAL_ERROR("fail to creat sal xmit task \r\n");
@@ -2455,6 +2474,30 @@ int sal_init(void)
     }
 
     sal_init_done = 1;
+    return 0 ;
+}
+
+int sal_deinit(void)
+{
+    if (!sal_init_done) {
+        SAL_ERROR("sal have not inited\n");
+        return 0;
+    }
+
+    SAL_DEBUG("Deinitializing SAL ...");
+    sal_mutex_arch_free();
+
+    sal_mutex_free(&lock_sal_core);
+
+#if SAL_PACKET_SEND_MODE_ASYNC
+///////
+    sal_send_async_running = 0;
+#endif
+
+    /* Low level init. */
+    sal_module_deinit();
+
+    sal_init_done = 0;
     return 0 ;
 }
 
@@ -2622,16 +2665,13 @@ int sal_close(int s)
     err_t err;
 
     SAL_DEBUG("sal_close(%d)\r\n", s);
-
     event = tryget_event(s);
-
     if (event) {
         event->used = 0;
         return 0;
     }
 
     sock = get_socket(s);
-
     if (!sock) {
         return -1;
     }
@@ -2747,39 +2787,39 @@ int sal_getsockopt(int s, int level, int optname,
 
     /* Only support SOL_SOCKET/SO_ERROR for now. */
     switch (level) {
-        case SOL_SOCKET:
-            switch (optname) {
-                case SO_ERROR:
-                    if (*optlen < sizeof(int)) {
-                        return EINVAL;
-                    }
-
-                    /* only overwrite ERR_OK or temporary errors */
-                    if (((sock->err == 0) || (sock->err == EINPROGRESS)) &&
-                        (sock->conn != NULL)) {
-                        sock_set_errno(sock, err_to_errno(sock->conn->pending_err));
-                    }
-
-                    *(int *)optval = (sock->err == 0xFF ? (int) - 1 : (int)sock->err);
-                    sock->err = 0;
-                    SAL_DEBUG("sal_getsockopt(%d, SOL_SOCKET, SO_ERROR) = %d\n",
-                              s, *(int *)optval);
-                    break;
-
-                default:
-                    SAL_DEBUG("sal_getsockopt(%d, SOL_SOCKET, UNIMPL: "
-                              "optname=0x%x, ..)\n", s, optname);
-                    err = ENOPROTOOPT;
-                    break;
+    case SOL_SOCKET:
+        switch (optname) {
+        case SO_ERROR:
+            if (*optlen < sizeof(int)) {
+                return EINVAL;
             }
 
+            /* only overwrite ERR_OK or temporary errors */
+            if (((sock->err == 0) || (sock->err == EINPROGRESS)) &&
+                (sock->conn != NULL)) {
+                sock_set_errno(sock, err_to_errno(sock->conn->pending_err));
+            }
+
+            *(int *)optval = (sock->err == 0xFF ? (int) - 1 : (int)sock->err);
+            sock->err = 0;
+            SAL_DEBUG("sal_getsockopt(%d, SOL_SOCKET, SO_ERROR) = %d\n",
+                      s, *(int *)optval);
             break;
 
         default:
-            SAL_DEBUG("sal_getsockopt(%d, level=0x%x, UNIMPL: optname=0x%x, ..)\n",
-                      s, level, optname);
+            SAL_DEBUG("sal_getsockopt(%d, SOL_SOCKET, UNIMPL: "
+                      "optname=0x%x, ..)\n", s, optname);
             err = ENOPROTOOPT;
             break;
+        }
+
+        break;
+
+    default:
+        SAL_DEBUG("sal_getsockopt(%d, level=0x%x, UNIMPL: optname=0x%x, ..)\n",
+                  s, level, optname);
+        err = ENOPROTOOPT;
+        break;
     }
 
     sock_set_errno(sock, err);
@@ -2802,53 +2842,53 @@ int sal_setsockopt(int s, int level, int optname,
     }
 
     switch (level) {
-        case SOL_SOCKET:
-            switch (optname) {
-                case SO_RCVTIMEO:
-                    sock->conn->recv_timeout = SAL_SO_SNDRCVTIMEO_GET_MS(optval);
-                    break;
-
-                case SO_SNDTIMEO:
-                    sock->conn->send_timeout = SAL_SO_SNDRCVTIMEO_GET_MS(optval);
-                    break;
-
-                case SO_REUSEADDR:
-                    break;
-
-                default:
-                    SAL_DEBUG("sal_setsockopt(%d, SOL_SOCKET:, UNIMPL: "
-                              "optname=0x%x, ..)\n", s, optname);
-                    err = ENOPROTOOPT;
-                    break;
-            }
-
+    case SOL_SOCKET:
+        switch (optname) {
+        case SO_RCVTIMEO:
+            sock->conn->recv_timeout = SAL_SO_SNDRCVTIMEO_GET_MS(optval);
             break;
 
-        case IPPROTO_IP:
-            switch (optname) {
-                case IP_MULTICAST_IF:
-                    break;
+        case SO_SNDTIMEO:
+            sock->conn->send_timeout = SAL_SO_SNDRCVTIMEO_GET_MS(optval);
+            break;
 
-                case IP_MULTICAST_LOOP:
-                    break;
-
-                case IP_ADD_MEMBERSHIP:
-                    break;
-
-                default:
-                    SAL_DEBUG("sal_setsockopt(%d, SOL_SOCKET:, UNIMPL: "
-                              "optname=0x%x, ..)\n", s, optname);
-                    err = ENOPROTOOPT;
-                    break;
-            }
-
+        case SO_REUSEADDR:
             break;
 
         default:
-            SAL_DEBUG("sal_setsockopt(%d, level=0x%x, UNIMPL: optname=0x%x, ..)\n",
-                      s, level, optname);
+            SAL_DEBUG("sal_setsockopt(%d, SOL_SOCKET:, UNIMPL: "
+                      "optname=0x%x, ..)\n", s, optname);
             err = ENOPROTOOPT;
             break;
+        }
+
+        break;
+
+    case IPPROTO_IP:
+        switch (optname) {
+        case IP_MULTICAST_IF:
+            break;
+
+        case IP_MULTICAST_LOOP:
+            break;
+
+        case IP_ADD_MEMBERSHIP:
+            break;
+
+        default:
+            SAL_DEBUG("sal_setsockopt(%d, SOL_SOCKET:, UNIMPL: "
+                      "optname=0x%x, ..)\n", s, optname);
+            err = ENOPROTOOPT;
+            break;
+        }
+
+        break;
+
+    default:
+        SAL_DEBUG("sal_setsockopt(%d, level=0x%x, UNIMPL: optname=0x%x, ..)\n",
+                  s, level, optname);
+        err = ENOPROTOOPT;
+        break;
     }
 
     sock_set_errno(sock, err);
@@ -2874,27 +2914,27 @@ int sal_fcntl(int s, int cmd, ...)
     int val = va_arg(ap, int);
 
     switch (cmd) {
-        case F_GETFL:
-            ret = netconn_is_nonblocking(sock->conn) ? O_NONBLOCK : 0;
+    case F_GETFL:
+        ret = netconn_is_nonblocking(sock->conn) ? O_NONBLOCK : 0;
+        sock_set_errno(sock, 0);
+        break;
+
+    case F_SETFL:
+        if ((val & ~O_NONBLOCK) == 0) {
+            /* only O_NONBLOCK, all other bits are zero */
+            netconn_set_nonblocking(sock->conn, val & O_NONBLOCK);
+            ret = 0;
             sock_set_errno(sock, 0);
-            break;
-
-        case F_SETFL:
-            if ((val & ~O_NONBLOCK) == 0) {
-                /* only O_NONBLOCK, all other bits are zero */
-                netconn_set_nonblocking(sock->conn, val & O_NONBLOCK);
-                ret = 0;
-                sock_set_errno(sock, 0);
-            } else {
-                sock_set_errno(sock, ENOSYS); /* not yet implemented */
-            }
-
-            break;
-
-        default:
-            SAL_DEBUG("sal_fcntl(%d, UNIMPL: %d, %d)\n", s, cmd, val);
+        } else {
             sock_set_errno(sock, ENOSYS); /* not yet implemented */
-            break;
+        }
+
+        break;
+
+    default:
+        SAL_DEBUG("sal_fcntl(%d, UNIMPL: %d, %d)\n", s, cmd, val);
+        sock_set_errno(sock, ENOSYS); /* not yet implemented */
+        break;
     }
 
     va_end(ap);

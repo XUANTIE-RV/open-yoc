@@ -26,7 +26,7 @@ int aef_debug_init(int fs, uint8_t *conf, size_t conf_size)
 
     if (!rpc_ins) {
         rpc_ins = audioRPC_init(aef_ins);
-        CHECK_RET_TAG_WITH_RET(rpc_ins , -1);
+        CHECK_RET_TAG_WITH_RET(rpc_ins, -1);
     }
 
     return 0;

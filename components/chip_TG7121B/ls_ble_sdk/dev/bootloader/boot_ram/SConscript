@@ -1,0 +1,26 @@
+Import('dev_env')
+
+bram_env = dev_env.Clone()
+bram_env.Append(CPPPATH = ['.'])
+bram_env.Append(CPPDEFINES = ['-DBOOT_RAM=1','-DGLOBAL_OUTPUT_LVL=0','NDEBUG'])
+if dev_env['IC'] != 'le501x':
+    src = [
+        'boot_ram.c',
+    ]
+    bram_env.Append(CFLAGS = ' ')
+    bram_env['LINKSCRIPT'] = File('bram.ld')
+    bram_target = bram_env.Program('#build/boot_ram/bram',dev_env['SDK_SRC'] + src,OBJPREFIX = 'boot_ram-')
+    bram_env.Append(LINKFLAGS = ' -T ' + File('brom.sym').srcnode().path + ' -static-pie -nostartfiles')
+    bram_env.Depends(bram_target,[bram_env['LINKSCRIPT'],File('brom.sym')])
+    bram_bin = bram_env.Command('#dev/soc/arm_cm/sagi/bin/bram.bin',bram_target,Action('$OBJCOPY -O binary $SOURCE $TARGET'))
+else:
+    src = ['boot_ram_le501x.c']
+    bram_env['LINKSCRIPT'] = File('bram_le501x.ld')
+    bram_target = bram_env.Program('#build/boot_ram/bram',dev_env['SDK_SRC'] + src,OBJPREFIX = 'boot_ram-')
+    bram_env.Append(LINKFLAGS = ' -nostartfiles')
+    bram_env.Depends(bram_target,[bram_env['LINKSCRIPT']])
+    bram_bin = bram_env.Command('#dev/soc/arm_cm/le501x/bin/bram.bin',bram_target,Action('$OBJCOPY -O binary $SOURCE $TARGET'))
+
+bram_env.AddPostAction(bram_target,Action('$OBJDUMP -d -z -x $TARGET > ${TARGET.base}.asm'))
+info_sbl_hex = bram_env.Command('#build/examples/info_sbl.hex',bram_bin,Action('python tools/info_sbl_merge.py $SOURCE ' + dev_env['IC'] + ' $TARGET'))
+bram_env.Depends(info_sbl_hex,['#tools/info_sbl_merge.py'])

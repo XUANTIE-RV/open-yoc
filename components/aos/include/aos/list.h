@@ -260,9 +260,9 @@ static inline slist_t *slist_next(slist_t *n)
 * @param[in]   member  the name of the slist_t within the struct.
 */
 #define slist_for_each_entry(queue, node, type, member)        \
-    for (node = aos_container_of((queue)->next, type, member); \
-         &node->member;                                        \
-         node = aos_container_of(node->member.next, type, member))
+    for (node = (queue)->next? aos_container_of((queue)->next, type, member) : NULL; \
+         node;                                        \
+         node = node->member.next ? aos_container_of(node->member.next, type, member) : NULL)
 
 /*
  * Iterate over list of given type safe against removal of list entry.
@@ -274,11 +274,10 @@ static inline slist_t *slist_next(slist_t *n)
  * @param[in]   member  the name of the slist_t within the struct.
  */
 #define slist_for_each_entry_safe(queue, tmp, node, type, member) \
-    for (node = aos_container_of((queue)->next, type, member),    \
+    for (node = (queue)->next? aos_container_of((queue)->next, type, member) : NULL, \
          tmp = (queue)->next ? (queue)->next->next : NULL;        \
-         &node->member;                                           \
-         node = aos_container_of(tmp, type, member), tmp = tmp ? tmp->next : tmp)
-
+         node;                                           \
+         node = tmp ? aos_container_of(tmp, type, member) : NULL, tmp = tmp ? tmp->next : NULL)
 /*
  * Initialise the list.
  *

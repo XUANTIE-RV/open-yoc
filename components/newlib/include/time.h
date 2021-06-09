@@ -22,7 +22,7 @@
  ********************************************************************************/
 #include <stdbool.h>
 #include <sys/types.h>
-#include <sys/_timespec.h>
+//#include <sys/_timespec.h>
 #include <stdlib.h>
 #include <stdint.h>
 
@@ -82,7 +82,17 @@
  ********************************************************************************/
 /* Scalar types */
 
+#ifndef _TIME_T_DECLARED
+#define _TIME_T_DECLARED
 typedef int32_t  time_t;         /* Holds time in seconds */
+#endif
+
+
+#ifndef _CLOCK_T_DECLARED
+#define _CLOCK_T_DECLARED
+typedef uint32_t        clock_t;
+#endif
+
 typedef uint8_t   clockid_t;      /* Identifies one time base source */
 typedef uint32_t  timer_t;        /* Represents one POSIX timer */
 
@@ -90,11 +100,11 @@ typedef uint32_t  timer_t;        /* Represents one POSIX timer */
  * nanoseconds.
  */
 
-// struct timespec
-// {
-//   time_t tv_sec;                   /* Seconds */
-//   long   tv_nsec;                  /* Nanoseconds */
-// };
+struct timespec
+{
+  time_t tv_sec;                   /* Seconds */
+  long   tv_nsec;                  /* Nanoseconds */
+};
 
 /* struct tm is the standard representation for "broken out" time.
  *

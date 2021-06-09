@@ -7,7 +7,6 @@
 
 #include <aos/list.h>
 #include <aos/kernel.h>
-#include <aos/log.h>
 
 #include <yoc/udata.h>
 

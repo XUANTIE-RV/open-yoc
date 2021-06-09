@@ -100,8 +100,8 @@ typedef struct {
 					//弹内访问，生产环境，"wss://nls-gateway-inner.aliyuncs.com/ws/v1"
 	char * app_key; //[必须设置]。管控台创建的项目Appkey。
 	char * token;   //服务访问令牌。根据服务发布位置，可以是固定token，也可以是动态token（需配合key_id/key_secret）。
-	char * secret;  //预留
-	char * id;      //预留
+	//char * secret;  //预留
+	//char * id;      //预留
 	/* 以上变量，只在SDK引擎内部使用。*/
 
 	/* 以下变量，只在SDK外层使用，引擎内部不使用。*/
@@ -121,8 +121,8 @@ typedef struct {
    	   NULL      whatever    valid-token static_token, user 'token'
    	   NULL      whatever      NULL      return error
 	*/
+	char * sdk_code; //sdk_code info.向mind询问具体配置信息。
 
-	
 	/*reserved
 	TTSCacheType type;    //缓存存储方式，只支持kTTSCacheTypeFile
 	int size;             //limit of size. fileCount-File/MemorySize-RAM/MemorySize-Flash

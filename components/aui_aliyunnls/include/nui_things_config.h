@@ -74,6 +74,7 @@ void nui_things_config_print(NuiThingsConfig * config);
 
 NuiThingsConfig * nui_things_config_create();
 int nui_things_config_destroy(NuiThingsConfig * config);
+int nui_things_config_reset(NuiThingsConfig * config);
 //int nui_things_config_set_param(NuiThingsConfig * config, const char *key, const char * value);
 
 #ifdef __cplusplus

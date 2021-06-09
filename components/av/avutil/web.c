@@ -2,6 +2,7 @@
  * Copyright (C) 2018-2020 Alibaba Group Holding Limited
  */
 
+#if defined(CONFIG_SAL) || defined(CONFIG_TCPIP)
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/socket.h>
@@ -13,7 +14,7 @@
 #include "avutil/dync_buf.h"
 #include "avutil/socket_rw.h"
 
-#ifdef AV_USING_TLS
+#ifdef CONFIG_USING_TLS
 #include "mbedtls/base64.h"
 #include "mbedtls/net.h"
 #include "mbedtls/ssl.h"
@@ -27,7 +28,7 @@
 
 extern int select(int maxfdp1, fd_set *readset, fd_set *writeset, fd_set *exceptset, struct timeval *timeout);
 
-#ifdef AV_USING_TLS
+#ifdef CONFIG_USING_TLS
 struct mtls_session {
     uint8_t                     init;
     mbedtls_net_context         nctx;
@@ -41,7 +42,7 @@ struct mtls_session {
 
 static void _wsession_init(wsession_t *session)
 {
-#ifdef AV_USING_TLS
+#ifdef CONFIG_USING_TLS
     struct mtls_session *mtls = session->tls;
 #endif
 
@@ -52,12 +53,12 @@ static void _wsession_init(wsession_t *session)
     session->hdr_size_max     = WEB_HDR_SIZE_MAX_DEFAULT;
     session->body_size_max    = WEB_BODY_SIZE_MAX_DEFAULT;
     session->redirect_cnt_max = WEB_REDIRECT_CNT_MAX_DEFAULT;
-#ifdef AV_USING_TLS
+#ifdef CONFIG_USING_TLS
     session->tls              = mtls;
 #endif
 }
 
-#ifdef AV_USING_TLS
+#ifdef CONFIG_USING_TLS
 static void _mtls_session_init(struct mtls_session *mtls)
 {
     if (mtls && (!mtls->init)) {
@@ -114,9 +115,11 @@ static int _https_open(wsession_t *session, web_url_t *wurl, int timeout_ms)
 
     snprintf(port, sizeof(port), "%d", wurl->port);
     LOGD(TAG, "tls: connect to server %s ,port is %s", wurl->host, port);
+
     rc = mbedtls_net_connect(&mtls->nctx, wurl->host, port, MBEDTLS_NET_PROTO_TCP);
     if (rc != 0) {
         LOGE(TAG, "failed ! mbedtls_net_connect returned -0x%x", -rc);
+        AV_ERRNO_SET(AV_ERRNO_CONNECT_FAILD);
         goto err;
     }
 
@@ -136,7 +139,7 @@ static int _https_open(wsession_t *session, web_url_t *wurl, int timeout_ms)
         goto err;
     }
 
-    mbedtls_ssl_conf_read_timeout(&mtls->conf, 3000);
+    mbedtls_ssl_conf_read_timeout(&mtls->conf, timeout_ms);
     mbedtls_ssl_conf_authmode(&mtls->conf, MBEDTLS_SSL_VERIFY_NONE);
     mbedtls_ssl_conf_rng(&mtls->conf, mbedtls_ctr_drbg_random, &mtls->ctr_drbg);
 
@@ -150,7 +153,11 @@ static int _https_open(wsession_t *session, web_url_t *wurl, int timeout_ms)
 
     LOGD(TAG, "now, start handshake...");
     rc = mbedtls_ssl_handshake(&mtls->ssl);
-    CHECK_RET_WITH_GOTO(rc == 0, err);
+    if (rc != 0) {
+        LOGE(TAG, "handshake error, rc = %d", rc);
+        AV_ERRNO_SET(AV_ERRNO_NETWORK_FAILD);
+        goto err;
+    }
 
     LOGD(TAG, " ***tls handshake ok***\n    [ Protocol is %s ]\n    [ Ciphersuite is %s ]\n",
          mbedtls_ssl_get_version(&mtls->ssl), mbedtls_ssl_get_ciphersuite(&mtls->ssl));
@@ -216,17 +223,16 @@ static int _parse_resp_hdr(wsession_t *session, char *str)
     while (*str == ' ')
         str++;
     end = strchr(str, '\n');
-    CHECK_RET_WITH_GOTO(end != NULL, err);
+    CHECK_RET_WITH_GOTO(end, err);
 
     session->phrase = strndup(str, end - str);
-    CHECK_RET_WITH_GOTO(session->phrase != NULL, err);
+    CHECK_RET_WITH_GOTO(session->phrase, err);
 
     str = end + 1;
     while (*str) {
         end = strchr(str, '\n');
         ptr = strchr(str, ':');
-        CHECK_RET_WITH_GOTO((end != NULL) && (ptr != NULL), err);
-        CHECK_RET_WITH_GOTO(ptr < end, err);
+        CHECK_RET_WITH_GOTO(end && ptr && (ptr < end), err);
 
         *ptr++ = 0;
         while (*ptr == ' ')
@@ -250,6 +256,7 @@ err:
 
 static int _dict_add_basic_auth(dict_t *c, const char *header, const char *user, const char *passwd)
 {
+#ifdef CONFIG_USING_TLS
     char *b64;
     char buf[256];
     size_t dlen, olen, slen;
@@ -258,14 +265,17 @@ static int _dict_add_basic_auth(dict_t *c, const char *header, const char *user,
     slen = strlen(buf);
     dlen = slen * 3 / 2 + 4;
     b64  = aos_zalloc(dlen);
-    CHECK_RET_WITH_RET(b64 != NULL, -1);
+    CHECK_RET_WITH_RET(b64, -1);
 
     mbedtls_base64_encode((unsigned char*)b64, dlen, &olen, (unsigned char *)buf, slen);
 
-    snprintf(buf, sizeof(buf), "Basic %s", buf);
+    snprintf(buf, sizeof(buf), "Basic %s", b64);
     aos_free(b64);
 
     return dict_add(c, header, buf);
+#else
+    return -1;
+#endif
 }
 
 /**
@@ -274,7 +284,7 @@ static int _dict_add_basic_auth(dict_t *c, const char *header, const char *user,
  */
 wsession_t* wsession_create()
 {
-#ifdef AV_USING_TLS
+#ifdef CONFIG_USING_TLS
     wsession_t *session    = NULL;
     struct mtls_session *mtls = NULL;
 
@@ -318,6 +328,7 @@ static int _http_open(wsession_t *session, web_url_t *wurl, int timeout_ms)
     rc = getaddrinfo(wurl->host, port, &hints, &res);
     if (rc != 0) {
         LOGE(TAG, "getaddrinfo fail. rc = %d, host = %s, port = %s\n", rc, wurl->host, port);
+        AV_ERRNO_SET(AV_ERRNO_DNS_FAILD);
         goto err;
     }
 
@@ -343,7 +354,8 @@ static int _http_open(wsession_t *session, web_url_t *wurl, int timeout_ms)
                 break;
             }
             if ((errno != EAGAIN) && (errno != EINPROGRESS)) {
-                LOGE(TAG, "wsession_open connect fail. errno = %d\n", errno);
+                LOGE(TAG, "wsession_open connect fail. errno = %d", errno);
+                AV_ERRNO_SET(AV_ERRNO_CONNECT_FAILD);
                 goto err;
             }
         }
@@ -356,13 +368,14 @@ static int _http_open(wsession_t *session, web_url_t *wurl, int timeout_ms)
                 if ((errno == EINTR) || (errno == EAGAIN)) {
                     continue;
                 }
-                LOGE(TAG, "wsession_open select fail. errno = %d\n", errno);
+                LOGE(TAG, "wsession_open select fail. errno = %d", errno);
+                AV_ERRNO_SET(AV_ERRNO_CONNECT_FAILD);
                 goto err;
             } else if (rc == 1) {
                 break;
             } else if (rc == 0) {
-                errno = ETIMEDOUT;
-                LOGE(TAG, "wsession_open select timeout. errno = %d\n", errno);
+                LOGE(TAG, "wsession_open select timeout. errno = %d", errno);
+                AV_ERRNO_SET(AV_ERRNO_CONNECT_FAILD);
                 goto err;
             }
         }
@@ -401,12 +414,12 @@ int wsession_open(wsession_t *session, const char *url, int timeout_ms)
     }
 
     wurl = web_url_new(url);
-    CHECK_RET_WITH_GOTO(wurl != NULL, err);
+    CHECK_RET_WITH_GOTO(wurl, err);
 
     rc = dict_init(&session->hdrs, 10);
     CHECK_RET_WITH_GOTO(rc == 0, err);
 
-#ifdef AV_USING_TLS
+#ifdef CONFIG_USING_TLS
     if (URL_IS_HTTPS(wurl))
         rc = _https_open(session, wurl, timeout_ms);
     else
@@ -438,7 +451,7 @@ int wsession_write(wsession_t *session, const char *buf, size_t count, int timeo
         return -1;
     }
 
-#ifdef AV_USING_TLS
+#ifdef CONFIG_USING_TLS
     int rc;
     struct mtls_session *mtls = session->tls;
 
@@ -468,17 +481,17 @@ int wsession_read(wsession_t *session, char *buf, size_t count, int timeout_ms)
         return -1;
     }
 
-#ifdef AV_USING_TLS
+#ifdef CONFIG_USING_TLS
     int rc;
     struct mtls_session *mtls = session->tls;
 
     if (URL_IS_HTTPS(session->url)) {
         mbedtls_ssl_conf_read_timeout(&mtls->conf, timeout_ms);
         count = count >= MBEDTLS_SSL_MAX_CONTENT_LEN ? MBEDTLS_SSL_MAX_CONTENT_LEN / 2 : count;
-        rc    = mbedtls_ssl_read(&mtls->ssl, (unsigned char *)buf, count);
+        rc = mbedtls_ssl_read(&mtls->ssl, (unsigned char *)buf, count);
         //printf("====>>>count = %10d, rc = %10d, %d\n", count, rc, MBEDTLS_SSL_MAX_CONTENT_LEN);
         if (rc < 0) {
-            LOGI(TAG, "ssl read may be eof: rc = %d.", rc);
+            LOGI(TAG, "ssl read may be eof: rc = 0x%x.", -rc);
             /* FIXME: patch for mbedtls. may be read eof normaly */
             rc = (rc == MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY) ? 0 : -1;
         }
@@ -592,16 +605,17 @@ out:
 int wsession_close(wsession_t *session)
 {
     if (session) {
-        if (session->fd >= 0)
-            close(session->fd);
-
         dict_uninit(&session->hdrs);
         web_url_free(session->url);
         aos_free(session->phrase);
 
-#ifdef AV_USING_TLS
+#ifdef CONFIG_USING_TLS
         _mtls_session_deinit((struct mtls_session*)session->tls);
 #endif
+
+        if (session->fd >= 0)
+            close(session->fd);
+
         _wsession_init(session);
         return 0;
     }
@@ -618,7 +632,7 @@ int wsession_destroy(wsession_t *session)
 {
     if (session) {
         wsession_close(session);
-#ifdef AV_USING_TLS
+#ifdef CONFIG_USING_TLS
         aos_free(session->tls);
 #endif
         aos_free(session);
@@ -686,7 +700,7 @@ int wsession_get_range(wsession_t *session, const char *url, int redirect, int r
         return -1;
     }
 
-    rc = wsession_open(session, url, WEB_TIMEOUT_DEFAULT);
+    rc = wsession_open(session, url, 3000);
     CHECK_RET_WITH_RET(rc == 0, -1);
 
     if (range_s >= 0) {
@@ -698,13 +712,15 @@ int wsession_get_range(wsession_t *session, const char *url, int redirect, int r
         wsession_hdrs_add(session, "Range", range_v);
     }
 
-    rc = wsession_send_hdr(session, WEB_METHOD_GET, WEB_TIMEOUT_DEFAULT);
+    rc = wsession_send_hdr(session, WEB_METHOD_GET, 3000);
     CHECK_RET_WITH_GOTO(rc == 0, err);
 
-    rc = wsession_read_resp_hdr(session, WEB_TIMEOUT_DEFAULT);
+    rc = wsession_read_resp_hdr(session, 3000);
     CHECK_RET_WITH_GOTO(rc == 0, err);
 
-    LOGI(TAG, "HTTP response: %d %s", session->code, session->phrase);
+    if (session->code != 200) {
+        LOGI(TAG, "HTTP response: %d %s, url = %s", session->code, session->phrase, url);
+    }
     switch (session->code) {
     case 200:
     /* Partial Content */
@@ -721,7 +737,7 @@ int wsession_get_range(wsession_t *session, const char *url, int redirect, int r
         CHECK_RET_WITH_GOTO(redirect < session->redirect_cnt_max, err);
 
         r_url = strdup(val);
-        CHECK_RET_WITH_GOTO(r_url != NULL, err);
+        CHECK_RET_WITH_GOTO(r_url, err);
 
         wsession_close(session);
 
@@ -729,7 +745,11 @@ int wsession_get_range(wsession_t *session, const char *url, int redirect, int r
 
         aos_free(r_url);
         return rc;
+    case 404:
+        AV_ERRNO_SET(AV_ERRNO_FILE_NOT_FOUND);
+        return -1;
     default:
+        AV_ERRNO_SET(AV_ERRNO_HTTP_FAILD);
         return -1;
     }
 
@@ -737,5 +757,6 @@ err:
     wsession_close(session);
     return -1;
 }
+#endif
 
 

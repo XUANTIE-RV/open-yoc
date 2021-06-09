@@ -83,10 +83,8 @@ uint32_t byte_r32le(const uint8_t *buf)
     uint32_t x = -1;
 
     if (buf) {
-        x = buf[0];
-        x = x | (buf[1] << 8);
-        x = x | (buf[2] << 16);
-        x = x | (buf[3] << 24);
+        x  = (uint32_t)byte_r16le(buf);
+        x |= (uint32_t)byte_r16le(buf + 2) << 16;
     }
 
     return x;
@@ -94,20 +92,11 @@ uint32_t byte_r32le(const uint8_t *buf)
 
 uint64_t byte_r64le(const uint8_t *buf)
 {
-    uint64_t x = -1, y;
+    uint64_t x = -1;
 
     if (buf) {
-        x = buf[0];
-        x = x | (buf[1] << 8);
-        x = x | (buf[2] << 16);
-        x = x | (buf[3] << 24);
-
-        y = buf[4];
-        y = y | (buf[5] << 8);
-        y = y | (buf[6] << 16);
-        y = y | (buf[7] << 24);
-
-        x = x | (y << 32);
+        x  = (uint64_t)byte_r32le(buf);
+        x |= (uint64_t)byte_r32le(buf + 4) << 32;
     }
 
     return x;

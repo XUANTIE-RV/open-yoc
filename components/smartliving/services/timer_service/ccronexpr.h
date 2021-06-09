@@ -85,6 +85,9 @@ time_t cron_next(cron_expr* expr, time_t date);
  */
 time_t cron_prev(cron_expr* expr, time_t date);
 
+uint8_t cron_get_bit(uint8_t* rbyte, int idx);
+
+void cron_set_bit(uint8_t* rbyte, int idx);
 
 #if defined(__cplusplus) && !defined(CRON_COMPILE_AS_CXX)
 } /* extern "C"*/

@@ -11,9 +11,8 @@ extern "C" {
 
 #include <aos/types.h>
 #include <aos/kernel.h>
-#include <aos/kv.h>
+// #include <aos/kv.h>
 #include <aos/list.h>
-#include <aos/log.h>
 #include <aos/version.h>
 #include <aos/debug.h>
 

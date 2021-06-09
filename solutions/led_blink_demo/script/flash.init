@@ -1,0 +1,13 @@
+
+#reset
+set $psr=0xc0000000
+set *(int*)0x42010300=0x03
+
+download ihex verify=no $(ProjectPath)/generated/imtb.hex
+download ihex verify=no $(ProjectPath)/generated/tee.hex
+download ihex verify=no $(ProjectPath)/generated/boot.hex
+download ihex verify=no $(ProjectPath)/generated/prim.hex
+download ihex verify=no $(ProjectPath)/generated/misc.hex
+download ihex verify=no $(ProjectPath)/generated/kv.hex
+download ihex verify=no $(ProjectPath)/generated/lpm.hex
+download ihex verify=no $(ProjectPath)/generated/otp.hex 

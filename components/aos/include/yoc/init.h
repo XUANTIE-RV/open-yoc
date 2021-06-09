@@ -7,7 +7,7 @@
 
 #include <stdint.h>
 #include <devices/console_uart.h>
-#include <yoc/uservice.h>
+#include <devices/apdu_uart.h>
 #include <yoc/lpm.h>
 
 #ifdef __cplusplus

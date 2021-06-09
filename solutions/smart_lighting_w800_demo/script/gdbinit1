@@ -1,0 +1,30 @@
+#
+# Will Run this script before Start Debug 
+# 
+
+#target jtag jtag://127.0.0.1:1025
+target remote 127.0.0.1:1025
+
+reset
+set $psr=0xe0000000
+set $pc=Reset_Handler
+
+set debug-in-rom on
+set $r0=0x0000001d
+set $r1=0x2000fbf4
+set $r2=0x2000efe4
+set $r3=0x00000007
+set $r4=0x00000002
+set $r5=0x200199e0
+set $r6=0x2000fb74
+set $r7=0x2000f008
+set $r8=0x080d5dc0
+set $r9=0x200199e8
+set $r10=0x2000fb74
+set $r11=0x00000007
+set $r12=0x00000002
+set $r13=0x20019b20
+set $r14=0x2000f00c
+set $r15=0x80000340
+set $psr=0x2000c000
+set $pc=0x80000340

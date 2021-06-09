@@ -28,6 +28,14 @@ int avf_init(const char *inst_name, avfilter_t *avf);
 int avf_control(avfilter_t *avf, int cmd, void *arg, size_t *arg_size);
 
 /**
+ * @brief  bypass enable
+ * @param  [in] avf
+ * @param  [in] bypass : 0 or 1
+ * @return 0/-1
+ */
+int avf_set_bypass(avfilter_t *avf, int bypass);
+
+/**
  * @brief  link the two filters, to make a filter-chain
  * @param  [in] src : source filter
  * @param  [in] dst : the next/sink filter
@@ -48,7 +56,7 @@ int avf_link_tail(avfilter_t *head, avfilter_t *tail);
  * @param  [in] avf : the avfilter
  * @param  [in] in
  * @param  [in] out
- * @return 0/-1
+ * @return number of samples output per channel, -1 on error
  */
 int avf_filter_frame(avfilter_t *avf, const avframe_t *in, avframe_t *out);
 

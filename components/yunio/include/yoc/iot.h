@@ -9,8 +9,8 @@
 #include <stdarg.h>
 #include <stdint.h>
 #include <aos/kernel.h>
-#include <yoc/eventid.h>
-#include <yoc/uservice.h>
+#include <uservice/eventid.h>
+#include <uservice/uservice.h>
 
 #include <yoc/udata.h>
 

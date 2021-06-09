@@ -1,0 +1,52 @@
+<Board arch="riscv" cskysimv="2.0" name="bigdipper_alkaid_evb">
+	<cpu_info abi="abiv2" cpu="e906" endian="little" />
+	<dyndev shm="on">
+		<dev addr="0x50018000" extra="" filename="csky_gpio" irq="0" name="csky_gpio" type="GPIO" />
+		<dev addr="0x50010000" extra="" filename="csky_uart" irq="6" name="csky_uart" type="UART" />
+		<dev addr="0x60010000" extra="" filename="csky_uart" irq="7" name="csky_uart" type="UART" />
+		<dev addr="0x50000000" extra="" filename="csky_timer" irq="2" name="csky_timer" type="TIMER" />
+		<dev addr="0x50000014" extra="" filename="csky_timer" irq="3" name="csky_timer" type="TIMER" />
+		<dev addr="0x50000400" extra="" filename="csky_timer" irq="23" name="csky_timer" type="TIMER" />
+		<dev addr="0x50000414" extra="" filename="csky_timer" irq="24" name="csky_timer" type="TIMER" />
+		<dev addr="0x60000000" extra="" filename="csky_timer" irq="26" name="csky_timer" type="TIMER" />
+		<dev addr="0x60000014" extra="" filename="csky_timer" irq="27" name="csky_timer" type="TIMER" />
+		<dev addr="0x60000400" extra="" filename="csky_timer" irq="28" name="csky_timer" type="TIMER" />
+		<dev addr="0x60000414" extra="" filename="csky_timer" irq="29" name="csky_timer" type="TIMER" />
+		<dev addr="0x50008000" extra="" filename="csky_wdt" irq="5" name="csky_wdt" type="WDT" />
+		<dev addr="0x50014000" extra="" filename="csky_i2c" irq="9" name="csky_i2c" type="I2C" />
+		<dev addr="0x5000c000" extra="" filename="csky_spi" irq="12" name="csky_spi" type="SPI" />
+		<dev addr="0x6000c000" extra="" filename="csky_spi" irq="11" name="csky_spi" type="SPI" />
+		<dev addr="0x60020000" extra="" filename="csky_adc" irq="15" name="csky_adc" type="ADC" />
+		<dev addr="0x40001000" extra="" filename="csky_wj_dmac" irq="17" name="csky_wj_dmac" type="WJ_DMAC" />
+		<dev addr="0x5001c000" extra="" filename="csky_pwm" irq="19" name="csky_pwm" type="PWM" />
+		<dev addr="0x50040000" extra="" filename="csky_iis" irq="14" name="csky_iis" type="IIS" />
+		<dev addr="0x50040400" extra="" filename="csky_iis" irq="16" name="csky_iis" type="IIS" />
+		<dev addr="0x60040400" extra="" filename="csky_iis" irq="21" name="csky_iis" type="IIS" />
+		<dev addr="0x60040800" extra="" filename="csky_iis" irq="22" name="csky_iis" type="IIS" />
+		<dev addr="0x60024000" extra="" filename="csky_wj_etb" irq="" name="csky_wj_etb" type="ETB" />
+		<dev addr="0x5002c000" extra="" filename="csky_qspi" irq="25" name="csky_qspi" type="QSPI" />
+	</dyndev>
+	<memory>
+		<mem addr="0x0" attr="MEM_RAM" name="smart_inst_mem" size="0x01000000" />
+		<mem addr="0x20000000" attr="MEM_RAM" name="smart_data_mem" size="0x01000000" />
+		<mem addr="0x50000000" attr="MEM_RAM" name="smart_outchip_mem" size="0x00800000" />
+		<mem addr="0x60000000" attr="MEM_RAM" name="smart_sys_mem" size="0x01000000" />
+	</memory>
+	<cpu_prop>
+		<cpu name="pctrace" value="off"> on/off </cpu>
+		<cpu name="elrw" value="on"> on/off </cpu>
+		<cpu name="mem_prot" value="mpu"> no/mmu/mpu </cpu>
+		<cpu name="unaligned_access" value="off"> on/off </cpu>
+	</cpu_prop>
+	<Description>
+		This file is used for dynamic configuration
+		<AutoDescription>
+            CPU Type: ck805ef Little Endian
+            Memory Sections:
+                smart_inst_mem, Start: 0x0, Length: 0x1000000
+                smart_data_mem, Start: 0x20000000, Length: 0x40000
+                smart_outchip_mem, Start: 0x50000000, Length: 0x800000
+                smart_sys_mem, Start: 0x60000000, Length: 0x1000000
+        </AutoDescription>
+	</Description>
+</Board>

@@ -16,6 +16,22 @@ avframe_t *avframe_alloc()
 }
 
 /**
+ * @brief  clear nb_samples, sf, linesize, etc. mpool & data point reserved otherwise.
+ * @param  [in] frame
+ * @return
+ */
+void avframe_clear(avframe_t *frame)
+{
+    if (frame) {
+        frame->type       = AVMEDIA_TYPE_UNKNOWN;
+        frame->sf         = 0;
+        frame->nb_samples = 0;
+        frame->moffset    = 0;
+        memset(frame->linesize, 0, sizeof(frame->linesize));
+    }
+}
+
+/**
  * @brief  free res of the frame
  * @param  [in] frame
  * @return
@@ -94,7 +110,7 @@ int avframe_get_buffer(avframe_t *frame)
  * @param  [in] to
  * @return 0/-1
  */
-int avframe_copy_from(avframe_t *from, avframe_t *to)
+int avframe_copy_from(const avframe_t *from, avframe_t *to)
 {
     int rc = -1;
     int f_linesize;
@@ -114,18 +130,19 @@ int avframe_copy_from(avframe_t *from, avframe_t *to)
             rc = 0;
         }
     } else {
-        if (f_linesize != to->linesize[0]) {
+        //FIXME:
+        if (f_linesize > to->capsize[0]) {
             void *data = aos_realloc(to->data[0], f_linesize);
             if (!data) {
                 return -1;
             }
-            to->data[0]     = data;
-            to->linesize[0] = f_linesize;
-            to->capsize[0]  = f_linesize;
+            to->data[0]    = data;
+            to->capsize[0] = f_linesize;
         }
 
         to->sf          = from->sf;
         to->nb_samples  = from->nb_samples;
+        to->linesize[0] = f_linesize;
         memcpy(to->data[0], from->data[0], f_linesize);
         rc = 0;
     }

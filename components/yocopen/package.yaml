@@ -1,9 +1,9 @@
 
 ## 第一部分： 基础信息
 name: yocopen                               # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
-version: v7.3.0                                     # <必选项> 组件版本号
+version: v7.4.3                                     # <必选项> 组件版本号
 description: 开源 yoc  # <必选项> 建议至少20字以上
-type: common                                        # <必选项> 组件类型，为：solution, chip, board, common
+type: common                                        # <必选项> 组件类型，为：solution, chip, board, common, sdk
 
 tag: 核心模块                                       # <可选项> 组件分类，缺省值： ''
 license: Apache license v2.0                        # <可选项> 源代码的许可证，要确保所有代码、文件的许可证不冲突。如：MIT，Apache license v2.0，BSD
@@ -16,94 +16,200 @@ license: Apache license v2.0                        # <可选项> 源代码的�
 #   - aos: >=v7.2.0
 depends:
   # base component
-  - csi: V7.3.0
-  - minilibc: V7.3.0
-  - aos: V7.3.0
-  - console: V7.3.0
-  - drivers: V7.3.0
-  - kv: V7.3.0
-  - rhino: V7.3.0
-  - posix: V7.3.0
+  - csi: v7.4.3
+  - minilibc: v7.4.3
+  - newlib: v7.4.3
+  - aos: v7.4.3
+  - cli: v7.4.3
+  - drivers: v7.4.3
+  - posix: v7.4.3
+  - ipc: v7.4.3
+  - rhino: v7.4.3
+  - rhino_arch: v7.4.3
+  - rhino_pwrmgmt: v7.4.3
+  - uservice: v7.4.3
+  - partition: v7.4.3
+  - ulog: v7.4.3
+  - aos_hal: v7.4.3
+  - hal_csi: v7.4.3
 
   # network
-  - lwip: V7.3.0
-  - sal: V7.3.0
-  - coap: V7.3.0
-  - sntp: V7.3.0
-  - netmgr: V7.3.0
-  - httpclient: V7.3.0
-  - transport: V7.3.0
-  - webclient: V7.3.0
-  - ntp: V7.3.0
-  - fota: V7.3.0
-  - websocket: V7.3.0
-  - mbedtls: V7.3.0
-  - wifi_provisioning: V7.3.0
+  - lwip: v7.4.3
+  - sal: v7.4.3
+  - coap: v7.4.3
+  - mqtt: v7.4.3
+  - ntp: v7.4.3
+  - sntp: v7.4.3
+  - netmgr: v7.4.3
+  - httpclient: v7.4.3
+  - transport: v7.4.3
+  - webclient: v7.4.3
+  - websocket: v7.4.3
+  - http: v7.4.3
+  - ogg: v7.4.3
+  - sys_voice: v7.4.3
+  - fota: v7.4.3
+  - wifi_provisioning: v7.4.3
+  - aliot: v7.4.3
+  - yunio: v7.4.3
 
-  # media
-  - aui_cloud: V7.3.0
-  - aui_demo: V7.3.0
-  - ipc: V7.3.0
-  - mic: V7.3.0
-  - minialsa: V7.3.0
-  - pvmp3dec: V7.3.0
-  - record: V7.3.0
-  - voice: V7.3.0
-  - av: V7.3.0
-  - amrnb: V7.3.0
-  - amrwb: V7.3.0
-  - av_cp: V7.3.0
-  - speexdsp: V7.3.0
-  - flac: V7.3.0
-
-  # iot
-  - aliot: V7.3.0
-  - yunio: V7.3.0
+  # audio media
+  - aui_cloud: v7.4.3
+  - aui_aliyunnls: v7.4.3
+  - aui_cloud_adapter: v7.4.3
+  - mic: v7.4.3
+  - minialsa: v7.4.3
+  - pvmp3dec: v7.4.3
+  - record: v7.4.3
+  - voice: v7.4.3
+  - av: v7.4.3
+  - av_cp: v7.4.3
+  - amrnb: v7.4.3
+  - amrwb: v7.4.3
+  - speexdsp: v7.4.3
+  - flac: v7.4.3
+  - speex: v7.4.3
+  - sonic: v7.4.3
+  - opus: v7.4.3
+  - voice_mit: v7.4.3
+  - voice_huwen: v7.4.3
+  - voice_thead: v7.4.3
+  - yoc_sc5654: v7.4.3
+  - smart_audio: v7.4.3
 
   # fs
-  - vfs: V7.3.0
-  - fatfs: V7.3.0
-  - spiffs: V7.3.0
-  - littlefs: V7.3.0
+  - kv: v7.4.3
+  - vfs: v7.4.3
+  - fatfs: v7.4.3
+  - spiffs: v7.4.3
+  - littlefs: v7.4.3
 
   # security
-  - tee: V7.3.0
+  - tee: v7.4.3
+  - sec_crypto: v7.4.3
+  - key_mgr: v7.4.3
+  - mbedtls: v7.4.3
 
-  # others
-  - at: V7.3.0
-  - ers: V7.3.0
-  - button: V7.3.0
-  - adc_button: V7.3.0
-  - clock_alarm: V7.3.0
-  - ble_mesh: V7.3.0
-  - cjson: V7.3.0
+  # ble
+  - ble_mesh: v7.4.3
+  - ble_host: v7.4.3
 
-  # drivers
-  - drv_bt_rtl8723ds: V7.3.0
-  - drv_wifi_rtl8723ds: V7.3.0
-  - drv_sdmmc: V7.3.0
-  - drv_sensors: V7.3.0
-  - drv_wifi_esp8266: V7.3.0
-  - drv_wifi_m88wi6700s: V7.3.0
-  - drv_snd_pangu: V7.3.0
-  - drv_sensors: V7.3.0
-  - drv_leds: V7.3.0
-  - drv_wifi_esp8266: V7.3.0
+  # Ali Tmall app
+  - smartliving: v7.4.3
+  - breeze: v7.4.3
+
+  # device drivers
+  - drv_bt_rtl8723ds: v7.4.3
+  - drv_wifi_rtl8723ds: v7.4.3
+  - drv_sdmmc: v7.4.3
+  - drv_sensors: v7.4.3
+  - drv_wifi_esp8266: v7.4.3
+  - drv_wifi_m88wi6700s: v7.4.3
+  - drv_snd_pangu: v7.4.3
+  - drv_leds: v7.4.3
+  - drv_snd_sc5654: v7.4.3
+  - drv_bt_phy6220: v7.4.3
+  - drv_light: v7.4.3
+  - drv_bt_w800: v7.4.3
+  - drv_wifi_w800: v7.4.3
 
   # chip
-  - csi_pangu: V7.3.0
-  - csi_dummy: V7.3.0
-  - csi_ch2201: V7.3.0
+  - chip_pangu: v7.4.3
+  - chip_csky_dummy: v7.4.3
+  - chip_ch2201: v7.4.3
+  - chip_arm_dummy: v7.4.3
+  - chip_riscv_dummy: v7.4.3
+  - chip_sc5654: v7.4.3
+  - chip_phy6220: v7.4.3
+  - chip_ch2601: v7.4.3
+  - chip_w800: v7.4.3
 
   # boards
-  - board_dummy: V7.3.0
-  - pangu_cpu0: V7.3.0
-  - cb2201: V7.3.0
+  - board_arm_dummy: v7.4.3
+  - board_csky_dummy: v7.4.3
+  - board_riscv_dummy: v7.4.3
+  - pangu_cpu0_evb: v7.4.3
+  - pangu_cpu1_evb: v7.4.3
+  - pangu_cpu2_evb: v7.4.3
+  - cb2201: v7.4.3
+  - cb5654: v7.4.3
+  - phy6220_evb: v7.4.3
+  - ch2601_evb: v7.4.3
+  - w800_evb: v7.4.3
 
-  # demo soution
-  - helloworld: V7.3.0
-  - pangu_player: V7.3.0
-  - pangu_tee: V7.3.0
-  - pangu_tee_test: V7.3.0
-  - alicoap_demo: V7.3.0
-  - alimqtt_sensor_data_to_cloud_demo: V7.3.0
+  # solution
+  - cb5654_boot: v7.4.3
+  - pangu_boot: v7.4.3
+  # demo
+  - helloworld: v7.4.3
+  - fota_demo: v7.4.3
+  - wifi_demo: v7.4.3
+  - arm_dummy_demo: v7.4.3
+  - csky_dummy_demo: v7.4.3
+  - riscv_dummy_demo: v7.4.3
+  # pangu demo
+  - pangu_demo: v7.4.3
+  - pangu_player_demo: v7.4.3
+  - pangu_tee_demo: v7.4.3
+  - pangu_secure_demo: v7.4.3
+  # ch2201 demo
+  - alicoap_demo: v7.4.3
+  - alimqtt_sensor_data_to_cloud_demo: v7.4.3
+  - led_blink_demo: v7.4.3
+  - cb2201_fota_demo: v7.4.3
+  # sc5654 demo
+  - smart_speaker_demo: v7.4.3
+  # ch2601 demo
+  - ch2601_helloworld: v7.4.3
+  - ch2601_gui_demo: v7.4.3
+  - ch2601_fota_demo: v7.4.3
+  - ch2601_player_demo: v7.4.3
+  - ch2601_marquee_demo: v7.4.3
+  - ch2601_at_demo: v7.4.3
+  # phy6220 demo
+  - helloworld_phy6220: v7.4.3
+  - ble_uart_profile_server_demo: v7.4.3
+  - ble_uart_profile_client_demo: v7.4.3
+  - ble_shell_demo: v7.4.3
+  - ble_scanner_demo: v7.4.3
+  - ble_ibeacon_demo: v7.4.3
+  - ble_hrs_demo: v7.4.3
+  - ble_hid_keyboard_demo: v7.4.3
+  - ble_dis_demo: v7.4.3
+  - ble_bas_demo: v7.4.3
+  - ble_advertising_demo: v7.4.3
+  - mesh_shell: v7.4.3
+  - mesh_switch_node_demo: v7.4.3
+  - mesh_light_node_demo: v7.4.3
+  - ble_ibeacon_apple_demo: v7.4.3
+  - ble_hrs_lpm_demo: v7.4.3
+  # w800 demo
+  - smart_lighting_w800_demo: v7.4.3
+  - helloworld_w800: v7.4.3
+
+  # chip sdk
+  - sdk_chip_arm_dummy: v7.4.3
+  - sdk_chip_csky_dummy: v7.4.3
+  - sdk_chip_riscv_dummy: v7.4.3
+  - sdk_chip_pangu: v7.4.3
+  - sdk_chip_ch2201: v7.4.3
+  - sdk_chip_sc5654: v7.4.3
+  - sdk_chip_phy6220: v7.4.3
+  - sdk_chip_ch2601: v7.4.3
+  - sdk_chip_w800: v7.4.3
+
+  # test
+  # - sdk_test_solutions: v7.4.3
+
+  # misc component
+  - at: v7.4.3
+  - ers: v7.4.3
+  - button: v7.4.3
+  - adc_button: v7.4.3
+  - clock_alarm: v7.4.3
+  - bt: v7.4.3
+  - cjson: v7.4.3
+  - fct: v7.4.3
+  - dut_service: v7.4.3
+  - rhino_arch_phy6220: v7.4.3
+  - cmsis: v7.4.3

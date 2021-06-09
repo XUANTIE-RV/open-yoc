@@ -16,7 +16,7 @@ enum iotx_event_t {
     IOTX_AWSS_START = 0x1000,       // AWSS start without enbale, just supports device discover
     IOTX_AWSS_ENABLE,               // AWSS enable
     IOTX_AWSS_LOCK_CHAN,            // AWSS lock channel(Got AWSS sync packet)
-    IOTX_AWSS_CS_ERR,               // AWSS AWSS checksum is error
+    IOTX_AWSS_CS_ERR,               // AWSS AWSS checksum is error. For dev ap is awss packet content error
     IOTX_AWSS_PASSWD_ERR,           // AWSS decrypt passwd error
     IOTX_AWSS_GOT_SSID_PASSWD,      // AWSS parse ssid and passwd successfully
     IOTX_AWSS_CONNECT_ADHA,         // AWSS try to connnect adha (device discover, router solution)

@@ -16,10 +16,10 @@ static context_internel ctx_internal = {0x0000000000000000, CONTEXT_INIT_FLAG};
 static session_internel sess_internal = {0x0000000000000000};
 
 #undef tee_malloc
-#define tee_malloc  malloc
+#define tee_malloc(a)   NULL
 
 #undef tee_free
-#define tee_free    free
+#define tee_free(a) NULL
 
 
 #if CONFIG_MSG_VERIFY > 0

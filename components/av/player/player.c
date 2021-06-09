@@ -2,10 +2,12 @@
  * Copyright (C) 2018-2020 Alibaba Group Holding Limited
  */
 
+#include "avutil/av_config.h"
 #include "avutil/common.h"
 #include "avutil/av_typedef.h"
 #include "stream/stream.h"
 #include "avformat/avformat.h"
+#include "avformat/avparser_all.h"
 #include "avcodec/avcodec.h"
 #include "output/output.h"
 #include "avfilter/avfilter.h"
@@ -13,8 +15,6 @@
 #include "player.h"
 
 #define TAG                    "player"
-
-//#define FPGA_ENABLE
 
 enum player_status {
     PLAYER_STATUS_STOPED,
@@ -50,6 +50,8 @@ struct player_cb {
     uint32_t                     resample_rate; ///< none zereo means need to resample
     uint8_t                      vol_en;        ///< soft vol scale enable
     uint8_t                      vol_index;     ///< soft vol scale index (0~255)
+    uint8_t                      atempo_play_en;///< atempo play enable
+    float                        speed;         ///< atempo play speed.suggest: 0.5 ~ 2.0;
     uint8_t                      *aef_conf;     ///< config data for aef
     size_t                       aef_conf_size; ///< size of the config data for aef
     uint8_t                      eq_en;         ///< used for equalizer config
@@ -59,6 +61,7 @@ struct player_cb {
 
     int64_t                      cur_pts;
     uint8_t                      status;
+    uint8_t                      before_status;
     aos_event_t                  evt;
     uint8_t                      evt_status;
     player_event_t               event_cb;
@@ -82,16 +85,17 @@ struct player_cb {
  */
 static void _player_inner_init(player_t *player)
 {
-    player->url        = NULL;
-    player->s          = NULL;
-    player->demuxer    = NULL;
-    player->ad         = NULL;
-    player->ao         = NULL;
-    player->need_quit  = 0;
-    player->cur_pts    = 0;
-    player->start_time = 0;
-    player->status     = PLAYER_STATUS_STOPED;
-    player->evt_status = PLAYER_EVENT_UNKNOWN;
+    player->url           = NULL;
+    player->s             = NULL;
+    player->demuxer       = NULL;
+    player->ad            = NULL;
+    player->ao            = NULL;
+    player->need_quit     = 0;
+    player->cur_pts       = 0;
+    player->start_time    = 0;
+    player->status        = PLAYER_STATUS_STOPED;
+    player->before_status = PLAYER_STATUS_STOPED;
+    player->evt_status    = PLAYER_EVENT_UNKNOWN;
 
     aos_event_set(&player->evt, ~PLAYER_TASK_QUIT_EVT, AOS_EVENT_AND);
     memset(&player->stat, 0, sizeof(player->stat));
@@ -109,6 +113,8 @@ int player_init()
         resample_register();
         eqx_register();
         aefx_register();
+        atempo_register();
+        avparser_register_all();
 
         stream_register_all();
         demux_register_all();
@@ -131,6 +137,7 @@ int player_conf_init(ply_conf_t *ply_cnf)
     CHECK_PARAM(ply_cnf, -1);
     memset(ply_cnf, 0, sizeof(ply_conf_t));
     ply_cnf->ao_name               = "alsa";
+    ply_cnf->speed                 = 1;
     ply_cnf->rcv_timeout           = SRCV_TIMEOUT_DEFAULT;
     ply_cnf->cache_size            = SCACHE_SIZE_DEFAULT;
     ply_cnf->cache_start_threshold = SCACHE_THRESHOLD_DEFAULT;
@@ -149,7 +156,7 @@ player_t* player_new(const ply_conf_t *ply_cnf)
 {
     player_t *player = NULL;
 
-    CHECK_PARAM(ply_cnf && ply_cnf->ao_name, NULL);
+    CHECK_PARAM(ply_cnf && ply_cnf->ao_name && ply_cnf->speed >= PLAY_SPEED_MIN && ply_cnf->speed <= PLAY_SPEED_MAX, NULL);
     LOGI(TAG, "%s, %d enter.", __FUNCTION__, __LINE__);
     player = (struct player_cb*)aos_zalloc(sizeof(struct player_cb));
     CHECK_RET_TAG_WITH_RET(player, NULL);
@@ -178,13 +185,14 @@ player_t* player_new(const ply_conf_t *ply_cnf)
     player->resample_rate         = ply_cnf->resample_rate;
     player->vol_en                = ply_cnf->vol_en;
     player->vol_index             = ply_cnf->vol_index;
+    player->atempo_play_en        = ply_cnf->atempo_play_en;
+    player->speed                 = ply_cnf->speed;
     player->rcv_timeout           = ply_cnf->rcv_timeout ? ply_cnf->rcv_timeout : SRCV_TIMEOUT_DEFAULT;
     player->eq_segments           = ply_cnf->eq_segments;
     player->cache_size            = ply_cnf->cache_size ? ply_cnf->cache_size : SCACHE_SIZE_DEFAULT;
     player->cache_start_threshold = ply_cnf->cache_start_threshold ? ply_cnf->cache_start_threshold : SCACHE_THRESHOLD_DEFAULT;
     player->period_ms             = ply_cnf->period_ms ? ply_cnf->period_ms : AO_ONE_PERIOD_MS;
     player->period_num            = ply_cnf->period_num ? ply_cnf->period_num : AO_TOTAL_PERIOD_NUM;
-    player->status                = PLAYER_STATUS_STOPED;
     aos_event_new(&player->evt, 0);
     aos_mutex_new(&player->lock);
     _player_inner_init(player);
@@ -311,15 +319,17 @@ static ao_cls_t* _player_ao_new(player_t *player, sf_t ao_sf)
     ao_cls_t *ao;
 
     ao_conf_init(&ao_cnf);
-    ao_cnf.name          = player->ao_name;
-    ao_cnf.eq_segments   = player->eq_segments;
-    ao_cnf.resample_rate = player->resample_rate;
-    ao_cnf.aef_conf      = player->aef_conf;
-    ao_cnf.aef_conf_size = player->aef_conf_size;
-    ao_cnf.vol_en        = player->vol_en;
-    ao_cnf.vol_index     = player->vol_index;
-    ao_cnf.period_ms     = player->period_ms;
-    ao_cnf.period_num    = player->period_num;
+    ao_cnf.name           = player->ao_name;
+    ao_cnf.eq_segments    = player->eq_segments;
+    ao_cnf.resample_rate  = player->resample_rate;
+    ao_cnf.aef_conf       = player->aef_conf;
+    ao_cnf.aef_conf_size  = player->aef_conf_size;
+    ao_cnf.vol_en         = player->vol_en;
+    ao_cnf.vol_index      = player->vol_index;
+    ao_cnf.atempo_play_en = player->atempo_play_en;
+    ao_cnf.speed          = player->speed;
+    ao_cnf.period_ms      = player->period_ms;
+    ao_cnf.period_num     = player->period_num;
     ao = ao_open(ao_sf, &ao_cnf);
     CHECK_RET_TAG_WITH_RET(ao, NULL);
 
@@ -349,6 +359,26 @@ err:
     return NULL;
 }
 
+static void _stream_event(void *opaque, uint8_t event, const void *data, uint32_t len)
+{
+    player_t *player = opaque;
+
+    if (player->status == PLAYER_STATUS_PLAYING) {
+        switch (event) {
+        case STREAM_EVENT_UNDER_RUN:
+            player->evt_status = PLAYER_EVENT_UNDER_RUN;
+            break;
+        case STREAM_EVENT_OVER_RUN:
+            player->evt_status = PLAYER_EVENT_OVER_RUN;
+            break;
+        default:
+            LOGE(TAG, "stream event unknown, event = %u", event);
+            return;
+        }
+        EVENT_CALL(player, player->evt_status, NULL, 0);
+    }
+}
+
 static int _player_prepare(player_t *player)
 {
     int rc;
@@ -367,8 +397,11 @@ static int _player_prepare(player_t *player)
     stm_cnf.cache_start_threshold = player->cache_start_threshold;
     stm_cnf.irq.arg               = player;
     stm_cnf.irq.handler           = _interrupt;
+    stm_cnf.opaque                = player;
+    stm_cnf.stream_event_cb       = _stream_event;
     s = stream_open(player->url, &stm_cnf);
     CHECK_RET_TAG_WITH_GOTO(s, err);
+    player->speed = stream_is_live(s) ? 1 : player->speed;
     demuxer = demux_open(s);
     CHECK_RET_TAG_WITH_GOTO(demuxer, err);
     if (player->start_time) {
@@ -387,14 +420,12 @@ static int _player_prepare(player_t *player)
 
     /* FIXME: sf of the demuxer may be inaccurate */
     sf = ad->ash.sf ? ad->ash.sf : demuxer->ash.sf;
-    demuxer->ash.sf = sf;
 
-#ifndef FPGA_ENABLE
     ao = _player_ao_new(player, sf);
     CHECK_RET_TAG_WITH_GOTO(ao, err);
     rc = ao_start(ao);
     CHECK_RET_TAG_WITH_GOTO(rc == 0, err);
-#endif
+
     player->s       = s;
     player->demuxer = demuxer;
     player->ad      = ad;
@@ -402,9 +433,7 @@ static int _player_prepare(player_t *player)
 
     return 0;
 err:
-#ifndef FPGA_ENABLE
     ao_close(ao);
-#endif
     ad_close(ad);
     demux_close(demuxer);
     stream_close(s);
@@ -425,27 +454,33 @@ static void _ptask(void *arg)
     dframe = avframe_alloc();
     CHECK_RET_TAG_WITH_GOTO(dframe, quit);
 
-    player_lock();
+    /* FIXME: prepare may be block too long */
     rc = _player_prepare(player);
     if (rc < 0) {
         goto quit;
     }
-    player->status = PLAYER_STATUS_PLAYING;
-    player_unlock();
+
+loop:
+    player_lock();
+    if (player->status == PLAYER_STATUS_PREPARING) {
+        player->status = PLAYER_STATUS_PLAYING;
+        player_unlock();
+    } else if (player->status == PLAYER_STATUS_PAUSED) {
+        player_unlock();
+        aos_msleep(200);
+        goto loop;
+    } else {
+        /* player status is PLAYER_STATUS_STOPED only */
+        rc = 0;
+        player_unlock();
+        goto quit;
+    }
+
     ad      = player->ad;
     demuxer = player->demuxer;
-
     EVENT_CALL(player, PLAYER_EVENT_START, NULL, 0);
-#ifdef FPGA_ENABLE
-    char back[13] = {0};
-    long long t = aos_now_ms();
-    printf("\r\n====>pcm time             ");
-    memset(back, '\b', 10);
-#endif
-    player_lock();
+
     for (;;) {
-        player_unlock();
-        player_lock();
         player->stat.run_loop++;
         if (PLAYER_STATUS_PAUSED == player->status) {
             aos_msleep(200);
@@ -454,52 +489,53 @@ static void _ptask(void *arg)
             break;
         }
 
-        rc = demux_read_packet(demuxer, &pkt);
-        if (rc < 0) {
-            LOGE(TAG, "read packet fail, rc = %d", rc);
-            goto quit;
-        } else if (rc == 0) {
-            break;
+        if (!pkt.len) {
+            rc = demux_read_packet(demuxer, &pkt);
+            if (rc < 0) {
+                LOGE(TAG, "read packet fail, rc = %d", rc);
+                goto quit;
+            } else if (rc == 0) {
+                break;
+            }
+            player->cur_pts = pkt.pts;
         }
 
-#if 0
-        printf("====>>>size = %d\n", pkt.len);
-#else
-        player->cur_pts = pkt.pts;
-        rc = ad_decode(ad, dframe, &got_frame, &pkt);
-        if (rc <= 0) {
-            LOGE(TAG, "ad decode fail, rc = %d", rc);
-            goto quit;
-        }
-        if (!got_frame) {
-            continue;
-        }
+        player_lock();
+        if (player->status == PLAYER_STATUS_PLAYING) {
+            rc = ad_decode(ad, dframe, &got_frame, &pkt);
+            if (rc <= 0) {
+                LOGE(TAG, "ad decode fail, rc = %d", rc);
+                AV_ERRNO_SET(AV_ERRNO_DECODE_FAILD);
+                player_unlock();
+                goto quit;
+            }
+            pkt.len = 0;
+            if (!got_frame) {
+                player_unlock();
+                continue;
+            }
 
-#ifdef FPGA_ENABLE
-        aos_msleep(10);
-        if ((aos_now_ms() - t) > (120000)) {
-            goto quit;
-        }
-        printf("%s%10ld", back, aos_now_ms() - t);
-#else
-        rc = ao_write(player->ao, dframe->data[0], dframe->linesize[0]);
-        if (rc >= 0) {
-            player->stat.ao_write_size += rc;
-            player->stat.run_loop_valid++;
-            if (play_first == 1) {
-                play_first = 0;
-                LOGI(TAG, "first frame output");
+            rc = ao_write(player->ao, dframe->data[0], dframe->linesize[0]);
+            if (rc >= 0) {
+                player->stat.ao_write_size += rc;
+                player->stat.run_loop_valid++;
+                if (play_first == 1) {
+                    play_first = 0;
+                    LOGI(TAG, "first frame output");
+                }
+                player_unlock();
+            } else {
+                LOGE(TAG, "ao write fail, rc = %d, pcm_size = %d", rc, dframe->linesize[0]);
+                AV_ERRNO_SET(AV_ERRNO_OUTPUT_FAILD);
+                player_unlock();
+                goto quit;
             }
         } else {
-            LOGE(TAG, "ao write fail, rc = %d, pcm_size = %d", rc, dframe->linesize[0]);
-            goto quit;
+            player_unlock();
         }
-#endif
-#endif
     }
     rc = 0;
 quit:
-    player_unlock();
     LOGD(TAG, "cb run task quit");
     avpacket_free(&pkt);
     avframe_free(&dframe);
@@ -539,10 +575,12 @@ int player_play(player_t *player, const char *url, uint64_t start_time)
     player->url        = strdup(url);
     CHECK_RET_TAG_WITH_GOTO(player->url, quit);
     player->status = PLAYER_STATUS_PREPARING;
-    rc = aos_task_new_ext(&ptask, "player_task", _ptask, (void *)player, 96*1024, AOS_DEFAULT_APP_PRI - 2);
+    rc = aos_task_new_ext(&ptask, "player_task", _ptask, (void *)player, CONFIG_PLAYER_TASK_STACK_SIZE, AOS_DEFAULT_APP_PRI - 2);
     if (rc != 0) {
         aos_freep(&player->url);
+        player->status = PLAYER_STATUS_STOPED;
         LOGE(TAG, "player_task new create faild, may be oom, rc = %d", rc);
+        AV_ERRNO_SET(AV_ERRNO_OOM);
         goto quit;
     }
 
@@ -564,12 +602,16 @@ int player_pause(player_t *player)
     CHECK_PARAM(player, -1);
     aos_mutex_lock(&player->lock, AOS_WAIT_FOREVER);
     LOGI(TAG, "%s, %d enter. player = %p", __FUNCTION__, __LINE__, player);
-    if (player->status == PLAYER_STATUS_PLAYING) {
-        player->status = PLAYER_STATUS_PAUSED;
-#ifndef FPGA_ENABLE
+    switch (player->status) {
+    case PLAYER_STATUS_PLAYING:
         ao_stop(player->ao);
-#endif
+    case PLAYER_STATUS_PREPARING:
+        player->before_status = player->status;
+        player->status        = PLAYER_STATUS_PAUSED;
         ret = 0;
+        break;
+    default:
+        break;
     }
     LOGI(TAG, "%s, %d leave. player = %p", __FUNCTION__, __LINE__, player);
     aos_mutex_unlock(&player->lock);
@@ -590,11 +632,17 @@ int player_resume(player_t *player)
     aos_mutex_lock(&player->lock, AOS_WAIT_FOREVER);
     LOGI(TAG, "%s, %d enter. player = %p", __FUNCTION__, __LINE__, player);
     if (player->status == PLAYER_STATUS_PAUSED) {
-#ifndef FPGA_ENABLE
-        ao_start(player->ao);
-#endif
-        player->status = PLAYER_STATUS_PLAYING;
-        ret = 0;
+        switch (player->before_status) {
+        case PLAYER_STATUS_PLAYING:
+            ao_start(player->ao);
+        case PLAYER_STATUS_PREPARING:
+            player->status        = player->before_status;
+            player->before_status = PLAYER_STATUS_PAUSED;
+            ret = 0;
+            break;
+        default:
+            break;
+        }
     }
     LOGI(TAG, "%s, %d leave. player = %p", __FUNCTION__, __LINE__, player);
     aos_mutex_unlock(&player->lock);
@@ -606,7 +654,6 @@ static int _player_stop(player_t *player)
 {
     int ret = -1;
 
-#ifndef FPGA_ENABLE
     if (player->ao) {
         /* play finish normal */
         if (player->evt_status == PLAYER_EVENT_FINISH) {
@@ -616,7 +663,6 @@ static int _player_stop(player_t *player)
         ao_close(player->ao);
         player->ao = NULL;
     }
-#endif
     if (player->ad) {
         ad_close(player->ad);
         player->ad = NULL;
@@ -704,7 +750,8 @@ int player_seek(player_t *player, uint64_t timestamp)
     aos_mutex_lock(&player->lock, AOS_WAIT_FOREVER);
     LOGI(TAG, "%s, %d enter. player = %p, timestamp = %llu", __FUNCTION__, __LINE__, player, timestamp);
     demuxer = player->demuxer;
-    if (player->status == PLAYER_STATUS_PLAYING || player->status == PLAYER_STATUS_PAUSED) {
+    if (player->status == PLAYER_STATUS_PLAYING
+        || (player->status == PLAYER_STATUS_PAUSED && player->before_status != PLAYER_STATUS_PREPARING)) {
         ao_stop(player->ao);
         rc = demux_seek(demuxer, timestamp);
         if (rc == 0) {
@@ -730,16 +777,17 @@ int player_get_cur_ptime(player_t *player, play_time_t *ptime)
     demux_cls_t *demuxer;
 
     CHECK_PARAM(player && ptime, -1);
-    aos_mutex_lock(&player->lock, AOS_WAIT_FOREVER);
+    //aos_mutex_lock(&player->lock, AOS_WAIT_FOREVER);
     LOGD(TAG, "%s, %d enter. player = %p", __FUNCTION__, __LINE__, player);
     demuxer = player->demuxer;
-    if (player->status == PLAYER_STATUS_PLAYING || player->status == PLAYER_STATUS_PAUSED) {
+    if ((player->status == PLAYER_STATUS_PLAYING || (player->status == PLAYER_STATUS_PAUSED && player->before_status != PLAYER_STATUS_PREPARING))
+        && demuxer) {
         ptime->curtime  = demuxer->time_scale ? player->cur_pts * 1000 / demuxer->time_scale : 0;
         ptime->duration = demuxer->duration;
         rc              = 0;
     }
     LOGD(TAG, "%s, %d leave. player = %p", __FUNCTION__, __LINE__, player);
-    aos_mutex_unlock(&player->lock);
+    //aos_mutex_unlock(&player->lock);
 
     return rc;
 }
@@ -756,11 +804,12 @@ int player_get_media_info(player_t *player, media_info_t *minfo)
     demux_cls_t *demuxer;
 
     CHECK_PARAM(player && minfo, -1);
-    aos_mutex_lock(&player->lock, AOS_WAIT_FOREVER);
+    //aos_mutex_lock(&player->lock, AOS_WAIT_FOREVER);
     LOGD(TAG, "%s, %d enter. player = %p", __FUNCTION__, __LINE__, player);
     demuxer = player->demuxer;
     memset(minfo, 0, sizeof(media_info_t));
-    if (player->status == PLAYER_STATUS_PLAYING || player->status == PLAYER_STATUS_PAUSED) {
+    if ((player->status == PLAYER_STATUS_PLAYING || (player->status == PLAYER_STATUS_PAUSED && player->before_status != PLAYER_STATUS_PREPARING))
+        && demuxer && player->s) {
         minfo->tracks   = demuxer->tracks;
         minfo->size     = stream_get_size(player->s);
         //TODO: just one track now for audio player
@@ -769,7 +818,7 @@ int player_get_media_info(player_t *player, media_info_t *minfo)
         rc              = 0;
     }
     LOGD(TAG, "%s, %d leave. player = %p", __FUNCTION__, __LINE__, player);
-    aos_mutex_unlock(&player->lock);
+    //aos_mutex_unlock(&player->lock);
 
     return rc;
 }
@@ -830,7 +879,61 @@ int player_set_vol(player_t *player, uint8_t vol)
     return rc;
 }
 
+/**
+ * @brief  get play speed of the player
+ * @param  [in] player
+ * @param  [out] speed
+ * @return 0/-1
+ */
+int player_get_speed(player_t *player, float *speed)
+{
+    int rc = -1;
 
+    CHECK_PARAM(player && speed, -1);
+    aos_mutex_lock(&player->lock, AOS_WAIT_FOREVER);
+    LOGD(TAG, "%s, %d enter. player = %p", __FUNCTION__, __LINE__, player);
+    if (player->atempo_play_en) {
+        *speed = player->speed;
+        rc = 0;
+    }
+    LOGD(TAG, "%s, %d leave. player = %p", __FUNCTION__, __LINE__, player);
+    aos_mutex_unlock(&player->lock);
 
+    return rc;
+}
+
+/**
+ * @brief  set play speed of the player
+ * @param  [in] player
+ * @param  [in] speed : [PLAY_SPEED_MIN ~ PLAY_SPEED_MAX]
+ * @return 0/-1
+ */
+int player_set_speed(player_t *player, float speed)
+{
+    int rc = -1;
+
+    CHECK_PARAM(player && speed >= PLAY_SPEED_MIN && speed <= PLAY_SPEED_MAX, -1);
+    aos_mutex_lock(&player->lock, AOS_WAIT_FOREVER);
+    LOGD(TAG, "%s, %d enter. player = %p", __FUNCTION__, __LINE__, player);
+    if (player->atempo_play_en) {
+        if (player->ao) {
+            //live is not allowed set speed
+            if (!stream_is_live(player->s)) {
+                size_t size;
+
+                size = sizeof(float);
+                rc = ao_control(player->ao, AO_CMD_ATEMPO_SET_SPEED, (void*)&speed, &size);
+                player->speed = rc < 0 ? player->speed : speed;
+            }
+        } else {
+            player->speed = speed;
+            rc = 0;
+        }
+    }
+    LOGD(TAG, "%s, %d leave. player = %p", __FUNCTION__, __LINE__, player);
+    aos_mutex_unlock(&player->lock);
+
+    return rc;
+}
 
 

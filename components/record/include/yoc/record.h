@@ -5,6 +5,7 @@
 #ifndef __RECORD_H__
 #define __RECORD_H__
 
+#include <aos/aos.h>
 
 typedef int * rec_hdl_t;
 typedef void (*data_ready_func)(void *arg);

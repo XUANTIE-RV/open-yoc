@@ -2,7 +2,7 @@
 #define __HTTP_TLS_H__
 
 #if defined(CONFIG_USING_TLS)
-#include <tls.h>
+#include <transport/tls.h>
 
 #ifdef __cplusplus
 extern "C" {

@@ -55,5 +55,17 @@ int stream_register_crypto()
     return stream_ops_register(&stream_ops_crypto);
 }
 
+/**
+ * @brief  regist stream for hls
+ * @return 0/-1
+ */
+int stream_register_hls()
+{
+    extern struct stream_ops stream_ops_hls;
+    return stream_ops_register(&stream_ops_hls);
+}
+
+
+
 
 

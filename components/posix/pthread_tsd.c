@@ -33,16 +33,17 @@ int pthread_key_create(pthread_key_t *key, void (*destructor)(void*))
         pthread_key_list_s_c = pthread_key_list_head.next;
         pthread_key_list_s_l = &pthread_key_list_head;
         while (pthread_key_list_s_c != NULL) {
-             pthread_key_list_s_l = pthread_key_list_s_c;
-             pthread_key_list_s_c = pthread_key_list_s_c->next;
+            pthread_key_list_s_l = pthread_key_list_s_c;
+            pthread_key_list_s_c = pthread_key_list_s_c->next;
         }
 
         /* malloc the new key */
-        pthread_key_list_s_c = (pthread_key_list_t *)krhino_mm_alloc(sizeof(pthread_key_list_t), __builtin_return_address(0));
+        pthread_key_list_s_c = (pthread_key_list_t *)krhino_mm_alloc(sizeof(pthread_key_list_t));
         if (pthread_key_list_s_c == NULL) {
             RHINO_CRITICAL_EXIT();
             return -1;
         }
+        _alloc_trace(pthread_key_list_s_c, (size_t)__builtin_return_address(0));
 
         /* init the new key */
         memset(pthread_key_list_s_c, 0, sizeof(pthread_key_list_t));
@@ -82,13 +83,13 @@ int pthread_setspecific(pthread_key_t key, const void *value)
     /* find the key in list */
     pthread_key_list_s_c = &pthread_key_list_head;
     while (pthread_key_list_s_c != NULL) {
-         if (pthread_key_list_s_c->key_num == key){
+        if (pthread_key_list_s_c->key_num == key) {
             list_flag = 1;
             key_value_s_o = pthread_key_list_s_c->head.next;
             break;
-         }
+        }
 
-         pthread_key_list_s_c = pthread_key_list_s_c->next;
+        pthread_key_list_s_c = pthread_key_list_s_c->next;
     }
 
     /* if can not find the key in list, return error */
@@ -99,12 +100,13 @@ int pthread_setspecific(pthread_key_t key, const void *value)
 
     /* if no value store in the key, create new pthread_key_value_t to save the value */
     if (key_value_s_o == NULL) {
-        key_value_s = (pthread_key_value_t *)krhino_mm_alloc(sizeof(pthread_key_value_t), __builtin_return_address(0));
+        key_value_s = (pthread_key_value_t *)krhino_mm_alloc(sizeof(pthread_key_value_t));
         if (key_value_s == NULL) {
             RHINO_CRITICAL_EXIT();
             return -1;
         }
 
+        _alloc_trace(key_value_s, (size_t)__builtin_return_address(0));
         memset(key_value_s, 0, sizeof(pthread_key_value_t));
 
         /* save the thread id and value */
@@ -133,12 +135,13 @@ int pthread_setspecific(pthread_key_t key, const void *value)
 
         /* if no same thread had save the value before create new pthread_key_value_t */
         if (value_flag == 0) {
-            key_value_s = (pthread_key_value_t *)krhino_mm_alloc(sizeof(pthread_key_value_t), __builtin_return_address(0));
+            key_value_s = (pthread_key_value_t *)krhino_mm_alloc(sizeof(pthread_key_value_t));
             if (key_value_s == NULL) {
                 RHINO_CRITICAL_EXIT();
                 return -1;
             }
 
+            _alloc_trace(key_value_s, (size_t)__builtin_return_address(0));
             memset(key_value_s, 0, sizeof(pthread_key_value_t));
 
             /* save current value to pthread_key_value_t */
@@ -162,7 +165,7 @@ void *pthread_getspecific(pthread_key_t key)
     pthread_key_value_t *key_value_s_o        = NULL;
     pthread_key_value_t *key_value_s_c        = NULL;
 
-    int list_flag = 0; 
+    int list_flag = 0;
 
     CPSR_ALLOC();
     RHINO_CRITICAL_ENTER();
@@ -170,13 +173,13 @@ void *pthread_getspecific(pthread_key_t key)
     /* find the key in list */
     pthread_key_list_s_c = &pthread_key_list_head;
     while (pthread_key_list_s_c != NULL) {
-         if (pthread_key_list_s_c->key_num == key){
+        if (pthread_key_list_s_c->key_num == key) {
             list_flag = 1;
             key_value_s_o = pthread_key_list_s_c->head.next;
             break;
-         }
+        }
 
-         pthread_key_list_s_c = pthread_key_list_s_c->next;
+        pthread_key_list_s_c = pthread_key_list_s_c->next;
     }
 
     /* if can not find the key in list, or no value store in the key, return NULL */
@@ -193,7 +196,7 @@ void *pthread_getspecific(pthread_key_t key)
             return (void*)key_value_s_c->key_value.value;
         }
 
-        key_value_s_c = key_value_s_c->next;               
+        key_value_s_c = key_value_s_c->next;
     }
 
     /* if can not find the value current thread saved return NULL */
@@ -209,7 +212,7 @@ int pthread_key_delete(pthread_key_t key)
     pthread_key_value_t *key_value_s_c        = NULL;
     pthread_key_value_t *key_value_s_n        = NULL;
 
-    int list_flag = 0; 
+    int list_flag = 0;
 
     CPSR_ALLOC();
     RHINO_CRITICAL_ENTER();
@@ -231,9 +234,7 @@ int pthread_key_delete(pthread_key_t key)
         /* if no other key save in the list set key_num to 0 */
         if (pthread_key_list_head.next == NULL) {
             pthread_key_list_head.key_num = 0;
-        }
-        else /* else copy the next key to the head */
-        {
+        } else { /* else copy the next key to the head */
             pthread_key_list_s_c = pthread_key_list_head.next;
             pthread_key_list_head.key_num = pthread_key_list_head.next->key_num;
             memcpy(&pthread_key_list_head.head, &pthread_key_list_head.next->head, sizeof(pthread_key_value_head_t));
@@ -241,13 +242,11 @@ int pthread_key_delete(pthread_key_t key)
 
             krhino_mm_free(pthread_key_list_s_c);
         }
-    }
-    else /* if key is not saved in pthread_key_list_head, find the key in the list */
-    {
+    } else { /* if key is not saved in pthread_key_list_head, find the key in the list */
         /* find the key in the list */
         pthread_key_list_s_c = pthread_key_list_head.next;
         while (pthread_key_list_s_c != NULL) {
-             if (pthread_key_list_s_c->key_num == key){
+            if (pthread_key_list_s_c->key_num == key) {
                 key_value_s_o = pthread_key_list_s_c->head.next;
 
                 if (pthread_key_list_s_l == NULL) {
@@ -260,10 +259,10 @@ int pthread_key_delete(pthread_key_t key)
 
                 list_flag = 1;
                 break;
-             }
+            }
 
-             pthread_key_list_s_l = pthread_key_list_s_c;
-             pthread_key_list_s_c = pthread_key_list_s_c->next;
+            pthread_key_list_s_l = pthread_key_list_s_c;
+            pthread_key_list_s_c = pthread_key_list_s_c->next;
         }
 
         /* if can not find the key in list return error */
@@ -321,7 +320,7 @@ void krhino_task_del_hook(ktask_t *task, res_free_t *arg)
     /* call the destructor function of TSD */
     pthread_key_list_s_c = &pthread_key_list_head;
     while (pthread_key_list_s_c != NULL) {
-        if (pthread_key_list_s_c->head.fun != NULL){
+        if (pthread_key_list_s_c->head.fun != NULL) {
             pthread_key_list_s_c->head.fun(NULL);
         }
 

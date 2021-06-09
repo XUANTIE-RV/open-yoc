@@ -6,10 +6,12 @@
 #define _MESH_HAL_BLE_H_
 
 #include <stdint.h>
-#include <net/buf.h>
+
 #include <bluetooth/bluetooth.h>
 #include <bluetooth/conn.h>
 #include <bluetooth/gatt.h>
+#include <net/buf.h>
+
 #include <api/mesh.h>
 
 /** @typedef bt_mesh_le_scan_cb_t

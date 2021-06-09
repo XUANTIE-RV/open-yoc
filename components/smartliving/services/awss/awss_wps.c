@@ -120,6 +120,10 @@ static int get_ssid_passwd_from_w(uint8_t *in, int total_len, uint8_t *src, uint
     char *magic_p_w_d = "zl&ws";//FIXME: Maybe it will be dangerous when opening source.
     static uint32_t start_time = 0;
 
+    #ifdef DEV_STATEMACHINE_ENABLE
+    dev_awss_state_set(AWSS_PATTERN_SMART_CONFIG, AWSS_STATE_COLLECTING_SSID);
+    #endif
+
 #define W_LEN        (32)  // total_len
 #define EXTRA_LEN    (3)   // ssid_len(1B) + checksum(2B)
     if (!in || total_len <= 4 + EXTRA_LEN)
@@ -156,8 +160,8 @@ static int get_ssid_passwd_from_w(uint8_t *in, int total_len, uint8_t *src, uint
         memset(zc_pre_ssid, 0, sizeof(zconfig_data->android_pre_ssid));
         memset(zc_android_ssid, 0, sizeof(zconfig_data->android_ssid));
         memset(zc_android_bssid, 0, sizeof(zconfig_data->android_bssid));
-        awss_debug("rx illegal p2p (0x%x != 0x%x)\r\n", crc, cal_crc);
-        awss_event_post(AWSS_CS_ERR);
+        dump_awss_status(STATE_WIFI_P2P_DEBUG, "rx illegal p2p (0x%x != 0x%x)", crc, cal_crc);
+        awss_event_post(IOTX_AWSS_CS_ERR);
         AWSS_UPDATE_STATIS(AWSS_STATIS_WPS_IDX, AWSS_STATIS_TYPE_CRC_ERR);
         /*
          * use zconfig_checksum_v3() because
@@ -175,10 +179,10 @@ static int get_ssid_passwd_from_w(uint8_t *in, int total_len, uint8_t *src, uint
     memcpy(zc_android_src, src, ETH_ALEN);
     if (zc_android_src[0] & MAC_LOCAL_ADMINISTERED_BIT) {
         zc_android_src[0] &= ~MAC_LOCAL_ADMINISTERED_BIT;
-        //awss_debug("android src: %02x%02x%02x\r\n", zc_android_src[0], src[1], src[2]);
+        // dump_awss_status(STATE_WIFI_P2P_DEBUG, "android src: %02x%02x%02x", zc_android_src[0], src[1], src[2]); 
     } else {
-        awss_warn("local administered bit not set: %02x%02x%02x\r\n",
-                src[0], src[1], src[2]);
+        dump_awss_status(STATE_WIFI_P2P_DEBUG, "local administered bit not set: %02x%02x%02x",
+                         src[0], src[1], src[2]);
     }
 
     in += 1;/* eating ssid_len(1B) */
@@ -207,15 +211,15 @@ static int get_ssid_passwd_from_w(uint8_t *in, int total_len, uint8_t *src, uint
             aes_decrypt_string((char *)passwd_cipher, (char *)tmp_passwd, passwd_len,
                     1, os_get_encrypt_type(), 0, NULL);
             os_free(passwd_cipher);
-            if (is_utf8((const char *)tmp_passwd, passwd_len) == 0) {
+            if (zconfig_is_utf8((const char *)tmp_passwd, passwd_len) == 0) {
                 //memset(zconfig_data, 0, sizeof(*zconfig_data));
                 memset(zc_android_src, 0, sizeof(zconfig_data->android_src));
                 memset(zc_pre_ssid, 0, sizeof(zconfig_data->android_pre_ssid));
                 memset(zc_android_ssid, 0, sizeof(zconfig_data->android_ssid));
                 memset(zc_android_bssid, 0, sizeof(zconfig_data->android_bssid));
 
-                awss_warn("p2p decrypt passwd content err\r\n");
-                awss_event_post(AWSS_PASSWD_ERR);
+                dump_awss_status(STATE_WIFI_P2P_DEBUG, "p2p decrypt passwd content err");
+                awss_event_post(IOTX_AWSS_PASSWD_ERR);
                 AWSS_UPDATE_STATIS(AWSS_STATIS_WPS_IDX, AWSS_STATIS_TYPE_PASSWD_ERR);
                 return GOT_NOTHING;
             }
@@ -223,7 +227,7 @@ static int get_ssid_passwd_from_w(uint8_t *in, int total_len, uint8_t *src, uint
         }
         default: {
             void *mutex = zc_mutex;
-            awss_warn("p2p encypt:%d not support\r\n", encrypt);
+            dump_awss_status(STATE_WIFI_P2P_DEBUG, "p2p encypt:%d not support", encrypt);
             memset(zconfig_data, 0, sizeof(*zconfig_data));
             zc_mutex = mutex;
             return GOT_NOTHING;
@@ -253,7 +257,7 @@ static int get_ssid_passwd_from_w(uint8_t *in, int total_len, uint8_t *src, uint
         int pre_ssid_len = strlen((const char *)zc_pre_ssid);  // prepare_ssid
         if (pre_ssid_len && pre_ssid_len < cur_ssid_len) {
             /* should not happen */
-            awss_warn("pre:%s < cur:%s\r\n", zc_pre_ssid, tmp_ssid);
+            dump_awss_status(STATE_WIFI_P2P_DEBUG, "pre:%s < cur:%s", zc_pre_ssid, tmp_ssid);
             best_ssid = tmp_ssid;  /* current ssid */
         } else if (pre_ssid_len) {
             best_ssid = zc_pre_ssid;    /* prepare ssid */
@@ -339,7 +343,11 @@ chn_locked:
     return PKG_START_FRAME;
 rcv_done:
     AWSS_UPDATE_STATIS(AWSS_STATIS_WPS_IDX, AWSS_STATIS_TYPE_TIME_SUC);
+#ifdef AWSS_SUPPORT_SMARTCONFIG_MCAST
+    zc_got_ssid_passwd_from_p2p = 1;
+#else
     zconfig_set_state(STATE_RCV_DONE, tods, channel);
+#endif
     return PKG_END;
 }
 

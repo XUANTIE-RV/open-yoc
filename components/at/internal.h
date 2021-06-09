@@ -1,5 +1,5 @@
-#ifndef AT2_INTERNAL_H
-#define AT2_INTERNAL_H
+#ifndef AT_INTERNAL_H
+#define AT_INTERNAL_H
 
 #include <stdlib.h>
 
@@ -7,17 +7,16 @@
 extern "C" {
 #endif
 
-typedef struct {
-    size_t buffer_size;
-    size_t count;
-    int max_size;
-    char *line;
-} linebuffer_t;
+#define AT_UART_EVENT_READ  (1UL << 0)
+#define AT_UART_EVENT_WRITE (1UL << 1)
+#define AT_UART_OVERFLOW    (1UL << 2)
 
-linebuffer_t *linebuffer_new(int max_size);
-void linebuffer_free(linebuffer_t *line);
-int linebuffer_putc(linebuffer_t *line, char c);
-int linebuffer_cmp(linebuffer_t *line, char *s);
+typedef void (*uart_event_t)(int event_id, void *priv);
+
+void *at_uart_init(const char *name, uart_config_t *config);
+int at_uart_set_event(void *uart_hdl, uart_event_t evt_cb, void *priv);
+int at_uart_send(void *hdl, const char *data, int size);
+int at_uart_recv(void *hdl, const char *data, int size, int timeout);
 
 #ifdef __cplusplus
 }

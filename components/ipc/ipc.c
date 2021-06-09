@@ -74,7 +74,6 @@ static int phy_recv(ipc_t *ipc, phy_data_t *msg, int ms)
         if ((msg->flag & SHM_CACHE) && m.data) {
             csi_dcache_invalid_range((uint32_t *)m.data, SHM_ALIGN_SIZE(m.len, SHM_ALIGN_CACHE));
         }
-
         memcpy(msg, &m, sizeof(phy_data_t));
         msg->data = aos_malloc_check(m.len);
         msg->len  = m.len;
@@ -217,7 +216,7 @@ static int transfer_recv(service_t *ser, message_t *msg, int timeout_ms)
 
     aos_free(phy_msg.data);
 
-    while(total_len > 0) {
+    while(recv && total_len > 0) {
         phy_wait(ser, &phy_msg, timeout_ms);
         memcpy(recv, phy_msg.data, phy_msg.len);
         recv += phy_msg.len;
@@ -246,7 +245,9 @@ static void ipc_task_process_entry(void *arg)
 
         ser = find_service(ipc, data.service_id);
         if (ser) {
-            aos_queue_send(&ser->queue, &data, sizeof(phy_data_t));
+            while (aos_queue_send(&ser->queue, &data, sizeof(phy_data_t)) != 0) {
+                aos_msleep(100);
+            }
         }
     }
 
@@ -324,7 +325,7 @@ int ipc_message_send(ipc_t *ipc, message_t *m, int timeout_ms)
             memcpy(m->resp_data, msg.resp_data, msg.resp_len);
             aos_free(msg.resp_data);
         } else {
-            asm("bkpt");
+            aos_assert(0);
         }
     }
 
@@ -376,7 +377,7 @@ int ipc_lpm(int cpu_id, int state)
     // }
 
     channel_mailbox_lpm(ipc->ch, state);
-    
+
     return 0;
 }
 

@@ -4,9 +4,8 @@
 
 #include "../http/http.h"
 #include <yoc/fota.h>
-#include <aos/network.h>
 #include <yoc/netio.h>
-#include <aos/log.h>
+#include "util/network.h"
 
 #define TAG "fota"
 
@@ -33,7 +32,7 @@ static int http_read(netio_t *io, uint8_t *buffer, int length, int timeoutms)
     }
     snprintf(range, 56, "bytes=%d-%d", io->offset, range_end);
     http_head_sets(http, "Range", range);
-    free(range);
+    aos_free(range);
     http_head_sets(http, "Connection", "keep-alive");
     http_head_sets(http, "Cache-Control", "no-cache");
 
@@ -65,7 +64,7 @@ static int http_open(netio_t *io, const char *path)
     }
 
     io->offset = 0;
-    io->block_size = 512;// 1024
+    io->block_size = CONFIG_FOTA_BUFFER_SIZE;// 1024
     // io->private = http;
 
     int content_len;
@@ -83,7 +82,7 @@ static int http_open(netio_t *io, const char *path)
     }
     snprintf(range, 56, "bytes=%d-%d", io->offset, range_end);
     http_head_sets(http, "Range", range);
-    free(range);
+    aos_free(range);
     http_head_sets(http, "Connection", "keep-alive");
     http_head_sets(http, "Cache-Control", "no-cache");
 

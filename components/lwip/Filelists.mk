@@ -184,6 +184,15 @@ NETBIOSNSFILES=$(LWIPDIR)/apps/netbiosns/netbiosns.c
 # TFTPFILES: TFTP server files
 TFTPFILES=$(LWIPDIR)/apps/tftp/tftp_server.c
 
+# TELNETDFILES: telnet server files
+TELNETDFILES=apps/telnetd/telnetserver.c \
+             apps/telnetd/telnetserver_cli.c
+
+
+# SENDFILEFILES: SENDFILE client/server files
+SENDFILEFILES=apps/sendfile/sendfile.c \
+          apps/sendfile/sendfile_cli.c
+
 # MQTTFILES: MQTT client files
 MQTTFILES=$(LWIPDIR)/apps/mqtt/mqtt.c
 
@@ -191,6 +200,18 @@ MQTTFILES=$(LWIPDIR)/apps/mqtt/mqtt.c
 MBEDTLS_FILES=$(LWIPDIR)/apps/altcp_tls/altcp_tls_mbedtls.c \
 	$(LWIPDIR)/apps/altcp_tls/altcp_tls_mbedtls_mem.c \
 	$(LWIPDIR)/apps/snmp/snmpv3_mbedtls.c
+
+# DNSCLIFILES: DNS command line files
+DNSCLIFILES = apps/dns/dns_cli.c
+
+# ARPCLIFILES: ARP command line files
+ARPCLIFILES = apps/arp/arp_cli.c
+
+# LSFDCLIFILES: LSFD command line files
+LSFDCLIFILES = apps/lsfd/lsfd_cli.c
+
+# PKTPRINTFILES: PKTPRINT command line files
+PKTPRINTFILES = core/pkt_print.c
 
 # LWIPAPPFILES: All LWIP APPs
 LWIPAPPFILES=$(SNMPFILES) \

@@ -1,10 +1,9 @@
 
 ## 第一部分： 基础信息
-name: voice_mit                                    # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
-version: v7.3.0                                     # <必选项> 组件版本号
+name: voice_mit                                     # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
+version: v7.4.3                                     # <必选项> 组件版本号
 description: 麦克风服务，MIT语音唤醒算法固件         # <必选项> 建议至少20字以上
-type: common                                        # <必选项> 组件类型，为：solution, chip, board, common
-
+type: common                                        # <必选项> 组件类型，为：solution, chip, board, common, sdk
 tag: 核心模块                                       # <可选项> 组件分类，缺省值： ''
 keywords:                                           # <可选项> 标签，会影响到组件被搜索的效果，合理的标签很重要
   - base
@@ -13,65 +12,15 @@ license: Apache license v2.0                        # <可选项> 源代码的�
 ## 第二部分：依赖信息
 #           指定该组件依赖的组件及版本，版本支持条件比较，支持：>=v1.0, >v1.0, ==v1.0, <=v1.0, <v1.0, v1.0
 #           未指定条件时，默认为 ==，如 v1.0 与 ==v1.0
+# sdk_chip:                                # <可选项> 该组件依赖sdk组件，合理的依赖才能保证组件能编译、使用
+#   - sdk_chip_csky_dummy: v7.4.3
+#   - sdk_chip_riscv_dummy: v7.4.3
 # depends:                                 # <可选项> 该组件依赖其他的组件，合理的依赖才能保证组件能编译、使用
 #   - minilibc: v7.2.0
 #   - aos: >=v7.2.0
 depends:
-  - csi: V7.3.0
-  - rhino: V7.3.0
-  - minilibc: V7.3.0
-  - aos: V7.3.0
-  - record: V7.3.0
-
-## 第三部分：板级信息
-# hw_info:                                 # 对 solution、board、chip 三个字段的改进，统称为 hw_info 字段
-#   cpu_id: cpu0
-#   cpu_name: CK804EF
-#   vendor_name: t-head
-#   chip_name: chip_pangu                  # <可选项> 指定芯片组件名,未设置时，使用depends中 chip 第一个组件
-#   board_name: pangu_cpu0                 # <可选项> 指定开发板组件名，未设置时，使用depends中 board 第一个组件
-#   ld_script: configs/gcc_eflash.ld       # <可选项> 连接时使用 LD 脚本，当选把未设置时，使用对应的 board 的 LD 脚本
-#   flash_program: bin/flash_program.elf   # <可选项> 芯片全局烧写程序
-#   cpu0:
-#     cpu_name: CK804EF                    # <必选项> 该芯片使用的 CPU 型号
-#     ld_script: configs/gcc_eflash.ld     # <必选项> 连接时使用 LD 脚本
-#     flash_program: bin/flash_program.elf # <可选项> 该CPU对应烧写程序，未指定时使用全局烧写程序
-#   cpu1:
-#     cpu_name: CK804EF                    # <必选项> 该芯片使用的 CPU 型号
-#     ld_script: configs/gcc_eflash.ld     # <可选项> 连接时使用 LD 脚本
-#     flash_program: bin/flash_program.elf # <可选项> 该CPU对应烧写程序，未指定时使用全局烧写程序
-
-## solution component
-# hw_info:
-#   cpu_id: cpu0
-#   board_name: pangu_cpu0
-#   cpu_name: CK805EF
-#   vendor_name: csky
-#   chip_name: 'chip_pangu'
-#   ld_script: configs/gcc_eflash.ld.S
-
-## board component
-# hw_info:
-#   chip_name: chip_pangu
-#   ld_script: configs/gcc_eflash.ld
-
-## chip component (单处理器)
-# hw_info:
-#   cpu_name: CK804EF
-#   ld_script: configs/gcc_eflash.ld
-#   flash_program: bin/flash_program.elf
-
-## chip component(多处理器)
-# hw_info:
-#   cpu0:
-#     cpu_name: CK804EF                    # <必选项> 该芯片使用的 CPU 型号
-#     ld_script: configs/gcc_eflash.ld     # <必选项> 连接时使用 LD 脚本
-#     flash_program: bin/flash_program.elf # <可选项> 该CPU对应烧写程序，未指定时使用全局烧写程序
-#   cpu1:
-#     cpu_name: CK804EF                    # <必选项> 该芯片使用的 CPU 型号
-#     ld_script: configs/gcc_eflash.ld     # <必选项> 连接时使用 LD 脚本
-#     flash_program: bin/flash_program.elf # <可选项> 该CPU对应烧写程序，未指定时使用全局烧写程序
-#   flash_program: bin/flash_program.elf   # <可选项> 芯片全局烧写程序
+  - aos: v7.4.3
+  - record: v7.4.3
 
 ## 第四部分：编译连接信息
 # build_config:                            # <可选项> 编译配置项
@@ -111,19 +60,26 @@ source_file:
 #   CONFIG_PARAM_NOT_CHECK: y
 #   CONFIG_CLI: y
 def_config:
-    CONFIG_MIT_DSP: 1
+  CONFIG_MIT_DSP: 1
 
 ## 第六部分：安装信息
 # install:
-#   - dest: include/                       # 安装的目的路径 dest是相当路径，通常是相对于YoC SDK 安装目录
+#   - dest: include/                       # 安装的目的路径 dest是相对路径，通常是相对于YoC SDK 安装目录
 #     source:                              # 安装源列表
 #      - src/*.h                           # 支持通配符，相对路径
 install:
   - dest: "include/yoc"
     source:
       - "include/yoc/*.h"
-  - dest: lib
+  - dest: "lib"
     source:
-      - sc5654/lib/liblpmmitvad.a
+      - "sc5654/lib/liblpmmitvad.a"
 
 ## 第七部分：导出部分
+# export:
+#   - dest: "<SOLUTION_PATH>/generated/data" # 安装的目的路径 dest是相对路径
+#     source:                                # 安装源列表
+#       - "bootimgs/boot"
+#       - "bootimgs/tee"
+#       - "bootimgs/mtb"
+#       - "configs/config.yaml"

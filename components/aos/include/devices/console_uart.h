@@ -2,8 +2,8 @@
  * Copyright (C) 2018-2020 Alibaba Group Holding Limited
  */
 
-#ifndef __CONSOLE_UART_H__
-#define __CONSOLE_UART_H__
+#ifndef __CONSOLE_UART_IDX_H__
+#define __CONSOLE_UART_IDX_H__
 
 #include <aos/aos.h>
 
@@ -20,5 +20,5 @@ uint16_t console_get_buffer_size(void);
 }
 #endif
 
-#endif /* __CONSOLE_UART_H__ */
+#endif /* __CONSOLE_UART_IDX_H__ */
 

@@ -2,6 +2,8 @@
  * Copyright (C) 2018-2020 Alibaba Group Holding Limited
  */
 
+#if defined(CONFIG_DEMUXER_MP4) && CONFIG_DEMUXER_MP4 && defined(CONFIG_USING_TLS)
+#include "avutil/av_config.h"
 #include "avutil/misc.h"
 #include "avutil/byte_rw.h"
 #include "avutil/url_parse.h"
@@ -16,6 +18,7 @@
 
 #define AES_128_BITS           (128)
 #define AES_128_BYTES          (16)
+
 const avcodec_tag_t g_codec_tags_audio[] = {
     { AVCODEC_ID_AAC,          TAG_VAL('m', 'p', '4', 'a') },
     { AVCODEC_ID_MP3,          TAG_VAL('.', 'm', 'p', '3') },
@@ -32,11 +35,29 @@ const avcodec_tag_t g_mp4_obj_type[] = {
     { AVCODEC_ID_UNKNOWN,      0x0  },
 };
 
+#if CONFIG_AV_MP4_IDX_OPT
+#define AUDIO_SAMPLE_SIZE_TYPE  int16_t
+#else
+#define AUDIO_SAMPLE_SIZE_TYPE  int32_t
+#endif
+
 typedef struct index_entry {
     int32_t                    pos;
     int32_t                    size;
     int64_t                    timestamp;       ///< base the time_scale
 } index_entry_t;
+
+#if CONFIG_AV_MP4_IDX_OPT
+#define INDEX_ENTRY_MEM_MAX    (0x8000)
+#define IDX_NB_PER_SEGMENT     (INDEX_ENTRY_MEM_MAX / sizeof(index_entry_t))
+
+typedef struct segment_index {
+    int32_t                    start;
+    int32_t                    end;
+    int64_t                    start_ts;       ///< timestamp
+    int64_t                    end_ts;         ///< timestamp
+} seg_idx_t;
+#endif
 
 typedef struct encrypt_info {
     uint8_t                    *iv;
@@ -65,13 +86,18 @@ struct mp4_priv {
     uint32_t                   stsc_count;
     uint32_t                   sample_count;
     int32_t                    *chunk_offsets;
-    int32_t                    *sample_sizes;
+    AUDIO_SAMPLE_SIZE_TYPE     *sample_sizes;
     mp4_stts_t                 *stts_data;
     mp4_stsc_t                 *stsc_data;
 
     uint32_t                   cur_sample;
     index_entry_t              *indexes;
     uint32_t                   nb_indexes;
+#if CONFIG_AV_MP4_IDX_OPT
+    seg_idx_t                  *seg_idxes;
+    int32_t                    nb_seg_idxes;
+    int32_t                    cur_seg_idx;
+#endif
 
     avcodec_id_t               id;
     uint8_t                    major_brand[5];
@@ -97,7 +123,11 @@ typedef struct {
 } mp4_parser_t;
 
 static int _mp4_read_atom(demux_cls_t *o, mp4_atom_t *atom);
+#if CONFIG_AV_MP4_IDX_OPT
+static int _mp4_create_indexes(demux_cls_t *o, int start_idx);
+#else
 static int _mp4_create_indexes(demux_cls_t *o);
+#endif
 static int _demux_mp4_read_packet(demux_cls_t *o, avpacket_t *pkt);
 
 static void _mp4_read_close(demux_cls_t *o)
@@ -108,6 +138,9 @@ static void _mp4_read_close(demux_cls_t *o)
     aos_freep((char**)&priv->sample_sizes);
     aos_freep((char**)&priv->stsc_data);
     aos_freep((char**)&priv->stts_data);
+#if CONFIG_AV_MP4_IDX_OPT
+    aos_freep((char**)&priv->seg_idxes);
+#endif
     if (priv->cenc_encrypted) {
         if (priv->encrypt_samples) {
             aos_freep((char **)&priv->encrypt_samples[0].iv);
@@ -303,7 +336,11 @@ static int _mp4_read_stco(demux_cls_t *o, mp4_atom_t *atom)
     }
     priv->chunk_count = i;
 
+#if CONFIG_AV_MP4_IDX_OPT
+    rc = _mp4_create_indexes(o, 0);
+#else
     rc = _mp4_create_indexes(o);
+#endif
     if (rc < 0) {
         LOGE(TAG, "mp4 create indexes fail");
         return -1;
@@ -579,14 +616,15 @@ static int _mp4_read_stsz(demux_cls_t *o, mp4_atom_t *atom)
     }
 
     priv->sample_count = entries;
-    priv->sample_sizes = aos_zalloc(entries * sizeof(int32_t));
+    /* FIXME: sample_sizes may be too large */
+    priv->sample_sizes = aos_zalloc(entries * sizeof(AUDIO_SAMPLE_SIZE_TYPE));
     if (!priv->sample_sizes) {
         LOGE(TAG, "stsz fail, oom.");
         return -1;
     }
 
     for (i = 0; i < entries; i++) {
-        priv->sample_sizes[i] = stream_r32be(s);
+        priv->sample_sizes[i] = (AUDIO_SAMPLE_SIZE_TYPE)stream_r32be(s);
     }
 
     return 0;
@@ -633,6 +671,93 @@ static int _mp4_read_stts(demux_cls_t *o, mp4_atom_t *atom)
     return 0;
 }
 
+#if CONFIG_AV_MP4_IDX_OPT
+static int _mp4_create_indexes(demux_cls_t *o, int start_idx)
+{
+    uint32_t i, j, cur_offset;
+    index_entry_t *indexes = NULL;
+    struct mp4_priv *priv  = o->priv;
+    seg_idx_t *seg_idxes   = priv->seg_idxes;
+    int64_t cur_dts        = 0;
+    uint32_t stsc_index    = 0;
+    uint32_t cur_sample    = 0, sample_size, nb_idxes;
+    uint32_t stts_sample   = 0, stts_index = 0, nb_indexes = 0;
+
+    //printf("===>>>start idx = %d\n", start_idx);
+    nb_idxes = priv->sample_count > IDX_NB_PER_SEGMENT ? IDX_NB_PER_SEGMENT : priv->sample_count;
+    if (priv->indexes) {
+        indexes = priv->indexes;
+        memset(priv->indexes, 0, sizeof(index_entry_t) * nb_idxes);
+    } else {
+        indexes = aos_zalloc(sizeof(index_entry_t) * nb_idxes);
+        if (!indexes) {
+            LOGE(TAG, "alloc fail, oom, sample_count = %d", nb_idxes);
+            return -1;
+        }
+
+        priv->nb_seg_idxes = (priv->sample_count + (IDX_NB_PER_SEGMENT - 1)) / IDX_NB_PER_SEGMENT;
+        priv->seg_idxes    = aos_zalloc(sizeof(seg_idx_t) * priv->nb_seg_idxes);
+        for (i = 0; i < priv->nb_seg_idxes; i++) {
+            priv->seg_idxes[i].start = i * IDX_NB_PER_SEGMENT;
+            priv->seg_idxes[i].end   = (i + 1) * IDX_NB_PER_SEGMENT - 1;
+        }
+        priv->seg_idxes[i - 1].end = priv->sample_count - 1;
+    }
+
+    for (i = 0; i < priv->chunk_count; i++) {
+        cur_offset  = priv->chunk_offsets[i];
+        while ((stsc_index + 1 < priv->stsc_count) && (i + 1 == priv->stsc_data[stsc_index + 1].first))
+            stsc_index++;
+
+        for (j = 0; j < priv->stsc_data[stsc_index].count; j++) {
+            index_entry_t *e;
+            if (nb_indexes >= priv->sample_count) {
+                LOGE(TAG, "wrong sample count\n");
+                goto err;
+            }
+
+            sample_size  = priv->szsample_size ? priv->szsample_size : priv->sample_sizes[cur_sample++];
+            if (nb_indexes >= start_idx && nb_indexes < start_idx + IDX_NB_PER_SEGMENT) {
+                e            = &indexes[nb_indexes - start_idx];
+                e->pos       = cur_offset;
+                e->size      = sample_size;
+                e->timestamp = cur_dts;
+            }
+
+            if (seg_idxes) {
+                if (nb_indexes >= start_idx + IDX_NB_PER_SEGMENT) {
+                    /* seg_idxes constructed already */
+                    goto quit;
+                }
+            } else {
+                int seg_index = nb_indexes / IDX_NB_PER_SEGMENT;
+
+                if (nb_indexes == priv->seg_idxes[seg_index].start)
+                    priv->seg_idxes[seg_index].start_ts = cur_dts;
+                if (nb_indexes == priv->seg_idxes[seg_index].end)
+                    priv->seg_idxes[seg_index].end_ts = cur_dts;
+            }
+            nb_indexes++;
+            cur_offset += sample_size;
+
+            cur_dts += priv->stts_data[stts_index].duration;
+            stts_sample++;
+            if (stts_index + 1 < priv->stts_count && stts_sample == priv->stts_data[stts_index].count) {
+                stts_sample = 0;
+                stts_index++;
+            }
+        }
+    }
+quit:
+    priv->indexes    = indexes;
+    priv->nb_indexes = priv->sample_count;
+
+    return 0;
+err:
+    aos_free(indexes);
+    return -1;
+}
+#else
 static int _mp4_create_indexes(demux_cls_t *o)
 {
     uint32_t i, j, cur_offset;
@@ -684,6 +809,7 @@ err:
     aos_free(indexes);
     return -1;
 }
+#endif
 
 static int _mp4_read_trak(demux_cls_t *o, mp4_atom_t *atom)
 {
@@ -711,10 +837,19 @@ static int _mp4_read_trak(demux_cls_t *o, mp4_atom_t *atom)
     }
 
 err:
+#if CONFIG_AV_MP4_IDX_OPT
+    if (ret < 0) {
+        aos_freep((char**)&priv->chunk_offsets);
+        aos_freep((char**)&priv->sample_sizes);
+        aos_freep((char**)&priv->stsc_data);
+        aos_freep((char**)&priv->stts_data);
+    }
+#else
     aos_freep((char**)&priv->chunk_offsets);
     aos_freep((char**)&priv->sample_sizes);
     aos_freep((char**)&priv->stsc_data);
     aos_freep((char**)&priv->stts_data);
+#endif
 
     return ret;
 }
@@ -1104,7 +1239,19 @@ static int _demux_mp4_read_packet(demux_cls_t *o, avpacket_t *pkt)
         return 0;
     }
 
+#if CONFIG_AV_MP4_IDX_OPT
+    if (priv->cur_sample > priv->seg_idxes[priv->cur_seg_idx].end) {
+        priv->cur_seg_idx++;
+        ret = _mp4_create_indexes(o, priv->seg_idxes[priv->cur_seg_idx].start);
+        if (ret < 0) {
+            LOGE(TAG, "mp4 re-create indexes fail");
+            return -1;
+        }
+    }
+    e = &priv->indexes[priv->cur_sample % IDX_NB_PER_SEGMENT];
+#else
     e = &priv->indexes[priv->cur_sample];
+#endif
     ret = stream_seek(s, e->pos, SEEK_SET);
     CHECK_RET_TAG_WITH_GOTO(ret == 0, err);
 
@@ -1138,6 +1285,52 @@ err:
     return -1;
 }
 
+#if CONFIG_AV_MP4_IDX_OPT
+static int _demux_mp4_seek(demux_cls_t *o, uint64_t timestamp)
+{
+    int rc = -1;
+    int x, y, m = 0;
+    int i, seg_idx = -1;
+    struct mp4_priv *priv = o->priv;
+
+    if (priv->seg_idxes[0].start_ts <= timestamp
+        && priv->seg_idxes[priv->nb_seg_idxes - 1].end_ts >= timestamp) {
+        for (i = 0; i < priv->nb_seg_idxes; i++) {
+            if (priv->seg_idxes[i].start_ts <= timestamp && priv->seg_idxes[i].end_ts >= timestamp) {
+                seg_idx = i;
+                break;
+            }
+        }
+    }
+
+    if (seg_idx >= 0) {
+        if (seg_idx != priv->cur_seg_idx) {
+            priv->cur_seg_idx = seg_idx;
+            rc = _mp4_create_indexes(o, priv->seg_idxes[priv->cur_seg_idx].start);
+            if (rc < 0) {
+                LOGE(TAG, "mp4 re-create indexes fail");
+                return -1;
+            }
+        }
+    } else {
+        return -1;
+    }
+
+    x = -1;
+    y = priv->seg_idxes[priv->cur_seg_idx].end - priv->seg_idxes[priv->cur_seg_idx].start + 1;
+    while (y - x > 1) {
+        m = (x + y) >> 1;
+        if (priv->indexes[m].timestamp >= timestamp) {
+            y = m;
+        } else {
+            x = m;
+        }
+    }
+    priv->cur_sample = m + priv->seg_idxes[priv->cur_seg_idx].start;
+
+    return 0;
+}
+#else
 static int _demux_mp4_seek(demux_cls_t *o, uint64_t timestamp)
 {
     int rc = -1;
@@ -1162,6 +1355,7 @@ static int _demux_mp4_seek(demux_cls_t *o, uint64_t timestamp)
 
     return rc;
 }
+#endif
 
 static int _demux_mp4_control(demux_cls_t *o, int cmd, void *arg, size_t *arg_size)
 {
@@ -1182,4 +1376,5 @@ const struct demux_ops demux_ops_mp4 = {
     .seek            = _demux_mp4_seek,
     .control         = _demux_mp4_control,
 };
+#endif
 

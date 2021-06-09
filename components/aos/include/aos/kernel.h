@@ -16,13 +16,22 @@ extern "C" {
 
 #define AOS_WAIT_FOREVER    0xffffffffu
 #define AOS_NO_WAIT         0x0
+
+#ifndef AOS_DEFAULT_APP_PRI
 #define AOS_DEFAULT_APP_PRI 32
+#endif
+
+#ifndef AOS_MAX_APP_PRI
 #define AOS_MAX_APP_PRI     60
+#endif
 
 #define AOS_EVENT_AND              0x02u
 #define AOS_EVENT_AND_CLEAR        0x03u
 #define AOS_EVENT_OR               0x00u
 #define AOS_EVENT_OR_CLEAR         0x01u
+
+/// Status code values returned by CSI-kernel functions. 0 - success, negative represents error code ,see errno.h
+typedef int32_t k_status_t;
 
 /// Entry point of a timer call back function.
 typedef void (*aos_timer_cb_t)(void *, void *);
@@ -641,6 +650,14 @@ void aos_init(void);
  * Start system
  */
 void aos_start(void);
+
+/// System enter interrupt status.
+/// \return execution status code. \ref k_status_t
+k_status_t aos_kernel_intrpt_enter(void);
+
+/// System exit interrupt status.
+/// \return execution status code. \ref k_status_t
+k_status_t aos_kernel_intrpt_exit(void);
 
 /**
  * Get aos memory used info.

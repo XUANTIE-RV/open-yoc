@@ -1,16 +1,9 @@
 /* ntpclient.c */
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <time.h>
-#include <errno.h>
-#include <unistd.h>
-
+#include <aos/aos.h>
 #include <sys/select.h>
 #include <lwip/netdb.h>
 #include <arpa/inet.h>
 
-#include <aos/log.h>
 
 static const char *TAG = "NTP";
 
@@ -196,7 +189,7 @@ static int _ntp_sync_time(char *server)
     int                sockfd, maxfd1;
     struct sockaddr_in servaddr = {0,};
     fd_set             readfds;
-    struct timeval     timeout, recvtv, tv;
+    struct timeval     timeout, recvtv, tv, rcvtimeout = {3, 0};
     double             offset;
 
     servaddr.sin_family = AF_INET;
@@ -215,6 +208,8 @@ static int _ntp_sync_time(char *server)
         //LOGE(TAG, "socket error");
         return -1;
     }
+
+    setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, &rcvtimeout, sizeof(struct timeval));
 
     if (connect(sockfd, (struct sockaddr *)&servaddr, sizeof(struct sockaddr)) != 0) {
         //LOGE(TAG, "connect error");

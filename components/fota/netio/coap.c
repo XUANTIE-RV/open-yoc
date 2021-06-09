@@ -4,9 +4,8 @@
 
 #include <yoc/netio.h>
 #include <yoc/fota.h>
-#include <aos/network.h>
+#include "util/network.h"
 #include "er-coap-13/er-coap-13.h"
-#include <aos/log.h>
 
 // #define BUFFER_SIZE 768
 #define COAP_205_CONTENT                (uint8_t)0x45
@@ -118,7 +117,7 @@ int coap_open(netio_t *io, const char *path)
     port = strrchr(ip, ':');
 
     if (port == NULL) {
-        free(coap_ins);
+        aos_free(coap_ins);
         return -1;
     }
 
@@ -134,15 +133,15 @@ int coap_open(netio_t *io, const char *path)
 
         if (coap_ins->path == NULL) {
             net.net_disconncet(&net);
-            free(coap_ins);
+            aos_free(coap_ins);
             return -1;
         }
     }
 
-    if ((coap_ins->buffer = malloc(BUFFER_SIZE)) == NULL) {
-        free(coap_ins->path);
+    if ((coap_ins->buffer = aos_malloc(BUFFER_SIZE)) == NULL) {
+        aos_free(coap_ins->path);
         net.net_disconncet(&net);
-        free(coap_ins);
+        aos_free(coap_ins);
         return -1;
     }
 
@@ -163,10 +162,10 @@ int coap_close(netio_t *io)
     target_coap_t *coap_ins = (target_coap_t*)io->private;
     net.net_disconncet(&net);
 
-    free(coap_ins->path);
+    aos_free(coap_ins->path);
 
-    free(coap_ins->buffer);
-    free(coap_ins);
+    aos_free(coap_ins->buffer);
+    aos_free(coap_ins);
     return 0;
 }
 

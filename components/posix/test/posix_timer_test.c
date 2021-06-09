@@ -4,7 +4,7 @@
 
 #include "timer.h"
 #include "semaphore.h"
-#include "aos/log.h"
+#include "ulog/ulog.h"
 
 #define TAG "timer_test"
 

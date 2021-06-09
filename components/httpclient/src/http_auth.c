@@ -20,7 +20,7 @@
 #include "lwip/sockets.h"
 #include "mbedtls/base64.h"
 #include "mbedtls/md5.h"
-#include "tperrors.h"
+#include "transport/tperrors.h"
 
 #include "http_utils.h"
 #include "http_auth.h"
@@ -50,6 +50,7 @@ static int md5_printf(char *md, const char *fmt, ...)
     va_start(ap, fmt);
     len = vasprintf((char **)&buf, fmt, ap);
     if (buf == NULL) {
+        va_end(ap);
         return WEB_FAIL;
     }
 

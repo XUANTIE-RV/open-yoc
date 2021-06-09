@@ -85,4 +85,25 @@ int demux_register_amr()
     return demux_ops_register(&demux_ops_amr);
 }
 
+/**
+ * @brief  regist demux for ts
+ * @return 0/-1
+ */
+int demux_register_ts()
+{
+    extern struct demux_ops demux_ops_ts;
+    return demux_ops_register(&demux_ops_ts);
+}
+
+/**
+ * @brief  regist demux for ogg
+ * @return 0/-1
+ */
+int demux_register_ogg()
+{
+    extern struct demux_ops demux_ops_ogg;
+    return demux_ops_register(&demux_ops_ogg);
+}
+
+
 

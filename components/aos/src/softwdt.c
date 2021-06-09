@@ -6,7 +6,6 @@
 #include <unistd.h>
 
 #include <aos/list.h>
-#include <aos/log.h>
 #include <aos/version.h>
 #include <aos/kernel.h>
 #include <aos/debug.h>
@@ -20,7 +19,7 @@
 // FIXME:
 #define CONFIG_USE_HW
 
-static const char *TAG = "swdt";
+//static const char *TAG = "swdt";
 
 struct softwdt_node {
     uint32_t index;
@@ -37,7 +36,11 @@ static struct softwdt_context {
     aos_mutex_t  mutex;
     aos_event_t  wait_event;
 #ifdef CONFIG_USE_HW
+#ifdef CONFIG_CSI_V2
+    csi_wdt_t   hw_wdg_handle;
+#else
     wdt_handle_t hw_wdg_handle;
+#endif
 #endif
     slist_t      head;
 } g_softwdt_ctx;
@@ -68,8 +71,13 @@ static void softwdt_task_entry(void *arg)
         }
 
 #ifdef CONFIG_USE_HW
+#ifdef CONFIG_CSI_V2
+        csi_wdt_stop(&ctx->hw_wdg_handle);
+        csi_wdt_start(&ctx->hw_wdg_handle);
+#else
         if (ctx->hw_wdg_handle)
             csi_wdt_restart(ctx->hw_wdg_handle);
+#endif
 #endif
         struct softwdt_node *node;
         slist_for_each_entry(&ctx->head, node, struct softwdt_node, node) {
@@ -77,16 +85,16 @@ static void softwdt_task_entry(void *arg)
                 node->left_time -= LOOP_TIME;
 
                 if (node->left_time * 2 < node->max_time)
-                    LOGW(TAG, "%x: left_time %d", node->index, node->left_time);
+                    printf("%x: left_time %d", node->index, node->left_time);
 
                 if (node->left_time <= 0) {
                     if (node->will)
                         node->will(node->args);
                     else {
-                        LOGE(TAG, "softwdt %u crash!!!", node->index);
+                        printf("softwdt %u crash!!!", node->index);
 
                         if (node->args)
-                            LOGE(TAG, "softwdt info: %s", (char *)node->args);
+                            printf("softwdt info: %s", (char *)node->args);
                     }
                     // use hw watchdog reboot
                     aos_reboot();
@@ -222,8 +230,8 @@ void aos_wdt_show(uint32_t index)
     struct softwdt_node *node;
     slist_for_each_entry(&g_softwdt_ctx.head, node, struct softwdt_node, node) {
         if (node->index == index)
-            LOGE(TAG, "softwdt uint[%d], left_time = %d, max_time=%d\n", node->index,
-                 node->left_time, node->max_time);
+            printf("softwdt uint[%d], left_time = %d, max_time=%d\n", node->index,
+                   node->left_time, node->max_time);
     }
 
     aos_mutex_unlock(&g_softwdt_ctx.mutex);
@@ -236,8 +244,8 @@ void aos_wdt_showall()
 
     struct softwdt_node *node;
     slist_for_each_entry(&g_softwdt_ctx.head, node, struct softwdt_node, node) {
-        LOGE(TAG, "softwdt uint[%d], left_time = %d, max_time=%d\n", node->index, node->left_time,
-             node->max_time);
+        printf("softwdt uint[%d], left_time = %d, max_time=%d\n", node->index, node->left_time,
+               node->max_time);
     }
 
     aos_mutex_unlock(&g_softwdt_ctx.mutex);
@@ -246,10 +254,21 @@ void aos_wdt_showall()
 int aos_wdt_hw_enable(int id)
 {
 #ifdef CONFIG_USE_HW
+#ifdef CONFIG_CSI_V2
+    csi_error_t ret = csi_wdt_init(&g_softwdt_ctx.hw_wdg_handle, id);
+    if (ret != CSI_OK) {
+        return -1;
+    }
+
+    csi_wdt_set_timeout(&g_softwdt_ctx.hw_wdg_handle, SOFTWDT_TIME);
+    csi_wdt_start(&g_softwdt_ctx.hw_wdg_handle);
+    aos_check_return_einval(&g_softwdt_ctx.hw_wdg_handle);
+#else
     g_softwdt_ctx.hw_wdg_handle = csi_wdt_initialize(0, NULL);
     csi_wdt_set_timeout(g_softwdt_ctx.hw_wdg_handle, SOFTWDT_TIME);
     csi_wdt_start(g_softwdt_ctx.hw_wdg_handle);
     aos_check_return_einval(g_softwdt_ctx.hw_wdg_handle);
+#endif
 
     return 0;
 #else
@@ -260,7 +279,11 @@ int aos_wdt_hw_enable(int id)
 void aos_wdt_hw_disable(int id)
 {
 #ifdef CONFIG_USE_HW
+#ifdef CONFIG_CSI_V2
+    csi_wdt_uninit(&g_softwdt_ctx.hw_wdg_handle);
+#else
     csi_wdt_uninitialize(g_softwdt_ctx.hw_wdg_handle);
     g_softwdt_ctx.hw_wdg_handle = NULL;
+#endif
 #endif
 }

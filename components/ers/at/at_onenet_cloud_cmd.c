@@ -8,8 +8,7 @@
 #include <ctype.h>
 
 #include <aos/kernel.h>
-#include <aos/log.h>
-#include <yoc/event.h>
+#include <uservice/event.h>
 #include "at_internal.h"
 
 #include <cis_api.h>

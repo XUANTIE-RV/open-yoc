@@ -31,7 +31,9 @@ struct bt_mesh_adv {
 	u8_t      type:2,
 		  busy:1;
 	u8_t      xmit;
-
+	#ifdef GENIE_ULTRA_PROV
+    u8_t tiny_adv;
+	#endif
 	union {
 		/* Address, used e.g. for Friend Queue messages */
 		u16_t addr;

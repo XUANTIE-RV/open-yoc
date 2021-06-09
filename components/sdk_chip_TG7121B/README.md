@@ -1,0 +1,21 @@
+## 概述
+TG7121B 芯片依赖组件，用于根据芯片类型关联相关组件。
+
+## 依赖资源
+  - aos
+  - aos_hal
+  - chip_TG7121B
+  - csi
+  - drivers
+  - cmsis
+  - kv
+  - key_mgr
+  - newlib
+  - TG7121B_evb
+  - rhino
+  - rhino_arch
+  - rhino_pwrmgmt
+  - partition
+  - sec_crypto
+  - uservice
+  - ulog

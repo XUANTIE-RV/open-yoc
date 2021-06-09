@@ -7,10 +7,11 @@
 #include <sys/types.h>
 #include "csi_core.h"
 #include "drv/timer.h"
-
+#ifdef CONFIG_CSI_V2
+#include "drv/porting.h"
+#endif
 
 extern int32_t drv_get_cpu_freq(int idx);
-extern uint64_t g_sys_tick_count;
 extern uint32_t csi_coret_get_value(void);
 extern uint32_t csi_coret_get_load(void);
 extern long long aos_now_ms(void);
@@ -38,14 +39,23 @@ static uint32_t coretim_getpass(void)
     int      value;
 
     uint32_t loadtime;
+#ifdef __arm__
+    loadtime = SysTick->LOAD;
+#else
     loadtime = csi_coret_get_load();
+#endif
+
+#ifdef __arm__
+    cvalue = SysTick->VAL;
+#else
     cvalue = csi_coret_get_value();
+#endif
     value = loadtime - cvalue;
 
     return value > 0 ? value : 0;
 }
 
-int coretimspec(struct timespec *ts)
+__attribute__((weak)) int coretimspec(struct timespec *ts)
 {
     uint32_t msecs;
     uint32_t secs;
@@ -66,7 +76,11 @@ int coretimspec(struct timespec *ts)
 
         if (clk1 == clk2 && pass2 > pass1) {
             msecs = clk1;
+#ifdef CONFIG_CSI_V2
+            nsecs = pass2 * (NSEC_PER_SEC / soc_get_cur_cpu_freq());
+#else            
             nsecs = pass2 * (NSEC_PER_SEC / drv_get_cpu_freq(0));
+#endif
             break;
         }
     }

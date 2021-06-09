@@ -2,11 +2,17 @@
  * Copyright (C) 2019-2020 Alibaba Group Holding Limited
  */
 #include <aos/aos.h>
-#include <yoc/uservice.h>
-#include <yoc/eventid.h>
+#include <uservice/uservice.h>
+#include <uservice/eventid.h>
 #include <devices/netdrv.h>
 #include <yoc/netmgr.h>
 #include <yoc/netmgr_service.h>
+#include <ulog/ulog.h>
+#ifdef CONFIG_KV_SMART
+#include <aos/kv.h>
+#endif
+
+#include "activation.h"
 
 #define KV_VAL_LENGTH       32
 
@@ -198,6 +204,9 @@ static int netmgr_evt_ip_got(struct netmgr_uservice *netmgr, rpc_t *rpc)
     hal_net_get_ipaddr(dev, &node->ipaddr, &node->netmask, &node->gw);
     LOGI(TAG, "IP: %s", ipaddr_ntoa((ip4_addr_t *)ip_2_ip4(&node->ipaddr)));
 
+#ifdef AOS_COMP_ACTIVATION
+    activation_report();
+#endif
     netmgr_set_gotip(NULL, 1);
     event_publish(EVENT_NETMGR_GOT_IP, &node->ipaddr);
 
@@ -220,12 +229,17 @@ static int netmgr_check_dhcp(struct netmgr_uservice *netmgr, rpc_t *rpc)
 
 static int netmgr_srv_ipconfig(struct netmgr_uservice *netmgr, rpc_t *rpc)
 {
-    param_ip_setting_t *param = rpc_get_point(rpc);
-    netmgr_dev_t *node = (netmgr_dev_t *)param->hdl;
-    aos_dev_t *dev = node->dev;
     int ret = -EBADFD;
+    param_ip_setting_t *param = rpc_get_point(rpc);
+
+    if (param == NULL) {
+        return ret;
+    }
+
+    netmgr_dev_t *node = (netmgr_dev_t *)param->hdl;
 
     if (node != NULL) {
+        aos_dev_t *dev = node->dev;
         ip_setting_t *ip = &param->config;
         node->dhcp_en = ip->dhcp_en;
 #ifdef CONFIG_KV_SMART
@@ -233,8 +247,8 @@ static int netmgr_srv_ipconfig(struct netmgr_uservice *netmgr, rpc_t *rpc)
         if ((ip->ipaddr != NULL) && (ip->netmask != NULL) && (ip->gw != NULL)) {
             aos_kv_setint(KV_DHCP_EN, node->dhcp_en);
             aos_kv_set(KV_IP_ADDR, ip->ipaddr, strlen(ip->ipaddr), 1);
-            aos_kv_set(KV_IP_ADDR, ip->netmask, strlen(ip->netmask), 1);
-            aos_kv_set(KV_IP_ADDR, ip->gw, strlen(ip->gw), 1);
+            aos_kv_set(KV_IP_NETMASK, ip->netmask, strlen(ip->netmask), 1);
+            aos_kv_set(KV_IP_GW, ip->gw, strlen(ip->gw), 1);
 
             ret = 0;
         } else {
@@ -244,6 +258,7 @@ static int netmgr_srv_ipconfig(struct netmgr_uservice *netmgr, rpc_t *rpc)
 #endif
         if (node->dhcp_en) {
             netmgr_start_dhcp(netmgr, node->name);
+            ret = 0;
         } else {
             if ((ip->ipaddr != NULL) && (ip->netmask != NULL) && (ip->gw != NULL)) {
                 ip_addr_t ipaddr;

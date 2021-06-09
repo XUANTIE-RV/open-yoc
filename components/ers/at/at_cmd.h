@@ -116,6 +116,75 @@
 #define AT_OTAGETINFO       {"AT+OTAGETINFO",   at_cmd_otagetinfo}
 #define AT_OTAPOST          {"AT+OTAPOST",      at_cmd_otapost}
 
+#ifdef COFNIG_BT
+//BT
+#define AT_BT_NAME          {"AT+BTNAME",at_cmd_bt_name}
+#define AT_BT_ADV           {"AT+BTADV", at_cmd_bt_adv}
+#define AT_BT_AUTO_ADV      {"AT+BTAUTOADV",at_cmd_bt_adv_def}
+#define AT_BT_CONN          {"AT+BTCONN",at_cmd_bt_conn}
+#define AT_BT_CONN_UPDATE   {"AT+BTCONNUPDATE",at_cmd_bt_conn_update}
+#define AT_BT_AUTO_CONN     {"AT+BTAUTOCONN",at_cmd_bt_conn_def}
+#define AT_BT_TX            {"AT+BTTX",  at_cmd_bt_tx}
+#define AT_BT_ROLE          {"AT+BTROLE",at_cmd_bt_role}
+#define AT_BT_REBOOT        {"AT+REBOOT",at_cmd_bt_reboot}
+#define AT_BT_RST           {"AT+BTRST",at_cmd_bt_rst}
+#define AT_BT_SLEEP         {"AT+BTSLEEP",at_cmd_bt_sleep_mode}
+#define AT_BT_TXPOWER       {"AT+BTTXPOW",at_cmd_bt_tx_power}
+#define AT_BT_FWVER         {"AT+BTFWVER",at_cmd_bt_fwver}
+#define AT_BT_BAUD          {"AT+BAUD",at_cmd_bt_baud}
+#define AT_BT_MAC           {"AT+BTMAC",at_cmd_bt_mac}
+#define AT_BT_FIND          {"AT+BTFIND",at_cmd_bt_find}
+#define AT_BT_DISCONN       {"AT+BTDISCONN",at_cmd_bt_disconn}
+#define AT_BT_FIND          {"AT+BTFIND",at_cmd_bt_find}
+#endif
+
+#ifdef CONFIG_BT_MESH
+//MESH
+#define AT_BTMESH_REBOOT        {"AT+IREBOOT",at_cmd_btmesh_reboot}
+#define AT_BTMESH_QUERY_STA     {"AT+MESHQUERYSTA",at_cmd_btmesh_query_sta}
+#define AT_BTMESH_RST_DEV      {"AT+RST",at_cmd_btmesh_rst_dev}
+#define AT_BTMESH_CLEAR_RPL     {"AT+MESHCLEARRPL",at_cmd_btmesh_rpl_clear}
+#define AT_BTMESH_PROV_EN       {"AT+MESHPROVEN",at_cmd_btmesh_prov_en}
+#define AT_BTMESH_PROV_FILTER_DEV {"AT+MESHPROVFILTERDEV", at_cmd_btmesh_prov_set_uuid_filter}
+#define AT_BTMESH_PROV_SHOW_DEV {"AT+MESHPROVSHOWDEV", at_cmd_btmesh_prov_show_dev}
+#define AT_BTMESH_GET_NODE_INFO {"AT+MESHGETNODEINFO",at_cmd_btmesh_prov_get_node_info}
+#define AT_BTMESH_ADD_NODE      {"AT+MESHADDNODE",at_cmd_btmesh_prov_add_node}
+#define AT_BTMESH_ADDDEV        {"AT+MESHADDDEV",at_cmd_btmesh_prov_add_dev}
+#define AT_BTMESH_AUTOCONFIG    {"AT+MESHAUTOCONFIG",at_cmd_btmesh_prov_node_auto_config}
+#define AT_BTMESH_DELDEV        {"AT+MESHDELDEV",at_cmd_btmesh_prov_del_dev}
+#define AT_BTMESH_OOB           {"AT+MESHOOB",at_cmd_btmesh_prov_add_oob}
+#define AT_BTMESH_NETKEY_GET    {"AT+MESHGETNETKEY",at_cmd_btmesh_prov_netkey_get}
+#define AT_BTMESH_NETKEY_SET    {"AT+MESHSETNETKEY",at_cmd_btmesh_prov_netkey_set}
+#define AT_BTMESH_APPKEY_GET    {"AT+MESHGETAPPKEY",at_cmd_btmesh_prov_appkey_get}
+#define AT_BTMESH_APPKEY_SET    {"AT+MESHSETAPPKEY",at_cmd_btmesh_prov_appkey_set}
+#define AT_BTMESH_APPKEY_ADD    {"AT+MESHADDAPPKEY",at_cmd_btmesh_appkey_add}
+#define AT_BTMESH_APPKEY_BIND   {"AT+MESHBINDAPPKEY",at_cmd_btmesh_appkey_bind}
+#define AT_BTMESH_APPKEY_UNBIND   {"AT+MESHUNBINDAPPKEY",at_cmd_btmesh_appkey_unbind}
+#define AT_BTMESH_CFG_RELAY     {"AT+MESHRELAY",at_cmd_btmesh_relay}
+#define AT_BTMESH_CFG_COMP_GET  {"AT+MESHGETCOMP",at_cmd_btmesh_get_comp}
+#define AT_BTMESH_CFG_PROXY     {"AT+MESHPROXY",at_cmd_btmesh_proxy}
+#define AT_BTMESH_CFG_FRIEND    {"AT+MESHFRIEND",at_cmd_btmesh_friend}
+#define AT_BTMESH_PUB_SET           {"AT+MESHSETPUB",at_cmd_btmesh_pub}
+#define AT_BTMESH_SUB_SET           {"AT+MESHSETSUB",at_cmd_btmesh_sub}
+#define AT_BTMESH_SUB_GET       {"AT+MESHGETSUB",at_cmd_btmesh_sub_get}
+#define AT_BTMESH_PUB_GET       {"AT+MESHGETPUB",at_cmd_btmesh_pub_get}
+#define AT_BTMESH_SUB_DEL       {"AT+MESHDELSUB",at_cmd_btmesh_sub_del}
+#define AT_BTMESH_RST           {"AT+MESHRST",at_cmd_btmesh_rst}
+#define AT_BTMESH_ONOFF         {"AT+MESHONOFF",at_cmd_btmesh_onoff}
+#define AT_BTMESH_LEVEL         {"AT+MESHLEVEL",at_cmd_btmesh_level}
+#define AT_BTMESH_LEVEL_MOVE    {"AT+MESHLEVELMOVE",at_cmd_btmesh_level_move}
+#define AT_BTMESH_LEVEL_DELTA   {"AT+MESHLEVELDELTA",at_cmd_btmesh_level_move_delta}
+#define AT_BTMESH_LIGHTNESS     {"AT+MESHLIGHTNESS",at_cmd_btmesh_lightness}
+#define AT_BTMESH_LIGHTNESS_LIN {"AT+MESHLIGHTNESSLIN",at_cmd_btmesh_lightness_linear}
+#define AT_BTMESH_LIGHTNESS_RANGE     {"AT+MESHLIGHTNESSRANGE",at_cmd_btmesh_lightness_range}
+#define AT_BTMESH_LIGHTNESS_DEF     {"AT+MESHLIGHTNESSDEF",at_cmd_btmesh_lightness_def}
+#define AT_BTMESH_LIGHT_CTL     {"AT+MESHCTL",at_cmd_btmesh_light_ctl}
+#define AT_BTMESH_LIGHT_CTL_TEMP   {"AT+MESHCTLTEMP",at_cmd_btmesh_light_ctl_temp}
+#define AT_BTMESH_LIGHT_CTL_RANGE    {"AT+MESHCTLTEMPRANGE",at_cmd_btmesh_light_ctl_range}
+#define AT_BTMESH_LIGHT_CTL_DEF   {"AT+MESHCTLDEF",at_cmd_btmesh_light_ctl_def}
+#define AT_BTMESH_TRS           {"AT+MESHTRS",at_cmd_btmesh_vendor_send}
+#endif
+
 #define AT_NULL             {NULL,NULL}
 
 /* basic cmd */
@@ -133,6 +202,80 @@ void at_cmd_echo(char *cmd, int type, char *data);
 void at_cmd_model(char *cmd, int type, char *data);
 void at_cmd_sleep(char *cmd, int type, char *data);
 void at_cmd_debug_func(char *cmd, int type, char *data);
+
+#ifdef COFNIG_BT
+/*bt cmd*/
+void at_cmd_bt_mac(char *cmd, int type, char *data);
+void at_cmd_bt_baud(char *cmd, int type, char *data);
+void at_cmd_bt_find(char *cmd, int type, char *data);
+void at_cmd_bt_disconn(char *cmd, int type, char *data);
+
+void at_cmd_bt_name(char *cmd, int type, char *data);
+void at_cmd_bt_adv(char *cmd, int type, char *data);
+void at_cmd_bt_adv_def(char *cmd, int type, char *data);
+void at_cmd_bt_conn(char *cmd, int type, char *data);
+void at_cmd_bt_conn_def(char *cmd, int type, char *data);
+void at_cmd_bt_conn_update(char *cmd, int type, char *data);
+void at_cmd_bt_tx(char *cmd, int type, char *data);
+void at_cmd_bt_role(char *cmd, int type, char *data);
+void at_cmd_bt_reboot(char *cmd, int type, char *data);
+void at_cmd_bt_rst(char *cmd, int type, char *data);
+void at_cmd_bt_sleep_mode(char *cmd, int type, char *data);
+void at_cmd_bt_tx_power(char *cmd, int type, char *data);
+void at_cmd_bt_fwver(char *cmd, int type, char *data);
+void at_cmd_bt_mac(char *cmd, int type, char *data);
+void at_cmd_bt_baud(char *cmd, int type, char *data);
+void at_cmd_bt_find(char *cmd, int type, char *data);
+void at_cmd_bt_fota(char *cmd, int type, char *data);
+#endif
+
+#ifdef CONFIG_BT_MESH
+/* mesh cmd */
+void at_cmd_btmesh_rst_dev(char * cmd, int type, char * data);
+void at_cmd_btmesh_prov_en(char *cmd, int type, char *data);
+void at_cmd_btmesh_rpl_clear(char * cmd, int type, char * data);
+void at_cmd_btmesh_prov_set_uuid_filter(char *cmd, int type, char *data);
+void at_cmd_btmesh_prov_show_dev(char *cmd, int type, char *data);
+void at_cmd_btmesh_prov_add_dev(char *cmd, int type, char *data);
+void at_cmd_btmesh_prov_node_auto_config(char * cmd, int type, char * data);
+void at_cmd_btmesh_prov_del_dev(char *cmd, int type, char *data);
+void at_cmd_btmesh_prov_add_oob(char *cmd, int type, char *data);
+void at_cmd_btmesh_prov_netkey_get(char * cmd, int type, char * data);
+void at_cmd_btmesh_prov_netkey_set(char * cmd, int type, char * data);
+void at_cmd_btmesh_prov_appkey_get(char * cmd, int type, char * data);
+void at_cmd_btmesh_prov_appkey_set(char * cmd, int type, char * data);
+void at_cmd_btmesh_prov_get_node_info(char *cmd, int type, char *data);
+void at_cmd_btmesh_prov_add_node(char *cmd, int type, char *data);
+void at_cmd_btmesh_appkey_add(char *cmd, int type, char *data);
+void at_cmd_btmesh_appkey_bind(char *cmd, int type, char *data);
+void at_cmd_btmesh_appkey_unbind(char *cmd, int type, char *data);
+void at_cmd_btmesh_local_key_get(char * cmd, int type, char * data);
+void at_cmd_btmesh_pub(char *cmd, int type, char *data);
+void at_cmd_btmesh_sub(char *cmd, int type, char *data);
+void at_cmd_btmesh_sub_get(char * cmd, int type, char * data);
+void at_cmd_btmesh_pub_get(char * cmd, int type, char * data);
+void at_cmd_btmesh_get_comp(char *cmd, int type, char *data);
+void at_cmd_btmesh_sub_del(char *cmd, int type, char *data);
+void at_cmd_btmesh_rst(char *cmd, int type, char *data);
+void at_cmd_btmesh_onoff(char *cmd, int type, char *data);
+void at_cmd_btmesh_level(char *cmd, int type, char *data);
+void at_cmd_btmesh_level_move(char *cmd, int type, char *data);
+void at_cmd_btmesh_level_move_delta(char *cmd, int type, char *data);
+void at_cmd_btmesh_lightness(char *cmd, int type, char *data);
+void at_cmd_btmesh_lightness_linear(char *cmd, int type, char *data);
+void at_cmd_btmesh_lightness_range(char *cmd, int type, char *data);
+void at_cmd_btmesh_lightness_def(char *cmd, int type, char *data);
+void at_cmd_btmesh_light_ctl(char *cmd, int type, char *data);
+void at_cmd_btmesh_light_ctl_temp(char *cmd, int type, char *data);
+void at_cmd_btmesh_light_ctl_range(char *cmd, int type, char *data);
+void at_cmd_btmesh_light_ctl_def(char *cmd, int type, char *data);
+void at_cmd_btmesh_vendor_send(char *cmd, int type, char *data);
+void at_cmd_btmesh_reboot(char * cmd, int type, char * data);
+void at_cmd_btmesh_query_sta(char * cmd, int type, char * data);
+void at_cmd_btmesh_relay(char * cmd, int type, char * data);
+void at_cmd_btmesh_proxy(char * cmd, int type, char * data);
+void at_cmd_btmesh_friend(char * cmd, int type, char * data);
+#endif
 
 /* service cmd */
 void at_cmd_fotastart(char *cmd, int type, char *data);

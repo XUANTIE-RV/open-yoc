@@ -7,8 +7,9 @@
 
 #include <stdarg.h>
 
-#include <yoc/uservice.h>
+#include <uservice/uservice.h>
 #include <devices/uart.h>
+#include <yoc/at_port.h>
 
 
 #ifdef __cplusplus

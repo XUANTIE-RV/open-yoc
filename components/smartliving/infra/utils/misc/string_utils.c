@@ -13,7 +13,7 @@ char *LITE_strdup(const char *src, ...)
 {
     int             len = 0;
     char           *dst = NULL;
-
+    
     if (!src) {
         return NULL;
     }

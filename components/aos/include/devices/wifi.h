@@ -267,7 +267,7 @@ typedef struct {
     uint8_t dtim_interval; //DTIM interval ,default to 0
     uint8_t channel; //ap's channel, default to 0
     uint8_t beacon_interval; //default to 0
-    int hide_ssid; //hide the ssid, default to 0 
+    int hide_ssid; //hide the ssid, default to 0
     int max_sta_number; //max sta number, default to 0
 } wifi_config_ap_adv_t;
 

@@ -4,7 +4,6 @@
 
 #include <string.h>
 #include <vfs.h>
-#include <aos/log.h>
 #include <aos/kernel.h>
 #include "recio.h"
 #include "uri_parse.h"
@@ -51,8 +50,10 @@ static int sdbuf_close(recio_t *io)
 {
     sdbuf_conf_t *priv = (sdbuf_conf_t *)io->private;
 
-    aos_close(priv->wtfd);
-    aos_close(priv->rdfd);
+    if (priv) {
+        aos_close(priv->wtfd);
+        aos_close(priv->rdfd);
+    }
 
     if (io->private) {
         aos_free(io->private);

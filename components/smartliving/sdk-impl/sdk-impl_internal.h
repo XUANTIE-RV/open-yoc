@@ -5,7 +5,6 @@
 #ifndef __SDK_IMPL_INTERNAL_H__
 #define __SDK_IMPL_INTERNAL_H__
 
-#include "sl_config.h"
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -50,6 +49,8 @@
 
 typedef struct {
     int domain_type;
+    int mqtt_port_num;
+    int env;
     int dynamic_register;
 } sdk_impl_ctx_t;
 

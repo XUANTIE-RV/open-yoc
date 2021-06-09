@@ -28,7 +28,6 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <aos/debug.h>
-#include <aos/log.h>
 #include <pthread.h>
 
 #define RWS_VERSION_MAJOR 1

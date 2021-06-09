@@ -19,7 +19,7 @@
         return -1; \
 } while(0)
 
-ssize_t usrsock_write(aos_dev_t *dev, const void *data, size_t size)
+int usrsock_write(aos_dev_t *dev, const void *data, size_t size)
 {
     ssize_t ret;
 
@@ -36,7 +36,7 @@ ssize_t usrsock_write(aos_dev_t *dev, const void *data, size_t size)
     return ret;
 }
 
-ssize_t usrsock_read(aos_dev_t *dev, void *data, size_t size)
+int usrsock_read(aos_dev_t *dev, void *data, size_t size)
 {
     ssize_t ret;
 

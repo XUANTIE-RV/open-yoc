@@ -1,8 +1,8 @@
 /*
  * Copyright (C) 2015-2018 Alibaba Group Holding Limited
  */
-
 #include "sl_config.h"
+
 #ifdef AWSS_SUPPORT_AHA
 #include <stdio.h>
 #include <stdint.h>
@@ -126,7 +126,7 @@ int awss_ieee80211_aha_process(uint8_t *mgmt_header, int len, int link_type, str
 
     if (!ieee80211_is_beacon(fc) && !ieee80211_is_probe_resp(fc))
         return ALINK_INVALID;
-    ret = ieee80211_get_bssid(mgmt_header, bssid);
+    ret = aw_ieee80211_get_bssid(mgmt_header, bssid);
     if (ret < 0)
         return ALINK_INVALID;
 

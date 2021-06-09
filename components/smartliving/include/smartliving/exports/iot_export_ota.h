@@ -10,8 +10,6 @@ extern "C" {
 #endif
 
 #include "smartliving/iot_import.h"
-// #include <stdint.h>
-// #include <stddef.h>
 
 #define OTA_CH_SIGNAL_MQTT      (0)
 #define OTA_CH_SIGNAL_COAP      (1)
@@ -43,7 +41,8 @@ typedef enum {
 typedef enum {
     IOT_OTAT_NONE,
     IOT_OTAT_COTA,
-    IOT_OTAT_FOTA
+    IOT_OTAT_FOTA,
+    IOT_OTAT_FOTA_OFFLINE
 } IOT_OTA_Type_t;
 
 /* Progress of OTA */

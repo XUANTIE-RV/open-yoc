@@ -5,9 +5,10 @@
 #ifndef HAL_NETMGR_IMPL_H
 #define HAL_NETMGR_IMPL_H
 
+#if defined(CONFIG_SAL) || defined(CONFIG_TCPIP)
 #include <stdint.h>
 
-#include <yoc/uservice.h>
+#include <uservice/uservice.h>
 #include <devices/driver.h>
 #include <lwip/ip_addr.h>
 
@@ -48,6 +49,8 @@ typedef struct netdev_driver {
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif
 
 #endif

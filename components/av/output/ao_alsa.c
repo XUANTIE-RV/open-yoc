@@ -47,7 +47,7 @@ static aos_pcm_t *pcm_init(ao_cls_t *o, unsigned int *rate)
 
     aos_pcm_hw_params_set_rate_near(pcm, params, rate, 0);
 
-    period_frames = ((*rate) / 1000) * o->period_ms * 2;
+    period_frames = ((*rate) / 1000) * o->period_ms;
     aos_pcm_hw_params_set_period_size_near(pcm, params, &period_frames, 0);
 
     buffer_frames = period_frames * o->period_num;
@@ -65,7 +65,7 @@ static int _ao_alsa_open(ao_cls_t *o, sf_t sf)
     struct ao_alsa_priv *priv = NULL;
 
     priv = aos_zalloc(sizeof(struct ao_alsa_priv));
-    CHECK_RET_TAG_WITH_RET(NULL != priv, -1);
+    CHECK_RET_TAG_WITH_RET(priv, -1);
 
     rate = sf_get_rate(sf);
     switch (rate) {
@@ -101,27 +101,30 @@ static int _ao_alsa_start(ao_cls_t *o)
     unsigned int rate;
     struct ao_alsa_priv *priv = o->priv;
 
-    rate = sf_get_rate(o->sf);
-    priv->pcm = pcm_init(o, &rate);
-    if (priv->pcm == NULL) {
-        LOGE(TAG, "ao alsa open failed\n");
-        return -1;
+    if (priv->pcm) {
+        aos_pcm_pause(priv->pcm, 0);
+    } else {
+        rate = sf_get_rate(o->sf);
+        priv->pcm = pcm_init(o, &rate);
+        if (!priv->pcm) {
+            LOGE(TAG, "ao alsa open failed\n");
+            return -1;
+        }
     }
 
-    aos_pcm_pause(priv->pcm, 0);
     return 0;
 }
 
 static int _ao_alsa_stop(ao_cls_t *o)
 {
+    int rc = -1;
     struct ao_alsa_priv *priv = o->priv;
 
     if (priv->pcm) {
         aos_pcm_pause(priv->pcm, 1);
-        aos_pcm_close(priv->pcm);
-        priv->pcm = NULL;
+        rc = 0;
     }
-    return 0;
+    return rc;
 }
 
 static int _ao_alsa_drain(ao_cls_t *o)

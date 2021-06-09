@@ -1,8 +1,7 @@
 /*
  * Copyright (C) 2015-2018 Alibaba Group Holding Limited
  */
-
-#include "sl_config.h"
+#include "sl_config.h" 
 #ifdef LOG_REPORT_TO_CLOUD
 #include "iotx_utils_internal.h"
 #include "iotx_dm_internal.h"
@@ -125,7 +124,9 @@ void parse_msg_id(_IN_ char *payload, _IN_ int payload_len, _OU_ dm_msg_request_
 
 int stop_sample() {
     if (current_log_pos > g_log_poll) {
+        #if !defined(DEVICE_MODEL_RAWDATA_SOLO)
        dm_mgr_upstream_thing_log_post(0, NULL, 0, 1);
+       #endif
     }
     switch_status = 0;
     dm_log_info("stop sample");
@@ -210,7 +211,9 @@ void send_permance_info(char *input, int input_len, char *comments, int report_f
         default:
             return;
     }
+#if !defined(DEVICE_MODEL_RAWDATA_SOLO)
     iotx_dm_log_post(0,  data, strlen((const char *)data));
+#endif
     if (2 == report_format) {
         g_report_status = READY;
     }

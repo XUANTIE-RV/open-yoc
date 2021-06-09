@@ -8,6 +8,8 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+#include "nui_things_common_event.h"
+
 
 typedef enum {
 	kNlsNuiThingsDialogTypeVA,
@@ -75,6 +77,8 @@ typedef int (*NlsNuiThingsTTSEventCallback)(void * user_data, NlsNuiThingsTTSEve
 typedef struct {
 	NlsNuiThingsTTSEventCallback event_call_back; //回调函数
 	void * user_data;                             //用户传入的私人数据，回调中会带有此参数。
+	
+	FunNuiThingsCommonEvent common_event_callback;//SDK通用功能事件回调函数
 }NlsNuiThingsTTSListener;
 
 #ifdef __cplusplus

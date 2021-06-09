@@ -12,7 +12,7 @@
 
 #if (CONFIG_TB_KP > 0)
 #include <mtb.h>
-#include <kp.h>
+#include <key_mgr.h>
 #endif
 
 #if (CONFIG_ALGO_RSA > 0)
@@ -50,6 +50,7 @@ static int tee_rsa_load_key(uint8_t *key, uint32_t key_len, uint32_t key_type, v
         // boot public key, only used for verify
         if (internel_key == 1)
         {
+            /* TODO */
             key_info_t info;
             ret = mtb_get_pubkey_info(&info);
             if (ret)
@@ -63,24 +64,25 @@ static int tee_rsa_load_key(uint8_t *key, uint32_t key_len, uint32_t key_type, v
         else
         {
             uint32_t keyaddr;
+            uint32_t size;
 
-            ret = kp_get_key(KEY_CIDPRIVKEY, &keyaddr);
-
-            if (ret < 0) {
-                TEE_LOGE("find KEY_CIDPRIVKEY fail ret %d\n", ret);
-                return ret;
-            }
-
-            if (ret != RSA_KEYBITS >> 2)
-            {
-                TEE_LOGE("KEY_CIDPRIVKEY size (%d) err, unsupport in rsa\n", ret);
+            ret = km_get_key(KEY_ID_ID2PRVK, &keyaddr, &size);
+            if (ret != KM_OK || size != (RSA_KEYBITS >> 2)) {
+                TEE_LOGE("find KEY_CIDPRIVKEY fail ret %d %d\n", ret, size);
                 return TEE_ERROR_GENERIC;
             }
+
             n = (uint8_t *)keyaddr;
-            e = (uint8_t *)test_key_e;
+            ret = km_get_key(KM_ID_PUBKEY_E, &keyaddr, &size);
+            if (ret != KM_OK || size == 0) {
+                TEE_LOGE("find KM_ID_PUBKEY_E fail ret %d %d\n", ret, size);
+                return TEE_ERROR_GENERIC;
+            }
+            e = (uint8_t *)keyaddr;
             d = (uint8_t *)(keyaddr + (RSA_KEYBITS >> 3));
         }
 #else
+        /* TODO */
         n = (uint8_t *)test_key_n;
         e = (uint8_t *)test_key_e;
         d = (uint8_t *)test_key_d;

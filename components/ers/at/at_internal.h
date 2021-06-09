@@ -68,31 +68,31 @@ typedef enum {
 } sock_evt_t;
 
 
-#define CRLF          "\r\n"
-#define OK_CRLF       "OK\r\n"
-#define CRLF_OK_CRLF  "\r\nOK\r\n"
+// #define CRLF          "\r\n"
+// #define OK_CRLF       "OK\r\n"
+// #define CRLF_OK_CRLF  "\r\nOK\r\n"
 
-#define ERR_CRLF      "ERROR\r\n"
-#define CRLF_ERR_CRLF "\r\nERROR\r\n"
+// #define ERR_CRLF      "ERROR\r\n"
+// #define CRLF_ERR_CRLF "\r\nERROR\r\n"
 
-#define AT_BACK_CMD(cmd)                      atserver_send("%s\r\n", cmd + 2)
-#define AT_BACK_OK()                          atserver_send("\r\nOK\r\n")
-#define AT_BACK_ERR()                         atserver_send("\r\nERROR\r\n")
-#define AT_BACK_ERRNO(errno)                  atserver_send("\r\nERROR: %d\r\n", errno)
-#define AT_BACK_RET_OK(cmd, par1)             atserver_send("\r\n%s:%s\r\nOK\r\n", cmd + 2, par1)
+// #define AT_BACK_CMD(cmd)                      atserver_send("%s\r\n", cmd + 2)
+// #define AT_BACK_OK()                          atserver_send("\r\nOK\r\n")
+// #define AT_BACK_ERR()                         atserver_send("\r\nERROR\r\n")
+// #define AT_BACK_ERRNO(errno)                  atserver_send("\r\nERROR: %d\r\n", errno)
+// #define AT_BACK_RET_OK(cmd, par1)             atserver_send("\r\n%s:%s\r\nOK\r\n", cmd + 2, par1)
 
-#define AT_BACK_OK_INT(val)                   atserver_send("\r\n%d\r\nOK\r\n", val)
-#define AT_BACK_OK_INT2(val1, val2)           atserver_send("\r\n%d,%d\r\nOK\r\n", val1, val2)
-#define AT_BACK_RET_OK_INT(cmd, val)          atserver_send("\r\n%s:%d\r\nOK\r\n", cmd + 2, val)
-#define AT_BACK_RET_OK_INT2(cmd, val1, val2)  atserver_send("\r\n%s:%d,%d\r\nOK\r\n", cmd + 2, val1, val2)
-#define AT_BACK_RET_OK2(cmd, par1, par2)      atserver_send("\r\n%s:%s,%s\r\nOK\r\n", cmd + 2, par1, par2)
-#define AT_BACK_RET_OK_HEAD(cmd, ret)         atserver_send("\r\n%s:%s", cmd + 2, ret)
-#define AT_BACK_RET_OK_CMD_HEAD(cmd)          atserver_send("\r\n%s:", cmd + 2)
-#define AT_BACK_RET_OK_END()                  atserver_send("\r\nOK\r\n")
-#define AT_BACK_RET_ERR(cmd, errno)           atserver_send("\r\n%s:%d\r\nERROR\r\n", cmd + 2, errno)
-#define AT_BACK_CME_ERR(errno)                atserver_send("\r\nCME ERROR: %d\r\n", errno)
-#define AT_BACK_CIS_ERR(errno)                atserver_send("\r\n+CIS ERROR: %d\r\n", errno)
-#define AT_BACK_STR(str)                      atserver_send("%s", str)
+// #define AT_BACK_OK_INT(val)                   atserver_send("\r\n%d\r\nOK\r\n", val)
+// #define AT_BACK_OK_INT2(val1, val2)           atserver_send("\r\n%d,%d\r\nOK\r\n", val1, val2)
+// #define AT_BACK_RET_OK_INT(cmd, val)          atserver_send("\r\n%s:%d\r\nOK\r\n", cmd + 2, val)
+// #define AT_BACK_RET_OK_INT2(cmd, val1, val2)  atserver_send("\r\n%s:%d,%d\r\nOK\r\n", cmd + 2, val1, val2)
+// #define AT_BACK_RET_OK2(cmd, par1, par2)      atserver_send("\r\n%s:%s,%s\r\nOK\r\n", cmd + 2, par1, par2)
+// #define AT_BACK_RET_OK_HEAD(cmd, ret)         atserver_send("\r\n%s:%s", cmd + 2, ret)
+// #define AT_BACK_RET_OK_CMD_HEAD(cmd)          atserver_send("\r\n%s:", cmd + 2)
+// #define AT_BACK_RET_OK_END()                  atserver_send("\r\nOK\r\n")
+// #define AT_BACK_RET_ERR(cmd, errno)           atserver_send("\r\n%s:%d\r\nERROR\r\n", cmd + 2, errno)
+// #define AT_BACK_CME_ERR(errno)                atserver_send("\r\nCME ERROR: %d\r\n", errno)
+// #define AT_BACK_CIS_ERR(errno)                atserver_send("\r\n+CIS ERROR: %d\r\n", errno)
+// #define AT_BACK_STR(str)                      atserver_send("%s", str)
 
 int32_t at_cmd_echo_on(void);
 int32_t at_cmd_event_on(void);

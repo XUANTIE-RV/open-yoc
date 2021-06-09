@@ -29,6 +29,7 @@ struct avfilter_ops {
 
 struct avfilter {
     uint8_t                   eof;
+    uint8_t                   bypass;
     aos_mutex_t               lock;
     char                      *inst_name; ///< name of the avfilter instance
     avframe_t                 *oframe;     ///< used for sync filtering

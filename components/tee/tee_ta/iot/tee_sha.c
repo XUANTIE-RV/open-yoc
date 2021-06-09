@@ -78,11 +78,11 @@ int tee_core_sha(tee_param params[4])
         goto fail;
     }
 
-    digest_handler->operation_info.digestlength = sha_param[type][2];
-
-
-    hash_ctx ->hashctx = (uint8_t *)ctx + sizeof(hash_context);
-    digest_handler->dig_ctx = (void *)hash_ctx;
+    if (mode != 0) {
+        digest_handler->operation_info.digestlength = sha_param[type][2];
+        hash_ctx ->hashctx = (uint8_t *)ctx + sizeof(hash_context);
+        digest_handler->dig_ctx = (void *)hash_ctx;
+    }
 
     switch (mode) {
         /*digest*/

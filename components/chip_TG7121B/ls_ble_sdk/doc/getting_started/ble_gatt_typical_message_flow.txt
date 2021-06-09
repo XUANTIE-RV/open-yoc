@@ -1,0 +1,68 @@
+title BLE GATT TYPICAL MESSAGE FLOW
+participant Server App
+participant Server Stack
+participant Client Stack
+participant Client App
+
+opt Exchange MTU
+    Client App->+Client Stack: gatt_manager_client_mtu_exch_send
+    Client Stack->>Server Stack: Exchange MTU Request
+    Server Stack->>Client Stack: Exchange MTU Response
+    Server Stack-->Server App: gatt_event: MTU_CHANGED_INDICATION
+    Client Stack-->-Client App: gatt_event: MTU_CHANGED_INDICATION
+end
+
+note over Client Stack,Client App: Service discovery
+
+Client App->+Client Stack: gatt_manager_client_svc_discover_by_uuid
+Client Stack-->-Client App: gatt_event: CLIENT_PRIMARY_SVC_DIS_IND
+Client App->+Client Stack: gatt_manager_client_char_discover_by_uuid
+Client Stack-->-Client App: gatt_event: CLIENT_CHAR_DIS_BY_UUID_IND
+Client App->+Client Stack: gatt_manager_client_desc_char_discover
+Client Stack-->-Client App: gatt_event: CLIENT_CHAR_DESC_DIS_BY_UUID_IND
+
+
+note over Server App,Server Stack,Client Stack,Client App: Client Initiated Operation
+
+opt Write Without Rseponse
+    Client App->+Client Stack: gatt_manager_client_write_no_rsp
+    Client Stack-->-Client App: gatt_event: CLIENT_WRITE_NO_RSP_DONE
+    Client Stack->>Server Stack: Write command
+    Server Stack-->Server App: gatt_event: SERVER_WRITE_REQ
+end
+
+opt Write Characteristic Value
+    Client App->+Client Stack: gatt_manager_client_write_with_rsp
+    Client Stack->>Server Stack: Write Request
+    Server Stack-->Server App: gatt_event: SERVER_WRITE_REQ
+    Server Stack->>Client Stack: Write Response
+    Client Stack-->-Client App: gatt_event: CLIENT_WRITE_WITH_RSP_DONE
+end
+
+opt Read Characteristic Value
+    Client App->+Client Stack: gatt_manager_client_read
+    Client Stack->>Server Stack: Read Request
+    Server Stack-->+Server App: gatt_event: SERVER_READ_REQ
+    Server App->-Server Stack: gatt_manager_server_read_req_reply
+    Server Stack->>Client Stack: Read Response
+    Client Stack-->-Client App: gatt_event: CLIENT_RD_CHAR_VAL_BY_UUID_IND
+end
+
+note over Server App,Server Stack,Client Stack,Client App: Server Initiated Operation
+
+opt Notification
+    Server App->+Server Stack: gatt_manager_server_send_notification
+    Server Stack-->-Server App: gatt_event: SERVER_NOTIFICATION_DONE
+    Server Stack->>Client Stack: Handle Value Notification
+    Client Stack-->Client App: gatt_event: CLIENT_RECV_NOTIFICATION
+end
+
+opt Indication
+    Server App->+Server Stack: gatt_manager_server_send_indication
+    Server Stack->>Client Stack: Handle Value Indication
+    Client Stack-->+Client App: gatt_event: CLIENT_RECV_INDICATION
+    Client App->-Client Stack: gatt_manager_client_indication_confirm
+    Client Stack->>Server Stack: Handle Value Confirmation
+    Server Stack-->-Server App: gatt_event: SERVER_INDICATION_DONE
+end
+

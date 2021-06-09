@@ -6,7 +6,7 @@
 #include <tee_msg_cmd.h>
 #include <string.h>
 #include <tee_debug.h>
-#include <kp.h>
+#include <key_mgr.h>
 
 #if (CONFIG_DEV_CID > 0)
 
@@ -29,16 +29,15 @@ int tee_core_cid(tee_param params[4])
 
 #if (CONFIG_TB_KP > 0)
     uint32_t keyaddr;
+    uint32_t size;
     int ret;
-    ret = kp_get_key(KEY_CID, &keyaddr);
-
-    if (ret < 0) {
+    ret = km_get_key(KEY_ID_CHIPID, &keyaddr, &size);
+    if (ret != KM_OK || size == 0) {
         TEE_LOGE("get key cid fail, %d\n", ret);
         *cid_size = 0;
         return TEE_ERROR_GENERIC;
     }
-
-    *cid_size = ret;
+    *cid_size = size;
     memcpy(params[0].memref.buffer, (uint32_t *)keyaddr, *cid_size);
 #else
     memcpy(params[0].memref.buffer, cid_device_id, CID_LEN);

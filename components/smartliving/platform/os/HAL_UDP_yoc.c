@@ -14,19 +14,11 @@
 #include <unistd.h>
 #include <iot_import.h>
 // #include "imports/iot_import_coap.h"
-#include <aos/log.h>
+#include <ulog/ulog.h>
 
 #define TAG "IOT_HAL"
 
 #define TRANSPORT_ADDR_LEN 16
-
-#ifndef IP_PKTINFO
-#define IP_PKTINFO IP_MULTICAST_IF
-#endif
-
-#ifndef IPV6_PKTINFO
-#define IPV6_PKTINFO IPV6_V6ONL
-#endif
 
 #define NETWORK_ADDR_LEN (16)
 
@@ -54,12 +46,12 @@ intptr_t HAL_UDP_create_without_connect(const char *host, unsigned short port)
     if ((ret = setsockopt(socket_id, IPPROTO_IP, IP_RECVPKTINFO, &flag,
                           sizeof(flag))) < 0)
 #else  /* IP_RECVPKTINFO */
-    if ((ret = setsockopt(socket_id, IPPROTO_IP, IP_PKTINFO, &flag,
+    if ((ret = setsockopt(socket_id, IPPROTO_IP, IP_MULTICAST_IF, &flag,
                           sizeof(flag))) < 0)
 #endif /* IP_RECVPKTINFO */
         if (ret < 0) {
             close(socket_id);
-            LOGE(TAG, "setsockopt IP_PKTINFO failed");
+            LOGE(TAG, "setsockopt IP_MULTICAST_IF failed");
             return (intptr_t)-1;
         }
 

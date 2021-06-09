@@ -2,6 +2,7 @@
  * Copyright (C) 2018-2020 Alibaba Group Holding Limited
  */
 
+#if defined(CONFIG_DEMUXER_ASF) && CONFIG_DEMUXER_ASF
 #include "avformat/avformat_utils.h"
 #include "avformat/riff_rw.h"
 #include "avformat/asf_rw.h"
@@ -9,7 +10,7 @@
 #include "stream/stream.h"
 
 #define TAG                    "demux_asf"
-#define asf_SYNC_HDR_MAX       (2*1024)
+#define ASF_SYNC_HDR_MAX       (2*1024)
 
 #define GET_LEN_2BITS(bits) ((((bits) & 0x3) == 0x03) ? 4 : ((bits) & 0x3))
 #define GET_VAL_2BITS(bits, var, defval)        \
@@ -40,6 +41,7 @@ typedef struct {
     int32_t                    frag_offset;      ///<
     int32_t                    repl_size;        ///<
     int32_t                    frag_size;        ///<
+    int32_t                    obj_size;        ///<
 
     int16_t                    duration;         ///< ms, pkt duration
     int32_t                    pos;              ///< postion
@@ -331,29 +333,51 @@ static int _asf_read_payload(demux_cls_t *o, avpacket_t *pkt)
     GET_VAL_2BITS(apkt->pro_flag, apkt->repl_size, 0);
     rsize += GET_LEN_2BITS(apkt->pro_flag);
 
-    stream_skip(s, apkt->repl_size);
-    apkt->frag_size = stream_r16le(s);
-    CHECK_RET_TAG_WITH_GOTO(apkt->frag_size > 0, err);
-
-    if (pkt->size < apkt->frag_size) {
-        rc = avpacket_grow(pkt, apkt->frag_size);
-        if (rc < 0) {
-            LOGE(TAG, "avpacket resize fail. pkt->size = %d, framesize = %d", pkt->size, apkt->frag_size);
-            goto err;
-        }
+    if (apkt->repl_size >= 8) {
+        apkt->obj_size = stream_r32le(s);
+        stream_skip(s, 4); // frag timestamp
+        rsize += apkt->repl_size;
+    } else {
+        stream_skip(s, apkt->repl_size);
+        rsize += apkt->repl_size;
     }
 
-    len = stream_read(o->s, pkt->data, apkt->frag_size);
-    if (len != apkt->frag_size) {
-        LOGE(TAG, "stream read err, len = %d, diff = %d, frame size = %d", len, apkt->frag_size);
+    if (apkt->obj_size <= 0) {
+        LOGE(TAG, "invalid obj_size");
         goto err;
     }
-    pkt->len = len;
+
+    if (apkt->len_flag & 0x1) {
+        GET_VAL_2BITS(apkt->pl_flag >> 6, apkt->frag_size, 0);
+    } else {
+        apkt->frag_size = apkt->remain_size - rsize;
+    }
+    CHECK_RET_TAG_WITH_GOTO(apkt->frag_size > 0, err);
+
+    rc = avpacket_grow(pkt, apkt->obj_size);
+    if (rc < 0) {
+        LOGE(TAG, "avpacket resize fail. pkt->size = %d, framesize = %d", pkt->size, apkt->frag_size);
+        goto err;
+    }
+
+    //FIXME:
+    if (apkt->frag_size + apkt->frag_offset <= apkt->obj_size && pkt->len + apkt->frag_size <= pkt->size) {
+        len = stream_read(o->s, pkt->data + pkt->len, apkt->frag_size);
+        if (len != apkt->frag_size) {
+            LOGE(TAG, "stream read err, len = %d, diff = %d, frame size = %d", len, apkt->frag_size);
+            goto err;
+        }
+        pkt->len += len;
+    } else {
+        LOGE(TAG, "read payload fail. pkt: size = %d, len = %d. apkt: offset = %d, obj = %d, frag size = %d", pkt->size, pkt->len, apkt->frag_offset, apkt->obj_size, apkt->frag_size);
+        goto err;
+    }
     if (priv->iduration > 0 && priv->data_size > 0 && priv->start_pos > 0) {
         pkt->pts = apkt->ts * o->time_scale / 1000;
     }
+    //printf("===>>>pkt pos = %10d, len = %10d\n", priv->start_pos, len);
 
-    return 0;
+    return pkt->len == apkt->obj_size ? 0 : 1;
 err:
     return -1;
 }
@@ -404,6 +428,7 @@ err:
     return rc;
 }
 
+//FIXME:
 static int _demux_asf_seek(demux_cls_t *o, uint64_t timestamp)
 {
     int rc = -1;
@@ -445,4 +470,5 @@ const struct demux_ops demux_ops_asf = {
     .seek            = _demux_asf_seek,
     .control         = _demux_asf_control,
 };
+#endif
 

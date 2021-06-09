@@ -3,7 +3,7 @@
  */
 
 #include <media.h>
-#include <yoc/eventid.h>
+#include <uservice/eventid.h>
 #include <devices/audio.h>
 #include <alsa/mixer.h>
 #include <player.h>
@@ -37,6 +37,11 @@ typedef struct {
     uint64_t   seek_time;
 } seek_param_t;
 
+typedef struct {
+    int   type;
+    float speed;
+} speed_param_t;
+
 typedef enum {
     MEDIA_INIT_CMD,
     MEDIA_PLAY_CMD,
@@ -53,11 +58,15 @@ typedef enum {
     MEDIA_EVT_ERR_CMD,
     MEDIA_EVT_RUN_CMD,
     MEDIA_EVT_END_CMD,
+    MEDIA_EVT_UNDER_RUN_CMD,
+    MEDIA_EVT_OVER_RUN_CMD,
     MEDIA_CONTINUE_MUSIC_CMD,
     MEDIA_CONFIG_CMD,
     MEDIA_CONFIG_KEY_CMD,
     MEDIA_GET_STATE_CMD,
     MEDIA_MUTE_CMD,
+    MEDIA_SET_SPEED_CMD,
+    MEDIA_GET_SPEED_CMD,
 
     MEDIA_END_CMD
 } MEDIA_CMD;
@@ -156,7 +165,7 @@ static int media_evt_call(int type, int evt_id)
 
 static int m_stop(media_type_t *m)
 {
-    if (m->hdl && (m->state == AUI_PLAYER_PLAYING || m->state == AUI_PLAYER_PAUSED)) {
+    if (m->hdl) {
         player_stop(m->hdl);
         player_free(m->hdl);
         m->state = AUI_PLAYER_STOP;
@@ -201,6 +210,8 @@ static int m_vol_set(media_type_t *m, int vol)
 
 static int m_start(media_type_t *m, const char *url, uint64_t seek_time)
 {
+    int ret;
+
     if (m->state == AUI_PLAYER_STOP) {
         ply_conf_t ply_cnf;
         // m_vol_set(m, m->play_vol);
@@ -210,39 +221,57 @@ static int m_start(media_type_t *m, const char *url, uint64_t seek_time)
         player_conf_init(&ply_cnf);
         ply_cnf.ao_name               = "alsa";
         ply_cnf.eq_segments           = g_eq_segment_count;
+        ply_cnf.vol_en                = m->config.vol_en;
+        ply_cnf.vol_index             = m->config.vol_index;
+        ply_cnf.aef_conf              = m->config.aef_conf;
+        ply_cnf.aef_conf_size         = m->config.aef_conf_size;
         ply_cnf.resample_rate         = m->config.resample_rate;
         ply_cnf.cache_size            = m->config.web_cache_size;
         ply_cnf.cache_start_threshold = m->config.web_start_threshold;
         ply_cnf.period_ms             = m->config.snd_period_ms;
         ply_cnf.period_num            = m->config.snd_period_num;
+        ply_cnf.speed                 = m->config.speed;
         ply_cnf.rcv_timeout           = 0;
         ply_cnf.get_dec_cb            = m->key_cb;
         ply_cnf.event_cb              = player_event;
+        ply_cnf.atempo_play_en        = 1;
+
+#if defined(CONFIG_AEFXER_SONA) && CONFIG_AEFXER_SONA && AEF_DEBUG
+        extern int aef_debug_init(int fs, char *conf, size_t conf_size);
+        aef_debug_init(ply_cnf.resample_rate, ply_cnf.aef_conf, ply_cnf.aef_conf_size);
+        ply_cnf.aef_conf = NULL;
+        ply_cnf.aef_conf_size = 0;
+#endif
+
         m->hdl = player_new(&ply_cnf);
-
-        /* EQ config */
-        if(g_eq_segment_count > 0 && g_eq_segments) {
-            int i;
-            peq_seten_t eqen;
-            peq_setpa_t eqpa;
-
-            for (i = 0; i < ply_cnf.eq_segments; i++) {
-                eqpa.segid = i;
-                eqpa.param = g_eq_segments[i];
-                //memcpy(&eqpa.param, (void*)&bqfparams[i], sizeof(eqfp_t));
-                if (g_eq_segments[i].type != EQF_TYPE_UNKNOWN) {
-                    player_ioctl(m->hdl, PLAYER_CMD_EQ_SET_PARAM, &eqpa);
-                }
-            }
-
-            eqen.enable = 1;
-            player_ioctl(m->hdl, PLAYER_CMD_EQ_ENABLE, &eqen);
-        }
-
         if (m->hdl == NULL) {
             LOGE(TAG, "play err(%s)", url);
         } else {
-            player_play(m->hdl, url, seek_time);
+            /* EQ config */
+            if(g_eq_segment_count > 0 && g_eq_segments) {
+                int i;
+                peq_seten_t eqen;
+                peq_setpa_t eqpa;
+
+                for (i = 0; i < ply_cnf.eq_segments; i++) {
+                    eqpa.segid = i;
+                    eqpa.param = g_eq_segments[i];
+                    //memcpy(&eqpa.param, (void*)&bqfparams[i], sizeof(eqfp_t));
+                    if (g_eq_segments[i].type != EQF_TYPE_UNKNOWN) {
+                        player_ioctl(m->hdl, PLAYER_CMD_EQ_SET_PARAM, &eqpa);
+                    }
+                }
+
+                eqen.enable = 1;
+                player_ioctl(m->hdl, PLAYER_CMD_EQ_ENABLE, &eqen);
+            }
+
+            ret = player_play(m->hdl, url, seek_time);
+            if(ret < 0) {
+                LOGE(TAG, "player play failed, ret %d", ret);
+                m_stop(m);
+                return -1;
+            }
             m->state    = AUI_PLAYER_PLAYING;
         }
     }
@@ -252,16 +281,25 @@ static int m_start(media_type_t *m, const char *url, uint64_t seek_time)
 
 static int m_continue(media_type_t *m, int flag)
 {
+    if (m->play_vol < m->min_vol) {
+        LOGD(TAG, "set play vol to min_vol %d", m->min_vol / VOLUME_UNIT);
+        m->play_vol = m->min_vol;
+    }
+
+    //flag == 0 pop mode, flag == 1 continue
     if (m->hdl && m->state == AUI_PLAYER_PAUSED) {
 
         if (m->mute == 0) {
-            if (m->play_vol < m->min_vol && m->cur_vol < m->min_vol) {
-                m_vol_set(m, m->min_vol);
+            if (flag) {
+                audio_set_vol(m->play_vol, m->play_vol);
+            } else {
+                audio_set_vol(m->cur_vol, m->cur_vol);
             }
         } else {
             audio_set_vol(0, 0);
         }
 
+        media_evt_call(m->type, AUI_PLAYER_EVENT_RESUME);
         player_resume(m->hdl);
         m->state = AUI_PLAYER_PLAYING;
     }
@@ -302,16 +340,17 @@ static void music_stash_pop(void)
     }
 }
 
-static void media_vol_init(int vol)
+static void media_type_init()
 {
-    audio_set_vol(vol, vol);
+    int vol = per_to_abs(60);
 
+    audio_set_vol(vol, vol);
     for (int i = 0; i < MEDIA_MAX_NUM; i++) {
-        media_type[i].type  = i;
-        media_type[i].state = AUI_PLAYER_STOP;
-        // media_type[i].cur_vol = vol;
+        media_type[i].type     = i;
+        media_type[i].state    = AUI_PLAYER_STOP;
         media_type[i].play_vol = vol;
         media_type[i].min_vol  = per_to_abs(10);
+        aui_player_config_init(&media_type[i].config);
     }
 }
 
@@ -332,7 +371,10 @@ static int _init(media_t *media, rpc_t *rpc)
     g_media.cb = (media_evt_t) rpc_get_point(rpc);;
     player_init();
     mixer_init();
-    media_vol_init(per_to_abs(60));
+    media_type_init();
+
+    aos_mixer_selem_set_playback_volume_all(g_media.elem, 100);
+
     return 0;
 }
 
@@ -501,6 +543,37 @@ static int _seek(media_t *media, rpc_t *rpc)
     return 0;
 }
 
+static int _set_speed(media_t *media, rpc_t *rpc)
+{
+    int ret;
+
+    speed_param_t *param   = (speed_param_t *)rpc_get_buffer(rpc, NULL);
+    media_type_t  *m       = get_type(param->type);
+
+    ret = player_set_speed(m->hdl, param->speed);
+    if(ret == 0) {
+        m->config.speed = param->speed;
+    }
+
+    return 0;
+}
+
+static int _get_speed(media_t *media, rpc_t *rpc)
+{
+    int type            = *(int *)rpc_get_point(rpc);
+    media_type_t *m     = get_type(type);
+    int rpc_ret         = -1;
+
+    float speed = 0;
+
+    rpc_ret = player_get_speed(m->hdl, &speed);
+
+    rpc_put_reset(rpc);
+    rpc_put_buffer(rpc, &speed, sizeof(speed));
+
+    return 0;
+}
+
 static int _get_time(media_t *media, rpc_t *rpc)
 {
     int type            = *(int *)rpc_get_point(rpc);
@@ -530,6 +603,10 @@ static int _config(media_t *media, rpc_t *rpc)
 
         memcpy(&m->config, config, sizeof(aui_player_config_t));
     }
+
+    /* FIXME: force system play speed = 1 */
+    m = get_type(MEDIA_SYSTEM);
+    m->config.speed = 1.0f;
 
     return 0;
 }
@@ -671,6 +748,26 @@ static int _evt_ok(media_t *media, rpc_t *rpc)
 {
     //播放完成
     _evt_hdl(rpc, AUI_PLAYER_EVENT_FINISH);
+    return 0;
+}
+
+static int _evt_under_run(media_t *media, rpc_t *rpc)
+{
+    int           type = rpc_get_int(rpc);
+    media_type_t *m    = (media_type_t *)get_type(type);
+
+    media_evt_call(m->type, AUI_PLAYER_EVENT_UNDER_RUN);
+
+    return 0;
+}
+
+static int _evt_over_run(media_t *media, rpc_t *rpc)
+{
+    int           type = rpc_get_int(rpc);
+    media_type_t *m    = (media_type_t *)get_type(type);
+
+    media_evt_call(m->type, AUI_PLAYER_EVENT_OVER_RUN);
+
     return 0;
 }
 
@@ -905,8 +1002,10 @@ int aui_player_vol_set(int type, int volume)
 {
     aos_check_return_einval((type >= MEDIA_MUSIC && type <= MEDIA_SYSTEM) || type == MEDIA_ALL);
 
-    if (volume < VOLUME_MIN || volume > (VOLUME_MAX / VOLUME_UNIT)) {
-        return -1;
+    if (volume < VOLUME_MIN) {
+        volume = VOLUME_MIN;
+    } else if(volume > (VOLUME_MAX / VOLUME_UNIT)) {
+        volume = (VOLUME_MAX / VOLUME_UNIT);
     }
 
     int         ret = -1;
@@ -949,12 +1048,26 @@ int aui_player_vol_get(int type)
     return ret < 0 ? ret : vol;
 }
 
-int aui_player_config(aui_player_config_t *config)
+int aui_player_config_init(aui_player_config_t *config)
+{
+    aos_check_return_einval(config);
+    memset(config, 0, sizeof(aui_player_config_t));
+
+    config->web_cache_size      = SCACHE_SIZE_DEFAULT;
+    config->web_start_threshold = SCACHE_THRESHOLD_DEFAULT;
+    config->snd_period_ms       = AO_ONE_PERIOD_MS;
+    config->snd_period_num      = AO_TOTAL_PERIOD_NUM;
+    config->speed               = 1;
+
+    return 0;
+}
+
+int aui_player_config(const aui_player_config_t *config)
 {
     aos_check_return_einval(config);
     int ret = -1;
 
-    ret = uservice_call_sync(g_media.srv, MEDIA_CONFIG_CMD, config, NULL, 0);
+    ret = uservice_call_sync(g_media.srv, MEDIA_CONFIG_CMD, (void*)config, NULL, 0);
     return ret;
 }
 
@@ -1018,6 +1131,28 @@ int aui_player_resume_music(void)
     return ret;
 }
 
+int aui_player_get_speed(int type, float *speed)
+{
+    aos_check_return_einval(type >= MEDIA_MUSIC && type <= MEDIA_SYSTEM);
+
+    int ret = uservice_call_sync(g_media.srv, MEDIA_GET_SPEED_CMD, &type, speed, sizeof(float));
+    return ret;
+}
+
+int aui_player_set_speed(int type, float speed)
+{
+    aos_check_return_einval(type >= MEDIA_MUSIC && type <= MEDIA_SYSTEM);
+    speed_param_t param;
+
+    int ret   = -1;
+
+    param.type  = type;
+    param.speed = speed;
+
+    ret = uservice_call_async(g_media.srv, MEDIA_SET_SPEED_CMD, &param, sizeof(speed_param_t));
+    return ret;
+}
+
 int aui_player_eq_config(eqfp_t *eq_segments, int count)
 {
     if (eq_segments == NULL || count <= 0) {
@@ -1051,12 +1186,16 @@ static const rpc_process_t c_media_cmd_cb_table[] = {
     {MEDIA_EVT_ERR_CMD,         (process_t)_evt_err},
     {MEDIA_EVT_RUN_CMD,         (process_t)_evt_run},
     {MEDIA_EVT_END_CMD,         (process_t)_evt_ok},
+    {MEDIA_EVT_UNDER_RUN_CMD,   (process_t)_evt_under_run},
+    {MEDIA_EVT_OVER_RUN_CMD,    (process_t)_evt_over_run},
     {MEDIA_GET_STATE_CMD,       (process_t)_get_state},
     {MEDIA_MUTE_CMD,            (process_t)_mute},
     {MEDIA_CONTINUE_MUSIC_CMD,  (process_t)_resume},
     {MEDIA_CONFIG_CMD,          (process_t)_config},
     {MEDIA_CONFIG_KEY_CMD,      (process_t)_key},
     {MEDIA_GET_TIME_CMD,        (process_t)_get_time},
+    {MEDIA_SET_SPEED_CMD,       (process_t)_set_speed},
+    {MEDIA_GET_SPEED_CMD,       (process_t)_get_speed},
 
     {MEDIA_END_CMD, (process_t)NULL},
 };
@@ -1070,7 +1209,7 @@ int aui_player_init(utask_t *task, media_evt_t evt_cb)
 {
     aos_check_return_einval(task);
 
-    if (g_media.srv != NULL) {
+    if (g_media.srv) {
         return -1;
     }
 

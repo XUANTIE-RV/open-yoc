@@ -1,0 +1,9 @@
+#! /bin/env python
+
+from yoctools.make import Make
+
+defconfig = Make(elf='yoc.elf', objcopy='generated/data/prim')
+
+Export('defconfig')
+
+defconfig.build_components()

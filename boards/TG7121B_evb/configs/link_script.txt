@@ -1,0 +1,114 @@
+MEMORY
+{
+  RAM (rwx) : ORIGIN = 0x0000, LENGTH = 0xc000
+  EM2 (rw): ORIGIN = 0x50006000, LENGTH = 0x2000
+  FLASH (rx) : ORIGIN = 0x1800b000, LENGTH = 0x40000
+}
+
+SECTIONS
+{
+    __vector_lma__ = ORIGIN(FLASH);
+    
+    .vector :
+    {
+        . = ALIGN(4);
+        __vector__start__ = .;
+        KEEP(*(.isr_vector))
+        __vector__end__ = .;
+    }>RAM AT>FLASH
+
+    __data_lma__ = __vector_lma__ + SIZEOF(.vector);
+    
+    .data :
+    {
+        . = ALIGN(4);
+        __data_start__ = .;
+        *(.data*)
+        *(.xip_banned)
+        *(.text.memcpy)
+        _net_buf_pool_list = .;
+        KEEP(*(SORT_BY_NAME("._net_buf_pool.static.*")))
+        __data_end__ = ALIGN(4);
+    }>RAM AT> FLASH   
+
+    .text :
+    {
+    
+        KEEP(*(.init))
+        KEEP(*(.fini))
+
+        *crtbegin.o(.ctors)
+        *crtbegin?.o(.ctors)
+        *(EXCLUDE_FILE(*crtend?.o *crtend.o) .ctors)
+        *(SORT(.ctors.*))
+        *(.ctors)
+
+
+        *crtbegin.o(.dtors)
+        *crtbegin?.o(.dtors)
+        *(EXCLUDE_FILE(*crtend?.o *crtend.o) .dtors)
+        *(SORT(.dtors.*))
+        *(.dtors)
+
+        *(.eh_frame*)
+        *(.text* .rodata*)
+
+        _bt_settings_start = .;
+        KEEP(*(._bt_settings.static.*))
+        _bt_settings_end = .;
+
+    }>FLASH
+    
+    .bss (NOLOAD):
+    {
+        __bss_start__ = .;
+        EXCLUDE_FILE(*chip_*:) *( .bss* COMMON)
+        *(SECTION_RTT)
+        __bss_end__ = ALIGN(4);
+    }>RAM
+
+    .reset_retain MAX(__bss_end__, 0x6AE8) (NOLOAD):
+    {
+        . = ALIGN(4);
+        
+        reset_retain_start = .;
+        . += 2*4;
+        reset_retain_end = .;
+    } > RAM
+    ASSERT(reset_retain_end <= 0xb800, "Error end address for reset retain")
+
+    ls_env ls_env_start (NOLOAD):
+    {
+        __ls_env_bss_start__ = .;
+        *chip_*:(.bss* COMMON)
+        __ls_env_bss_end__ = ALIGN(4);
+    } 
+    ls_env_start = __stack_data_start__ - ALIGN(SIZEOF(ls_env),4);
+
+    .heap (NOLOAD):
+    {
+        __end__ = .;
+        PROVIDE(end = .);
+        __heap_start = .;
+        *(.heap*)
+        __heap_end = .;
+        __HeapLimit = .;
+    } > EM2
+    /* .stack_dummy section doesn't contains any symbols. It is only
+     * used for linker to calculate size of stack sections, and assign
+     * values to stack symbols later */
+    .stack_dummy (NOLOAD):
+    {
+        *(.stack*)
+    } > EM2
+
+    /* Set stack top to end of RAM, and stack limit move down by
+     * size of stack_dummy section */
+    __StackTop = ORIGIN(EM2) + LENGTH(EM2);
+    __StackLimit = __StackTop - SIZEOF(.stack_dummy);
+    PROVIDE(__stack = __StackTop);
+    
+    /* Check if data + heap + stack exceeds RAM limit */
+    ASSERT(__StackLimit >= __HeapLimit, "region RAM overflowed with stack")
+    
+}

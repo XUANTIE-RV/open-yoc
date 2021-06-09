@@ -2,6 +2,7 @@
  * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
+#include "pthread_internal.h"
 #include "timer.h"
 #include "signal.h"
 
@@ -48,11 +49,12 @@ int timer_create(clockid_t clockid, struct sigevent *restrict evp, timer_t *rest
     }
 
     /* malloc new timer struct */
-    timer_list_m = (timer_list_t *)krhino_mm_alloc(sizeof(timer_list_t), __builtin_return_address(0));
+    timer_list_m = (timer_list_t *)krhino_mm_alloc(sizeof(timer_list_t));
     if (timer_list_m == NULL) {
         return -1;
     }
 
+    _alloc_trace(timer_list_m, (size_t)__builtin_return_address(0));
     memset(timer_list_m, 0, sizeof(timer_list_t));
 
     ret = krhino_mutex_lock(&g_timer_mutex, RHINO_WAIT_FOREVER);
@@ -138,7 +140,7 @@ int timer_delete(timer_t timerid)
 }
 
 int timer_settime(timer_t timerid, int flags, const struct itimerspec *restrict value,
-	              struct itimerspec *restrict ovalue)
+                  struct itimerspec *restrict ovalue)
 {
     int     ret            = -1;
     int64_t value_ns       = 0;

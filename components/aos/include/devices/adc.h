@@ -23,7 +23,9 @@ typedef struct {
     hal_adc_mode_e  mode;           ///< \ref adc_mode_e
     uint32_t    trigger;  ///< 0 -- software adc start or 1 -- external event trigger to start adc.
     uint32_t    intrp_mode;  ///< specifies whether the ADC is configured is interrupt mode (1)or in polling mode (0).
+#ifndef CONFIG_CSI_V2
     uint32_t   *channel;    ///< channel base address
+#endif
     uint32_t    sampling_time; ///< sampling time value to be set for the selected channel. Unit:ADC clock cycles.
     uint32_t    offset;  ///< reserved for future use, can be set to 0.
 } hal_adc_config_t;
@@ -35,7 +37,13 @@ typedef struct {
 
 int adc_config(aos_dev_t *dev, hal_adc_config_t *config);
 int adc_pin2channel(aos_dev_t *dev, int pin);
+
+#ifdef CONFIG_CSI_V2
+int adc_read(aos_dev_t *dev, uint8_t ch, void *output, uint32_t timeout);
+#else
 int adc_read(aos_dev_t *dev, void *output, uint32_t timeout);
+#endif
+
 void adc_config_default(hal_adc_config_t *config);
 
 #ifdef __cplusplus

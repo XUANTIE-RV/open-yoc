@@ -4,7 +4,7 @@
 
 #ifndef _FCT_H_
 
-#include <stdio.h>
+#include <uservice/uservice.h>
 
 /*测试结果最大长度*/
 #define FTEST_MAX_RESULT_LEN        256

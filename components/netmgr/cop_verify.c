@@ -4,16 +4,16 @@
 
 #include <http_client.h>
 #include <aos/kernel.h>
-#include <aos/log.h>
 #include <aos/debug.h>
 #include <cJSON.h>
-#include <aos/network.h>
+#include <network.h>
 #include <yoc/partition.h>
 #include <yoc/manifest_info.h>
 #include <yoc/nvram.h>
 #include <yoc/sysinfo.h>
 #include "mbedtls/md5.h"
 #include "ntp.h"
+#include <aos/kv.h>
 
 #define TAG "cop_verify"
 
@@ -66,93 +66,24 @@ static void gen_device_tuple(char **productKey, char **deviceName, char **device
     *deviceSercet = deviceSercet_val;
 }
 
-
-
-#if 0
-static char *gen_device_md5()
-{
-#define READ_EVERY 512
-#define MD5_MAX_LEN (33)
-    partition_t part = partition_open("prim");
-
-    if (part == -EINVAL) {
-        LOGE(TAG, "open prim partition failed");
-        return NULL;
-    }
-
-    unsigned char *read_buffer = aos_zalloc(READ_EVERY);
-    char *md = aos_zalloc(MD5_MAX_LEN);
-    partition_info_t *info = hal_flash_get_info(part);
-
-    LOGD(TAG, "Flash:%s base=%x start=%x len=%x sector_size=%d idx=%d",
-         info->description,
-         info->base_addr,
-         info->start_addr,
-         info->length,
-         info->sector_size,
-         info->idx);
-
-    int partition_length = info->length;
-    int i = 0;
-    unsigned char digest[MD5_MAX_LEN];
-
-    mbedtls_md5_context md5_ctx;
-    mbedtls_md5_init(&md5_ctx);
-    mbedtls_md5_starts(&md5_ctx);
-
-    int p_offset = 0;
-    int p_length = 0;
-
-    //printf("Flash start\n");
-
-    while (p_offset < partition_length) {
-        if (partition_length - p_offset > READ_EVERY) {
-            p_length = READ_EVERY;
-        } else {
-            p_length = partition_length - p_offset;
-        }
-
-        partition_read(part, p_offset, read_buffer, p_length);
-        //printf("update addr=%d len=%d\n", p_offset, p_length);
-        //printf(".");
-        mbedtls_md5_update(&md5_ctx, read_buffer, p_length);
-        p_offset += p_length;
-    }
-
-    //printf("Flash end\n");
-
-    mbedtls_md5_finish(&md5_ctx, digest);
-    mbedtls_md5_free(&md5_ctx);
-    partition_close(part);
-    aos_free(read_buffer);
-
-    for (i = 0; i < 16; ++i) {
-        sprintf(&md[i * 2], "%02x", (unsigned int)digest[i]);
-    }
-
-    return md;
-}
-#endif
-
 static char *gen_device_hash()
 {
     char *ret_buffer = NULL;
     int i = 0;
     partition_t partition = partition_open("prim");
 
-    if (partition == -EINVAL) {
+    if (partition < 0) {
         LOGE(TAG, "open prim partition failed");
         return NULL;
     }
 
     int32_t data_len = 128;
     unsigned char *data = aos_zalloc(data_len);
-    digest_sch_e digest_type;
 
-    if (get_partition_digest(partition, data, &data_len, &digest_type) == 0) {
-        char *digest_buffer = aos_zalloc(32 + 1);
+    if (partition_get_digest(partition, data, &data_len) == 0) {
+        char *digest_buffer = aos_zalloc(data_len * 2 + 1);
 
-        for (i = 0; i < 16; ++i) {
+        for (i = 0; i < data_len; ++i) {
             sprintf(&digest_buffer[i * 2], "%02x", (unsigned int)data[i]);
         }
 

@@ -36,6 +36,20 @@
 #define TOPIC_MATCH_REPORT                   "/sys/%s/%s/thing/awss/enrollee/match"
 #define TOPIC_MATCH_REPORT_REPLY             "/sys/%s/%s/thing/awss/enrollee/match_reply"
 #define TOPIC_AWSS_DEV_AP_SWITCHAP           "/sys/awss/device/softap/switchap"
+#ifdef DEV_ERRCODE_ENABLE
+#define TOPIC_AWSS_DEV_ERRCODE_GET           "/sys/awss/device/errcode/get"
+#define TOPIC_AWSS_DEV_ERRCODE_GET_REPLY     "/sys/awss/device/errcode/get_reply"
+#ifdef DEV_OFFLINE_OTA_ENABLE
+#define TOPIC_DEV_OFFLINE_OTA                "/sys/ota/local/start"
+#define TOPIC_DEV_OFFLINE_OTA_REPLY          "/sys/ota/local/start"
+#define TOPIC_DEV_OFFLINE_OTA_FINISH_NOTIFY  "/sys/ota/local/finish"
+#endif
+#ifdef DEV_OFFLINE_LOG_ENABLE
+#define TOPIC_DEV_OFFLINE_LOG_GET                "/sys/%s/%s/device/log/get"
+#define TOPIC_DEV_OFFLINE_LOG_GET_FINISH         "/sys/%s/%s/device/log/get/finish"
+#endif
+#define TOPIC_DEV_DIAGNOSIS_FINISH             "/sys/device/diagonsis/finish"
+#endif //DEV_ERRCODE_ENABLE
 
 #define METHOD_DEV_INFO_NOTIFY               "device.info.notify"
 #define METHOD_AWSS_DEV_INFO_NOTIFY          "awss.device.info.notify"
@@ -53,6 +67,9 @@
 #define AWSS_JSON_PARAM                      "params"
 #define AWSS_JSON_CODE                       "code"
 #define AWSS_JSON_ID                         "id"
+#define AWSS_JSON_EXT                        "ext"
+#define AWSS_JSON_TOKEN                      "token"
+#define AWSS_JSON_TOKEN_TYPE                 "tokenType"
 #define AWSS_STATIS_FMT                      "{\"template\":\"timestamp logLevel module traceContext logContent\",\"contents\":[\"%u %s %s %u %s\"]}"
 
 enum {

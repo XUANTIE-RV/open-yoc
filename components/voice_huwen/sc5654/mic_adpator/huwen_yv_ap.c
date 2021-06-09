@@ -3,7 +3,6 @@
 #include <string.h>
 
 #include <aos/kernel.h>
-#include <aos/log.h>
 
 #include "dspalg_cxc_msg.h"
 #include "dspalg_ringbuf.h"

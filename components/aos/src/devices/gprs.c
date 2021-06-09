@@ -2,6 +2,7 @@
  * Copyright (C) 2019-2020 Alibaba Group Holding Limited
  */
 
+#if defined(CONFIG_SAL)
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
@@ -236,3 +237,5 @@ int hal_gprs_get_simcard_info(aos_dev_t *dev, char ccid[21], int *insert)
 
     return ret;
 }
+#endif
+

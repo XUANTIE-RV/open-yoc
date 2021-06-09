@@ -834,97 +834,7 @@ int lite_cjson_object_item(_IN_ lite_cjson_t *lite, _IN_ const char *key, _IN_ i
     return 0;
 }
 
-#ifdef DEPRECATED_LINKKIT
-int lite_cjson_object_item_by_index(_IN_ lite_cjson_t *lite, _IN_ int index, _OU_ lite_cjson_t *lite_item_key,
-                                    _OU_ lite_cjson_t *lite_item_value)
-{
-    if (!lite || lite->type != cJSON_Object || !lite->value || lite->size == 0 || index < 0 || index >= lite->size) {
-        return -1;
-    };
-
-    parse_buffer buffer;
-    parse_buffer *p_buffer = &buffer;
-
-    memset(&buffer, 0, sizeof(parse_buffer));
-    buffer.content = (const unsigned char *)lite->value;
-    buffer.length = lite->value_length;
-    buffer.offset = 0;
-
-    lite_cjson_t current_item_key;
-    lite_cjson_t current_item_value;
-    //int start_pos = p_buffer->offset;
-    int item_index = 0;
-
-    if (cannot_access_at_index(p_buffer, 0) || (buffer_at_offset(p_buffer)[0] != '{')) {
-        return -1; /* not an object */
-    }
-
-    p_buffer->offset++;
-    buffer_skip_whitespace(p_buffer);
-    if (can_access_at_index(p_buffer, 0) && (buffer_at_offset(p_buffer)[0] == '}')) {
-        return -1; /* empty object */
-    }
-
-    /* check if we skipped to the end of the buffer */
-    if (cannot_access_at_index(p_buffer, 0)) {
-        p_buffer->offset--;
-        return -1;
-    }
-
-    /* step back to character in front of the first element */
-    p_buffer->offset--;
-    /* loop through the comma separated array elements */
-    do {
-        memset(&current_item_key, 0, sizeof(lite_cjson_t));
-        memset(&current_item_value, 0, sizeof(lite_cjson_t));
-
-        /* parse the name of the child */
-        p_buffer->offset++;
-        buffer_skip_whitespace(p_buffer);
-        if (parse_string(&current_item_key, p_buffer) != 0) {
-            return -1; /* faile to parse name */
-        }
-        buffer_skip_whitespace(p_buffer);
-
-        if (cannot_access_at_index(p_buffer, 0) || (buffer_at_offset(p_buffer)[0] != ':')) {
-            return -1; /* invalid object */
-        }
-
-        /* parse the value */
-        p_buffer->offset++;
-        buffer_skip_whitespace(p_buffer);
-        if (parse_value(&current_item_value, p_buffer) != 0) {
-            return -1; /* failed to parse value */
-        }
-        buffer_skip_whitespace(p_buffer);
-
-        //printf("Current Object [Index: %d], [Key Length: %d, Key Value: %.*s], [Value Length: %d, Value: %.*s]\n",
-        //  index + 1, current_item_key.value_length,current_item_key.value_length,current_item_key.value,
-        //  current_item_value.value_length,current_item_value.value_length,current_item_value.value);
-
-        //printf("index:%d, key: %.*s, value: %.*s\n",index,
-        //  current_item_key.value_length,current_item_key.value,
-        //  current_item_value.value_length,current_item_value.value);
-
-        if (item_index == index) {
-            if (lite_item_key) {
-                memcpy(lite_item_key, &current_item_key, sizeof(lite_cjson_t));
-            }
-            if (lite_item_value) {
-                memcpy(lite_item_value, &current_item_value, sizeof(lite_cjson_t));
-            }
-            return 0;
-        }
-
-        item_index++;
-    } while (can_access_at_index(p_buffer, 0) && (buffer_at_offset(p_buffer)[0] == ','));
-
-    return -1;
-}
-#endif  /* #ifdef DEPRECATED_LINKKIT */
-
 /*** cjson create, add and print ***/
-#if defined(ALCS_ENABLED) || defined(DEPRECATED_LINKKIT)
 #define true ((cJSON_bool)1)
 #define false ((cJSON_bool)0)
 #define cjson_min(a, b) ((a < b) ? a : b)
@@ -1054,7 +964,7 @@ static int remove_zero(unsigned char buffer[26], int length)
 {
     int idx = 0, found = 0;
 
-    for (idx = 0; idx < 26; idx ++) {
+    for (idx = 0;idx < 26;idx++) {
         if (buffer[idx] == '.') {
             found = 1;
             continue;
@@ -1068,14 +978,14 @@ static int remove_zero(unsigned char buffer[26], int length)
         return length;
     }
 
-    for (; idx > 0; idx --) {
+    for (;idx > 0;idx--) {
         if (buffer[idx-1] == '0') {
             buffer[idx-1] = '\0';
-            length --;
-        } else {
+            length--;
+        }else{
             if (buffer[idx-1] == '.') {
                 buffer[idx-1] = '\0';
-                length --;
+                length--;
             }
             break;
         }
@@ -1116,7 +1026,7 @@ static cJSON_bool print_number(const lite_cjson_item_t *const item, printbuffer 
                 /* If not, print with 17 decimal places of precision */
                 length = sprintf((char *)number_buffer, "%1.17g", d);
             }
-        } else {
+        }else{
             length = remove_zero(number_buffer,length);
         }
     }
@@ -1893,4 +1803,3 @@ lite_cjson_item_t *lite_cjson_create_stringArray(const char **strings, int count
 
     return a;
 }
-#endif

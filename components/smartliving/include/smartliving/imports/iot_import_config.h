@@ -6,7 +6,7 @@
 
 #ifndef __IOT_IMPORT_CONFIG_H__
 #define __IOT_IMPORT_CONFIG_H__
-#include "sl_config.h"
+
 #ifndef CONFIG_HTTP_AUTH_TIMEOUT
     #define CONFIG_HTTP_AUTH_TIMEOUT        (5 * 1000)
 #endif
@@ -24,11 +24,19 @@
 #endif
 
 #ifndef CONFIG_MQTT_TX_MAXLEN
+	#ifndef LINK_VISUAL_ENABLE
     #define CONFIG_MQTT_TX_MAXLEN           (2048)
+	#else
+	    #define CONFIG_MQTT_TX_MAXLEN           (16*1024)
+	#endif
 #endif
 
 #ifndef CONFIG_MQTT_RX_MAXLEN
+	#ifndef LINK_VISUAL_ENABLE
     #define CONFIG_MQTT_RX_MAXLEN           (2048)
+	#else
+	    #define CONFIG_MQTT_RX_MAXLEN           (16*1024)
+	#endif
 #endif
 
 #ifndef CONFIG_SDK_THREAD_COST
@@ -40,11 +48,15 @@
 #endif
 
 #ifndef CONFIG_RUNTIME_LOG_LEVEL
-    #define CONFIG_RUNTIME_LOG_LEVEL        (5)
+    #define CONFIG_RUNTIME_LOG_LEVEL        (2)
+#endif
+
+#ifndef CONFIG_BLDTIME_MUTE_DBGLOG
+    #define CONFIG_BLDTIME_MUTE_DBGLOG      (1)
 #endif
 
 #ifndef CONFIG_DISPATCH_QUEUE_MAXLEN
-    #define CONFIG_DISPATCH_QUEUE_MAXLEN    (50)
+    #define CONFIG_DISPATCH_QUEUE_MAXLEN    (20)
 #endif
 
 #ifndef CONFIG_DISPATCH_PACKET_MAXCOUNT
@@ -52,7 +64,7 @@
 #endif
 
 #ifndef CONFIG_MSGCACHE_QUEUE_MAXLEN
-    #define CONFIG_MSGCACHE_QUEUE_MAXLEN    (50)
+    #define CONFIG_MSGCACHE_QUEUE_MAXLEN    (20)
 #endif
 
 #endif  /* __IOT_IMPORT_CONFIG_H__ */

@@ -8,7 +8,9 @@
 //#include <string.h>
 //#include <stdlib.h>
 //#include <stdio.h>
+#include <stdbool.h>
 #include <unistd.h>
+#include <ctype.h>
 //#include <errno.h>
 //#include <sys/stat.h>
 //#include <sys/types.h>
@@ -25,6 +27,7 @@
 #include <aos/aos.h>
 #include <aos/debug.h>
 #include <aos/kernel.h>
+#include "avutil/av_errno.h"
 
 #ifdef __cplusplus
 extern "C" {

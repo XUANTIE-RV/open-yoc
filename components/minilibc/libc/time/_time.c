@@ -5,11 +5,14 @@
 #include <stdio.h>
 #include <time.h>
 #include <sys/types.h>
+#ifdef CONFIG_CSI_V2
+#include "drv/porting.h" 
+#else
 #include <sys_freq.h>
+#endif
 #include "csi_core.h"
 #include "drv/timer.h"
 
-extern uint64_t g_sys_tick_count;
 extern long long aos_now_ms(void);
 
 #ifndef CONFIG_CLOCK_BASETIME
@@ -63,7 +66,11 @@ int coretimspec(struct timespec *ts)
 
         if (clk1 == clk2 && pass2 > pass1) {
             msecs = clk1;
+#ifdef CONFIG_CSI_V2
+            nsecs = pass2 * (NSEC_PER_SEC /soc_get_cur_cpu_freq());
+#else
             nsecs = pass2 * (NSEC_PER_SEC / drv_get_cur_cpu_freq());
+#endif
             break;
         }
     }

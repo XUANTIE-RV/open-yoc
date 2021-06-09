@@ -1,4 +1,5 @@
 #include "sl_config.h"
+
 #ifdef ALCS_ENABLED
 #include "iotx_dm_internal.h"
 #ifdef LOG_REPORT_TO_CLOUD
@@ -60,6 +61,10 @@ static dm_server_uri_map_t g_dm_server_uri_map[] = {
     {DM_URI_THING_SERVICE_REQUEST_WILDCARD2,  DM_URI_SYS_PREFIX,         IOTX_DM_LOCAL_AUTH,      dm_server_thing_service_request              },
 #endif
     {DM_URI_DEV_CORE_SERVICE_DEV,            NULL,                      IOTX_DM_LOCAL_NO_AUTH,   dm_server_thing_dev_core_service_dev         },
+#ifdef ALCS_GROUP_COMM_ENABLE
+    {"/thing/service/property/set",            NULL,                 IOTX_DM_LOCAL_AUTH,   dm_server_thing_service_property_set         },
+    {"/thing/service/#",       NULL,                 IOTX_DM_LOCAL_AUTH,   dm_server_thing_service_request         },
+#endif
 };
 
 int dm_server_subscribe_all(char product_key[PRODUCT_KEY_MAXLEN], char device_name[DEVICE_NAME_MAXLEN])
@@ -73,6 +78,7 @@ int dm_server_subscribe_all(char product_key[PRODUCT_KEY_MAXLEN], char device_na
                                     product_key, device_name, &uri);
         if (res < SUCCESS_RETURN) {
             index--;
+            DM_free(uri);
             continue;
         }
 
@@ -89,6 +95,38 @@ int dm_server_subscribe_all(char product_key[PRODUCT_KEY_MAXLEN], char device_na
 
     return SUCCESS_RETURN;
 }
+
+#ifdef DEVICE_MODEL_GATEWAY 
+int  dm_server_unsubscribe_all(char product_key[PRODUCT_KEY_MAXLEN], char device_name[DEVICE_NAME_MAXLEN]){
+    int index, res;
+    char *uri = NULL;
+    int number = sizeof(g_dm_server_uri_map) / sizeof(dm_server_uri_map_t);
+    for (index = 0; index < number; index++) {
+        res = dm_utils_service_name((char *)g_dm_server_uri_map[index].uri_prefix, (char *)g_dm_server_uri_map[index].uri_name,
+                                    product_key, device_name, &uri);
+        if (res < SUCCESS_RETURN) {
+            index--;
+            DM_free(uri);
+            continue;
+        }
+        if (g_dm_server_uri_map[index].uri_prefix == NULL){
+            DM_free(uri);
+            continue;
+        }
+        dm_server_unsubscribe(uri);
+        DM_free(uri);
+    }
+    res = dm_utils_service_name("/dev/%s/%s", "/core/service/setup",product_key, device_name, &uri);
+    if (res < SUCCESS_RETURN) {
+        DM_free(uri);
+        return SUCCESS_RETURN;
+    }
+    dm_server_unsubscribe(uri);
+    
+    DM_free(uri);
+    return SUCCESS_RETURN;
+}
+#endif
 
 void dm_server_alcs_event_handler(void *pcontext, void *phandle, iotx_alcs_event_msg_t *msg)
 {
@@ -192,11 +230,6 @@ void dm_server_thing_service_property_get(CoAPContext *context, const char *path
     dest.uri_name = DM_URI_THING_SERVICE_PROPERTY_GET;
 
     dm_msg_proc_thing_service_property_get(&source, &dest, &request, &response, &data, &data_len);
-#ifdef DEPRECATED_LINKKIT
-    dm_msg_response(DM_MSG_DEST_LOCAL, &request, &response, (char *)data, data_len, alcs_context);
-    DM_free(data);
-    dm_server_free_context(alcs_context);
-#endif
 }
 
 void dm_server_thing_service_property_post(CoAPContext *context, const char *paths, NetworkAddr *remote,
@@ -264,6 +297,7 @@ void dm_server_thing_dev_core_service_dev(CoAPContext *context, const char *path
 
     res = dm_msg_proc_thing_dev_core_service_dev(&source, &dest, &request, &response, &data, &data_len);
     if (res < SUCCESS_RETURN) {
+        dm_server_free_context(alcs_context);
         return;
     }
 

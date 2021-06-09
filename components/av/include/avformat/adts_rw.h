@@ -7,6 +7,7 @@
 
 #include "avutil/common.h"
 #include "avutil/av_typedef.h"
+#include "avformat/m4a_rw.h"
 
 __BEGIN_DECLS__
 
@@ -30,6 +31,15 @@ struct adts_hdr {
  * @return 0/-1
  */
 int adts_hdr_get(const uint8_t* buf, struct adts_hdr *hinfo);
+
+/**
+ * @brief  encode the adts hdr from m4a config
+ * @param  [in] m4ac
+ * @param  [in] hdr[ADTS_HDR_SIZE]
+ * @param  [in] fsize : size of aac frame
+ * @return 0/-1
+ */
+int adts_hdr_encode(const m4a_cnf_t *m4ac, uint8_t hdr[ADTS_HDR_SIZE], size_t fsize);
 
 /**
  * @brief  sync the adts

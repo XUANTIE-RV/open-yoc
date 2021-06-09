@@ -112,6 +112,7 @@ int process_get_device_info(void *ctx, void *resource, void *remote, void *reque
         memcpy(req_msg_id, id, id_len);
 
     if (type == AWSS_NOTIFY_DEV_RAND_SIGN) {
+        dump_awss_status(STATE_WIFI_GOT_DEVINFO_QUERY, "app get devinfo");
         topic_fmt = is_mcast ? TOPIC_AWSS_GETDEVICEINFO_MCAST : TOPIC_AWSS_GETDEVICEINFO_UCAST;
     } else if (type == AWSS_NOTIFY_SUCCESS) {
         topic_fmt = is_mcast ? TOPIC_AWSS_GET_CONNECTAP_INFO_MCAST : TOPIC_AWSS_GET_CONNECTAP_INFO_UCAST;
@@ -140,7 +141,7 @@ DEV_INFO_ERR:
     if (buf) os_free(buf);
     if (dev_info) os_free(dev_info);
 
-    return -1;
+    return STATE_WIFI_COAP_RSP_INVALID;
 }
 
 int awss_process_mcast_get_connectap_info(void *ctx, void *resource, void *remote, void *request)

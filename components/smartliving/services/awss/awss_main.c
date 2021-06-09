@@ -17,10 +17,12 @@
 #include "passwd.h"
 #include "awss.h"
 #include "os.h"
+#include "iot_export.h"
 #include "sl_config.h"
 
 #if defined(__cplusplus)  /* If this is a C++ compiler, use C linkage */
-extern "C" {
+extern "C"
+{
 #endif
 
 char awss_finished = 2;
@@ -32,20 +34,22 @@ int __awss_start(pair_success_callback pair_cb)
     enum AWSS_AUTH_TYPE auth = AWSS_AUTH_TYPE_INVALID;
     enum AWSS_ENC_TYPE encry = AWSS_ENC_TYPE_INVALID;
     uint8_t token[ZC_MAX_TOKEN_LEN] = {0};
+    uint8_t token_type = 0;
     uint8_t bssid[OS_ETH_ALEN] = {0};
-    uint8_t channel = 0;
     uint8_t find_token = 0;
+    uint8_t channel = 0;
     uint8_t i;
     int ret;
     int pair_success = -1;
 
+    awss_trace("%s\n", __func__);
     awss_stop_connecting = 0;
     awss_finished = 0;
     /* these params is useless, keep it for compatible reason */
     aws_start(NULL, NULL, NULL, NULL);
 
     ret = aws_get_ssid_passwd(&ssid[0], &passwd[0], &bssid[0], &token[0],
-                              (char *)&auth, (char *)&encry, &channel);
+                              (char *)&auth, (char *)&encry, &channel, &token_type);
     if (!ret) {
         awss_warn("awss timeout!");
     }
@@ -75,24 +79,27 @@ int __awss_start(pair_success_callback pair_cb)
 #if defined(AWSS_SUPPORT_ADHA) || defined(AWSS_SUPPORT_AHA)
         if ((adha = strcmp(ssid, ADHA_SSID)) == 0 || strcmp(ssid, DEFAULT_SSID) == 0) {
             awss_notify_needed = 0;
-            awss_event_post(adha != 0 ? AWSS_CONNECT_AHA : AWSS_CONNECT_ADHA);
+            awss_event_post(adha != 0 ? IOTX_AWSS_CONNECT_AHA : IOTX_AWSS_CONNECT_ADHA);
         } else
 #endif
         {
-            awss_event_post(AWSS_CONNECT_ROUTER);
+            awss_event_post(IOTX_AWSS_CONNECT_ROUTER);
+            #ifdef DEV_STATEMACHINE_ENABLE
+            dev_state_set(DEV_STATE_CONNECT_AP);
+            #endif
             AWSS_UPDATE_STATIS(AWSS_STATIS_CONN_ROUTER_IDX, AWSS_STATIS_TYPE_TIME_START);
         }
 
-        /*ret = os_awss_connect_ap(WLAN_CONNECTION_TIMEOUT_MS, ssid, passwd,
-                                 auth, encry, bssid, channel);*/
-
-        // ret = awss_connect(ssid, passwd, bssid, ETH_ALEN, find_token != 0 ? token : NULL,
-        //                    find_token != 0 ? ZC_MAX_TOKEN_LEN : 0);
+        //ret = awss_connect(ssid, passwd, bssid, ETH_ALEN, find_token != 0 ? token : NULL,
+        //                   find_token != 0 ? ZC_MAX_TOKEN_LEN : 0, token_type);
         ret = pair_cb(1, ssid, passwd, WLAN_CONNECTION_TIMEOUT_MS);
         if (!ret) {
             awss_debug("awss connect ssid:%s success", ssid);
             pair_success = 0;
-            awss_event_post(AWSS_GOT_IP);
+            awss_event_post(IOTX_AWSS_GOT_IP);
+            #ifdef DEV_STATEMACHINE_ENABLE
+            dev_state_set(DEV_STATE_CONNECT_CLOUD);
+            #endif
 
 #if defined(AWSS_SUPPORT_ADHA) || defined(AWSS_SUPPORT_AHA)
             if (awss_notify_needed == 0) {
@@ -103,22 +110,24 @@ int __awss_start(pair_success_callback pair_cb)
                 if (adha == 0) {
                     AWSS_UPDATE_STATIS(AWSS_STATIS_ROUTE_IDX, AWSS_STATIS_TYPE_TIME_SUC);
 				}
-                awss_event_post(AWSS_SETUP_NOTIFY);
+                awss_event_post(IOTX_AWSS_SETUP_NOTIFY);
             } else
 #endif
             {
                 AWSS_UPDATE_STATIS(AWSS_STATIS_CONN_ROUTER_IDX, AWSS_STATIS_TYPE_TIME_SUC);
                 awss_devinfo_notify_stop();
             }
+            dump_awss_status(STATE_WIFI_CONNECT_AP_SUCCESS, "awss connect ssid:%s success", ssid);
         } else {
-            awss_debug("awss connect ssid:%s fail", ssid);
+            //dump_awss_status(STATE_WIFI_CONNECT_AP_FAILED, "awss connect ssid:%s fail", ssid);
+            awss_ap_diagnosis(ssid);
 #if defined(AWSS_SUPPORT_ADHA) || defined(AWSS_SUPPORT_AHA)
             if (awss_notify_needed == 0) {
-                awss_event_post(adha != 0 ? AWSS_CONNECT_AHA_FAIL : AWSS_CONNECT_ADHA_FAIL);
+                awss_event_post(adha != 0 ? IOTX_AWSS_CONNECT_AHA_FAIL : IOTX_AWSS_CONNECT_ADHA_FAIL);
             } else
 #endif
             {
-                awss_event_post(AWSS_CONNECT_ROUTER_FAIL);
+                awss_event_post(IOTX_AWSS_CONNECT_ROUTER_FAIL);
             }
         }
     } while (0);

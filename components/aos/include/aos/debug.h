@@ -6,7 +6,9 @@
 #define AOS_DEBUG_H
 
 #include <stdio.h>
+#include <string.h>
 #include <errno.h>
+#include <ulog/ulog.h>
 
 #ifdef __cplusplus
 extern "C" {

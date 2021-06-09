@@ -4,10 +4,10 @@
 #include <stdio.h>
 #include <aos/kernel.h>
 #include <aos/debug.h>
-#include "transport.h"
-#include "transport_tcp.h"
-#include "transport_ws.h"
-#include "transport_utils.h"
+#include "transport/transport.h"
+#include "transport/transport_tcp.h"
+#include "transport/transport_ws.h"
+#include "transport/transport_utils.h"
 #include "mbedtls/base64.h"
 #include "mbedtls/sha1.h"
 
@@ -125,6 +125,7 @@ static int ws_connect(transport_handle_t t, const char *host, int port, int time
         LOGE(TAG, "Error read response for Upgrade header %s", ws->buffer);
         return -1;
     }
+    ws->buffer[ws->buffer_size - 1] = '\0';
     char *server_key = get_http_header(ws->buffer, "Sec-WebSocket-Accept:");
     if (server_key == NULL) {
         LOGE(TAG, "Sec-WebSocket-Accept not found");
@@ -268,7 +269,8 @@ static int ws_read(transport_handle_t t, char *buffer, int len, int timeout_ms)
             buffer[i] = (data_ptr[i] ^ mask_key[i % 4]);
         }
     } else {
-        memmove(buffer, data_ptr, payload_len);
+        if (payload_len > 0)
+            memmove(buffer, data_ptr, payload_len);
     }
     return payload_len;
 }
@@ -325,9 +327,16 @@ transport_handle_t transport_ws_init(transport_handle_t parent_handle,
                                         int send_type,
                                         int buffer_size)
 {
-    transport_handle_t t = transport_init();
-    transport_ws_t *ws = aos_zalloc(sizeof(transport_ws_t));
-    TRANSPORT_MEM_CHECK(TAG, ws, return NULL);
+    transport_handle_t t;
+    transport_ws_t *ws;
+
+    t = transport_init();
+    TRANSPORT_MEM_CHECK(TAG, t, return NULL);
+    ws = aos_zalloc(sizeof(transport_ws_t));
+    TRANSPORT_MEM_CHECK(TAG, ws, {
+        transport_destroy(t);
+        return NULL;
+    });
     ws->parent = parent_handle;
 
     // ws->path = strdup("/");
@@ -345,6 +354,7 @@ transport_handle_t transport_ws_init(transport_handle_t parent_handle,
     TRANSPORT_MEM_CHECK(TAG, ws->buffer, {
         // aos_free(ws->path);
         // aos_free(ws->protocol);
+        transport_destroy(t);
         aos_free(ws);
         return NULL;
     });

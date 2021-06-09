@@ -2,6 +2,7 @@
  * Copyright (C) 2018-2020 Alibaba Group Holding Limited
  */
 
+#if defined(CONFIG_SAL) || defined(CONFIG_TCPIP)
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/socket.h>
@@ -157,5 +158,6 @@ int sock_writen(int fd, const char *buf, size_t count, int timeout_ms)
 
     return len;
 }
+#endif
 
 

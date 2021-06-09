@@ -14,6 +14,7 @@ typedef struct avpacket {
     int32_t                           size;      ///< total capcity
     int32_t                           len;       ///< length of avilable data
     int64_t                           pts;
+    slist_t                           node;
 } avpacket_t;
 
 /**

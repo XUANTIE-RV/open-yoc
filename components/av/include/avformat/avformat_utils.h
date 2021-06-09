@@ -9,9 +9,6 @@
 #include "avutil/av_typedef.h"
 #include "avutil/bio.h"
 #include "avutil/byte_rw.h"
-#include "avformat/mp3_rw.h"
-#include "avformat/adts_rw.h"
-#include "avformat/flac_rw.h"
 
 __BEGIN_DECLS__
 

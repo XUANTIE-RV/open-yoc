@@ -70,17 +70,17 @@ typedef struct _RANGE {
 
 
 typedef struct {
-#if CONFIG_BT_MESH_MODEL_GEN_ONOFF_SRV
+#ifdef CONFIG_BT_MESH_MODEL_GEN_ONOFF_SRV
     u8_t onoff[TYPE_NUM];
 #endif
-#if CONFIG_BT_MESH_MODEL_GEN_LEVEL_SRV
+#ifdef CONFIG_BT_MESH_MODEL_GEN_LEVEL_SRV
     s16_t level[TYPE_NUM];
 #endif
-#if CONFIG_BT_MESH_MODEL_LIGHT_LIGHTNESS_SRV
+#ifdef CONFIG_BT_MESH_MODEL_LIGHT_LIGHTNESS_SRV
     u16_t lightness_linear[TYPE_NUM];
     u16_t lightness_actual[TYPE_NUM];
 #endif
-#if  CONFIG_BT_MESH_MODEL_LIGHT_CTL_SRV
+#ifdef  CONFIG_BT_MESH_MODEL_LIGHT_CTL_SRV
     u16_t lightness[TYPE_NUM];
     u16_t temp[TYPE_NUM];
     u16_t UV[TYPE_NUM];
@@ -98,12 +98,12 @@ typedef struct {
 
 typedef struct {
 
-#if CONFIG_BT_MESH_MODEL_LIGHT_LIGHTNESS_SRV
+#ifdef CONFIG_BT_MESH_MODEL_LIGHT_LIGHTNESS_SRV
     u16_t lightness_actual_default;
     u16_t lightness_last;
     RANGE_STATUS lightness_range;
 #endif
-#if CONFIG_BT_MESH_MODEL_LIGHT_CTL_SRV
+#ifdef CONFIG_BT_MESH_MODEL_LIGHT_CTL_SRV
     uint16_t lightness_default;
     uint16_t temp_default;
     uint16_t UV_default;
@@ -146,6 +146,11 @@ typedef enum {
     BT_MESH_MODEL_CFG_APPKEY_BIND_STATUS = 0x803e,
     BT_MESH_MODEL_CFG_RST_STATUS     = 0x804a,
     BT_MESH_MODEL_CFG_NET_KEY_STATUS = 0x8044,
+	/*[Genie begin] add by wenbing.cwb at 2021-01-21*/
+    #ifdef CONFIG_BT_MESH_CTRL_RELAY
+    BT_MESH_MODEL_CFG_CTRL_RELAY_STATUS = 0x8072,
+    #endif
+	/*[Genie end] add by wenbing.cwb at 2021-01-21*/
     BT_MESH_MODEL_ONOFF_SET =        0x8202,
     BT_MESH_MODEL_ONOFF_STATUS =     0x8204,
     BT_MESH_MODEL_LEVEL_SET =        0x8206,

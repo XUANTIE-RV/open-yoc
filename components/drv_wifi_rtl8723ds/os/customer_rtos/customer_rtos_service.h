@@ -241,7 +241,9 @@ typedef	    __kernel_ssize_t	SSIZE_T;
 #define _LONG_CALL_ROM_  
 #define _WEAK          __weak
 #else
+#ifndef SECTION
 #define SECTION(_name) __attribute__ ((__section__(_name)))
+#endif
 #define ALIGNMTO(_bound) __attribute__ ((aligned (_bound)))
 #define _PACKED_       __attribute__ ((packed))
 #ifdef CONFIG_RELEASE_BUILD_LIBRARIES

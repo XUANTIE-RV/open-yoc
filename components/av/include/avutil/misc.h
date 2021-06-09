@@ -17,29 +17,44 @@ __BEGIN_DECLS__
 	((((x) & 0xff000000) >> 24) | (((x) & 0x00ff0000) >>  8) |	\
 	 (((x) & 0x0000ff00) <<  8) | (((x) & 0x000000ff) << 24))
 
-static inline int is_file_url(const char *name)
+static inline int is_file_url(const char *url)
 {
-    return strncmp(name, "file://", 7) == 0;
+    return strncmp(url, "file://", 7) == 0;
 }
 
-static inline int is_http_url(const char *name)
+static inline int is_http_url(const char *url)
 {
-    return strncmp(name, "http://", 7) == 0;
+    return strncmp(url, "http://", 7) == 0;
 }
 
-static inline int is_mem_url(const char *name)
+static inline int is_https_url(const char *url)
 {
-    return strncmp(name, "mem://", 6) == 0;
+    return strncmp(url, "https://", 7) == 0;
 }
 
-static inline int is_named_chunkfifo_url(const char *name)
+static inline int is_mem_url(const char *url)
 {
-    return strncmp(name, "chunkfifo://", 12) == 0;
+    return strncmp(url, "mem://", 6) == 0;
 }
 
-static inline int is_url(const char *name)
+static inline int is_fifo_url(const char *url)
 {
-    return is_file_url(name) || is_http_url(name) || is_mem_url(name) || is_named_chunkfifo_url(name);
+    return strncmp(url, "fifo://", 12) == 0;
+}
+
+static inline int is_crypto_url(const char *url)
+{
+    return strncmp(url, "crypto://", 6) == 0;
+}
+
+static inline int is_need_cache(const char *url)
+{
+    return is_http_url(url) || is_https_url(url);
+}
+
+static inline int is_url(const char *url)
+{
+    return is_file_url(url) || is_http_url(url) || is_https_url(url) || is_crypto_url(url) || is_mem_url(url) || is_fifo_url(url);
 }
 
 /**
@@ -89,12 +104,28 @@ int sign_extend(int val, unsigned bits);
 char* four_2_str(uint32_t val);
 
 /**
-* @brief  crc8(x8+x2+x+1)
+* @brief  crc8(x8+x2+x+1), CRC_8_ATM
 * @param  [in] data
 * @param  [in] len
-* @return 0 if ok
+* @return
 */
-uint8_t av_crc8(uint8_t *data, size_t len);
+uint8_t av_crc8(const uint8_t *data, size_t len);
+
+/**
+* @brief  crc32(x32+x26+x23+x22+x16+x12+x11+x10+x8+x7+x5+x4+x2+x+1), CRC_32_IEEE
+* @param  [in] data
+* @param  [in] len
+* @return
+*/
+uint32_t av_crc32(const uint8_t *data, size_t len);
+
+/**
+* @brief  crc32(x32+x26+x23+x22+x16+x12+x11+x10+x8+x7+x5+x4+x2+x+1), CRC_32_IEEE_LE
+* @param  [in] data
+* @param  [in] len
+* @return
+*/
+uint32_t av_crc32_le(uint8_t *data, size_t len);
 
 __END_DECLS__
 
