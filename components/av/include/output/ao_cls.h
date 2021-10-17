@@ -5,6 +5,7 @@
 #ifndef __AO_CLS_H__
 #define __AO_CLS_H__
 
+#include "avutil/av_config.h"
 #include "avutil/common.h"
 #include "avutil/av_typedef.h"
 #include "avutil/straight_fifo.h"

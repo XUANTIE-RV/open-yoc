@@ -17,7 +17,7 @@ typedef struct stream_conf {
     irq_av_t                  irq;
     uint8_t                   need_parse;               ///< 1 is default, means need parse the url. otherwise 0, means get stream by the prefix directly.
     uint32_t                  rcv_timeout;              ///< ms. 0 use default & AOS_WAIT_FOREVER means wait forever
-    uint32_t                  cache_size;               ///< size of the web cache, default is SCACHE_SIZE_DEFAULT. 0 means without cache
+    uint32_t                  cache_size;               ///< size of the web cache, default is CONFIG_AV_STREAM_CACHE_SIZE_DEFAULT. 0 means without cache
     uint32_t                  cache_start_threshold;    ///< (0~100)start read for player when up to cache_start_threshold. 0 use default
     get_decrypt_cb_t          get_dec_cb;               ///< used for get decrypt info
     void                      *opaque;                  ///< for stream event cb

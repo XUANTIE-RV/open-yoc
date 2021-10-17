@@ -278,6 +278,7 @@ static inline slist_t *slist_next(slist_t *n)
          tmp = (queue)->next ? (queue)->next->next : NULL;        \
          node;                                           \
          node = tmp ? aos_container_of(tmp, type, member) : NULL, tmp = tmp ? tmp->next : NULL)
+
 /*
  * Initialise the list.
  *

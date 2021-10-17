@@ -2,6 +2,7 @@
  * Copyright (C) 2018-2020 Alibaba Group Holding Limited
  */
 
+#if defined(CONFIG_USE_MINIALSA) && CONFIG_USE_MINIALSA
 #include <media.h>
 #include <uservice/eventid.h>
 #include <devices/audio.h>
@@ -1053,8 +1054,8 @@ int aui_player_config_init(aui_player_config_t *config)
     aos_check_return_einval(config);
     memset(config, 0, sizeof(aui_player_config_t));
 
-    config->web_cache_size      = SCACHE_SIZE_DEFAULT;
-    config->web_start_threshold = SCACHE_THRESHOLD_DEFAULT;
+    config->web_cache_size      = CONFIG_AV_STREAM_CACHE_SIZE_DEFAULT;
+    config->web_start_threshold = CONFIG_AV_STREAM_CACHE_THRESHOLD_DEFAULT;
     config->snd_period_ms       = AO_ONE_PERIOD_MS;
     config->snd_period_num      = AO_TOTAL_PERIOD_NUM;
     config->speed               = 1;
@@ -1221,3 +1222,4 @@ int aui_player_init(utask_t *task, media_evt_t evt_cb)
 
     return 0;
 }
+#endif

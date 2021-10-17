@@ -150,7 +150,7 @@ demux_cls_t* demux_open(stream_cls_t *s)
     const struct demux_ops *ops;
 
     CHECK_PARAM(s, NULL);
-    buf = aos_malloc(AVPROBE_SIZE_MAX);
+    buf = aos_malloc(CONFIG_AV_PROBE_SIZE_MAX);
     CHECK_RET_TAG_WITH_RET(buf, NULL);
     track = track_info_new(AVMEDIA_TYPE_AUDIO);
     CHECK_RET_TAG_WITH_GOTO(track, err);
@@ -166,10 +166,10 @@ demux_cls_t* demux_open(stream_cls_t *s)
         LOGD(TAG, "id3v2 size = %d", isize);
         rc = stream_seek(s, isize, SEEK_SET);
         CHECK_RET_TAG_WITH_GOTO(rc == 0, err);
-        pd.buf_size = stream_read(s, buf, AVPROBE_SIZE_MAX);
+        pd.buf_size = stream_read(s, buf, CONFIG_AV_PROBE_SIZE_MAX);
         CHECK_RET_TAG_WITH_GOTO(pd.buf_size > 0, err);
     } else {
-        rc = stream_read(s, buf + 10, AVPROBE_SIZE_MAX - 10);
+        rc = stream_read(s, buf + 10, CONFIG_AV_PROBE_SIZE_MAX - 10);
         CHECK_RET_TAG_WITH_GOTO(rc > 0, err);
         pd.buf_size = rc + 10;
     }

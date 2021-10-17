@@ -10,8 +10,6 @@
 
 #define TAG                    "demux_wav"
 
-#define ONE_FRAME_MS           (20)
-
 struct wav_priv {
     uint8_t                    is_compress;
     uint32_t                   data_size;
@@ -221,7 +219,7 @@ static int _demux_wav_read_packet(demux_cls_t *o, avpacket_t *pkt)
         goto eof;
     }
 
-    flen = priv->is_compress ? priv->block_align : ONE_FRAME_MS * (sf_get_rate(sf) / 1000) * sf_get_frame_size(sf);
+    flen = priv->is_compress ? priv->block_align : CONFIG_AV_SAMPLE_NUM_PER_FRAME_MAX * sf_get_frame_size(sf);
     if (pkt->size < flen) {
         rc = avpacket_grow(pkt, flen);
         if (rc < 0) {

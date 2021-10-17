@@ -9,7 +9,6 @@
 
 #define TAG                    "demux_rawaudio"
 
-#define ONE_FRAME_MS           (20)
 struct rawaudio_priv {
     //TODO
     char                       avcodec[16];
@@ -95,7 +94,7 @@ static int _demux_rawaudio_read_packet(demux_cls_t *o, avpacket_t *pkt)
 {
     int rc;
     sf_t sf                    = o->ash.sf;
-    size_t flen                = ONE_FRAME_MS * (sf_get_rate(sf) / 1000) * sf_get_frame_size(sf);
+    size_t flen                = CONFIG_AV_SAMPLE_NUM_PER_FRAME_MAX * sf_get_frame_size(sf);
     struct rawaudio_priv *priv = o->priv;
 
     if (pkt->size < flen) {

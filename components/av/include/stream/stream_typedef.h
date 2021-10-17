@@ -9,9 +9,6 @@
 
 __BEGIN_DECLS__
 
-#define STREAM_RECV_TO_MS_DEFAULT (6*1000)
-#define STREAM_RECV_TO_UNLIMITED  (AOS_WAIT_FOREVER)
-
 enum stream_mode {
     STREAM_CREATE  = (1<<0),
     STREAM_READ    = (1<<1),

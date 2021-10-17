@@ -5,6 +5,7 @@
 #ifndef __DEMUX_CLS_H__
 #define __DEMUX_CLS_H__
 
+#include "avutil/av_config.h"
 #include "avutil/av_typedef.h"
 #include "avutil/avpacket.h"
 #include "stream/stream_cls.h"
@@ -21,7 +22,6 @@ typedef struct avprobe_data {
 #define AVPROBE_SCORE_NAME      (80)
 #define AVPROBE_SCORE_AGAIN     (85)         ///< next frame(not need sync) probe ok
 #define AVPROBE_SCORE_MAX       (100)
-#define AVPROBE_SIZE_MAX        (STREAM_BUF_SIZE_MIN)
     uint8_t                     *buf;
     int32_t                     buf_size;
     const char                  *filename;

@@ -6,16 +6,6 @@
 #include "swresample/resample_all.h"
 
 /**
- * @brief  regist swresample for silan
- * @return 0/-1
- */
-int resample_register_silan()
-{
-    extern struct resx_ops resx_ops_silan;
-    return resx_ops_register(&resx_ops_silan);
-}
-
-/**
  * @brief  regist swresample for ipc
  * @return 0/-1
  */

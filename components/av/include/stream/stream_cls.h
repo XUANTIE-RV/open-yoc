@@ -5,6 +5,7 @@
 #ifndef __STREAM_CLS_H__
 #define __STREAM_CLS_H__
 
+#include "avutil/av_config.h"
 #include "avutil/common.h"
 #include "avutil/av_typedef.h"
 #include "avutil/straight_fifo.h"
@@ -13,13 +14,6 @@
 __BEGIN_DECLS__
 
 #define STREAM_PROTOCOLS_MAX     (5)
-#define STREAM_BUF_SIZE_MIN      (2*1024)
-#define STREAM_BUF_SIZE_MAX      (STREAM_BUF_SIZE_MIN * 2)
-#define STREAM_CACHE_SIZE        (20 * STREAM_BUF_SIZE_MAX)
-
-#define SRCV_TIMEOUT_DEFAULT     (3*1000) ///< ms
-#define SCACHE_SIZE_DEFAULT      (20 * STREAM_BUF_SIZE_MAX)
-#define SCACHE_THRESHOLD_DEFAULT (80)
 
 typedef struct stream_cls stream_cls_t;
 
@@ -89,7 +83,7 @@ struct stream_cls {
     uint32_t                  cache_start_threshold;   ///< (0~100)start read for player when up to cache_start_threshold. 0 use default
     uint8_t                   cache_start_upto;        ///<
     uint8_t                   cache_status;
-    int32_t                   cache_pos;               ///< cache position. used when cache enable
+    int64_t                   cache_pos;               ///< cache position. used when cache enable
 
     struct {
         uint32_t  to_4000ms;
@@ -110,7 +104,7 @@ struct stream_cls {
     const struct stream_ops   *ops;
     aos_mutex_t               lock;
     sfifo_t                   *fifo;
-    uint8_t                   buf[STREAM_BUF_SIZE_MAX];
+    uint8_t                   buf[CONFIG_AV_STREAM_INNER_BUF_SIZE];
 };
 
 __END_DECLS__

@@ -110,9 +110,9 @@ static int __ao_open(ao_cls_t *ao, sf_t sf, const ao_conf_t *ao_cnf)
         }
 
         if (ao_cnf->resample_rate) {
-            osf = sf_make_channel(2) | sf_make_rate(ao_cnf->resample_rate) | sf_make_bit(16) | sf_make_signed(1);
+            osf = sf_make_channel(CONFIG_AV_AO_CHANNEL_NUM) | sf_make_rate(ao_cnf->resample_rate) | sf_make_bit(16) | sf_make_signed(1);
         } else {
-            osf = sf_make_channel(2) | sf_make_rate(sf_get_rate(sf)) | sf_make_bit(16) | sf_make_signed(1);
+            osf = sf_make_channel(CONFIG_AV_AO_CHANNEL_NUM) | sf_make_rate(sf_get_rate(sf)) | sf_make_bit(16) | sf_make_signed(1);
         }
 
         frame = avframe_alloc();
@@ -775,9 +775,9 @@ ao_cls_t* ao_open(sf_t sf, const ao_conf_t *ao_cnf)
 #endif
 
     if (iao_cnf->resample_rate) {
-        osf = sf_make_channel(2) | sf_make_rate(iao_cnf->resample_rate) | sf_make_bit(16) | sf_make_signed(1);
+        osf = sf_make_channel(CONFIG_AV_AO_CHANNEL_NUM) | sf_make_rate(iao_cnf->resample_rate) | sf_make_bit(16) | sf_make_signed(1);
     } else {
-        osf = sf_make_channel(2) | sf_make_rate(sf_get_rate(sf)) | sf_make_bit(16) | sf_make_signed(1);
+        osf = sf_make_channel(CONFIG_AV_AO_CHANNEL_NUM) | sf_make_rate(sf_get_rate(sf)) | sf_make_bit(16) | sf_make_signed(1);
     }
 
     frame = avframe_alloc();
@@ -820,7 +820,7 @@ ao_cls_t* ao_open(sf_t sf, const ao_conf_t *ao_cnf)
 
             if (sf_get_rate(msf) != sf_get_rate(o->sf)) {
                 o->sf = sf_make_channel(1) | sf_make_rate(sf_get_rate(msf)) | sf_make_bit(16) | sf_make_signed(1);
-                osf   = sf_make_channel(2) | sf_make_rate(sf_get_rate(msf)) | sf_make_bit(16) | sf_make_signed(1);
+                osf   = sf_make_channel(CONFIG_AV_AO_CHANNEL_NUM) | sf_make_rate(sf_get_rate(msf)) | sf_make_bit(16) | sf_make_signed(1);
                 LOGW(TAG, "depend on the sf-mixer sf => %s", sf_get_format_str(msf));
                 iao_cnf->resample_rate = sf_get_rate(msf);
             }

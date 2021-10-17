@@ -48,7 +48,7 @@ enum aos_mixer_selem_regopt_abstract {
     AOS_MIXER_SABSTRACT_BASIC,
 };
 
-struct aos_mixer_selem_regopt {
+typedef struct aos_mixer_selem_regopt {
     int ver;
     enum aos_mixer_selem_regopt_abstract abstract;
     const char *device;

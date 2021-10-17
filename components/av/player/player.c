@@ -102,10 +102,11 @@ static void _player_inner_init(player_t *player)
 }
 
 /**
- * @brief  init player module
+ * @brief  init player module default
+ * attention: can rewrite this function by caller
  * @return 0/-1
  */
-int player_init()
+__attribute__((weak)) int player_init()
 {
     static int inited = 0;
 
@@ -119,7 +120,7 @@ int player_init()
         stream_register_all();
         demux_register_all();
         ad_register_all();
-        ao_register_alsa();
+        ao_register_all();
 
         inited = 1;
     }
@@ -138,9 +139,9 @@ int player_conf_init(ply_conf_t *ply_cnf)
     memset(ply_cnf, 0, sizeof(ply_conf_t));
     ply_cnf->ao_name               = "alsa";
     ply_cnf->speed                 = 1;
-    ply_cnf->rcv_timeout           = SRCV_TIMEOUT_DEFAULT;
-    ply_cnf->cache_size            = SCACHE_SIZE_DEFAULT;
-    ply_cnf->cache_start_threshold = SCACHE_THRESHOLD_DEFAULT;
+    ply_cnf->rcv_timeout           = CONFIG_AV_STREAM_RCV_TIMEOUT_DEFAULT;
+    ply_cnf->cache_size            = CONFIG_AV_STREAM_CACHE_SIZE_DEFAULT;
+    ply_cnf->cache_start_threshold = CONFIG_AV_STREAM_CACHE_THRESHOLD_DEFAULT;
     ply_cnf->period_ms             = AO_ONE_PERIOD_MS;
     ply_cnf->period_num            = AO_TOTAL_PERIOD_NUM;
 
@@ -187,10 +188,10 @@ player_t* player_new(const ply_conf_t *ply_cnf)
     player->vol_index             = ply_cnf->vol_index;
     player->atempo_play_en        = ply_cnf->atempo_play_en;
     player->speed                 = ply_cnf->speed;
-    player->rcv_timeout           = ply_cnf->rcv_timeout ? ply_cnf->rcv_timeout : SRCV_TIMEOUT_DEFAULT;
+    player->rcv_timeout           = ply_cnf->rcv_timeout ? ply_cnf->rcv_timeout : CONFIG_AV_STREAM_RCV_TIMEOUT_DEFAULT;
     player->eq_segments           = ply_cnf->eq_segments;
-    player->cache_size            = ply_cnf->cache_size ? ply_cnf->cache_size : SCACHE_SIZE_DEFAULT;
-    player->cache_start_threshold = ply_cnf->cache_start_threshold ? ply_cnf->cache_start_threshold : SCACHE_THRESHOLD_DEFAULT;
+    player->cache_size            = ply_cnf->cache_size ? ply_cnf->cache_size : CONFIG_AV_STREAM_CACHE_SIZE_DEFAULT;
+    player->cache_start_threshold = ply_cnf->cache_start_threshold ? ply_cnf->cache_start_threshold : CONFIG_AV_STREAM_CACHE_THRESHOLD_DEFAULT;
     player->period_ms             = ply_cnf->period_ms ? ply_cnf->period_ms : AO_ONE_PERIOD_MS;
     player->period_num            = ply_cnf->period_num ? ply_cnf->period_num : AO_TOTAL_PERIOD_NUM;
     aos_event_new(&player->evt, 0);
@@ -237,9 +238,9 @@ int player_ioctl(player_t *player, int cmd, ...)
         if (cmd == PLAYER_CMD_SET_RESAMPLE_RATE)
             player->resample_rate = val;
         else if (cmd == PLAYER_CMD_SET_RCVTO)
-            player->rcv_timeout = val ? val : SRCV_TIMEOUT_DEFAULT;
+            player->rcv_timeout = val ? val : CONFIG_AV_STREAM_RCV_TIMEOUT_DEFAULT;
         else
-            player->cache_size = val ? val : SCACHE_SIZE_DEFAULT;
+            player->cache_size = val ? val : CONFIG_AV_STREAM_CACHE_SIZE_DEFAULT;
         rc = 0;
     }
     break;

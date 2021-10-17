@@ -2,6 +2,7 @@
  * Copyright (C) 2018-2020 Alibaba Group Holding Limited
  */
 
+#if defined(CONFIG_AV_AO_ALSA) && CONFIG_AV_AO_ALSA
 #include "avutil/common.h"
 #include "output/ao_cls.h"
 #include <alsa/pcm.h>
@@ -39,7 +40,7 @@ static aos_pcm_t *pcm_init(ao_cls_t *o, unsigned int *rate)
         LOGE(TAG, "Sample format non available");
     }
 
-    err = aos_pcm_hw_params_set_channels(pcm, params, 2);
+    err = aos_pcm_hw_params_set_channels(pcm, params, 1);
 
     if (err < 0) {
         LOGE(TAG, "Channels count non available");
@@ -168,5 +169,6 @@ const struct ao_ops ao_ops_alsa = {
     .close         = _ao_alsa_close,
     .write         = _ao_alsa_write,
 };
+#endif
 
 

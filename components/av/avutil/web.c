@@ -341,8 +341,8 @@ static int _http_open(wsession_t *session, web_url_t *wurl, int timeout_ms)
     setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, (void *)&tv, sizeof(tv));
     setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, (void *)&tv, sizeof(tv));
 
-    flags = lwip_fcntl(fd, F_GETFL, 0);
-    rc = lwip_fcntl(fd, F_SETFL, O_NONBLOCK);
+    flags = fcntl(fd, F_GETFL, 0);
+    rc = fcntl(fd, F_SETFL, O_NONBLOCK);
     CHECK_RET_WITH_GOTO(rc != -1, err);
 
     while (1) {
@@ -381,7 +381,7 @@ static int _http_open(wsession_t *session, web_url_t *wurl, int timeout_ms)
         }
     }
 
-    lwip_fcntl(session->fd, F_SETFL, flags);
+    fcntl(session->fd, F_SETFL, flags);
     freeaddrinfo(res);
 
     session->fd  = fd;

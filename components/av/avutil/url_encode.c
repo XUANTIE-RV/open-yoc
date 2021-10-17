@@ -65,7 +65,7 @@ static bool _needs_encode(const char *p)
     char c = *p;
 
     if (c == '%') {
-        if (isxdigit(*(p + 1)) && isxdigit(*(p + 2)))
+        if (isxdigit((int)*(p + 1)) && isxdigit((int)*(p + 2)))
             return false;
         else
             return true;

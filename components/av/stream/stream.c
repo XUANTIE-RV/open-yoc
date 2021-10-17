@@ -103,7 +103,7 @@ static int _cache_stream_fill_buf(stream_cls_t *o)
     sfifo_t *fifo = o->fifo;
 
     //LOGI(TAG, "======>>> pos = %10lld, cache_pos = %10d, diff = %d", o->pos, o->cache_pos, o->cache_pos - o->pos);
-    while (count < STREAM_BUF_SIZE_MAX) {
+    while (count < CONFIG_AV_STREAM_INNER_BUF_SIZE) {
         rlen = sfifo_get_rpos(fifo, &pos, (o->rcv_timeout == AOS_WAIT_FOREVER) ? 2 * 1000 : o->rcv_timeout);
         if (o->irq.handler && o->irq.handler(o->irq.arg)) {
             LOGI(TAG, "interrupt");
@@ -132,7 +132,7 @@ static int _cache_stream_fill_buf(stream_cls_t *o)
                 if (dlen < (o->cache_size * o->cache_start_threshold / 100.0)) {
                     if (first) {
                         first = 0;
-                        LOGD(TAG, "upto cache threshold, pos = %10lld, cache_pos = %10d, diff = %d", o->pos, o->cache_pos, o->cache_pos - o->pos);
+                        LOGD(TAG, "upto cache threshold1, pos = %10lld, cache_pos = %10lld, diff = %lld", o->pos, o->cache_pos, o->cache_pos - o->pos);
                         o->stat.upto_cnt++;
                     }
                     aos_msleep(100);
@@ -144,12 +144,12 @@ static int _cache_stream_fill_buf(stream_cls_t *o)
                     STREAM_EVENT_CALL(o, o->last_event, NULL, 0);
                 }
             } else {
-                if (dlen <= STREAM_BUF_SIZE_MAX) {
+                if (dlen <= CONFIG_AV_STREAM_INNER_BUF_SIZE) {
                     o->cache_start_upto = 0;
                     if (first) {
                         first = 0;
                         o->stat.upto_cnt++;
-                        LOGD(TAG, "upto cache threshold, pos = %10lld, cache_pos = %10d, diff = %d", o->pos, o->cache_pos, o->cache_pos - o->pos);
+                        LOGD(TAG, "upto cache threshold2, pos = %10lld, cache_pos = %10lld, diff = %lld", o->pos, o->cache_pos, o->cache_pos - o->pos);
                         o->last_event = STREAM_EVENT_UNDER_RUN;
                         STREAM_EVENT_CALL(o, o->last_event, NULL, 0);
                     }
@@ -159,7 +159,7 @@ static int _cache_stream_fill_buf(stream_cls_t *o)
             }
         }
 
-        remain = STREAM_BUF_SIZE_MAX - count;
+        remain = CONFIG_AV_STREAM_INNER_BUF_SIZE - count;
         rlen   = rlen > remain ? remain : rlen;
         memcpy(o->buf + count, pos, rlen);
         count += rlen;
@@ -178,8 +178,8 @@ static int _stream_fill_buf(stream_cls_t *o)
         ret = _cache_stream_fill_buf(o);
         len = ret > 0 ? ret : len;
     } else {
-        while (len < STREAM_BUF_SIZE_MAX) {
-            ret = o->ops->read(o, o->buf + len, STREAM_BUF_SIZE_MAX - len);
+        while (len < CONFIG_AV_STREAM_INNER_BUF_SIZE) {
+            ret = o->ops->read(o, o->buf + len, CONFIG_AV_STREAM_INNER_BUF_SIZE - len);
             if (ret <= 0) {
                 LOGD(TAG, "read ret = %d, may be read eof, len = %d. '%s'", ret, len, o->url);
                 break;
@@ -215,7 +215,7 @@ static void _scache_task(void *arg)
             break;
         }
 
-        wlen = wlen >= STREAM_BUF_SIZE_MAX ? STREAM_BUF_SIZE_MAX : wlen;
+        wlen = wlen >= CONFIG_AV_STREAM_INNER_BUF_SIZE ? CONFIG_AV_STREAM_INNER_BUF_SIZE : wlen;
         rlen = o->ops->read(o, (uint8_t*)pos, wlen);
         if (rlen <= 0) {
             if ((rlen == -1) && (errno == EAGAIN)) {
@@ -268,9 +268,9 @@ int stream_conf_init(stm_conf_t *stm_cnf)
     memset(stm_cnf, 0, sizeof(stm_conf_t));
     stm_cnf->mode                  = STREAM_READ;
     stm_cnf->need_parse            = 1;
-    stm_cnf->cache_size            = SCACHE_SIZE_DEFAULT;
-    stm_cnf->cache_start_threshold = SCACHE_THRESHOLD_DEFAULT;
-    stm_cnf->rcv_timeout           = SRCV_TIMEOUT_DEFAULT;
+    stm_cnf->cache_size            = CONFIG_AV_STREAM_CACHE_SIZE_DEFAULT;
+    stm_cnf->cache_start_threshold = CONFIG_AV_STREAM_CACHE_THRESHOLD_DEFAULT;
+    stm_cnf->rcv_timeout           = CONFIG_AV_STREAM_RCV_TIMEOUT_DEFAULT;
 
     return 0;
 }
@@ -311,9 +311,9 @@ stream_cls_t* stream_open(const char *url, const stm_conf_t *stm_cnf)
     o->get_dec_cb            = stm_cnf->get_dec_cb;
     o->opaque                = stm_cnf->opaque;
     o->stream_event_cb       = stm_cnf->stream_event_cb;
-    o->cache_size            = stm_cnf->cache_size ? stm_cnf->cache_size : SCACHE_SIZE_DEFAULT;
-    o->cache_start_threshold = stm_cnf->cache_start_threshold ? stm_cnf->cache_start_threshold : SCACHE_THRESHOLD_DEFAULT;
-    o->rcv_timeout           = stm_cnf->rcv_timeout ? stm_cnf->rcv_timeout : SRCV_TIMEOUT_DEFAULT;
+    o->cache_size            = stm_cnf->cache_size ? stm_cnf->cache_size : CONFIG_AV_STREAM_CACHE_SIZE_DEFAULT;
+    o->cache_start_threshold = stm_cnf->cache_start_threshold ? stm_cnf->cache_start_threshold : CONFIG_AV_STREAM_CACHE_THRESHOLD_DEFAULT;
+    o->rcv_timeout           = stm_cnf->rcv_timeout ? stm_cnf->rcv_timeout : CONFIG_AV_STREAM_RCV_TIMEOUT_DEFAULT;
 
     aos_mutex_new(&o->lock);
     ret = ops->open(o, stm_cnf->mode);
@@ -333,7 +333,7 @@ stream_cls_t* stream_open(const char *url, const stm_conf_t *stm_cnf)
         aos_event_new(&o->cache_quit, 0);
         o->fifo         = fifo;
         o->cache_status = CACHE_STATUS_RUNNING;
-        aos_task_new("scache", _scache_task, (void *)o, 6*1024);
+        aos_task_new("scache", _scache_task, (void *)o, CONFIG_WEB_CACHE_TASK_STACK_SIZE);
     }
 
     return o;
@@ -464,7 +464,7 @@ static int _inner_stream_seek(stream_cls_t *o, int32_t pos)
             aos_event_set(&o->cache_quit, 0, AOS_EVENT_AND);
             o->stat.rsize = pos;
             o->cache_pos  = pos;
-            aos_task_new("scache", _scache_task, (void *)o, 6*1024);
+            aos_task_new("scache", _scache_task, (void *)o, CONFIG_WEB_CACHE_TASK_STACK_SIZE);
         }
     }
 
@@ -515,8 +515,8 @@ int stream_seek(stream_cls_t *o, int32_t offset, int whence)
             int newpos;
             //FIXME: read from cache for FW. this cost may be less than seek
             if (pos - o->pos <= o->cache_size) {
-                newpos = pos / STREAM_BUF_SIZE_MAX + 1;
-                newpos = newpos * STREAM_BUF_SIZE_MAX;
+                newpos = pos / CONFIG_AV_STREAM_INNER_BUF_SIZE + 1;
+                newpos = newpos * CONFIG_AV_STREAM_INNER_BUF_SIZE;
                 while (o->pos < newpos) {
                     rc = _stream_fill_buf(o);
                     if (rc <= 0)

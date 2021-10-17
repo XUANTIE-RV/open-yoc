@@ -75,7 +75,8 @@ typedef struct player_conf {
 } ply_conf_t;
 
 /**
- * @brief  init player module
+ * @brief  init player module default
+ * attention: can rewrite this function by caller
  * @return 0/-1
  */
 int player_init();
