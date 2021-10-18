@@ -49,7 +49,7 @@ int32_t hal_flash_info_get(hal_partition_t in_partition, hal_logic_partition_t *
 
         //FIXME: structure multiplex, attention!
         partition->partition_start_addr = flash_info.xip_addr;
-        partition->partition_length     = flash_info.sector_size;
+        partition->partition_length     = flash_info.flash_size;
         partition->partition_options    = flash_info.flash_size / flash_info.sector_size;
     } else {
         hal_logic_partition_t *logic_partition;

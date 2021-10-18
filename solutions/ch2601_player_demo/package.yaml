@@ -1,5 +1,5 @@
 name: ch2601_player_demo
-version: v7.4.3
+version: v7.4.5
 description: ch2601本地播放例程
 type: solution
 hw_info:
@@ -11,8 +11,8 @@ hw_info:
   ld_script: configs/gcc_flash.ld
   flash_program: ""
 depends:
-  - av: v7.4.4
-  - sdk_chip_ch2601: v7.4.3
+  - av: v7.4.6
+  - sdk_chip_ch2601: v7.4.4
 ## 第三部分：板级信息
 # hw_info:                                 # 对 solution、board、chip 三个字段的改进，统称为 hw_info 字段
 #   cpu_id: cpu0

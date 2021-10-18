@@ -168,6 +168,15 @@ int partition_get_digest(partition_t partition, uint8_t *out_hash, uint32_t *out
  */
 int partition_set_region_safe(partition_t partition);
 
+#if CONFIG_MULTI_FLASH_SUPPORT
+/**
+ * Get flash id by absolute address
+ *
+ * @param[in]  address   absolute address
+ * @return  < 0: If an error occurred with any step, otherwise is the flash id
+ */
+int get_flashid_by_abs_addr(unsigned long address);
+#endif
 
 #ifdef __cplusplus
 }

@@ -94,6 +94,10 @@
 #define CONFIG_AV_AO_ALSA                              (1)
 #endif
 
+#ifndef CONFIG_AV_AEF_DEBUG
+#define CONFIG_AV_AEF_DEBUG                            (0)
+#endif
+
 // ao config
 #ifndef CONFIG_AO_MIXER_SUPPORT
 #define CONFIG_AO_MIXER_SUPPORT                        (1)

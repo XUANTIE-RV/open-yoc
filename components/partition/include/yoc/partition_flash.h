@@ -11,11 +11,24 @@
 extern "C" {
 #endif
 
+#ifndef CONFIG_FLASH_NUM
+#define CONFIG_FLASH_NUM 1
+#endif
+
+#if CONFIG_FLASH_NUM < 1 || CONFIG_FLASH_NUM > 3
+#error "CONFIG_FLASH_NUM must be greater than 0 and less than 4."
+#endif
+
 typedef struct {
     uint32_t    start_addr;
     uint32_t    sector_size;
     uint32_t    sector_count;
 } partition_flash_info_t;
+
+typedef struct {
+    void *handle;    /*!< the device handle */
+    uint32_t index;  /*!< the index of handle */
+} hdl_mgr_t;
 
 typedef struct {
     void *(*open)(int id);
@@ -24,6 +37,8 @@ typedef struct {
     int (*read)(void *handle, uint32_t addr, void *data, size_t data_len);
     int (*write)(void *handle, uint32_t addr, void *data, size_t data_len);
     int (*erase)(void *handle, uint32_t addr, size_t len);
+
+    hdl_mgr_t hdl_mgr;
 } partition_flash_ops_t;
 
 /**

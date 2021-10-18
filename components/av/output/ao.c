@@ -84,6 +84,15 @@ static const struct ao_ops* _get_ao_ops_by_name(const char* name)
     return NULL;
 }
 
+/*
+ao_evet == 0, ao stop
+ao_evt == 1, ao start
+*/
+__attribute__((weak)) void ao_event_hook(int ao_evt)
+{
+    return;
+}
+
 #if CONFIG_AO_MIXER_SUPPORT
 static int __ao_open(ao_cls_t *ao, sf_t sf, const ao_conf_t *ao_cnf)
 {
@@ -147,6 +156,7 @@ static int __ao_open(ao_cls_t *ao, sf_t sf, const ao_conf_t *ao_cnf)
         }
         ao_set_real(o);
     }
+    o = ao_get_real();
     ao_ref_open_inc();
     ao_ref_dump();
     ao_ref_unlock();
@@ -263,7 +273,7 @@ static int __ao_start(ao_cls_t *ao)
 #else
         ao_cls_t *o = ao;
 #endif
-
+        ao_event_hook(1);
         rc = o->ops->start(o);
     }
     ao_ref_start_inc();
@@ -302,6 +312,7 @@ static int __ao_stop(ao_cls_t *ao)
 #endif
 
         rc = o->ops->stop(o);
+        ao_event_hook(0);
     }
     ao_ref_dump();
     ao_ref_unlock();
@@ -632,7 +643,7 @@ static int _ao_filters_open2(ao_cls_t *o)
     g_dump_size = 0;
 #endif
 
-    if (o->eq_params || o->vol_en || o->aef_conf || o->atempo_play_en || AEF_DEBUG) {
+    if (o->eq_params || o->vol_en || o->aef_conf || o->atempo_play_en || CONFIG_AV_AEF_DEBUG) {
         s16sf = sf_make_channel(1) | sf_make_rate(sf_get_rate(o->ori_sf)) | sf_make_bit(16) | sf_make_signed(1);
         if (s16sf != o->ori_sf) {
             /* swr first */
@@ -682,7 +693,7 @@ static int _ao_filters_open2(ao_cls_t *o)
                 avfc = avf_eq;
         }
 
-        if (o->aef_conf || AEF_DEBUG) {
+        if (o->aef_conf || CONFIG_AV_AEF_DEBUG) {
             aef_avfp_t aefp;
             memset(&aefp, 0, sizeof(aef_avfp_t));
 
@@ -754,6 +765,7 @@ ao_cls_t* ao_open(sf_t sf, const ao_conf_t *ao_cnf)
     CHECK_PARAM(sf && ao_cnf && ao_cnf->name, NULL);
     _ao_init();
     o = aos_zalloc(sizeof(ao_cls_t));
+    CHECK_RET_TAG_WITH_RET(o, NULL);
 
     //patch for tmall resampler
     memcpy(iao_cnf, ao_cnf, sizeof(ao_conf_t));

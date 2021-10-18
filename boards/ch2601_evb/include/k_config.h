@@ -58,9 +58,9 @@
 
 /* kernel dynamic tick conf */
 #ifdef CONFIG_KERNEL_PWR_MGMT
-#define RHINO_CONFIG_CPU_PWR_MGMT            1
+#define RHINO_CONFIG_PWRMGMT            1
 #else
-#define RHINO_CONFIG_CPU_PWR_MGMT            0
+#define RHINO_CONFIG_PWRMGMT            0
 #endif
 
 /*

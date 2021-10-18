@@ -33,6 +33,7 @@ static int yoc_eflash_open(aos_dev_t *dev)
     flash->handle = csi_eflash_initialize(dev->id, NULL);
 
     if (flash->handle == NULL) {
+        // aos_free(dev);
         return -1;
     }
 

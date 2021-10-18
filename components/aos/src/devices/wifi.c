@@ -374,6 +374,25 @@ int hal_wifi_stop_monitor(aos_dev_t *dev)
 
 }
 
+int hal_wifi_start_mgnt_monitor(aos_dev_t *dev, wifi_mgnt_cb_t cb)
+{
+    int ret;
+    WIFI_VALID(dev);
+    device_lock(dev);
+    ret = WIFI_DRIVER(dev)->start_mgnt_monitor(dev, cb);
+    device_unlock(dev);
+    return ret;
+}
+
+int hal_wifi_stop_mgnt_monitor(aos_dev_t *dev)
+{
+    int ret;
+    WIFI_VALID(dev);
+    device_lock(dev);
+    ret = WIFI_DRIVER(dev)->stop_mgnt_monitor(dev);
+    device_unlock(dev);
+    return ret;
+}
 
 int hal_wifi_send_80211_raw_frame(aos_dev_t *dev, void *buffer, uint16_t len)
 {

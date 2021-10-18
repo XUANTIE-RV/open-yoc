@@ -1,6 +1,7 @@
 /*
  * Copyright (C) 2017-2019 Alibaba Group Holding Limited
  */
+#ifndef CONFIG_HAL_UART_DISABLED
 
 #include <stdio.h>
 #include <aos/hal/uart.h>
@@ -9,7 +10,17 @@
 #include <drv/usart.h>
 #include <aos/ringbuffer.h>
 
-#define HAL_UART_RINGBUF_LEN 256
+#ifdef CONFIG_HAL_UART_RINGBUF_LEN
+#define HAL_UART_RINGBUF_LEN (CONFIG_HAL_UART_RINGBUF_LEN)
+#else
+#define HAL_UART_RINGBUF_LEN (256)
+#endif
+
+#ifdef CONFIG_HAL_UART_NUM
+#define HAL_UART_NUM (CONFIG_HAL_UART_NUM)
+#else
+#define HAL_UART_NUM (6)
+#endif
 
 #define EVENT_WRITE 0x0F0F0000
 #define EVENT_READ  0x00000F0F
@@ -25,12 +36,14 @@ typedef struct {
     aos_mutex_t     rx_mutex;
 } hal_uart_priv_t;
 
-static hal_uart_priv_t uart_list[6];
+static hal_uart_priv_t uart_list[HAL_UART_NUM];
 
 static void uart_event_cb(int32_t idx, uint32_t event)
 {
-    int32_t ret;
-    uint8_t tmp_buf[16];
+    int32_t      ret;
+    uint8_t      tmp_buf[16];
+    aos_event_t *wrrdevent;
+
     switch (event) {
         case USART_EVENT_SEND_COMPLETE:
             aos_sem_signal(&uart_list[idx].uart_sem);
@@ -38,18 +51,25 @@ static void uart_event_cb(int32_t idx, uint32_t event)
             break;
         case USART_EVENT_RECEIVE_COMPLETE:
         case USART_EVENT_RECEIVED:
-            do {
-                ret = csi_usart_receive_query(uart_list[idx].handle, tmp_buf, 1);
-                if (ret > 0) {
-                    if (ringbuffer_write(&uart_list[idx].read_buffer, tmp_buf, ret) != ret) {
-                        break;
+            if (uart_list[idx].handle) {
+                do {
+                    ret = csi_usart_receive_query(uart_list[idx].handle, tmp_buf, 1);
+                    if (ret > 0) {
+                        if (ringbuffer_write(&uart_list[idx].read_buffer, tmp_buf, ret) != ret) {
+                            break;
+                        }
                     }
+                } while (ret);
+
+                if (uart_list[idx].rx_cb) {
+                    (*(uart_list[idx].rx_cb))(uart_list[idx].uart_dev);
                 }
-            } while(ret);
-            if (uart_list[idx].rx_cb) {
-                (*(uart_list[idx].rx_cb))(uart_list[idx].uart_dev);
+
+                wrrdevent = &uart_list[idx].event_write_read;
+                if (wrrdevent && wrrdevent->hdl) {
+                    aos_event_set(&uart_list[idx].event_write_read, EVENT_READ, AOS_EVENT_OR);
+                }
             }
-            aos_event_set(&uart_list[idx].event_write_read, EVENT_READ, AOS_EVENT_OR);
             break;
         default:
             break;
@@ -309,3 +329,5 @@ int32_t hal_uart_finalize(uart_dev_t *uart)
     uart_list[uart->port].rx_cb = NULL;
     return 0;
 }
+
+#endif

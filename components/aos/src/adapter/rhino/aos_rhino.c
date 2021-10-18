@@ -1022,12 +1022,26 @@ void aos_task_show_info(void)
     if (task_array == NULL)
         return;
 
+#if (RHINO_CONFIG_SYS_STATS > 0)
+    static int show_first = 1;
+    debug_task_cpu_usage_stats();
+    if (show_first) {
+        // FIXME: make cpu-usage more accurate on the first time
+        aos_msleep(100);
+        debug_task_cpu_usage_stats();
+        show_first = 0;
+    }
+#endif
+
 #if (RHINO_CONFIG_CPU_USAGE_STATS > 0)
+#if (RHINO_CONFIG_SYS_STATS > 0)
+    printf("\nCPU USAGE: %d/10000\n", 10000 - debug_task_cpu_usage_get(&g_idle_task[0]));
+#else
     printf("\nCPU USAGE: %d/10000\n", krhino_get_cpu_usage());
+#endif
 #endif
 
 #if (RHINO_CONFIG_SYS_STATS > 0)
-    debug_task_cpu_usage_stats();
     printf("task                 pri status      sp     stack size max used ratio left tick  %%CPU\n");
     printf("-------------------- --- ------- ---------- ---------- -------- ----- ---------  ------\n");
 #else
@@ -1465,7 +1479,12 @@ void *aos_malloc(unsigned int size)
 
 void *aos_calloc(unsigned int size, int num)
 {
-    return aos_zalloc(size * num);
+    void *ptr = yoc_malloc(size * num, __builtin_return_address(0));
+
+    if (ptr)
+        memset(ptr, 0, size * num);
+
+    return ptr;
 }
 
 void *aos_realloc(void *ptr, unsigned int size)

@@ -1,7 +1,7 @@
 
 ## 第一部分： 基础信息
 name: sdk_chip_ch2601                               # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
-version: v7.4.3                                     # <必选项> 组件版本号
+version: v7.4.4                                     # <必选项> 组件版本号
 description: chip sdk for ch2601                    # <必选项> 建议至少20字以上
 type: sdk                                           # <必选项> 组件类型，为：solution, chip, board, common, sdk
 
@@ -16,26 +16,30 @@ license: Apache license v2.0                        # <可选项> 源代码的�
 #   - aos: >=v7.2.0
 depends:
   - csi: v7.4.3
-  - rhino: v7.4.3
+  - rhino: v7.4.5
   - rhino_arch: v7.4.3
   - rhino_pwrmgmt: v7.4.3
-  - hal_csi: v7.4.3
+  - hal_csi: v7.4.6
   - aos_hal: v7.4.3
   - chip_ch2601: v7.4.3
   - cli: v7.4.3
-  - ch2601_evb: v7.4.3
+  - ch2601_evb: v7.4.4
   - kv: v7.4.3
-  - partition: v7.4.3
-  - aos: v7.4.3
+  - partition: v7.4.5
+  - aos: v7.4.5
   - newlib: v7.4.3
-  - drivers: v7.4.3
+  - drivers: v7.4.5
   - uservice: v7.4.3
-  - drv_snd_ch2601: v7.4.3
+  - drv_snd_ch2601: v7.4.4
   - ulog: v7.4.3
-  - minialsa: v7.4.3
+  - minialsa: v7.4.5
   - lvgl: v7.4.3
   - sal: v7.4.3
   - netmgr: v7.4.3
-  - at: v7.4.3
-  - drv_wifi_at_w800: v7.4.3
+  - at: v7.4.4
+  - drv_wifi_at_w800: v7.4.4
+  - sec_crypto: v7.4.3
+  - pvmp3dec: v7.4.4
+  - vfs: v7.4.4
+  - sonic: v7.4.4
   

@@ -12,7 +12,7 @@
 #include "k_api.h"
 #include "cpu_pwr_config.h"
 
-//#if (RHINO_CONFIG_CPU_PWR_MGMT > 0)
+//#if (RHINO_CONFIG_PWRMGMT > 0)
 //#if (RHINO_CONFIG_CPU_TICKLESS > 0)
 
 #include "cpu_tickless.h"
@@ -126,4 +126,4 @@ void rtc_info_show(void)
 #endif /* RTC_ONE_SHOT_DBG */
 
 //#endif /* RHINO_CONFIG_CPU_TICKLESS */
-//#endif /* RHINO_CONFIG_CPU_PWR_MGMT */
+//#endif /* RHINO_CONFIG_PWRMGMT */

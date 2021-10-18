@@ -15,13 +15,15 @@
 
 #define SHOW_PART_INFO_EN 0
 
-#define MAX_FLASH_NUM   4
+#define MAX_FLASH_NUM CONFIG_FLASH_NUM
 
 static struct {
     partition_info_t *scn_list;
     uint8_t num;
 } g_partion_array;
 static uint32_t g_scn_buf[sizeof(partition_info_t) * CONFIG_MAX_PARTITION_NUM / 4];
+
+extern void partition_flash_register_default(void);
 
 int partition_init(void)
 {
@@ -36,6 +38,7 @@ int partition_init(void)
     if (g_part_init_ok == 1) {
         return g_partion_array.num;
     }
+    partition_flash_register_default();
 
 #ifdef CONFIG_TEE_CA
     ret = csi_tee_get_sys_partition(buf, (uint32_t *)&size);
@@ -57,6 +60,9 @@ int partition_init(void)
         temp_flash_dev = partition_flash_open(flash_idx);
         partition_flash_info_get(temp_flash_dev, &cur_flash_info);
         if (cur_flash_info.sector_count > 0) {
+#if SHOW_PART_INFO_EN
+            printf("#############################[flash_idx:%d]\n", flash_idx);
+#endif
             for (i = 0; i < num; i++) {
                 if ((cur_flash_info.start_addr <= part_info[i].part_addr) &&
                     ((part_info[i].part_addr + part_info[i].part_size) <= (cur_flash_info.start_addr + cur_flash_info.sector_size * cur_flash_info.sector_count))) {
@@ -71,7 +77,11 @@ int partition_init(void)
                     scn->load_addr = part_info[i].load_addr;
                     scn->image_size = part_info[i].image_size;
 #endif
-#if SHOW_PART_INFO_EN > 0
+#if CONFIG_MULTI_FLASH_SUPPORT
+                    scn->type = part_info[i].type;
+                    scn->idx = scn->type.son_type;
+#endif
+#if SHOW_PART_INFO_EN
                     printf("------------------>%s\n", scn->description);
                     printf("scn->base_addr:0x%x\n", scn->base_addr);
                     printf("scn->start_addr:0x%x\n", scn->start_addr);
@@ -80,6 +90,10 @@ int partition_init(void)
                     #if !defined(CONFIG_MANTB_VERSION) || (CONFIG_MANTB_VERSION > 3)
                     printf("scn->load_addr:0x%x\n", scn->load_addr);
                     printf("scn->image_size:0x%x\n", scn->image_size);
+                    #endif
+                    #if CONFIG_MULTI_FLASH_SUPPORT
+                    printf("scn->type:0x%x\n", scn->type);
+                    printf("scn->idx:0x%x\n", scn->idx);
                     #endif
 #endif
                     if(!(scn->length && scn->sector_size && strlen(scn->description) > 0)) {
@@ -114,10 +128,13 @@ partition_info_t *partition_info_get(partition_t partition)
 partition_t partition_open(const char *name)
 {
     int len;
+
+    if (name == NULL) {
+        return -EINVAL;
+    }
     for (int i = 0; i < g_partion_array.num; i++) {
-        len = strlen(g_partion_array.scn_list[i].description);
+        len = strlen(name);
         len = len > MTB_IMAGE_NAME_SIZE ? MTB_IMAGE_NAME_SIZE : len;
-        //if (strcmp(name, g_partion_array.scn_list[i].description) == 0) {
         if (memcmp(name, g_partion_array.scn_list[i].description, len) == 0) {
             if (g_partion_array.scn_list[i].flash_dev == NULL) {
                 void *flash_dev = partition_flash_open(g_partion_array.scn_list[i].idx);
@@ -141,6 +158,9 @@ void partition_close(partition_t partition)
 
 int partition_read(partition_t partition, off_t off_set, void *data, size_t size)
 {
+    if (off_set < 0 || data == NULL) {
+        return -EINVAL;
+    }
     partition_info_t *node = hal_flash_get_info(partition);
     if (node != NULL && off_set + size <= node->length) {
         return partition_flash_read(node->flash_dev, node->base_addr + node->start_addr + off_set, data, size);
@@ -152,9 +172,12 @@ int partition_read(partition_t partition, off_t off_set, void *data, size_t size
 int partition_write_size = 0; // for kv test
 int partition_write(partition_t partition, off_t off_set, void *data, size_t size)
 {
+    if (off_set < 0 || data == NULL) {
+        return -EINVAL;
+    }
     partition_write_size += size;
     partition_info_t *node = hal_flash_get_info(partition);
-    if (node != NULL && off_set + size <= node->length) {
+    if (node != NULL && off_set >= 0 && off_set + size <= node->length) {
         return partition_flash_write(node->flash_dev, node->base_addr + node->start_addr + off_set, data, size);
     }
     return -EINVAL;
@@ -163,6 +186,9 @@ int partition_write(partition_t partition, off_t off_set, void *data, size_t siz
 int partition_erase_size = 0; // for kv test
 int partition_erase(partition_t partition, off_t off_set, uint32_t block_count )
 {
+    if (off_set < 0) {
+        return -EINVAL;
+    }
     partition_erase_size += block_count;
     partition_info_t *node = hal_flash_get_info(partition);
     if (node != NULL && off_set / node->sector_size + block_count <= node->length / node->sector_size) {
@@ -290,3 +316,23 @@ int partition_set_region_safe(partition_t partition)
 #endif /* CONFIG_NOT_SUPORRT_SASC */
     return -EINVAL;
 }
+
+#if CONFIG_MULTI_FLASH_SUPPORT
+int get_flashid_by_abs_addr(unsigned long address)
+{
+    int i;
+    uint32_t addr;
+    partition_info_t *scn;
+
+    i = 0;
+    while(i < g_partion_array.num) {
+        scn = &g_partion_array.scn_list[i];
+        addr = scn->base_addr + scn->start_addr;
+        if (address >= addr && address <= addr + scn->length) {
+            return scn->idx;
+        }
+        i++;
+    }
+    return 0;
+}
+#endif

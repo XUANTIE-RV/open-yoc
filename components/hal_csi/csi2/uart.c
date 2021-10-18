@@ -20,6 +20,7 @@ typedef struct {
     csi_uart_t     handle;
     aos_event_t    event_write_read;
     char          *recv_buf;
+    aos_sem_t      uart_sem;
     dev_ringbuf_t  read_buffer;
     uart_rx_cb     rx_cb;
     uart_dev_t    *uart_dev;
@@ -38,7 +39,7 @@ static void uart_event_cb(csi_uart_t *uart, csi_uart_event_t event, void *arg)
 {
     switch (event) {
     case UART_EVENT_SEND_COMPLETE:
-        aos_event_set(&uart_list[(unsigned int)uart->dev.idx].event_write_read, EVENT_WRITE, AOS_EVENT_OR);
+        aos_sem_signal(&uart_list[(unsigned int)uart->dev.idx].uart_sem);
         break;
     case UART_EVENT_RECEIVE_COMPLETE: {
         aos_event_set(&uart_list[(unsigned int)uart->dev.idx].event_write_read, EVENT_READ, AOS_EVENT_OR);
@@ -108,6 +109,12 @@ int32_t hal_uart_init(uart_dev_t *uart)
 
 #ifndef UART_MODE_SYNC
     ret = aos_event_new(&uart_list[uart->port].event_write_read, 0);
+
+    if (ret != 0U) {
+        return -1;
+    }
+
+    ret = aos_sem_new(&uart_list[uart->port].uart_sem, 0);
 
     if (ret != 0U) {
         return -1;
@@ -191,7 +198,6 @@ int32_t hal_uart_send_poll(uart_dev_t *uart, const void *data, uint32_t size)
 int32_t hal_uart_send(uart_dev_t *uart, const void *data, uint32_t size, uint32_t timeout)
 {
     int32_t ret = 0;
-    unsigned int actl_flags = 0;
 
     if (uart == NULL) {
         return -1;
@@ -212,7 +218,7 @@ int32_t hal_uart_send(uart_dev_t *uart, const void *data, uint32_t size, uint32_
         return -1;
     }
 
-    ret = aos_event_get(&uart_list[uart->port].event_write_read, EVENT_WRITE, AOS_EVENT_OR_CLEAR, &actl_flags, timeout);
+    ret = aos_sem_wait(&uart_list[uart->port].uart_sem, timeout);
     if (ret != 0) {
         return -1;
     }
@@ -317,6 +323,7 @@ int32_t hal_uart_recv_cb_reg(uart_dev_t *uart, uart_rx_cb cb)
 
 int32_t hal_uart_finalize(uart_dev_t *uart)
 {
+    aos_sem_free(&uart_list[uart->port].uart_sem);
     aos_mutex_free(&uart_list[uart->port].tx_mutex);
     aos_mutex_free(&uart_list[uart->port].rx_mutex);
 #ifdef UART_MODE_DMA

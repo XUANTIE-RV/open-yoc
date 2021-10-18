@@ -1,6 +1,6 @@
 
 name: ch2601_fota_demo
-version: v7.4.4                                     # <必选项> 组件版本号
+version: v7.4.6                                     # <必选项> 组件版本号
 description: ch2601_fota_demo
 
 type: solution
@@ -16,7 +16,7 @@ hw_info:
   ld_script: configs/gcc_flash.ld
 
 depends:                                       # 该组件依赖其他的组件
-  - sdk_chip_ch2601: v7.4.3
+  - sdk_chip_ch2601: v7.4.4
   - fota: v7.4.3
 
 ## 第三部分：板级信息

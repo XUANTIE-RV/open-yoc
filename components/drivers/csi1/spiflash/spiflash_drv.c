@@ -40,6 +40,7 @@ static int yoc_spiflash_open(aos_dev_t *dev)
     flash->handle = csi_spiflash_initialize(dev->id, NULL);
 
     if (flash->handle == NULL) {
+        // aos_free(dev);
         return -1;
     }
 
@@ -76,13 +77,58 @@ static int yoc_spiflash_program(aos_dev_t *dev, uint32_t dstaddr, const void *sr
     return ret < 0 ? -EIO : 0;
 }
 
-static int yoc_spiflash_erase(aos_dev_t *dev, int32_t addroff, int32_t blkcnt)
+#if defined(CONFIG_SPIFLASH_BLOCK_ERASE) && CONFIG_SPIFLASH_BLOCK_ERASE
+static int yoc_spiflash_block_erase(aos_dev_t *dev, int32_t addroff, int32_t sector_cnt)
+{
+    flash_dev_t *flash = (flash_dev_t*)dev;
+    int ret = -EIO;
+    int left_sector_count = sector_cnt;
+
+    int FLASH_BLOCK_SIZE = flash->info->block_size; /*get erase block size */
+    int BLKERASE_SECTOR_CNT = FLASH_BLOCK_SIZE / flash->info->sector_size;
+
+    while (left_sector_count > 0) {
+
+        int flash_addr = (sector_cnt - left_sector_count) * flash->info->sector_size + addroff + flash->info->start;
+
+        if ( (flash_addr % FLASH_BLOCK_SIZE == 0) && (left_sector_count >= BLKERASE_SECTOR_CNT) ) {
+            ret = csi_spiflash_erase_block(flash->handle, flash_addr);
+            left_sector_count -= BLKERASE_SECTOR_CNT;
+            //printf("Erase block 0x%x\n", flash->info->start + flash_addr);
+        } else {
+            ret = csi_spiflash_erase_sector(flash->handle, flash_addr);
+            left_sector_count --;
+            //printf("Erase sector 0x%x\n", flash->info->start + flash_addr);
+        }
+
+        if (ret) {
+            return -EIO;
+        }
+    }
+    return 0;
+}
+#else
+static int yoc_spiflash_block_erase(aos_dev_t *dev, int32_t addroff, int32_t sector_cnt)
+{
+    printf("Error: block erase is not supported!\n");
+    return -1;
+}
+#endif
+
+static int yoc_spiflash_erase(aos_dev_t *dev, int32_t addroff, int32_t sector_cnt)
 {
     flash_dev_t *flash = (flash_dev_t*)dev;
     int ret = -EIO;
     int i;
 
-    for (i = 0; i < blkcnt; i++) {
+    /* check block erase support */
+    if (flash->info->block_size) {
+        ret = yoc_spiflash_block_erase(dev, addroff, sector_cnt);
+        return ret;
+    }
+
+    /* sector erase */
+    for (i = 0; i < sector_cnt; i++) {
         ret = csi_spiflash_erase_sector(flash->handle, flash->info->start + addroff + i * flash->info->sector_size);
         if (ret != 0) {
             break;

@@ -29,7 +29,7 @@ static int _stream_http_open(stream_cls_t *o, int mode)
 
     rc = wsession_get(session, o->url, 3);
     if (rc) {
-        LOGE(TAG, "wsession_get fail. rc = %d, code = %d, phrase = %s", rc, session->code, session->phrase);
+        LOGE(TAG, "wsession_get fail. rc = %d, code = %d, phrase = %s", rc, session->code, (session->phrase ? session->phrase : "NULL"));
         goto err;
     }
 
@@ -101,7 +101,7 @@ static int _stream_http_seek(stream_cls_t *o, int32_t pos)
         wsession_close(session);
         rc = wsession_get_range(session, o->url, 3, pos, -1);
         if (rc < 0) {
-            LOGE(TAG, "http seek: wsession_get range fail. rc = %d, code = %d, phrase = %s", rc, session->code, session->phrase);
+            LOGE(TAG, "http seek: wsession_get range fail. rc = %d, code = %d, phrase = %s", rc, session->code, (session->phrase ? session->phrase : "NULL"));
         }
     }
 

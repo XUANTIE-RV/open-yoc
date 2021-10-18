@@ -50,6 +50,8 @@ typedef struct wifi_driver {
     /** promiscuous APIs */
     int (*start_monitor)(aos_dev_t *dev, wifi_promiscuous_cb_t cb);
     int (*stop_monitor)(aos_dev_t *dev);
+    int (*start_mgnt_monitor)(aos_dev_t *dev, wifi_mgnt_cb_t cb);
+    int (*stop_mgnt_monitor)(aos_dev_t *dev);
     int (*send_80211_raw_frame)(aos_dev_t *dev, void *buffer, uint16_t len);
     int (*set_channel)(aos_dev_t *dev, uint8_t primary, wifi_second_chan_t second);
     int (*get_channel)(aos_dev_t *dev, uint8_t *primary, wifi_second_chan_t *second);

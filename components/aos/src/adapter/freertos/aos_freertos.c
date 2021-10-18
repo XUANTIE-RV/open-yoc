@@ -15,30 +15,20 @@
 #include <aos/aos.h>
 #include <drv/irq.h>
 
-static uint32_t CK_IN_INTRP(void)
+// weak hook
+__attribute__((weak)) void aos_task_create_hook_lwip_thread_sem(aos_task_t *task)
 {
-#ifdef __CSKY__
-    uint32_t vec = 0;
 
-    vec = (__get_PSR() & PSR_VEC_Msk) >> PSR_VEC_Pos;
+}
 
-    if (vec >= 32 || (vec == 10)) {
-        return 1;
-    } else {
-        return 0;
-    }
-
-#else
-    uint32_t val = 0;
-    val = __get_MINTSTATUS();
-
-    if (val & 0xFF0000000) {
-        return 1;
-    } else {
-        return 0;
-    }
-
-#endif
+__attribute__((weak)) void aos_task_del_hook_lwip_thread_sem(aos_task_t *task, void *arg)
+{
+    
+}
+volatile int g_intrpt_nested_cnt;
+static uint32_t is_in_intrp(void)
+{
+    return g_intrpt_nested_cnt;
 }
 
 void aos_reboot_ext(int cmd)
@@ -94,8 +84,9 @@ void vPortCleanUpTCB(void *pxTCB)
 {
     AosStaticTask_t *task = (AosStaticTask_t *)pxTCB;
 
-    if (task->magic != AOS_MAGIC)
+    if (task->magic != AOS_MAGIC) {
         return;
+    }
 
     free(task->stack);
     free(task);
@@ -127,6 +118,7 @@ int aos_task_new_ext(aos_task_t *task, const char *name, void (*fn)(void *), voi
         if(task) {
             task->hdl = xHandle;
         }
+        aos_task_create_hook_lwip_thread_sem(task);
         return 0;
     } else {
         return -1;
@@ -139,7 +131,20 @@ void aos_task_exit(int code)
 {
     /* task exit by itself */
     vTaskDelete(NULL);
+    aos_task_t task = aos_task_self();
+// #if (RHINO_CONFIG_USER_HOOK_FOR_LWIP > 0)
+    aos_task_del_hook_lwip_thread_sem(&task, NULL);
+// #endif
 }
+
+// aos_status_t aos_task_delete(aos_task_t *task)
+// {
+//     TaskHandle_t *ptask = (TaskHandle_t *)task;
+
+//     vTaskDelete(ptask);
+
+//     return 0;
+// }
 
 const char *aos_task_name(void)
 {
@@ -305,7 +310,7 @@ void aos_mutex_free(aos_mutex_t *mutex)
 int aos_mutex_lock(aos_mutex_t *mutex, unsigned int ms)
 {
     if (mutex && mutex->hdl) {
-        if(CK_IN_INTRP()) {
+        if(is_in_intrp()) {
             BaseType_t temp = pdFALSE;
             xSemaphoreTakeFromISR(mutex->hdl,&temp);
         } else {
@@ -318,7 +323,7 @@ int aos_mutex_lock(aos_mutex_t *mutex, unsigned int ms)
 int aos_mutex_unlock(aos_mutex_t *mutex)
 {
     if (mutex && mutex->hdl) {
-        if(CK_IN_INTRP()) {
+        if(is_in_intrp()) {
             BaseType_t temp = pdFALSE;
             xSemaphoreGiveFromISR(mutex->hdl,&temp);
         } else {
@@ -335,14 +340,14 @@ int aos_mutex_is_valid(aos_mutex_t *mutex)
 
 int aos_sem_new(aos_sem_t *sem, int count)
 {
-    SemaphoreHandle_t s = xSemaphoreCreateCounting(128, count);
+    SemaphoreHandle_t s = xSemaphoreCreateCounting(1024, count);
     sem->hdl = s;
     return 0;
 }
 
 void aos_sem_free(aos_sem_t *sem)
 {
-    if (sem == NULL && sem->hdl ) {
+    if (sem == NULL || sem->hdl ) {
         return;
     }
 
@@ -355,11 +360,10 @@ int aos_sem_wait(aos_sem_t *sem, unsigned int ms)
         return -1;
     }
     int ret;
-    if(CK_IN_INTRP()) {
+    if(is_in_intrp()) {
         BaseType_t pxHiProTskWkup = pdTRUE;
         ret = xSemaphoreTakeFromISR(sem->hdl, &pxHiProTskWkup);
-    }
-    {
+    } else {
         ret = xSemaphoreTake(sem->hdl, ms == AOS_WAIT_FOREVER ? portMAX_DELAY : pdMS_TO_TICKS(ms));
     }
     return ret == pdPASS ? 0 : -1;
@@ -370,9 +374,9 @@ void aos_sem_signal(aos_sem_t *sem)
     if (sem == NULL && sem->hdl) {
         return;
     }
-    if(CK_IN_INTRP()) {
+    if(is_in_intrp()) {
         BaseType_t  temp = pdTRUE;
-        xSemaphoreGiveFromISR(sem->hdl,&temp);
+        xSemaphoreGiveFromISR(sem->hdl, &temp);
     } else {
         xSemaphoreGive(sem->hdl);
     }
@@ -389,7 +393,7 @@ void aos_sem_signal_all(aos_sem_t *sem)
     aos_sem_signal(sem);
 }
 
-int aos_queue_new(aos_queue_t *queue, void *buf, unsigned int size, int max_msg)
+int aos_queue_new(aos_queue_t *queue, void *buf, size_t size, int max_msg)
 {
     xQueueHandle q;
     (void)(buf);
@@ -429,8 +433,7 @@ int aos_queue_send(aos_queue_t *queue, void *msg, unsigned int size)
     return xQueueSend(queue->hdl, msg, portMAX_DELAY) == pdPASS ? 0 : -1;
 }
 
-int aos_queue_recv(aos_queue_t *queue, unsigned int ms, void *msg,
-                   unsigned int *size)
+int aos_queue_recv(aos_queue_t *queue, unsigned int ms, void *msg, size_t *size)
 {
     /* verify param */
     if(queue == NULL || msg == NULL || size == 0 ) {
@@ -471,7 +474,9 @@ typedef struct tmr_adapter {
 static void tmr_adapt_cb(TimerHandle_t xTimer)
 {
     tmr_adapter_t *pTmrObj = (tmr_adapter_t *)pvTimerGetTimerID(xTimer);
-    pTmrObj->func(pTmrObj,pTmrObj->func_arg);
+
+    if(pTmrObj->func)
+        pTmrObj->func(pTmrObj,pTmrObj->func_arg);
     return;
 }
 
@@ -509,15 +514,16 @@ int aos_timer_new_ext(aos_timer_t *timer, void (*fn)(void *, void *),
         return -1;
     }
 
+    tmr_adapter->timer = ptimer;
+    timer->hdl = (void*)tmr_adapter;
+
     /* start timer if auto_run == TRUE */
     if(auto_run) {
-        if(pdPASS != xTimerStart(timer,0)) {
+        if(aos_timer_start(timer) != 0) {
             return -1;
         }
     }
 
-    tmr_adapter->timer = ptimer;
-    timer->hdl = (void*)tmr_adapter;
     return 0;
 }
 
@@ -549,9 +555,15 @@ int aos_timer_start(aos_timer_t *timer)
 
     /* start timer  */
     tmr_adapter_t *tmr_adapter = timer->hdl;
-    int tmp = xTimerStart(tmr_adapter->timer, 0);
+    int ret;
 
-    if (tmp != pdPASS) {
+    if(is_in_intrp()) {
+        BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+        ret = xTimerStartFromISR(tmr_adapter->timer, &xHigherPriorityTaskWoken);
+    } else {
+        ret = xTimerStart(tmr_adapter->timer, 0);
+    }
+    if (ret != pdPASS) {
         return -1;
     }
 
@@ -567,10 +579,16 @@ int aos_timer_stop(aos_timer_t *timer)
 
     /* stop timer */
     tmr_adapter_t *tmr_adapter = timer->hdl;
-    int tmp;
-    tmp = xTimerStop(tmr_adapter->timer, 0);
+    int ret;
 
-    if (tmp != pdPASS) {
+    if(is_in_intrp()) {
+        BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+        ret = xTimerStopFromISR(tmr_adapter->timer, &xHigherPriorityTaskWoken);
+    } else {
+        ret = xTimerStop(tmr_adapter->timer, 0);
+    }
+
+    if (ret != pdPASS) {
         return -1;
     }
 
@@ -587,7 +605,7 @@ int aos_timer_change(aos_timer_t *timer, int ms)
     /* change timer period value */
     tmr_adapter_t *pTimer = timer->hdl;
     int ret;
-    if(CK_IN_INTRP()) {
+    if(is_in_intrp()) {
         ret = xTimerChangePeriodFromISR(pTimer->timer,pdMS_TO_TICKS(ms),&xHigherProTskWoken);
     } else {
         ret = xTimerChangePeriod(pTimer->timer,pdMS_TO_TICKS(ms),10);
@@ -600,6 +618,46 @@ int aos_timer_change(aos_timer_t *timer, int ms)
     return 0;
 }
 
+int aos_timer_is_valid(aos_timer_t *timer)
+{
+    tmr_adapter_t *pTimer = timer->hdl;
+    if( xTimerIsTimerActive(pTimer->timer) != pdFALSE ) {
+        // pTimer is active, do something.
+        return 1;
+    }
+    else {
+        // pTimer is not active, do something else.
+        return 0;
+    }
+}
+
+int aos_timer_change_once(aos_timer_t *timer, int ms)
+{
+    int ret = -1;
+
+    aos_check_return_einval(timer && timer->hdl);
+    tmr_adapter_t *pTimer = timer->hdl;
+    if( xTimerIsTimerActive(pTimer->timer) != pdFALSE ) {
+        xTimerStop(pTimer->timer, 100);
+    }
+    if( xTimerIsTimerActive(pTimer->timer) == pdFALSE ) {
+
+        if(is_in_intrp()) {
+            BaseType_t xHigherProTskWoken = pdFALSE;
+            ret = xTimerChangePeriodFromISR(pTimer->timer,pdMS_TO_TICKS(ms),&xHigherProTskWoken);
+        } else {
+            ret = xTimerChangePeriod(pTimer->timer, pdMS_TO_TICKS(ms), 100);
+        }
+
+        if (ret == pdPASS) {
+            return 0;
+        } else {
+            return -1;
+        }
+    }
+
+    return ret;
+}
 
 int aos_workqueue_create(aos_workqueue_t *workqueue, int pri, int stack_size)
 {
@@ -684,7 +742,7 @@ void yoc_free(void *ptr, void *caller)
     (void)caller;
     vPortFree(ptr);
 }
-void *aos_zalloc(unsigned int size)
+void *aos_zalloc(size_t size)
 {
     void* ptr = pvPortMalloc(size);
     if(ptr) {
@@ -693,12 +751,12 @@ void *aos_zalloc(unsigned int size)
     return ptr;
 }
 
-void *aos_malloc(unsigned int size)
+void *aos_malloc(size_t size)
 {
     return pvPortMalloc(size);
 }
 
-void *aos_realloc(void *mem, unsigned int size)
+void *aos_realloc(void *mem, size_t size)
 {
     return pvPortRealloc(mem,size);
 }
@@ -714,7 +772,7 @@ void aos_free(void *mem)
     vPortFree(mem);
 }
 
-void *aos_zalloc_check(unsigned int size)
+void *aos_zalloc_check(size_t size)
 {
     void *ptr = yoc_malloc(size, __builtin_return_address(0));
 
@@ -726,7 +784,7 @@ void *aos_zalloc_check(unsigned int size)
     return ptr;
 }
 
-void *aos_malloc_check(unsigned int size)
+void *aos_malloc_check(size_t size)
 {
     void *p = yoc_malloc(size, __builtin_return_address(0));
     aos_check_mem(p);
@@ -739,7 +797,7 @@ void *aos_calloc_check(unsigned int size, int num)
     return aos_zalloc_check(size * num);
 }
 
-void *aos_realloc_check(void *ptr, unsigned int size)
+void *aos_realloc_check(void *ptr, size_t size)
 {
     void *new_ptr = yoc_realloc(ptr, size, __builtin_return_address(0));
     aos_check_mem(new_ptr);
@@ -817,7 +875,7 @@ void dumpsys_task_func(void)
 
 int32_t aos_irq_context(void)
 {
-    return CK_IN_INTRP();
+    return is_in_intrp();
 }
 
 void aos_task_yield()
@@ -827,7 +885,7 @@ void aos_task_yield()
 
 aos_task_t aos_task_self(void)
 {
-    aos_task_t task;
+    static aos_task_t task;
     task.hdl = xTaskGetCurrentTaskHandle();
 
     return task;
@@ -897,11 +955,10 @@ int aos_event_get
 int aos_event_set(aos_event_t *event, unsigned int flags, unsigned char opt)
 {
     aos_check_return_einval(event && event->hdl);
-    if(CK_IN_INTRP()) {
+    if(is_in_intrp()) {
         BaseType_t xHighProTaskWoken = pdFALSE;
         xEventGroupSetBitsFromISR(event->hdl,flags,&xHighProTaskWoken);
-    }
-    {
+    } else {
         xEventGroupSetBits(event->hdl,flags);
     }
 
@@ -973,11 +1030,13 @@ uint64_t aos_kernel_ms2tick(uint32_t ms)
 
 k_status_t aos_kernel_intrpt_enter(void)
 {
+    g_intrpt_nested_cnt ++;
     return 0;
 }
 
 k_status_t aos_kernel_intrpt_exit(void)
 {
+    g_intrpt_nested_cnt --;
     portYIELD_FROM_ISR(pdTRUE);
     return 0;
 }

@@ -15,6 +15,7 @@
 #include <dirent.h>
 
 #include <vfs.h>
+#include <vfs_cli.h>
 
 #define LSFLAGS_SIZE          1
 #define LSFLAGS_LONG          2
@@ -447,19 +448,19 @@ void cmd_ls(char *wbuf, int wbuf_len, int argc, char **argv)
 
     while ((option = getopt(argc, argv, "ls")) != -1) {
         switch (option) {
-            case 'l':
-                lsflags |= (LSFLAGS_SIZE | LSFLAGS_LONG);
-                break;
+        case 'l':
+            lsflags |= (LSFLAGS_SIZE | LSFLAGS_LONG);
+            break;
 
-            case 's':
-                lsflags |= LSFLAGS_SIZE;
-                break;
+        case 's':
+            lsflags |= LSFLAGS_SIZE;
+            break;
 
-            case '?':
-            default:
-                printf(g_fmtarginvalid, argv[0]);
-                badarg = 1;
-                break;
+        case '?':
+        default:
+            printf(g_fmtarginvalid, argv[0]);
+            badarg = 1;
+            break;
         }
     }
 
@@ -666,36 +667,36 @@ void cmd_mkfatfs(char *wbuf, int wbuf_len, int argc, char **argv)
 
     while ((option = getopt(argc, argv, ":F:")) != -1) {
         switch (option) {
-            case 'F':
-                fattype = atoi(optarg);
+        case 'F':
+            fattype = atoi(optarg);
 
-                switch (fattype) {
-                    case 32:
-                        opt = FM_FAT32;
-                    case 64:
-                        opt = FM_EXFAT;
-                    case 16:
-                    case 12:
-                        opt = FM_FAT;
-                    case 0:
-                        opt = FM_ANY;
-                    default:
-                        printf(g_fmtargrange, argv[0]);
-                        badarg = true;
-                }
-
-                break;
-
-            case ':':
-                printf(g_fmtargrequired, argv[0]);
-                badarg = true;
-                break;
-
-            case '?':
+            switch (fattype) {
+            case 32:
+                opt = FM_FAT32;
+            case 64:
+                opt = FM_EXFAT;
+            case 16:
+            case 12:
+                opt = FM_FAT;
+            case 0:
+                opt = FM_ANY;
             default:
-                printf(g_fmtarginvalid, argv[0]);
+                printf(g_fmtargrange, argv[0]);
                 badarg = true;
-                break;
+            }
+
+            break;
+
+        case ':':
+            printf(g_fmtargrequired, argv[0]);
+            badarg = true;
+            break;
+
+        case '?':
+        default:
+            printf(g_fmtarginvalid, argv[0]);
+            badarg = true;
+            break;
         }
     }
 

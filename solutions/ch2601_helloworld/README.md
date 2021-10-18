@@ -3,33 +3,9 @@
 `helloworld`是基于RVB2601开发板的最小系统Helloworld例程，其完成了AliOS Things的内核移植，最后在一个任务是实现周期性打印Helloworld的字符串。
 
 ## CDK
-建议使用CDK集成开发环境统一开发编译下载。
+在CDK的首页，通过搜索ch2601，可以找到ch2601_helloworld，然后创建工程。
 
-## GCC
-
-安装RISC-V工具链，可以直接从https://occ.t-head.cn/community/download?id=3873045063571677184 下载安装
-
-### 编译
-
-1. 利用一下指令完成编译。
-
-```bash
-make clean;make
-```
-### 烧录
-
-1. 修改 `gdbinit` IP地址，IP地址从DebugServer处获取。
-2. 利用以下指令完成镜像烧写
-
-```bash
-make flashall
-```
-
-### 调试
-
-```bash
-riscv64-unknown-elf-gdb yoc.elf -x gdbinit_debug
-```
+CDK的使用可以参考YoCBook [《CDK开发快速上手》](https://yoc.docs.t-head.cn/yocbook/Chapter2-%E5%BF%AB%E9%80%9F%E4%B8%8A%E6%89%8B%E6%8C%87%E5%BC%95/%E4%BD%BF%E7%94%A8CDK%E5%BC%80%E5%8F%91%E5%BF%AB%E9%80%9F%E4%B8%8A%E6%89%8B.html) 章节
 
 ## 启动
 

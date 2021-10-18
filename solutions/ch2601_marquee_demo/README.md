@@ -14,15 +14,8 @@ PWM方式下，可以实现效果更加丰富的呼吸灯效果。通过三路PW
 
 # 下载
 
-首先安装yoc工具，参考YoCBook CDK开发快速上手 章节， 链接 https://yoc.docs.t-head.cn/yocbook/Chapter2-%E5%BF%AB%E9%80%9F%E4%B8%8A%E6%89%8B%E6%8C%87%E5%BC%95/%E4%BD%BF%E7%94%A8CDK%E5%BC%80%E5%8F%91%E5%BF%AB%E9%80%9F%E4%B8%8A%E6%89%8B.html
+首先安装yoc工具，参考YoCBook [《CDK开发快速上手》](https://yoc.docs.t-head.cn/yocbook/Chapter2-%E5%BF%AB%E9%80%9F%E4%B8%8A%E6%89%8B%E6%8C%87%E5%BC%95/%E4%BD%BF%E7%94%A8CDK%E5%BC%80%E5%8F%91%E5%BF%AB%E9%80%9F%E4%B8%8A%E6%89%8B.html) 
 
-下载ch2601_gui_demo代码命令如下：
-
-```bash
-yoc init
-
-yoc install ch2601_gui_demo
-```
 
 # 配置
 
@@ -59,20 +52,6 @@ void led_refresh()
 
 无。
 
-# 编译
-
-
-ch2601_marquee_demo下执行
-
-```bash
-make
-```
-
-# 烧录
-ch2601_marquee_demo下执行
-```bash
-make flashall
-```
 
 # 启动
 

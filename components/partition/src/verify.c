@@ -22,7 +22,10 @@
 #ifdef CONFIG_NON_ADDRESS_FLASH
 #undef CONFIG_SHA_UPDATE_ONCE
 #endif
+
+#ifndef MIN
 #define MIN(x, y) ((x) < (y) ? (x) : (y))
+#endif
 
 typedef struct {
     sc_sha_t sc_sha;
@@ -79,8 +82,11 @@ static int copy_data(void *dst, void *src, size_t size, int from_mem)
     }
 
 #ifdef CONFIG_NON_ADDRESS_FLASH
-
-    void *handle = partition_flash_open(0);
+    int flashid = 0;
+#if CONFIG_MULTI_FLASH_SUPPORT
+    flashid = get_flashid_by_abs_addr((uint32_t)src);
+#endif
+    void *handle = partition_flash_open(flashid);
     ret = partition_flash_read(handle, (uint32_t)src, dst, size);
     partition_flash_close(handle);
 #else
@@ -89,8 +95,6 @@ static int copy_data(void *dst, void *src, size_t size, int from_mem)
 
     return ret;
 }
-
-
 
 static sha_context_t* hash_init(digest_sch_e ds)
 {

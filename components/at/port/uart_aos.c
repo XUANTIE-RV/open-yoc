@@ -15,7 +15,9 @@ typedef struct {
 static int32_t uart_rx(uart_dev_t *uart_dev_t)
 {
     aos_uart_t *uart = (aos_uart_t *)uart_dev_t;
-    uart->cb(AT_CHANNEL_EVENT_READ, uart->priv);
+    
+    if (uart->cb)
+        uart->cb(AT_CHANNEL_EVENT_READ, uart->priv);
 
     return 0;
 }

@@ -78,7 +78,7 @@ static int _demux_mp3_open(demux_cls_t *o)
     bio_init(&bio, o->fpkt.data, o->fpkt.len);
     /* skip the side info */
     bio_skip(&bio, MP3_HDR_LEN + mp3_side_tbl[hinfo->lsf == 1][sf_get_channel(sf) == 1]);
-    val = bio_r32be(&bio);
+    val = bio_r32le(&bio);
     priv->is_cbr = val == TAG_VAL('I', 'n', 'f', 'o');
     if (priv->is_cbr || val == TAG_VAL('X', 'i', 'n', 'g')) {
         val = bio_r32be(&bio);
@@ -94,7 +94,7 @@ static int _demux_mp3_open(demux_cls_t *o)
     o->time_scale = AV_FLICK_BASE / rate;
     o->fpkt.pts   = hinfo->spf * o->time_scale / rate;
     if (fsize > 0) {
-        o->duration     = priv->nb_frames > 0 ? priv->nb_frames * hinfo->spf * 1000 / rate : fsize * 8 / hinfo->bitrate;
+        o->duration     = priv->nb_frames > 0 ? priv->nb_frames * hinfo->spf / (rate / 1000.0) : fsize * 8 / hinfo->bitrate;
         priv->iduration = o->duration / 1000.0 * o->time_scale;
         priv->start_pos = stream_tell(o->s) - o->fpkt.len;
         priv->mp3_size  = priv->mp3_size > 0 ? priv->mp3_size : fsize - priv->start_pos;
@@ -119,14 +119,14 @@ static int _demux_mp3_close(demux_cls_t *o)
 static int _demux_mp3_read_packet(demux_cls_t *o, avpacket_t *pkt)
 {
     int rc = -1;
-    int len = 0;
+    int64_t pos;
+    int len = 0, mp3_guess;
     int resync_cnt = 10, cnt = 0;
     uint8_t hdr[MP3_HDR_LEN];
     struct mp3_priv *priv = o->priv;
     sf_t sf = priv->hinfo.sf;
-    struct mp3_hdr_info info, *hinfo;
+    struct mp3_hdr_info info, *hinfo = &priv->hinfo;
 
-    hinfo = sf == 0 ? &priv->hinfo : &info;
     len = stream_read(o->s, hdr, MP3_HDR_LEN);
     if (len != MP3_HDR_LEN) {
         goto err;
@@ -136,14 +136,17 @@ static int _demux_mp3_read_packet(demux_cls_t *o, avpacket_t *pkt)
         return 0;
     }
 resync:
-    rc = mp3_sync(sync_read_stream, o->s, MP3_SYNC_HDR_MAX, hdr, hinfo);
+    mp3_guess = 0;
+    pos = stream_tell(o->s);
+    memset(&info, 0, sizeof(struct mp3_hdr_info));
+    rc = mp3_sync(sync_read_stream, o->s, MP3_SYNC_HDR_MAX, hdr, &info);
     if (rc < 0) {
         LOGE(TAG, "mp3 sync failed, rc = %d", rc);
         goto err;
     }
     if (sf) {
         //FIXME: patch for seek
-        if (!(hinfo->sf == sf && hinfo->layer == priv->hinfo.layer && hinfo->spf == priv->hinfo.spf)) {
+        if (!(hinfo->sf == info.sf && hinfo->layer == info.layer && hinfo->spf == info.spf)) {
             if (cnt > resync_cnt) {
                 LOGE(TAG, "mp3 sync failed, rc = %d, resync_cnt = %d", rc, resync_cnt);
                 goto err;
@@ -153,19 +156,23 @@ resync:
             goto resync;
         }
     }
+    if (rc > 0) {
+        /* guess may be wrong, judge twice needed*/
+        mp3_guess = rc;
+    }
 
-    if (pkt->size < hinfo->framesize) {
-        rc = avpacket_grow(pkt, hinfo->framesize);
+    if (pkt->size < info.framesize) {
+        rc = avpacket_grow(pkt, info.framesize);
         if (rc < 0) {
-            LOGE(TAG, "avpacket resize fail. pkt->size = %d, framesize = %d", pkt->size, hinfo->framesize);
+            LOGE(TAG, "avpacket resize fail. pkt->size = %d, framesize = %d", pkt->size, info.framesize);
             goto err;
         }
     }
 
     memcpy(pkt->data, hdr, MP3_HDR_LEN);
-    len = stream_read(o->s, pkt->data + MP3_HDR_LEN, hinfo->framesize - MP3_HDR_LEN);
-    if (len != hinfo->framesize - MP3_HDR_LEN) {
-        LOGE(TAG, "stream read err, len = %d, diff = %d, frame size = %d", len, hinfo->framesize - MP3_HDR_LEN, hinfo->framesize);
+    len = stream_read(o->s, pkt->data + MP3_HDR_LEN, info.framesize - MP3_HDR_LEN);
+    if (len != info.framesize - MP3_HDR_LEN) {
+        LOGE(TAG, "stream read err, len = %d, diff = %d, frame size = %d", len, info.framesize - MP3_HDR_LEN, info.framesize);
         goto err;
     }
     len += MP3_HDR_LEN;
@@ -173,6 +180,47 @@ resync:
     if (priv->iduration > 0 && priv->mp3_size > 0 && priv->start_pos >= 0) {
         pkt->pts = 1.0 * (stream_tell(o->s) - priv->start_pos) / priv->mp3_size * priv->iduration;
     }
+
+    if (mp3_guess) {
+        int elen, again_err = 0, new_pos;
+        struct mp3_hdr_info einfo = {0};
+
+        elen = stream_read(o->s, hdr, MP3_HDR_LEN);
+        if (elen != MP3_HDR_LEN) {
+            rc = -1;
+            goto err;
+        }
+        rc = mp3_hdr_get(hdr, &einfo);
+        if (rc == 0) {
+            if (sf) {
+                if (!(hinfo->sf == einfo.sf && hinfo->layer == einfo.layer && hinfo->spf == einfo.spf)) {
+                    again_err = 1;
+                }
+            }
+        } else {
+            again_err = 1;
+        }
+
+        if (again_err) {
+            new_pos = pos + mp3_guess + 1;
+            rc = stream_seek(o->s, new_pos, SEEK_SET);
+            if (rc < 0) {
+                LOGE(TAG, "stream seek err, seek pos = %lld", new_pos);
+                goto err;
+            } else {
+                LOGD(TAG, "guess again, retry");
+                pkt->len = 0;
+                goto resync;
+            }
+        } else {
+            /* guess again ok, seek back */
+            rc = stream_seek(o->s, -MP3_HDR_LEN, SEEK_CUR);
+            CHECK_RET_TAG_WITH_GOTO(rc >= 0, err);
+        }
+    }
+    //printf("=====>>len = %10d, pos = %lld\n", len, stream_tell(o->s) - len);
+    if (sf == 0)
+        memcpy(hinfo, &info, sizeof(info));
 
     return len;
 err:

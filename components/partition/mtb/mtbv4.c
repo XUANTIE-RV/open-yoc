@@ -16,8 +16,6 @@
 
 #if !defined(CONFIG_MANTB_VERSION) || (CONFIG_MANTB_VERSION > 3)
 
-static uint32_t g_flash_base_addr;
-
 int mtbv4_partition_count(void)
 {
     imtb_head_v4_t *head;
@@ -34,13 +32,11 @@ int mtbv4_init(void)
 
     mtb = mtb_get();
 
-    void *handle = partition_flash_open(0);
+    void *handle = partition_flash_open(0); // MTB must be in flash0
     partition_flash_info_get(handle, &flash_info);
     partition_flash_close(handle);
 
     MTB_LOGD("imtb using:0x%x, valid:0x%x", mtb->using_addr, mtb->prim_addr);
-
-    g_flash_base_addr = flash_info.start_addr;
 
     if (mtbv4_get_partition_info(MTB_IMAGE_NAME_IMTB, &part_info)) {
         MTB_LOGE("mtb f `imtb` e");
@@ -60,19 +56,26 @@ int mtbv4_init(void)
 
 int mtbv4_get_partition_info(const char *name, mtb_partition_info_t *part_info)
 {
+    int flashid = 0;
     int i, count;
-    uint32_t flash_base_addr;
     imtb_head_v4_t *head;
     imtb_partition_info_v4_t *pp;
+    partition_flash_info_t flash_info;
 
     if (name && part_info) {
         head = (imtb_head_v4_t *)mtb_get()->using_addr;
         pp = (imtb_partition_info_v4_t *)(mtb_get()->using_addr + sizeof(imtb_head_v4_t) + MTB_OS_VERSION_LEN_V4);
         count = head->partition_count;
-        flash_base_addr = g_flash_base_addr;
         for (i = 0; i < count; i++) {
             if (strncmp(pp->name, name, MTB_IMAGE_NAME_SIZE) == 0) {
-                part_info->start_addr = flash_base_addr + pp->block_offset * 512;
+#if CONFIG_MULTI_FLASH_SUPPORT
+                flashid = pp->partition_type.son_type;
+#endif
+                void *handle = partition_flash_open(flashid);
+                partition_flash_info_get(handle, &flash_info);
+                partition_flash_close(handle);
+
+                part_info->start_addr = flash_info.start_addr + pp->block_offset * 512;
                 part_info->end_addr = part_info->start_addr + pp->block_count * 512;
                 part_info->load_addr = pp->load_address;
                 memcpy(part_info->pub_key_name, pp->pub_key_name, PUBLIC_KEY_NAME_SIZE);
@@ -91,19 +94,25 @@ int mtbv4_get_partition_info(const char *name, mtb_partition_info_t *part_info)
 int mtbv4_get_partition_info_with_index(int index, mtb_partition_info_t *part_info)
 {
     int count;
-    uint32_t flash_base_addr;
+    int flashid = 0;
     imtb_head_v4_t *head;
     imtb_partition_info_v4_t *pp;
+    partition_flash_info_t flash_info;
 
     if (part_info) {
         head = (imtb_head_v4_t *)mtb_get()->using_addr;
         pp = (imtb_partition_info_v4_t *)(mtb_get()->using_addr + sizeof(imtb_head_v4_t) + MTB_OS_VERSION_LEN_V4);
         count = head->partition_count;
         if (index < count) {
-            flash_base_addr = g_flash_base_addr;
             pp += index;
+#if CONFIG_MULTI_FLASH_SUPPORT
+            flashid = pp->partition_type.son_type;
+#endif
+            void *handle = partition_flash_open(flashid);
+            partition_flash_info_get(handle, &flash_info);
+            partition_flash_close(handle);
 
-            part_info->start_addr = flash_base_addr + pp->block_offset * 512;
+            part_info->start_addr = flash_info.start_addr + pp->block_offset * 512;
             part_info->end_addr = part_info->start_addr + pp->block_count * 512;
             part_info->load_addr = pp->load_address;
             memcpy(part_info->pub_key_name, pp->pub_key_name, PUBLIC_KEY_NAME_SIZE);
@@ -189,7 +198,9 @@ int mtbv4_image_verify(const char *name)
     pub_key_name = part_info.pub_key_name;
 
     memset(buf, 0, sizeof(buf));
-    get_data_from_faddr(part_start, buf, sizeof(buf));
+    if (get_data_from_faddr(part_start, buf, sizeof(buf))) {
+        return -1;
+    }
     offset      = 0;
     need_verify = 0;
     while (offset < READ_MAX_SIZE) {
@@ -215,7 +226,9 @@ int mtbv4_image_verify(const char *name)
         MTB_LOGD("p_head->size=0x%x", p_head->size);
         MTB_LOGD("part_tail_addr:0x%x", part_tail_addr);
 
-        get_data_from_faddr(part_tail_addr, part_tail_buf, PART_TAIL_HEAD_SIZE);
+        if (get_data_from_faddr(part_tail_addr, part_tail_buf, PART_TAIL_HEAD_SIZE)) {
+            return -1;
+        }
         p_tail_head = (partition_tail_head_t *)part_tail_buf;
 
         MTB_LOGD("start verify [%s]", name);
@@ -236,7 +249,9 @@ int mtbv4_image_verify(const char *name)
                 return -1;
             }
 
-            get_data_from_faddr(hash_addr, old_sha, hash_len);
+            if (get_data_from_faddr(hash_addr, old_sha, hash_len)) {
+                return -1;
+            }
 #if 0
             printf("old_sha---------------------------------------------------\n");
             dump_data((uint8_t *)old_sha, hash_len);
@@ -250,7 +265,9 @@ int mtbv4_image_verify(const char *name)
             }
             if (km_get_pub_key_by_name(pub_key_name, &key_addr, &key_size) == KM_OK) {
                 MTB_LOGD("key_addr:0x%x", key_addr);
-                get_data_from_faddr(sig_addr, old_sig, sig_len);
+                if (get_data_from_faddr(sig_addr, old_sig, sig_len)) {
+                    return -1;
+                }
                 MTB_LOGD("sig_addr:0x%x",sig_addr);
 #if 0
                 printf("key---------------------------------------------------\n");

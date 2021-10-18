@@ -44,7 +44,7 @@ char *aos_get_os_version(void)
     return (char *)ret;
 }
 
-char *aos_get_app_version(void)
+SYSINFO_WEAK char *aos_get_app_version(void)
 {
     int32_t     ret;
     static char str_version[65] = {

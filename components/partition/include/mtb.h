@@ -20,8 +20,11 @@ extern "C" {
 #define MTB_IMAGE_NAME_IMTB     "imtb"
 #define MTB_IMAGE_NAME_PKEY     "pkey"
 #define MTB_IMAGE_NAME_OTP      "otp"
+#ifndef CONFIG_MTB_NAME_KP
 #define MTB_IMAGE_NAME_KP       "kp"
-
+#else
+#define MTB_IMAGE_NAME_KP       CONFIG_MTB_NAME_KP
+#endif
 
 #define MAX_MANTB_BYTE_SIZE (1024 * 4)
 #define MAX_MANTB_WORD_SIZE ((MAX_MANTB_BYTE_SIZE) >> 2)
@@ -236,6 +239,10 @@ typedef struct {
     uint16_t rsv: 15;
 } mtb_t;
 
+#ifndef CONFIG_MULTI_FLASH_SUPPORT
+#define CONFIG_MULTI_FLASH_SUPPORT 0
+#endif
+
 typedef struct {
     char image_name[MTB_IMAGE_NAME_SIZE];
     uint64_t part_addr;
@@ -243,6 +250,10 @@ typedef struct {
 #if !defined(CONFIG_MANTB_VERSION) || (CONFIG_MANTB_VERSION > 3)
     uint64_t load_addr;
     uint32_t image_size;
+#endif
+#if CONFIG_MULTI_FLASH_SUPPORT
+    scn_type_t type;        // Parameter reuse
+    uint16_t rsv;
 #endif
 } sys_partition_info_t;
 

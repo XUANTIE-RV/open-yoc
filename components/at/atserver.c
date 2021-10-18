@@ -5,6 +5,7 @@
 #include <aos/aos.h>
 #include <yoc/atserver.h>
 #include "yoc/at_port.h"
+#include "csi_core.h"
 
 #define TAG "atserver"
 
@@ -23,8 +24,21 @@
 #endif
 
 
-#define UART_BUF_SIZE 16
+#define CHANNEL_BUF_SIZE 16
 
+#define CHECK_RETURN_VAL(x, ret)                  \
+        do {                                        \
+            if (!(x)) {                         \
+                return ret;                         \
+            }                                       \
+        } while(0);
+
+#define CHECK_RETURN(x)                  \
+        do {                                        \
+            if (!(x)) {                         \
+                return;                          \
+            }                                       \
+        } while(0);
 typedef struct atcmd_node {
     const atserver_cmd_t   *at;
     int                     len; //cmd total num
@@ -36,6 +50,11 @@ typedef enum {
     PASS_THROUGH_MODE
 } ATSERVER_MODE;
 
+typedef enum {
+    RUNNING,
+    STOP,
+} ATSERVER_STATUE;
+
 typedef struct {
     ATSERVER_MODE mode;
     char *data;
@@ -45,21 +64,22 @@ typedef struct {
 } atserver_mode_t;
 
 typedef struct atserver {
-    char             *buffer;
+    char            *buffer;
     uint16_t         buffer_size;
     uint16_t         recv_size;
-    char             uart_buffer[UART_BUF_SIZE];
-    uint8_t          uart_count;
-    uint8_t          uart_inc;
+    char             channel_buffer[CHANNEL_BUF_SIZE];
+    uint8_t          channel_count;
+    uint8_t          channel_inc;
     uint8_t          echo_flag;
     char             para_delimiter;
-    volatile int     have_uart_event;
+    volatile int     have_channel_event;
+    ATSERVER_STATUE  statue;
 
     int              timeout;
-    const char       *output_terminator;
+    const char      *output_terminator;
     slist_t          cmd_head;
-    uservice_t       *srv;
-    void             *uart_dev;
+    uservice_t      *srv;
+    void            *dev;
     aos_mutex_t      mutex;
     atserver_mode_t  at_mode;
     at_channel_t    *channel;
@@ -74,6 +94,9 @@ typedef enum {
     ATSERVER_TMOUT_CMD,
     ATSERVER_INTERRUPT_CMD,
     ATSERVER_PASS_THROUGH_CMD,
+    ATSERVER_STOP_CMD,
+    ATSERVER_RESUME_CMD,
+    ATSERVER_SHOW_CMD,
     ATSERVER_END_CMD
 } ATSERVER_CMD;
 
@@ -83,29 +106,29 @@ static int atserver_process_rpc(void *context, rpc_t *rpc);
 
 static atserver_uservice_t g_atserver;
 
-static int atserver_uart_send(const char *data, size_t size, size_t timeout) 
+static int atserver_channel_send(const char *data, size_t size, size_t timeout) 
 {
     if (size == 0) {
         return 0;
     }
 
-    int ret = g_atserver.channel->send(g_atserver.uart_dev, (void *)data, size);
+    int ret = g_atserver.channel->send(g_atserver.dev, (void *)data, size);
 
     return ret;
 }
 
-int atserver_uart_recv(char *data)
+int atserver_channel_recv(char *data)
 {
-    if (g_atserver.uart_inc == g_atserver.uart_count) {
-        int ret = g_atserver.channel->recv(g_atserver.uart_dev, g_atserver.uart_buffer, UART_BUF_SIZE, 0);
+    if (g_atserver.channel_inc == g_atserver.channel_count) {
+        int ret = g_atserver.channel->recv(g_atserver.dev, g_atserver.channel_buffer, CHANNEL_BUF_SIZE, 0);
         if (ret > 0) {
-            g_atserver.uart_count = ret;
-            g_atserver.uart_inc = 0;
+            g_atserver.channel_count = ret;
+            g_atserver.channel_inc = 0;
         }
     }
 
-    if (g_atserver.uart_inc < g_atserver.uart_count) {
-        *data = g_atserver.uart_buffer[g_atserver.uart_inc++];
+    if (g_atserver.channel_inc < g_atserver.channel_count) {
+        *data = g_atserver.channel_buffer[g_atserver.channel_inc++];
 
         return 1;
     }
@@ -113,13 +136,21 @@ int atserver_uart_recv(char *data)
     return 0;
 }
 
-static void uart_event(int event_id, void *priv)
+
+static void channel_event(int event_id, void *priv)
 {
+    uint32_t flags = 0;
+	int ret = 0;
     if (event_id == AT_CHANNEL_EVENT_READ) {
-        if (g_atserver.have_uart_event < 2) {
-            uservice_call_async(g_atserver.srv, ATSERVER_INTERRUPT_CMD, NULL, 0);
-            g_atserver.have_uart_event++;
-        }
+        if (g_atserver.have_channel_event < 2) {
+            ret = uservice_call_async(g_atserver.srv, ATSERVER_INTERRUPT_CMD, NULL, 0);
+			if(ret < 0) {
+			   return;
+			}
+	        flags = csi_irq_save();
+            g_atserver.have_channel_event++;
+			csi_irq_restore(flags);
+         }
     }
 }
 
@@ -131,9 +162,9 @@ int atserver_init(utask_t *task, const char *name, uart_config_t *config)
 
     g_atserver.channel = &uart_channel;
     //uart init
-    g_atserver.uart_dev = g_atserver.channel->init(name, config);
+    g_atserver.dev = g_atserver.channel->init(name, config);
 
-    if (g_atserver.uart_dev == NULL) {
+    if (g_atserver.dev == NULL) {
         return -1;
     }
 
@@ -152,9 +183,49 @@ int atserver_init(utask_t *task, const char *name, uart_config_t *config)
 
     utask_add(task, g_atserver.srv);
 
-    g_atserver.channel->set_event(g_atserver.uart_dev, uart_event, NULL);
+    g_atserver.channel->set_event(g_atserver.dev, channel_event, NULL);
 
     aos_mutex_new(&g_atserver.mutex);
+
+    g_atserver.statue = RUNNING;
+
+    return 0;
+}
+
+int atserver_channel_init(utask_t *task, const char *name, void *config, at_channel_t *channel)
+{
+    aos_assert(task);
+
+    memset(&g_atserver, 0, sizeof(atserver_uservice_t));
+
+    g_atserver.channel = channel;
+    //uart init
+    g_atserver.dev = g_atserver.channel->init(name, config);
+
+    if (g_atserver.dev == NULL) {
+        return -1;
+    }
+
+    g_atserver.buffer_size = BUFFER_MIN_SIZE;
+    g_atserver.buffer = aos_malloc(BUFFER_MIN_SIZE);
+    aos_assert(g_atserver.buffer);
+
+    g_atserver.timeout = 500;
+    g_atserver.output_terminator = "\r\n";
+    g_atserver.para_delimiter = ',';
+    slist_init(&g_atserver.cmd_head);
+
+    //uservice
+    g_atserver.srv = uservice_new("atserver", atserver_process_rpc, NULL);
+    aos_assert(g_atserver.srv);
+
+    utask_add(task, g_atserver.srv);
+
+    g_atserver.channel->set_event(g_atserver.dev, channel_event, NULL);
+
+    aos_mutex_new(&g_atserver.mutex);
+
+    g_atserver.statue = RUNNING;
 
     return 0;
 }
@@ -268,6 +339,21 @@ void atserver_set_timeout(int timeout)
     uservice_call_sync(g_atserver.srv, ATSERVER_TMOUT_CMD, (void *)&timeout, NULL, 0);
 }
 
+void atserver_stop(void)
+{
+    uservice_call_sync(g_atserver.srv, ATSERVER_STOP_CMD, NULL, NULL, 0);
+}
+
+void atserver_resume(void)
+{
+    uservice_call_sync(g_atserver.srv, ATSERVER_RESUME_CMD, NULL, NULL, 0);
+}
+
+void atserver_show_command(void)
+{
+    uservice_call_sync(g_atserver.srv, ATSERVER_SHOW_CMD, NULL, NULL, 0);
+}
+
 static void atserver_clear_buffer(void)
 {
     if (g_atserver.buffer_size >= BUFFER_MIN_SIZE) {
@@ -292,7 +378,7 @@ static int atserver_get_cmdline(void)
     }
 
     while (1) {
-        int ret = atserver_uart_recv(&c);
+        int ret = atserver_channel_recv(&c);
 
         if (ret == 0) {
             if (flag == 1) {
@@ -518,7 +604,7 @@ static int pass_through(void)
 
         recv_size = atmode(g_atserver).len - atmode(g_atserver).recv_size;
         offset = atmode(g_atserver).recv_size;
-        ret = uart_recv(g_atserver.uart_dev, atmode(g_atserver).data + offset, recv_size, 0);
+        ret = g_atserver.channel->recv(g_atserver.dev, atmode(g_atserver).data + offset, recv_size, 0);
         atmode(g_atserver).recv_size += ret;
 
         if (atmode(g_atserver).recv_size >= atmode(g_atserver).len) {
@@ -542,10 +628,19 @@ static int pass_through(void)
 static int interrupt_cmd_handle(void *context, rpc_t *rpc)
 {
     int ret = -1;
+	uint32_t flags;
+
+	if(g_atserver.statue != RUNNING) {
+		flags = csi_irq_save();
+		g_atserver.have_channel_event--;
+		csi_irq_restore(flags);
+		return 0;
+	}
 
     if (pass_through() < 0) {
-        g_atserver.have_uart_event--;
-
+		flags = csi_irq_save();
+        g_atserver.have_channel_event--;
+        csi_irq_restore(flags);
         return 0;
     }
 
@@ -577,7 +672,9 @@ static int interrupt_cmd_handle(void *context, rpc_t *rpc)
             break;
         }
     }
-    g_atserver.have_uart_event--;
+	flags = csi_irq_save();
+	g_atserver.have_channel_event --;
+	csi_irq_restore(flags);
 
     return 0;
 }
@@ -659,8 +756,9 @@ int atserver_write(const void *data, int size)
     int ret = -1;
 
     aos_check_return_einval(data && size > 0);
+    CHECK_RETURN_VAL(g_atserver.statue == RUNNING, -1);
 
-    ret = atserver_uart_send(data, size, g_atserver.timeout);
+    ret = atserver_channel_send(data, size, g_atserver.timeout);
 
     return ret;
 }
@@ -671,12 +769,13 @@ int atserver_sendv(const char *command, va_list args)
     char *send_buf = NULL;
 
     aos_check_return_einval(command);
+    CHECK_RETURN_VAL(g_atserver.statue == RUNNING, -1);
 
     if (vasprintf(&send_buf, command, args) >= 0) {
-        ret = atserver_uart_send(send_buf, strlen(send_buf), g_atserver.timeout);
+        ret = atserver_channel_send(send_buf, strlen(send_buf), g_atserver.timeout);
 
         if (ret == 0 && g_atserver.output_terminator != NULL) {
-            ret = atserver_uart_send(g_atserver.output_terminator, strlen(g_atserver.output_terminator), g_atserver.timeout);
+            ret = atserver_channel_send(g_atserver.output_terminator, strlen(g_atserver.output_terminator), g_atserver.timeout);
         }
 
         aos_free(send_buf);
@@ -691,6 +790,7 @@ int atserver_send(const char *command, ...)
     va_list args;
 
     aos_check_return_einval(command);
+    CHECK_RETURN_VAL(g_atserver.statue == RUNNING, -1);
 
     va_start(args, command);
 
@@ -703,14 +803,15 @@ int atserver_send(const char *command, ...)
 
 int atserver_set_uartbaud(int baud)
 {
+    CHECK_RETURN_VAL(g_atserver.statue == RUNNING, -1);
     uart_config_t config;
-    if (g_atserver.uart_dev == NULL) {
+    if (g_atserver.dev == NULL) {
         return -1;
     }
     memset(&config, 0, sizeof(config));
     uart_config_default(&config);
     config.baud_rate = baud;
-    if (uart_config(g_atserver.uart_dev, &config) < 0) {
+    if (uart_config(g_atserver.dev, &config) < 0) {
         return -1;
     }
     return 0;
@@ -718,17 +819,20 @@ int atserver_set_uartbaud(int baud)
 
 void atserver_lock(void)
 {
+    CHECK_RETURN(g_atserver.statue == RUNNING);
     aos_mutex_lock(&(g_atserver.mutex), AOS_WAIT_FOREVER);
 }
 
 void atserver_unlock(void)
 {
+    CHECK_RETURN(g_atserver.statue == RUNNING);
     aos_mutex_unlock(&(g_atserver.mutex));
 }
 
 int atserver_pass_through(int len, pass_through_cb cb)
 {
     aos_check_return_einval(len && cb);
+    CHECK_RETURN_VAL(g_atserver.statue == RUNNING, -1);
 
     atserver_mode_t atmode;
 
@@ -762,7 +866,7 @@ static int send_cmd_handle(void *context, rpc_t *rpc)
 {
     char *param = (char *)rpc_get_point(rpc);
 
-    atserver_uart_send(param, strlen(param), g_atserver.timeout);
+    atserver_channel_send(param, strlen(param), g_atserver.timeout);
     return 0;
 }
 
@@ -784,6 +888,41 @@ static int tmout_cmd_handle(void *context, rpc_t *rpc)
     return 0;
 }
 
+static int stop_cmd_handle(void *context, rpc_t *rpc)
+{
+    g_atserver.statue = STOP;
+    atserver_clear_buffer();
+    g_atserver.channel->set_event(g_atserver.dev, NULL, NULL);
+
+    return 0;
+}
+
+static int resume_cmd_handle(void *context, rpc_t *rpc)
+{
+    g_atserver.statue = RUNNING;
+    g_atserver.channel->set_event(g_atserver.dev, channel_event, NULL);
+
+    return 0;
+}
+
+static int show_cmd_handle(void *context, rpc_t *rpc)
+{
+    atcmd_node_t *node;
+
+    slist_for_each_entry(&g_atserver.cmd_head, node, atcmd_node_t, next) {
+        atserver_cmd_t *atcmd = (atserver_cmd_t *)node->at;
+
+        for (int i = 0; i < node->len; i++) {
+            
+            atserver_channel_send(atcmd->cmd+3, strlen(atcmd->cmd) - 3, g_atserver.timeout);
+            atserver_channel_send(";\r\n", 3, g_atserver.timeout);
+
+            atcmd++;
+        }
+    }
+    return 0;
+}
+
 static const rpc_process_t c_atserver_cmd_cb_table[] = {
     {ATSERVER_SEND_CMD,         send_cmd_handle},
     {ATSERVER_OUTPUT_CMD,       output_cmd_handle},
@@ -791,6 +930,9 @@ static const rpc_process_t c_atserver_cmd_cb_table[] = {
     {ATSERVER_TMOUT_CMD,        tmout_cmd_handle},
     {ATSERVER_INTERRUPT_CMD,    interrupt_cmd_handle},
     {ATSERVER_PASS_THROUGH_CMD, pass_through_handle},
+    {ATSERVER_STOP_CMD,         stop_cmd_handle},
+    {ATSERVER_RESUME_CMD,       resume_cmd_handle},
+    {ATSERVER_SHOW_CMD,         show_cmd_handle},
 
     {ATSERVER_END_CMD,           NULL},
 };

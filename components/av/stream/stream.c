@@ -210,14 +210,19 @@ static void _scache_task(void *arg)
     while (CACHE_STATUS_STOPED != o->cache_status && !stream_is_interrupt(o)) {
         wlen = sfifo_get_wpos(fifo, &pos, AOS_WAIT_FOREVER);
         sfifo_get_eof(fifo, &reof, NULL);
-        if (!((wlen > 0) && (CACHE_STATUS_STOPED != o->cache_status) && (!reof))) {
-            LOGD(TAG, "cache task break. wlen = %d, status = %d, reof = %d", wlen, o->cache_status, reof);
+        if (!((wlen > 0) && (CACHE_STATUS_STOPED != o->cache_status) && (!reof) && (!stream_is_interrupt(o)))) {
+            LOGD(TAG, "cache task break. wlen = %d, status = %d, reof = %d, interrupt = %d", wlen, o->cache_status, reof, stream_is_interrupt(o));
             break;
         }
 
         wlen = wlen >= CONFIG_AV_STREAM_INNER_BUF_SIZE ? CONFIG_AV_STREAM_INNER_BUF_SIZE : wlen;
         rlen = o->ops->read(o, (uint8_t*)pos, wlen);
         if (rlen <= 0) {
+            if (stream_is_interrupt(o)) {
+                LOGD(TAG, "interrupted, read rlen = %d, url =%s", rlen, o->url);
+                goto quit;
+            }
+
             if ((rlen == -1) && (errno == EAGAIN)) {
                 aos_msleep(200);
                 continue;
@@ -232,10 +237,10 @@ static void _scache_task(void *arg)
             //FIXME:
             if (o->size > 0 && (o->size - o->stat.rsize > 0) && o->seekable) {
                 rc = o->ops->seek(o, o->stat.rsize);
-                if (rc == 0) {
+                if (rc == 0 && !stream_is_interrupt(o)) {
                     rlen = o->ops->read(o, (uint8_t*)pos, wlen);
                 }
-                LOGD(TAG, "may be pause long time, rc = %d, rlen = %d. '%s'", rc, rlen, o->url);
+                LOGD(TAG, "may be pause long time, rc = %d, rlen = %d. '%s', interrupt = %d", rc, rlen, o->url, stream_is_interrupt(o));
             }
 
             if (rlen <= 0) {

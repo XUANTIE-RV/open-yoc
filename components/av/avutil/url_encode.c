@@ -138,9 +138,9 @@ int url_encode(const char* src, const size_t src_size, char* dst, const size_t d
 
     for (i = 0; (i < src_size) && (j < dst_size); ++i) {
         c = src[i];
-        if (((c >= 'A') && (c < 'Z')) ||
-            ((c >= 'a') && (c < 'z')) ||
-            ((c >= '0') && (c < '9'))) {
+        if (((c >= 'A') && (c <= 'Z')) ||
+            ((c >= 'a') && (c <= 'z')) ||
+            ((c >= '0') && (c <= '9'))) {
             dst[j++] = c;
         } else if (c == '.' || c == '-' || c == '_' || c == '*') {
             dst[j++] = c;

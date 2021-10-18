@@ -77,7 +77,7 @@ typedef struct {
 
 struct atparser_uservice {
     //comm begin
-    void *uart_dev;
+    void *dev;
     int timeout;
     const char *output_terminator;
     char dbg_on;
@@ -114,8 +114,8 @@ static int atparser_data_push(atparser_uservice_t *at);
 static int detch_oob(atparser_uservice_t *at, int *offset);
 
 
-#define atparser_channel_send(at, data, size, timeout) at->channel->send(at->uart_dev, data, size)
-#define atparser_channel_recv(at, data, size, timeout) at->channel->recv(at->uart_dev, data, size, timeout)
+#define atparser_channel_send(at, data, size, timeout) at->channel->send(at->dev, data, size)
+#define atparser_channel_recv(at, data, size, timeout) at->channel->recv(at->dev, data, size, timeout)
 
 static void uart_event(int id, void *priv)
 {
@@ -152,26 +152,26 @@ atparser_uservice_t *atparser_init(utask_t *task, const char *name, uart_config_
     at->output_terminator = "\r\n";
     slist_init(&at->oob_head);
 
-    at->uart_dev = at->channel->init(name, config);
+    at->dev = at->channel->init(name, config);
 
-    if (at->uart_dev == NULL) {
+    if (at->dev == NULL) {
         goto fail_0;
     }
 
-    // uart_set_buffer_size(at->uart_dev, 1024*2);
+    // uart_set_buffer_size(at->dev, 1024*2);
     // if (config) {
-    //     uart_config(at->uart_dev, config);
+    //     uart_config(at->dev, config);
     // }
 
     at->srv = uservice_new("atparser", atparser_process_rpc, at);
 
     if (at->srv == NULL) {
-        uart_close(at->uart_dev);
+        uart_close(at->dev);
         goto fail_0;
     }
 
     utask_add(task, at->srv);
-    at->channel->set_event(at->uart_dev, uart_event, at);
+    at->channel->set_event(at->dev, uart_event, at);
 
     aos_mutex_new(&at->mutex);
 
@@ -190,6 +190,11 @@ atparser_uservice_t *atparser_channel_init(utask_t *task, const char *name, void
 
     aos_check_return_val(task && channel, NULL);
 
+    if (channel->init == NULL || channel->recv == NULL || \
+        channel->send == NULL || channel->set_event == NULL) {
+        return NULL;
+    }
+
     at = aos_zalloc(sizeof(atparser_uservice_t));
 
     if (at == NULL) {
@@ -207,21 +212,20 @@ atparser_uservice_t *atparser_channel_init(utask_t *task, const char *name, void
     at->output_terminator = "\r\n";
     slist_init(&at->oob_head);
 
-    at->uart_dev = at->channel->init(name, config);
+    at->dev = at->channel->init(name, config);
 
-    if (at->uart_dev == NULL) {
+    if (at->dev == NULL) {
         goto fail_0;
     }
 
     at->srv = uservice_new("atparser", atparser_process_rpc, at);
 
     if (at->srv == NULL) {
-        uart_close(at->uart_dev);
         goto fail_0;
     }
 
     utask_add(task, at->srv);
-    at->channel->set_event(at->uart_dev, uart_event, at);
+    at->channel->set_event(at->dev, uart_event, at);
 
     aos_mutex_new(&at->mutex);
 

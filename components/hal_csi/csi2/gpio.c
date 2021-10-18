@@ -17,8 +17,8 @@ static struct {
 
 static void gpio_cb(csi_gpio_pin_t *gpio, void *arg)
 {
-    if (priv_gpio_cb.gpio_cb[*(uint32_t*)arg] != NULL) {
-        priv_gpio_cb.gpio_cb[*(uint32_t*)arg](priv_gpio_cb.arg[*(uint32_t*)arg]);
+    if (priv_gpio_cb.gpio_cb[*(uint8_t*)arg] != NULL) {
+        priv_gpio_cb.gpio_cb[*(uint8_t*)arg](priv_gpio_cb.arg[*(uint8_t*)arg]);
     }
 }
 

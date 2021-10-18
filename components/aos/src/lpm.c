@@ -104,7 +104,7 @@ void pm_init(lpm_event_cb_t pm_cb)
 void pm_config_mask(uint32_t lpm_dev_mask)
 {
     if (g_pm_ctx.lpm_handle == NULL) {
-        printf("pm not initialized");
+        LOGE(TAG, "pm not initialized");
         return;
     }
     g_pm_ctx.lpm_dev_mask |= lpm_dev_mask;
@@ -113,7 +113,7 @@ void pm_config_mask(uint32_t lpm_dev_mask)
 void pm_config_policy(pm_policy_t policy)
 {
     if (g_pm_ctx.lpm_handle == NULL) {
-        printf("pm not initialized");
+        LOGE(TAG, "pm not initialized");
         return;
     }
     aos_mutex_lock(&g_pm_ctx.mutex, AOS_WAIT_FOREVER);
@@ -138,7 +138,7 @@ pm_policy_t pm_get_policy(void)
 void pm_agree_halt(uint32_t ms)
 {
     if (g_pm_ctx.lpm_handle == NULL) {
-        printf("pm not initialized");
+        LOGE(TAG, "pm not initialized");
         return;
     }
     aos_mutex_lock(&g_pm_ctx.mutex, AOS_WAIT_FOREVER);

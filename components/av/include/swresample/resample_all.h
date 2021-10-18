@@ -20,12 +20,6 @@ __BEGIN_DECLS__
     }
 
 /**
- * @brief  regist resample for silan
- * @return 0/-1
- */
-int resample_register_silan();
-
-/**
  * @brief  regist resample for ipc
  * @return 0/-1
  */
@@ -43,9 +37,6 @@ int resample_register_speex();
  */
 static inline int resample_register()
 {
-#if defined(CONFIG_RESAMPLER_SILAN)
-    REGISTER_RESAMPLER(SILAN, silan);
-#endif
 #if defined(CONFIG_RESAMPLER_IPC)
     REGISTER_RESAMPLER(IPC, ipc);
 #endif

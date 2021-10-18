@@ -47,9 +47,13 @@ const scn_type_t g_scn_part_type[] = {
  ****************************************************************************/
 static inline int padding_flash(uint32_t src)
 {
+    int flashid = 0;
     partition_flash_info_t flash_info;
 
-    void *handle = partition_flash_open(0);
+#if CONFIG_MULTI_FLASH_SUPPORT
+    flashid = get_flashid_by_abs_addr(src);
+#endif
+    void *handle = partition_flash_open(flashid);
     partition_flash_info_get(handle, &flash_info);
     partition_flash_close(handle);
     return PADDING_SIZE(src, flash_info.sector_size);
@@ -634,6 +638,10 @@ int mtb_get_key_info(key_info_t *info)
     uint32_t key_addr;
     uint32_t size;
 
+    if (info == NULL) {
+        return -EINVAL;
+    }
+
     memset(info, 0, sizeof(key_info_t));
     ret = km_get_key(KEY_ID_PUBK_TB, &key_addr, &size);
     if (ret != 0) {
@@ -670,6 +678,10 @@ int mtb_get_pubkey_info(key_info_t *info)
     int ret;
     uint32_t key_addr;
     uint32_t size;
+
+    if (info == NULL) {
+        return -EINVAL;
+    }
 
     memset(info, 0, sizeof(key_info_t));
     ret = km_get_key(KEY_ID_PUBK_TB, &key_addr, &size);
@@ -722,6 +734,8 @@ int mtb_get_img_info_buf(uint8_t *buf, uint32_t *size, char *name)
             out_info.static_addr = info.start_addr;
             out_info.loading_addr = info.load_addr;
             out_info.image_size = info.img_size;
+            memcpy(buf, &out_info, sizeof(scn_img_sig_info_t));
+            *size = sizeof(scn_img_sig_info_t);
             return 0;
         }
     }

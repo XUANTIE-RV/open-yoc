@@ -13,7 +13,13 @@ struct aef_sona_priv {
     void                      *hdl;
 };
 
-#if AEF_DEBUG
+#define AEF_INIT_ONCE 1
+
+#if AEF_INIT_ONCE
+static void * g_aef_sona_hdl = NULL;
+#endif
+
+#if CONFIG_AV_AEF_DEBUG
 static void *aef_ins;
 static void *rpc_ins;
 
@@ -46,6 +52,9 @@ void aef_debug_uninit()
 
 #endif
 
+#define EQ_CLEAN_FRAME_SIZE 512
+static short g_zero_pcm_in[EQ_CLEAN_FRAME_SIZE] = {0};
+static short g_zero_pcm_out[EQ_CLEAN_FRAME_SIZE] = {0};
 static int _aef_sona_init(aefx_t *aef)
 {
     void *hdl = NULL;
@@ -54,10 +63,30 @@ static int _aef_sona_init(aefx_t *aef)
     priv = aos_zalloc(sizeof(struct aef_sona_priv));
     CHECK_RET_TAG_WITH_RET(priv, -1);
 
-#if AEF_DEBUG
+#if CONFIG_AV_AEF_DEBUG
     priv->hdl = aef_ins;
+    audioaef_set_fs(aef_ins, aef->rate, aef->rate);
+#else
+#if AEF_INIT_ONCE
+    if (g_aef_sona_hdl == NULL) {
+        hdl = audioaef_create_fromBuffer(aef->rate, aef->rate, (char*)aef->conf, aef->conf_size, sizeof(int16_t) * 8, aef->nsamples_max);
+        g_aef_sona_hdl = hdl;
+        for(int i = 0; i < 512; i++) {
+            g_zero_pcm_in[i] = rand() % 5;
+        }
+    } else {
+        hdl = g_aef_sona_hdl;
+        audioaef_set_fs(hdl, aef->rate, aef->rate);
+    }
 #else
     hdl = audioaef_create_fromBuffer(aef->rate, aef->rate, (char*)aef->conf, aef->conf_size, sizeof(int16_t) * 8, aef->nsamples_max);
+#endif
+
+    /* clear history */
+    for(int i = 0; i < 8; i++) {
+        audioaef_process(hdl, (char*)g_zero_pcm_in, EQ_CLEAN_FRAME_SIZE, 1, sizeof(int16_t) * 8, (char*)g_zero_pcm_out, 1);
+    }
+
     CHECK_RET_TAG_WITH_GOTO(hdl, err);
     priv->hdl = hdl;
 #endif
@@ -75,7 +104,9 @@ static int _aef_sona_process(aefx_t *aef, const int16_t *in, int16_t *out, size_
     struct aef_sona_priv *priv = aef->priv;
 
     size = nb_samples * sizeof(int16_t);
+
     rc = audioaef_process(priv->hdl, (char*)in, size, 1, sizeof(int16_t) * 8, (char*)out, 1);
+
     CHECK_RET_TAG_WITH_RET(rc == size, -1);
 
     return 0;
@@ -85,8 +116,10 @@ static int _aef_sona_uninit(aefx_t *aef)
 {
     struct aef_sona_priv *priv = aef->priv;
 
-#if !(AEF_DEBUG)
+#if !(CONFIG_AV_AEF_DEBUG)
+#if !(AEF_INIT_ONCE)
     audioaef_destroy(priv->hdl);
+#endif
 #endif
     aos_free(priv);
     aef->priv = NULL;

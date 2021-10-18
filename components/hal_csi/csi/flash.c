@@ -53,13 +53,13 @@ int32_t hal_flash_info_get(hal_partition_t in_partition, hal_logic_partition_t *
 
             //FIXME: structure multiplex, attention!
             partition->partition_start_addr = flash_info->start;
-            partition->partition_length     = flash_info->sector_size;
+            partition->partition_length     = (flash_info->end - flash_info->start + 1);
             partition->partition_options    = (flash_info->end - flash_info->start + 1) / flash_info->sector_size;
         } else {
             spiflash_info_t  *info = csi_spiflash_get_info(spiflash_handle);
             
             partition->partition_start_addr = info->start;
-            partition->partition_length     = info->sector_size;
+            partition->partition_length     = info->sector_size * info->sector_count;
             partition->partition_options    = info->sector_count;
         }
     } else {

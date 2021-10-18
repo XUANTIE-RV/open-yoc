@@ -35,7 +35,7 @@ int vol_scale(const int16_t *in, size_t nb_samples, int16_t *out, uint8_t scale_
     static int init;
 
     if (!init) {
-        _factor_init(15, -35);
+        _factor_init(14, -60);
         init = 1;
     }
 

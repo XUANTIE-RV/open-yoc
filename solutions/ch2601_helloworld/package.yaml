@@ -1,5 +1,5 @@
 name: ch2601_helloworld
-version: v7.4.3                                     # <必选项> 组件版本号
+version: v7.4.5                                     # <必选项> 组件版本号
 description: YoC helloworld SDK
 
 type: solution
@@ -15,7 +15,7 @@ hw_info:
   # ld_script: configs/gcc_eflash.ld.S
 
 depends:                                       # 该组件依赖其他的组件
-  - sdk_chip_ch2601: v7.4.3
+  - sdk_chip_ch2601: v7.4.4
 
 # 编译参数
 build_config:

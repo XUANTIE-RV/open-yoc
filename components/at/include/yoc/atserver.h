@@ -65,6 +65,7 @@ typedef struct atserver_cmd {
 } atserver_cmd_t;
 
 int  atserver_init(utask_t *task, const char *name, uart_config_t *config);
+int  atserver_channel_init(utask_t *task, const char *name, void *config, at_channel_t *channel);
 int  atserver_send(const char *format, ...);
 int  atserver_sendv(const char *command, va_list args);
 int  atserver_write(const void *data, int size);
@@ -80,6 +81,9 @@ void atserver_lock(void);
 void atserver_unlock(void);
 int atserver_pass_through(int len, pass_through_cb cb);
 int atserver_set_uartbaud(int baud);
+void atserver_stop(void);
+void atserver_resume(void);
+void atserver_show_command(void);
 
 #ifdef __cplusplus
 }

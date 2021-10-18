@@ -68,7 +68,7 @@
 #endif
 
 #ifndef RHINO_CONFIG_MUTEX_INHERIT
-#define RHINO_CONFIG_MUTEX_INHERIT           0
+#define RHINO_CONFIG_MUTEX_INHERIT           1
 #endif
 
 #if (RHINO_CONFIG_WORKQUEUE > 0)

@@ -12,6 +12,7 @@ extern "C" {
 #endif
 
 uint32_t aos_wdt_index();
+void aos_wdt_debug(int en);
 int  aos_wdt_hw_enable(int id);
 void aos_wdt_hw_disable(int id);
 void aos_wdt_attach(uint32_t index, void (*will)(void *), void *args);

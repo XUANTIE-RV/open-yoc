@@ -21,8 +21,13 @@ int get_data_from_faddr(uint32_t addr, void *data, size_t data_len)
 {
     int ret = 0;
 #ifdef CONFIG_NON_ADDRESS_FLASH
+    int flashid = 0;
 
-    void *handle = partition_flash_open(0);
+#if CONFIG_MULTI_FLASH_SUPPORT
+    flashid = get_flashid_by_abs_addr(addr);
+#endif
+
+    void *handle = partition_flash_open(flashid);
     ret = partition_flash_read(handle, addr, data, data_len);
     partition_flash_close(handle);
 
@@ -153,7 +158,7 @@ int mtb_init(void)
     uint32_t flash_end;
     partition_flash_info_t flash_info;
 
-    handle = partition_flash_open(0);
+    handle = partition_flash_open(0);   // MTB must be in flash0
     ret = partition_flash_info_get(handle, &flash_info);
     partition_flash_close(handle);
 
@@ -219,6 +224,10 @@ int mtb_image_verify(const char *name)
 {
     int ret = 0;
 
+    if (name == NULL) {
+        return -EINVAL;
+    }
+
     if (strncmp(name, MTB_IMAGE_NAME_IMTB, MTB_IMAGE_NAME_SIZE) == 0) {
         ret = mtb_verify();
     } else {
@@ -283,6 +292,9 @@ int mtb_get_partition_info(const char *name, mtb_partition_info_t *part_info)
 
 int mtb_get_img_info(const char *name, img_info_t *img_info)
 {
+    if (!(name && img_info)) {
+        return -EINVAL;
+    }
     if (mtb_get()->version == 4) {
         mtb_partition_info_t part_info;
         if (mtb_get_partition_info((const char *)name, &part_info)) {
@@ -305,11 +317,19 @@ int mtb_get_img_info(const char *name, img_info_t *img_info)
 
 int get_section_buf(uint32_t addr, uint32_t img_len, scn_type_t *scn_type, uint32_t *scn_size)
 {
+    int ret;
     uint32_t size;
     uint8_t buf[sizeof(scn_head_t)];
 
+    if (!(scn_type && scn_size && img_len > 0)) {
+        return -EINVAL;
+    }
+
     MTB_LOGD("addr:0x%x, img_len:%d", addr, img_len);
-    get_data_from_faddr(addr, buf, sizeof(scn_head_t));
+    ret = get_data_from_faddr(addr, buf, sizeof(scn_head_t));
+    if (ret < 0) {
+        return -1;
+    }
     memcpy(&scn_type->father_type, buf, sizeof(scn_father_type_t));
     scn_type->son_type = buf[1];
 
@@ -329,6 +349,9 @@ int mtb_get_img_scn_addr(uint8_t *mtb_buf, const char *name, uint32_t *scn_addr)
 {
     int ret;
 
+    if (!(mtb_buf && name && scn_addr)) {
+        return -EINVAL;
+    }
     ret = get_section_addr((uint32_t)mtb_buf, &(g_scn_img_type[SCN_SUB_TYPE_IMG_NOR]), (uint8_t *)name,
                      (uint32_t *)scn_addr, SEACH_MODE_FIRST_TYPE);
     return ret;
@@ -344,6 +367,10 @@ int get_sys_partition(uint8_t *out, uint32_t *out_len)
     MTB_LOGD("mtb.using_addr: 0x%x", g_mtb.using_addr);
     MTB_LOGD("mtb.one_size: 0x%x", g_mtb.one_size);
     MTB_LOGD("mtb.version: 0x%x", g_mtb.version);
+
+    if (!(out && out_len)) {
+        return -EINVAL;
+    }
 
     if (g_mtb.version < 4) {
         scn_head_t *partition_addr;
@@ -376,6 +403,9 @@ int get_sys_partition(uint8_t *out, uint32_t *out_len)
             p->part_size = part_info.end_addr - part_info.start_addr;
             p->image_size = part_info.img_size;
             p->load_addr = part_info.load_addr;
+#if CONFIG_MULTI_FLASH_SUPPORT
+            p->type = part_info.part_type;
+#endif
             p ++;
         }
         *out_len = sizeof(sys_partition_info_t) * count;

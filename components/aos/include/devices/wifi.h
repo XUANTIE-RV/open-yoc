@@ -366,7 +366,7 @@ typedef struct {
 
 typedef int32_t (*wifi_rxcb_t)(void *buffer, uint16_t len, void *ebuf);
 typedef void (* wifi_promiscuous_cb_t)(wifi_promiscuous_pkt_t *buf, wifi_promiscuous_pkt_type_t type);
-
+typedef void (* wifi_mgnt_cb_t)(uint8_t *data, uint32_t len);
 
 /*
  * The event call back function called at specific events occurred.
@@ -409,6 +409,8 @@ int hal_wifi_sta_get_link_status(aos_dev_t *dev, wifi_ap_record_t *ap_info);
 int hal_wifi_ap_get_sta_list(aos_dev_t *dev, wifi_sta_list_t *sta);
 int hal_wifi_start_monitor(aos_dev_t *dev, wifi_promiscuous_cb_t cb);
 int hal_wifi_stop_monitor(aos_dev_t *dev);
+int hal_wifi_start_mgnt_monitor(aos_dev_t *dev, wifi_mgnt_cb_t cb);
+int hal_wifi_stop_mgnt_monitor(aos_dev_t *dev);
 int hal_wifi_send_80211_raw_frame(aos_dev_t *dev, void *buffer, uint16_t len);
 int hal_wifi_set_channel(aos_dev_t *dev, uint8_t primary, wifi_second_chan_t second);
 int hal_wifi_get_channel(aos_dev_t *dev, uint8_t *primary, wifi_second_chan_t *second);

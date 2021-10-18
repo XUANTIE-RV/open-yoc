@@ -64,7 +64,6 @@ typedef enum {
     MEDIA_CONTINUE_MUSIC_CMD,
     MEDIA_CONFIG_CMD,
     MEDIA_CONFIG_KEY_CMD,
-    MEDIA_GET_STATE_CMD,
     MEDIA_MUTE_CMD,
     MEDIA_SET_SPEED_CMD,
     MEDIA_GET_SPEED_CMD,
@@ -114,7 +113,54 @@ static int g_eq_segment_count = 0;
 static void          m_step_vol(media_type_t *m, int new_vol, int time);
 static media_type_t *get_type(int type);
 static int           m_vol_set(media_type_t *m, int vol);
-#if 1
+#if defined(TMALL_PATCH) && TMALL_PATCH
+extern int tmall_vol_set(uint8_t vol_index);
+extern uint8_t tmall_vol_get();
+/* 0~255  <==> -60dB~14dB
+ * 35~207 <==> -50dB~0dB
+*/
+/* 音量0 ~ 100, 11个标定点 0,10,20..., 数组的索引是函数tmall_vol_set的参数 */
+static int g_mark_point[20] = {35, 207};//= {86, 100, 107, 114, 121, 128, 145, 159, 172, 189, 207};
+static int g_mark_point_count = 2;
+
+void aui_vol_set_mark(int *mark_point, int count)
+{
+    memcpy(g_mark_point, mark_point, sizeof(int) * count);
+    g_mark_point_count = count;
+}
+
+static int vol2tvol(int vol /* 0 ~ 100 */)
+{
+    int level_count = 100 / (g_mark_point_count - 1);
+    int v1 = vol / level_count;
+    int v2 = vol % level_count;
+
+    if (v2 == 0) {
+        return g_mark_point[v1];
+    }
+
+    return (g_mark_point[v1 + 1] - g_mark_point[v1]) * v2 / level_count + g_mark_point[v1];
+}
+
+static void audio_set_vol(int l, int r)
+{
+    if(l == 0) {
+        aos_mixer_selem_set_playback_volume_all(g_media.elem, 0);
+        tmall_vol_set(0);
+    } else {
+        if (tmall_vol_get() == 0) {
+            aos_mixer_selem_set_playback_volume_all(g_media.elem, 100);
+        }
+
+        /* 0 ~ 100的音量值 */
+        int realvol = l / VOLUME_UNIT;
+        int t_vol = vol2tvol(realvol);
+
+        tmall_vol_set(t_vol);
+    }
+}
+
+#else
 #define audio_set_vol(l, r)                                                                        \
     aos_mixer_selem_set_playback_volume_all(g_media.elem, (l + r) / VOLUME_UNIT / 2)
 #endif
@@ -237,7 +283,7 @@ static int m_start(media_type_t *m, const char *url, uint64_t seek_time)
         ply_cnf.event_cb              = player_event;
         ply_cnf.atempo_play_en        = 1;
 
-#if defined(CONFIG_AEFXER_SONA) && CONFIG_AEFXER_SONA && AEF_DEBUG
+#if defined(CONFIG_AEFXER_SONA) && CONFIG_AEFXER_SONA && CONFIG_AV_AEF_DEBUG
         extern int aef_debug_init(int fs, char *conf, size_t conf_size);
         aef_debug_init(ply_cnf.resample_rate, ply_cnf.aef_conf, ply_cnf.aef_conf_size);
         ply_cnf.aef_conf = NULL;
@@ -373,8 +419,9 @@ static int _init(media_t *media, rpc_t *rpc)
     player_init();
     mixer_init();
     media_type_init();
-
+#if defined(TMALL_PATCH) && TMALL_PATCH
     aos_mixer_selem_set_playback_volume_all(g_media.elem, 100);
+#endif
 
     return 0;
 }
@@ -869,20 +916,6 @@ static int _vol_gradual(media_t *media, rpc_t *rpc)
     return 0;
 }
 
-static int _get_state(media_t *media, rpc_t *rpc)
-{
-    int           type = *(int *)rpc_get_point(rpc);
-    media_type_t *m    = get_type(type);
-
-    if (m->speech_pause == 0) {
-        rpc_return_int(rpc, m->state);
-    } else {
-        rpc_return_int(rpc, (int)AUI_PLAYER_PLAYING);
-    }
-
-    return 0;
-}
-
 int aui_player_play(int type, const char *url, int resume)
 {
     aos_check_return_einval(type >= MEDIA_MUSIC && type <= MEDIA_SYSTEM && url && strlen(url) > 0);
@@ -1108,7 +1141,6 @@ int aui_player_vol_gradual(int type, int new_volume, int ms)
 aui_player_state_t aui_player_get_state(int type)
 {
     aos_check_return_einval(type >= MEDIA_MUSIC && type <= MEDIA_SYSTEM);
-    int ret   = -1;
     int state = AUI_PLAYER_UNKNOWN;
 
     if (g_media.srv == NULL) {
@@ -1119,8 +1151,9 @@ aui_player_state_t aui_player_get_state(int type)
         return state;
     }
 
-    ret = uservice_call_sync(g_media.srv, MEDIA_GET_STATE_CMD, &type, &state, sizeof(int));
-    return ret < 0 ? AUI_PLAYER_UNKNOWN : state;
+    media_type_t *m = get_type(type);
+
+    return m->speech_pause == 0 ? m->state : AUI_PLAYER_PLAYING;
 }
 
 int aui_player_resume_music(void)
@@ -1189,7 +1222,6 @@ static const rpc_process_t c_media_cmd_cb_table[] = {
     {MEDIA_EVT_END_CMD,         (process_t)_evt_ok},
     {MEDIA_EVT_UNDER_RUN_CMD,   (process_t)_evt_under_run},
     {MEDIA_EVT_OVER_RUN_CMD,    (process_t)_evt_over_run},
-    {MEDIA_GET_STATE_CMD,       (process_t)_get_state},
     {MEDIA_MUTE_CMD,            (process_t)_mute},
     {MEDIA_CONTINUE_MUSIC_CMD,  (process_t)_resume},
     {MEDIA_CONFIG_CMD,          (process_t)_config},
