@@ -2,13 +2,15 @@
 
 `ch2601_freertos_demo`是基于RVB2601开发板的最小系统例程，其完成了FreeRTOS的内核移植，两个任务实现交替周期性打印字符串。
 
+# 使用
+
 ## CDK
-在CDK的首页，通过搜索ch2601，可以找到ch2601_freertos_demo，然后创建工程。
 
-CDK的使用可以参考YoCBook [《CDK开发快速上手》](https://yoc.docs.t-head.cn/yocbook/Chapter2-%E5%BF%AB%E9%80%9F%E4%B8%8A%E6%89%8B%E6%8C%87%E5%BC%95/%E4%BD%BF%E7%94%A8CDK%E5%BC%80%E5%8F%91%E5%BF%AB%E9%80%9F%E4%B8%8A%E6%89%8B.html) 章节
+双击打开当前目录下的`project.cdkproj`。
+如何安装和使用CDK请参考YoCBook [《CDK开发快速上手》](https://yoc.docs.t-head.cn/yocbook/Chapter2-%E5%BF%AB%E9%80%9F%E4%B8%8A%E6%89%8B%E6%8C%87%E5%BC%95/%E4%BD%BF%E7%94%A8CDK%E5%BC%80%E5%8F%91%E5%BF%AB%E9%80%9F%E4%B8%8A%E6%89%8B.html) 章节。
 
 
-## 启动
+# 启动
 
 烧录完成之后按复位键，串口会有打印输出
 

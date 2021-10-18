@@ -1,1 +1,0 @@
-Obj/init_init.o Obj/src_main.o Obj/oled_bitmap_risc_v.o Obj/oled_oled.o 
