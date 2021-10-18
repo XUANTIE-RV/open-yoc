@@ -1,6 +1,6 @@
 
 name: ch2601_fota_demo
-version: v7.4.3                                     # <必选项> 组件版本号
+version: v7.4.4                                     # <必选项> 组件版本号
 description: ch2601_fota_demo
 
 type: solution

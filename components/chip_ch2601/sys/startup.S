@@ -80,6 +80,10 @@ _start:
     .align  2
     .globl  Reset_Handler
     .type   Reset_Handler, %function
+    .globl  __driver_test_service__
+    .weak   __driver_test_service__
+    .type   __driver_test_service__, %function
+    
 Reset_Handler:
     csrc    mstatus, 8
 .option push
@@ -105,7 +109,13 @@ Reset_Handler:
     jal     SystemInit
 #endif
 
-    jal     pre_main
+    la     a0, __driver_test_service__
+	beq    zero, a0, 1f
+	jalr   a0
+    j      __exit
+	
+1:
+    jal    pre_main
 
     .size   Reset_Handler, . - Reset_Handler
 

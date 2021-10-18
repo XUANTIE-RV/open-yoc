@@ -9,43 +9,9 @@
 
 在CDK的首页，通过搜索ch2601，可以找到CH2601_FOTA_DEMO，然后创建工程。
 
-CDK的使用可以参考YoCBook 《CDK开发快速上手》 章节， 链接 https://yoc.docs.t-head.cn/yocbook/Chapter2-%E5%BF%AB%E9%80%9F%E4%B8%8A%E6%89%8B%E6%8C%87%E5%BC%95/%E4%BD%BF%E7%94%A8CDK%E5%BC%80%E5%8F%91%E5%BF%AB%E9%80%9F%E4%B8%8A%E6%89%8B.html
+CDK的使用可以参考YoCBook [《CDK开发快速上手》](https://yoc.docs.t-head.cn/yocbook/Chapter2-%E5%BF%AB%E9%80%9F%E4%B8%8A%E6%89%8B%E6%8C%87%E5%BC%95/%E4%BD%BF%E7%94%A8CDK%E5%BC%80%E5%8F%91%E5%BF%AB%E9%80%9F%E4%B8%8A%E6%89%8B.html) 章节 
 
 具体步骤参考OCC上的博文《RVB2601应用开发实系列四: FOTA镜像升级》
-## 通过命令行
-
-### 下载
-
-```bash
-mkdir workspace
-cd workspace
-yoc init
-yoc install ch2601_fota_demo
-```
-
-### 编译
-
-```bash
-make clean;make
-```
-
-### 烧录
-
-```bash
-make flashall
-```
-
-从服务器上下载镜像包镜像烧录：
-
-```bash
-product flash 20210304215611061_factory.zip -a -f ch2601_flash.elf -x gdbinit
-```
-
-### 调试
-
-```bash
-riscv64-unknown-elf-gdb yoc.elf -x gdbinit_debug
-```
 
 # 联网配置
 

@@ -10,7 +10,7 @@
  ******************************************************************************/
 MEMORY
 {
-    SPIFLASH : ORIGIN = 0x18017000 , LENGTH = 0x32000   /* SPI-FLASH 256KB*/
+    SPIFLASH : ORIGIN = 0x18017000 , LENGTH = 0x40000   /* SPI-FLASH 256KB*/
     SRAM     : ORIGIN = 0x20000000 , LENGTH = 0x30000   /* on-chip SRAM 192KB*/
 }
 

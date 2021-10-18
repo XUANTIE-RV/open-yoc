@@ -18,5 +18,5 @@ partitions:
   - { name: imtb,   address: 0x18010000, size: 0x02000 }
   - { name: bmtb,   address: 0x18012000, size: 0x01000 }
   - { name: kv,     address: 0x18013000, size: 0x04000 }
-  - { name: prim,   address: 0x18017000, size: 0x32000, verify: true, update: FULL}
-  - { name: misc,   address: 0x18049000, size: 0x37000 }
+  - { name: prim,   address: 0x18017000, size: 0x40000, verify: true, update: FULL}
+  - { name: misc,   address: 0x18057000, size: 0x40000 }
