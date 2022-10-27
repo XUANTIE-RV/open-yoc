@@ -73,7 +73,9 @@ typedef enum IRQn {
     SysTick_IRQn                  =  -1,      /* 15 System Tick Interrupt */
 
     /* ----------------------  PHY BUMBEE M0 Interrupt Numbers  --------------------- */
+    TSPEND_IRQn                   =   0,      /* Software interrupt */
     CORETIM_IRQn                  =   1,      /* CORETIM intrerrupt*/
+    RX_SIGNAL_IRQn                =   2,      /* Software interrupt */
     BB_IRQn                       =   4,      /* Base band Interrupt */
     KSCAN_IRQn                    =   5,      /* Key scan Interrupt */
     RTC_IRQn                      =   6,      /* RTC Timer Interrupt */

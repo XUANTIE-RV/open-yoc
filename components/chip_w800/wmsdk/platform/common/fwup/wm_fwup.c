@@ -84,13 +84,13 @@ int tls_fwup_img_header_check(IMAGE_HEADER_PARAM_ST *img_param)
     	return FALSE;
     }
 
-    if ((img_param->img_addr|FLASH_BASE_ADDR) + img_param->img_len >= USER_ADDR_START)
+    if ((img_param->img_addr|FLASH_BASE_ADDR) + fwup->image_size >= USER_ADDR_START)
     {
-    	return FALSE;
+        return FALSE;
     }
 
 	if(((img_param->upgrade_img_addr|FLASH_BASE_ADDR) < CODE_UPD_START_ADDR)
-		|| ((img_param->upgrade_img_addr|FLASH_BASE_ADDR) + img_param->img_len >= CODE_RUN_START_ADDR))
+		/*|| ((img_param->upgrade_img_addr|FLASH_BASE_ADDR) + img_param->img_len >= CODE_RUN_START_ADDR)*/)
 	{
 		return FALSE;
 	}
@@ -237,9 +237,8 @@ static void fwup_scheduler(void *data)
 						fwup->updated_len += request->data_len;
 
 						//TLS_DBGPRT_INFO("updated: %d bytes\n" , fwup->updated_len);
-						if(fwup->updated_len >= (fwup->total_len)) 
+						if(fwup->updated_len >= (fwup->image_size)) 
 						{
-
 							u8 *buffer_t;
 							u32 len, left, offset;	
 
@@ -259,11 +258,11 @@ static void fwup_scheduler(void *data)
 								offset = sizeof(IMAGE_HEADER_PARAM_ST);
 								if (booter.img_attr.b.signature)
 								{
-									left = fwup->total_len - 128 - sizeof(IMAGE_HEADER_PARAM_ST);
+									left = fwup->image_size - 128 - sizeof(IMAGE_HEADER_PARAM_ST);
 								}
 								else
 								{
-									left = fwup->total_len - sizeof(IMAGE_HEADER_PARAM_ST);
+									left = fwup->image_size - sizeof(IMAGE_HEADER_PARAM_ST);
 								}
 
 								tls_crypto_crc_init(&crcContext, 0xFFFFFFFF, CRYPTO_CRC_TYPE_32, 3);
@@ -302,7 +301,7 @@ static void fwup_scheduler(void *data)
 							TLS_DBGPRT_INFO("update the firmware successfully!\n");
 							fwup->current_state |= TLS_FWUP_STATE_COMPLETE;
 							if (oneshotback != 0){
-								tls_wifi_set_oneshot_flag(oneshotback);	// ª÷∏¥“ªº¸≈‰÷√
+								tls_wifi_set_oneshot_flag(oneshotback);
 							}
 							err_status = 0;
 						}
@@ -321,7 +320,7 @@ request_finish:
 					{
 						request->complete(request, request->arg);
 					}
-					if(fwup->updated_len >= (fwup->total_len))
+					if((fwup->updated_len >= (fwup->image_size)) || (request->status != TLS_FWUP_REQ_STATUS_SUCCESS))
 					{
 					    fwup_update_autoflag();
 
@@ -351,7 +350,7 @@ void fwup_request_complete(struct tls_fwup_request *request, void *arg)
 	tls_os_sem_release(sem);
 }
 
-u32 tls_fwup_enter(enum tls_fwup_image_src image_src)
+u32 tls_fwup_enter(enum tls_fwup_image_src image_src, uint32_t image_size)
 {
 	u32 session_id = 0;
 	u32 cpu_sr;
@@ -382,6 +381,7 @@ u32 tls_fwup_enter(enum tls_fwup_image_src image_src)
 
 	fwup->received_len = 0;
 	fwup->total_len = 0;
+	fwup->image_size = image_size;
 	fwup->updated_len = 0;
 	fwup->program_base = 0;
 	fwup->program_offset = 0;
@@ -391,7 +391,7 @@ u32 tls_fwup_enter(enum tls_fwup_image_src image_src)
 	fwup->busy = TRUE;
 	oneshotback = tls_wifi_get_oneshot_flag();
 	if (oneshotback != 0){
-		tls_wifi_set_oneshot_flag(0);	// ÕÀ≥ˆ“ªº¸≈‰÷√
+		tls_wifi_set_oneshot_flag(0);	
 	}
 	tls_param_get(TLS_PARAM_ID_PSM, &enable, TRUE);	
 	if (TRUE == enable)
@@ -429,6 +429,7 @@ int tls_fwup_exit(u32 session_id)
 
 	fwup->received_len = 0;
 	fwup->total_len = 0;
+	fwup->image_size = 0;
 	fwup->updated_len = 0;
 	fwup->program_base = 0;
 	fwup->program_offset = 0;
@@ -437,7 +438,7 @@ int tls_fwup_exit(u32 session_id)
 	fwup->current_session_id = 0;
 	fwup->busy = FALSE;
 	if (oneshotback != 0){
-		tls_wifi_set_oneshot_flag(oneshotback); // ª÷∏¥“ªº¸≈‰÷√
+		tls_wifi_set_oneshot_flag(oneshotback); 
 	}
 	tls_param_get(TLS_PARAM_ID_PSM, &enable, TRUE);	
 	tls_wifi_set_psflag(enable, 0);

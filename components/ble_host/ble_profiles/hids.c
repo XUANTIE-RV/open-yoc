@@ -13,8 +13,8 @@
 
 typedef struct hids_info_t {
     uint16_t bcdHID;
-    uint8_t countryCode;
-    uint8_t flags;
+    uint8_t  countryCode;
+    uint8_t  flags;
 } hids_info_t;
 
 typedef struct hids_report_ref_t {
@@ -23,13 +23,13 @@ typedef struct hids_report_ref_t {
 } hids_report_ref_t;
 
 enum {
-    HIDS_INPUT = 0x01,
-    HIDS_OUTPUT = 0x02,
+    HIDS_INPUT   = 0x01,
+    HIDS_OUTPUT  = 0x02,
     HIDS_FEATURE = 0x03,
 };
 
 enum {
-    HIDS_REMOTE_WAKE = 0x01,
+    HIDS_REMOTE_WAKE          = 0x01,
     HIDS_NORMALLY_CONNECTABLE = 0x02,
 };
 
@@ -49,7 +49,7 @@ static hids_report_ref_t report_output_ref = {
     HIDS_OUTPUT,
 };
 
-//static hids_report_ref_t report_feature_ref = {
+// static hids_report_ref_t report_feature_ref = {
 //    0x00,
 //    HIDS_FEATURE,
 //};
@@ -57,42 +57,80 @@ static hids_report_ref_t report_output_ref = {
 typedef struct reportdata_array {
     uint8_t *map_array;
     uint16_t map_len;
-    int8_t s_flag;
+    int8_t   s_flag;
 } data_report_array;
 
-static data_report_array  data_in_out[] = {
-    {NULL, 0, -1}, //REPORT_MAP
-    {NULL, 0, -1}, //REPORT_INPUT
-    {NULL, 0, -1}, //REPORT_OUTPUT
+static data_report_array data_in_out[] = {
+    { NULL, 0, -1 }, // REPORT_MAP
+    { NULL, 0, -1 }, // REPORT_INPUT
+    { NULL, 0, -1 }, // REPORT_OUTPUT
 };
 
-gatt_service hids_service;
-
-
 static uint8_t *get_data_map_data(uint8_t u_type);
-static uint16_t  get_data_map_len(uint8_t u_type);
+static uint16_t get_data_map_len(uint8_t u_type);
 
 typedef struct _hids_t {
     uint16_t conn_handle;
     uint16_t svc_handle;
     uint16_t input_ccc;
     uint16_t boot_input_ccc;
-    uint8_t protocol_mode;
+    uint8_t  protocol_mode;
 } hids_t;
 
-hids_t g_hids = {0};
-
+hids_t g_hids = { 0 };
 
 typedef struct _register_hids_event_ {
-    int16_t  idx;
+    int16_t       idx;
     hids_event_cb cb;
-} register_hids_event ;
-register_hids_event  hids_event_arr[HIDS_IDX_MAX] = {0};
+} register_hids_event;
+register_hids_event hids_event_arr[HIDS_IDX_MAX] = { 0 };
 
-//static struct bt_gatt_ccc_cfg_t ccc_data1[2] = {};
-//static struct bt_gatt_ccc_cfg_t ccc_data2[2] = {};
+#if defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE
+GATT_SERVICE_STATIC_DEFINE(
+    hids_service, GATT_PRIMARY_SERVICE_DEFINE(UUID_HIDS),
+    /* REPORT MAP */
+    GATT_CHAR_DEFINE(UUID_HIDS_REPORT_MAP, GATT_CHRC_PROP_READ),
+    GATT_CHAR_VAL_DEFINE(UUID_HIDS_REPORT_MAP, GATT_PERM_READ),
 
-gatt_attr_t  hids_attrs[] = {
+    /* REPORT INPUT  */
+    GATT_CHAR_DEFINE(UUID_HIDS_REPORT, GATT_CHRC_PROP_READ | GATT_CHRC_PROP_WRITE | GATT_CHRC_PROP_NOTIFY),
+    GATT_CHAR_VAL_DEFINE(UUID_HIDS_REPORT, GATT_PERM_READ | GATT_PERM_READ_ENCRYPT),
+    GATT_CHAR_DESCRIPTOR_DEFINE(UUID_HIDS_REPORT_REF, GATT_PERM_READ | GATT_PERM_READ_ENCRYPT), GATT_CHAR_CCC_DEFINE(),
+
+    /* REPORT OUTPUT */
+    GATT_CHAR_DEFINE(UUID_HIDS_REPORT, GATT_CHRC_PROP_READ | GATT_CHRC_PROP_WRITE | GATT_CHRC_PROP_WRITE_WITHOUT_RESP),
+    GATT_CHAR_VAL_DEFINE(UUID_HIDS_REPORT, GATT_PERM_READ | GATT_PERM_READ_ENCRYPT | GATT_PERM_WRITE),
+    GATT_CHAR_DESCRIPTOR_DEFINE(UUID_HIDS_REPORT_REF, GATT_PERM_READ | GATT_PERM_READ_ENCRYPT),
+#if 0
+    /* REPORT FEATURE */
+    GATT_CHAR_DEFINE(UUID_HIDS_REPORT, GATT_CHRC_PROP_READ | GATT_CHRC_PROP_WRITE),
+    GATT_CHAR_VAL_DEFINE(UUID_HIDS_REPORT, GATT_PERM_READ | GATT_PERM_READ_ENCRYPT | GATT_PERM_WRITE | GATT_PERM_WRITE_ENCRYPT),
+    GATT_CHAR_DESCRIPTOR_DEFINE(UUID_HIDS_REPORT_REF, GATT_PERM_READ),
+#endif
+    /* Boot Keyboard Input Report */
+    GATT_CHAR_DEFINE(UUID_HIDS_BOOT_KB_IN_REPORT, GATT_CHRC_PROP_READ | GATT_CHRC_PROP_NOTIFY),
+    GATT_CHAR_VAL_DEFINE(UUID_HIDS_BOOT_KB_IN_REPORT, GATT_PERM_READ | GATT_PERM_READ_ENCRYPT | GATT_PERM_WRITE),
+    GATT_CHAR_CCC_DEFINE(),
+
+    /* Boot Keyboard Output Report */
+    GATT_CHAR_DEFINE(UUID_HIDS_BOOT_KB_OUT_REPORT,
+                     GATT_CHRC_PROP_READ | GATT_CHRC_PROP_WRITE | GATT_CHRC_PROP_WRITE_WITHOUT_RESP),
+    GATT_CHAR_VAL_DEFINE(UUID_HIDS_BOOT_KB_OUT_REPORT, GATT_PERM_READ | GATT_PERM_READ_ENCRYPT | GATT_PERM_WRITE),
+
+    /* HID Information */
+    GATT_CHAR_DEFINE(UUID_HIDS_INFO, GATT_CHRC_PROP_READ), GATT_CHAR_VAL_DEFINE(UUID_HIDS_INFO, GATT_PERM_READ),
+
+    /* HID Control Point */
+    GATT_CHAR_DEFINE(UUID_HIDS_CTRL_POINT, GATT_CHRC_PROP_WRITE_WITHOUT_RESP),
+    GATT_CHAR_VAL_DEFINE(UUID_HIDS_CTRL_POINT, GATT_PERM_WRITE),
+
+    /* Protocol Mode */ // low power Suspend mode ,0x00 Boot Protocol Mode 0x01 report protocol mode
+    GATT_CHAR_DEFINE(UUID_HIDS_PROTOCOL_MODE, GATT_CHRC_PROP_READ | GATT_CHRC_PROP_WRITE_WITHOUT_RESP),
+    GATT_CHAR_VAL_DEFINE(UUID_HIDS_PROTOCOL_MODE, GATT_PERM_READ | GATT_PERM_WRITE), );
+#else
+gatt_service hids_service;
+
+gatt_attr_t hids_attrs[] = {
     GATT_PRIMARY_SERVICE_DEFINE(UUID_HIDS),
     /* REPORT MAP */
     GATT_CHAR_DEFINE(UUID_HIDS_REPORT_MAP, GATT_CHRC_PROP_READ),
@@ -120,8 +158,9 @@ gatt_attr_t  hids_attrs[] = {
     GATT_CHAR_CCC_DEFINE(),
 
     /* Boot Keyboard Output Report */
-    GATT_CHAR_DEFINE(UUID_HIDS_BOOT_KB_OUT_REPORT, GATT_CHRC_PROP_READ | GATT_CHRC_PROP_WRITE | GATT_CHRC_PROP_WRITE_WITHOUT_RESP),
-    GATT_CHAR_VAL_DEFINE(UUID_HIDS_BOOT_KB_OUT_REPORT, GATT_PERM_READ | GATT_PERM_READ_ENCRYPT | GATT_PERM_WRITE), //
+    GATT_CHAR_DEFINE(UUID_HIDS_BOOT_KB_OUT_REPORT,
+                     GATT_CHRC_PROP_READ | GATT_CHRC_PROP_WRITE | GATT_CHRC_PROP_WRITE_WITHOUT_RESP),
+    GATT_CHAR_VAL_DEFINE(UUID_HIDS_BOOT_KB_OUT_REPORT, GATT_PERM_READ | GATT_PERM_READ_ENCRYPT | GATT_PERM_WRITE),
 
     /* HID Information */
     GATT_CHAR_DEFINE(UUID_HIDS_INFO, GATT_CHRC_PROP_READ),
@@ -131,22 +170,25 @@ gatt_attr_t  hids_attrs[] = {
     GATT_CHAR_DEFINE(UUID_HIDS_CTRL_POINT, GATT_CHRC_PROP_WRITE_WITHOUT_RESP),
     GATT_CHAR_VAL_DEFINE(UUID_HIDS_CTRL_POINT, GATT_PERM_WRITE),
 
-    /* Protocol Mode *///low power Suspend mode ,0x00 Boot Protocol Mode 0x01 report protocol mode
+    /* Protocol Mode */ // low power Suspend mode ,0x00 Boot Protocol Mode 0x01 report protocol mode
     GATT_CHAR_DEFINE(UUID_HIDS_PROTOCOL_MODE, GATT_CHRC_PROP_READ | GATT_CHRC_PROP_WRITE_WITHOUT_RESP),
     GATT_CHAR_VAL_DEFINE(UUID_HIDS_PROTOCOL_MODE, GATT_PERM_READ | GATT_PERM_WRITE),
 };
+#endif
 
 static void read_report(evt_data_gatt_char_read_t *e, void *data, uint16_t len)
 {
     e->data = data;
-    e->len = len;
+    e->len  = len;
 }
 
 static void event_char_read(ble_event_en event, void *event_data)
 {
     evt_data_gatt_char_read_t *e = (evt_data_gatt_char_read_t *)event_data;
 
-    if (g_hids.conn_handle == 0xFFFF || e->char_handle < g_hids.svc_handle || e->char_handle >= g_hids.svc_handle + HIDS_IDX_MAX) {
+    if (g_hids.conn_handle == 0xFFFF || e->char_handle < g_hids.svc_handle
+        || e->char_handle >= g_hids.svc_handle + HIDS_IDX_MAX)
+    {
         return;
     }
 
@@ -187,7 +229,7 @@ static void event_char_read(ble_event_en event, void *event_data)
     }
 }
 
-int  init_hids_call_func(int32_t idx, hids_event_cb cb_event)
+int ble_prf_hids_regist(int32_t idx, hids_event_cb cb_event)
 {
     if (idx < 0 || idx >= HIDS_IDX_MAX) {
         return -1;
@@ -197,7 +239,7 @@ int  init_hids_call_func(int32_t idx, hids_event_cb cb_event)
         hids_event_arr[idx].cb = cb_event;
     }
 
-    return  0;
+    return 0;
 }
 
 int execute_hids_call_func(int32_t idx, void *event_data)
@@ -215,10 +257,12 @@ int execute_hids_call_func(int32_t idx, void *event_data)
 
 static void event_char_write(ble_event_en event, void *event_data)
 {
-    evt_data_gatt_char_write_t *e = (evt_data_gatt_char_write_t *)event_data;
-    int ires = 0;
+    evt_data_gatt_char_write_t *e    = (evt_data_gatt_char_write_t *)event_data;
+    int                         ires = 0;
 
-    if (g_hids.conn_handle == 0xFFFF || e->char_handle < g_hids.svc_handle || e->char_handle >= g_hids.svc_handle + HIDS_IDX_MAX) {
+    if (g_hids.conn_handle == 0xFFFF || e->char_handle < g_hids.svc_handle
+        || e->char_handle >= g_hids.svc_handle + HIDS_IDX_MAX)
+    {
         return;
     }
 
@@ -238,8 +282,7 @@ static void event_char_write(ble_event_en event, void *event_data)
             break;
 
         case HIDS_IDX_CTRL_VAL:
-            LOGI(TAG, "control cmd %d, %s\n", e->data[0], e->data[0] == 0x00 ? " Suspend" :
-                 "Exit Suspend");
+            LOGI(TAG, "control cmd %d, %s\n", e->data[0], e->data[0] == 0x00 ? " Suspend" : "Exit Suspend");
             ires = execute_hids_call_func(HIDS_IDX_CTRL_VAL, e);
             break;
 
@@ -260,7 +303,9 @@ static void event_char_ccc_change(ble_event_en event, void *event_data)
 {
     evt_data_gatt_char_ccc_change_t *e = (evt_data_gatt_char_ccc_change_t *)event_data;
 
-    if (g_hids.conn_handle == 0xFFFF || e->char_handle < g_hids.svc_handle || e->char_handle >= g_hids.svc_handle + HIDS_IDX_MAX) {
+    if (g_hids.conn_handle == 0xFFFF || e->char_handle < g_hids.svc_handle
+        || e->char_handle >= g_hids.svc_handle + HIDS_IDX_MAX)
+    {
         return;
     }
 
@@ -318,7 +363,7 @@ static ble_event_cb_t ble_cb = {
     .callback = hids_event_callback,
 };
 
-hids_handle_t hids_init(uint8_t     mode)
+hids_handle_t ble_prf_hids_init(uint8_t mode)
 {
     int ret = 0;
 
@@ -328,26 +373,30 @@ hids_handle_t hids_init(uint8_t     mode)
         return NULL;
     }
 
-    ret = ble_stack_gatt_registe_service(&hids_service,hids_attrs, BLE_ARRAY_NUM(hids_attrs));
+#if defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE
+    ret = ble_stack_gatt_service_handle(&hids_service);
+#else
+    ret = ble_stack_gatt_registe_service(&hids_service, hids_attrs, BLE_ARRAY_NUM(hids_attrs));
+#endif
 
     if (ret < 0) {
         return NULL;
     }
 
-    g_hids.conn_handle = 0xFFFF;
-    g_hids.svc_handle = ret;
+    g_hids.conn_handle   = 0xFFFF;
+    g_hids.svc_handle    = ret;
     g_hids.protocol_mode = mode;
 
     memset(hids_event_arr, 0x0, sizeof(hids_event_arr));
     return &g_hids;
 }
 
-int hids_notify_send(hids_handle_t handle, uint8_t *key_code, uint16_t us_len)
+int ble_prf_hids_notify_send(hids_handle_t handle, uint8_t *key_code, uint16_t us_len)
 {
     hids_t *hids = handle;
 
     if (handle == NULL) {
-        return -BLE_STACK_ERR_NULL;
+        return -BT_STACK_STATUS_EINVAL;
     }
 
     if (hids->protocol_mode == HIDS_REPORT_PROTOCOL_MODE && hids->input_ccc == CCC_VALUE_NOTIFY) {
@@ -356,33 +405,33 @@ int hids_notify_send(hids_handle_t handle, uint8_t *key_code, uint16_t us_len)
 
     return 0;
 }
-int hids_key_send(hids_handle_t handle, uint8_t *key_code, uint16_t us_len)
+int ble_prf_hids_key_send(hids_handle_t handle, uint8_t *key_code, uint16_t us_len)
 {
     hids_t *hids = handle;
 
     if (handle == NULL) {
-        return -BLE_STACK_ERR_NULL;
+        return -BT_STACK_STATUS_EINVAL;
     }
 
     ble_stack_gatt_notificate(hids->conn_handle, hids->svc_handle + HIDS_IDX_REPORT_INPUT_VAL, key_code, us_len);
     return 0;
 }
 
-int set_data_map(uint8_t u_data[], uint16_t len, uint8_t u_type)
+int ble_prf_hids_set_data_map(uint8_t u_data[], uint16_t len, uint8_t u_type)
 {
     if (u_type >= REPORT_MAX) {
         return -1;
     }
 
-    //data_in_out[u_type].map_array = (uint8_t *)malloc(sizeof(uint8_t) * len);
+    // data_in_out[u_type].map_array = (uint8_t *)malloc(sizeof(uint8_t) * len);
 
-    //if (data_in_out[u_type].map_array == NULL) {
+    // if (data_in_out[u_type].map_array == NULL) {
     //    return -1;
     //}
 
     data_in_out[u_type].map_array = u_data;
-    data_in_out[u_type].map_len = len;
-    data_in_out[u_type].s_flag = 0;
+    data_in_out[u_type].map_len   = len;
+    data_in_out[u_type].s_flag    = 0;
 
     return 0;
 }
@@ -399,7 +448,7 @@ static uint8_t *get_data_map_data(uint8_t u_type)
     return (uint8_t *)data_in_out[u_type].map_array;
 }
 
-static uint16_t  get_data_map_len(uint8_t u_type)
+static uint16_t get_data_map_len(uint8_t u_type)
 {
     if (u_type >= REPORT_MAX) {
         return -1;
@@ -409,10 +458,5 @@ static uint16_t  get_data_map_len(uint8_t u_type)
         return -1;
     }
 
-    return  data_in_out[u_type].map_len;
+    return data_in_out[u_type].map_len;
 }
-
-
-
-
-

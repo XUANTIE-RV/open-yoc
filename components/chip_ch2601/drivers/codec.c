@@ -344,7 +344,7 @@ csi_error_t csi_codec_output_resume(csi_codec_output_t *ch)
 uint32_t csi_codec_output_buffer_avail(csi_codec_output_t *ch)
 {
     CSI_PARAM_CHK(ch, CSI_ERROR);
-    return ringbuffer_avail(ch->ring_buf);
+    return csi_ringbuf_avail(ch->ring_buf);
 }
 
 /**
@@ -355,7 +355,7 @@ uint32_t csi_codec_output_buffer_avail(csi_codec_output_t *ch)
 uint32_t csi_codec_output_buffer_remain(csi_codec_output_t *ch)
 {
     CSI_PARAM_CHK(ch, CSI_ERROR);
-    return ringbuffer_len(ch->ring_buf);
+    return csi_ringbuf_len(ch->ring_buf);
 }
 
 /**
@@ -367,7 +367,7 @@ csi_error_t csi_codec_output_buffer_reset(csi_codec_output_t *ch)
 {
     CSI_PARAM_CHK(ch, CSI_ERROR);
     csi_error_t ret = CSI_ERROR;
-    ringbuffer_reset(ch->ring_buf);
+    csi_ringbuf_reset(ch->ring_buf);
 
     if (ch->ring_buf->buffer != NULL) {
         memset(ch->ring_buf->buffer, 0, ch->ring_buf->size);
@@ -390,7 +390,7 @@ csi_error_t csi_codec_output_mute(csi_codec_output_t *ch, bool enable)
 {
     CSI_PARAM_CHK(ch, CSI_ERROR);
     csi_error_t ret = CSI_OK;
-    es8156_set_software_mute(&es8156_dev, true);
+    es8156_set_software_mute(&es8156_dev, enable);
     return ret;
 }
 
@@ -649,7 +649,7 @@ void csi_codec_input_stop(csi_codec_input_t *ch)
 uint32_t csi_codec_input_buffer_avail(csi_codec_input_t *ch)
 {
     CSI_PARAM_CHK(ch, CSI_ERROR);
-    return ringbuffer_avail(ch->ring_buf);
+    return csi_ringbuf_avail(ch->ring_buf);
 }
 
 /**
@@ -660,7 +660,7 @@ uint32_t csi_codec_input_buffer_avail(csi_codec_input_t *ch)
 uint32_t csi_codec_input_buffer_remain(csi_codec_input_t *ch)
 {
     CSI_PARAM_CHK(ch, CSI_ERROR);
-    return ringbuffer_len(ch->ring_buf);
+    return csi_ringbuf_len(ch->ring_buf);
 }
 
 /**
@@ -672,7 +672,7 @@ csi_error_t csi_codec_input_buffer_reset(csi_codec_input_t *ch)
 {
     CSI_PARAM_CHK(ch, CSI_ERROR);
     csi_error_t ret = CSI_ERROR;
-    ringbuffer_reset(ch->ring_buf);
+    csi_ringbuf_reset(ch->ring_buf);
 
     if (ch->ring_buf->buffer != NULL) {
         memset(ch->ring_buf->buffer, 0, ch->ring_buf->size);

@@ -1,0 +1,159 @@
+## 第一部分： 基础信息
+name: bl606p_bthost                                  # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
+version: v7.6.0                                     # <必选项> 组件版本号
+description: bluetooth host source code        # <必选项> 建议至少20字以上
+type: common                                          # <必选项> 组件类型，为：solution, chip, board, common
+
+tag: 核心模块                                       # <可选项> 组件分类，缺省值： ''
+keywords:                                           # <可选项> 标签，会影响到组件被搜索的效果，合理的标签很重要
+  - chip
+license: Apache license v2.0                        # <可选项> 源代码的许可证，要确保所有代码、文件的许可证不冲突。如：MIT，Apache license v2.0，BSD
+
+
+hw_info:
+  cpu1:
+    arch_name: riscv
+    vendor_name: bthost
+    cpu_name: e907fp
+    ld_script: gcc_flash_cpu1.ld
+    flash_program: xxxx
+    toolchain_prefix: riscv64-unknown-elf
+
+build_config:
+  cflag: >
+    -Wno-unused-variable
+    -Wno-unused-but-set-variable
+    -march=rv32imafc -mabi=ilp32f -g -Os
+    -nostdlib -Wpointer-arith -Wundef -Wall -Wl,-EL -ffunction-sections
+    -fdata-sections -fno-inline-functions -fno-builtin -fno-strict-aliasing
+    -fno-strength-reduce -fno-omit-frame-pointer -std=gnu11
+    -DCFG_BLE_ENABLE
+    -DBFLB_BLE
+    -DCONFIG_BT_CONN=2
+    -DCONFIG_BLE_TX_BUFF_DATA=2
+    -DCFG_BLE_TX_BUFF_DATA=2
+    -DCONFIG_MAX_SCO=2
+    -DCONFIG_BT_SMP
+    -DCONFIG_BT_SIGNING
+    -DCONFIG_BT_ALLROLES=1
+    -DCONFIG_BT_CENTRAL=1
+    -DCONFIG_BT_OBSERVER=1
+    -DCONFIG_BT_PERIPHERAL=1
+    -DCONFIG_BT_BROADCASTER=1
+    -DCONFIG_BT_STACK_CLI=1
+    -DCONFIG_BT_GATT_CLIENT=1
+    -DCONFIG_BT_ECC
+    -DCONFIG_BT_BREDR=1
+    -DCONFIG_BT_A2DP=1
+    -DCONFIG_BT_AVRCP=1
+    -DCONFIG_BT_HFP=0
+    -DCONFIG_BT_L2CAP_DYNAMIC_CHANNEL
+    -DCONFIG_BT_GATT_DYNAMIC_DB
+    -DSBC_DEC_INCLUDED
+    -DSBC_ENC_INCLUDED
+
+  include:
+  - src/common
+  - src/port
+  - src/port/include
+  - src/common/include
+  - src/include/bluetooth
+  - src/include/drivers/bluetooth
+  - src/host
+  - src/sbc/dec #sbc codec
+  - src/sbc/enc
+  - src/ble_inc
+  
+  internal_include:                      # <可选项> 编译时，影响编译器的-I 参数 ,组件内有效
+  - src/ble_inc
+  - src/common/include/misc
+  - src/common/include/zephyr
+  - src/common/include/toolchain
+  - src/common/tinycrypt/include/tinycrypt
+  - src/hci_onchip
+  - src/bl_hci_wrapper
+  - src/host
+  - src/cli_cmds
+  - src/services
+
+source_file:                             # <可选项> 指定参与编译的源代码文件，支持通配符，采用相对路径
+  - src/port/bl_port.c
+  - src/common/atomic_c.c
+  - src/common/buf.c
+  - src/common/log.c
+  - src/common/poll.c
+  - src/common/rpa.c
+  - src/common/work_q.c
+  - src/common/utils.c
+  - src/common/dec.c
+  - src/common/dummy.c
+  - src/common/tinycrypt/source/aes_decrypt.c
+  - src/common/tinycrypt/source/aes_encrypt.c
+  - src/common/tinycrypt/source/cbc_mode.c
+  - src/common/tinycrypt/source/ccm_mode.c
+  - src/common/tinycrypt/source/cmac_mode.c
+  - src/common/tinycrypt/source/ctr_mode.c
+  - src/common/tinycrypt/source/ctr_prng.c
+  - src/common/tinycrypt/source/ecc.c
+  - src/common/tinycrypt/source/ecc_dh.c
+  - src/common/tinycrypt/source/ecc_dsa.c
+  - src/common/tinycrypt/source/ecc_platform_specific.c
+  - src/common/tinycrypt/source/hmac.c
+  - src/common/tinycrypt/source/hmac_prng.c
+  - src/common/tinycrypt/source/sha256.c
+  - src/common/tinycrypt/source/utils.c
+  - src/bl_hci_wrapper/bl_hci_wrapper.c
+  - src/hci_onchip/hci_driver.c
+  - src/host/att.c
+  - src/host/conn.c
+  - src/host/crypto.c
+  - src/host/gatt.c
+  - src/host/hci_core.c
+  - src/host/hci_ecc.c
+  - src/host/l2cap.c
+  - src/host/uuid.c
+  - src/host/smp.c #CONFIG_DISABLE_BT_SMP
+  - src/host/keys.c
+  - src/host/keys_br.c #bredr_stack_srcs
+  - src/host/l2cap_br.c
+  - src/sbc/dec/alloc.c #sbc codec
+  - src/sbc/dec/bitalloc.c
+  - src/sbc/dec/bitalloc-sbc.c
+  - src/sbc/dec/bitstream-decode.c
+  - src/sbc/dec/decoder-oina.c
+  - src/sbc/dec/decoder-private.c
+  - src/sbc/dec/decoder-sbc.c
+  - src/sbc/dec/dequant.c
+  - src/sbc/dec/framing.c
+  - src/sbc/dec/framing-sbc.c
+  - src/sbc/dec/oi_codec_version.c
+  - src/sbc/dec/synthesis-8-generated.c
+  - src/sbc/dec/synthesis-dct8.c
+  - src/sbc/dec/synthesis-sbc.c
+  - src/sbc/enc/sbc_analysis.c
+  - src/sbc/enc/sbc_dct.c
+  - src/sbc/enc/sbc_dct_coeffs.c
+  - src/sbc/enc/sbc_enc_bit_alloc_mono.c
+  - src/sbc/enc/sbc_enc_bit_alloc_ste.c
+  - src/sbc/enc/sbc_enc_coeffs.c
+  - src/sbc/enc/sbc_encoder.c
+  - src/sbc/enc/sbc_packing.c
+  - src/cli_cmds/bredr_cli_cmds.c
+#  - src/host/sdp.c #btprofile component
+#  - src/host/a2dp.c
+#  - src/host/avdtp.c
+#  - src/host/avrcp.c
+#  - src/host/avctp.c
+#  - src/host/hfp_hf.c
+#  - src/host/rfcomm.c
+#  - src/host/at.c
+#  - src/cli_cmds/ble_cli_cmds.c #CONFIG_BT_STACK_CLI
+#  - src/cli_cmds/bredr_cli_cmds.c
+#  - src/cli_cmds/pts_cli_cmds.c
+#  - src/services/ble_tp_svc.c #CONFIG_BLE_TP_SERVER
+#  - src/host/bl_host_assist.c #CONFIG_BT_RESET
+#  - src/host/iso.c
+  
+def_config:
+  BFLB_BLE: 1
+  CFG_CON: 1

@@ -83,6 +83,20 @@ static void cmd_kvfs_func(char *wbuf, int wbuf_len, int argc, char **argv)
         } else {
             printf("kv getint fail\n");
         }
+    } else if (0 == strcmp(argv[1], "gethex") ) {
+        static char * encode = "0123456789ABCDEF";
+        int len = sizeof(getvalue);
+        ret = aos_kv_get(key, getvalue, &len);
+        if (ret >= 0) {
+            printf("kv gethex ");
+            for (int i = 0; i < len; i ++) {
+                putchar(encode[(getvalue[i] >> 4) & 0xf]);
+                putchar(encode[getvalue[i] & 0xf]);
+            }
+            putchar('\n');
+        } else {
+            printf("kv getint fail\n");
+        }
     }
 }
 

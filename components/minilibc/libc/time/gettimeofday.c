@@ -7,6 +7,11 @@
 
 extern int clock_gettime(clockid_t clockid, struct timespec *tp);
 
+/*
+SVr4, 4.3BSD.  POSIX.1-2001 describes gettimeofday() but not
+settimeofday().  POSIX.1-2008 marks gettimeofday() as obsolete,
+recommending the use of clock_gettime(2) instead.
+*/
 int gettimeofday(struct timeval *tv, struct timezone *tz)
 {
     struct timespec ts;

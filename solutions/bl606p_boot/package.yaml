@@ -1,0 +1,86 @@
+## 第一部分： 基础信息
+name: bl606p_boot                                   # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
+version: v7.6.0                                     # <必选项> 组件版本号
+description: bootloader for bl606p                  # <必选项> 建议至少20字以上
+type: solution                                      # <必选项> 组件类型，为：solution, chip, board, common, sdk
+
+hw_info:
+  cpu_id: cpu1
+  chip_name: chip_bl606p
+  ld_script: gcc_flash.ld
+
+depends:                                       # 该组件依赖其他的组件
+  - csi: v7.6.0
+  - chip_bl606p: v7.6.2
+  - boot: v7.6.0
+  - partition: v7.6.2
+  - sec_crypto: v7.6.0
+  - key_mgr: v7.6.0
+  - bootab: v7.6.2
+
+# 编译参数
+build_config:
+  include:
+    - app/include
+    - board/include
+  cflag: >
+        -c -g -Os -ffunction-sections -fdata-sections -Wall -fno-common 
+        -Os -gdwarf -ffunction-sections -fdata-sections -fstrict-volatile-bitfields -fshort-enums 
+        -fcommon -fno-strict-aliasing -fno-omit-frame-pointer  
+        -Wall -Wno-error=unused-function -Wno-error=unused-but-set-variable -Wno-error=unused-variable 
+        -Wno-error=deprecated-declarations -Wno-unused-parameter -Wno-sign-compare 
+        -Wno-old-style-declaration -mabi=ilp32f -mtune=e907 -mcmodel=medany 
+
+  asmflag: -c -g -ffunction-sections -fdata-sections -Wall
+  ldflag: -lstdc++ -lsupc++ -lm -lc -lgcc -lnosys -nostartfiles -Wl,--allow-multiple-definition -u _printf_float --specs=nano.specs -Wl,-Map=boot.map
+  cxxflag: >
+        -D_GLIBCXX_HAS_GTHREADS
+        -std=gnu++11 -fno-common -fno-exceptions -ffunction-sections -fdata-sections -fomit-frame-pointer -fpermissive -g -Os
+
+
+# 源文件
+source_file:
+  - app/src/*.c
+  - porting/*.c
+  - board/src/*.c
+
+def_config:
+  CONFIG_DEBUG: 3
+  SHOW_PART_INFO_EN: 0
+  CONFIG_NEWLIB_STUB: 1
+  CONFIG_NO_OTA_UPGRADE: 0
+  CONFIG_OTA_NO_DIFF: 1
+  CONFIG_PARITION_NO_VERIFY: 0
+  CONFIG_NOT_SUPORRT_SASC: 1
+  CONFIG_TB_KP: 1
+  CONFIG_KP_BUFFER_LEN: 4096
+  CONFIG_KEY_MGR_KP_PROTECT: 1
+  CONFIG_KEY_MGR_NO_PUB_PARTITION: y
+  CONFIG_IMG_AUTHENTICITY_NOT_CHECK: 0
+  # CONFIG_SHOW_KEY_IN_KP: y
+  CONFIG_MANTB_VERSION: 4
+  CONFIG_ARCH_INTERRUPTSTACK: 16384
+
+  #sec_crypto
+  CONFIG_SEC_CRYPTO_AES_SW: 1
+  CONFIG_SEC_CRYPTO_SHA_SW: 1
+  CONFIG_SEC_CRYPTO_RSA_SW: 1
+  CONFIG_SEC_CRYPTO_RNG_SW: 1
+
+  CONFIG_MLIBC_PATH: stdio2
+  CONFIG_SYSTICK_HZ: 100
+  CONFIG_CPU_E907: 1
+  HAVE_MBEDTLS_USER_CONFIG: 1
+
+  CPU_M1: 1
+  CPU_ID: "M0"
+  CPU_M0: y
+  ARCH_RISCV: y
+  # WLAN_DEBUG: y
+  BFLB_USE_HAL_DRIVER: y
+  CONF_ENABLE_FRAME_PTR: y
+  CONF_USER_ENABLE_PSRAM: y
+  CONFIG_XIP: y
+  CONFIG_WDT_TIMEOUT: 10000
+  CONFIG_MAX_PARTITION_NUM: 16
+  CONFIG_BL_LIB_SUB_PATH: "boot"

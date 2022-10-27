@@ -32,10 +32,7 @@
     .globl   __Vectors
     .type    __Vectors, @object
 __Vectors:
-    .long   Reset_Handler
-    .size    __Vectors, . - __Vectors
-
-    br       Reset_Handler
+    jbsr       Reset_Handler
     .align   2
     .long    0x594B5343 /* CSKY ASCII */
     .long    0x594B5343 /* CSKY ASCII */

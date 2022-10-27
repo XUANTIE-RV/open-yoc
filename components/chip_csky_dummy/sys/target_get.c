@@ -30,8 +30,10 @@ csi_error_t target_get(csi_dev_tag_t dev_tag, uint32_t idx, csi_dev_t *dev)
         ret = CSI_ERROR;
     }
 
+    ///< 使用包含外设基地址，外设中断号，外设设备号，外设设备类型成员的结构体数组变量初始化info
     info = (csi_perip_info_t *)&g_soc_info;
 
+    ///< 获取相应的设备类型和设备号
     while (info->reg_base) {
         if ((info->dev_tag == (uint16_t)dev_tag) && (info->idx == (uint8_t)idx)) {
             break;
@@ -44,6 +46,7 @@ csi_error_t target_get(csi_dev_tag_t dev_tag, uint32_t idx, csi_dev_t *dev)
         ret = CSI_ERROR;
     }
 
+    ///< 初始化设备的统一句柄：基地址，中断号，设备号，设备类型
     if (ret != CSI_ERROR) {
         dev->reg_base = info->reg_base;
         dev->irq_num  = info->irq_num;

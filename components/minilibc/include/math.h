@@ -146,9 +146,10 @@ typedef double double_t;
 #endif
 
 #define isnormal(y) (fpclassify(y) == FP_NORMAL)
-#define signbit(__x) \
-	((sizeof(__x) == sizeof(float))  ?  __signbitf(__x) : \
-		__signbitd(__x))
+#define signbit(x) \
+	((sizeof(x) == sizeof(float)) ? __builtin_signbitf(x) \
+	 : (sizeof(x) == sizeof(double)) ? __builtin_signbit(x) \
+	 : __builtin_signbitl(x))
 
 #define isgreater(x,y) \
           (__extension__ ({__typeof__(x) __x = (x); __typeof__(y) __y = (y); \
@@ -173,7 +174,7 @@ typedef double double_t;
 /* Non ANSI double precision functions.  */
 
 #if !defined(__cplusplus)
-#define log2(x) (log (x) / _M_LN2)
+//#define log2(x) (log (x) / _M_LN2)
 #endif
 
 /*  single precision functions.  */
@@ -265,6 +266,18 @@ extern double exp(double x);
 extern double nan (const char *);
 extern double expm1(double x);
 
+extern double round (double);
+extern float roundf(float x);
+extern double rint(double x);
+
+extern double trunc(double x);
+extern double acosh(double x);
+extern double asinh(double x);
+extern double atanh(double x);
+extern double log1p(double x);
+extern double log2(double x);
+extern double cbrt(double x);
+
 /* Single precision versions of ANSI functions.  */
 
 extern float atanf _PARAMS((float));
@@ -308,14 +321,6 @@ extern float hypotf _PARAMS((float, float));
 
 
 /* self minilibc define below */
-#ifndef min
-#define min(a, b) (((a) < (b)) ? (a) : (b))
-#endif
-
-#ifndef max
-#define max(a, b) (((a) > (b)) ? (a) : (b))
-#endif
-
 #ifndef MIN
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 #endif

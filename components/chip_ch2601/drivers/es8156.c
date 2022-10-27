@@ -244,11 +244,12 @@ int32_t es8156_set_right_channel_mute(es8156_dev_t *dev, bool en)
 
 int32_t es8156_set_software_mute(es8156_dev_t *dev, bool en)
 {
+
     if (en) {
-        return es8156_update_bits(dev, ES8156_MUTE_CTL_REG13, 0x10, 0x00);
+        return es8156_update_bits(dev, ES8156_MUTE_CTL_REG13, 0x6, 0x6);
     }
 
-    return es8156_update_bits(dev, ES8156_MUTE_CTL_REG13, 0x10, 0x10);
+    return es8156_update_bits(dev, ES8156_MUTE_CTL_REG13, 0x6, 0x0);
 }
 
 int32_t es8156_set_volume(es8156_dev_t *dev, unsigned char gain)

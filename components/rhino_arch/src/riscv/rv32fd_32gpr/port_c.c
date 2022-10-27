@@ -27,38 +27,38 @@ void *cpu_task_stack_init(cpu_stack_t *stack_base, size_t stack_size,
 
     stk = (cpu_stack_t *)temp;
 
-    *(--stk)  = (uint32_t)0x12345678L;          *(--stk)  = (uint32_t)0x87654321L;       
-    *(--stk)  = (uint32_t)0x12345678L;          *(--stk)  = (uint32_t)0x87654321L;       
-    *(--stk)  = (uint32_t)0x12345678L;          *(--stk)  = (uint32_t)0x87654321L;       
-    *(--stk)  = (uint32_t)0x12345678L;          *(--stk)  = (uint32_t)0x87654321L;       
-    *(--stk)  = (uint32_t)0x12345678L;          *(--stk)  = (uint32_t)0x87654321L;       
-    *(--stk)  = (uint32_t)0x12345678L;          *(--stk)  = (uint32_t)0x87654321L;       
-    *(--stk)  = (uint32_t)0x12345678L;          *(--stk)  = (uint32_t)0x87654321L;       
-    *(--stk)  = (uint32_t)0x12345678L;          *(--stk)  = (uint32_t)0x87654321L;       
-    *(--stk)  = (uint32_t)0x12345678L;          *(--stk)  = (uint32_t)0x87654321L;       
-    *(--stk)  = (uint32_t)0x12345678L;          *(--stk)  = (uint32_t)0x87654321L;       
-    *(--stk)  = (uint32_t)0x12345678L;          *(--stk)  = (uint32_t)0x87654321L;       
-    *(--stk)  = (uint32_t)0x12345678L;          *(--stk)  = (uint32_t)0x87654321L;       
-    *(--stk)  = (uint32_t)0x12345678L;          *(--stk)  = (uint32_t)0x87654321L;       
-    *(--stk)  = (uint32_t)0x12345678L;          *(--stk)  = (uint32_t)0x87654321L;       
-    *(--stk)  = (uint32_t)0x12345678L;          *(--stk)  = (uint32_t)0x87654321L;       
-    *(--stk)  = (uint32_t)0x12345678L;          *(--stk)  = (uint32_t)0x87654321L;       
-    *(--stk)  = (uint32_t)0x12345678L;          *(--stk)  = (uint32_t)0x87654321L;       
-    *(--stk)  = (uint32_t)0x12345678L;          *(--stk)  = (uint32_t)0x87654321L;       
-    *(--stk)  = (uint32_t)0x12345678L;          *(--stk)  = (uint32_t)0x87654321L;       
-    *(--stk)  = (uint32_t)0x12345678L;          *(--stk)  = (uint32_t)0x87654321L;       
-    *(--stk)  = (uint32_t)0x12345678L;          *(--stk)  = (uint32_t)0x87654321L;       
-    *(--stk)  = (uint32_t)0x12345678L;          *(--stk)  = (uint32_t)0x87654321L;       
-    *(--stk)  = (uint32_t)0x12345678L;          *(--stk)  = (uint32_t)0x87654321L;       
-    *(--stk)  = (uint32_t)0x12345678L;          *(--stk)  = (uint32_t)0x87654321L;       
-    *(--stk)  = (uint32_t)0x12345678L;          *(--stk)  = (uint32_t)0x87654321L;       
-    *(--stk)  = (uint32_t)0x12345678L;          *(--stk)  = (uint32_t)0x87654321L;       
-    *(--stk)  = (uint32_t)0x12345678L;          *(--stk)  = (uint32_t)0x87654321L;       
-    *(--stk)  = (uint32_t)0x12345678L;          *(--stk)  = (uint32_t)0x87654321L;       
-    *(--stk)  = (uint32_t)0x12345678L;          *(--stk)  = (uint32_t)0x87654321L;       
-    *(--stk)  = (uint32_t)0x12345678L;          *(--stk)  = (uint32_t)0x87654321L;       
-    *(--stk)  = (uint32_t)0x12345678L;          *(--stk)  = (uint32_t)0x87654321L;       
-    *(--stk)  = (uint32_t)0x12345678L;          *(--stk)  = (uint32_t)0x87654321L;       
+    *(--stk)  = (uint32_t)0x12345678L;       /* F31         */
+    *(--stk)  = (uint32_t)0x12345678L;       /* F30         */
+    *(--stk)  = (uint32_t)0x12345678L;       /* F29         */
+    *(--stk)  = (uint32_t)0x12345678L;       /* F28         */
+    *(--stk)  = (uint32_t)0x12345678L;       /* F27         */
+    *(--stk)  = (uint32_t)0x12345678L;       /* F26         */
+    *(--stk)  = (uint32_t)0x12345678L;       /* F25         */
+    *(--stk)  = (uint32_t)0x12345678L;       /* F24         */
+    *(--stk)  = (uint32_t)0x12345678L;       /* F23         */
+    *(--stk)  = (uint32_t)0x12345678L;       /* F22         */
+    *(--stk)  = (uint32_t)0x12345678L;       /* F21         */
+    *(--stk)  = (uint32_t)0x12345678L;       /* F20         */
+    *(--stk)  = (uint32_t)0x12345678L;       /* F19         */
+    *(--stk)  = (uint32_t)0x12345678L;       /* F18         */
+    *(--stk)  = (uint32_t)0x12345678L;       /* F17         */
+    *(--stk)  = (uint32_t)0x12345678L;       /* F16         */
+    *(--stk)  = (uint32_t)0x12345678L;       /* F15         */
+    *(--stk)  = (uint32_t)0x12345678L;       /* F14         */
+    *(--stk)  = (uint32_t)0x12345678L;       /* F13         */
+    *(--stk)  = (uint32_t)0x12345678L;       /* F12         */
+    *(--stk)  = (uint32_t)0x12345678L;       /* F11         */
+    *(--stk)  = (uint32_t)0x12345678L;       /* F10         */
+    *(--stk)  = (uint32_t)0x12345678L;       /* F9          */
+    *(--stk)  = (uint32_t)0x12345678L;       /* F8          */
+    *(--stk)  = (uint32_t)0x12345678L;       /* F7          */
+    *(--stk)  = (uint32_t)0x12345678L;       /* F6          */
+    *(--stk)  = (uint32_t)0x12345678L;       /* F5          */
+    *(--stk)  = (uint32_t)0x12345678L;       /* F4          */
+    *(--stk)  = (uint32_t)0x12345678L;       /* F3          */
+    *(--stk)  = (uint32_t)0x12345678L;       /* F2          */
+    *(--stk)  = (uint32_t)0x12345678L;       /* F1          */
+    *(--stk)  = (uint32_t)0x12345678L;       /* F0          */
 
     *(--stk) = (uint32_t)entry;                   /* PC            */
     *(--stk) = (uint32_t)0x31313131L;             /* X31           */

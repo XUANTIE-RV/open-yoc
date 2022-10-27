@@ -57,32 +57,6 @@ extern __printf_like(3, 0) int vsnprintk(char *str, size_t size,
 
 extern __printf_like(3, 0) void _vprintk(int (*out)(int, void *), void *ctx,
 					 const char *fmt, va_list ap);
-#else
-static inline int printk(const char *fmt, ...)
-{
-	ARG_UNUSED(fmt);
-	return 0;
-}
-
-static inline int vprintk(const char *fmt, va_list ap)
-{
-	ARG_UNUSED(fmt);
-	ARG_UNUSED(ap);
-	return 0;
-}
-
-#define snprintk snprintf
-
-static inline int vsnprintk(char *str, size_t size,
-						const char *fmt, va_list ap)
-{
-	ARG_UNUSED(str);
-	ARG_UNUSED(size);
-	ARG_UNUSED(fmt);
-	ARG_UNUSED(ap);
-
-	return 0;
-}
 #endif
 
 #ifdef __cplusplus

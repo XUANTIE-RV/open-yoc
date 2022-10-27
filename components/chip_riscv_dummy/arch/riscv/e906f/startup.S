@@ -69,7 +69,13 @@ __Vectors:
     .long   Default_IRQHandler
 
     .text
-    .align  2
+    .align   2
+    j        Reset_Handler
+    .align   2
+    .long    0x594B5343 /* CSKY ASCII */
+    .long    0x594B5343 /* CSKY ASCII */
+    .align   2
+    .long    Reset_Handler
 _start:
     .text
     .align  2
@@ -84,8 +90,18 @@ Reset_Handler:
     ori     a0, a0, 3
     csrw    mtvec, a0
 
+    /* enable mstatus FS */
     li      a0, 0x2000
     csrs    mstatus, a0
+
+#ifndef CONFIG_KERNEL_NONE
+    /* enable mexstatus SPUSHEN and SPSWAPEN */
+    la      a0, 0x30000
+#else
+    /* enable mexstatus SPUSHEN */
+    la      a0, 0x10000
+#endif
+    csrc    mexstatus, a0
 
     la      a0, __Vectors
     csrw    mtvt, a0

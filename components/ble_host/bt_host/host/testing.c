@@ -7,13 +7,14 @@
 #include <ble_os.h>
 #include <stddef.h>
 
-#include <bluetooth/mesh.h>
 #include <bluetooth/testing.h>
+#include <misc/util.h>
+#include <misc/slist.h>
 
 #if defined(CONFIG_BT_MESH)
-#include "mesh/net.h"
-#include "mesh/lpn.h"
-#include "mesh/transport.h"
+#include "inc/api/mesh.h"
+#include "inc/net.h"
+#include "inc/lpn.h"
 #endif /* CONFIG_BT_MESH */
 
 #include "testing.h"

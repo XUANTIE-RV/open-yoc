@@ -37,22 +37,6 @@ extern "C" {
 #endif
 
 typedef enum {
-    User_Software_IRQn             =  0U,      /* User software interrupt */
-    Supervisor_Software_IRQn       =  1U,      /* Supervisor software interrupt */
-    Machine_Software_IRQn          =  3U,      /* Machine software interrupt */
-    User_Timer_IRQn                =  4U,      /* User timer interrupt */
-    Supervisor_Timer_IRQn          =  5U,      /* Supervisor timer interrupt */
-    Machine_Timer_IRQn             =  7U,      /* Machine timer interrupt */
-    Machine_External_IRQn          =  11U,     /* Machine external interrupt */
-    CORET_IRQn                     =  7U,
-    DW_UART0_IRQn                  =  16U,
-    TIM0_IRQn                      =  18U,      /* timer0 Interrupt */
-    TIM1_IRQn                      =  20U,      /* timer1 Interrupt */
-    TIM2_IRQn                      =  21U,      /* timer1 Interrupt */
-    TIM3_IRQn                      =  22U,      /* timer1 Interrupt */
-} irqn_type_t;
-
-typedef enum {
     DW_UART0_RX_DMAN               = 0U,
     DW_UART0_TX_DMAN               = 1U,
     DW_UART1_RX_DMAN               = 2U,
@@ -230,7 +214,7 @@ typedef enum {
     PIN_FUNC_END                   =  0xFFFFFFFFU
 } pin_func_t;
 
-#define CONFIG_IRQ_NUM              32U
+#define CONFIG_IRQ_NUM              64U
 
 ///< AHB
 #define SPIFLASH_BASE               0x18000000UL
@@ -238,20 +222,78 @@ typedef enum {
 #define SRAM_BASE                   0x20000000UL
 #define SRAM_SIZE                   0x20000U
 
-///< APB0
+#if __riscv_xlen == 32
+
+typedef enum {
+    User_Software_IRQn             =  0U,      /* User software interrupt */
+    Supervisor_Software_IRQn       =  1U,      /* Supervisor software interrupt */
+    Machine_Software_IRQn          =  3U,      /* Machine software interrupt */
+    User_Timer_IRQn                =  4U,      /* User timer interrupt */
+    Supervisor_Timer_IRQn          =  5U,      /* Supervisor timer interrupt */
+    CORET_IRQn                     =  7U,      /* Machine timer interrupt */
+    Machine_External_IRQn          =  11U,     /* Machine external interrupt */
+    DW_UART0_IRQn                  =  16U,
+    TIM0_IRQn                      =  18U,      /* timer0 Interrupt */
+    TIM1_IRQn                      =  20U,      /* timer1 Interrupt */
+    TIM2_IRQn                      =  21U,      /* timer1 Interrupt */
+    TIM3_IRQn                      =  22U,      /* timer1 Interrupt */
+} irqn_type_t;
+
+#define DW_UART0_BASE               0x40015000UL
 #define DW_TIMER0_BASE              0x40011000UL
 #define DW_TIMER0_SIZE              0x14U
 #define DW_TIMER1_BASE              (DW_TIMER0_BASE+DW_TIMER0_SIZE)
 #define DW_TIMER1_SIZE              DW_TIMER0_SIZE
-
 #define DW_TIMER2_BASE              0x40011028UL
 #define DW_TIMER2_SIZE              0x14U
 #define DW_TIMER3_BASE              (DW_TIMER2_BASE+DW_TIMER2_SIZE)
 #define DW_TIMER3_SIZE              DW_TIMER2_SIZE
 
+#elif __riscv_xlen == 64
 
-#define DW_UART0_BASE               0x40015000U
-#define DW_UART0_SIZE               0x1000U
+/* -------------------------  Interrupt Number Definition  ------------------------ */
+
+typedef enum IRQn {
+    /* ----------------------  SmartL Specific Interrupt Numbers  --------------------- */
+    Supervisor_Software_IRQn        =   1,
+    Machine_Software_IRQn           =   3,
+    Supervisor_Timer_IRQn           =   5,
+    CORET_IRQn                      =   7,
+    Supervisor_External_IRQn        =   9,
+    Machine_External_IRQn           =   11,
+    DW_UART0_IRQn                   =   32+0,     /* uart Interrupt */
+    TIM0_IRQn                       =   32+2,     /* timer0 Interrupt */
+    TIM1_IRQn                       =   32+3,     /* timer1 Interrupt */
+    TIM2_IRQn                       =   32+4,     /* timer1 Interrupt */
+    TIM3_IRQn                       =   32+5,     /* timer1 Interrupt */
+    GPIO0_IRQn                      =   32+6,     /* gpio0 Interrupt */
+    GPIO1_IRQn                      =   32+7,     /* gpio1 Interrupt */
+    GPIO2_IRQn                      =   32+8,     /* gpio2 Interrupt */
+    GPIO3_IRQn                      =   32+9,     /* gpio3 Interrupt */
+    GPIO4_IRQn                      =   32+10,     /* gpio4 Interrupt */
+    GPIO5_IRQn                      =   32+11,     /* gpio5 Interrupt */
+    GPIO6_IRQn                      =   32+12,     /* gpio6 Interrupt */
+    GPIO7_IRQn                      =   32+13,     /* gpio7 Interrupt */
+    STIM0_IRQn                      =   32+14,     /* stimer0 Interrupt */
+    STIM1_IRQn                      =   32+15,     /* stimer0 Interrupt */
+    STIM2_IRQn                      =   32+16,     /* stimer0 Interrupt */
+    STIM3_IRQn                      =   32+17,     /* stimer0 Interrupt */
+    PAD_IRQn                        =   32+18,     /* pad Interrupt */
+} irqn_type_t;
+
+#define DW_UART0_BASE              (0x10015000UL)
+#define DW_TIMER0_BASE             (0x10011000UL)
+#define DW_TIMER1_BASE             (0x10011014UL)
+#define DW_TIMER2_BASE             (0x10011028UL)
+#define DW_TIMER3_BASE             (0x1001103cUL)
+
+#endif /*__riscv_xlen*/
+
+#define PLIC_BASE           (0x4000000000UL)
+#ifndef CORET_BASE
+#define CORET_BASE          (PLIC_BASE + 0x4000000UL)               /*!< CORET Base Address */
+#endif
+#define PLIC                ((PLIC_Type *)PLIC_BASE)
 
 #ifdef __cplusplus
 }

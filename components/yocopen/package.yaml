@@ -1,215 +1,198 @@
 
 ## 第一部分： 基础信息
-name: yocopen                               # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
-version: v7.4.3                                     # <必选项> 组件版本号
-description: 开源 yoc  # <必选项> 建议至少20字以上
-type: common                                        # <必选项> 组件类型，为：solution, chip, board, common, sdk
-
-tag: 核心模块                                       # <可选项> 组件分类，缺省值： ''
-license: Apache license v2.0                        # <可选项> 源代码的许可证，要确保所有代码、文件的许可证不冲突。如：MIT，Apache license v2.0，BSD
+name: yocopen                                        # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
+version: v7.6.0                                     # <必选项> 组件版本号
+description: YoC组件集合                             # <必选项> 建议至少20字以上
+type: common                                         # <必选项> 组件类型，为：solution, chip, board, common, sdk
+tag: 核心模块                                        # <可选项> 组件分类，缺省值： ''
+license: Apache license v2.0                         # <可选项> 源代码的许可证，要确保所有代码、文件的许可证不冲突。如：MIT，Apache license v2.0，BSD
 
 ## 第二部分：依赖信息
 #           指定该组件依赖的组件及版本，版本支持条件比较，支持：>=v1.0, >v1.0, ==v1.0, <=v1.0, <v1.0, v1.0
 #           未指定条件时，默认为 ==，如 v1.0 与 ==v1.0
 # depends:                                 # <可选项> 该组件依赖其他的组件，合理的依赖才能保证组件能编译、使用
-#   - minilibc: v7.2.0
+#   - minilibc: v7.6.0
 #   - aos: >=v7.2.0
 depends:
   # base component
-  - csi: v7.4.3
-  - minilibc: v7.4.3
-  - newlib: v7.4.3
-  - aos: v7.4.3
-  - cli: v7.4.3
-  - drivers: v7.4.3
-  - posix: v7.4.3
-  - ipc: v7.4.3
-  - rhino: v7.4.3
-  - rhino_arch: v7.4.3
-  - rhino_pwrmgmt: v7.4.3
-  - uservice: v7.4.3
-  - partition: v7.4.3
-  - ulog: v7.4.3
-  - aos_hal: v7.4.3
-  - hal_csi: v7.4.3
+  - yoc_kernel: v7.6.0
+  - minilibc: v7.6.0
+  - newlib: v7.6.0
+  - libc_stub: v7.6.0
+  - drivers: v7.6.0
+  - posix: v7.6.3
+  - ipc: v7.6.0
+  - log_ipc: v7.6.0
+
+  # boot
+  - boot: v7.6.0
+  - bootab: v7.6.2
 
   # network
-  - lwip: v7.4.3
-  - sal: v7.4.3
-  - coap: v7.4.3
-  - mqtt: v7.4.3
-  - ntp: v7.4.3
-  - sntp: v7.4.3
-  - netmgr: v7.4.3
-  - httpclient: v7.4.3
-  - transport: v7.4.3
-  - webclient: v7.4.3
-  - websocket: v7.4.3
-  - http: v7.4.3
-  - ogg: v7.4.3
-  - sys_voice: v7.4.3
-  - fota: v7.4.3
-  - wifi_provisioning: v7.4.3
-  - aliot: v7.4.3
-  - yunio: v7.4.3
+  - lwip: v7.6.0
+  - sal: v7.6.0
+  - ntp: v7.6.0
+  - sntp: v7.6.0
+  - netmgr: v7.6.0
+  - httpclient: v7.6.0
+  - transport: v7.6.0
+  - websocket: v7.6.0
+  - fota: v7.6.3
+  - wifi_provisioning: v7.6.0
 
   # audio media
-  - aui_cloud: v7.4.3
-  - aui_aliyunnls: v7.4.3
-  - aui_cloud_adapter: v7.4.3
-  - mic: v7.4.3
-  - minialsa: v7.4.3
-  - pvmp3dec: v7.4.3
-  - record: v7.4.3
-  - voice: v7.4.3
-  - av: v7.4.3
-  - av_cp: v7.4.3
-  - amrnb: v7.4.3
-  - amrwb: v7.4.3
-  - speexdsp: v7.4.3
-  - flac: v7.4.3
-  - speex: v7.4.3
-  - sonic: v7.4.3
-  - opus: v7.4.3
-  - voice_mit: v7.4.3
-  - voice_huwen: v7.4.3
-  - voice_thead: v7.4.3
-  - yoc_sc5654: v7.4.3
-  - smart_audio: v7.4.3
+  - aui_cloud_mind: v7.6.0
+  - mic: v7.6.0
+  - minialsa: v7.6.2
+  - pvmp3dec: v7.6.0
+  - record: v7.6.0
+  - voice: v7.6.0
+  - av_cp: v7.6.0
+  - av_limited: v7.6.0
+  - amrnb: v7.6.0
+  - amrwb: v7.6.0
+  - speexdsp: v7.6.0
+  - flac: v7.6.0
+  - speex: v7.6.0
+  - sonic: v7.6.0
+  - opus: v7.6.0
+  - ogg: v7.6.0
+  - smart_audio: v7.6.0
+  - voice_wrapper: v7.6.0
+  - voice_mit: v7.6.0
+  - voice_huwen: v7.6.0
+  - voice_thead: v7.6.0
+  - alg_kws_thead: v7.6.0
+  - alg_pcm_input: v7.6.0
+  - alg_postproc_thead: v7.6.0
+  - alg_record: v7.6.0
+  - alg_ssp_thead: v7.6.0
+  - alg_dispatch: v7.6.0
+  - drv_amplifier: v7.6.0
 
   # fs
-  - kv: v7.4.3
-  - vfs: v7.4.3
-  - fatfs: v7.4.3
-  - spiffs: v7.4.3
-  - littlefs: v7.4.3
+  - vfs: v7.6.3
+  - littlefs: v7.6.2
+  - fatfs: v7.6.0
 
   # security
-  - tee: v7.4.3
-  - sec_crypto: v7.4.3
-  - key_mgr: v7.4.3
-  - mbedtls: v7.4.3
+  - mbedtls: v7.6.0
 
-  # ble
-  - ble_mesh: v7.4.3
-  - ble_host: v7.4.3
+  # bluetooth
+  - ble_mesh: v7.6.0
+  - ble_host: v7.6.0
+
+  # zip
+  - zlib: v7.6.0
+  - xz: v7.6.0
+
+  # utils
+  - cmsis: v7.6.0
+  - at: v7.6.0
+  - ers: v7.6.0
+  - button: v7.6.0
+  - adc_button: v7.6.0
+  - clock_alarm: v7.6.0
+  - cjson: v7.6.0
+  - fct: v7.6.0
+  - dut_service: v7.6.0
+  - adb: v7.6.0
 
   # Ali Tmall app
-  - smartliving: v7.4.3
-  - breeze: v7.4.3
+  - smartliving: v7.6.0
+  - breeze: v7.6.0
 
   # device drivers
-  - drv_bt_rtl8723ds: v7.4.3
-  - drv_wifi_rtl8723ds: v7.4.3
-  - drv_sdmmc: v7.4.3
-  - drv_sensors: v7.4.3
-  - drv_wifi_esp8266: v7.4.3
-  - drv_wifi_m88wi6700s: v7.4.3
-  - drv_snd_pangu: v7.4.3
-  - drv_leds: v7.4.3
-  - drv_snd_sc5654: v7.4.3
-  - drv_bt_phy6220: v7.4.3
-  - drv_light: v7.4.3
-  - drv_bt_w800: v7.4.3
-  - drv_wifi_w800: v7.4.3
+  - drv_bt_rtl8723ds: v7.6.0
+  - drv_wifi_rtl8723ds: v7.6.0
+  - drv_sdmmc: v7.6.0
+  - drv_leds: v7.6.0
+  - drv_bt_phy6220: v7.6.0
+  - drv_light: v7.6.0
+  - drv_bt_w800: v7.6.0
+  - drv_wifi_w800: v7.6.0
+  - drv_snd_bl606p: v7.6.0
 
   # chip
-  - chip_pangu: v7.4.3
-  - chip_csky_dummy: v7.4.3
-  - chip_ch2201: v7.4.3
-  - chip_arm_dummy: v7.4.3
-  - chip_riscv_dummy: v7.4.3
-  - chip_sc5654: v7.4.3
-  - chip_phy6220: v7.4.3
-  - chip_ch2601: v7.4.3
-  - chip_w800: v7.4.3
+  - chip_csky_dummy: v7.6.0
+  - chip_arm_dummy: v7.6.0
+  - chip_riscv_dummy: v7.6.0
+  - chip_phy6220: v7.6.0
+  - chip_ch2601: v7.6.0
+  - chip_w800: v7.6.0
+  - chip_d1: v7.6.0
+  - chip_bl606p: v7.6.2
 
   # boards
-  - board_arm_dummy: v7.4.3
-  - board_csky_dummy: v7.4.3
-  - board_riscv_dummy: v7.4.3
-  - pangu_cpu0_evb: v7.4.3
-  - pangu_cpu1_evb: v7.4.3
-  - pangu_cpu2_evb: v7.4.3
-  - cb2201: v7.4.3
-  - cb5654: v7.4.3
-  - phy6220_evb: v7.4.3
-  - ch2601_evb: v7.4.3
-  - w800_evb: v7.4.3
-
-  # solution
-  - cb5654_boot: v7.4.3
-  - pangu_boot: v7.4.3
-  # demo
-  - helloworld: v7.4.3
-  - fota_demo: v7.4.3
-  - wifi_demo: v7.4.3
-  - arm_dummy_demo: v7.4.3
-  - csky_dummy_demo: v7.4.3
-  - riscv_dummy_demo: v7.4.3
-  # pangu demo
-  - pangu_demo: v7.4.3
-  - pangu_player_demo: v7.4.3
-  - pangu_tee_demo: v7.4.3
-  - pangu_secure_demo: v7.4.3
-  # ch2201 demo
-  - alicoap_demo: v7.4.3
-  - alimqtt_sensor_data_to_cloud_demo: v7.4.3
-  - led_blink_demo: v7.4.3
-  - cb2201_fota_demo: v7.4.3
-  # sc5654 demo
-  - smart_speaker_demo: v7.4.3
-  # ch2601 demo
-  - ch2601_helloworld: v7.4.3
-  - ch2601_gui_demo: v7.4.3
-  - ch2601_fota_demo: v7.4.3
-  - ch2601_player_demo: v7.4.3
-  - ch2601_marquee_demo: v7.4.3
-  - ch2601_at_demo: v7.4.3
-  # phy6220 demo
-  - helloworld_phy6220: v7.4.3
-  - ble_uart_profile_server_demo: v7.4.3
-  - ble_uart_profile_client_demo: v7.4.3
-  - ble_shell_demo: v7.4.3
-  - ble_scanner_demo: v7.4.3
-  - ble_ibeacon_demo: v7.4.3
-  - ble_hrs_demo: v7.4.3
-  - ble_hid_keyboard_demo: v7.4.3
-  - ble_dis_demo: v7.4.3
-  - ble_bas_demo: v7.4.3
-  - ble_advertising_demo: v7.4.3
-  - mesh_shell: v7.4.3
-  - mesh_switch_node_demo: v7.4.3
-  - mesh_light_node_demo: v7.4.3
-  - ble_ibeacon_apple_demo: v7.4.3
-  - ble_hrs_lpm_demo: v7.4.3
-  # w800 demo
-  - smart_lighting_w800_demo: v7.4.3
-  - helloworld_w800: v7.4.3
+  - board_arm_dummy: v7.6.0
+  - board_csky_dummy: v7.6.0
+  - board_riscv_dummy: v7.6.0
+  - phy6220_evb: v7.6.0
+  - ch2601_evb: v7.6.0
+  - IoTGW_CB800: v7.6.0
+  - d1_dockpro_evb: v7.6.0
+  - bl606p_evb_e907: v7.6.2
+  - bl606p_evb_c906: v7.6.2
 
   # chip sdk
-  - sdk_chip_arm_dummy: v7.4.3
-  - sdk_chip_csky_dummy: v7.4.3
-  - sdk_chip_riscv_dummy: v7.4.3
-  - sdk_chip_pangu: v7.4.3
-  - sdk_chip_ch2201: v7.4.3
-  - sdk_chip_sc5654: v7.4.3
-  - sdk_chip_phy6220: v7.4.3
-  - sdk_chip_ch2601: v7.4.3
-  - sdk_chip_w800: v7.4.3
+  - sdk_chip_arm_dummy: v7.6.0
+  - sdk_chip_csky_dummy: v7.6.0
+  - sdk_chip_riscv_dummy: v7.6.0
+  - sdk_chip_phy6220: v7.6.0
+  - sdk_chip_ch2601: v7.6.0
+  - sdk_chip_IoTGW_CB800: v7.6.0
+  - sdk_chip_d1: v7.6.0
+  - sdk_chip_bl606p_e907: v7.6.2
+
+  # common demo
+  - arm_dummy_demo: v7.6.0
+  - csky_dummy_demo: v7.6.0
+  - riscv_dummy_demo: v7.6.0
+  - helloworld: v7.6.0
+  - fota_demo: v7.6.2
+  - wifi_demo: v7.6.0
+  - httpclient_demo: v7.6.0
+  - kv_demo: v7.6.0
+  - cli_demo: v7.6.0
+  - xplayer_demo: v7.6.0
+  - record_demo: v7.6.y
+  - codec_demo: v7.6.0
+  - aoshal_demo: v7.6.0
+  - ipc_demo: v7.6.0
+  - haasui_ued_demo: v7.6.0
+  - haasui_falcon_demo: v7.6.0
+  - hellojs: v7.6.0
+  - led_demo: v7.6.0
+  - lcd_demo: v7.6.0
+  # ch2601 demo
+  - ch2601_boot: v7.6.0
+  - ch2601_gui_demo: v7.6.0
+  - ch2601_ft_demo: v7.6.0
+  - ch2601_marquee_demo: v7.6.0
+  # phy6220 demo
+  - ble_uart_profile_server_demo: v7.6.0
+  - ble_uart_profile_client_demo: v7.6.0
+  - ble_shell_demo: v7.6.0
+  - ble_scanner_demo: v7.6.0
+  - ble_ibeacon_demo: v7.6.0
+  - ble_hrs_demo: v7.6.0
+  - ble_hid_keyboard_demo: v7.6.0
+  - ble_dis_demo: v7.6.0
+  - ble_bas_demo: v7.6.0
+  - ble_advertising_demo: v7.6.0
+  - mesh_shell: v7.6.0
+  - mesh_switch_node_demo: v7.6.0
+  - mesh_light_node_demo: v7.6.0
+  - ble_ibeacon_apple_demo: v7.6.0
+  - ble_hrs_lpm_demo: v7.6.0
+  # bl606p demo
+  - bl606p_boot: v7.6.0
+  - bl606p_e907_coremark: v7.6.0
+  - bl606p_e907_dhrystone: v7.6.0
+  - bl606p_c906_ipc_demo: v7.6.0
+  # d1 demo
+  - d1_boot_demo: v7.6.0
+  - d1_button_demo: v7.6.0
 
   # test
-  # - sdk_test_solutions: v7.4.3
-
-  # misc component
-  - at: v7.4.3
-  - ers: v7.4.3
-  - button: v7.4.3
-  - adc_button: v7.4.3
-  - clock_alarm: v7.4.3
-  - bt: v7.4.3
-  - cjson: v7.4.3
-  - fct: v7.4.3
-  - dut_service: v7.4.3
-  - rhino_arch_phy6220: v7.4.3
-  - cmsis: v7.4.3
+  #- sdk_test_solutions: v7.6.y

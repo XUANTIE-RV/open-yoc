@@ -611,7 +611,7 @@ csi_error_t csi_i2s_tx_link_dma(csi_i2s_t *i2s, csi_dma_ch_t *tx_dma)
   \param[in]   buffer i2s rx cache
   \return      none
 */
-void csi_i2s_rx_set_buffer(csi_i2s_t *i2s, ringbuffer_t *buffer)
+void csi_i2s_rx_set_buffer(csi_i2s_t *i2s, csi_ringbuf_t *buffer)
 {
     CSI_PARAM_CHK_NORETVAL(i2s);
     CSI_PARAM_CHK_NORETVAL(buffer);
@@ -624,7 +624,7 @@ void csi_i2s_rx_set_buffer(csi_i2s_t *i2s, ringbuffer_t *buffer)
   \param[in]   buffer i2s tx cache
   \return      none
 */
-void csi_i2s_tx_set_buffer(csi_i2s_t *i2s, ringbuffer_t *buffer)
+void csi_i2s_tx_set_buffer(csi_i2s_t *i2s, csi_ringbuf_t *buffer)
 {
     CSI_PARAM_CHK_NORETVAL(i2s);
     CSI_PARAM_CHK_NORETVAL(buffer);
@@ -682,18 +682,18 @@ csi_error_t csi_i2s_tx_set_period(csi_i2s_t *i2s, uint32_t period)
 }
 
 /**
-  \brief  Get rx ringbuffer cache free space
+  \brief  Get rx csi_ringbuf cache free space
    \param[in]   i2s i2s handle to operate.
   \return buffer free space (bytes)
 */
 uint32_t csi_i2s_rx_buffer_avail(csi_i2s_t *i2s)
 {
     CSI_PARAM_CHK(i2s, 0U);
-    return ringbuffer_avail(i2s->rx_buf);
+    return csi_ringbuf_avail(i2s->rx_buf);
 }
 
 /**
-  \brief  Reset the rx ringbuffer, discard all data in the cache
+  \brief  Reset the rx csi_ringbuf, discard all data in the cache
   \param[in]   i2s i2s handle to operate.
   \return      error code
 */
@@ -701,7 +701,7 @@ csi_error_t csi_i2s_rx_buffer_reset(csi_i2s_t *i2s)
 {
     CSI_PARAM_CHK(i2s, CSI_ERROR);
     csi_error_t ret = CSI_ERROR;
-    ringbuffer_reset(i2s->rx_buf);
+    csi_ringbuf_reset(i2s->rx_buf);
 
     if (i2s->rx_buf->buffer != NULL) {
         memset(i2s->rx_buf->buffer, 0, i2s->rx_buf->size);
@@ -715,18 +715,18 @@ csi_error_t csi_i2s_rx_buffer_reset(csi_i2s_t *i2s)
 }
 
 /**
-  \brief  Get tx ringbuffer cache free space
+  \brief  Get tx csi_ringbuf cache free space
    \param[in]   i2s i2s handle to operate.
   \return buffer free space (bytes)
 */
 uint32_t csi_i2s_tx_buffer_avail(csi_i2s_t *i2s)
 {
     CSI_PARAM_CHK(i2s, 0U);
-    return ringbuffer_avail(i2s->tx_buf);
+    return csi_ringbuf_avail(i2s->tx_buf);
 }
 
 /**
-  \brief  Reset the tx ringbuffer, discard all data in the cache
+  \brief  Reset the tx csi_ringbuf, discard all data in the cache
   \param[in]   i2s i2s handle to operate.
   \return      error code
 */
@@ -734,7 +734,7 @@ csi_error_t csi_i2s_tx_buffer_reset(csi_i2s_t *i2s)
 {
     CSI_PARAM_CHK(i2s, CSI_ERROR);
     csi_error_t ret = CSI_ERROR;
-    ringbuffer_reset(i2s->tx_buf);
+    csi_ringbuf_reset(i2s->tx_buf);
 
     if (i2s->tx_buf->buffer != NULL) {
         memset(i2s->tx_buf->buffer, 0, i2s->tx_buf->size);
@@ -774,7 +774,7 @@ int32_t csi_i2s_receive(csi_i2s_t *i2s, void *data, uint32_t size)
     } else {
 
         while (1) {
-            read_size += (int32_t)ringbuffer_out(i2s->rx_buf, (void *)(read_data + (uint32_t)read_size), (size - (uint32_t)read_size));
+            read_size += (int32_t)csi_ringbuf_out(i2s->rx_buf, (void *)(read_data + (uint32_t)read_size), (size - (uint32_t)read_size));
 
             if ((size - (uint32_t)read_size) <= 0U) {
                 break;
@@ -805,7 +805,7 @@ uint32_t csi_i2s_send_async(csi_i2s_t *i2s, const void *data, uint32_t size)
     uint32_t write_len;
 
     uint32_t result = csi_irq_save();
-    write_len = ringbuffer_in(i2s->tx_buf, data, size);
+    write_len = csi_ringbuf_in(i2s->tx_buf, data, size);
     csi_irq_restore(result);
 
     if ((uint8_t *)i2s->priv) { ///< if dma is stop, then start it
@@ -858,7 +858,7 @@ int32_t csi_i2s_send(csi_i2s_t *i2s, const void *data, uint32_t size)
 
     } else {
         while (1) {
-            write_size += (int32_t)ringbuffer_in(i2s->tx_buf, (void *)(send_data + (uint32_t)write_size), (size - (uint32_t)write_size));
+            write_size += (int32_t)csi_ringbuf_in(i2s->tx_buf, (void *)(send_data + (uint32_t)write_size), (size - (uint32_t)write_size));
 
             if ((uint8_t *)i2s->priv) { ///< if dma is stop, then start it
                 wj_i2s_regs_t *i2s_base = (wj_i2s_regs_t *)i2s->dev.reg_base;
@@ -885,7 +885,7 @@ int32_t csi_i2s_send(csi_i2s_t *i2s, const void *data, uint32_t size)
             }
         }
 
-        while (!ringbuffer_is_empty(i2s->tx_buf));
+        while (!csi_ringbuf_is_empty(i2s->tx_buf));
     }
 
     return write_size;
@@ -908,7 +908,7 @@ uint32_t csi_i2s_receive_async(csi_i2s_t *i2s, void *data, uint32_t size)
     uint32_t read_len;
 
     uint32_t result = csi_irq_save();
-    read_len = ringbuffer_out(i2s->rx_buf, (void *)data, size);
+    read_len = csi_ringbuf_out(i2s->rx_buf, (void *)data, size);
     csi_irq_restore(result);
     return read_len;
 }
@@ -1060,7 +1060,7 @@ void csi_i2s_send_stop(csi_i2s_t *i2s)
     CSI_PARAM_CHK_NORETVAL(i2s);
     wj_i2s_regs_t *i2s_base = (wj_i2s_regs_t *)i2s->dev.reg_base;
     csi_dma_ch_stop(i2s->tx_dma);
-    ringbuffer_reset(i2s->tx_buf);
+    csi_ringbuf_reset(i2s->tx_buf);
     memset(i2s->tx_buf->buffer, 0, i2s->tx_buf->size);
 
     while (wj_i2s_get_transmit_fifo_level(i2s_base));
@@ -1078,7 +1078,7 @@ void csi_i2s_receive_stop(csi_i2s_t *i2s)
 {
     CSI_PARAM_CHK_NORETVAL(i2s);
     csi_dma_ch_stop(i2s->rx_dma);
-    ringbuffer_reset(i2s->rx_buf);
+    csi_ringbuf_reset(i2s->rx_buf);
     memset(i2s->rx_buf->buffer, 0, i2s->rx_buf->size);
     wj_i2s_clear_fifo(i2s);
     i2s->state.readable = 0U;

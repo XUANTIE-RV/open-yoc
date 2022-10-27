@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2020 Alibaba Group Holding Limited
+ * Copyright (C) 2022 Alibaba Group Holding Limited
  */
 
 #include <api/mesh.h>
@@ -11,7 +11,6 @@ typedef u16_t (*BIND_OPS_HANDLER)(S_ELEM_STATE *p_elem, u8_t type);
 
 u16_t model_bind_operation(BIND_OPERATION_ID id, S_ELEM_STATE *p_elem, u8_t type);
 
-
 static u16_t _gen_onoff_operation(S_ELEM_STATE *p_elem, u8_t type);
 static u16_t _gen_onpowerup_operation(S_ELEM_STATE *p_elem, u8_t type);
 
@@ -21,33 +20,32 @@ static u16_t _gen_lightness_linear_operation(S_ELEM_STATE *p_elem, u8_t type);
 static u16_t _gen_lightness_actual_operation(S_ELEM_STATE *p_elem, u8_t type);
 static u16_t _gen_power_range_operation(S_ELEM_STATE *p_elem, u8_t type);
 
-
 BIND_OPS_HANDLER bind_handler[B_OPS_END_ID] = {
     /* !!!START!!! --- Don't add new ID before this one */
-    //B_OPS_START_ID = -1,
+    // B_OPS_START_ID = -1,
 
     /* Generic OnOff */
-    _gen_onoff_operation,//B_GEN_ONOFF_ID = 0,
+    _gen_onoff_operation, // B_GEN_ONOFF_ID = 0,
 
     /* Generic Level */
-    NULL,//B_GEN_LEVEL_ID,
-    NULL,//B_GEN_DELTA_ID,
-    NULL,//B_GEN_MOVE_ID,
+    NULL, // B_GEN_LEVEL_ID,
+    NULL, // B_GEN_DELTA_ID,
+    NULL, // B_GEN_MOVE_ID,
 
     /* Generic Default Transition Time */
-    NULL,//B_GEN_DFT_TRANS_TIME_ID,
+    NULL, // B_GEN_DFT_TRANS_TIME_ID,
 
     /* Generic Power OnOff */
-    _gen_onpowerup_operation,//B_GEN_ON_PWR_UP_ID,
+    _gen_onpowerup_operation, // B_GEN_ON_PWR_UP_ID,
 
     /* Generic Power Level */
-    _gen_power_actual_operation,//B_GEN_PWR_ACTUAL_ID,
-    NULL,//B_GEN_PWR_LAST_ID,
-    NULL,//B_GEN_PWR_DFT_ID,
-    _gen_power_range_operation,//B_GEN_PWR_RANGE_ID,
+    _gen_power_actual_operation, // B_GEN_PWR_ACTUAL_ID,
+    NULL,                        // B_GEN_PWR_LAST_ID,
+    NULL,                        // B_GEN_PWR_DFT_ID,
+    _gen_power_range_operation,  // B_GEN_PWR_RANGE_ID,
     /*lightness*/
-    _gen_lightness_linear_operation,//B_GEN_LIGHTNESS_LINEAR_ID
-    _gen_lightness_actual_operation,//B_GEN_LIGHTNESS_ACTUAL_ID
+    _gen_lightness_linear_operation, // B_GEN_LIGHTNESS_LINEAR_ID
+    _gen_lightness_actual_operation, // B_GEN_LIGHTNESS_ACTUAL_ID
     /* !!!END!!! --- Don't add new ID after this one */
     NULL
 };
@@ -132,7 +130,8 @@ static u16_t _gen_onoff_operation(S_ELEM_STATE *p_elem, u8_t type) {
       p_state->lightness_actual[T_CUR] = 0;
     }
 
-    BT_INFO("onoff[T_TAR]:%d, onoff[T_CUR]:%d, actual[TAR]:0x%02x", p_state->onoff[T_TAR], p_state->onoff[T_CUR], p_state->actual[T_TAR]);
+    BT_INFO("onoff[T_TAR]:%d, onoff[T_CUR]:%d, actual[TAR]:0x%02x", p_state->onoff[T_TAR], p_state->onoff[T_CUR],
+p_state->actual[T_TAR]);
 
     return 0;
 }
@@ -149,7 +148,8 @@ static u16_t _gen_level_operation(S_ELEM_STATE *p_elem, u8_t type) {
 static u16_t _gen_onpowerup_operation(S_ELEM_STATE *p_elem, u8_t type) {
     S_MESH_STATE *p_state = &p_elem->state;
     S_MESH_POWERUP *p_powerUp = &p_elem->powerup;
-    //Ethan: not supported, give 1  for the moment, don't need to adjust target actual here, will only take affect when next power on cycle
+    //Ethan: not supported, give 1  for the moment, don't need to adjust target actual here, will only take affect when
+next power on cycle
 
     if(p_state->powerUp_status == 0x00){
       p_state->actual[T_CUR] = 0;
@@ -217,6 +217,3 @@ static u16_t _gen_lightness_actual_operation(S_ELEM_STATE *p_elem, u8_t type)
    p_state->onoff[type]= 0x01;
  }
 }*/
-
-
-

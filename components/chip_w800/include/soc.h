@@ -40,7 +40,7 @@ extern "C" {
 #define CONFIG_LSPI_NUM                 1
 #define CONFIG_EFLASH_NUM               1
 #define CONFIG_SPIFLASH_NUM             1
-#define CONFIG_PWM_NUM                  3
+#define CONFIG_PWM_NUM                  5
 #define CONFIG_PER_PWM_CHANNEL_NUM      5
 #define CONFIG_TRNG_NUM                 1
 #define CONFIG_CRC_NUM                  1
@@ -83,6 +83,9 @@ extern "C" {
 #define CSKY_I2S_BASE              (HR_I2S_REG_BASE)
 
 #define CSKY_ADC_CTL_BASE			(HR_SD_ADC_BASE_ADDR)
+
+#define CONFIG_OTP_BASE_ADDR 0
+#define CONFIG_OTP_BANK_SIZE 1024
 #ifdef __cplusplus
 }
 #endif

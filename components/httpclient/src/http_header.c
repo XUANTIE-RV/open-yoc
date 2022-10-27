@@ -18,9 +18,11 @@
 #include <ctype.h>
 #include <stdio.h>
 #include <stdarg.h>
+#include <stdbool.h>
 
 #include "http_header.h"
 #include "http_utils.h"
+#include "http_client.h"
 
 static const char *TAG = "HTTP_HEADER";
 #define HEADER_BUFFER (1024)
@@ -44,9 +46,9 @@ http_header_handle_t http_header_init()
     return header;
 }
 
-web_err_t http_header_destroy(http_header_handle_t header)
+http_errors_t http_header_destroy(http_header_handle_t header)
 {
-    web_err_t err = http_header_clean(header);
+    http_errors_t err = http_header_clean(header);
     free(header);
     return err;
 }
@@ -65,7 +67,7 @@ http_header_item_handle_t http_header_get_item(http_header_handle_t header, cons
     return NULL;
 }
 
-web_err_t http_header_get(http_header_handle_t header, const char *key, char **value)
+http_errors_t http_header_get(http_header_handle_t header, const char *key, char **value)
 {
     http_header_item_handle_t item;
 
@@ -76,15 +78,15 @@ web_err_t http_header_get(http_header_handle_t header, const char *key, char **v
         *value = NULL;
     }
 
-    return WEB_OK;
+    return HTTP_CLI_OK;
 }
 
-static web_err_t http_header_new_item(http_header_handle_t header, const char *key, const char *value)
+static http_errors_t http_header_new_item(http_header_handle_t header, const char *key, const char *value)
 {
     http_header_item_handle_t item;
 
     item = calloc(1, sizeof(http_header_item_t));
-    HTTP_MEM_CHECK(TAG, item, return WEB_ERR_NO_MEM);
+    HTTP_MEM_CHECK(TAG, item, return HTTP_CLI_ERR_NO_MEM);
     http_utils_assign_string(&item->key, key, 0);
     HTTP_MEM_CHECK(TAG, item->key, goto _header_new_item_exit);
     http_utils_trim_whitespace(&item->key);
@@ -92,17 +94,17 @@ static web_err_t http_header_new_item(http_header_handle_t header, const char *k
     HTTP_MEM_CHECK(TAG, item->value, goto _header_new_item_exit);
     http_utils_trim_whitespace(&item->value);
     STAILQ_INSERT_TAIL(header, item, next);
-    return WEB_OK;
+    return HTTP_CLI_OK;
 _header_new_item_exit:
     if (item->key)
         free(item->key);
     if (item->value)
         free(item->value);
     free(item);
-    return WEB_ERR_NO_MEM;
+    return HTTP_CLI_ERR_NO_MEM;
 }
 
-web_err_t http_header_set(http_header_handle_t header, const char *key, const char *value)
+http_errors_t http_header_set(http_header_handle_t header, const char *key, const char *value)
 {
     http_header_item_handle_t item;
 
@@ -116,32 +118,32 @@ web_err_t http_header_set(http_header_handle_t header, const char *key, const ch
         free(item->value);
         item->value = strdup(value);
         http_utils_trim_whitespace(&item->value);
-        return WEB_OK;
+        return HTTP_CLI_OK;
     }
     return http_header_new_item(header, key, value);
 }
 
-web_err_t http_header_set_from_string(http_header_handle_t header, const char *key_value_data)
+http_errors_t http_header_set_from_string(http_header_handle_t header, const char *key_value_data)
 {
     char *eq_ch;
     char *p_str;
 
     p_str = strdup(key_value_data);
-    HTTP_MEM_CHECK(TAG, p_str, return WEB_ERR_NO_MEM);
+    HTTP_MEM_CHECK(TAG, p_str, return HTTP_CLI_ERR_NO_MEM);
     eq_ch = strchr(p_str, ':');
     if (eq_ch == NULL) {
         free(p_str);
-        return WEB_ERR_INVALID_ARG;
+        return HTTP_CLI_ERR_INVALID_ARG;
     }
     *eq_ch = 0;
 
     http_header_set(header, p_str, eq_ch + 1);
     free(p_str);
-    return WEB_OK;
+    return HTTP_CLI_OK;
 }
 
 
-web_err_t http_header_delete(http_header_handle_t header, const char *key)
+http_errors_t http_header_delete(http_header_handle_t header, const char *key)
 {
     http_header_item_handle_t item = http_header_get_item(header, key);
     if (item) {
@@ -150,9 +152,9 @@ web_err_t http_header_delete(http_header_handle_t header, const char *key)
         free(item->value);
         free(item);
     } else {
-        return WEB_ERR_NOT_FOUND;
+        return HTTP_CLI_ERR_NOT_FOUND;
     }
-    return WEB_OK;
+    return HTTP_CLI_OK;
 }
 
 
@@ -216,7 +218,7 @@ int http_header_generate_string(http_header_handle_t header, int index, char *bu
     return ret_idx;
 }
 
-web_err_t http_header_clean(http_header_handle_t header)
+http_errors_t http_header_clean(http_header_handle_t header)
 {
     http_header_item_handle_t item = STAILQ_FIRST(header), tmp;
     while (item != NULL) {
@@ -227,7 +229,7 @@ web_err_t http_header_clean(http_header_handle_t header)
         item = tmp;
     }
     STAILQ_INIT(header);
-    return WEB_OK;
+    return HTTP_CLI_OK;
 }
 
 int http_header_count(http_header_handle_t header)

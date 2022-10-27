@@ -15,11 +15,11 @@
 #define TAG "DEMO"
 
 struct {
-    uint8_t button1_press: 1;
-    uint8_t button2_press: 1;
-    uint8_t on_off: 1;
+    uint8_t   button1_press : 1;
+    uint8_t   button2_press : 1;
+    uint8_t   on_off        : 1;
     aos_sem_t sync_sem;
-} switch_state = {0};
+} switch_state = { 0 };
 
 void prepare_onoff_state(uint8_t onoff)
 {
@@ -33,17 +33,16 @@ int main()
     /* Board Hardware and yoc modules init */
     board_yoc_init();
 
+    LOGI(TAG, "Mesh Switch node demo %s", aos_get_app_version());
     /* Mesh Models and Device parameter setting, include models event callback regiter */
     ret = mesh_dev_init();
 
     if (ret) {
-        LOGE(TAG, "mesh dev init faild\n");
+        LOGE(TAG, "mesh dev init failed");
     }
 
     /* Mesh CLI command handle register */
     cli_reg_cmd_switch_ctrl();
-
-    LOGI(TAG, "Mesh Switch node demo\n");
 
     aos_sem_new(&switch_state.sync_sem, 0);
 
@@ -53,10 +52,10 @@ int main()
 
         if (switch_state.button1_press) {
             switch_state.button1_press = 0;
-            ret = gen_onoff_set(switch_state.on_off, false);
+            ret                        = gen_onoff_set(switch_state.on_off, false);
 
             if (ret) {
-                LOGE(TAG, "send unack msg LED faild");
+                LOGE(TAG, "send unack msg LED failed");
             } else {
                 LOGI(TAG, "send unack msg LED %s", switch_state.on_off ? "ON" : "OFF");
             }
@@ -66,10 +65,10 @@ int main()
 
         if (switch_state.button2_press) {
             switch_state.button2_press = 0;
-            ret = gen_onoff_set(switch_state.on_off, true);
+            ret                        = gen_onoff_set(switch_state.on_off, true);
 
             if (ret) {
-                LOGE(TAG, "send ack msg LED faild");
+                LOGE(TAG, "send ack msg LED failed");
             } else {
                 LOGI(TAG, "send ack msg LED %s", switch_state.on_off ? "ON" : "OFF");
             }
@@ -78,4 +77,3 @@ int main()
 
     return 0;
 }
-

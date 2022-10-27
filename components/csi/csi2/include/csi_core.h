@@ -51,6 +51,10 @@
 #include <csi_core_cmsis.h>
 #endif
 
+#ifdef __ARM_ARCH_ISA_A64
+#include <core/csi_arm64_gcc.h>
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif

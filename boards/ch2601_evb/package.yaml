@@ -1,19 +1,19 @@
 
 ## 第一部分： 基础信息
 name: ch2601_evb                                    # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
-version: v7.4.4
-description: ch2601 board configure                  # <必选项> 建议至少20字以上
-type: board                                         # <可选项> 组件类型，为：solution, chip, board, common，缺省值 common
-
+version: v7.6.0                                     # <必选项> 组件版本号
+description: ch2601 board configure                 # <必选项> 建议至少20字以上
+type: board                                         # <必选项> 组件类型，为：solution, chip, board, common, sdk
 license: Apache license v2.0                        # <可选项> 源代码的许可证，要确保所有代码、文件的许可证不冲突。如：MIT，Apache license v2.0，BSD
 
 ## 第二部分：依赖信息
-#           指定该组件依赖的组件及版本，版本支持条件比较，支持：>=v1.0, >v1.0, ==v1.0, <=v1.0, <v1.0, v1.0
-#           未指定条件时，默认为 ==，如 v1.0 与 ==v1.0
+#           指定该组件依赖的组件及版本
+# sdk_chip:                                # <可选项> 该组件依赖sdk组件，合理的依赖才能保证组件能编译、使用
+#   - sdk_chip_csky_dummy: v7.4.0
+#   - sdk_chip_riscv_dummy: v7.4.0
 # depends:                                 # <可选项> 该组件依赖其他的组件，合理的依赖才能保证组件能编译、使用
-#   - minilibc: v7.2.0
-#   - aos: >=v7.2.0
-
+#   - minilibc: v7.4.0
+#   - aos: v7.4.0
 
 ## 第三部分：板级信息
 # hw_info:                                 # 对 solution、board、chip 三个字段的改进，统称为 hw_info 字段
@@ -21,7 +21,7 @@ license: Apache license v2.0                        # <可选项> 源代码的�
 #   cpu_name: CK804EF
 #   vendor_name: t-head
 #   chip_name: chip_pangu                  # <可选项> 指定芯片组件名,未设置时，使用depends中 chip 第一个组件
-#   board_name: pangu_cpu0_evb                 # <可选项> 指定开发板组件名，未设置时，使用depends中 board 第一个组件
+#   board_name: pangu_cpu0_evb             # <可选项> 指定开发板组件名，未设置时，使用depends中 board 第一个组件
 #   ld_script: configs/gcc_eflash.ld       # <可选项> 连接时使用 LD 脚本，当选把未设置时，使用对应的 board 的 LD 脚本
 #   flash_program: bin/flash_program.elf   # <可选项> 芯片全局烧写程序
 #   toolchain_prefix: csky-abiv2-elf       # <可选项> 编译器前缀
@@ -36,44 +36,14 @@ license: Apache license v2.0                        # <可选项> 源代码的�
 #     flash_program: bin/flash_program.elf # <可选项> 该CPU对应烧写程序，未指定时使用全局烧写程序
 #     toolchain_prefix: csky-abiv2-elf     # <可选项> 编译器前缀
 
-## solution component
-# hw_info:
-#   cpu_id: cpu0
-#   board_name: pangu_cpu0_evb
-#   cpu_name: CK805EF
-#   vendor_name: thead
-#   chip_name: 'chip_pangu'
-#   ld_script: configs/gcc_eflash.ld.S
-
 ## board component
 # hw_info:
 #   chip_name: chip_pangu
 #   ld_script: configs/gcc_eflash.ld
-
-## chip component (单处理器)
-# hw_info:
-#   cpu_name: CK804EF
-#   ld_script: configs/gcc_eflash.ld
-#   toolchain_prefix: csky-abiv2-elf
-#   flash_program: bin/flash_program.elf
-
-## chip component(多处理器)
-# hw_info:
-#   cpu0:
-#     cpu_name: CK804EF                    # <必选项> 该芯片使用的 CPU 型号
-#     ld_script: configs/gcc_eflash.ld     # <必选项> 连接时使用 LD 脚本
-#     flash_program: bin/flash_program.elf # <可选项> 该CPU对应烧写程序，未指定时使用全局烧写程序
-#     toolchain_prefix: csky-abiv2-elf     # <可选项> 编译器前缀
-#   cpu1:
-#     cpu_name: CK804EF                    # <必选项> 该芯片使用的 CPU 型号
-#     ld_script: configs/gcc_eflash.ld     # <必选项> 连接时使用 LD 脚本
-#     flash_program: bin/flash_program.elf # <可选项> 该CPU对应烧写程序，未指定时使用全局烧写程序
-#     toolchain_prefix: csky-abiv2-elf     # <可选项> 编译器前缀
 hw_info:
   vendor_name: thead
   chip_name: chip_ch2601
   cpu_name: e906
-  ld_script: ./gcc_flash.ld
 
 ## 第四部分：编译连接信息
 # build_config:                            # <可选项> 编译配置项
@@ -95,24 +65,82 @@ hw_info:
 #     - libs                               #   -Llibs
 build_config:
   cflag: >
-    -nostdlib -Wpointer-arith -Wall -Wl,-EL -ffunction-sections -fdata-sections -Os -g
+    -nostdlib -Wpointer-arith -Wall -Wl,-EL -ffunction-sections -fdata-sections
+    -Os -g
   cxxflag: >
-    -nostdlib -Wpointer-arith -Wall -Wl,-EL -ffunction-sections -fdata-sections -Os -g
+    -nostdlib -Wpointer-arith -Wall -Wl,-EL -ffunction-sections -fdata-sections
+    -Os -g
   include:
     - include
+  prebuild_script: "script/pre_build.sh"
+  postbuild_script: "script/aft_build.sh"
 
 # source_file:                             # <可选项> 指定参与编译的源代码文件，支持通配符，采用相对路径
 #   - src/*.c                              # 例：组件 src 目录下所有的扩展名为 c 的源代码文件
 source_file:
-  - src/*.c
-  # - src/pwr/board_cpu_pwr.c  ? <CONFIG_KERNEL_PWR_MGMT>
-  # - src/pwr/board_cpu_pwr_systick.c  ? <CONFIG_KERNEL_PWR_MGMT>
-  # - src/pwr/board_cpu_pwr_timer.c  ? <CONFIG_KERNEL_PWR_MGMT>
+  - "src/*.c"
+  - src/audio/*.c ? <CONFIG_BOARD_AUDIO>
+
 ## 第五部分：配置信息
 # def_config:                              # 组件的可配置项
 #   CONFIG_DEBUG: y
 #   CONFIG_PARAM_NOT_CHECK: y
 #   CONFIG_CLI: y
+def_config:
+  CONFIG_CPU_E906: y
+  CONFIG_XIP: y
+  CONFIG_ARCH_INTERRUPTSTACK: 16384
+  CONFIG_OTA_AB: 0
+  # player
+  CONFIG_AEFXER_IPC: 0
+  CONFIG_AEFXER_SONA: 0
+  CONFIG_ATEMPOER_IPC: 0
+  CONFIG_ATEMPOER_SONIC: 1
+  CONFIG_AVPARSER_ADTS: 0
+  CONFIG_AVPARSER_MP3: 1
+  CONFIG_DECODER_ADPCM_MS: 0
+  CONFIG_DECODER_ALAW: 0
+  CONFIG_DECODER_AMRNB: 0
+  CONFIG_DECODER_AMRWB: 0
+  CONFIG_DECODER_FLAC: 0
+  CONFIG_DECODER_IPC: 0
+  CONFIG_DECODER_MULAW: 0
+  CONFIG_DECODER_OPUS: 0
+  CONFIG_DECODER_PCM: 1
+  CONFIG_DECODER_PVMP3: 1
+  CONFIG_DECODER_SPEEX: 0
+  CONFIG_DEMUXER_ADTS: 0
+  CONFIG_DEMUXER_AMR: 0
+  CONFIG_DEMUXER_ASF: 0
+  CONFIG_DEMUXER_FLAC: 0
+  CONFIG_DEMUXER_MP3: 1
+  CONFIG_DEMUXER_MP4: 0
+  CONFIG_DEMUXER_OGG: 0
+  CONFIG_DEMUXER_RAWAUDIO: 0
+  CONFIG_DEMUXER_TS: 0
+  CONFIG_DEMUXER_WAV: 0
+  CONFIG_EQXER_IPC: 0
+  CONFIG_EQXER_SILAN: 0
+  CONFIG_FFTXER_IPC: 0
+  CONFIG_FFTXER_SPEEX: 0
+  CONFIG_RESAMPLER_IPC: 0
+  CONFIG_RESAMPLER_SPEEX: 1
+  CONFIG_STREAMER_CRYPTO: 0
+  CONFIG_STREAMER_FIFO: 0
+  CONFIG_STREAMER_FILE: 1
+  CONFIG_STREAMER_HLS: 0
+  CONFIG_STREAMER_HTTP: 0
+  CONFIG_STREAMER_MEM: 1
+  CONFIG_PLAYER_TASK_STACK_SIZE: 2048
+  CONFIG_AV_STREAM_INNER_BUF_SIZE: 256
+  CONFIG_AV_PROBE_SIZE_MAX: 1024                # for av foramt probe
+  CONFIG_AV_AO_CHANNEL_NUM: 1                   # mono output
+  CONFIG_AV_SAMPLE_NUM_PER_FRAME_MAX: 80
+  HAVE_MBEDTLS_USER_CONFIG: 1
+  CONFIG_USING_TLS: 1
+  CONFIG_SEC_CRYPTO_SHA_SW: 1
+  CONFIG_FOTA_BUFFER_SIZE: 512
+  CLI_CONFIG_STACK_SIZE: 4096
 
 ## 第六部分：安装信息
 # install:
@@ -128,11 +156,3 @@ source_file:
 #       - "bootimgs/tee"
 #       - "bootimgs/mtb"
 #       - "configs/config.yaml"
-export:
-  - dest: "<SOLUTION_PATH>/generated/data"
-    source:
-      - "bootimgs/boot"
-      - "configs/config.yaml"
-  - dest: "<SOLUTION_PATH>"
-    source:
-      - "bootimgs/ch2601_flash.elf"

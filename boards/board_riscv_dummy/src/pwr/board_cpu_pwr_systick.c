@@ -17,7 +17,7 @@ detail for how to implement these two functions.
 #include "cpu_pwr_config.h"
 #include "port.h"
 #include "csi_core.h"
-#if (RHINO_CONFIG_CPU_PWR_MGMT > 0)
+#if (RHINO_CONFIG_PWRMGMT > 0)
 extern uint32_t csi_coret_suspend();
 extern uint32_t csi_coret_resume();
 
@@ -43,4 +43,4 @@ void systick_resume(void)
 {
 }
 
-#endif /* RHINO_CONFIG_CPU_PWR_MGMT */
+#endif /* RHINO_CONFIG_PWRMGMT */

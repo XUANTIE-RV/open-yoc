@@ -19,6 +19,7 @@
 #include "wm_debug.h"
 //#include "wm_sockets.h"
 #include "utils.h"
+#include "wm_config.h"
 
 
 static const u8 crc8_tbl[256] = {

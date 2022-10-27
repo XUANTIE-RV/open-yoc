@@ -1,6 +1,6 @@
 
 ## 第一部分： 基础信息
-version: v7.4.3
+version: v7.6.0                                     # <必选项> 组件版本号
 name: chip_phy6220                                   # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
 description: phy6220 chip CSI driver SDK.            # <必选项> 建议至少20字以上
 type: chip                                          # <可选项> 组件类型，为：solution, chip, board, common，缺省值 common
@@ -17,9 +17,7 @@ license: Apache license v2.0                        # <可选项> 源代码的�
 #   - minilibc: v7.3.0
 #   - aos: >=v7.3.0
 depends:
-  - csi: v7.4.3
-  - hal_csi: v7.4.3
-  - dut_service: v7.4.3
+  - dut_service: v7.6.0
 
 ## 第三部分：板级信息
 # hw_info:                                 # 对 solution、board、chip 三个字段的改进，统称为 hw_info 字段
@@ -80,7 +78,7 @@ hw_info:
   vendor_name: thead
   cpu_name: CK802
   flash_program: flash/PHY6220_Flash.elf
-  ld_script: xxxx
+  ld_script: configs/gcc_csky.ld
 
 ## 第四部分：编译连接信息
 # build_config:                            # <可选项> 编译配置项
@@ -102,12 +100,13 @@ hw_info:
 #     - libs                               #   -Llibs
 build_config:
   cflag: ' -Wno-unused-function -Os -g  '
-  ldflag: '-u jump_table_base ./misc/rom_ck802.elf.ck802sym -Wl,-ckmap="yoc.map" -Wl,-zmax-page-size=1024'
+  ldflag: '-u jump_table_base ./temp/misc/rom_ck802.elf.ck802sym -Wl,-ckmap="yoc.map" -Wl,-zmax-page-size=1024'
   cxxflag: ' -Os -g'
   define:
     - NO_MORE_DEFINE
   include:
     - include
+    - tee
     - ./components/driver/inc
     - ./components/inc
     - ./components/osal/include
@@ -131,6 +130,7 @@ source_file:
 
 ## 第五部分：配置信息
 def_config:                              # 组件的可配置项
+    RHINO_ARCH_CK802_INT_RESTORE_PATCH: 1
     CONFIG_CSI_V1: 1
     CONFIG_CSI: "csi1"
     PHY_MCU_TYPE: 4 #MCU_BUMBEE_CK802
@@ -145,6 +145,11 @@ def_config:                              # 组件的可配置项
     AOS_MAX_APP_PRI: 14
     CONFIG_KERNEL_PRI_MAX: 14
     CONFIG_SYSTICK_HZ: 1000
+    CONFIG_CALIBRATE_WITH_FREQOFF: 1
+    CONFIG_IDLE_TASK_STACK_SIZE: 64
+    CONFIG_HAL_UART_NUM: 2
+    CLI_TASK_PRIORITY: 5
+
 #   CONFIG_DEBUG: y
 #   CONFIG_PARAM_NOT_CHECK: y
 #   CONFIG_CLI: y

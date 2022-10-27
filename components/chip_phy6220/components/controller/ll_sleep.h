@@ -34,7 +34,7 @@
 #ifndef LL_SLEEP__H_
 #define LL_SLEEP__H_
 
-#include "OSAL_PwrMgr.h"
+//#include "OSAL_PwrMgr.h"
 
 #include "ll_def.h"
 #include "ll_common.h"

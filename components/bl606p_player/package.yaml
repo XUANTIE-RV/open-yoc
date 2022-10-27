@@ -1,0 +1,32 @@
+
+## 第一部分： 基础信息
+name: bl606p_player                                       # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
+version: v7.6.0                                     # <必选项> 组件版本号
+description: blplayer        # <必选项> 建议至少20字以上
+type: common                                          # <必选项> 组件类型，为：solution, chip, board, common
+
+tag: 核心模块                                       # <可选项> 组件分类，缺省值： ''
+keywords:                                           # <可选项> 标签，会影响到组件被搜索的效果，合理的标签很重要
+  - chip
+license: Apache license v2.0                        # <可选项> 源代码的许可证，要确保所有代码、文件的许可证不冲突。如：MIT，Apache license v2.0，BSD
+
+
+hw_info:
+  cpu1:
+    arch_name: riscv
+    vendor_name: blplayer
+    cpu_name: e907fp
+    ld_script: gcc_flash_cpu1.ld
+    flash_program: xxxx
+    toolchain_prefix: riscv64-unknown-elf
+
+build_config:
+  include:
+    - include
+  libs:
+    - bl606p_player_prebuild
+  libpath:
+    - libs
+
+
+

@@ -41,18 +41,16 @@ enum misc_status_type_e {
 
 int misc_file_check(void);
 int misc_reset(void);
-int misc_init(uint32_t misc_addr, uint32_t flash_size , uint32_t flash_section);
-uint32_t misc_next_imager(uint32_t fd);
-int misc_get_imager_info(uint32_t fd, img_info_t *img_f);
-int misc_update_path(uint32_t bm_addr, img_info_t *img_update, uint32_t type, uint32_t fd);
+int misc_init(unsigned long misc_addr, uint32_t flash_size , uint32_t flash_section);
+unsigned long misc_next_imager(unsigned long fd);
+int misc_get_imager_info(unsigned long fd, img_info_t *img_f);
+int misc_update_path(unsigned long bm_addr, img_info_t *img_update, uint32_t type, unsigned long fd);
 
-int misc_get_update_fd(uint32_t *fd, uint32_t *status);
-int misc_set_update_fd(uint32_t type, uint32_t fd, uint32_t status);
-int misc_update_os_version(uint32_t bm_addr);
+int misc_get_update_fd(unsigned long *fd, uint32_t *status);
+int misc_set_update_fd(uint32_t type, unsigned long fd, uint32_t status);
 
-int misc_get_scn_img_info(uint32_t img_addr, scn_img_t *scn_img);
+int misc_get_scn_img_info(unsigned long img_addr, scn_img_t *scn_img);
 
-uint8_t *misc_get_imtb_crc_and_sig(uint32_t *olen);
 int misc_get_app_version(uint8_t *out, uint32_t *olen);
 #ifdef __cplusplus
 }

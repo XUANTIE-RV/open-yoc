@@ -31,8 +31,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define mbedtls_calloc(...) NULL
-#define mbedtls_free(...)
+#define mbedtls_calloc calloc
+#define mbedtls_free free
 
 /* Implementation that should never be optimized out by the compiler */
 static void mbedtls_zeroize(void *v, size_t n)
@@ -103,12 +103,12 @@ const sc_mbedtls_md_info_t *sc_mbedtls_md_info_from_type(sc_mbedtls_md_type_t md
         case SC_MBEDTLS_MD_SHA1:
             return (&sc_mbedtls_sha1_info);
 
-#if defined(CONFIG_SEC_CRYPTO_SHA_SW)
+//#if defined(CONFIG_SEC_CRYPTO_SHA_SW)
         case SC_MBEDTLS_MD_SHA224:
             return (&sc_mbedtls_sha224_info);
         case SC_MBEDTLS_MD_SHA256:
             return (&sc_mbedtls_sha256_info);
-#endif
+//#endif
         default:
             return (NULL);
     }

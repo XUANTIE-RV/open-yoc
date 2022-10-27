@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CDK_Workspace Name="ble_uart_profile_server_demo" Database="">
+  <Project Name="ble_uart_profile_server_demo" Path="ble_uart_profile_server_demo.cdkproj" Active="Yes"/>
+  <BuildMatrix>
+    <WorkspaceConfiguration Name="Debug" Selected="yes">
+      <Environment/>
+      <Project Name="ble_uart_profile_server_demo" ConfigName="BuildSet"/>
+    </WorkspaceConfiguration>
+  </BuildMatrix>
+  <DefaultPackPath>$(CDKPath)/CSKY/PACK</DefaultPackPath>
+</CDK_Workspace>

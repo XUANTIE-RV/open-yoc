@@ -85,7 +85,7 @@ struct bt_keys *bt_keys_find_addr(u8_t id, const bt_addr_le_t *addr);
 void bt_keys_add_type(struct bt_keys *keys, int type);
 void bt_keys_clear(struct bt_keys *keys);
 
-#if defined(CONFIG_BT_SETTINGS)
+#if defined(CONFIG_BT_SETTINGS) && CONFIG_BT_SETTINGS
 int bt_keys_store(struct bt_keys *keys);
 #else
 static inline int bt_keys_store(struct bt_keys *keys)
@@ -110,6 +110,9 @@ struct bt_keys_link_key *bt_keys_get_link_key(const bt_addr_t *addr);
 struct bt_keys_link_key *bt_keys_find_link_key(const bt_addr_t *addr);
 void bt_keys_link_key_clear(struct bt_keys_link_key *link_key);
 void bt_keys_link_key_clear_addr(const bt_addr_t *addr);
+
+int bt_br_keys_store(struct bt_keys_link_key *link_key);
+int bt_br_key_settings_init();
 
 /* This function is used to signal that the key has been used for paring */
 /* It updates the aging counter and saves it to flash if configuration option */

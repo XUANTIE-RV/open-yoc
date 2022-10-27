@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2020 Alibaba Group Holding Limited
+ * Copyright (C) 2022 Alibaba Group Holding Limited
  */
 
 #include <api/mesh.h>
@@ -14,64 +14,61 @@ struct bt_mesh_model_pub g_ctl_cli_pub = {
     .msg = NET_BUF_SIMPLE(2 + 9 + 4),
 };
 
-
 extern u8_t bt_mesh_default_ttl_get(void);
+extern uint8_t mesh_gen_tid(void);
 
-static void _light_ctl_status(struct bt_mesh_model *model,
-                              struct bt_mesh_msg_ctx *ctx,
-                              struct net_buf_simple *buf)
+static void _light_ctl_status(struct bt_mesh_model *model, struct bt_mesh_msg_ctx *ctx, struct net_buf_simple *buf)
 {
     LOGD(TAG, "");
-    model_message message;
-    message.source_addr = ctx->addr;
-    message.status_data = buf;
+    model_message message = { 0 };
+    message.trans         = ctx->trans;
+    message.source_addr   = ctx->addr;
+    message.status_data   = buf;
     model_event(BT_MESH_MODEL_LIGHT_CTL_STATUS, &message);
     return;
 }
 
-static void _light_ctl_temp_status(struct bt_mesh_model *model,
-                                   struct bt_mesh_msg_ctx *ctx,
-                                   struct net_buf_simple *buf)
+static void _light_ctl_temp_status(struct bt_mesh_model *model, struct bt_mesh_msg_ctx *ctx, struct net_buf_simple *buf)
 {
     LOGD(TAG, "");
-    model_message message;
-    message.source_addr = ctx->addr;
-    message.status_data = buf;
+    model_message message = { 0 };
+    message.trans         = ctx->trans;
+    message.source_addr   = ctx->addr;
+    message.status_data   = buf;
     model_event(BT_MESH_MODEL_LIGHT_CTL_TEMP_STATUS, &message);
     return;
 }
 
-static void _light_ctl_default_status(struct bt_mesh_model *model,
-                                      struct bt_mesh_msg_ctx *ctx,
+static void _light_ctl_default_status(struct bt_mesh_model *model, struct bt_mesh_msg_ctx *ctx,
                                       struct net_buf_simple *buf)
 {
     LOGD(TAG, "");
-    model_message message;
-    message.source_addr = ctx->addr;
-    message.status_data = buf;
+    model_message message = { 0 };
+    message.trans         = ctx->trans;
+    message.source_addr   = ctx->addr;
+    message.status_data   = buf;
     model_event(BT_MESH_MODEL_LIGHT_CTL_DEF_STATUS, &message);
     return;
 }
 
-static void _light_ctl_range_status(struct bt_mesh_model *model,
-                                    struct bt_mesh_msg_ctx *ctx,
+static void _light_ctl_range_status(struct bt_mesh_model *model, struct bt_mesh_msg_ctx *ctx,
                                     struct net_buf_simple *buf)
 {
     LOGD(TAG, "");
-    model_message message;
-    message.source_addr = ctx->addr;
-    message.status_data = buf;
+    model_message message = { 0 };
+    message.trans         = ctx->trans;
+    message.source_addr   = ctx->addr;
+    message.status_data   = buf;
     model_event(BT_MESH_MODEL_LIGHT_CTL_TEMP_RANGE_STATUS, &message);
     return;
 }
 
-
-
-int ble_mesh_light_ctl_set(uint16_t netkey_idx, uint16_t appkey_idx, uint16_t unicast_addr, struct bt_mesh_model *model, set_light_ctl_arg *send_arg, bool ack)
+int ble_mesh_light_ctl_set(uint16_t netkey_idx, uint16_t appkey_idx, uint16_t unicast_addr, struct bt_mesh_model *model,
+                           set_light_ctl_arg *send_arg, bool ack)
 
 {
-    int err;
-    struct bt_mesh_msg_ctx ctx = {0};
+    int                    err;
+    struct bt_mesh_msg_ctx ctx = { 0 };
 
     if (model == NULL || send_arg == NULL) {
         return -EINVAL;
@@ -80,6 +77,8 @@ int ble_mesh_light_ctl_set(uint16_t netkey_idx, uint16_t appkey_idx, uint16_t un
     if (0x0000 == unicast_addr) {
         return -EADDRNOTAVAIL;
     }
+	
+    send_arg->tid = mesh_gen_tid();
 
     struct net_buf_simple *msg = NET_BUF_SIMPLE(2 + 9 + 4);
 
@@ -99,29 +98,28 @@ int ble_mesh_light_ctl_set(uint16_t netkey_idx, uint16_t appkey_idx, uint16_t un
         net_buf_simple_add_u8(msg, send_arg->delay);
     }
 
-    ctx.addr = unicast_addr;
-    ctx.net_idx = netkey_idx;
-    ctx.app_idx = appkey_idx;
+    ctx.addr     = unicast_addr;
+    ctx.net_idx  = netkey_idx;
+    ctx.app_idx  = appkey_idx;
     ctx.send_ttl = bt_mesh_default_ttl_get();
 
-    err =  bt_mesh_model_send(model, &ctx, msg, NULL, NULL);
+    err = bt_mesh_model_send(model, &ctx, msg, NULL, NULL);
 
     if (err) {
         LOGE(TAG, "lightness range set send fail %d", err);
         return err;
     }
 
-    LOGI(TAG, "light ctl lightness %x,temp %x, delta uv %x, TID %x,trans %x,delay %x", send_arg->lightness, send_arg->temperature, \
-         send_arg->delta_uv, send_arg->tid, send_arg->trans, send_arg->delay);
+    LOGI(TAG, "light ctl lightness %x,temp %x, delta uv %x, TID %x,trans %x,delay %x", send_arg->lightness,
+         send_arg->temperature, send_arg->delta_uv, send_arg->tid, send_arg->trans, send_arg->delay);
     return 0;
 }
-
 
 int ble_mesh_light_ctl_get(uint16_t netkey_idx, uint16_t appkey_idx, uint16_t unicast_addr, struct bt_mesh_model *model)
 
 {
-    int err;
-    struct bt_mesh_msg_ctx ctx = {0};
+    int                    err;
+    struct bt_mesh_msg_ctx ctx = { 0 };
 
     if (model == NULL) {
         return -EINVAL;
@@ -143,7 +141,7 @@ int ble_mesh_light_ctl_get(uint16_t netkey_idx, uint16_t appkey_idx, uint16_t un
 
     ctx.send_ttl = bt_mesh_default_ttl_get();
 
-    err =  bt_mesh_model_send(model, &ctx, msg, NULL, NULL);
+    err = bt_mesh_model_send(model, &ctx, msg, NULL, NULL);
 
     if (err) {
         LOGE(TAG, "light ctl get send fail %d", err);
@@ -153,10 +151,11 @@ int ble_mesh_light_ctl_get(uint16_t netkey_idx, uint16_t appkey_idx, uint16_t un
     return 0;
 }
 
-int ble_mesh_light_ctl_temp_set(uint16_t netkey_idx, uint16_t appkey_idx, uint16_t unicast_addr, struct bt_mesh_model *model, set_light_ctl_arg *send_arg, bool ack)
+int ble_mesh_light_ctl_temp_set(uint16_t netkey_idx, uint16_t appkey_idx, uint16_t unicast_addr,
+                                struct bt_mesh_model *model, set_light_ctl_arg *send_arg, bool ack)
 {
-    int err;
-    struct bt_mesh_msg_ctx ctx = {0};
+    int                    err;
+    struct bt_mesh_msg_ctx ctx = { 0 };
 
     if (model == NULL || send_arg == NULL) {
         return -EINVAL;
@@ -165,6 +164,8 @@ int ble_mesh_light_ctl_temp_set(uint16_t netkey_idx, uint16_t appkey_idx, uint16
     if (0x0000 == unicast_addr) {
         return -EADDRNOTAVAIL;
     }
+
+    send_arg->tid = mesh_gen_tid();
 
     struct net_buf_simple *msg = NET_BUF_SIMPLE(2 + 7 + 4);
 
@@ -183,28 +184,28 @@ int ble_mesh_light_ctl_temp_set(uint16_t netkey_idx, uint16_t appkey_idx, uint16
         net_buf_simple_add_u8(msg, send_arg->delay);
     }
 
-
-    ctx.addr = unicast_addr;
-    ctx.net_idx = netkey_idx;
-    ctx.app_idx = appkey_idx;
+    ctx.addr     = unicast_addr;
+    ctx.net_idx  = netkey_idx;
+    ctx.app_idx  = appkey_idx;
     ctx.send_ttl = bt_mesh_default_ttl_get();
 
-    err =  bt_mesh_model_send(model, &ctx, msg, NULL, NULL);
+    err = bt_mesh_model_send(model, &ctx, msg, NULL, NULL);
 
     if (err) {
         LOGE(TAG, "light ctl set send fail %d", err);
         return err;
     }
 
-    LOGI(TAG, "light ctl set temp %x, delta uv %x, TID %x,trans %x,delay %x", send_arg->temperature, \
-         send_arg->delta_uv, send_arg->tid, send_arg->trans, send_arg->delay);
+    LOGI(TAG, "light ctl set temp %x, delta uv %x, TID %x,trans %x,delay %x", send_arg->temperature, send_arg->delta_uv,
+         send_arg->tid, send_arg->trans, send_arg->delay);
     return 0;
 }
 
-int ble_mesh_light_ctl_temp_get(uint16_t netkey_idx, uint16_t appkey_idx, uint16_t unicast_addr, struct bt_mesh_model *model)
+int ble_mesh_light_ctl_temp_get(uint16_t netkey_idx, uint16_t appkey_idx, uint16_t unicast_addr,
+                                struct bt_mesh_model *model)
 {
-    int err;
-    struct bt_mesh_msg_ctx ctx = {0};
+    int                    err;
+    struct bt_mesh_msg_ctx ctx = { 0 };
 
     if (model == NULL) {
         return -EINVAL;
@@ -226,7 +227,7 @@ int ble_mesh_light_ctl_temp_get(uint16_t netkey_idx, uint16_t appkey_idx, uint16
 
     ctx.send_ttl = bt_mesh_default_ttl_get();
 
-    err =  bt_mesh_model_send(model, &ctx, msg, NULL, NULL);
+    err = bt_mesh_model_send(model, &ctx, msg, NULL, NULL);
 
     if (err) {
         LOGE(TAG, "light ctl temp get send fail %d", err);
@@ -236,10 +237,11 @@ int ble_mesh_light_ctl_temp_get(uint16_t netkey_idx, uint16_t appkey_idx, uint16
     return 0;
 }
 
-int ble_mesh_light_ctl_def_set(uint16_t netkey_idx, uint16_t appkey_idx, uint16_t unicast_addr, struct bt_mesh_model *model, set_light_ctl_arg *send_arg, bool ack)
+int ble_mesh_light_ctl_def_set(uint16_t netkey_idx, uint16_t appkey_idx, uint16_t unicast_addr,
+                               struct bt_mesh_model *model, set_light_ctl_arg *send_arg, bool ack)
 {
-    int err;
-    struct bt_mesh_msg_ctx ctx = {0};
+    int                    err;
+    struct bt_mesh_msg_ctx ctx = { 0 };
 
     if (model == NULL || send_arg == NULL) {
         return -EINVAL;
@@ -248,6 +250,8 @@ int ble_mesh_light_ctl_def_set(uint16_t netkey_idx, uint16_t appkey_idx, uint16_
     if (0x0000 == unicast_addr) {
         return -EADDRNOTAVAIL;
     }
+
+    send_arg->tid = mesh_gen_tid();
 
     struct net_buf_simple *msg = NET_BUF_SIMPLE(2 + 6 + 4);
 
@@ -261,26 +265,28 @@ int ble_mesh_light_ctl_def_set(uint16_t netkey_idx, uint16_t appkey_idx, uint16_
     net_buf_simple_add_le16(msg, send_arg->temperature);
     net_buf_simple_add_le16(msg, send_arg->delta_uv);
 
-    ctx.addr = unicast_addr;
-    ctx.net_idx = netkey_idx;
-    ctx.app_idx = appkey_idx;
+    ctx.addr     = unicast_addr;
+    ctx.net_idx  = netkey_idx;
+    ctx.app_idx  = appkey_idx;
     ctx.send_ttl = bt_mesh_default_ttl_get();
 
-    err =  bt_mesh_model_send(model, &ctx, msg, NULL, NULL);
+    err = bt_mesh_model_send(model, &ctx, msg, NULL, NULL);
 
     if (err) {
         LOGE(TAG, "light ctl def set send fail %d", err);
         return err;
     }
 
-    LOGI(TAG, "light ctl def set set lightness %x, temperature %x, delta_uv %x", send_arg->lightness, send_arg->temperature, send_arg->delta_uv);
+    LOGI(TAG, "light ctl def set set lightness %x, temperature %x, delta_uv %x", send_arg->lightness,
+         send_arg->temperature, send_arg->delta_uv);
     return 0;
 }
 
-int ble_mesh_light_ctl_def_get(uint16_t netkey_idx, uint16_t appkey_idx, uint16_t unicast_addr, struct bt_mesh_model *model)
+int ble_mesh_light_ctl_def_get(uint16_t netkey_idx, uint16_t appkey_idx, uint16_t unicast_addr,
+                               struct bt_mesh_model *model)
 {
-    int err;
-    struct bt_mesh_msg_ctx ctx = {0};
+    int                    err;
+    struct bt_mesh_msg_ctx ctx = { 0 };
 
     if (model == NULL) {
         return -EINVAL;
@@ -302,7 +308,7 @@ int ble_mesh_light_ctl_def_get(uint16_t netkey_idx, uint16_t appkey_idx, uint16_
 
     ctx.send_ttl = bt_mesh_default_ttl_get();
 
-    err =  bt_mesh_model_send(model, &ctx, msg, NULL, NULL);
+    err = bt_mesh_model_send(model, &ctx, msg, NULL, NULL);
 
     if (err) {
         LOGE(TAG, "light ctl def get send fail %d", err);
@@ -312,10 +318,11 @@ int ble_mesh_light_ctl_def_get(uint16_t netkey_idx, uint16_t appkey_idx, uint16_
     return 0;
 }
 
-int ble_mesh_light_ctl_temp_range_set(uint16_t netkey_idx, uint16_t appkey_idx, uint16_t unicast_addr, struct bt_mesh_model *model, set_light_ctl_arg *send_arg, bool ack)
+int ble_mesh_light_ctl_temp_range_set(uint16_t netkey_idx, uint16_t appkey_idx, uint16_t unicast_addr,
+                                      struct bt_mesh_model *model, set_light_ctl_arg *send_arg, bool ack)
 {
-    int err;
-    struct bt_mesh_msg_ctx ctx = {0};
+    int                    err;
+    struct bt_mesh_msg_ctx ctx = { 0 };
 
     if (model == NULL || send_arg == NULL) {
         return -EINVAL;
@@ -336,12 +343,12 @@ int ble_mesh_light_ctl_temp_range_set(uint16_t netkey_idx, uint16_t appkey_idx, 
     net_buf_simple_add_le16(msg, send_arg->range_min);
     net_buf_simple_add_le16(msg, send_arg->range_max);
 
-    ctx.addr = unicast_addr;
-    ctx.net_idx = netkey_idx;
-    ctx.app_idx = appkey_idx;
+    ctx.addr     = unicast_addr;
+    ctx.net_idx  = netkey_idx;
+    ctx.app_idx  = appkey_idx;
     ctx.send_ttl = bt_mesh_default_ttl_get();
 
-    err =  bt_mesh_model_send(model, &ctx, msg, NULL, NULL);
+    err = bt_mesh_model_send(model, &ctx, msg, NULL, NULL);
 
     if (err) {
         LOGE(TAG, "light ctl temp range set send fail %d", err);
@@ -352,10 +359,11 @@ int ble_mesh_light_ctl_temp_range_set(uint16_t netkey_idx, uint16_t appkey_idx, 
     return 0;
 }
 
-int ble_mesh_light_ctl_temp_range_get(uint16_t netkey_idx, uint16_t appkey_idx, uint16_t unicast_addr, struct bt_mesh_model *model)
+int ble_mesh_light_ctl_temp_range_get(uint16_t netkey_idx, uint16_t appkey_idx, uint16_t unicast_addr,
+                                      struct bt_mesh_model *model)
 {
-    int err;
-    struct bt_mesh_msg_ctx ctx = {0};
+    int                    err;
+    struct bt_mesh_msg_ctx ctx = { 0 };
 
     if (model == NULL) {
         return -EINVAL;
@@ -377,7 +385,7 @@ int ble_mesh_light_ctl_temp_range_get(uint16_t netkey_idx, uint16_t appkey_idx, 
 
     ctx.send_ttl = bt_mesh_default_ttl_get();
 
-    err =  bt_mesh_model_send(model, &ctx, msg, NULL, NULL);
+    err = bt_mesh_model_send(model, &ctx, msg, NULL, NULL);
 
     if (err) {
         LOGE(TAG, "light ctl temp range get send fail %d", err);
@@ -387,12 +395,11 @@ int ble_mesh_light_ctl_temp_range_get(uint16_t netkey_idx, uint16_t appkey_idx, 
     return 0;
 }
 
-
 const struct bt_mesh_model_op light_ctl_cli_op[LIGHT_CTL_CLI_OPC_NUM] = {
-    { BT_MESH_MODEL_OP_2(0x82, 0x60), 2, _light_ctl_status},
-    { BT_MESH_MODEL_OP_2(0x82, 0x66), 2, _light_ctl_temp_status},
-    { BT_MESH_MODEL_OP_2(0x82, 0x68), 2, _light_ctl_default_status},
-    { BT_MESH_MODEL_OP_2(0x82, 0x63), 2, _light_ctl_range_status},
+    { BT_MESH_MODEL_OP_2(0x82, 0x60), 2, _light_ctl_status },
+    { BT_MESH_MODEL_OP_2(0x82, 0x66), 2, _light_ctl_temp_status },
+    { BT_MESH_MODEL_OP_2(0x82, 0x68), 2, _light_ctl_default_status },
+    { BT_MESH_MODEL_OP_2(0x82, 0x63), 2, _light_ctl_range_status },
     BT_MESH_MODEL_OP_END,
 };
 

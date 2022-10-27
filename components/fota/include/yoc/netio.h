@@ -5,9 +5,9 @@
 #ifndef YOC_NETIO_H
 #define YOC_NETIO_H
 
-#include <aos/aos.h>
+#include <stdint.h>
+#include <stddef.h>
 #include <aos/list.h>
-#include <aos/kernel.h>
 
 #ifndef CONFIG_FOTA_BUFFER_SIZE
 #define CONFIG_FOTA_BUFFER_SIZE 512
@@ -71,6 +71,12 @@ int netio_register_httpc(const char *cert);
 int netio_register_flash(void);
 
 /**
+ * @brief  将ab flash操作功能注册到netio
+ * @return 0 on success, -1 on failed
+ */
+int netio_register_flashab(void);
+
+/**
  * @brief  将coap操作功能注册到netio
  * @return 0 on success, -1 on failed
  */
@@ -118,7 +124,6 @@ int netio_write(netio_t *io, uint8_t *buffer, size_t lenght, int timeoutms);
  * @return 0 on success, -1 on failed
  */
 int netio_seek(netio_t *io, size_t offset, int whence);
-// int netio_getinfo(netio_t *io, fota_info_t *info);
 
 #ifdef __cplusplus
 }

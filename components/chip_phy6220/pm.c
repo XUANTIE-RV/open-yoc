@@ -13,8 +13,8 @@
 #include <ll_hw_drv.h>
 
 #include <global_config.h>
-#include <OSAL_PwrMgr.h>
-#include <OSAL_Timers.h>
+//#include <OSAL_PwrMgr.h>
+//#include <OSAL_Timers.h>
 
 #include <k_api.h>
 #include <gpio.h>
@@ -101,6 +101,12 @@ pm_wakeup_by_io_cb g_wakeup_cb = NULL;
 #ifndef CONFIG_WDT
 #define CONFIG_WDT     0
 #endif
+
+#define RAM_CODE_SECTION(func)  __attribute__((section(".__sram.code."#func)))  func
+__attribute__((weak)) int RAM_CODE_SECTION(pm_prepare_sleep_action)();
+__attribute__((weak)) int RAM_CODE_SECTION(pm_after_sleep_action)();
+void RAM_CODE_SECTION(registers_save)(uint32_t *mem, uint32_t *addr, int size);
+void RAM_CODE_SECTION(registers_restore)(uint32_t *addr, uint32_t *mem, int size);
 
 #if (CONFIG_WDT > 0)
 #define WDT_TIMEOUT             2000
@@ -206,7 +212,7 @@ void wdt_wakeup_action()
 #endif
 }
 
-__attribute__((weak)) __attribute__((section(".__sram.code"))) int pm_prepare_sleep_action()
+__attribute__((weak)) int pm_prepare_sleep_action()
 {
     csi_pinmux_prepare_sleep_action();
     csi_usart_prepare_sleep_action();
@@ -214,7 +220,7 @@ __attribute__((weak)) __attribute__((section(".__sram.code"))) int pm_prepare_sl
     return 0;
 }
 
-__attribute__((weak)) __attribute__((section(".__sram.code"))) int pm_after_sleep_action()
+__attribute__((weak)) int pm_after_sleep_action()
 {
     csi_pinmux_wakeup_sleep_action();
     csi_usart_wakeup_sleep_action();
@@ -225,7 +231,7 @@ __attribute__((weak)) __attribute__((section(".__sram.code"))) int pm_after_slee
     return 0;
 }
 
-__attribute__((section(".__sram.code"))) void registers_save(uint32_t *mem, uint32_t *addr, int size)
+void registers_save(uint32_t *mem, uint32_t *addr, int size)
 {
     int i;
 
@@ -234,7 +240,7 @@ __attribute__((section(".__sram.code"))) void registers_save(uint32_t *mem, uint
     }
 }
 
-__attribute__((section(".__sram.code"))) void registers_restore(uint32_t *addr, uint32_t *mem, int size)
+void registers_restore(uint32_t *addr, uint32_t *mem, int size)
 {
     int i;
 
@@ -345,7 +351,7 @@ void enterSleepProcess1(uint32_t time)
     if (pGlobal_config[LL_SWITCH] & RC32_TRACKINK_ALLOW) {
         // 1. read RC 32KHz tracking counter, calculate 16MHz ticks number per RC32KHz cycle
 
-        temp = *(volatile uint32_t *)0x4000f064 & 0x1ffff;
+        temp = AP_PCRM->cal_ro1 & 0x1ffff;
         //====== assume the error cnt is (n+1/2) cycle,for this case, it should be 9 or 10
 
 //         error_delt = (temp>STD_CRY32_8_CYCLE_16MHZ_CYCLE)
@@ -437,6 +443,8 @@ void enterSleepProcess1(uint32_t time)
     // 5. set sleep flag(AON reg & retention SRAM variable)
     set_sleep_flag(1);
 
+    extern int32_t arch_do_cpu_resume(void);
+    JUMP_FUNCTION(WAKEUP_PROCESS) = (uint32_t)arch_do_cpu_resume;
 
     // 6. trigger system sleep
     csi_pmu_enter_sleep(pmu_handle, PMU_MODE_DORMANT);
@@ -467,7 +475,7 @@ int sys_soc_suspend(uint32_t suspend_tick)
     uint32_t        temp1, temp2;
     CPSR_ALLOC();
     RHINO_CPU_INTRPT_DISABLE();
-    irq_flags = psr;
+    irq_flags = cpsr;
 
     if (!isSleepAllowInPM()) {
         RHINO_CPU_INTRPT_ENABLE();
@@ -637,6 +645,221 @@ int sys_soc_suspend(uint32_t suspend_tick)
 #define BASE_TIME_UNITS   (0x3fffff)
 #endif
 
+#define   CRY32_2_CYCLE_16MHZ_CYCLE_MAX    (976 + 98)     // tracking value range std +/- 20%
+#define   CRY32_2_CYCLE_16MHZ_CYCLE_MIN    (976 - 98)
+#define   CRY32_2_CYCLE_DELTA_LMT          (19)
+#define   TRACKING_96M_16M_MULTI6_DELTA_LIMIT       (10*6)            //96M:16M*6 +- 1%
+#define   DLL_ENABLE_MAX                          (5)
+#define   TRACKING_16M_TICK_MAX            (3300)
+#define   TRACKING_MAX_SLEEPTIME           (1980000)  //MAX sleep time is 60 seconds.
+
+//volatile uint8_t g_rc32kCalRes = 0xff;
+uint32_t g_xtal16M_tmp=0;
+uint32_t g_xtal96M_temp=0;
+uint32_t DLL_enable_num=1;
+uint32_t tracking_16M_num = 0;
+extern void Reset_Handler();
+void just_enter_sleep(uint32 time)
+{
+//    while (!(*(volatile uint32_t *)0x4000f0cc)) {
+//        ;
+//    }
+
+    JUMP_FUNCTION(WAKEUP_PROCESS) = (uint32_t)Reset_Handler;
+
+    /* set sleep flag , rom boot will check the flag and
+    set reset path from WAKEUP_PROCESS */
+    set_sleep_flag(1);
+
+    subWriteReg(&(AP_AON->PMCTL2_0),6,6,0x00);   //disable software control
+    //  config wakeup timer
+    uint32_t sleep_tick_now = AP_AON->RTCCNT;
+    WaitRTCCount(1);
+    AP_AON->RTCCC0 = sleep_tick_now + time;
+    AP_AON->RTCCTL |= BIT(15)|BIT(18)|BIT(20);
+
+    // clear sram retention
+    // hal_pwrmgr_RAM_retention_clr();
+   
+    /**
+        config reset casue as RSTC_WARM_NDWC
+        reset path walkaround dwc
+    */
+    AP_AON->SLEEP_R[0]=4;
+
+    //  trigger system sleep
+    enter_sleep_off_mode(SYSTEM_SLEEP_MODE);
+}
+
+void check_16MXtal_by_rcTracking(void)
+{
+    /*
+
+        for fiset wakeupini, not do rcCal, just skip the rcTacking
+    */
+
+    if((AP_AON->SLEEP_R[1] & 0x80) == 0)
+    {
+        WaitRTCCount(60);
+        return;
+    }
+
+    uint32_t tracking_start = rtc_get_counter();
+
+    uint32_t temp,temp1;
+    uint32_t temp31,temp32,temp33;
+    uint32_t temp_min,temp_max;
+
+    // ======== enable tracking 32KHz RC timer with 16MHz crystal clock
+    temp = AP_PCRM->CLKHF_CTL0;
+    AP_PCRM->CLKHF_CTL0 = temp | BIT(18);
+    temp = AP_PCRM->cal_rw;
+    AP_PCRM->cal_rw = (temp & 0xfffefe00) | 0x0028;
+    WaitRTCCount(3);
+
+    temp31 = (AP_PCRM->cal_ro1 & 0x1ffff);
+    WaitRTCCount(3);
+
+    temp32 = (AP_PCRM->cal_ro1 & 0x1ffff);
+    WaitRTCCount(3);
+
+    temp33 = (AP_PCRM->cal_ro1 & 0x1ffff);
+
+    while(1)
+    {
+        temp_min = (temp31 >=temp32) ? (temp32):(temp31);
+        temp_min = (temp_min >=temp33) ? (temp33):(temp_min);
+        temp_max = (temp31 >=temp32) ? (temp31):(temp32);
+        temp_max = (temp_max >=temp33) ? (temp_max):(temp33);
+
+        if( temp31>CRY32_2_CYCLE_16MHZ_CYCLE_MIN  && 
+            temp31<CRY32_2_CYCLE_16MHZ_CYCLE_MAX  &&
+            temp32 >CRY32_2_CYCLE_16MHZ_CYCLE_MIN  && 
+            temp32 <CRY32_2_CYCLE_16MHZ_CYCLE_MAX  &&
+            temp33 >CRY32_2_CYCLE_16MHZ_CYCLE_MIN  && 
+            temp33 <CRY32_2_CYCLE_16MHZ_CYCLE_MAX  &&
+            (temp_max-temp_min)<CRY32_2_CYCLE_DELTA_LMT
+            )
+        {
+            subWriteReg(&(AP_AON->SLEEP_R[1]),3,2,0);
+
+            //reset tracking sleep num
+            subWriteReg(&(AP_AON->SLEEP_R[1]),15,8,0);
+            break;
+        }
+
+        temp31= temp32;
+        temp32 = temp33;
+        WaitRTCCount(3);
+        temp33 = (AP_PCRM->cal_ro1 & 0x1ffff);
+
+        //check tracking cost
+        uint32_t tracking_end = rtc_get_counter();
+        uint32_t tracking_16M_tick = (tracking_end>=tracking_start) ? (tracking_end-tracking_start) : (0xffffffff-tracking_start+tracking_end);
+        if(tracking_16M_tick >= TRACKING_16M_TICK_MAX)
+        {
+                uint32_t tracking_sleep_num = (AP_AON->SLEEP_R[1] & 0xFF00) >>8;
+                subWriteReg(&(AP_AON->SLEEP_R[1]),15,8,tracking_sleep_num+1);
+                subWriteReg(&(AP_AON->SLEEP_R[1]),3,2,1); 
+                if ((uint32_t)((uint32_t)1 << tracking_sleep_num)*33000 < TRACKING_MAX_SLEEPTIME)
+                {
+                    just_enter_sleep((1 << tracking_sleep_num)*33000);
+                }
+                else
+                {
+                    just_enter_sleep(TRACKING_MAX_SLEEPTIME);
+                }
+        }
+
+    }
+
+    temp1 = (AP_PCRM->cal_ro1 & 0x1ffff);
+
+    subWriteReg(&(AP_PCRM->cal_rw),3,3,0);    
+
+    g_xtal16M_tmp = temp1;
+}
+
+void check_96MXtal_by_rcTracking(void)
+{
+    uint32_t temp,temp1;
+    //for first wakeupinit
+
+    if((AP_AON->SLEEP_R[1] & 0x80) == 0)
+    {
+        //enable DLL
+        temp = AP_PCRM->CLKHF_CTL1;
+        AP_PCRM->CLKHF_CTL1 = temp | BIT(7);
+        WaitRTCCount(3);
+        return;
+    }
+
+    DLL_enable_num=0;
+
+    // ======== enable tracking 32KHz RC timer with 16MHz crystal clock
+    temp = AP_PCRM->CLKHF_CTL0;
+    AP_PCRM->CLKHF_CTL0 = temp | BIT(18);
+
+    while(1)
+    {
+        //enable DLL
+        temp = AP_PCRM->CLKHF_CTL1;
+        AP_PCRM->CLKHF_CTL1 = temp | BIT(7);
+        WaitRTCCount(3);
+        DLL_enable_num++;
+        
+        // //enable digclk 96M
+
+        temp = AP_PCRM->CLKHF_CTL1;
+        AP_PCRM->CLKHF_CTL1 = temp | BIT(16);
+        for(uint8 index=0;index<5;index++)
+        {
+            temp = AP_PCRM->cal_rw;
+            AP_PCRM->cal_rw = (temp & 0xfffefe00) | 0x0028 | BIT(16);
+            WaitRTCCount(3);
+            temp1 = (AP_PCRM->cal_ro1 & 0x1ffff);
+            subWriteReg(&(AP_PCRM->cal_rw),3,3,0);
+            if( (g_xtal16M_tmp*6 >=temp1 ? (g_xtal16M_tmp*6 -temp1):(temp1-g_xtal16M_tmp*6))<TRACKING_96M_16M_MULTI6_DELTA_LIMIT)
+            {
+                //disable 96M
+                subWriteReg(&(AP_PCRM->cal_rw),16,16,0);
+                subWriteReg(&(AP_PCRM->CLKHF_CTL1),16,16,0);
+                g_xtal96M_temp = temp1;
+                subWriteReg(&(AP_AON->SLEEP_R[1]),5,4,0); 
+                return;
+            }
+
+        }
+
+        //disable 96M
+        subWriteReg(&(AP_PCRM->cal_rw),16,16,0);
+        subWriteReg(&(AP_PCRM->CLKHF_CTL1),16,16,0);        
+
+        //should not be here
+
+        if(DLL_enable_num>= DLL_ENABLE_MAX)
+        {
+                subWriteReg(&(AP_AON->SLEEP_R[1]),5,4,1); 
+                just_enter_sleep(60);
+        }
+
+        //disable DLL
+
+        subWriteReg(&(AP_PCRM->CLKHF_CTL1),7,7,0);
+        WaitRTCCount(3);
+
+        //update g_xtal16M_tmp
+        temp = AP_PCRM->cal_rw;
+        AP_PCRM->cal_rw = (temp & 0xfffefe00) | 0x0028 ;
+        WaitRTCCount(3);
+        g_xtal16M_tmp = (AP_PCRM->cal_ro1 & 0x1ffff);
+
+        subWriteReg(&(AP_PCRM->cal_rw),3,3,0);       
+    }
+
+}
+
+uint32_t tracking_cnt=0;
 void wakeup_init1() {
     uint8_t pktFmt = 1;    // packet format 1: BLE 1M
     uint32_t  temp;
@@ -647,7 +870,28 @@ void wakeup_init1() {
 
     //each rtc count is about 30.5us
     //after 15count , xtal will be feedout to dll and doubler
-    WaitRTCCount(pGlobal_config[WAKEUP_DELAY]);
+    //WaitRTCCount(pGlobal_config[WAKEUP_DELAY]);
+    if(g_system_clk == SYS_CLK_XTAL_16M)
+    {
+        WaitRTCCount(pGlobal_config[WAKEUP_DELAY]);
+    }
+    else
+    {
+        uint32_t tracking_c1,tracking_c2;
+        tracking_c1 = rtc_get_counter();
+        WaitRTCCount(50);
+        subWriteReg(&(AP_AON->SLEEP_R[1]),1,0,0);
+        check_16MXtal_by_rcTracking();
+        WaitRTCCount(16);
+        subWriteReg(&(AP_AON->SLEEP_R[1]),1,0,1);
+        check_96MXtal_by_rcTracking();
+        subWriteReg(&(AP_AON->SLEEP_R[1]),1,0,2);
+        tracking_c2 = rtc_get_counter();
+
+        tracking_cnt = (tracking_c2>=tracking_c1) ? (tracking_c2-tracking_c1) : (0xffffffff-tracking_c1+tracking_c2);
+
+        pGlobal_config[WAKEUP_ADVANCE] =1500+30*tracking_cnt;
+    }
 
     // ============ config BB Top
     *(volatile uint32_t *) 0x40030000 = 0x3d068001; // set tx pkt =2
@@ -655,7 +899,7 @@ void wakeup_init1() {
     *(volatile uint32_t *) 0x400300a4 = 0x140;      //[6] for tpm_en
 
     clk_init(g_system_clk);
-
+    subWriteReg(&(AP_AON->SLEEP_R[1]),1,0,3);
     hal_wakeup_irq_config();
 
     // ========== init timers
@@ -679,8 +923,8 @@ void wakeup_init1() {
     ll_hw_ign_rfifo(LL_HW_IGN_SSN | LL_HW_IGN_CRC | LL_HW_IGN_EMP);
 
     // ======== enable tracking 32KHz RC timer with 16MHz crystal clock
-    temp = *(volatile uint32_t *)0x4000f05C;
-    *(volatile uint32_t *)0x4000f05C = (temp & 0xfffefe00) | 0x0108; //[16] 16M [8:4] cnt [3] track_en_rc32k
+    temp = AP_PCRM->cal_rw;
+    AP_PCRM->cal_rw = (temp & 0xfffefe00) | 0x0108; //[16] 16M [8:4] cnt [3] track_en_rc32k
 }
 
 static void hw_spif_cache_config(void) {
@@ -689,6 +933,7 @@ static void hw_spif_cache_config(void) {
     hal_cache_init();
 }
 
+extern void patch_efuse_init(void);
 int sys_soc_resume(int pm_state) {
     uint32_t current_RTC_tick;
     uint32_t wakeup_time, wakeup_time0, next_time;
@@ -698,6 +943,11 @@ int sys_soc_resume(int pm_state) {
     if (pm_state == SYS_POWER_STATE_RUN) {
         return 0;
     }
+
+    patch_efuse_init();
+    JUMP_FUNCTION(WAKEUP_PROCESS) = (uint32_t)Reset_Handler;
+    set_sleep_flag(1);
+    wdt_wakeup_action();
 
     DBG_GPIO_WRITE(DBGIO_APP_WAKEUP, 1);
     // restore HW registers
@@ -723,14 +973,14 @@ int sys_soc_resume(int pm_state) {
     //config the tx2rx timing according to the g_rfPhyPktFmt
     ll_hw_tx2rx_timing_config(g_rfPhyPktFmt);
 
-    if (pGlobal_config[LL_SWITCH] & LL_RC32K_SEL) {
-        subWriteReg(0x4000f01c, 16, 7, 0x3fb); //software control 32k_clk
-        subWriteReg(0x4000f01c, 6, 6 , 0x01); //enable software control
+    // if (pGlobal_config[LL_SWITCH] & LL_RC32K_SEL) {
+    //     subWriteReg(0x4000f01c, 16, 7, 0x3fb); //software control 32k_clk
+    //     subWriteReg(0x4000f01c, 6, 6 , 0x01); //enable software control
 
-    } else {
-        subWriteReg(0x4000f01c, 9, 8, 0x03); //software control 32k_clk
-        subWriteReg(0x4000f01c, 6, 6, 0x00); //disable software control
-    }
+    // } else {
+    //     subWriteReg(0x4000f01c, 9, 8, 0x03); //software control 32k_clk
+    //     subWriteReg(0x4000f01c, 6, 6, 0x00); //disable software control
+    // }
 
     //20181201 by ZQ
     //restart the TIM2 to align the RTC
@@ -798,17 +1048,6 @@ int sys_soc_resume(int pm_state) {
         g_osalTickTrim_mod = g_osalTickTrim_mod % 4;
     }
 
-    // restore systick
-//    osal_sys_tick += (sleep_total + g_osal_tick_trim) / 625;    // convert to 625us systick
-    //  rtc_mod_value += ((sleep_total + g_osal_tick_trim) % 625);
-
-    if (rtc_mod_value > 625) {
-        osal_sys_tick += 1;
-        rtc_mod_value = rtc_mod_value % 625;
-    }
-
-    //  gpio_write(DBGIO_APP_WAKEUP, 1);
-    osalTimeUpdate();
 
 //   gpio_write(DBGIO_APP_WAKEUP, 0);
     // osal time update, not required. It will be updated when osal_run_system() is called after wakeup
@@ -858,7 +1097,7 @@ int sys_soc_resume(int pm_state) {
 
     ll_debug_output(DEBUG_WAKEUP);
 
-    set_sleep_flag(0);
+//    set_sleep_flag(0);
 
     DBG_GPIO_WRITE(DBGIO_APP_WAKEUP, 1);
 
@@ -867,11 +1106,29 @@ int sys_soc_resume(int pm_state) {
 
     //clk_spif_ref_clk(g_spif_ref_clk);
 
+    int count;
+    unsigned int v = *((volatile unsigned int *) (0xE000E010));
+    while((v & 0x10000) > 0)
+    {
+        v = *((volatile unsigned int *) (0xE000E010));
+        count++;
+    }
     CPSR_ALLOC();
-    psr = irq_flags;
+    cpsr = irq_flags;
     RHINO_CPU_INTRPT_ENABLE();
 
-    wdt_wakeup_action();
+
+    // restore systick
+    osal_sys_tick += (sleep_total + g_osal_tick_trim) / 625;    // convert to 625us systick
+    rtc_mod_value += ((sleep_total + g_osal_tick_trim) % 625);
+
+    if (rtc_mod_value > 625) {
+        osal_sys_tick += 1;
+        rtc_mod_value = rtc_mod_value % 625;
+    }
+
+    osalTimeUpdate();
+
     //usart_wakeup_action();
     pm_after_sleep_action();
 
@@ -883,9 +1140,9 @@ int sys_soc_resume(int pm_state) {
     // ==== measure value, from RTC counter meet comparator 0 -> here : 260us ~ 270us
     // start task loop
     // osal_start_system();
-    uint32_t sleep_total_us = sleep_total + g_osal_tick_trim;
+    uint64_t sleep_total_us = sleep_total + g_osal_tick_trim;
     sleep_total_us = ((sleep_total_us << 7) + (sleep_total_us << 1) + sleep_total_us) >> 17; //sleep_total_us/1000
-    return sleep_total_us;
+    return (uint32_t)(sleep_total_us & 0xFFFFFFFF);
 }
 
 void drv_pm_sleep_enable() {

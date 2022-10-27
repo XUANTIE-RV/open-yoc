@@ -15,7 +15,7 @@ This file provides Hardware Abstraction Layer of CPU power management support.
 #include "k_api.h"
 #include "cpu_pwr_config.h"
 
-//#if RHINO_CONFIG_CPU_PWR_MGMT
+//#if RHINO_CONFIG_PWRMGMT
 
 #include "stdlib.h"
 #include "k_atomic.h"
@@ -3543,4 +3543,4 @@ static int num_of_bit_one_get
     return count; 
     }
 
-//#endif /* RHINO_CONFIG_CPU_PWR_MGMT */
+//#endif /* RHINO_CONFIG_PWRMGMT */

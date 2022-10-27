@@ -410,7 +410,6 @@ int tls_spifls_get_param(u8 type, void *param)
 
 int tls_spifls_drv_register(struct tls_fls_drv *fls_drv)
 {
-    u32 cpu_sr;
     struct tls_fls_drv *drv;
 
     if (fls_drv == NULL)
@@ -497,7 +496,6 @@ int tls_spifls_probe(void)
 int tls_spifls_init(void)
 {
     struct tls_fls *fls;
-    int err;
 
     if (spi_fls != NULL)
     {

@@ -15,7 +15,11 @@ lv_color_t test_fb[LV_HOR_RES_MAX * LV_VER_RES_MAX];
 int main(void)
 {
     printf("Call lv_init...\n");
+#if defined(AOS_COMP_LINKVISUAL) && AOS_COMP_LINKVISUAL
+    lvgl_init();
+#else
     lv_init();
+#endif
 
     hal_init();
 

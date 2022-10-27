@@ -4,6 +4,7 @@
 
 /*
  * Copyright (c) 2015-2016 Intel Corporation
+ * Copyright (c) 2022 Alibaba Group Holding Limited
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -56,14 +57,29 @@ extern "C" {
 #define BT_A2DP_SBC_SUB_BAND(preset)     ((preset->config[1] >> 2) & 0x03)
 #define BT_A2DP_SBC_ALLOC_MTHD(preset)   ((preset->config[1]) & 0x03)
 
+/** @brief Stream End Point Codec type */
+enum bt_a2dp_codec_type
+{
+    /** Codec SBC */
+    BT_A2DP_SBC = 0x00,
+    /** Codec MPEG-1 */
+    BT_A2DP_MPEG1 = 0x01,
+    /** Codec MPEG-2 */
+    BT_A2DP_MPEG2 = 0x02,
+    /** Codec ATRAC */
+    BT_A2DP_ATRAC = 0x04,
+    /** Codec Non-A2DP */
+    BT_A2DP_VENDOR = 0xff
+};
+
 /** @brief SBC Codec */
 struct bt_a2dp_codec_sbc_params {
-	/** First two octets of configuration */
-	u8_t config[2];
-	/** Minimum Bitpool Value */
-	u8_t min_bitpool;
-	/** Maximum Bitpool Value */
-	u8_t max_bitpool;
+    /** First two octets of configuration */
+    u8_t config[2];
+    /** Minimum Bitpool Value */
+    u8_t min_bitpool;
+    /** Maximum Bitpool Value */
+    u8_t max_bitpool;
 } __packed;
 
 #ifdef __cplusplus

@@ -64,6 +64,8 @@
 #define HR_CRYPTO_SHA1_DIGEST4     (HR_CRYPTO_BASE_ADDR + 0x44) 
 /** The address of the RNG RESULT register. */
 #define HR_CRYPTO_RNG_RESULT     (HR_CRYPTO_BASE_ADDR + 0x48) 
+/** The address of the TRNG CR register. */
+#define HR_CRYPTO_TRNG_CR        (HR_CRYPTO_BASE_ADDR + 0x54)
 
 
 /** The address of the CRC in register. */
@@ -559,6 +561,19 @@ int tls_crypto_exptmod(hstm_int *a, hstm_int *e, hstm_int *n, hstm_int *res);
  * @note			None
  */
 void tls_crypto_init(void);
+
+/**
+ * @brief        	This function is used to generate true random number seed.
+ *
+ * @param[in]   	None
+ *
+ * @retval  		random number
+ *
+ * @note         	None
+ */
+unsigned int tls_random_seed_generation(void);
+
+
 
 /**
  * @}

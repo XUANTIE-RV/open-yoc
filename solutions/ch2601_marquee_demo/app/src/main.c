@@ -15,13 +15,10 @@
 
 #include "app_config.h"
 #include "app_init.h"
-#include "csi_config.h"
-#include "hw_config.h"
 #include "lvgl.h"
 #include "lv_label.h"
 #include "oled.h"
 
-#include "board_config.h"
 #include "drv/gpio_pin.h"
 #include <drv/pin.h>
 #include <drv/pwm.h>

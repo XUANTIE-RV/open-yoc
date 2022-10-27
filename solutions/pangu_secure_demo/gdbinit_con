@@ -1,8 +1,0 @@
-target remote 30.21.178.44:1025
-
-#add-symbol-file yoc.elf 0x18010000
-
-#set confirm off
-#set $pc=0x18010000
-#set $psr=0xc0000000
-#set $epc=0x0000000

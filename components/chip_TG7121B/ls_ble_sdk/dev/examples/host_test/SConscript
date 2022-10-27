@@ -1,8 +1,0 @@
-Import('app_build')
-src = [
-    'main.c'
-]
-inc = [
-    '.'
-]
-app_build('host_test',src,inc)

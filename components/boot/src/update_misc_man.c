@@ -17,9 +17,17 @@
 #if (CONFIG_PARITION_NO_VERIFY == 0)
 #include <key_mgr.h>
 #endif
+#if defined(CONFIG_XZ_CMP)
+#include <xz_dec.h>
+#endif
 /****************************************************************************
 * Definitions
 ****************************************************************************/
+
+typedef enum {
+	CAR_NULL = 0,
+	CAR_XZ,
+} car_e;
 
 typedef struct {
     uint8_t reserve: 2;
@@ -37,9 +45,10 @@ typedef struct {
     uint8_t img_name[8];
     uint32_t img_off;
     uint8_t img_type;
-    uint8_t rsv_d[3];
+    uint8_t car; /* Compression Alogrithm Routine */
+    uint8_t rsv_d[2];
 } misc_img_info_t;
-typedef  uint32_t  MISC_FD_T;
+typedef  unsigned long  MISC_FD_T;
 
 #define MISC_IMG_TYPE_SIZE 1
 #define MISC_IMG_NAME_SIZE 8
@@ -57,11 +66,11 @@ typedef  uint32_t  MISC_FD_T;
 #define AUTOGRAPH_SHA1                    (1)
 
 #define __FMIT(misc)                      ((misc_head_info_t *)misc) //FLASH MISC INFO T == FMIT
-#define __FMIT_IMG_START(misc)            ((uint32_t)misc+MISC_FLASH_HEADLEN(misc))
+#define __FMIT_IMG_START(misc)            ((unsigned long)misc+MISC_FLASH_HEADLEN(misc))
 #define __FMIT_IMG(misc,num)              ((__FMIT_FD(__FMIT_IMG_START(misc)))[num])
 #define __FMIT_FD(fd)                     ((misc_img_info_t *)fd)
 #define MISC_FILE_HEADER_STRING           0x45474d49   //"IMGE" = 0x45474d49
-#define MISC_FILE_HEADER_INT              ((uint32_t)MISC_FILE_HEADER_STRING)
+#define MISC_FILE_HEADER_INT              ((unsigned long)MISC_FILE_HEADER_STRING)
 #define MISC_FLASH_VALID(misc)            ((__FMIT(misc)->magic) == MISC_FILE_HEADER_INT)
 #define MISC_FLASH_FOTA_VERSION(misc)     (__FMIT(misc)->ver)
 #define MISC_FLASH_HEADLEN(misc)          (__FMIT(misc)->head_len)
@@ -72,7 +81,7 @@ typedef  uint32_t  MISC_FD_T;
 #define MISC_FLASH_MNFT_OFFSET(misc)      (__FMIT(misc)->mnft_off)
 #define MISC_FLASH_FIRST_FD(misc)         ((MISC_FD_T)(&(__FMIT_IMG(misc,0)))) //
 #define MISC_NEXT_FD(fd)                  ((MISC_FD_T)&(__FMIT_FD(fd)[1]))
-#define MISC_NEXT_FD_PRE(fd)              ((MISC_FD_T)((uint32_t)fd-sizeof(misc_img_info_t)))
+#define MISC_NEXT_FD_PRE(fd)              ((MISC_FD_T)((unsigned long)fd-sizeof(misc_img_info_t)))
 #define MISC_FLASH_FD_LAST(misc)          ((MISC_FD_T)&(__FMIT_IMG(misc,(MISC_FLASH_FD_SUM(misc)-1))))
 
 #define MISC_FD_TYPE(fd)                    (__FMIT_FD(fd)->img_type)
@@ -81,10 +90,10 @@ typedef  uint32_t  MISC_FD_T;
 #define MISC_FD_NEXT_OFFSET(fd)             MISC_FD_OFFSET(MISC_NEXT_FD(fd))
 #define MISC_FD_PRE_OFFSET(fd)             MISC_FD_OFFSET(MISC_NEXT_FD_PRE(fd))
 #define MISC_FLASH_NUM_FD(misc,num)          ((MISC_FD_T)(&(__FMIT_IMG(misc,num)))) //
-#define MISC_FLASH_FD_NUM(misc,fd)           ((((uint32_t)(fd)) - __FMIT_IMG_START(misc)) / sizeof(misc_img_info_t))
+#define MISC_FLASH_FD_NUM(misc,fd)           ((((unsigned long)(fd)) - __FMIT_IMG_START(misc)) / sizeof(misc_img_info_t))
 
 
-#define MISC_OS_VERSION_ADDR(misc)           ((uint32_t)misc+sizeof(misc_head_info_t))
+#define MISC_OS_VERSION_ADDR(misc)           ((unsigned long)misc+sizeof(misc_head_info_t))
 
 // update type {DIFF, FULL}
 #define UPDATE_TYPE_DIFF   1
@@ -93,11 +102,11 @@ typedef  uint32_t  MISC_FD_T;
 mtb_t *g_upd_mtb;
 
 static uint32_t g_flash_misc_section_size;
-static uint32_t g_flash_misc_addr;
-static uint32_t g_flash_misc_fota_data_addr;
+static unsigned long g_flash_misc_addr;
+static unsigned long g_flash_misc_fota_data_addr;
 static uint32_t g_flash_misc_size;
 #ifdef CONFIG_NON_ADDRESS_FLASH
-static uint8_t g_fota_tb_ram[MAX_FOTA_TB_SIZE] = {0};
+static uint8_t __attribute__((aligned(4))) g_fota_tb_ram[MAX_FOTA_TB_SIZE] = {0};
 #endif
 
 typedef struct {
@@ -136,7 +145,7 @@ typedef struct {
 } misc_control_s;
 
 static int misc_get_update_status(bool *is_continue);
-static uint32_t misc_first_fd(void);
+static unsigned long misc_first_fd(void);
 
 
 /****************************************************************************
@@ -178,82 +187,115 @@ static uint32_t c2int32(uint8_t *buf)
 
 /**
  * update image
+ * @param[in]    name             update partition name
  * @param[in]    part_addr        update partition base_addr
  * @param[in]    part_len         update partition len
  * @param[in]    img_addr         update img base_addr
- * @param[in]    img_size          update img len
+ * @param[in]    img_size         update img len
+ * @param[in]    car              compression alogrithm routine
  * @return      0 on success; -1 on failure
  */
-static int update_image(uint32_t part_addr , uint32_t part_len, uint32_t img_addr, uint32_t img_size , uint32_t update_type , uint32_t max_part_size)
+static int update_image(const char *name, uint32_t part_addr , uint32_t part_len, uint32_t img_addr, uint32_t img_size , car_e car, uint32_t update_type , uint32_t max_part_size)
 {
-    UPD_LOGD("update image update_type:%d", update_type);
+    int ret = -1;
+
+    UPD_LOGD("update image update_type:%d car:%d 0x%x", update_type, car, part_addr);
+    if (img_size > max_part_size) {
+        UPD_LOGE("too imglen");
+        return -1;
+    }
     if (update_type == UPDATE_TYPE_DIFF) {
-        UPD_LOGI("start DIFF update");
+        UPD_LOGI("start DIFF update[%s]", name);
 #if (CONFIG_OTA_NO_DIFF == 0)
-        return diff_updata_img(part_addr, part_len, max_part_size, img_addr, img_size);
+        ret = diff_init_config(CONFIG_RAM_MAX_USE, g_flash_misc_section_size, g_flash_misc_section_size, g_flash_misc_addr + g_flash_misc_size);
+        if (ret) {
+            UPD_LOGE("diff init failed.ret:%d", ret);
+            return -1;
+        }
+        ret = diff_updata_img(part_addr, part_len, max_part_size, img_addr, img_size);
+        if (ret) {
+            UPD_LOGE("DIFF update failed[%s]", name);
+        }
+        return ret;
 #else
         UPD_LOGI("DIFF not support.");
         return UPDATE_NOT_SUPPORT;
 #endif
     }
-    UPD_LOGI("start FULL update");
 
     uint8_t *buf = NULL;
-    if (img_size > max_part_size) {
-        UPD_LOGE("too imglen");
-        goto fail;
-    }
-
+    UPD_LOGI("start FULL update[%s]", name);
     /*modif it with your update mode*/
+    UPD_LOGI("start to erase ...");
     if (boot_flash_erase(part_addr, max_part_size)) {
         UPD_LOGE("e e flash");
         goto fail;
     }
 
+    if (car == CAR_NULL) {
 #ifdef CONFIG_NON_ADDRESS_FLASH
-    boot_flash_info_t flash_info;
-    uint32_t tmp_size;
-    uint32_t offset = 0;
+        uint32_t tmp_size = 4096;
+        uint32_t offset = 0;
 
-    boot_flash_info_get(&flash_info);
-    tmp_size = flash_info.sector_size;
-    buf = (uint8_t *)malloc(tmp_size);
-    if (!buf) {
-        UPD_LOGE("mem out");
-        return -1;
-    }
-    while(img_size > tmp_size) {
-        if (boot_flash_read(img_addr + offset, buf, tmp_size)) {
+        buf = (uint8_t *)malloc(tmp_size);
+        if (!buf) {
+            UPD_LOGE("mem out");
+            return -1;
+        }
+        while(img_size > tmp_size) {
+            if (boot_flash_read(img_addr + offset, buf, tmp_size)) {
+                goto fail;
+            }
+            if (boot_flash_write(part_addr + offset, buf, tmp_size)) {
+                goto fail;
+            }
+            offset += tmp_size;
+            img_size -= tmp_size;
+        }
+        if (boot_flash_read(img_addr + offset, buf, img_size)) {
             goto fail;
         }
-        if (boot_flash_write(part_addr + offset, buf, tmp_size)) {
+        if (boot_flash_write(part_addr + offset, buf, img_size)) {
             goto fail;
         }
-        offset += tmp_size;
-        img_size -= tmp_size;
-    }
-    if (boot_flash_read(img_addr + offset, buf, img_size)) {
-        goto fail;
-    }
-    if (boot_flash_write(part_addr + offset, buf, img_size)) {
-        goto fail;
-    }
 #else
-    if (boot_flash_write(part_addr, (uint8_t *)img_addr, img_size)) {
-        UPD_LOGE("e w flash");
-        return -1;
+        if (boot_flash_write(part_addr, (uint8_t *)img_addr, img_size)) {
+            UPD_LOGE("e w flash");
+            return -1;
+        }
+#endif /* CONFIG_NON_ADDRESS_FLASH */
+    } else if (car == CAR_XZ) {
+#if defined(CONFIG_XZ_CMP)
+        uint32_t olen;
+        UPD_LOGI("start xz decompress");
+#ifdef CONFIG_NON_ADDRESS_FLASH
+        ret = xz_decompress((uint8_t *)((long)img_addr), img_size, boot_flash_read, (uint8_t *)((long)part_addr), &olen, boot_flash_write);
+#else
+        ret = xz_decompress((uint8_t *)((long)img_addr), img_size, NULL, (uint8_t *)((long)part_addr), &olen, boot_flash_write);
+#endif /*CONFIG_NON_ADDRESS_FLASH*/
+        if(ret) {
+		   UPD_LOGE("xz decompress or write faild %d", ret);
+		   goto fail;
+	    }
+#else
+        UPD_LOGE("xz decompress not enable.");
+#endif /*CONFIG_XZ_CMP*/
+    } else {
+        UPD_LOGE("decompress not support, car:%d", car);
+        goto fail;
     }
-#endif
+    UPD_LOGI("FULL update over[%s]", name);
     if (buf) {
         free(buf);
     }
     return 0;
 
 fail:
+    UPD_LOGI("FULL update failed[%s]", name);
     if (buf) {
         free(buf);
     }
-    return -1;
+    return ret;
 }
 
 /**
@@ -263,9 +305,13 @@ fail:
  */
 int misc_reset(void)
 {
-    uint32_t misc_addr = g_flash_misc_addr;
-    UPD_LOGD("misc_addr:0x%x, size:%d", misc_addr, g_flash_misc_size);
-    return boot_flash_erase(misc_addr, g_flash_misc_size);
+    uint32_t erase_len = g_flash_misc_size;
+    unsigned long misc_addr = g_flash_misc_addr;
+    if (erase_len > g_flash_misc_section_size * 3) {
+        erase_len = g_flash_misc_section_size * 3;
+    }
+    UPD_LOGI("misc reset at 0x%lx, erase_len:0x%x\n", misc_addr, erase_len);
+    return boot_flash_erase(misc_addr, erase_len);
 }
 
 /**
@@ -274,7 +320,7 @@ int misc_reset(void)
  * @param[in]    misc_addr         misc_base
  * @return      0 on success; -1 on failure
  */
-int misc_init(uint32_t misc_addr , uint32_t flash_size , uint32_t flash_section)
+int misc_init(unsigned long misc_addr , uint32_t flash_size , uint32_t flash_section)
 {
     g_flash_misc_addr = misc_addr;
     g_flash_misc_fota_data_addr = misc_addr + (flash_section << 1);
@@ -286,18 +332,18 @@ int misc_init(uint32_t misc_addr , uint32_t flash_size , uint32_t flash_section)
     }
 #endif
     g_upd_mtb = mtb_get();
-    UPD_LOGD("g_flash_misc_addr:0x%x", g_flash_misc_addr);
-    UPD_LOGD("g_flash_misc_fota_data_addr:0x%x", g_flash_misc_fota_data_addr);
+    UPD_LOGD("g_flash_misc_addr:0x%lx", g_flash_misc_addr);
+    UPD_LOGD("g_flash_misc_fota_data_addr:0x%lx", g_flash_misc_fota_data_addr);
     UPD_LOGD("g_flash_misc_section_size:0x%x", g_flash_misc_section_size);
     UPD_LOGD("g_flash_misc_size:0x%x", g_flash_misc_size);
     return 0;
 }
 
-inline static uint32_t get_fota_tb_address()
+inline static unsigned long get_fota_tb_address()
 {
-    uint32_t addr;
+    unsigned long addr;
 #ifdef CONFIG_NON_ADDRESS_FLASH
-    addr = (uint32_t)g_fota_tb_ram;
+    addr = (unsigned long)g_fota_tb_ram;
 #else
     addr = g_flash_misc_fota_data_addr;
 #endif
@@ -314,10 +360,10 @@ inline static uint32_t get_fota_tb_address()
 int misc_file_check()
 {
     bool is_continue;
-    uint32_t misc_addr;
+    unsigned long misc_addr;
 
     misc_addr = get_fota_tb_address();
-    UPD_LOGD("misc_addr=0x%08x", misc_addr);
+    UPD_LOGD("misc_addr=0x%08lx", misc_addr);
     if (!MISC_FLASH_VALID(misc_addr) || MISC_FLASH_FD_SUM(misc_addr) > FLASH_MISC_IMAGER_MAX) {
         UPD_LOGW("misc fota data e");
         return -1;
@@ -334,27 +380,26 @@ int misc_file_check()
         uint8_t  calc_hash[128];
         uint32_t hash_len;
         uint32_t olen;
-        uint32_t fota_data_addr;
+        unsigned long fota_data_addr;
         uint32_t fota_data_size;
-        uint32_t signature_addr, signature_len;
+        unsigned long signature_addr;
+        uint32_t signature_len;
         // signature_sch_e sig_type;
         digest_sch_e digest_type;
-        uint32_t hash_addr = INVALID_ADDR;
+        unsigned long hash_addr = INVALID_ADDR;
 
         // sig_type    = __FMIT(misc_addr)->signature_type;
         digest_type = __FMIT(misc_addr)->digest_type;
 
         fota_data_addr = g_flash_misc_fota_data_addr;
 
-    #if (CONFIG_MANTB_VERSION == 1) || (CONFIG_MANTB_VERSION == 4)
+    #if (CONFIG_MANTB_VERSION == 4)
         if ((MISC_FLASH_FOTA_VERSION(misc_addr)) == 0) {
             signature_len  = MISC_FILE_SIG_LEN;
             fota_data_size = MISC_FLASH_MNFT_OFFSET(misc_addr);
             signature_addr = MISC_FLASH_MNFT_OFFSET(misc_addr)+fota_data_addr;
             hash_addr      = signature_addr + 256;
         } else if ((MISC_FLASH_FOTA_VERSION(misc_addr)) == 1) {
-    #elif (CONFIG_MANTB_VERSION == 2)
-        if ((MISC_FLASH_FOTA_VERSION(misc_addr)) == 1) {
     #endif
             signature_len  = MISC_FILE_SIG_LEN;
             fota_data_size = MISC_FLASH_MNFT_OFFSET(misc_addr);
@@ -365,8 +410,8 @@ int misc_file_check()
         }
         hash_len = get_length_with_digest_type(digest_type);
 
-        UPD_LOGD("signature_addr:0x%x, hash_addr:0x%x, hash_len:%d", signature_addr, hash_addr, hash_len);
-        UPD_LOGD("fota_data_addr:0x%x, fota_data_size:%d", fota_data_addr, fota_data_size);
+        UPD_LOGD("signature_addr:0x%lx, hash_addr:0x%lx, hash_len:%d", signature_addr, hash_addr, hash_len);
+        UPD_LOGD("fota_data_addr:0x%lx, fota_data_size:%d", fota_data_addr, fota_data_size);
 #ifdef CONFIG_NON_ADDRESS_FLASH
         if (boot_flash_read(signature_addr, signature, signature_len)) {
             return -1;
@@ -386,7 +431,7 @@ int misc_file_check()
         }
 #endif
         UPD_LOGI("fota data hash verify ok");
-#if (CONFIG_PARITION_NO_VERIFY == 0)
+#if (CONFIG_PARITION_NO_VERIFY == 0) && (CONFIG_FOTA_IMG_AUTHENTICITY_NOT_CHECK == 0)
         key_handle key_addr;
         uint32_t key_len;
         signature_sch_e sig_type;
@@ -401,7 +446,7 @@ int misc_file_check()
             return -1;
         }
         UPD_LOGI("fota data verify ok");
-#endif /* CONFIG_PARITION_NO_VERIFY */     
+#endif
     }
 
     UPD_LOGD("pmtb");
@@ -414,17 +459,17 @@ int misc_file_check()
  * @param[in]    fd         misc fd
  * @return      imager fd
  */
-uint32_t misc_next_imager(uint32_t fd)
+unsigned long misc_next_imager(unsigned long fd)
 {
-    uint32_t misc_addr = get_fota_tb_address();
-    UPD_LOGD("fd in:%x", fd);
+    unsigned long misc_addr = get_fota_tb_address();
+    UPD_LOGD("fd in:0x%lx", fd);
 
     if ((MISC_FLASH_FD_NUM(misc_addr, fd)) == 0) {
         UPD_LOGD("fd no");
         return 0;
     }
 
-    UPD_LOGD("fd out:%x", MISC_NEXT_FD_PRE(fd));
+    UPD_LOGD("fd out:0x%lx", MISC_NEXT_FD_PRE(fd));
     return MISC_NEXT_FD_PRE(fd);
 }
 
@@ -433,10 +478,10 @@ uint32_t misc_next_imager(uint32_t fd)
  *
  * @return      imager first fd
  */
-static uint32_t misc_first_fd()
+static unsigned long misc_first_fd()
 {
-    uint32_t misc_addr = get_fota_tb_address();
-    UPD_LOGD("sum:%d,imgstart:0x%x,first_fd:0x%x", MISC_FLASH_FD_SUM(misc_addr), __FMIT_IMG_START(misc_addr), MISC_FLASH_FIRST_FD(misc_addr));
+    unsigned long misc_addr = get_fota_tb_address();
+    UPD_LOGD("sum:%d,imgstart:0x%lx,first_fd:0x%lx", MISC_FLASH_FD_SUM(misc_addr), __FMIT_IMG_START(misc_addr), MISC_FLASH_FIRST_FD(misc_addr));
     return MISC_FLASH_FD_LAST(misc_addr);
 }
 
@@ -445,9 +490,9 @@ static uint32_t misc_first_fd()
  *
  * @return      imager first fd
  */
-static int32_t misc_fd_check(uint32_t fd)
+static int32_t misc_fd_check(unsigned long fd)
 {
-    uint32_t misc_addr = get_fota_tb_address();
+    unsigned long misc_addr = get_fota_tb_address();
     uint32_t fd_sum = MISC_FLASH_FD_SUM(misc_addr);
     uint32_t fd_num = MISC_FLASH_FD_NUM(misc_addr, fd);
 
@@ -461,7 +506,7 @@ static int32_t misc_fd_check(uint32_t fd)
 
 static uint8_t misc_get_padtype()
 {
-    uint32_t misc_addr = get_fota_tb_address();
+    unsigned long misc_addr = get_fota_tb_address();
     UPD_LOGD("PAD type:%d", MISC_FLASH_PADTYPE(misc_addr));
     return MISC_FLASH_PADTYPE(misc_addr);
 }
@@ -473,11 +518,11 @@ static uint8_t misc_get_padtype()
  * @param[out]   img_f      misc info
  * @return      0 on success; -1 on failure
  */
-int misc_get_imager_info(uint32_t fd, img_info_t *img_f)
+int misc_get_imager_info(unsigned long fd, img_info_t *img_f)
 {
-    uint32_t misc_addr = get_fota_tb_address();
+    unsigned long misc_addr = get_fota_tb_address();
     uint8_t  *img_name = MISC_FD_NAME_FDS(fd);
-    UPD_LOGD("got fd %x", fd);
+    UPD_LOGD("got fd 0x%lx", fd);
 
     strncpy((char *)(img_f->img_name), (char *)img_name, SIZE_OF_IMAGE_NAME);
     img_f->img_addr = MISC_FD_OFFSET(fd) + g_flash_misc_fota_data_addr;
@@ -497,7 +542,7 @@ int misc_get_imager_info(uint32_t fd, img_info_t *img_f)
     return 0;
 }
 
-int misc_get_scn_img_info(uint32_t img_addr, scn_img_t *scn_img)
+int misc_get_scn_img_info(unsigned long img_addr, scn_img_t *scn_img)
 {
     boot_flash_read(img_addr, (uint8_t *)scn_img, sizeof(scn_img_t));
     return 0;
@@ -506,60 +551,13 @@ int misc_get_scn_img_info(uint32_t img_addr, scn_img_t *scn_img)
 #define __PADDING_LEN(A,B) (((A+B-1)/B)*B)
 
 /**
- * update osversion from misc
- *
- * @param[in]   bm_addr      bm_addr
- * @return      0 on success; -1 on failure
- */
-int misc_update_os_version(uint32_t bm_addr)
-{
-#if (CONFIG_MANTB_VERSION < 4)
-    uint32_t misc_addr = g_flash_misc_fota_data_addr;
-    uint32_t os_ver_addr = MISC_OS_VERSION_ADDR(misc_addr);
-    uint32_t os_ver_len = 0;
-
-#if (CONFIG_MANTB_VERSION == 1)
-    if (MISC_FLASH_FOTA_VERSION(misc_addr) == 0) {
-        os_ver_len = MTB_OS_VERSION_LEN;
-    } else if (MISC_FLASH_FOTA_VERSION(misc_addr) == 1) {
-#elif (CONFIG_MANTB_VERSION == 2)
-    if (MISC_FLASH_FOTA_VERSION(misc_addr) == 1)
-#endif /* CONFIG_MANTB_VERSION */
-        os_ver_len = MTB_OS_VERSION_LEN_V2;
-    }
-
-    UPD_LOGD("new os_vers:%.*s", MTB_IMAGE_VERSION_SIZE, (char *)os_ver_addr);
-
-    if (update_imginfo(bm_addr, UPDATE_TYPE_OS_VERSIN, NULL, (uint8_t *)os_ver_addr, os_ver_len)) {
-        UPD_LOGE("e update os_ver:%d", os_ver_len);
-        return -1;
-    }
-
-    if (update_img_mtb(1)) {
-        return -1;
-    }
-#else
-    UPD_LOGD("mtb update app version...");
-    if (mtb_update_other(g_upd_mtb, 1)) {
-        UPD_LOGE("mtb update other e");
-        return -1;
-    }
-    if (mtb_update_valid(g_upd_mtb)) {
-        UPD_LOGE("mtb update valid e");
-        return -1;
-    }
-#endif /*CONFIG_MANTB_VERSION < 4*/
-    return 0;
-}
-
-/**
  * update path from misc
  *
  * @param[in]   img_f      misc info
  * @param[in]   path       which path
  * @return      0 on success; -1 on failure
  */
-int misc_update_path(uint32_t bm_addr, img_info_t *img_update, uint32_t type, uint32_t fd)
+int misc_update_path(unsigned long bm_addr, img_info_t *img_update, uint32_t type, unsigned long fd)
 {
     int ret;
     img_info_t img_old_v;
@@ -576,9 +574,6 @@ int misc_update_path(uint32_t bm_addr, img_info_t *img_update, uint32_t type, ui
     int update_flag = 0;
     int flash_sector;
     boot_flash_info_t flash_info;
-
-    boot_flash_info_get(&flash_info);
-    flash_sector = flash_info.sector_size;
 
     UPD_LOGD("update_type.type:0x%x,update_type.type_t.img_type:%d,update_type.type_t.update_type:%d,reserve:%d", update_type.type, update_type.type_t.img_type, update_type.type_t.update_type, update_type.type_t.reserve);
 
@@ -597,7 +592,7 @@ int misc_update_path(uint32_t bm_addr, img_info_t *img_update, uint32_t type, ui
         UPD_LOGD("update_img_addr:0x%x, update_img_size:%d", update_img_addr, update_img_size);
 
 		// TODO: update_img_addr, update_img_size ?? need resize??
-        ret = update_image(img_old->img_addr, img_old->img_size, update_img_addr, update_img_size, update_type.type_t.update_type, img_old->img_part_size);
+        ret = update_image((const char *)img_old->img_name, img_old->img_addr, img_old->img_size, update_img_addr, update_img_size,  __FMIT_FD(fd)->car, update_type.type_t.update_type, img_old->img_part_size);
         if (ret < 0) {
             UPD_LOGE("e up nimg:%.*s", MTB_IMAGE_NAME_SIZE, img_update->img_name);
             return ret;
@@ -614,8 +609,18 @@ int misc_update_path(uint32_t bm_addr, img_info_t *img_update, uint32_t type, ui
                 return -1;
             }
 
+            if (mtb_get_img_info((const char *)img_update->img_name, img_old)) {
+                UPD_LOGE("e got img info: %s", img_update->img_name);
+                return -1;
+            }
             /* need sector padding */
             if (0 == pad_type) {
+                int flashid = 0;
+#if CONFIG_MULTI_FLASH_SUPPORT
+                flashid = get_flashid_by_abs_addr(img_old->img_addr);
+#endif
+                boot_flash_info_get(flashid, &flash_info);
+                flash_sector = flash_info.sector_size;
                 tmp_addr = img_update->img_addr - g_flash_misc_fota_data_addr + tmp_size;
 				// FIXME: (g_flash_misc_section_size > FLASH_IMG_SETCOR ? g_flash_misc_section_size : FLASH_IMG_SETCOR)???
                 update_img_addr = g_flash_misc_fota_data_addr + __PADDING_LEN(tmp_addr , (g_flash_misc_section_size > flash_sector ? g_flash_misc_section_size : flash_sector));
@@ -626,14 +631,8 @@ int misc_update_path(uint32_t bm_addr, img_info_t *img_update, uint32_t type, ui
                 update_img_addr = img_update->img_addr + tmp_size;
                 update_img_size = img_update->img_size - tmp_size;
             }
-
-            if (mtb_get_img_info((const char *)img_update->img_name, img_old)) {
-                UPD_LOGE("e got img info: %s", img_update->img_name);
-                return -1;
-            }
-
             UPD_LOGD("update img part_addr:0x%x-img_name:%s-img_addr:%x-img_size:%d-max_size:%d-update_type:%d\n", img_old->img_addr, img_update->img_name, update_img_addr, update_img_size, img_old->img_part_size, update_type.type_t.update_type);
-            ret = update_image(img_old->img_addr, img_old->img_size, update_img_addr, update_img_size, update_type.type_t.update_type, img_old->img_part_size);
+            ret = update_image((const char *)img_old->img_name, img_old->img_addr, img_old->img_size, update_img_addr, update_img_size, __FMIT_FD(fd)->car, update_type.type_t.update_type, img_old->img_part_size);
             if (ret < 0) {
                 UPD_LOGE("e up dimg: %s", img_update->img_name);
                 return ret;
@@ -669,11 +668,6 @@ int misc_update_path(uint32_t bm_addr, img_info_t *img_update, uint32_t type, ui
                 UPD_LOGE("e update mate %.*s", MTB_IMAGE_NAME_SIZE, img_update->img_name);
                 return -1;
             }
-#else
-            if (update_imginfo(bm_addr, UPDATE_TYPE_IMG_INFO, img_update->img_name, (uint8_t *)(img_update->img_addr), tmp_size)) {
-                UPD_LOGE("e update mate%.*s", MTB_IMAGE_NAME_SIZE, img_update->img_name);
-                return -1;
-            }
 #endif
             type_flag = MISC_STATUS_PRIM_MANFEST_SET;
         }
@@ -688,10 +682,6 @@ int misc_update_path(uint32_t bm_addr, img_info_t *img_update, uint32_t type, ui
                     UPD_LOGE("update valid mtb e");
                     return -1;
                 }
-            }
-#else
-            if (update_img_mtb(1)) {
-                return -1;
             }
 #endif
         }
@@ -733,19 +723,19 @@ static int misc_get_update_status(bool *is_continue)
     return 0;
 }
 
-static uint32_t get_real_fd(uint32_t fd)
+static unsigned long get_real_fd(unsigned long fd)
 {
 #ifdef CONFIG_NON_ADDRESS_FLASH
-    return fd + (uint32_t)g_fota_tb_ram;
+    return fd + (unsigned long)g_fota_tb_ram;
 #else
     return fd;
 #endif
 }
 
-static uint32_t set_real_fd(uint32_t fd)
+static unsigned long set_real_fd(unsigned long fd)
 {
 #ifdef CONFIG_NON_ADDRESS_FLASH
-    return (fd >= (uint32_t)g_fota_tb_ram) ? fd - (uint32_t)g_fota_tb_ram : fd;
+    return (fd >= (unsigned long)g_fota_tb_ram) ? fd - (unsigned long)g_fota_tb_ram : fd;
 #else
     return fd;
 #endif
@@ -758,14 +748,14 @@ static uint32_t set_real_fd(uint32_t fd)
  * @param[in]   path       which path
  * @return      0 on success; -1 on failure
  */
-int misc_get_update_fd(uint32_t *fd, uint32_t *status)
+int misc_get_update_fd(unsigned long *fd, uint32_t *status)
 {
-    uint32_t addr = g_flash_misc_addr;
+    unsigned long addr = g_flash_misc_addr;
     misc_control_s *misc_control;
     misc_control_s misc_control2;
     // misc_control_s *misc_control = (misc_control_s *)addr;
     // misc_control_s *misc_control2 = (misc_control_s *)(addr + g_flash_misc_section_size);
-    uint32_t imisc_addr = get_fota_tb_address();
+    unsigned long imisc_addr = get_fota_tb_address();
     uint32_t sum_fd = MISC_FLASH_FD_SUM(imisc_addr);
     uint32_t tmp_status = MISC_STATUS_IMG_SET;
     int32_t control_state = 0, i;
@@ -809,7 +799,7 @@ int misc_get_update_fd(uint32_t *fd, uint32_t *status)
         }
 
 		*fd = misc_first_fd();
-        UPD_LOGD("misc_first_fd=0x%x", *fd);
+        UPD_LOGD("misc_first_fd=0x%lx", *fd);
         UPD_LOGD("==================>>>>%s", ((misc_img_info_t *)*fd)->img_name);
 		*status = MISC_STATUS_IMG_SET;
     } else {
@@ -830,7 +820,7 @@ int misc_get_update_fd(uint32_t *fd, uint32_t *status)
             }
         }
 
-        UPD_LOGD("seach misc_control->fd:%x,type:%d,i:%d", get_real_fd(misc_control->fd_info[i].type[MISC_STATUS_FD_ADDR]), tmp_status, i);
+        UPD_LOGD("seach misc_control->fd:0x%lx,type:%d,i:%d", get_real_fd(misc_control->fd_info[i].type[MISC_STATUS_FD_ADDR]), tmp_status, i);
 
 
         if (i < 0) {
@@ -852,7 +842,7 @@ int misc_get_update_fd(uint32_t *fd, uint32_t *status)
             }
         }
 
-        UPD_LOGD("got misc_control->fd:%x,type:%d", get_real_fd(misc_control->fd_info[i].type[MISC_STATUS_FD_ADDR]), tmp_status);
+        UPD_LOGD("got misc_control->fd:0x%lx,type:%d", get_real_fd(misc_control->fd_info[i].type[MISC_STATUS_FD_ADDR]), tmp_status);
 
         if (misc_fd_check(*fd) || *status > MISC_STATUS_PRIM_MANFEST_SET) {
             UPD_LOGE("e fd info");
@@ -861,7 +851,7 @@ int misc_get_update_fd(uint32_t *fd, uint32_t *status)
         }
 
     }
-    UPD_LOGD("misc get fd over, 0x%x", buf);
+    UPD_LOGD("misc get fd over, 0x%lx", (unsigned long)buf);
     free(buf);
     return 0;
 }
@@ -874,7 +864,7 @@ int misc_get_update_fd(uint32_t *fd, uint32_t *status)
  * @return      0 on success; -1 on failure
  */
 
-int misc_set_update_fd(uint32_t type, uint32_t fd, uint32_t status)
+int misc_set_update_fd(uint32_t type, unsigned long fd, uint32_t status)
 {
     uint32_t addr = g_flash_misc_addr;
     int ret = UPDATE_CHECK_FAIL;
@@ -886,7 +876,7 @@ int misc_set_update_fd(uint32_t type, uint32_t fd, uint32_t status)
     UPD_LOGD("type=%d, g_flash_misc_addr=0x%x, g_flash_misc_section_size=0x%x", type, addr, g_flash_misc_section_size);
     if (type == MISC_UPDATA_CONTROL_SET) {
         ret = UPDATE_PATCH_FAIL;
-        UPD_LOGD("set fd:%x,stas:%d", fd, status);
+        UPD_LOGD("set fd:0x%lx,stas:%d", fd, status);
 
         if (status > MISC_STATUS_PRIM_MANFEST_SET) {
             UPD_LOGE("e fd type");
@@ -896,7 +886,7 @@ int misc_set_update_fd(uint32_t type, uint32_t fd, uint32_t status)
         if (misc_control->status == MISC_UPDATA_STATUS_CONTINUE) {
             fd_num = MISC_FLASH_FD_NUM(get_fota_tb_address(), fd);
 
-            UPD_LOGI("fd:%x,fd_num:%d", fd, fd_num);
+            UPD_LOGI("fd:0x%lx,fd_num:%d", fd, fd_num);
 
             if (misc_fd_check(fd)) {
                 UPD_LOGE("e fd info");
@@ -945,31 +935,10 @@ int misc_set_update_fd(uint32_t type, uint32_t fd, uint32_t status)
     return 0;
 }
 
-/*
-返回mem中crc和signature的地址
- */
-uint8_t *misc_get_imtb_crc_and_sig(uint32_t *olen)
-{
-    // |4bytes erase value|4bytes crc32|
-    uint8_t tail_f[8];
-    static uint8_t crc32_v[4];
-
-    *olen = 4;
-    // 读取末尾8个字节，最后1个word为保存着的新的crc32校验值;
-    // 倒数第2个word为flash擦除后的值，不加密的就是0xFFFFFFFF
-    boot_flash_read(g_upd_mtb->prim_addr + g_upd_mtb->one_size - 8, tail_f, 8);
-    if (memcmp(&tail_f[0], &tail_f[4], 4) == 0) {
-        return NULL;
-    }
-    memcpy(crc32_v, &tail_f[4], 4);
-    UPD_LOGD("### imtb crc32 = 0x%x%x%x%x", crc32_v[0], crc32_v[1], crc32_v[2], crc32_v[3]);
-    return crc32_v;
-}
-
 int misc_get_app_version(uint8_t *out, uint32_t *olen)
 {
-    uint32_t addr = get_fota_tb_address();
-    uint32_t ver_addr = MISC_OS_VERSION_ADDR(addr);
+    unsigned long addr = get_fota_tb_address();
+    unsigned long ver_addr = MISC_OS_VERSION_ADDR(addr);
     int fota_ver = MISC_FLASH_FOTA_VERSION(addr);
     int app_ver_size = 32;
 

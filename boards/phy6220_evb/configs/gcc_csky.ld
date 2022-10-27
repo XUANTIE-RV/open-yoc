@@ -26,7 +26,7 @@ MEMORY
 	SRAM   : ORIGIN = 0x1FFF1a40 , LENGTH = 0xe5c0      /* SRAM  57.4KB */
 }
 
-__min_heap_size = 0x1000;
+__min_heap_size = 0x1800;
 PROVIDE (__ram_end  = 0x20000000);
 PROVIDE (__heap_end = __ram_end);
 
@@ -53,6 +53,16 @@ SECTIONS
   *(.rodata*)
   *(.rodata.*)
   *(.rodata.str1.4)
+  . = ALIGN(0x4) ;
+  _bt_gatt_service_static_list_start = .;
+  KEEP (*(SORT(._bt_gatt_service_static.static.*)))
+  _bt_gatt_service_static_list_end = .;
+  _bt_gatt_attr_list_start = .;
+  KEEP (*(SORT(._bt_gatt_attr.static.*)))
+  _bt_gatt_attr_list_end = .;
+  _bt_l2cap_fixed_chan_list_start = .;
+  KEEP (*(SORT(._bt_l2cap_fixed_chan.static.*)))
+  _bt_l2cap_fixed_chan_list_end = .;
   KEEP (*crtbegin.o(.ctors))
   KEEP (*crtbegin?.o(.ctors))
   KEEP (*(EXCLUDE_FILE (*crtend.o *crtend?.o ) .ctors))
@@ -85,12 +95,13 @@ SECTIONS
 
   *libaos.a:*hook_impl.o(.text.*)
   *libchip_phy6220.a:*system.o(.text.hal_cache_init )
-  *csky_case_uqi.o(*)
-  *csky_case_shi.o(*)
 
   . = ALIGN(0x800) ;
   *libchip_phy6220.a:*system.o(.bss.PHY6220_Vectors)
-
+  *csky_case_uqi.o(*)
+  *csky_case_shi.o(*)
+  *:*_divsi3.o(*)
+  *:*_udivsi3.o(*)
   *librhino.a:*k_tick.o(.text.*)
   //*librhino.a:*k_buf_queue.o(.text.*)
   //*librhino.a:*k_mutex.o(.text.*)
@@ -123,9 +134,11 @@ SECTIONS
 
   //*libdrivers.a:*uart_drv.o(.text.usart_csky_event_cb_fun .text.uart_csky_send .text.uart_csky_recv)
 
-  *libdrv_bt_phy6220*.a:*ll_patch.o(.text.*)
+  //*libdrv_bt_phy6220*.a:*ll_patch.o(.text.*)
   *libdrv_bt_phy6220*.a:*rf_phy_driver.o(.text.*)
   *libdrv_bt_phy6220*.a:*phy6220_hci.o(.text.osal_set_event1)
+  *libdrv_bt_phy6220*.a:*hci_event_patch.o(.text.LL_ExtAdvReportCback1)
+
 
   *libble_host.a:*h4_driver.o(.text._hci_recv_event)
   //*libble_host.a:*aos_port.o(.text.*)
@@ -138,7 +151,7 @@ SECTIONS
   *(*__udiv32*)
 
   *libminilibc.a:*memcpy_fast.o(*)
-  *(.__sram.code)
+  *(.__sram*)
   data_text_end = . ;
 
   *(.got.plt)
@@ -187,6 +200,7 @@ SECTIONS
   . = ALIGN(0x4) ;
   __stext = . ;
   *(.text)
+  *(.__xip.code*)
   *(.text*)
   *(.text.*)
   *(.gnu.warning)

@@ -179,17 +179,18 @@ void tls_pmu_sdio_isr_register(tls_pmu_irq_callback callback, void *arg)
 void tls_pmu_clk_select(u8 bypass)
 {
 	u32 val;
+	val = tls_reg_read32(HR_PMU_PS_CR);
+    val &= ~BIT(3);   					//bit 2 first set 0 and set 1                   
+	tls_reg_write32(HR_PMU_PS_CR, val);	
 
 	val = tls_reg_read32(HR_PMU_PS_CR);
-	if(bypass)
-	{
+	if(bypass){
 		val |= BIT(4);
 	}
-	else
-	{
+	else{
 		val &= ~BIT(4);
-		val |= BIT(3);
 	}
+	val |= BIT(3);
 	tls_reg_write32(HR_PMU_PS_CR, val);	
 }
 
@@ -283,7 +284,6 @@ void tls_pmu_timer1_stop(void)
 void tls_pmu_standby_start(void)
 {
 	u32 val;
-    tls_reg_write32(HR_PMU_INTERRUPT_SRC, BIT(2)); /* clear gpio wake interrupt */
 
 	tls_irq_enable(PMU_IRQn);		//默认打开中断为了清楚IO唤醒的中断标记
 
@@ -312,7 +312,6 @@ void tls_pmu_standby_start(void)
 void tls_pmu_sleep_start(void)
 {
 	u32 val;
-    tls_reg_write32(HR_PMU_INTERRUPT_SRC, BIT(2)); /* clear gpio wake interrupt */
 
 	tls_irq_enable(PMU_IRQn);		//默认打开中断为了清楚IO唤醒的中断标记
 	/*Clear Standby status after exit standby mode and enter sleep mode*/

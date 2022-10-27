@@ -207,12 +207,13 @@ static int cli_parse(char *cmd_name, int cmd_type, char *args)
 
     return -1;
 }
-
+static int fct_running=1;
+static aos_event_t fct_comm_event;
 static void tsk_fct_comm(void *arg)
 {
     char ch = '\0';
 
-    while (1) {
+    while (fct_running) {
         /* if received command from PC, process it */
         if (uart_recv(comm_handle, &ch, 1, 100) > 0) {
             int_fast8_t ret;
@@ -255,12 +256,13 @@ static void tsk_fct_comm(void *arg)
             } 
         }
     }
+    aos_event_set(&fct_comm_event, 0x1, AOS_EVENT_OR);
 }
-
 int fct_comm_init(int uart_id, uint32_t baud_rate)
 {
     uart_config_t config;
     int ret;
+    uint32_t flags = 0;
     
     if (comm_handle) {
         return -EBUSY;
@@ -279,12 +281,29 @@ int fct_comm_init(int uart_id, uint32_t baud_rate)
     cmd_args_cp = malloc(MAX_CMD_ARGS_LEN + 1);
     arg_items = (char **)malloc(MAX_CMD_ARG_NUM * sizeof(char *));
 
+    ret = aos_event_new(&fct_comm_event, flags);
+    if (ret != 0) {
+        printf("event create failed\n");
+        return -1;
+    }
     ret = aos_task_new_ext(&tsk_comm, "fcomm", tsk_fct_comm, NULL, 3 * 1024, AOS_DEFAULT_APP_PRI);
     CHECK_RET_WITH_RET(ret == 0, ret);
 
     return 0;
 }
+void fct_comm_deinit(void)
+{
+    uint32_t actl_flags;
 
+    fct_running=0;
+    aos_event_get(&fct_comm_event, 0x1, AOS_EVENT_OR_CLEAR, &actl_flags, AOS_WAIT_FOREVER);
+    uart_close(comm_handle);
+    
+    free(cmd_name);
+    free(cmd_args);
+    free(cmd_args_cp);
+    free(arg_items);
+}
 int fct_comm_reg_cmd(const char *name, const char *help, int cmd_id)
 {
     cmd_list_t *temp_cmd_node;

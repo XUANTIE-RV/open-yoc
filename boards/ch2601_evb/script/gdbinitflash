@@ -1,0 +1,5 @@
+target remote localhost:1025
+
+si
+set $mhcr=0
+set $mstatus&=~(0x00000008)

@@ -6,6 +6,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
+#include <stdbool.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -22,6 +23,14 @@ void boot_load_and_jump(void);
 */
 /* TODO weak */
 void boot_sys_reboot(void);
+
+/**
+ * @brief  check the image is needed ota or not
+ * @param name partition name
+ * @return true: no needed ota, false: need ota
+ */
+/* TODO weak */
+bool boot_is_no_needed_ota(const char *name);
 
 #ifdef __cplusplus
 }

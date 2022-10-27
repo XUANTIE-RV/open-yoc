@@ -11,7 +11,7 @@ modification history
 #include "k_api.h"
 #include "cpu_pwr_config.h"
 
-//#if RHINO_CONFIG_CPU_PWR_MGMT
+//#if RHINO_CONFIG_PWRMGMT
 
 #include "cpu_pwr_hal_lib.h"
 #include "cpu_pwr_lib.h"
@@ -212,4 +212,4 @@ kstat_t cpu_pwr_idle_mode_get (CPU_IDLE_MODE * pMode)
     return RHINO_SUCCESS;
     }
 
-//#endif /* RHINO_CONFIG_CPU_PWR_MGMT */
+//#endif /* RHINO_CONFIG_PWRMGMT */

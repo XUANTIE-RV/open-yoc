@@ -300,13 +300,13 @@ static int spi_block_read_dma(u8 *data, u32 len, u8 *txdata, u8 txlen)
     return ret;
 }
 #endif /* SPI_USE_DMA */
-
+#if 0
 static void spi_message_init(struct tls_spi_message *m)
 {
     memset(m, 0, sizeof(*m));
     dl_list_init(&m->transfers);
 }
-
+#endif
 u32 spi_fill_txfifo(struct tls_spi_transfer *current_transfer, u32 current_remaining_bytes)
 {
     u8 fifo_level;
@@ -449,7 +449,7 @@ u32 spi_get_rxfifo(struct tls_spi_transfer *current_transfer, u32 current_remain
 
     return (current_remaining_bytes - rx_remaining_bytes);
 }
-
+#if 0
 static struct tls_spi_transfer *spi_next_transfer(struct tls_spi_message *current_message)
 {
     if (current_message == NULL)
@@ -475,7 +475,7 @@ static struct tls_spi_message *spi_next_message(void)
 
     return current_message;
 }
-
+#endif
 void spi_start_transfer(u32 transfer_bytes)
 {
     if (spi_port->reconfig)
@@ -498,7 +498,7 @@ void spi_stop_transfer(void)
     spi_set_chipselect_mode(SPI_CS_INACTIVE_MODE);
 }
 
-
+#if 0
 static void spi_continue_transfer(void)
 {
     struct tls_spi_message *current_message;
@@ -631,7 +631,7 @@ static int tls_spi_async(struct tls_spi_transfer *x, uint32_t num)
 	
     return status;
 }
-
+#endif
 /**
  * @brief          This function is used to set SPI transfer mode.
  *
@@ -677,7 +677,7 @@ void tls_spi_trans_type(u8 type)
  */
 int tls_spi_init(void)
 {
-    u8 err;
+    //u8 err;
     struct tls_spi_port *port;
 
     if (spi_port != NULL)
@@ -821,7 +821,7 @@ static int32_t tls_spi_xfer(const void *data_out, void *data_in, uint32_t num_ou
 	uint32_t total_discard_rx_byte = 0;
 	uint32_t rx_length;
 
-	uint8_t *tx_buf = NULL;
+	//uint8_t *tx_buf = NULL;
 
     if (spi_port == NULL || data_in == NULL || data_out == NULL || num_out == 0 || num_in == 0) {
         return -1;
@@ -910,16 +910,16 @@ static int32_t tls_spi_xfer(const void *data_out, void *data_in, uint32_t num_ou
 static int32_t tls_spi_tx(const void *data_out, uint32_t num_out,uint32_t conitueflag)
 {
     int ret = TLS_SPI_STATUS_OK;
-	uint32_t tx_length = 0;
-	uint32_t rx_length = 0;
+    uint32_t tx_length = 0;
+    //uint32_t rx_length = 0;
     uint32_t int_status;	
     struct tls_spi_transfer tls_transfer;
 	uint32_t tot_num = 0;
     uint32_t total_tx_length ;
 
-	uint32_t total_discard_rx_byte = 0;
+	//uint32_t total_discard_rx_byte = 0;
 
-	uint8_t *tx_buf = NULL;
+	//uint8_t *tx_buf = NULL;
 
     if (spi_port == NULL || data_out == NULL || num_out == 0) {
         return -1;
@@ -954,7 +954,7 @@ static int32_t tls_spi_tx(const void *data_out, uint32_t num_out,uint32_t conitu
 
 		while (spi_i2s_get_busy_status() == 1);
 
-		rx_length = spi_get_rxfifo(&tls_transfer,total_tx_length);
+		spi_get_rxfifo(&tls_transfer,total_tx_length);
 		while (spi_i2s_get_busy_status() == 1);
 
 		total_tx_length -= tx_length;
@@ -978,7 +978,7 @@ static int32_t tls_spi_rx(void *data_in, uint32_t num_in, uint32_t conitueflag)
     struct tls_spi_transfer tls_transfer;
     uint32_t total_tx_length ;	
 	uint32_t total_rx_length = 0;
-	uint32_t total_discard_rx_byte = 0;
+	//uint32_t total_discard_rx_byte = 0;
 	uint32_t rx_length;
 
 	uint8_t *tx_buf = NULL;
@@ -1257,7 +1257,7 @@ int tls_spi_write_with_cmd(const u8 *cmd, u32 n_cmd, const u8 *txbuf,
  */
 int tls_spi_read_with_cmd(const u8 *txbuf, u32 n_tx, u8 *rxbuf, u32 n_rx)
 {
-    int status;
+    int status = TLS_SPI_STATUS_OK;
 
     if ((txbuf == NULL) || (n_tx == 0) || (rxbuf == NULL) || (n_rx == 0))
     {

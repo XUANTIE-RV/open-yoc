@@ -58,7 +58,21 @@ cpu_intrpt_save:
 .type cpu_intrpt_restore, %function
 cpu_intrpt_restore:
     mtcr    r0, psr
-    rts
+#ifdef CONFIG_SUPPORT_TSPEND
+    btsti   r0, 6
+    bf      .Lret
+    lrw     r1, 0x00ff0000
+    and     r1, r0
+    cmpnei  r1, 0
+    bt      .Lret
+    lrw     r1, VIC_TSPDR
+.Lloop:
+    ldw     r2, (r1)
+    btsti   r2, 0
+    bt      .Lloop
+.Lret:
+#endif
+    rts 
 
 /******************************************************************************
  * Functions:
@@ -119,6 +133,11 @@ tspend_handler:
     fstms   vr0-vr15, (sp)
 #endif
 
+    lrw     r0, g_sched_lock
+    ldb     r1, (r0)
+    cmpnei  r1, 0
+    bt      .Lnot_switch
+
     lrw     r2, g_active_task
     ldw     r2, (r2)
     stw     sp, (r2)
@@ -139,6 +158,7 @@ __tspend_handler_nosave:
 
     ldw     sp, (r6)
 
+.Lnot_switch:
 #ifdef SAVE_VR_REGISTERS
     fldms   vr0-vr15, (sp)
     addi    sp, 64

@@ -25,7 +25,7 @@
 #include "global_config.h"
 #include <ll_buf.h>
 #include <rom_sym_def.h>
-#include <OSAL_Timers.h>
+//#include <OSAL_Timers.h>
 
 #ifndef BASE_TIME_UINTS
 #define BASE_TIME_UNITS   (0x3fffff)
@@ -38,6 +38,10 @@ extern uint8_t llState, llSecondaryState;
 #ifndef ENOTSUP
 #define ENOTSUP 35
 #endif
+
+
+extern unsigned int irq_lock(void);
+extern void irq_unlock(unsigned int key);
 
 uint8 patchRandomAddr[ LL_DEVICE_ADDR_LEN ] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 
@@ -458,15 +462,26 @@ int hci_api_le_enctypt_ltk_req_neg_reply(uint16_t conn_handle)
     return LL_EncLtkNegReply(conn_handle);
 }
 
+
 int hci_api_le_rand(uint8_t random_data[8])
 {
     extern uint8_t TRNG_Rand(uint8_t* buf, uint8 len);
-    return (TRNG_Rand(random_data, 8));
+	uint8_t status = 0;
+    unsigned int irq_key = 0;
+    irq_key = irq_lock();
+	status = TRNG_Rand(random_data, 8);
+    irq_unlock(irq_key);
+    return status;
 }
 
 int hci_api_le_enc(uint8_t key[16], uint8_t plaintext[16], uint8_t ciphertext[16])
 {
-    return LL_Encrypt(key, plaintext, ciphertext);
+    uint8_t status = 0;
+	unsigned int irq_key = 0;
+    irq_key = irq_lock();
+    status = LL_Encrypt(key, plaintext, ciphertext);
+	irq_unlock(irq_key);
+	return status;
 }
 
 int hci_api_le_set_phy(uint16_t  handle,

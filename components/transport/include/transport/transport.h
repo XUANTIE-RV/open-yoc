@@ -298,8 +298,6 @@ web_err_t transport_set_async_connect_func(transport_handle_t t, connect_async_f
  */
 web_err_t transport_set_parent_transport_func(transport_handle_t t, payload_transfer_func _parent_transport);
 
-// void *transport_get_n(transport_handle_t t);
-
 #ifdef __cplusplus
 }
 #endif

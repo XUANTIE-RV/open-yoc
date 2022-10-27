@@ -84,6 +84,7 @@ Reset_Handler:
     ori     a0, a0, 3
     csrw    mtvec, a0
 
+    /* enable mstatus FS */
     li      a0, 0x2000
     csrs    mstatus, a0
 

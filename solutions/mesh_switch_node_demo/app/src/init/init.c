@@ -129,6 +129,7 @@ void board_yoc_init()
     /* kvfs init */
     aos_kv_init("kv");
     board_cli_init();
+
     LOGI(TAG, "Build:%s,%s", __DATE__, __TIME__);
 }
 

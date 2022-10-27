@@ -21,13 +21,13 @@ extern void (*g_irqvector[])(void);
   \param[in]   irq_num Number of IRQ.
   \return      None.
 */
-__attribute__((section(".__sram.code"))) void drv_irq_enable(uint32_t irq_num)
+__attribute__((section(".__sram.code.drv_irq_enable"))) void drv_irq_enable(uint32_t irq_num)
 {
-#ifdef CONFIG_SYSTEM_SECURE
-    csi_vic_enable_sirq(irq_num);
-#else
+//#ifdef CONFIG_SYSTEM_SECURE
+    //csi_vic_enable_sirq(irq_num);
+//#else
     csi_vic_enable_irq(irq_num);
-#endif
+//#endif
 }
 
 /**
@@ -35,13 +35,13 @@ __attribute__((section(".__sram.code"))) void drv_irq_enable(uint32_t irq_num)
   \param[in]   irq_num Number of IRQ.
   \return      None.
 */
-__attribute__((section(".__sram.code"))) void drv_irq_disable(uint32_t irq_num)
+__attribute__((section(".__sram.code.drv_irq_disable"))) void drv_irq_disable(uint32_t irq_num)
 {
-#ifdef CONFIG_SYSTEM_SECURE
-    csi_vic_disable_sirq(irq_num);
-#else
+//#ifdef CONFIG_SYSTEM_SECURE
+    //csi_vic_disable_sirq(irq_num);
+//#else
     csi_vic_disable_irq(irq_num);
-#endif
+//#endif
 }
 
 /**

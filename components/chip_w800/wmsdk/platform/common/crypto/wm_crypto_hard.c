@@ -20,6 +20,13 @@
 #define RNG_LOAD_SEED    	29
 #define RNG_START         	30
 
+#define TRNG_EN             0
+#define TRNG_SEL            1
+#define TRNG_DIG_BYPASS     2
+#define TRNG_CP             3
+#define TRNG_INT_MASK       6
+
+
 #define PS_ARG_FAIL   -6
 //#define CRYPTO_LOG printf
 #define CRYPTO_LOG(...)
@@ -206,6 +213,47 @@ int tls_crypto_random_bytes(unsigned char *out, u32 len)
 	}
 	return ERR_CRY_OK;
 }
+
+/**
+ * @brief        	This function is start trng module
+ *
+ * @param[in]   	None
+ *
+ * @retval  		None
+ *
+ * @note         	None
+ */
+void tls_trng_start(void)
+{
+	unsigned int val;
+
+	val = (4 << TRNG_CP) | (1 << TRNG_EN) | (1<<TRNG_INT_MASK);
+	tls_reg_write32(HR_CRYPTO_TRNG_CR, val);
+}
+
+/**
+ * @brief        	This function is used to generate true random number seed.
+ *
+ * @param[in]   	None
+ *
+ * @retval  		random number
+ *
+ * @note         	None
+ */
+unsigned int tls_random_seed_generation(void)
+{
+	extern void delay_cnt(int count);
+
+	unsigned int val;
+	unsigned int seed;
+	val = tls_reg_read32(HR_CRYPTO_TRNG_CR);
+	tls_reg_write32(HR_CRYPTO_TRNG_CR, val|(1 << TRNG_SEL));
+	delay_cnt(2000);
+	seed = tls_reg_read32(HR_CRYPTO_RNG_RESULT);
+	tls_reg_write32(HR_CRYPTO_TRNG_CR, val);
+	return seed^csi_coret_get_value();
+}
+
 
 /**
  * @brief          	This function initializes a RC4 encryption algorithm,  

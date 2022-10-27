@@ -17,8 +17,12 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-
+#ifdef __riscv_vector
+#define CSK_CPU_STACK_EXTRAL    (280 + 512 + 40) /* if use vector instructions, we need add extra more stack size*/
+#else
 #define CSK_CPU_STACK_EXTRAL    280
+#endif
+#define RHINO_CONFIG_MM_MAXMSIZEBIT 28
 
 #define RHINO_CONFIG_STD_MALLOC              1
 #define K_MM_STATISTIC                       1
@@ -35,7 +39,11 @@
 #define RHINO_CONFIG_TIMER                   1
 #define RHINO_CONFIG_BUF_QUEUE               1
 #define RHINO_CONFIG_MM_BLK                  1
+#define RHINO_CONFIG_MM_BLK_SIZE             256
+#define RHINO_CONFIG_MM_TLF                  1
 #define RHINO_CONFIG_MM_TLF_BLK_SIZE         4096
+#define RHINO_CONFIG_MM_MINISIZEBIT          6
+#define RHINO_CONFIG_MM_TRACE_LVL            4
 
 #ifdef CONFIG_DEBUG_MM
 #define RHINO_CONFIG_MM_DEBUG                1
@@ -50,18 +58,10 @@
 
 /* kernel dynamic tick conf */
 #ifdef CONFIG_KERNEL_PWR_MGMT
-#define RHINO_CONFIG_CPU_PWR_MGMT            1
+#define RHINO_CONFIG_PWRMGMT            1
 #else
-#define RHINO_CONFIG_CPU_PWR_MGMT            0
+#define RHINO_CONFIG_PWRMGMT            0
 #endif
-
-/*
-#define RHINO_CONFIG_TICKS_PER_SECOND        100
-#define RHINO_CONFIG_TICK_HEAD_ARRAY         1
-#define RHINO_CONFIG_SCHED_RR                0
-#define RHINO_CONFIG_TIMER_RATE              1
-#define RHINO_CONFIG_TIMER                   1
-*/
 
 /* kernel task conf */
 #define RHINO_CONFIG_TASK_SUSPEND            1
@@ -147,9 +147,7 @@
 #define RHINO_CONFIG_CPU_USAGE_TASK_STACK    (50 + CSK_CPU_STACK_EXTRAL)
 
 /* kernel stats conf */
-#ifndef RHINO_CONFIG_KOBJ_LIST
 #define RHINO_CONFIG_KOBJ_LIST               1
-#endif
 
 
 #endif /* CONFIG_H */

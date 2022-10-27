@@ -4,6 +4,11 @@
 #ifndef __DUT_HAL_BLE_H_
 #define __DUT_HAL_BLE_H_
 
+
+int dut_hal_freqoff_get(int32_t *freqoff);
+
+int dut_hal_freqoff_store(int32_t freqoff);
+
 int dut_hal_xtalcap_get(uint32_t *xtalcap);
 
 int dut_hal_xtalcap_store(uint32_t xtalcap);

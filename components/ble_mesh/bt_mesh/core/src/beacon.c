@@ -26,7 +26,7 @@
 #include "beacon.h"
 #include "foundation.h"
 
-#define UNPROVISIONED_INTERVAL     K_SECONDS(5)
+#define UNPROVISIONED_INTERVAL     K_SECONDS(2)
 #define PROVISIONED_INTERVAL       K_SECONDS(10)
 
 /* 3 transmissions, 20ms interval */
@@ -86,7 +86,7 @@ void genie_set_silent_unprov_beacon_interval(bool is_silent)
 	}
 	else
 	{
-		unprov_beacon_interval = K_SECONDS(5);
+		unprov_beacon_interval = UNPROVISIONED_INTERVAL;
 	}
 
 	return;
@@ -138,6 +138,15 @@ static int secure_beacon_send(void)
 
 	int i;
 
+/*[Genie begin] add by lgy at 2021-11-03*/
+#ifdef CONFIG_GENIE_MESH_GLP
+	if (bt_mesh.seq < CONFIG_IV_UPDATE_SEQ_LIMIT)
+	{
+		return 0;
+	}
+#endif
+/*[Genie begin] add by lgy at 2021-11-03*/
+
 	BT_DBG("");
 
 	for (i = 0; i < ARRAY_SIZE(bt_mesh.sub); i++) {
@@ -153,20 +162,38 @@ static int secure_beacon_send(void)
 		/*[Genie begin] add by lgy at 2021-01-19*/
 		if (time_diff < K_SECONDS(600))
 		{
-#ifdef CONFIG_GENIE_MESH_GLP
+#ifndef CONFIG_GENIE_MESH_GLP
+#if defined(CONFIG_BT_MESH_LPM)
 			if (time_diff < K_SECONDS(30))
 #else
 			if (time_diff < BEACON_THRESHOLD(sub))
+#endif
 #endif
 			{
 				continue;
 			}
 		}
 /*[Genie end] add by lgy at 2021-01-19*/
+/*[Genie begin] add by wenbing.cwb at 2021-10-15*/
+#ifdef CONFIG_BT_MESH_NPS_OPT
+		if ((bt_mesh_relay_get() != BT_MESH_RELAY_ENABLED) && (bt_mesh_friend_get() != BT_MESH_FRIEND_ENABLED))
+		{
+			if (time_diff < K_SECONDS(60))
+			{
+				continue;
+			}
+		}
+#endif
 #endif
 
+#ifdef CONFIG_BT_MESH_NPS_OPT
+		buf = bt_mesh_adv_create(BT_MESH_ADV_BEACON, BT_MESH_ADV_XMIT_FLAG,
+					 K_NO_WAIT);
+#else
 		buf = bt_mesh_adv_create(BT_MESH_ADV_BEACON, PROV_XMIT,
 					 K_NO_WAIT);
+#endif
+/*[Genie end] add by wenbing.cwb at 2021-10-15*/
 		if (!buf) {
 			BT_ERR("Unable to allocate beacon buffer");
 			return -ENOBUFS;
@@ -217,8 +244,7 @@ static int unprovisioned_beacon_send(void)
 	if (prov->uri) {
 		size_t len;
 
-		buf = bt_mesh_adv_create(BT_MESH_ADV_URI, UNPROV_XMIT,
-					 K_NO_WAIT);
+		buf = bt_mesh_adv_create(BT_MESH_ADV_URI, UNPROV_XMIT, K_NO_WAIT);
 		if (!buf) {
 			BT_ERR("Unable to allocate URI buffer");
 			return -ENOBUFS;

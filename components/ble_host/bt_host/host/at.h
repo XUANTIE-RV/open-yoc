@@ -94,15 +94,22 @@ struct at_client {
 	u8_t buf_max_len;
 	u8_t state;
 	u8_t cmd_state;
+	const struct at_unsolicited *unsolicated_array;
+	int unsolicated_size;
 	at_resp_cb_t resp;
-	at_resp_cb_t unsolicited;
 	at_finish_cb_t finish;
+};
+
+struct at_unsolicited {
+    const char *     cmd;
+    enum at_cmd_type type;
+    int (*func)(struct at_client *hf_at);
 };
 
 /* Register the callback functions */
 void at_register(struct at_client *at, at_resp_cb_t resp,
 		 at_finish_cb_t finish);
-void at_register_unsolicited(struct at_client *at, at_resp_cb_t unsolicited);
+void at_register_unsolicited(struct at_client *at, const struct at_unsolicited *unsolicated_array, int size);
 int at_get_number(struct at_client *at, u32_t *val);
 /* This parsing will only works for non-fragmented net_buf */
 int at_parse_input(struct at_client *at, struct net_buf *buf);

@@ -75,6 +75,13 @@ CRYPTO
 
 #define TLS_CONFIG_BT                                  (TLS_CONFIG_BR_EDR || TLS_CONFIG_BLE)
 
+/* for compile warnings */
+#define WM_CONFIG_DEBUG_UART2                           0
+#define INCLUDE_vTaskSuspend                            0
+#define configUSE_MUTEXES                               0
+#define configUSE_MAILBOX                               0
+#define TLS_CONFIG_IOUART                               0
+
 #include "wm_os_config.h"  //if you want to use source code,please open
 #include "wm_wifi_config.h"
 

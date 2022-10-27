@@ -13,7 +13,7 @@
 #include <ctype.h>
 #include <ble_os.h>
 //#include <shell/shell.h>
-//#include <misc/printk.h>
+#include <misc/byteorder.h>
 
 #include <settings/settings.h>
 
@@ -98,6 +98,7 @@ static u8_t reg_faults[CUR_FAULTS_MAX * 2];
 extern struct k_sem prov_input_sem;
 extern u8_t   prov_input[8];
 extern u8_t   prov_input_size;
+extern uint8_t mesh_gen_tid(void);
 
 static void get_faults(u8_t *faults, u8_t faults_size, u8_t *dst, u8_t *count)
 {
@@ -231,7 +232,7 @@ static int on_off_srv_update(struct bt_mesh_model *mod)
 
     uint8_t msg[2];
     msg[0] = g_srv_onoff;
-    msg[1] = tid++;
+    msg[1] = mesh_gen_tid();
 
     struct net_buf_simple *msg_buf = gen_onoff_srv_pub.msg;
 
@@ -299,9 +300,9 @@ static const struct bt_mesh_model_op gen_onoff_srv_op[] = {
 };
 
 
-
+#if defined(CONFIG_BT_MESH_CFG_CLI) && CONFIG_BT_MESH_CFG_CLI > 0
 static struct bt_mesh_cfg_cli cfg_cli = {0};
-
+#endif
 void show_faults(u8_t test_id, u16_t cid, u8_t *faults, size_t fault_count)
 {
     size_t i;
@@ -385,6 +386,7 @@ static const struct bt_mesh_comp comp = {
     .elem_count = ARRAY_SIZE(elements),
 };
 
+#if 0
 static u8_t hex2val(char c)
 {
     if (c >= '0' && c <= '9') {
@@ -397,6 +399,7 @@ static u8_t hex2val(char c)
         return 0;
     }
 }
+#endif
 
 static void prov_complete(u16_t net_idx, u16_t addr)
 {
@@ -1428,7 +1431,7 @@ static int cmd_net_key_update(int argc, char *argv[])
     err = bt_mesh_net_keys_create(&sub->keys[1], default_key);
 
     if (err) {
-        printf("create new key faild\n");
+        printf("create new key failed\n");
         return -1;
     }
 
@@ -1593,14 +1596,14 @@ static int cmd_local_revoke_keys(int argc, char *argv[])
         err = bt_mesh_provisioner_local_app_key_delete(key_net_idx, appkey_idx);
 
         if (err) {
-            printf("delete the AppKey faild\n");
+            printf("delete the AppKey failed\n");
             return -1;
         }
 
         err = bt_mesh_provisioner_local_app_key_add(default_key, key_net_idx, &appkey_idx);
 
         if (err) {
-            printf("readd the AppKey faild\n ");
+            printf("readd the AppKey failed\n ");
             return -1;
         }
     }
@@ -3178,7 +3181,7 @@ int str2bt_addr_le(const char *str, const char *type, bt_addr_le_t *addr)
 
 static char *addr_le_str(const bt_addr_le_t *addr)
 {
-    static char bufs[2][27];
+    static char bufs[2][30];
     static u8_t cur;
     char *str;
 
@@ -3198,7 +3201,7 @@ static void unprovison_dev_found(const u8_t addr[6], const u8_t addr_type,
     if (show_unprovison_dev) {
         struct bt_uuid_128 uuid = {{BT_UUID_TYPE_128}, {0}};
         bt_addr_le_t btaddr;
-        memcpy(uuid.val, dev_uuid, 16);
+        sys_memcpy_swap (uuid.val, dev_uuid, 16);
         btaddr.type = addr_type;
         memcpy(btaddr.a.val, addr, 6);
         printf("unprovisioned device: %s adv type:%d UUID: %s oob_info: 0x%x bearer: 0x%x\n",

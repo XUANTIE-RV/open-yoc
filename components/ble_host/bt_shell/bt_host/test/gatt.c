@@ -1288,7 +1288,7 @@ int cmd_gatt_register_test_svc(int argc, char *argv[])
         ret = ble_stack_gatt_registe_service(&test_service, test_attrs, BLE_ARRAY_NUM(test_attrs));
 
         if (ret < 0) {
-            printf("Registering test services faild (%d)\n", ret);
+            printf("Registering test services failed (%d)\n", ret);
             return ret;
         }
 
@@ -1298,7 +1298,7 @@ int cmd_gatt_register_test_svc(int argc, char *argv[])
         ret = ble_stack_gatt_registe_service(&test2_service, test2_attrs, BLE_ARRAY_NUM(test2_attrs));
 
         if (ret < 0) {
-            printf("Registering test services faild (%d)\n", ret);
+            printf("Registering test services failed (%d)\n", ret);
             return ret;
         }
 

@@ -9,11 +9,20 @@
 #include "app_main.h"
 #include "app_init.h"
 #include "pin_name.h"
+#include "aos/kv.h"
+#ifdef AOS_COMP_CLI
+#include "aos/cli.h"
+#endif
 
 #define TAG "DEMO"
-#define CHECK_NAME "YoC HRS"
+#define CHECK_NAME "YoC HRS LPM"
 #define DEVICE_NAME "YoC Test"
 #define DEVICE_ADDR {0xCC,0x3B,0xE3,0x88,0xBA,0xC0}
+#define BLE_SCAN_INTERVAL_TAG "BLE_SCAN_INT"
+#define BLE_SCAN_WINDOW_TAG "BLE_SCAN_WIN"
+#define BLE_CONN_INT_TAG "BLE_CONN_INT"
+#define BLE_CONN_LATENCY_TAG "BLE_CONN_LATENCY"
+#define BLE_CONN_TIMEOUT_TAG "BLE_CONN_TIMEOUT"
 
 #define EVENT_SCAN  (EVENT_USER + 1)
 #define EVENT_DIS_CHAR (EVENT_SCAN + 1)
@@ -43,7 +52,7 @@ static void scan_work(const void *arg)
 {
     int ret;
     scan_param_t param = {
-        SCAN_PASSIVE,
+        SCAN_ACTIVE,
         SCAN_FILTER_DUP_ENABLE,
         SCAN_FAST_INTERVAL,
         SCAN_FAST_WINDOW,
@@ -56,6 +65,19 @@ static void scan_work(const void *arg)
     if (scan_flag == 1) {
         return;
     }
+    int scan_interval = SCAN_FAST_INTERVAL;
+    int scan_window = SCAN_FAST_WINDOW;
+    ret = aos_kv_getint(BLE_SCAN_INTERVAL_TAG, &scan_interval);
+    if (ret != 0) {
+        scan_interval = SCAN_FAST_INTERVAL;
+    }
+    ret = aos_kv_getint(BLE_SCAN_WINDOW_TAG, &scan_window);
+    if (ret != 0) {
+        scan_window = SCAN_FAST_WINDOW;
+    }
+    param.interval = scan_interval;
+    param.window = scan_window;
+    LOGI(TAG, "scan int %d ms, win %d us!\n", (param.interval * 625 / 1000), (param.window * 625));
 
     ret = ble_stack_scan_start(&param);
 
@@ -99,7 +121,7 @@ static int check_name(const char *name, uint8_t *ad, int ad_len)
         value = (char *)ad;
 
         if (len + 1 > ad_len || len == 0) {
-            LOGE(TAG, "invaild ad(%d)", len);
+            //LOGE(TAG, "invaild ad(%d)", len);
             return 0;
         }
 
@@ -131,10 +153,6 @@ static void device_find(ble_event_en event, void *event_data)
     char addr_s[36] = {0};
     char adv_data_s[64] = {0};
 
-    if (e->adv_type != ADV_IND) {
-        return;
-    }
-
     if (e->adv_len > 31) {
         LOGE(TAG, "invail ad len %d", e->adv_len);
         return;
@@ -145,7 +163,7 @@ static void device_find(ble_event_en event, void *event_data)
              e->dev_addr.val[2], e->dev_addr.val[1], e->dev_addr.val[0], e->dev_addr.type);
     hex_to_str((uint8_t *)adv_data_s, e->adv_data, e->adv_len);
 
-    LOGI(TAG, "find device %s,%s,%s", addr_s, adv_type_s[e->adv_type], adv_data_s);
+    //LOGI(TAG, "find device %s,%s,%s", addr_s, adv_type_s[e->adv_type], adv_data_s);
 
     if (!check_name(CHECK_NAME, e->adv_data, e->adv_len)) {
         return;
@@ -160,6 +178,35 @@ static void device_find(ble_event_en event, void *event_data)
         0,
         400,
     };
+    int conn_int_min = CONN_INT_MIN_INTERVAL;
+    int conn_int_max = CONN_INT_MAX_INTERVAL;
+    int ret = aos_kv_getint(BLE_CONN_INT_TAG, &conn_int_min);
+    if (ret != 0) {
+        conn_int_min = CONN_INT_MIN_INTERVAL;
+        conn_int_max = CONN_INT_MAX_INTERVAL;
+    } else {
+        conn_int_max = conn_int_min;
+    }
+    int latency = 0;
+    ret = aos_kv_getint(BLE_CONN_LATENCY_TAG, &latency);
+    if (ret != 0) {
+        latency = 0;
+    }
+    int timeout = 0;
+    ret = aos_kv_getint(BLE_CONN_TIMEOUT_TAG, &timeout);
+    if (ret != 0) {
+        timeout = 400;
+    } else {
+        timeout /= 10;
+    }
+    param.interval_max = conn_int_max;
+    param.interval_min = conn_int_min;
+    param.latency = latency;
+    param.timeout = timeout;
+    LOGI(TAG, "conn int max %d ms, min %d ms, latency %d, timeout %d ms!\n", (param.interval_max * 1250 / 1000),
+                                                                          (param.interval_min * 1250 / 1000),
+                                                                          latency,
+                                                                          timeout * 10);
 
     g_conn_handle = ble_stack_connect(&e->dev_addr, &param, 0);
 }
@@ -321,6 +368,7 @@ int main()
     aos_sem_new(&sync_sem, 0);
 
     ble_stack_init(&init);
+    ble_stack_setting_load();
     ble_stack_event_register(&ble_cb);
 
     scan_work(NULL);

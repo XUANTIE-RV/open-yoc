@@ -84,10 +84,10 @@ typedef struct sys_mbox *sys_mbox_t;
 #else
 typedef aos_queue_t sys_mbox_t;
 #define sys_mbox_valid(mbox)       aos_queue_is_valid(mbox)
-#define sys_mbox_set_invalid(mbox) do { if(mbox != NULL) { (mbox)->hdl = NULL; }}while(0)
+#define sys_mbox_set_invalid(mbox)
 #endif
 
-typedef void *sys_thread_t;
+typedef int sys_thread_t;
 
 #if LWIP_NETCONN_SEM_PER_THREAD
 sys_sem_t* sys_thread_sem_init(void);

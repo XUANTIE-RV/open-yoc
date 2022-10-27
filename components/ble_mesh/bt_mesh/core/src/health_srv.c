@@ -73,6 +73,37 @@ static void health_get_registered(struct bt_mesh_model *mod,
 	}
 }
 
+
+static void health_get_registered_by_id(struct bt_mesh_model *mod,
+				  u16_t company_id, u8_t test_id,
+				  struct net_buf_simple *msg)
+{
+	struct bt_mesh_health_srv *srv = mod->user_data;
+
+	BT_DBG("Company ID 0x%04x", company_id);
+
+	bt_mesh_model_msg_init(msg, OP_HEALTH_FAULT_STATUS);
+
+	net_buf_simple_add_u8(msg, test_id);
+	net_buf_simple_add_le16(msg, company_id);
+
+	if (srv->cb && srv->cb->fault_get_reg) {
+		u8_t fault_count = net_buf_simple_tailroom(msg) - 4;
+		int err;
+
+		err = srv->cb->fault_get_reg(mod, company_id, &test_id,
+					     net_buf_simple_tail(msg),
+					     &fault_count);
+		if (err) {
+			BT_ERR("Failed to get faults (err %d)", err);
+		} else {
+			net_buf_simple_add(msg, fault_count);
+		}
+	} else {
+		BT_WARN("No callback for getting faults");
+	}
+}
+
 static size_t health_get_current(struct bt_mesh_model *mod,
 				 struct net_buf_simple *msg)
 {
@@ -214,7 +245,7 @@ static void health_fault_test(struct bt_mesh_model *model,
 		}
 	}
 
-	health_get_registered(model, company_id, &sdu);
+	health_get_registered_by_id(model, company_id, test_id, &sdu);
 
 	if (bt_mesh_model_send(model, ctx, &sdu, NULL, NULL)) {
 		BT_ERR("Unable to send Health Current Status response");

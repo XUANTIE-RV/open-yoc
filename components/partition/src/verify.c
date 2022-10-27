@@ -9,7 +9,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-#include <sec_crypto_sha.h>
 #include "mtb_log.h"
 
 //#define DEBUG_WITH_MBEDTLS
@@ -26,12 +25,6 @@
 #ifndef MIN
 #define MIN(x, y) ((x) < (y) ? (x) : (y))
 #endif
-
-typedef struct {
-    sc_sha_t sc_sha;
-    sc_sha_context_t sc_ctx;
-    digest_sch_e ds_type;
-} sha_context_t;
 
 int get_length_with_digest_type(digest_sch_e type)
 {
@@ -84,10 +77,10 @@ static int copy_data(void *dst, void *src, size_t size, int from_mem)
 #ifdef CONFIG_NON_ADDRESS_FLASH
     int flashid = 0;
 #if CONFIG_MULTI_FLASH_SUPPORT
-    flashid = get_flashid_by_abs_addr((uint32_t)src);
+    flashid = get_flashid_by_abs_addr((unsigned long)src);
 #endif
     void *handle = partition_flash_open(flashid);
-    ret = partition_flash_read(handle, (uint32_t)src, dst, size);
+    ret = partition_flash_read(handle, (unsigned long)src, dst, size);
     partition_flash_close(handle);
 #else
     memcpy(dst, src, size);
@@ -96,7 +89,7 @@ static int copy_data(void *dst, void *src, size_t size, int from_mem)
     return ret;
 }
 
-static sha_context_t* hash_init(digest_sch_e ds)
+sha_context_t* sha_init(digest_sch_e ds)
 {
     sha_context_t *sha_ctx = NULL;
 #if defined(CONFIG_KERNEL_NONE)
@@ -116,7 +109,7 @@ static sha_context_t* hash_init(digest_sch_e ds)
     return sha_ctx;
 }
 
-static int hash_start(sha_context_t *ctx)
+int sha_start(sha_context_t *ctx)
 {
     sc_sha_mode_t mode = SC_SHA_MODE_1;
     switch (ctx->ds_type)
@@ -135,7 +128,7 @@ static int hash_start(sha_context_t *ctx)
     return 0;
 }
 
-static int hash_update(sha_context_t *ctx, const void *input, uint32_t ilen, int from_mem)
+int sha_update(sha_context_t *ctx, const void *input, uint32_t ilen, int from_mem)
 {
     uint32_t ret;
 #ifndef CONFIG_SHA_UPDATE_ONCE
@@ -186,7 +179,7 @@ static int hash_update(sha_context_t *ctx, const void *input, uint32_t ilen, int
     return 0;
 }
 
-static int hash_finish(sha_context_t *ctx, void *output, uint32_t *olen)
+int sha_finish(sha_context_t *ctx, void *output, uint32_t *olen)
 {
     if (sc_sha_finish(&ctx->sc_sha, &ctx->sc_ctx, output, olen) != SC_OK) {
         return -1;
@@ -194,7 +187,7 @@ static int hash_finish(sha_context_t *ctx, void *output, uint32_t *olen)
     return 0;
 }
 
-static int hash_deinit(sha_context_t *ctx)
+int sha_deinit(sha_context_t *ctx)
 {
     if (ctx == NULL) {
         return -1;
@@ -220,24 +213,24 @@ __attribute__((weak)) int hash_calc_start(digest_sch_e ds, const unsigned char *
         return -EINVAL;
     }
 
-    ctx = hash_init(ds);
+    ctx = sha_init(ds);
     if (ctx) {
-        ret = hash_start(ctx);
+        ret = sha_start(ctx);
         if (ret != 0) {
             MTB_LOGE("hash start e.");
             return -1;
         }
-        ret = hash_update(ctx, input, ilen, from_mem);
+        ret = sha_update(ctx, input, ilen, from_mem);
         if (ret != 0) {
             MTB_LOGE("hash update e.");
             return -1;
         }
-        ret = hash_finish(ctx, output, olen);
+        ret = sha_finish(ctx, output, olen);
         if (ret != 0) {
             MTB_LOGE("hash finish e.");
             return -1;
         }
-        ret = hash_deinit(ctx);
+        ret = sha_deinit(ctx);
         if (ret != 0) {
             MTB_LOGE("hash deinit e.");
             return -1;
@@ -440,6 +433,7 @@ __attribute__((weak)) int signature_verify_start(digest_sch_e ds, signature_sch_
                             const uint8_t *src, int src_size,
                             const uint8_t *signature, int sig_size)
 {
+    MTB_LOGD("rsa verify do nothing.");
     return 0;
 }
 
@@ -448,7 +442,7 @@ __attribute__((weak)) int signature_verify_start(digest_sch_e ds, signature_sch_
 __attribute__((weak)) int crc32_calc_start(const uint8_t *input, uint32_t ilen, uint32_t *output)
 {
     if (input && ilen > 0 && output) {
-        *output = crc32(0, (uint8_t *)input, ilen);
+        *output = pcrc32(0, (uint8_t *)input, ilen);
         return 0;
     }
 

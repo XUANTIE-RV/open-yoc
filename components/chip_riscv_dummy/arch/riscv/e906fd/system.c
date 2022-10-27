@@ -80,6 +80,7 @@ void SystemInit(void)
     cache_init();
     section_init();
     interrupt_init();
+    soc_set_sys_freq(10000000);
     csi_tick_init();
 }
 

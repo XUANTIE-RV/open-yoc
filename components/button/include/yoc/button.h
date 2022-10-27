@@ -15,7 +15,7 @@ typedef enum {
     BUTTON_PRESS_LONG_DOWN,
     BUTTON_PRESS_DOUBLE,
     BUTTON_PRESS_TRIPLE
-} button_evt_id_t;
+} button_press_type_t;
 
 typedef enum {
     BUTTON_TYPE_GPIO,/* GPIO按键 支持中断方式*/
@@ -30,9 +30,9 @@ typedef enum {
 typedef void (*button_evt_cb_t)(int evt_id, void *priv);
 
 typedef struct {
-    int             button_id;  //按键id
-    button_evt_id_t event_id;   //按键事件
-    int             press_time; //当按键事件为长按时，为长按事件
+    int                 button_id;  //按键id
+    button_press_type_t press_type; //按键事件
+    int                 press_time; //当按键事件为长按时，为长按事件
 } button_evt_t;
 
 /**
@@ -78,5 +78,12 @@ int button_add_adc(int button_id, char *adc_name, int adc_channel, int vol_ref, 
  */
 int button_add_event(int evt_id, button_evt_t *buttons, int button_count, button_evt_cb_t evt_cb, void *priv);
 
+/**
+ * @brief  check if button is pressed
+ * @param  [in] button_id        : button_id
+ * @param  [in] pressed          : press flag
+ * @return 0 on success, -1 on failed
+ */
+int button_is_pressed(int button_id, bool *pressed);
 
 #endif

@@ -24,6 +24,7 @@
 #define RHINO_CONFIG_MM_MAXMSIZEBIT 27
 #elif defined(__I805__) || defined(CONFIG_CPU_E906) || defined(CONFIG_CPU_E906F) || defined(CONFIG_CPU_E906FD)
 #define CSK_CPU_STACK_EXTRAL    280
+#define RHINO_CONFIG_MM_MAXMSIZEBIT 24
 #else
 #define CSK_CPU_STACK_EXTRAL    20
 #endif
@@ -43,7 +44,11 @@
 #define RHINO_CONFIG_TIMER                   1
 #define RHINO_CONFIG_BUF_QUEUE               1
 #define RHINO_CONFIG_MM_BLK                  1
+#define RHINO_CONFIG_MM_TLF                  1
 #define RHINO_CONFIG_MM_TLF_BLK_SIZE         4096
+#define RHINO_CONFIG_MM_BLK_SIZE             256
+#define RHINO_CONFIG_MM_MINISIZEBIT          6
+#define RHINO_CONFIG_MM_TRACE_LVL            4
 
 #ifdef CONFIG_DEBUG_MM
 #define RHINO_CONFIG_MM_DEBUG                1

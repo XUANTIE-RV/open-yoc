@@ -57,12 +57,12 @@
 static struct bt_rfcomm_server *servers;
 
 /* Pool for dummy buffers to wake up the tx threads */
-NET_BUF_POOL_DEFINE(dummy_pool, CONFIG_BT_MAX_CONN, 0, 0, NULL);
+NET_BUF_POOL_DEFINE(dummy_pool, CONFIG_BT_BR_MAX_CONN, 0, 0, NULL);
 
 #define RFCOMM_SESSION(_ch) CONTAINER_OF(_ch, \
 					 struct bt_rfcomm_session, br_chan.chan)
 
-static struct bt_rfcomm_session bt_rfcomm_pool[CONFIG_BT_MAX_CONN];
+static struct bt_rfcomm_session bt_rfcomm_pool[CONFIG_BT_BR_MAX_CONN];
 
 /* reversed, 8-bit, poly=0x07 */
 static const u8_t rfcomm_crc_table[256] = {
@@ -242,7 +242,6 @@ static void rfcomm_dlc_destroy(struct bt_rfcomm_dlc *dlc)
 
 	k_delayed_work_cancel(&dlc->rtx_work);
 	dlc->state = BT_RFCOMM_STATE_IDLE;
-	dlc->session = NULL;
 
 	if (dlc->ops && dlc->ops->disconnected) {
 		dlc->ops->disconnected(dlc);
@@ -279,6 +278,8 @@ static void rfcomm_dlc_disconnect(struct bt_rfcomm_dlc *dlc)
 		rfcomm_dlc_destroy(dlc);
 		break;
 	}
+
+	dlc->session = NULL;
 }
 
 static void rfcomm_session_disconnected(struct bt_rfcomm_session *session)
@@ -348,7 +349,7 @@ static int rfcomm_send_disc(struct bt_rfcomm_session *session, u8_t dlci)
 	buf = bt_l2cap_create_pdu(NULL, 0);
 
 	hdr = net_buf_add(buf, sizeof(*hdr));
-	cr = BT_RFCOMM_RESP_CR(session->role);
+	cr = BT_RFCOMM_CMD_CR(session->role);
 	hdr->address = BT_RFCOMM_SET_ADDR(dlci, cr);
 	hdr->control = BT_RFCOMM_SET_CTRL(BT_RFCOMM_DISC, BT_RFCOMM_PF_NON_UIH);
 	hdr->length = BT_RFCOMM_SET_LEN_8(0);
@@ -528,9 +529,9 @@ static void rfcomm_check_fc(struct bt_rfcomm_dlc *dlc)
 	k_sem_give(&dlc->tx_credits);
 }
 
-static void rfcomm_dlc_tx_thread(void *p1, void *p2, void *p3)
+static void rfcomm_dlc_tx_thread(void *arg)
 {
-	struct bt_rfcomm_dlc *dlc = p1;
+	struct bt_rfcomm_dlc *dlc = arg;
 	k_timeout_t timeout = K_FOREVER;
 	struct net_buf *buf;
 
@@ -751,11 +752,10 @@ static void rfcomm_dlc_connected(struct bt_rfcomm_dlc *dlc)
 	k_delayed_work_cancel(&dlc->rtx_work);
 
 	k_fifo_init(&dlc->tx_queue);
-	k_thread_create(&dlc->tx_thread, dlc->stack,
-			K_THREAD_STACK_SIZEOF(dlc->stack),
-			rfcomm_dlc_tx_thread, dlc, NULL, NULL, K_PRIO_COOP(7),
-			0, K_NO_WAIT);
-	k_thread_name_set(&dlc->tx_thread, "BT DLC");
+
+	k_thread_spawn(&dlc->tx_thread, "BT DLC", (uint32_t *)dlc->stack,
+				K_THREAD_STACK_SIZEOF(dlc->stack),
+				rfcomm_dlc_tx_thread, dlc, CONFIG_BT_HCI_TX_PRIO);
 
 	if (dlc->ops && dlc->ops->connected) {
 		dlc->ops->connected(dlc);
@@ -1246,7 +1246,7 @@ static void rfcomm_handle_disc(struct bt_rfcomm_session *session, u8_t dlci)
 
 		if (!session->dlcs) {
 			/* Start a session idle timer */
-			k_delayed_work_submit(&dlc->session->rtx_work,
+			k_delayed_work_submit(&session->rtx_work,
 					      RFCOMM_IDLE_TIMEOUT);
 		}
 	} else {
@@ -1262,6 +1262,7 @@ static void rfcomm_handle_msg(struct bt_rfcomm_session *session,
 {
 	struct bt_rfcomm_msg_hdr *hdr;
 	u8_t msg_type, len, cr;
+	(void)len;
 
 	if (buf->len < sizeof(*hdr)) {
 		BT_ERR("Too small RFCOMM message");
@@ -1583,6 +1584,7 @@ static struct bt_rfcomm_session *rfcomm_session_new(bt_rfcomm_role_t role)
 
 		session->br_chan.chan.ops = &ops;
 		session->br_chan.rx.mtu	= CONFIG_BT_RFCOMM_L2CAP_MTU;
+		session->br_chan.rx.cid = 0;
 		session->state = BT_RFCOMM_STATE_INIT;
 		session->role = role;
 		session->cfc = BT_RFCOMM_CFC_UNKNOWN;

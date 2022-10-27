@@ -13,10 +13,6 @@
 #include <aos/aos.h>
 #include "app_config.h"
 #include "app_init.h"
-#include "csi_config.h"
-#include "hw_config.h"
-
-#include "board_config.h"
 #include <drv/pin.h>
 #include <drv/pwm.h>
 

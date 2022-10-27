@@ -45,6 +45,7 @@ static int g_is_wifi_user_disconnect = 0;
 static gpio_pin_handle_t    *smartcfg_pin = NULL;
 static wifi_lpm_mode_t       g_wifi_lpm_mode = WIFI_LPM_NONE;
 static wifi_promiscuous_cb_t g_monitor_cb;
+static wifi_mgnt_cb_t        g_monitor_mgnt_cb;
 static wifi_event_func *     g_evt_func;
 static aos_dev_t *           wifi_evt_dev;
 
@@ -579,7 +580,7 @@ static void wm_wlan_scan_callback(void)
     }
 }
 
-static void wm_wlan_data_recv_callback(u8* data, u32 data_len)
+static void wm_wlan_data_recv_callback(u8 *data, u32 data_len)
 {
     struct ieee80211_hdr *hdr;
     wifi_promiscuous_pkt_type_t type = WIFI_PKT_MISC;
@@ -599,9 +600,40 @@ static void wm_wlan_data_recv_callback(u8* data, u32 data_len)
         type = WIFI_PKT_DATA;
 
     memset(buf, 0, sizeof(wifi_promiscuous_pkt_t) + data_len);
-    buf->rx_ctrl.rssi = -30;//-(char)(0x100 - ext->rssi);
+    buf->rx_ctrl.rssi = -30; //-(char)(0x100 - ext->rssi);
     buf->rx_ctrl.sig_len = data_len;
     memcpy(buf->payload, data, data_len);
+
+    if (g_monitor_cb)
+        g_monitor_cb(buf, type);
+
+    free(buf);
+}
+
+static void wm_wlan_mgmt_recv_callback(u8 *data, u32 data_len, struct tls_wifi_ext_t *ext)
+{
+#define CRC_LEN (4)
+    struct ieee80211_hdr *hdr;
+    wifi_promiscuous_pkt_type_t type = WIFI_PKT_MISC;
+    wifi_promiscuous_pkt_t *buf;
+
+    buf = malloc(sizeof(wifi_promiscuous_pkt_t) + data_len + CRC_LEN);
+    if (!buf)
+        return;
+
+    hdr = (struct ieee80211_hdr *)data;
+
+    if (ieee80211_is_ctl(hdr->frame_control))
+        type = WIFI_PKT_CTRL;
+    else if (ieee80211_is_mgmt(hdr->frame_control))
+        type = WIFI_PKT_MGMT;
+    else if (ieee80211_is_data(hdr->frame_control))
+        type = WIFI_PKT_DATA;
+
+    memset(buf, 0, sizeof(wifi_promiscuous_pkt_t) + data_len + CRC_LEN);
+    buf->rx_ctrl.rssi = -30; //-(char)(0x100 - ext->rssi);
+    buf->rx_ctrl.sig_len = data_len + CRC_LEN;
+    memcpy(buf->payload, data, data_len + CRC_LEN);
 
     if (g_monitor_cb)
         g_monitor_cb(buf, type);
@@ -813,14 +845,14 @@ static int w800_init(aos_dev_t *dev)
             return WIFI_ERR_FAIL;
         }
 
-        tls_wifi_set_tempcomp_flag(1);
+        tls_wifi_set_tempcomp_flag(0);
 
         tls_wifi_enable_log(false);
 
         tls_param_get(TLS_PARAM_ID_PSM, &enable, TRUE);	
-    	if (enable != TRUE)
+    	if (enable != FALSE)
     	{
-    	    enable = TRUE;
+    	    enable = FALSE;
     	    tls_param_set(TLS_PARAM_ID_PSM, &enable, TRUE);
     	    g_wifi_lpm_mode = WIFI_LPM_KEEP_LINK;
     	}
@@ -1371,6 +1403,27 @@ static int w800_ap_get_sta_list(aos_dev_t *dev, wifi_sta_list_t *sta)
     return WIFI_ERR_OK;
 }
 
+static void wm_wlan_mgmt_ext_recv_callback(u8* data, u32 data_len, struct tls_wifi_ext_t *ext)
+{
+    if (g_monitor_mgnt_cb) {
+        g_monitor_mgnt_cb(data, data_len);
+    }
+}
+
+int w800_start_mgnt_monitor(aos_dev_t *dev, wifi_mgnt_cb_t cb)
+{
+    g_monitor_mgnt_cb = cb;
+
+    tls_wifi_mgmt_ext_recv_cb_register(wm_wlan_mgmt_ext_recv_callback);
+
+    return 0;
+}
+
+int w800_stop_mgnt_monitor(aos_dev_t *dev)
+{
+    return 0;
+}
+
 static int w800_start_monitor(aos_dev_t *dev, wifi_promiscuous_cb_t cb)
 {
     if (!cb)
@@ -1382,6 +1435,8 @@ static int w800_start_monitor(aos_dev_t *dev, wifi_promiscuous_cb_t cb)
 
     tls_wifi_data_recv_cb_register(wm_wlan_data_recv_callback);
     tls_wl_plcp_cb_register(wm_wlan_data_recv_callback);
+
+    tls_wifi_mgmt_ext_recv_cb_register(wm_wlan_mgmt_recv_callback);
 
     tls_wifi_set_listen_mode(1);
     tls_wl_plcp_start();
@@ -1469,6 +1524,8 @@ static wifi_driver_t w800_wifi_driver = {
 
     .start_monitor        = w800_start_monitor,
     .stop_monitor         = w800_stop_monitor,
+    .start_mgnt_monitor   = w800_start_mgnt_monitor,
+    .stop_mgnt_monitor    = w800_stop_mgnt_monitor,
     .send_80211_raw_frame = w800_send_80211_raw_frame,
     .set_channel          = w800_set_channel,
     .get_channel          = w800_get_channel,

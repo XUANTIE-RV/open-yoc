@@ -1,0 +1,49 @@
+## 第一部分： 基础信息
+name: bl606p_e907_coremark                          # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
+version: v7.6.0                                     # <必选项> 组件版本号
+description: coremark for bl606p e907               # <必选项> 建议至少20字以上
+type: solution                                      # <必选项> 组件类型，为：solution, chip, board, common, sdk
+
+hw_info:
+  cpu_id: cpu1
+  chip_name: chip_bl606p
+  ld_script: gcc_flash_e907.ld
+
+depends:                                       # 该组件依赖其他的组件
+  - csi: v7.6.0
+  - chip_bl606p: v7.6.2
+
+# 编译参数
+build_config:
+  include:
+    - app/include
+    - app/src/board/include
+  libpath: ""
+  cflag: >
+        -O3 -g2 -funroll-all-loops -fgcse-sm -finline-limit=500 -fno-schedule-insns -fno-tree-loop-distribute-patterns
+        -ffunction-sections -fdata-sections
+        -DCPU_ID=M0 -DCPU_M0 -DARCH_RISCV -DWLAN_DEBUG -DBFLB_USE_HAL_DRIVER
+        -mabi=ilp32f -mtune=e907 -mcmodel=medany 
+
+  ldflag: > 
+        -nostartfiles -Wl,--gc-sections -lm  -Wl,-zmax-page-size=1024  -Wl,-Map=yoc.map
+
+
+# 源文件
+source_file:
+  - app/src/*.c
+  - app/src/coremark/*.c
+  - app/src/board/*.c
+
+def_config:
+  CONFIG_DEBUG: 2
+  # CORE_DEBUG: 1
+  STDIO_UART: 0
+  CONFIG_ARCH_INTERRUPTSTACK: 163840
+  CONFIG_KERNEL_NONE: 1
+
+  CONFIG_SYSTICK_HZ: 100
+  CONFIG_CPU_E907: 1
+
+  CONFIG_XIP: y
+  CONFIG_BL_LIB_SUB_PATH: "benchmarks"

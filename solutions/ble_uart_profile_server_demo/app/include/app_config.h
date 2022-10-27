@@ -1,10 +1,14 @@
+/*
+ * Copyright (C) 2019-2022 Alibaba Group Holding Limited
+ */
+
 #ifndef __APP_CONFIG_H__
 #define __APP_CONFIG_H__
 
 /*
  *"wiz_config.h" file is used for CDK system configuration.
  *Makefile compilation needs to keep the file empty.
-*/
+ */
 //#include "wiz_config.h"
 
 /* Allow LOGD function to output log information */
@@ -18,11 +22,10 @@
 //#define CONFIG_WIFI_PSK "12345678"
 
 #define WLAN_ENABLE_PIN PA16
-#define WLAN_POWER_PIN 0xFFFFFFFF
+#define WLAN_POWER_PIN  0xFFFFFFFF
 
-
-#define CONFIG_WIFI_SSID "OS-TEST"
-#define CONFIG_WIFI_PSK "TEST1234"
+#define CONFIG_WIFI_SSID     "OS-TEST"
+#define CONFIG_WIFI_PSK      "TEST1234"
 #define CONFIG_MANTB_VERSION 4
 
 #define CONSOLE_IDX 0

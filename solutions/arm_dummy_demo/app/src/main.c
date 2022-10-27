@@ -4,7 +4,7 @@
 
 #include <aos/aos.h>
 #include "aos/cli.h"
-#include "main.h"
+#include "app_main.h"
 #include "app_init.h"
 
 #define TAG "app"
@@ -15,7 +15,7 @@ int main(void)
 
     while (1) {
         LOGD(TAG, "Hello world! YoC");
-        aos_msleep(1000);
+        aos_msleep(3000);
     }
 
     return 0;

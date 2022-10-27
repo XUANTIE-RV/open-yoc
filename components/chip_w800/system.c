@@ -112,7 +112,7 @@ void SystemInit(void)
 	tls_reg_write32(HR_CLK_BASE_ADDR,tls_reg_read32(HR_CLK_BASE_ADDR)&
 		(~(BIT(6)|BIT(14)|BIT(18)|BIT(19)|BIT(21))));	
 	
-	tls_sys_clk_set(CPU_CLK_80M);
+	tls_sys_clk_set(CPU_CLK_240M);
 
 	drv_irq_register(SYS_TICK_IRQn, CORET_IRQHandler);
     drv_irq_enable(SYS_TICK_IRQn);

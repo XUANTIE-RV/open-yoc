@@ -36,7 +36,7 @@ int mtbv4_init(void)
     partition_flash_info_get(handle, &flash_info);
     partition_flash_close(handle);
 
-    MTB_LOGD("imtb using:0x%x, valid:0x%x", mtb->using_addr, mtb->prim_addr);
+    MTB_LOGD("imtb using:0x%lx, valid:0x%lx", mtb->using_addr, mtb->prim_addr);
 
     if (mtbv4_get_partition_info(MTB_IMAGE_NAME_IMTB, &part_info)) {
         MTB_LOGE("mtb f `imtb` e");
@@ -48,7 +48,7 @@ int mtbv4_init(void)
     } else {
         mtb->backup_addr = part_info.start_addr;
     }
-    MTB_LOGD("imtb backup:0x%x", mtb->backup_addr);
+    MTB_LOGD("imtb backup:0x%lx", mtb->backup_addr);
     MTB_LOGD("imtb one-size:0x%x", mtb->one_size);
     MTB_LOGD("mtb init over");
     return 0;
@@ -128,7 +128,6 @@ int mtbv4_get_partition_info_with_index(int index, mtb_partition_info_t *part_in
 
 int mtbv4_crc_check(void)
 {
-#if (CONFIG_MTB_CRC_NO_CHECK == 0)
     mtb_t *mtb;
     imtb_head_v4_t *m_head;
     int crc_content_len;
@@ -157,7 +156,6 @@ int mtbv4_crc_check(void)
         return -1;
     }
     MTB_LOGD("imtb crc verify ok");
-#endif
     return 0;
 }
 
@@ -169,6 +167,11 @@ int mtbv4_verify(void)
     return 0;
 }
 
+__attribute__((weak)) bool check_is_need_verify(const char *name)
+{
+    return false;
+}
+
 #if (CONFIG_PARITION_NO_VERIFY == 0)
 int mtbv4_image_verify(const char *name)
 {
@@ -176,15 +179,20 @@ int mtbv4_image_verify(const char *name)
 #define PART_HEAD_SIZE (sizeof(partition_header_t))
 #define PART_TAIL_HEAD_SIZE (sizeof(partition_tail_head_t))
     int        offset, need_verify;
-    char *     pub_key_name;
     uint32_t   part_start, olen;
     int        digest_type, sig_type;
-    key_handle key_addr;
-    uint32_t   key_size;
     uint8_t    buf[READ_MAX_SIZE + PART_HEAD_SIZE];
     uint8_t    old_sha[128];
-    uint8_t    old_sig[256];
     uint8_t    part_tail_buf[PART_TAIL_HEAD_SIZE];
+    uint32_t   custom_offset;
+    uint32_t   step;
+
+    custom_offset = 0;
+    step = 4;
+#ifdef CONFIG_CHIP_D1
+    custom_offset = 1024;
+    step = 1;
+#endif
 
     partition_header_t *   p_head;
     partition_tail_head_t *p_tail_head;
@@ -194,13 +202,17 @@ int mtbv4_image_verify(const char *name)
         return -1;
     }
 
-    part_start   = part_info.start_addr;
-    pub_key_name = part_info.pub_key_name;
+    part_start = part_info.start_addr + custom_offset;
 
     memset(buf, 0, sizeof(buf));
     if (get_data_from_faddr(part_start, buf, sizeof(buf))) {
         return -1;
     }
+#if 0
+    printf("---------------------------------------------------\n");
+    dump_data((uint8_t *)buf, sizeof(buf));
+    printf("---------------------------------------------------\n");
+#endif
     offset      = 0;
     need_verify = 0;
     while (offset < READ_MAX_SIZE) {
@@ -212,11 +224,16 @@ int mtbv4_image_verify(const char *name)
             need_verify = 1;
             break;
         }
-        offset += 4;
+        offset += step;
     }
     MTB_LOGD("--- %s", name);
     MTB_LOGD("offset:%d, need_verify:%d", offset, need_verify);
     MTB_LOGD("part_start=0x%x", part_start);
+
+    if (check_is_need_verify(name) && need_verify == 0) {
+        MTB_LOGE("need verify, but not signed.");
+        return -1;
+    }
 
     if (need_verify == 1) {
         uint32_t img_content_size = p_head->size;
@@ -225,6 +242,11 @@ int mtbv4_image_verify(const char *name)
 
         MTB_LOGD("p_head->size=0x%x", p_head->size);
         MTB_LOGD("part_tail_addr:0x%x", part_tail_addr);
+
+        if (part_start + img_content_size > part_info.end_addr) {
+            MTB_LOGE("the image content size is overflow!");
+            return -1;
+        }
 
         if (get_data_from_faddr(part_tail_addr, part_tail_buf, PART_TAIL_HEAD_SIZE)) {
             return -1;
@@ -239,11 +261,10 @@ int mtbv4_image_verify(const char *name)
             uint32_t hash_addr = part_tail_addr + PART_TAIL_HEAD_SIZE;
             uint32_t sig_addr  = hash_addr;
             int      hash_len  = get_length_with_digest_type(digest_type);
-            int      sig_len   = get_length_with_signature_type(sig_type);
             sig_addr += hash_len;
             MTB_LOGD("start check hash");
 
-            hash_calc_start(digest_type, (const uint8_t *)img_content_addr, img_content_size, sha, &olen, 0);
+            hash_calc_start(digest_type, (const uint8_t *)((unsigned long)img_content_addr), img_content_size, sha, &olen, 0);
             if (olen != hash_len) {
                 MTB_LOGE("sha len calc error:%d,%d", hash_len, olen);
                 return -1;
@@ -263,8 +284,14 @@ int mtbv4_image_verify(const char *name)
                 MTB_LOGE("img hash verify fail [%s]", name);
                 return -1;
             }
+#if CONFIG_IMG_AUTHENTICITY_NOT_CHECK == 0
+            key_handle key_addr;
+            uint32_t key_size;
+            uint8_t old_sig[256];
+            char *pub_key_name = part_info.pub_key_name;
+            int sig_len = get_length_with_signature_type(sig_type);
             if (km_get_pub_key_by_name(pub_key_name, &key_addr, &key_size) == KM_OK) {
-                MTB_LOGD("key_addr:0x%x", key_addr);
+                MTB_LOGD("key_addr:0x%lx", (unsigned long)key_addr);
                 if (get_data_from_faddr(sig_addr, old_sig, sig_len)) {
                     return -1;
                 }
@@ -277,16 +304,16 @@ int mtbv4_image_verify(const char *name)
                 printf("---------------------------------------------------\n");
 #endif
                 if (signature_verify_start(digest_type, sig_type, (uint8_t *)(key_addr),
-                                   key_size, sha, hash_len, old_sig, sig_len) != 0) {
+                                           key_size, sha, hash_len, old_sig, sig_len) != 0) {
                     MTB_LOGE("img rsa verify e");
                     return -1;
                 }
-            } else {
-                // FIXME: no pkey
-                MTB_LOGW("no pubkey found, %s", pub_key_name);
-                MTB_LOGW("no need rsa verify");
-                return 0;
+            }  else {
+                MTB_LOGE("no pubkey found, %s", pub_key_name);
+                MTB_LOGE("verify failed!");
+                return -1;
             }
+#endif
             MTB_LOGI("verify [%s] ok", name);
         } else {
             MTB_LOGE("sig type e:%d", p_tail_head->signatureType);

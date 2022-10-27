@@ -37,19 +37,23 @@ extern "C" {
 #define CSI_ASSERT(expr)        ((void)0U)
 #endif
 
-#ifdef CONFIG_PARAM_NOT_CHECK
-#define CSI_PARAM_CHK(para, err)                    \
-    do {                                            \
-        if ((int32_t)para == (int32_t)NULL) {       \
-            return (err);                           \
-        }                                           \
+#ifndef CONFIG_PARAM_NOT_CHECK
+#define CSI_PARAM_CHK(para, err)                        \
+    do                                                  \
+    {                                                   \
+        if ((unsigned long)para == (unsigned long)NULL) \
+        {                                               \
+            return (err);                               \
+        }                                               \
     } while (0)
 
-#define CSI_PARAM_CHK_NORETVAL(para)                \
-    do {                                            \
-        if ((int32_t)para == (int32_t)NULL) {       \
-            return;                                 \
-        }                                           \
+#define CSI_PARAM_CHK_NORETVAL(para)                    \
+    do                                                  \
+    {                                                   \
+        if ((unsigned long)para == (unsigned long)NULL) \
+        {                                               \
+            return;                                     \
+        }                                               \
     } while (0)
 #else
 #define CSI_PARAM_CHK(para, err)
@@ -101,8 +105,10 @@ struct csi_dev {
     uint8_t       idx;
     uint16_t      dev_tag;
     void          (*irq_handler)(void *);
+    void          (*irq_handler2)(uint32_t irqn, void *arg);
+    void          *arg;
 #ifdef CONFIG_PM
-    csi_pm_dev_t pm_dev;
+    csi_pm_dev_t  pm_dev;
 #endif
 };
 

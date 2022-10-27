@@ -13,21 +13,21 @@
 
 #include <drv/wdt.h>
 
-#define SOFTWDT_TASK_STACK_SIZE 1024
+#ifndef CONFIG_SOFTWDT_TASK_STACK_SIZE
+#define CONFIG_SOFTWDT_TASK_STACK_SIZE 1024
+#endif
+
 #define SOFTWDT_TIME 20000
 #define LOOP_TIME 1000
-
-// FIXME:
-#define CONFIG_USE_HW
 
 static const char *TAG = "swdt";
 
 struct softwdt_node {
-    uint32_t index;
+    long     index;
     int      left_time;
     int      max_time;
-    void (*will)(void *args);
-    void   *args;
+    void     (*will)(void *args);
+    void     *args;
     slist_t node;
 };
 
@@ -35,19 +35,18 @@ static struct softwdt_context {
     int          count;
     aos_task_t   task;
     aos_mutex_t  mutex;
-#ifdef CONFIG_USE_HW
 #ifdef CONFIG_CSI_V2
     csi_wdt_t   hw_wdg_handle;
 #else
     wdt_handle_t hw_wdg_handle;
 #endif
-#endif
     slist_t      head;
 } g_softwdt_ctx;
 
 static int g_wdt_debug = 1;
+static int g_use_hw_wdt;
 
-static struct softwdt_node *softwdt_find(int index)
+static struct softwdt_node *softwdt_find(long index)
 {
     struct softwdt_node *node;
     slist_for_each_entry(&g_softwdt_ctx.head, node, struct softwdt_node, node) {
@@ -65,15 +64,14 @@ static void softwdt_task_entry(void *arg)
 
     while (1) {
         aos_mutex_lock(&ctx->mutex, AOS_WAIT_FOREVER);
-#ifdef CONFIG_USE_HW
+        if (g_use_hw_wdt) {
 #ifdef CONFIG_CSI_V2
-        csi_wdt_stop(&ctx->hw_wdg_handle);
-        csi_wdt_start(&ctx->hw_wdg_handle);
+            csi_wdt_feed(&ctx->hw_wdg_handle);
 #else
-        if (ctx->hw_wdg_handle)
-            csi_wdt_restart(ctx->hw_wdg_handle);
+            if (ctx->hw_wdg_handle)
+                csi_wdt_restart(ctx->hw_wdg_handle);
 #endif
-#endif
+        }
 
         slist_for_each_entry(&ctx->head, node, struct softwdt_node, node) {
             if (node->max_time > 0) {
@@ -89,7 +87,7 @@ static void softwdt_task_entry(void *arg)
                     if (node->will)
                         node->will(node->args);
                     else {
-                        LOGE(TAG, "softwdt %u crash!!!", node->index);
+                        LOGE(TAG, "softwdt %ld crash!!!", node->index);
 
                         if (node->args)
                             LOGE(TAG, "softwdt info: %s", (char *)node->args);
@@ -119,15 +117,15 @@ static int aos_wdt_init(void)
 
     aos_mutex_new(&g_softwdt_ctx.mutex);
     aos_task_new_ext(&g_softwdt_ctx.task, "softwdt", softwdt_task_entry, &g_softwdt_ctx,
-                     SOFTWDT_TASK_STACK_SIZE, AOS_DEFAULT_APP_PRI - 5);
+                     CONFIG_SOFTWDT_TASK_STACK_SIZE, AOS_DEFAULT_APP_PRI - 5);
     softwdt_inited = 1;
 
     return 0;
 }
 
-uint32_t aos_wdt_index()
+long aos_wdt_index()
 {
-    uint32_t index = rand();
+    long index = rand();
 
     aos_wdt_init();
 
@@ -145,7 +143,7 @@ uint32_t aos_wdt_index()
     return index;
 }
 
-void aos_wdt_attach(uint32_t index, void (*will)(void *), void *args)
+void aos_wdt_attach(long index, void (*will)(void *), void *args)
 {
     aos_wdt_init();
 
@@ -173,7 +171,7 @@ void aos_wdt_attach(uint32_t index, void (*will)(void *), void *args)
     aos_mutex_unlock(&g_softwdt_ctx.mutex);
 }
 
-void aos_wdt_detach(uint32_t index)
+void aos_wdt_detach(long index)
 {
     aos_wdt_init();
     aos_mutex_lock(&g_softwdt_ctx.mutex, AOS_WAIT_FOREVER);
@@ -188,7 +186,7 @@ void aos_wdt_detach(uint32_t index)
     aos_mutex_unlock(&g_softwdt_ctx.mutex);
 }
 
-int aos_wdt_exists(uint32_t index)
+int aos_wdt_exists(long index)
 {
     aos_wdt_init();
     aos_mutex_lock(&g_softwdt_ctx.mutex, AOS_WAIT_FOREVER);
@@ -200,7 +198,7 @@ int aos_wdt_exists(uint32_t index)
     return node != NULL;
 }
 
-void aos_wdt_feed(uint32_t index, int max_time)
+void aos_wdt_feed(long index, int max_time)
 {
     aos_wdt_init();
     aos_mutex_lock(&g_softwdt_ctx.mutex, AOS_WAIT_FOREVER);
@@ -215,7 +213,7 @@ void aos_wdt_feed(uint32_t index, int max_time)
     aos_mutex_unlock(&g_softwdt_ctx.mutex);
 }
 
-void aos_wdt_show(uint32_t index)
+void aos_wdt_show(long index)
 {
     aos_wdt_init();
     aos_mutex_lock(&g_softwdt_ctx.mutex, AOS_WAIT_FOREVER);
@@ -223,7 +221,7 @@ void aos_wdt_show(uint32_t index)
     struct softwdt_node *node;
     slist_for_each_entry(&g_softwdt_ctx.head, node, struct softwdt_node, node) {
         if (node->index == index)
-            LOGE(TAG, "softwdt uint[%d], left_time = %d, max_time=%d\n", node->index,
+            LOGE(TAG, "softwdt uint[%ld], left_time = %d, max_time=%d\n", node->index,
                  node->left_time, node->max_time);
     }
 
@@ -237,7 +235,7 @@ void aos_wdt_showall()
 
     struct softwdt_node *node;
     slist_for_each_entry(&g_softwdt_ctx.head, node, struct softwdt_node, node) {
-        LOGE(TAG, "softwdt uint[%d], left_time = %d, max_time=%d\n", node->index, node->left_time,
+        LOGE(TAG, "softwdt uint[%ld], left_time = %d, max_time=%d\n", node->index, node->left_time,
              node->max_time);
     }
 
@@ -249,41 +247,37 @@ void aos_wdt_debug(int en)
     g_wdt_debug = en;
 }
 
-int aos_wdt_hw_enable(int id)
+int aos_wdt_hw_enable(int id, int ms)
 {
+    g_use_hw_wdt = 0;
     aos_wdt_init();
-#ifdef CONFIG_USE_HW
 #ifdef CONFIG_CSI_V2
     csi_error_t ret = csi_wdt_init(&g_softwdt_ctx.hw_wdg_handle, id);
     if (ret != CSI_OK) {
         return -1;
     }
-
-    csi_wdt_set_timeout(&g_softwdt_ctx.hw_wdg_handle, SOFTWDT_TIME);
+    csi_wdt_set_timeout(&g_softwdt_ctx.hw_wdg_handle, ms);
     csi_wdt_start(&g_softwdt_ctx.hw_wdg_handle);
     aos_check_return_einval(&g_softwdt_ctx.hw_wdg_handle);
 #else
-    g_softwdt_ctx.hw_wdg_handle = csi_wdt_initialize(0, NULL);
-    csi_wdt_set_timeout(g_softwdt_ctx.hw_wdg_handle, SOFTWDT_TIME);
+    g_softwdt_ctx.hw_wdg_handle = csi_wdt_initialize(id, NULL);
+    csi_wdt_set_timeout(g_softwdt_ctx.hw_wdg_handle, ms);
     csi_wdt_start(g_softwdt_ctx.hw_wdg_handle);
     aos_check_return_einval(g_softwdt_ctx.hw_wdg_handle);
 #endif
-
+    g_use_hw_wdt = 1;
     return 0;
-#else
-    return -1;
-#endif
 }
 
 void aos_wdt_hw_disable(int id)
 {
-    aos_wdt_init();
-#ifdef CONFIG_USE_HW
+    if (g_use_hw_wdt) {
 #ifdef CONFIG_CSI_V2
-    csi_wdt_uninit(&g_softwdt_ctx.hw_wdg_handle);
+        csi_wdt_uninit(&g_softwdt_ctx.hw_wdg_handle);
 #else
-    csi_wdt_uninitialize(g_softwdt_ctx.hw_wdg_handle);
-    g_softwdt_ctx.hw_wdg_handle = NULL;
+        csi_wdt_uninitialize(g_softwdt_ctx.hw_wdg_handle);
+        g_softwdt_ctx.hw_wdg_handle = NULL;
 #endif
-#endif
+        g_use_hw_wdt = 0;
+    }
 }

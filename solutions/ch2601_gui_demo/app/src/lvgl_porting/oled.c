@@ -12,7 +12,6 @@
 #include "lvgl.h"
 #include "src/lv_hal/lv_hal.h"
 #include "oled.h"
-#include "board_config.h"
 #include "drv/gpio_pin.h"
 #include <drv/pin.h>
 

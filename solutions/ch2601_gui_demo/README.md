@@ -12,10 +12,18 @@ ch2601开发板采用单彩色图形显示面板，屏幕分辨率128x64 pixel�
 
 
 
-# 使用
+# 下载
 
-双击打开当前目录下的`project.cdkproj`。
-如何安装和使用CDK请参考YoCBook [《CDK开发快速上手》](https://yoc.docs.t-head.cn/yocbook/Chapter2-%E5%BF%AB%E9%80%9F%E4%B8%8A%E6%89%8B%E6%8C%87%E5%BC%95/%E4%BD%BF%E7%94%A8CDK%E5%BC%80%E5%8F%91%E5%BF%AB%E9%80%9F%E4%B8%8A%E6%89%8B.html) 章节。
+首先安装yoc工具，参考YoCBook CDK开发快速上手 章节， 链接 https://yoc.docs.t-head.cn/yocbook/Chapter2-%E5%BF%AB%E9%80%9F%E4%B8%8A%E6%89%8B%E6%8C%87%E5%BC%95/%E4%BD%BF%E7%94%A8CDK%E5%BC%80%E5%8F%91%E5%BF%AB%E9%80%9F%E4%B8%8A%E6%89%8B.html
+
+下载ch2601_gui_demo代码命令如下：
+
+```bash
+yoc init
+
+yoc install ch2601_gui_demo
+```
+
 
 
 # 配置
@@ -231,6 +239,26 @@ lv_obj_set_size(p, 128, 60);
 ## 依赖资源
 
 无。
+
+
+
+# 编译
+
+目录solutions/ch2601_gui_demo下执行
+
+```bash
+make
+```
+
+
+
+# 烧录
+
+目录solutions/ch2601_gui_demo下执行
+
+```bash
+make flashall
+```
 
 
 

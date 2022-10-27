@@ -15,7 +15,7 @@
 #include "k_api.h"
 #include "cpu_pwr_config.h"
 
-//#if (RHINO_CONFIG_CPU_PWR_MGMT > 0)
+//#if (RHINO_CONFIG_PWRMGMT > 0)
 //#if (RHINO_CONFIG_CPU_TICKLESS > 0)
 
 #include "cpu_tickless.h"
@@ -150,5 +150,5 @@ kstat_t tim_one_shot_stop
 }
 
 //#endif /* RHINO_CONFIG_CPU_TICKLESS */
-//#endif /* RHINO_CONFIG_CPU_PWR_MGMT */
+//#endif /* RHINO_CONFIG_PWRMGMT */
 

@@ -166,7 +166,11 @@ static const void * event_act_data;
 /**
  * Init. the 'lv' library.
  */
+#if defined(AOS_COMP_LINKVISUAL) && AOS_COMP_LINKVISUAL
+void lvgl_init(void)
+#else
 void lv_init(void)
+#endif
 {
     /* Do nothing if already initialized */
     if(lv_initialized) {

@@ -74,6 +74,10 @@ static uint32_t s_sdifDmaTable[2][SDIF_DMA_TABLE_WORDS] __attribute__((section("
 #if defined(__CSKY__)
 uint32_t s_sdifDmaTable[2][SDIF_DMA_TABLE_WORDS] __attribute__((aligned(64)));
 #endif
+#if defined(__riscv)
+uint32_t s_sdifDmaTable[2][SDIF_DMA_TABLE_WORDS] __attribute__((aligned(64)));
+#endif
+
 static volatile bool g_sdifTransferSuccessFlag[2] = {true, true};
 /*! @brief Card detect flag. */
 static volatile bool s_sdInsertedFlag[2] = {false, false};
@@ -121,12 +125,12 @@ void SDMMCHOST_RegisterInterrupt(sdmmchost_interrupt_t interrupt_func)
 
 void SDMMCHOST_Enable_Interrupt(int idx)
 {
-    SDIF_EnableInterrupt(drv_sdif_get_handle(idx), kSDIF_SDIOInterrupt);
+    SDIF_EnableInterrupt(csi_sdif_get_handle(idx), kSDIF_SDIOInterrupt);
 }
 
 void SDMMCHOST_Disable_Interrupt(int idx)
 {
-    SDIF_DisableInterrupt(drv_sdif_get_handle(idx), kSDIF_SDIOInterrupt);
+    SDIF_DisableInterrupt(csi_sdif_get_handle(idx), kSDIF_SDIOInterrupt);
 }
 
 static void SDMMCHOST_Interrupt(uint32_t idx, void *user_data)
@@ -162,7 +166,7 @@ static status_t SDMMCHOST_TransferFunction(SDMMCHOST_TYPE base, SDMMCHOST_TRANSF
 #else
 
     do {
-        error = drv_sdif_transfer(base, &dmaConfig, content);
+        error = csi_sdif_transfer(base, &dmaConfig, content);
     } while (error == kStatus_SDIF_SyncCmdTimeout);
 
     if ((error != kStatus_Success) ||
@@ -263,7 +267,7 @@ void SDMMCHOST_PowerOffCard(SDMMCHOST_TYPE base, const sdmmchost_pwr_card_t *pwr
 #ifdef CONFIG_CSI_V2
 #else
         /* disable the card power */
-        drv_sdif_power_control(base, DRV_POWER_OFF);
+        csi_sdif_power_control(base, DRV_POWER_OFF);
 #endif
         /* Delay several milliseconds to make card stable. */
         SDMMCHOST_Delay(500U);
@@ -280,7 +284,7 @@ void SDMMCHOST_PowerOnCard(SDMMCHOST_TYPE base, const sdmmchost_pwr_card_t *pwr)
 #ifdef CONFIG_CSI_V2
 #else
         /* Enable the card power */
-        drv_sdif_power_control(base, DRV_POWER_FULL);
+        csi_sdif_power_control(base, DRV_POWER_FULL);
 
 #endif
         /* Delay several milliseconds to make card stable. */
@@ -309,8 +313,8 @@ status_t SDMMCHOST_Init(SDMMCHOST_CONFIG *host, void *user_data)
     sdifCallback.card_removed = SDMMCHOST_DetectCardRemoveByHost;
     sdifCallback.sdif_interrupt = SDMMCHOST_Interrupt;
 
-    drv_sdif_initialize(sdif, &sdifCallback, user_data);
-    drv_sdif_config(sdifHost->base, &(sdifHost->config));
+    csi_sdif_initialize(sdif, &sdifCallback, user_data);
+    csi_sdif_config(sdifHost->base, &(sdifHost->config));
 
     /* Create transfer complete event. */
     if (false == SDMMCEVENT_Create(sdif, kSDMMCEVENT_transfer_complete)) {
@@ -338,9 +342,9 @@ void SDMMCHOST_Deinit(void *host)
     sdif_host_t *sdifHost = (sdif_host_t *)host;
 #ifdef CONFIG_CSI_V2
     uint32_t sdif = SDIF_GetInstance(sdifHost->base);
-    drv_sdif_uninitialize(sdif, sdifHost->base);
+    csi_sdif_uninitialize(sdif, sdifHost->base);
 #else
-    drv_sdif_uninitialize(sdifHost->base);
+    csi_sdif_uninitialize(sdifHost->base);
 #endif
     SDMMCHOST_CardDetectDeinit(sdifHost->base);
 }
@@ -352,6 +356,6 @@ void SDMMCHOST_ErrorRecovery(SDMMCHOST_TYPE base)
 
 void SDMMCHOST_BindingSDIF(SDMMCHOST_CONFIG *host, uint32_t sdif)
 {
-    host->base = drv_sdif_get_handle(sdif);
+    host->base = csi_sdif_get_handle(sdif);
 }
 

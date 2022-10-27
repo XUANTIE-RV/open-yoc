@@ -7,7 +7,7 @@
 #include <bluetooth/bluetooth.h>
 #include <port/mesh_hal_sec.h>
 
-#ifndef CONFIG_MESH_STACK_ALONE
+#ifndef CONFIG_BT_MESH_STACK_ALONE
 #include <crypto.h>
 #include <tinycrypt/constants.h>
 #include <tinycrypt/utils.h>

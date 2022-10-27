@@ -16,23 +16,32 @@ enum {
     BAS_IDX_MAX,
 };
 
-static slist_t bas_list = {NULL};
+static slist_t bas_list = { NULL };
 
+#if defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE
+GATT_SERVICE_STATIC_DEFINE(bas_service, [BAS_IDX_SVC] = GATT_PRIMARY_SERVICE_DEFINE(UUID_BAS),
+                           [BAS_IDX_LEVEL_CHAR]
+                           = GATT_CHAR_DEFINE(UUID_BAS_BATTERY_LEVEL, GATT_CHRC_PROP_READ | GATT_CHRC_PROP_NOTIFY),
+                           [BAS_IDX_LEVEL_VAL] = GATT_CHAR_VAL_DEFINE(UUID_BAS_BATTERY_LEVEL, GATT_PERM_READ),
+                           [BAS_IDX_LEVEL_CCC] = GATT_CHAR_CCC_DEFINE(), );
+#else
 gatt_service bas_service;
 
 static gatt_attr_t bas_attrs[BAS_IDX_MAX] = {
-    [BAS_IDX_SVC] = GATT_PRIMARY_SERVICE_DEFINE(UUID_BAS),
-    [BAS_IDX_LEVEL_CHAR] = GATT_CHAR_DEFINE(UUID_BAS_BATTERY_LEVEL,  GATT_CHRC_PROP_READ | GATT_CHRC_PROP_NOTIFY),
-    [BAS_IDX_LEVEL_VAL] = GATT_CHAR_VAL_DEFINE(UUID_BAS_BATTERY_LEVEL, GATT_PERM_READ),
-    [BAS_IDX_LEVEL_CCC] = GATT_CHAR_CCC_DEFINE(),
+    [BAS_IDX_SVC]        = GATT_PRIMARY_SERVICE_DEFINE(UUID_BAS),
+    [BAS_IDX_LEVEL_CHAR] = GATT_CHAR_DEFINE(UUID_BAS_BATTERY_LEVEL, GATT_CHRC_PROP_READ | GATT_CHRC_PROP_NOTIFY),
+    [BAS_IDX_LEVEL_VAL]  = GATT_CHAR_VAL_DEFINE(UUID_BAS_BATTERY_LEVEL, GATT_PERM_READ),
+    [BAS_IDX_LEVEL_CCC]  = GATT_CHAR_CCC_DEFINE(),
 };
+#endif
 
 static inline bas_t *get_bas(uint16_t bas_svc_handle)
 {
     slist_t *tmp;
-    bas_t *node;
+    bas_t *  node;
 
-    slist_for_each_entry_safe(&bas_list, tmp, node, bas_t, next) {
+    slist_for_each_entry_safe(&bas_list, tmp, node, bas_t, next)
+    {
         if (node->bas_svc_handle == bas_svc_handle) {
             return node;
         }
@@ -52,7 +61,7 @@ static void event_char_read(ble_event_en event, void *event_data)
     }
 
     e->data = &bas->battery_level;
-    e->len = 1;
+    e->len  = 1;
 }
 
 static void conn_change(ble_event_en event, void *event_data)
@@ -60,8 +69,9 @@ static void conn_change(ble_event_en event, void *event_data)
     evt_data_gap_conn_change_t *e = (evt_data_gap_conn_change_t *)event_data;
 
     slist_t *tmp;
-    bas_t *node;
-    slist_for_each_entry_safe(&bas_list, tmp, node, bas_t, next) {
+    bas_t *  node;
+    slist_for_each_entry_safe(&bas_list, tmp, node, bas_t, next)
+    {
         if (e->connected == CONNECTED) {
             node->conn_handle = e->conn_handle;
         } else {
@@ -72,8 +82,8 @@ static void conn_change(ble_event_en event, void *event_data)
 
 static void event_char_ccc_change(ble_event_en event, void *event_data)
 {
-    evt_data_gatt_char_ccc_change_t *e = (evt_data_gatt_char_ccc_change_t *)event_data;
-    bas_t *bas = get_bas(e->char_handle - BAS_IDX_LEVEL_CCC);
+    evt_data_gatt_char_ccc_change_t *e   = (evt_data_gatt_char_ccc_change_t *)event_data;
+    bas_t *                          bas = get_bas(e->char_handle - BAS_IDX_LEVEL_CCC);
 
     if (bas == NULL) {
         return;
@@ -108,8 +118,7 @@ static ble_event_cb_t ble_cb = {
     .callback = bas_event_callback,
 };
 
-
-bas_handle_t bas_init(bas_t *bas)
+bas_handle_t ble_prf_bas_init(bas_t *bas)
 {
     int ret = 0;
 
@@ -123,29 +132,33 @@ bas_handle_t bas_init(bas_t *bas)
         goto err;
     }
 
+#if defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE
+    ret = ble_stack_gatt_service_handle(&bas_service);
+#else
     ret = ble_stack_gatt_registe_service(&bas_service, bas_attrs, BLE_ARRAY_NUM(bas_attrs));
+#endif
 
     if (ret < 0) {
         goto err;
     }
 
-    bas->conn_handle = 0xFFFF;
+    bas->conn_handle    = 0xFFFF;
     bas->bas_svc_handle = ret;
-    bas->battery_level = 0xFF;
-    bas->ccc = 0;
+    bas->battery_level  = 0xFF;
+    bas->ccc            = 0;
 
     slist_add(&bas->next, &bas_list);
     return bas;
 
 err:
-    ///free(bas);
+    /// free(bas);
     return NULL;
 }
 
-int bas_level_update(bas_handle_t handle, uint8_t level)
+int ble_prf_bas_level_update(bas_handle_t handle, uint8_t level)
 {
     if (handle == NULL) {
-        return -BLE_STACK_ERR_NULL;
+        return -BT_STACK_STATUS_EINVAL;
     }
 
     bas_t *bas = handle;
@@ -154,12 +167,9 @@ int bas_level_update(bas_handle_t handle, uint8_t level)
         bas->battery_level = level;
 
         if (bas->conn_handle != 0xFFFF && bas->ccc == CCC_VALUE_NOTIFY) {
-            return ble_stack_gatt_notificate(bas->conn_handle,
-                                             bas->bas_svc_handle + BAS_IDX_LEVEL_VAL,
-                                             &level, 1);
+            return ble_stack_gatt_notificate(bas->conn_handle, bas->bas_svc_handle + BAS_IDX_LEVEL_VAL, &level, 1);
         }
     }
 
     return 0;
 }
-

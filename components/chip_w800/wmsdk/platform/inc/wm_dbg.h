@@ -4,7 +4,7 @@
 #include "wm_debug.h"
 
 /* Define the module switcher */
-#define TLS_FLASH_DBG                       TLS_DBG_ON
+#define TLS_FLASH_DBG                       TLS_DBG_OFF
 #define TLS_SPI_DBG                         TLS_DBG_OFF
 #define TLS_IO_DBG                          TLS_DBG_OFF
 #define TLS_DMA_DBG                         TLS_DBG_OFF

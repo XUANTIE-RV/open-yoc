@@ -19,6 +19,7 @@ extern "C" {
 #define  MESSAGE_SYNC  0x01
 #define  MESSAGE_ACK   0x02
 #define  SHM_CACHE     0x04
+#define  MESSAGE_PROBE 0x08
 
 typedef struct message_msg message_t;
 typedef struct ipc         ipc_t;
@@ -30,9 +31,9 @@ struct message_msg {
     uint8_t         service_id;      /** service id for the service want to comtunicate */
     uint16_t        command;         /** command id the service provide */
     uint32_t        seq;             /** message seq */
-    void           *req_data;            /** message data */
-    int             req_len;             /** message len */
-    aos_queue_t     queue;           /** queue for SYNC MESSAGE */
+    void           *req_data;        /** message data */
+    int             req_len;         /** message len */
+    uint64_t        queue;           /** queue for SYNC MESSAGE */
     void           *resp_data;
     int             resp_len;
 };

@@ -32,9 +32,13 @@
 #define ERR_WDT(errno) (CSI_DRV_ERRNO_WDT_BASE | errno)
 #define WDT_NULL_PARAM_CHK(para)  HANDLE_PARAM_CHK(para, ERR_WDT(DRV_ERROR_PARAMETER))
 //#define SYSTEM_CLOCK_MS (30000 / 1000)
+#define RAM_CODE_SECTION(func)  __attribute__((section(".__sram.code."#func)))  func
+void RAM_CODE_SECTION(dw_wdt_irqhandler)(int32_t idx);
+int32_t RAM_CODE_SECTION(csi_wdt_set_timeout)(wdt_handle_t handle, uint32_t value);
+int32_t RAM_CODE_SECTION(csi_wdt_restart)(wdt_handle_t handle);
 
 //uint32_t timeout_ms[16];
-const uint32_t timeout_ms[8] = {2000, 4000, 8000, 16000, 32000, 64000, 128000, 256000};
+uint32_t timeout_ms[8] = {2000, 4000, 8000, 16000, 32000, 64000, 128000, 256000};
 typedef struct {
 #ifdef CONFIG_LPM
     uint8_t wdt_power_status;
@@ -60,7 +64,7 @@ static inline void dw_wdt_disable(dw_wdt_reg_t *addr)
     addr->WDT_CR = 0;
 }
 
-__attribute__((section(".__sram.code"))) void dw_wdt_irqhandler(int32_t idx)
+void dw_wdt_irqhandler(int32_t idx)
 {
     dw_wdt_priv_t *wdt_priv = &wdt_instance[idx];
     //dw_wdt_reg_t *addr = (dw_wdt_reg_t *)(wdt_priv->base);

@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2019-2020 Alibaba Group Holding Limited
  */
-
+#if defined(AOS_COMP_CLI) && defined(AOS_COMP_POSIX)
 #include <unistd.h>
 #include <string.h>
 #include <stdio.h>
@@ -16,6 +16,9 @@
 
 #include <vfs.h>
 #include <vfs_cli.h>
+#if defined(AOS_COMP_FATFS)
+#include <ff.h>
+#endif
 
 #define LSFLAGS_SIZE          1
 #define LSFLAGS_LONG          2
@@ -330,24 +333,26 @@ static int ls_handler(const char *dirpath,
     /* Check if any options will require that we stat the file */
 
     if ((lsflags & (LSFLAGS_SIZE | LSFLAGS_LONG)) != 0) {
-        struct stat buf = {0};
+        struct aos_stat buf = {0};
 
         /* stat the file */
 
         if (entryp != NULL) {
             char *fullpath = aos_malloc(strlen(dirpath) + strlen(entryp->d_name) + 1);
+            printf("fullpath: %s\n", fullpath);
 
             if (fullpath == NULL) {
                 return -1;
             }
 
             sprintf(fullpath, "%s/%s", dirpath, entryp->d_name);
+            printf("2fullpath: %s\n", fullpath);
             ret = aos_stat(fullpath, &buf);
 
             aos_free(fullpath);
         } else {
             /* A NULL entryp signifies that we are running ls on a single file */
-
+            printf("%s,%d\n", __func__, __LINE__);
             ret = aos_stat(dirpath, &buf);
         }
 
@@ -435,9 +440,9 @@ static int ls_handler(const char *dirpath,
 
 void cmd_ls(char *wbuf, int wbuf_len, int argc, char **argv)
 {
-    struct stat st = {0};
+    struct aos_stat st = {0};
     char *path;
-    unsigned int lsflags = 0;
+    unsigned long lsflags = 0;
     uint8_t badarg = 0;
     int len;
     int ret;
@@ -534,7 +539,7 @@ void cmd_rm(char *wbuf, int wbuf_len, int argc, char **argv)
     int ret = -1;
     char *path;
     int len;
-    struct stat st;
+    struct aos_stat st;
 
     if (argc != 2) {
         printf(g_fmtarginvalid, argv[0]);
@@ -556,9 +561,15 @@ void cmd_rm(char *wbuf, int wbuf_len, int argc, char **argv)
     if ((ret = aos_stat(path, &st)) < 0) {
         printf(g_fmtcmdfailed, argv[0], "stat", ret);
     } else if (!S_ISDIR(st.st_mode)) {
-        aos_unlink(path);
+        ret = aos_unlink(path);
+        if (ret < 0) {
+            printf(g_fmtcmdfailed, argv[0], "unlink", ret);
+        }
     } else {
-        aos_rmdir(path);
+        ret = aos_rmdir(path);
+        if (ret < 0) {
+            printf(g_fmtcmdfailed, argv[0], "rmdir", ret);
+        }
     }
 }
 
@@ -652,7 +663,7 @@ void cli_reg_cmd_mv(void)
     aos_cli_register_command(&cmd_info);
 }
 
-#if 0
+#if defined(AOS_COMP_FATFS)
 void cmd_mkfatfs(char *wbuf, int wbuf_len, int argc, char **argv)
 {
     uint8_t badarg;
@@ -746,3 +757,5 @@ void cli_reg_cmd_mkfatfs(void)
     aos_cli_register_command(&cmd_info);
 }
 #endif
+
+#endif /* AOS_COMP_CLI */

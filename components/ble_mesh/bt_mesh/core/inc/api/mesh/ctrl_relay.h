@@ -22,8 +22,8 @@
 #define CTRL_RELAY_CHK_PERIOD_DEF 70
 #define CTRL_RELAY_KEEP_PERIOD 10
 
-#define CTRL_RELAY_CACHE_TIMEOUT 70
-#define CTRL_RELAY_CACHE_EXPIRE 90
+#define CTRL_RELAY_CACHE_TIMEOUT 190
+#define CTRL_RELAY_CACHE_EXPIRE 200
 
 #define CTRL_RELAY_CHK_PROTECT 120
 
@@ -31,6 +31,13 @@
 #define CTRL_RELAY_CACHE_SIZE 10
 
 #define RSSI_VAL(n) (((n) < 0) ? -(n) : (n))
+
+typedef enum
+{
+    CTRL_RELAY_LOG_OFF = 0,
+    CTRL_RELAY_LOG_ON,
+    CTRL_RELAY_LOG_NONE
+} ctrl_relay_log_stat;
 
 typedef enum
 {
@@ -81,17 +88,19 @@ struct ctrl_relay_cfg
 {
     struct ctrl_relay_param param;
     struct ctrl_relay_status curr_stat;
-    struct bt_mesh_model *model;
     struct k_delayed_work sta_work;
     struct k_delayed_work chk_work;
     struct k_delayed_work keep_work;
 };
 
-int ctrl_relay_init(struct bt_mesh_model *model);
+int ctrl_relay_init(void);
 int ctrl_relay_deinit(void);
 void ctrl_relay_conf_set(struct bt_mesh_model *model, struct bt_mesh_msg_ctx *ctx, struct net_buf_simple *buf);
 void ctrl_relay_conf_get(struct bt_mesh_model *model, struct bt_mesh_msg_ctx *ctx, struct net_buf_simple *buf);
 int ctrl_relay_msg_recv(u8_t ctl_op, struct bt_mesh_net_rx *rx, struct net_buf_simple *buf);
 void ctrl_relay_set_flood_flg(void);
+void ctrl_relay_open_send(void);
+/* default log stat is ON */
+void ctrl_relay_log_set(ctrl_relay_log_stat stat);
 
 #endif /* __BT_MESH_CTRL_RELAY_H */

@@ -44,7 +44,7 @@
 #include "rom_sym_def.h"
 #include <string.h>
 #include "clock.h"
-#include "OSAL.h"
+//#include "OSAL.h"
 #include "kscan.h"
 #include "pwrmgr.h"
 #include "error.h"
@@ -53,6 +53,7 @@
 #include "bus_dev.h"
 //#include "log.h"
 #include "jump_function.h"
+#include "comdef.h"
 typedef struct {
     bool            enable;
     kscan_Cfg_t     cfg;

@@ -9,7 +9,6 @@
  * @version  V1.0
  * @date     02. June 2017
  ******************************************************************************/
-
 #include <stdbool.h>
 #include <string.h>
 #include <drv/irq.h>
@@ -18,6 +17,9 @@
 #include <dw_usart.h>
 #include <soc.h>
 #include <drv/dmac.h>
+#if defined  CONFIG_DW_UART_DMAC
+#include <dw_dmac.h>
+#endif
 #include <sys_freq.h>
 #include <clock.h>
 #include <gpio.h>
@@ -27,6 +29,8 @@
 static uint32_t usart_regs_saved[5];
 extern void registers_save(uint32_t *mem, uint32_t *addr, int size);
 extern void registers_restore(uint32_t *addr, uint32_t *mem, int size);
+
+
 
 #if 0
 void drv_irq_register(uint32_t irq_num, void *irq_handler)
@@ -98,9 +102,32 @@ typedef struct {
     uint32_t last_rx_num;
     int32_t idx;
     uint32_t fcr_reg;
+#if defined  CONFIG_DW_UART_DMAC
+    int32_t dma_tx_ch;
+    int32_t dma_rx_ch;
+    uint8_t dma_tx_mode;     // 0-not sending  1-sending
+    uint8_t dma_rx_mode;     // 0-not receiving  1-receiving
+    uint32_t rx_block_num;
+    uint32_t tx_block_num;
+    uint32_t rx_num;
+    uint32_t tx_num;
+    dma_config_t config;
+#endif
 } dw_usart_priv_t;
 
+#define RAM_CODE_SECTION(func)  __attribute__((section(".__sram.code."#func)))  func
+static void RAM_CODE_SECTION(dw_usart_dma_event_cb)(int32_t ch, dma_event_e event, void *arg);
+static void RAM_CODE_SECTION(dw_usart_intr_threshold_empty)(int32_t idx, dw_usart_priv_t *usart_priv);
+static void RAM_CODE_SECTION(dw_usart_intr_recv_data)(int32_t idx, dw_usart_priv_t *usart_priv);
+static void RAM_CODE_SECTION(dw_usart_intr_recv_line)(int32_t idx, dw_usart_priv_t *usart_priv);
+static void RAM_CODE_SECTION(dw_usart_intr_char_timeout)(int32_t idx, dw_usart_priv_t *usart_priv);
+void RAM_CODE_SECTION(dw_usart_irqhandler)(int32_t idx);
+void RAM_CODE_SECTION(csi_usart_prepare_sleep_action)(void);
+void RAM_CODE_SECTION(csi_usart_wakeup_sleep_action)(void);
+int32_t RAM_CODE_SECTION(csi_usart_restart_receive_dma)(usart_handle_t handle);
 extern int32_t target_usart_init(int32_t idx, uint32_t *base, uint32_t *irq, void **handler);
+
+
 extern int32_t target_get_addr_space(uint32_t addr);
 
 static dw_usart_priv_t usart_instance[CONFIG_USART_NUM];
@@ -113,6 +140,120 @@ static const usart_capabilities_t usart_capabilities = {
     .event_tx_complete = 1,     /* Transmit completed event */
     .event_rx_timeout = 0,      /* Signal receive character timeout event */
 };
+
+#if defined  CONFIG_DW_UART_DMAC
+static void dw_usart_dma_event_cb(int32_t ch, dma_event_e event, void *arg)
+{
+    dw_usart_priv_t *usart_priv = NULL;
+    int8_t priv_num  = 0;
+
+    for (priv_num = 0; priv_num < CONFIG_USART_NUM; priv_num++) {
+        usart_priv = &usart_instance[priv_num];
+
+        if ((usart_priv->dma_tx_ch == ch && usart_priv->dma_tx_mode == 1) || (usart_priv->dma_rx_ch == ch && usart_priv->dma_rx_mode == 1)) {
+            break;
+        }
+    }
+
+    dw_usart_reg_t *addr = (dw_usart_reg_t *)(usart_priv->base);
+
+    if (event == DMA_EVENT_TRANSFER_ERROR) {           /* DMA transfer ERROR */
+        if (usart_priv->dma_tx_ch == ch && usart_priv->dma_tx_mode == 1) {
+            csi_dma_stop(usart_priv->dma_tx_ch);
+            csi_dma_release_channel(usart_priv->dma_tx_ch);
+            usart_priv->tx_busy = 0;
+            usart_priv->dma_tx_mode = 0;
+            usart_priv->dma_tx_ch = -1;
+            usart_priv->fcr_reg &= ~DW_FCR_TET_FIFO_HALF;
+            //addr->FCR = usart_priv->fcr_reg;
+
+            if (usart_priv->cb_event) {
+                usart_priv->cb_event(priv_num, USART_EVENT_TX_UNDERFLOW);
+            }
+        } else {
+            csi_dma_stop(usart_priv->dma_rx_ch);
+            csi_dma_release_channel(usart_priv->dma_rx_ch);
+            usart_priv->rx_busy = 0;
+            usart_priv->dma_rx_mode = 0;
+            usart_priv->dma_rx_ch = -1;
+
+            /* FIFO enable */
+            usart_priv->fcr_reg &= ~(DW_FCR_RT_FIFO_LESSTWO);
+            // addr->FCR |= DW_FCR_FIFOE | DW_FCR_RT_FIFO_HALF;
+            usart_priv->fcr_reg |= DW_FCR_RT_FIFO_HALF;
+            /* enable received data available */
+            addr->IER |= IER_RDA_INT_ENABLE | IIR_RECV_LINE_ENABLE;
+
+            if (usart_priv->cb_event) {
+                usart_priv->cb_event(priv_num, USART_EVENT_RX_FRAMING_ERROR);
+            }
+        }
+    } else if (event == DMA_EVENT_TRANSFER_DONE) {  /* DMA transfer complete */
+        if (usart_priv->dma_tx_ch == ch && usart_priv->dma_tx_mode == 1) {
+            usart_priv->tx_num += usart_priv->tx_block_num;
+
+            if (usart_priv->tx_num >= usart_priv->tx_total_num) {
+                csi_dma_stop(usart_priv->dma_tx_ch);
+                csi_dma_release_channel(usart_priv->dma_tx_ch);
+                usart_priv->tx_busy = 0;
+                usart_priv->dma_tx_mode = 0;
+                usart_priv->dma_tx_ch = -1;
+                usart_priv->fcr_reg &= ~(DW_FCR_TET_FIFO_HALF);
+                //addr->FCR = usart_priv->fcr_reg;
+
+                if (usart_priv->cb_event) {
+                    usart_priv->cb_event(priv_num, USART_EVENT_SEND_COMPLETE);
+                }
+            } else {
+                uint32_t max_block_size = DMA_MAX_TRANSPORT_SIZE(usart_priv->dma_tx_ch);
+                uint32_t next_tx_size = usart_priv->tx_total_num - usart_priv->tx_num;
+                usart_priv->tx_block_num = (next_tx_size > max_block_size) ? max_block_size : next_tx_size;
+                csi_dma_start(usart_priv->dma_tx_ch, usart_priv->tx_buf + usart_priv->tx_num, (uint8_t *) & (addr->THR), usart_priv->tx_block_num);
+            }
+        } else if (usart_priv->dma_rx_ch == ch && usart_priv->dma_rx_mode == 1) {
+            usart_priv->rx_num += usart_priv->rx_block_num;
+
+            if (usart_priv->rx_num >= usart_priv->rx_total_num) {
+                csi_dma_stop(usart_priv->dma_rx_ch);
+                //csi_dma_release_channel(usart_priv->dma_rx_ch);
+                //usart_priv->rx_busy = 0;
+                //usart_priv->dma_rx_mode = 0;
+                //usart_priv->dma_rx_ch = -1;
+
+                /* FIFO enable */
+                //usart_priv->fcr_reg &= ~(DW_FCR_RT_FIFO_LESSTWO);
+                //usart_priv->fcr_reg |= DW_FCR_RT_FIFO_HALF;
+                //addr->FCR =  usart_priv->fcr_reg;
+                /* enable received data available */
+                //addr->IER |= IER_RDA_INT_ENABLE | IIR_RECV_LINE_ENABLE;
+
+                //uint32_t max_block_size = DMA_MAX_TRANSPORT_SIZE(usart_priv->dma_rx_ch);
+                //usart_priv->rx_block_num = (usart_priv->rx_total_num > max_block_size) ? max_block_size : usart_priv->rx_total_num;
+                //usart_priv->rx_num = 0;
+                //csi_dma_start(usart_priv->dma_rx_ch, (uint8_t *) & (addr->THR), usart_priv->rx_buf,  usart_priv->rx_block_num);
+                if (usart_priv->cb_event) {
+                    usart_priv->cb_event(priv_num, USART_EVENT_RECEIVE_COMPLETE);
+                }
+            } else {
+                uint32_t max_block_size = DMA_MAX_TRANSPORT_SIZE(usart_priv->dma_rx_ch);
+                uint32_t next_rx_size = usart_priv->rx_total_num - usart_priv->rx_num;
+                usart_priv->rx_block_num = (next_rx_size > max_block_size) ? max_block_size : next_rx_size;
+
+                uint8_t i;
+
+                for (i = 2; i > 0; i--) {
+                    if (!(usart_priv->rx_block_num % (2 << i))) {
+                        break;
+                    }
+                }
+
+                csi_dma_start(usart_priv->dma_rx_ch, (uint8_t *) & (addr->THR), usart_priv->rx_buf + usart_priv->rx_num,  usart_priv->rx_block_num);
+            }
+
+        }
+    }
+}
+#endif
 
 static int32_t usart_wait_timeout(usart_handle_t handle, dw_usart_reg_t *addr)
 {
@@ -367,7 +508,7 @@ int32_t csi_usart_putchar(usart_handle_t handle, uint8_t ch)
   \brief       interrupt service function for transmitter holding register empty.
   \param[in]   usart_priv usart private to operate.
 */
-static __attribute__((section(".__sram.code"))) void dw_usart_intr_threshold_empty(int32_t idx, dw_usart_priv_t *usart_priv)
+static void dw_usart_intr_threshold_empty(int32_t idx, dw_usart_priv_t *usart_priv)
 {
     if (usart_priv->tx_total_num == 0) {
         return;
@@ -404,7 +545,7 @@ static __attribute__((section(".__sram.code"))) void dw_usart_intr_threshold_emp
   \brief        interrupt service function for receiver data available.
   \param[in]   usart_priv usart private to operate.
 */
-static __attribute__((section(".__sram.code"))) void dw_usart_intr_recv_data(int32_t idx, dw_usart_priv_t *usart_priv)
+static void dw_usart_intr_recv_data(int32_t idx, dw_usart_priv_t *usart_priv)
 {
     if ((usart_priv->rx_total_num == 0) || (usart_priv->rx_buf == NULL)) {
         if (usart_priv->cb_event) {
@@ -446,7 +587,7 @@ static __attribute__((section(".__sram.code"))) void dw_usart_intr_recv_data(int
   \brief        interrupt service function for receiver line.
   \param[in]   usart_priv usart private to operate.
 */
-static __attribute__((section(".__sram.code"))) void dw_usart_intr_recv_line(int32_t idx, dw_usart_priv_t *usart_priv)
+static void dw_usart_intr_recv_line(int32_t idx, dw_usart_priv_t *usart_priv)
 {
     dw_usart_reg_t *addr = (dw_usart_reg_t *)(usart_priv->base);
     uint32_t lsr_stat = addr->LSR;
@@ -520,7 +661,7 @@ static __attribute__((section(".__sram.code"))) void dw_usart_intr_recv_line(int
   \brief        interrupt service function for character timeout.
   \param[in]   usart_priv usart private to operate.
 */
-static __attribute__((section(".__sram.code"))) void dw_usart_intr_char_timeout(int32_t idx, dw_usart_priv_t *usart_priv)
+static void dw_usart_intr_char_timeout(int32_t idx, dw_usart_priv_t *usart_priv)
 {
     if ((usart_priv->rx_total_num != 0) && (usart_priv->rx_buf != NULL)) {
         dw_usart_intr_recv_data(idx, usart_priv);
@@ -553,11 +694,15 @@ static __attribute__((section(".__sram.code"))) void dw_usart_intr_char_timeout(
   \brief       the interrupt service function.
   \param[in]   index of usart instance.
 */
-__attribute__((section(".__sram.code"))) void dw_usart_irqhandler(int32_t idx)
+void dw_usart_irqhandler(int32_t idx)
 {
     dw_usart_priv_t *usart_priv = &usart_instance[idx];
     dw_usart_reg_t *addr = (dw_usart_reg_t *)(usart_priv->base);
-
+#if defined  CONFIG_DW_UART_DMAC
+    if (usart_priv->dma_rx_mode) {
+        return;
+    }
+#endif
     uint8_t intr_state = addr->IIR & 0xf;
 
     switch (intr_state) {
@@ -620,42 +765,45 @@ static void do_wakeup_sleep_action(usart_handle_t handle)
 
 extern uint8_t uart_tx_rx_pin[4];
 
-__attribute__((section(".__sram.code")))  void csi_usart_prepare_sleep_action(void)
+void csi_usart_prepare_sleep_action(void)
 {
     uint32_t addr = 0x40004000;
     uint32_t set_fcr_value;
     while (!(*(volatile uint32_t *)(addr + 0x7c) & 0x4));
-    for(int i = 0; i < 4 ; i++) {
-      if(uart_tx_rx_pin[i] != 0xff) {
-        phy_gpio_fmux(uart_tx_rx_pin[i], Bit_DISABLE);
-      }
-    }
+//    for(int i = 0; i < 4 ; i++) {
+//      if(uart_tx_rx_pin[i] != 0xff) {
+//        phy_gpio_fmux(uart_tx_rx_pin[i], Bit_DISABLE);
+//      }
+//    }
     set_fcr_value = (*(volatile uint32_t *)(addr + 0x98) & 0x01) |
         ((*(volatile uint32_t *)(addr + 0x94) & 0x01)<<3) |
         ((*(volatile uint32_t *)(addr + 0x9c) & 0x03)<<6) |
         ((*(volatile uint32_t *)(addr + 0xa0) & 0x03)<<4) |
         DW_FCR_RFIFOR | DW_FCR_XFIFOR;
+    registers_save(&usart_regs_saved[3], (uint32_t *)addr + 3, 1);
     do{
-        *(volatile uint32_t *)(addr + 0x8) = set_fcr_value;
-    }while (*(volatile uint32_t *)(addr + 0x7c) & 0x1);
-    *(volatile uint32_t *)(addr + 0xc) |= 0x80;
+        *(volatile uint32_t *)(addr + 0xc) = 0x80;
+    }while(*(volatile uint32_t *)(addr + 0xc) != 0x80);
     registers_save((uint32_t *)usart_regs_saved, (uint32_t *)addr, 2);
-    *(volatile uint32_t *)(addr + 0xc) &= ~0x80;
+    do{
+        *(volatile uint32_t *)(addr + 0xc) = usart_regs_saved[3];
+    }while(*(volatile uint32_t *)(addr + 0xc) != usart_regs_saved[3]);
     registers_save(&usart_regs_saved[2], (uint32_t *)addr + 1, 1);
-    registers_save(&usart_regs_saved[3], (uint32_t *)addr + 3, 2);
     usart_regs_saved[4] = set_fcr_value;
 }
 
-__attribute__((section(".__sram.code")))  void csi_usart_wakeup_sleep_action(void)
+void csi_usart_wakeup_sleep_action(void)
 {
     uint32_t addr = 0x40004000;
-    //while (*(volatile uint32_t *)(addr + 0x7c) & 0x1);
 
-    *(volatile uint32_t *)(addr + 0xc) |= 0x80;
+    do{
+        *(volatile uint32_t *)(addr + 0xc) = 0x80;
+    }while(*(volatile uint32_t *)(addr + 0xc) != 0x80);
     registers_save((uint32_t *)addr, usart_regs_saved, 2);
-    *(volatile uint32_t *)(addr + 0xc) &= ~0x80;
+    do{
+        *(volatile uint32_t *)(addr + 0xc) = usart_regs_saved[3];
+    }while(*(volatile uint32_t *)(addr + 0xc) != usart_regs_saved[3]);
     registers_save((uint32_t *)addr + 1, &usart_regs_saved[2], 1);
-    registers_save((uint32_t *)addr + 3, &usart_regs_saved[3], 2);
     registers_save((uint32_t *)addr + 2, &usart_regs_saved[4], 1);
 }
 
@@ -698,6 +846,13 @@ usart_handle_t csi_usart_initialize(int32_t idx, usart_event_cb_t cb_event)
     usart_priv->irq = irq;
     usart_priv->cb_event = cb_event;
     usart_priv->idx = idx;
+
+#if defined CONFIG_DW_UART_DMAC
+    usart_priv->dma_tx_ch = -1;
+    usart_priv->dma_rx_ch = -1;
+    usart_priv->dma_tx_mode = 0;
+    usart_priv->dma_rx_mode = 0;
+#endif
 
 #ifdef CONFIG_LPM
     csi_usart_power_control(usart_priv, DRV_POWER_FULL);
@@ -809,6 +964,69 @@ int32_t csi_usart_config(usart_handle_t handle,
     return 0;
 }
 
+#if defined  CONFIG_DW_UART_DMAC
+static int32_t dw_usart_send_dma(dw_usart_priv_t *usart_priv)
+{
+    dma_config_t config;
+    config.src_inc  = DMA_ADDR_INC;
+    config.dst_inc  = DMA_ADDR_CONSTANT;
+    config.src_tw   = 1;
+    config.dst_tw   = 1;
+    if (usart_priv->idx == 0) {
+        config.hs_if    = DWENUM_DMA_UART0_TX;
+    } else if (usart_priv->idx == 1) {
+        config.hs_if    = DWENUM_DMA_UART1_TX;
+    } else {
+        return ERR_USART(DRV_ERROR_PARAMETER);
+    }
+    config.type     = DMA_MEM2PERH;
+    if (usart_priv->dma_tx_ch  == -1) {
+        usart_priv->dma_tx_ch  = csi_dma_alloc_channel();
+        if (usart_priv->dma_tx_ch == -1) {
+            return ERR_USART(DRV_ERROR_PARAMETER);
+        }
+    }
+    int32_t ret = csi_dma_config_channel(usart_priv->dma_tx_ch, &config, dw_usart_dma_event_cb, NULL);
+    if (ret < 0) {
+        csi_dma_release_channel(usart_priv->dma_tx_ch);
+        return ret;
+    }
+    usart_priv->config = config;
+    uint32_t max_block_size = DMA_MAX_TRANSPORT_SIZE(usart_priv->dma_tx_ch);
+    usart_priv->tx_block_num = (usart_priv->tx_total_num > max_block_size) ? max_block_size : usart_priv->tx_total_num;
+    dw_usart_reg_t *addr = (dw_usart_reg_t *)(usart_priv->base);
+    addr->FCR = usart_priv->fcr_reg | (DW_FCR_TET_FIFO_HALF);
+    usart_priv->fcr_reg |= (DW_FCR_TET_FIFO_HALF);
+    csi_dma_start(usart_priv->dma_tx_ch, usart_priv->tx_buf, (uint8_t *) & (addr->THR), usart_priv->tx_block_num);
+    return 0;
+}
+int32_t csi_usart_send_dma(usart_handle_t handle, const void *data, uint32_t num)
+{
+    USART_NULL_PARAM_CHK(handle);
+    USART_NULL_PARAM_CHK(data);
+
+    uint8_t *buff = (uint8_t *)data;
+
+    if (num == 0) {
+        return ERR_USART(DRV_ERROR_PARAMETER);
+    }
+
+    dw_usart_priv_t *usart_priv = handle;
+
+    usart_priv->tx_buf = buff;
+    usart_priv->tx_total_num = num;
+
+    usart_priv->dma_tx_mode = 1;
+    usart_priv->tx_busy = 1;
+    usart_priv->last_tx_num = 0;
+    usart_priv->tx_num = 0;
+
+    int32_t ret = dw_usart_send_dma(usart_priv);
+
+    return ret;
+}
+
+#endif
 /**
   \brief       Start sending data to UART transmitter,(received data is ignored).
                The function is non-blocking,UART_EVENT_TRANSFER_COMPLETE is signaled when transfer completes.
@@ -853,6 +1071,111 @@ int32_t csi_usart_abort_send(usart_handle_t handle)
     USART_NULL_PARAM_CHK(handle);
     return ERR_USART(DRV_ERROR_UNSUPPORTED);
 }
+
+#if defined  CONFIG_DW_UART_DMAC
+static int32_t dw_usart_receive_dma(dw_usart_priv_t *usart_priv)
+{
+    dw_usart_reg_t *addr = (dw_usart_reg_t *)(usart_priv->base);
+    /* disable received data available */
+
+    dma_config_t config;
+    config.src_inc  = DMA_ADDR_CONSTANT;
+    config.dst_inc  = DMA_ADDR_INC;
+    config.src_tw   = 1;
+    config.dst_tw   = 1;
+
+    if (usart_priv->idx == 0) {
+        config.hs_if    = DWENUM_DMA_UART0_RX;
+    } else if (usart_priv->idx == 1) {
+        config.hs_if    = DWENUM_DMA_UART1_RX;
+    } else {
+        return ERR_USART(DRV_ERROR_PARAMETER);
+    }
+
+    //addr->IER &= ~(IER_RDA_INT_ENABLE | IIR_RECV_LINE_ENABLE);
+    config.type     = DMA_PERH2MEM;
+
+    if (usart_priv->dma_rx_ch == -1) {
+        usart_priv->dma_rx_ch = csi_dma_alloc_channel();
+
+        if (usart_priv->dma_rx_ch == -1) {
+            return ERR_USART(DRV_ERROR_PARAMETER);
+        }
+    }
+
+    csi_dma_stop(usart_priv->dma_rx_ch);
+
+    int ret = csi_dma_config_channel(usart_priv->dma_rx_ch, &config, dw_usart_dma_event_cb, NULL);
+
+    if (ret < 0) {
+        csi_dma_release_channel(usart_priv->dma_rx_ch);
+        return ret;
+    }
+
+    usart_priv->config = config;
+
+    uint32_t max_block_size = DMA_MAX_TRANSPORT_SIZE(usart_priv->dma_rx_ch);
+    usart_priv->rx_block_num = (usart_priv->rx_total_num > max_block_size) ? max_block_size : usart_priv->rx_total_num;
+
+    uint8_t i;
+
+    for (i = 2; i > 0; i--) {
+        if (!(usart_priv->rx_block_num % (2 << i))) {
+            break;
+        }
+    }
+
+    usart_priv->dma_rx_mode = 1;
+
+    //usart_priv->fcr_reg &= ~(DW_FCR_RT_FIFO_LESSTWO);
+    //addr->FCR = 1 << DW_USART_FCR_RFIFOR_Pos | (1 << DW_USART_FCR_RT_Pos) | usart_priv->fcr_reg;
+    //usart_priv->fcr_reg |= (i << DW_USART_FCR_RT_Pos);
+    csi_dma_start(usart_priv->dma_rx_ch, (uint8_t *) & (addr->THR), usart_priv->rx_buf,  usart_priv->rx_block_num);
+    return 0;
+}
+
+int32_t csi_usart_receive_dma(usart_handle_t handle, void *data, uint32_t num)
+{
+    USART_NULL_PARAM_CHK(handle);
+    USART_NULL_PARAM_CHK(data);
+
+    dw_usart_priv_t *usart_priv = handle;
+
+    usart_priv->rx_buf = (uint8_t *)data;   // Save receive buffer usart
+    usart_priv->rx_total_num = num;         // Save number of data to be received
+    usart_priv->rx_cnt = 0;
+    usart_priv->rx_busy = 1;
+    usart_priv->last_rx_num = 0;
+    usart_priv->rx_num = 0;
+
+    int32_t ret = dw_usart_receive_dma(usart_priv);
+
+    return ret;
+
+}
+
+int32_t csi_usart_restart_receive_dma(usart_handle_t handle)
+{
+    dw_usart_priv_t *usart_priv = handle;
+    dw_usart_reg_t *addr = (dw_usart_reg_t *)(usart_priv->base);
+
+    /* if rx buffer pointer is working,but uart is idle, meanings rx buffer have unused data, need reset */
+    uint32_t flags = csi_irq_save();
+    if ((((volatile uint32_t )(AP_DMA_CH_CFG(usart_priv->dma_rx_ch)->DAR)) != usart_priv->rx_buf ) &&
+        ((addr->USR & USR_UART_BUSY) == 0)) {
+        uint32_t max_block_size = DMA_MAX_TRANSPORT_SIZE(usart_priv->dma_rx_ch);
+        usart_priv->rx_block_num = (usart_priv->rx_total_num > max_block_size) ? max_block_size : usart_priv->rx_total_num;
+        usart_priv->rx_num = 0;
+        csi_dma_stop(usart_priv->dma_rx_ch);
+        csi_dma_start(usart_priv->dma_rx_ch, (uint8_t *) & (addr->THR), usart_priv->rx_buf,  usart_priv->rx_block_num);
+        irq_unlock(flags);
+        return 0;
+    }
+    csi_irq_restore(flags);
+    return -1;
+}
+
+#endif
 
 /**
   \brief       Start receiving data from UART receiver.

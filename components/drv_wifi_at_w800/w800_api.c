@@ -700,6 +700,7 @@ int w800_connect_remote(int id, net_conn_e type, char *srvname, uint16_t port)
 {
     int ret = -1;
     int ret_id;
+    int local_port = 1838;
 
     if (g_net_status < NET_STATUS_GOTIP) {
         LOGE(TAG, "net status error\n");
@@ -716,8 +717,10 @@ int w800_connect_remote(int id, net_conn_e type, char *srvname, uint16_t port)
             break;
 
         case NET_TYPE_UDP_UNICAST:
+            ret = atparser_send(g_atparser_uservice_t, "AT+CIPSTART=%d,%s,%s,%d,%d", id, "udp_unicast", srvname, port, local_port);
+            break;
         case NET_TYPE_TCP_CLIENT:
-            ret = atparser_send(g_atparser_uservice_t, "AT+CIPSTART=%d,%s,%s,%d", id, type == NET_TYPE_TCP_CLIENT ? "tcp_client" : "udp_client", srvname, port);
+            ret = atparser_send(g_atparser_uservice_t, "AT+CIPSTART=%d,%s,%s,%d", id, "tcp_client", srvname, port);
             break;
 
         default:

@@ -2,7 +2,7 @@
  * Copyright (C) 2019-2020 Alibaba Group Holding Limited
  */
 
-#if defined(CONFIG_TCPIP)
+#if defined(CONFIG_SAL)
 #include <stdbool.h>
 #include <aos/aos.h>
 #include <aos/cli.h>

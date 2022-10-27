@@ -11,7 +11,6 @@
 #include <soc.h>
 #include <csi_config.h>
 #include <sys_clk.h>
-#include <board_config.h>
 #include <drv/common.h>
 #include <drv/irq.h>
 #include <drv/tick.h>
@@ -21,10 +20,6 @@
 #ifndef CONFIG_TICK_TIMER_IDX
 #define CONFIG_TICK_TIMER_IDX   0U
 #endif
-
-extern void krhino_tick_proc(void);
-extern void xPortSysTickHandler(void);
-extern void OSTimeTick(void);
 
 static csi_timer_t tick_timer;
 
@@ -40,12 +35,9 @@ void csi_tick_increase(void)
 static void tick_event_cb(csi_timer_t *timer_handle, void *arg)
 {
     csi_tick_increase();
-#if defined(CONFIG_KERNEL_RHINO)
-    krhino_tick_proc();
-#elif defined(CONFIG_KERNEL_FREERTOS)
-    xPortSysTickHandler();
-#elif defined(CONFIG_KERNEL_UCOS)
-    OSTimeTick();
+#ifndef CONFIG_KERNEL_NONE
+    extern void aos_sys_tick_handler(void);
+    aos_sys_tick_handler();
 #endif
 }
 

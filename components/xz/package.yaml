@@ -1,0 +1,41 @@
+## 第一部分： 基础信息
+name: xz                                            # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
+version: v7.6.0                                     # <必选项> 组件版本号
+description: xz compress&decompress                 # <必选项> 建议至少20字以上
+type: common                                        # <必选项> 组件类型，为：solution, chip, board, common, sdk
+tag: 第三方组件                                      # <可选项> 组件分类，缺省值： ''
+license: Apache license v2.0                        # <可选项> 源代码的许可证，要确保所有代码、文件的许可证不冲突。如：MIT，Apache license v2.0，BSD
+
+## 第二部分：依赖信息
+#           指定该组件依赖的组件及版本
+# sdk_chip:                                # <可选项> 该组件依赖sdk组件，合理的依赖才能保证组件能编译、使用
+#   - sdk_chip_csky_dummy: v7.4.0
+#   - sdk_chip_riscv_dummy: v7.4.0
+# depends:                                 # <可选项> 该组件依赖其他的组件，合理的依赖才能保证组件能编译、使用
+#   - minilibc: v7.4.0
+#   - aos: v7.4.0
+
+build_config:
+  include:
+    - src/lib/xz
+    - include/api
+    - include
+  cflag: -Wno-unused-function
+  cxxflag: ""
+  asmflag: ""
+  define: ~
+  libs: ~
+  libpath: ~
+# cxxflag: ''                                  # CXX 编译器所需要要的编译参数
+# asmflag: ''                                  # 汇编器所需要要参数
+# define:                                      # 宏定义
+#   - NO_MORE_DEFINE
+source_file:
+  - src/lib/xz/*.c
+  - src/lib/*.c
+  - src/api/*.c
+
+def_config:
+  CONFIG_XZ_CMP: 1
+  XZ_USE_CRC64: 1
+  XZ_DEC_ANY_CHECK: 1

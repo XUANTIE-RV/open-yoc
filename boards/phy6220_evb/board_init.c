@@ -52,14 +52,20 @@ const hal_logic_partition_t hal_partitions[] =
 }};
 #endif
 
+void dyn_mem_proc_task_start(void)
+{
+    ;
+}
+
 #ifdef CONFIG_PM_SLEEP
 extern int sys_soc_init();
-extern int sys_soc_resume(int pm_state);
+extern uint64_t sys_soc_resume(int pm_state);
 extern int sys_soc_suspend(uint32_t suspend_tick);
-__attribute__((section(".__sram.code"))) static void lpm_handle(void)
+
+__attribute__((section(".__sram.code.lpm_handle"))) static void lpm_handle(void)
 {
     int pm_state;
-    int ticks;
+    uint64_t ticks;
 
     aos_kernel_sched_suspend();
 
@@ -77,11 +83,13 @@ __attribute__((section(".__sram.code"))) static void lpm_handle(void)
     return;
 }
 
-__attribute__((section(".__sram.code"))) void krhino_idle_hook(void)
+__attribute__((section(".__sram.code.krhino_idle_hook"))) void krhino_idle_hook(void)
 {
+#if !(defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE)
 #ifdef CONFIG_BT_ECC
-    extern void ecc_work_handler();
-    ecc_work_handler();
+	extern void ecc_work_handler();
+	ecc_work_handler();
+#endif
 #endif
     lpm_handle();
 }
@@ -89,9 +97,11 @@ __attribute__((section(".__sram.code"))) void krhino_idle_hook(void)
 #else
 void krhino_idle_hook(void)
 {
+#if !(defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE)
 #ifdef CONFIG_BT_ECC
-    extern void ecc_work_handler();
-    ecc_work_handler();
+	extern void ecc_work_handler();
+	ecc_work_handler();
+#endif
 #endif
 }
 #endif

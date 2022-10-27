@@ -139,10 +139,13 @@ int32_t csi_eflash_read(eflash_handle_t handle, uint32_t addr, void *data, uint3
     ck_eflash_priv_t *eflash_priv = handle;
 
     if (eflash_priv->eflashinfo.start > addr || eflash_priv->eflashinfo.end <= addr || eflash_priv->eflashinfo.start > (addr + cnt - 1) || eflash_priv->eflashinfo.end <= (addr + cnt - 1)) {
+        printf("eflashinfo.start[0x%x], eflashinfo.end[0x%x], addr[0x%x], cnt[%d]\n",
+               eflash_priv->eflashinfo.start, eflash_priv->eflashinfo.end, addr, cnt);
         return ERR_EFLASH(DRV_ERROR_PARAMETER);
     }
 
     if (eflash_priv->status.busy) {
+        printf("status.busy %d\n", eflash_priv->status.busy);
         return ERR_EFLASH(DRV_ERROR_BUSY);
     }
 
@@ -155,13 +158,14 @@ int32_t csi_eflash_read(eflash_handle_t handle, uint32_t addr, void *data, uint3
 
     if (ret != TLS_FLS_STATUS_OK)
     {
+        printf("tls_fls_read err, ret %d\n", ret);
         eflash_priv->status.error = 1U;
 
         if (eflash_priv->cb)
             eflash_priv->cb(eflash_priv->idx, EFLASH_EVENT_ERROR);
     }
 
-    return (ret == TLS_FLS_STATUS_OK) ? 0 : ERR_EFLASH(DRV_ERROR_SPECIFIC);
+    return (ret == TLS_FLS_STATUS_OK) ? cnt : ERR_EFLASH(DRV_ERROR_SPECIFIC);
 }
 
 /**

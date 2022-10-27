@@ -23,32 +23,32 @@ extern int main(void);
  */
 void section_data_copy(void)
 {
-    extern uint32_t __erodata;
-    extern uint32_t __data_start__;
-    extern uint32_t __data_end__;
+    extern unsigned long __erodata;
+    extern unsigned long __data_start__;
+    extern unsigned long __data_end__;
 
-    if (((uint32_t)&__erodata != (uint32_t)&__data_start__)) {
-        uint32_t src_addr = (uint32_t)&__erodata;
+    if (((unsigned long)&__erodata != (unsigned long)&__data_start__)) {
+        unsigned long src_addr = (unsigned long)&__erodata;
         memcpy((void *)(&__data_start__), \
                (void *)src_addr, \
-               (uint32_t)(&__data_end__) - (uint32_t)(&__data_start__));
+               (unsigned long)(&__data_end__) - (unsigned long)(&__data_start__));
     }
 }
 
 void section_ram_code_copy(void)
 {
-    extern uint32_t __erodata;
-    extern uint32_t __data_start__;
-    extern uint32_t __data_end__;
-    extern uint32_t __ram_code_start__;
-    extern uint32_t __ram_code_end__;
+    extern unsigned long __erodata;
+    extern unsigned long __data_start__;
+    extern unsigned long __data_end__;
+    extern unsigned long __ram_code_start__;
+    extern unsigned long __ram_code_end__;
 
-    if (((uint32_t)&__erodata != (uint32_t)&__data_start__)) {
-        uint32_t src_addr = (uint32_t)&__erodata;
-        src_addr += (uint32_t)(&__data_end__) - (uint32_t)(&__data_start__);
+    if (((unsigned long)&__erodata != (unsigned long)&__data_start__)) {
+        unsigned long src_addr = (unsigned long)&__erodata;
+        src_addr += (unsigned long)(&__data_end__) - (unsigned long)(&__data_start__);
         memcpy((void *)(&__ram_code_start__), \
                (void *)src_addr, \
-               (uint32_t)(&__ram_code_end__) - (uint32_t)(&__ram_code_start__));
+               (unsigned long)(&__ram_code_end__) - (unsigned long)(&__ram_code_start__));
     }
 }
 
@@ -61,12 +61,12 @@ void section_ram_code_copy(void)
  */
 void section_bss_clear(void)
 {
-    extern uint32_t __bss_start__;
-    extern uint32_t __bss_end__;
+    extern unsigned long __bss_start__;
+    extern unsigned long __bss_end__;
 
     memset((void *)(&__bss_start__), \
            0, \
-           (uint32_t)(&__bss_end__) - (uint32_t)(&__bss_start__));
+           (unsigned long)(&__bss_end__) - (unsigned long)(&__bss_start__));
 
 }
 

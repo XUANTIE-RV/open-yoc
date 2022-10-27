@@ -18,26 +18,31 @@ uint32_t g_system_clock = IHS_VALUE;
 
 uint32_t soc_get_cpu_freq(uint32_t idx)
 {
+    ///< TODO：返回cpu的频率g_system_clock
     return g_system_clock;
 }
 
 uint32_t soc_get_cur_cpu_freq(void)
 {
+    ///< TODO：返回当前cpu的频率g_system_clock
     return g_system_clock;
 }
 
 uint32_t soc_get_coretim_freq(void)
 {
+    ///< TODO：返回coretime的频率g_system_clock
     return g_system_clock;
 }
 
 uint32_t soc_get_uart_freq(uint32_t idx)
 {
+    ///< TODO：返回uart的频率g_system_clock
     return g_system_clock;
 }
 
 csi_error_t soc_sysclk_config(system_clk_config_t *config)
 {
+    
     return CSI_OK;
 }
 

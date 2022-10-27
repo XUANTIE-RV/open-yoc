@@ -1,3 +1,6 @@
+/*
+ * Copyright (C) 2019-2022 Alibaba Group Holding Limited
+ */
 #include <stdbool.h>
 #include <aos/aos.h>
 #include <aos/kv.h>
@@ -40,4 +43,3 @@ void board_yoc_init()
 
     LOGI(TAG, "Build:%s,%s", __DATE__, __TIME__);
 }
-

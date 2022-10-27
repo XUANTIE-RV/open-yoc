@@ -41,7 +41,6 @@
 #define CONFIG_GPIO_NUM  1
 #define CONFIG_SPI_NUM      2
 #define CONFIG_IIC_NUM      2
-
 #define CONFIG_GPIO_PIN_NUM 23
 #define CONFIG_TIMER_NUM 2
 #define CONFIG_RTC_NUM 1
@@ -51,5 +50,6 @@
 #define CONFIG_AES_NUM 1
 #define CONFIG_PMU_NUM  1
 #define CONFIG_ADC_NUM 1
-
+#define CONFIG_OTP_BANK_SIZE 1024
+#define SHA_CONTEXT_SIZE  224
 #endif  /* _SOC_H_ */

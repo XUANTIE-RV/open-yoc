@@ -32,6 +32,7 @@ int recio_register_ws(const char *path);
 int recio_register_mem(const char *path);
 int recio_register_ringb(const char *path);
 int recio_register_sdbuf(const char *path);
+int recio_register_usb(const char *path);
 
 recio_t *recio_open(const char *path);
 int recio_close(recio_t *io);

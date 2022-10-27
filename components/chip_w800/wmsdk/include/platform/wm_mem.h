@@ -22,7 +22,7 @@
 #if 1//for doxygen
 //#ifdef CONFIG_KERNEL_FREERTOS
 //#define WM_MEM_DEBUG 1
-#if WM_MEM_DEBUG
+#if defined(WM_MEM_DEBUG) && WM_MEM_DEBUG
 
 #include "wm_list.h"
 

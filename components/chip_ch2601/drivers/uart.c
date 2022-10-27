@@ -250,7 +250,7 @@ ATTRIBUTE_DATA csi_error_t csi_uart_baud(csi_uart_t *uart, uint32_t baud)
 
     tx_pin_uart_to_gpio(uart->dev.idx, &tx_pin);
     rx_pin_uart_to_gpio(uart->dev.idx, &rx_pin);
-#ifdef CONFIG_CHIP_ALKAID
+#ifdef CONFIG_CHIP_CH2601
     mdelay(10);
 #endif
     flag =  csi_irq_save();
@@ -285,7 +285,7 @@ csi_error_t csi_uart_format(csi_uart_t *uart,  csi_uart_data_bits_t data_bits,
 
     tx_pin_uart_to_gpio(uart->dev.idx, &tx_pin);
     rx_pin_uart_to_gpio(uart->dev.idx, &rx_pin);
-#ifdef CONFIG_CHIP_ALKAID
+#ifdef CONFIG_CHIP_CH2601
     mdelay(10);
 #endif
     switch (data_bits) {

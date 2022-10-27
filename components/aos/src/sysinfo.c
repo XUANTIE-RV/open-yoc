@@ -15,7 +15,7 @@
 #endif
 
 #ifndef CONFIG_SDK_VERSION
-#define CONFIG_SDK_VERSION "V7.2.2_20200319"
+#define CONFIG_SDK_VERSION "v7.6.0_20220930"
 #endif
 
 
@@ -44,13 +44,18 @@ char *aos_get_os_version(void)
     return (char *)ret;
 }
 
-SYSINFO_WEAK char *aos_get_app_version(void)
+char *aos_get_app_version(void)
 {
     int32_t     ret;
     static char str_version[65] = {
         0,
     };
     uint32_t len = sizeof(str_version) - 1;
+
+#if defined(CONFIG_OTA_AB) && (CONFIG_OTA_AB > 0)
+    extern const char *bootab_get_cur_imgs_version(void);
+    return (char *)bootab_get_cur_imgs_version();
+#endif
 
     if (str_version[0] == 0) {
 #ifdef CONFIG_TEE_CA
@@ -72,7 +77,7 @@ SYSINFO_WEAK char *aos_get_app_version(void)
 
 SYSINFO_WEAK const char *aos_get_kernel_version(void)
 {
-    const char *ret = "AOS-R-1.2.0";
+    const char *ret = "AOS-R-3.3.0";
     return ret;
 }
 

@@ -204,5 +204,6 @@ int phy_gpioretention_unregister(gpio_pin_e pin);
 int phy_gpioretention_register(gpio_pin_e pin);
 void phy_gpioretention_prepare_sleep_action(void);
 void phy_gpioretention_prepare_wakeup_action(void);
+__attribute__((section(".__sram.code.phy_gpioretention_disable"))) void phy_gpioretention_disable(void);
 
 #endif

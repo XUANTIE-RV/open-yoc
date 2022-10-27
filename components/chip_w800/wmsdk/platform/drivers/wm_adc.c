@@ -412,7 +412,7 @@ u32 adc_get_offset(void)
 
     waitForAdcDone();
 	adc_offset = tls_read_adc_result(); //��ȡadcת�����
-	signedToUnsignedData(&adc_offset);
+	signedToUnsignedData((u32 *)&adc_offset);
 	tls_adc_stop(0);
 
 	//printf("\r\noffset:%d\r\n", adc_offset);
@@ -428,7 +428,7 @@ int adc_get_inputVolt(u8 channel)
 {
 	int average = 0;
 	double voltage = 0.0;
-	int i = 0;
+	//int i = 0;
 	u32 offfset = 0;
 	offfset =	adc_get_offset();
 
@@ -440,17 +440,17 @@ int adc_get_inputVolt(u8 channel)
 
 	waitForAdcDone();
 	average = tls_read_adc_result();
-	signedToUnsignedData(&average);
+	signedToUnsignedData((u32 *)&average);
 	tls_adc_stop(0);
 
 	if ((channel == 8) || (channel == 9))
 	{
-		voltage = ((double)average - (double)adc_offset)/4.0;
+		voltage = ((double)average - (double)offfset)/4.0;
 		voltage = voltage*(126363/1000)/1000000;
 	}
 	else
 	{
-		voltage = ((double)average - (double)adc_offset)/4.0;
+		voltage = ((double)average - (double)offfset)/4.0;
 		voltage = 1.196 + voltage*(126363/1000.0)/1000000;
 	}
 

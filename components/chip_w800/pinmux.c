@@ -116,6 +116,10 @@ int32_t drv_pinmux_config(pin_name_e pin, pin_func_e pin_func)
         {
             wm_pwm1_config(WM_IO_PB_00);
         }
+        else if (PB0_PSRAM_CK == pin_func)
+        {
+            wm_psram_ck_config(WM_IO_PB_00);
+        }
     }
     else if (PB1 == pin)
     {
@@ -130,6 +134,10 @@ int32_t drv_pinmux_config(pin_name_e pin, pin_func_e pin_func)
         else if (PB1_PWM == pin_func)
         {
             wm_pwm2_config(WM_IO_PB_01);
+        }
+        else if (PB1_PSRAM_CS == pin_func)
+        {
+            wm_psram_cs_config(WM_IO_PB_01);
         }
     }
     else if (PB2 == pin)
@@ -146,6 +154,10 @@ int32_t drv_pinmux_config(pin_name_e pin, pin_func_e pin_func)
         {
             wm_pwm3_config(WM_IO_PB_02);
         }
+        else if (PB2_PSRAM_DAT0 == pin_func)
+        {
+            wm_psram_dat0_config(WM_IO_PB_02);
+        }
     }
     else if (PB3 == pin)
     {
@@ -160,6 +172,10 @@ int32_t drv_pinmux_config(pin_name_e pin, pin_func_e pin_func)
         else if (PB3_PWM == pin_func)
         {
             wm_pwm4_config(WM_IO_PB_03);
+        }
+        else if (PB3_PSRAM_DAT1 == pin_func)
+        {
+            wm_psram_dat1_config(WM_IO_PB_03);
         }
     }
     else if (PB4 == pin)
@@ -176,6 +192,10 @@ int32_t drv_pinmux_config(pin_name_e pin, pin_func_e pin_func)
         {
             wm_spi_cs_config(WM_IO_PB_04);
         }
+        else if (PB4_PSRAM_DAT2 == pin_func)
+        {
+            wm_psram_dat2_config(WM_IO_PB_04);
+        }
     }
     else if (PB5 == pin)
     {
@@ -190,6 +210,10 @@ int32_t drv_pinmux_config(pin_name_e pin, pin_func_e pin_func)
         else if (PB5_SPI_DO == pin_func)
         {
             wm_spi_do_config(WM_IO_PB_05);
+        }
+        else if (PB5_PSRAM_DAT3 == pin_func)
+        {
+            wm_psram_dat3_config(WM_IO_PB_05);
         }
     }
     else if (PB6 == pin)

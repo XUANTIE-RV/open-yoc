@@ -8,7 +8,7 @@
 #include "aos/hal/uart.h"
 
 static uart_dev_t _uart, *g_console_handle;
-
+static int g_console_uart;
 static uint16_t g_console_buf_size = 128;
 static aos_mutex_t g_console_mutex_handle;
 const char *console_get_devname(void)
@@ -45,6 +45,7 @@ void console_init(int idx, uint32_t baud, uint16_t buf_size)
         g_console_handle = &_uart;
         g_console_buf_size = buf_size;
     }
+    g_console_uart = idx;
 }
 
 void console_deinit(void)
@@ -56,12 +57,26 @@ void console_deinit(void)
     return;
 }
 
-int uart_putc(int ch)
+int console_get_uart(void)
 {
-    if (g_console_handle == NULL) {
-        return -1;
+    return g_console_uart;
+}
+
+int uart_write(const void *buf, size_t size)
+{
+    CHECK_PARAM(g_console_handle, -1);
+    if (!aos_irq_context()) {
+        hal_uart_send(g_console_handle, buf, size, AOS_WAIT_FOREVER);
+    } else {
+        hal_uart_send_poll(g_console_handle, buf, size);
     }
 
+    return size;
+}
+
+int uart_putc(int ch)
+{
+    CHECK_PARAM(g_console_handle, -1);
     if (ch == '\n') {
         int data = '\r';
         if (!aos_irq_context()) {
@@ -97,6 +112,7 @@ int uart_getc(void)
 __attribute__((weak)) int os_critical_enter(unsigned int *lock)
 {
     int ret;
+    CHECK_PARAM(g_console_handle, -1);
     ret = aos_mutex_lock(&g_console_mutex_handle,10000);
     return ret;
 }
@@ -104,6 +120,7 @@ __attribute__((weak)) int os_critical_enter(unsigned int *lock)
 __attribute__((weak)) int os_critical_exit(unsigned int *lock)
 {
     int ret;
+    CHECK_PARAM(g_console_handle, -1);
     ret = aos_mutex_unlock(&g_console_mutex_handle);
     return ret;
 }

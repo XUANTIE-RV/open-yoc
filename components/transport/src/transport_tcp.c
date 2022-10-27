@@ -83,7 +83,7 @@ static int tcp_connect(transport_handle_t t, const char *host, int port, int tim
     LOGD(TAG, "[sock=%d],connecting to server IP:%s,Port:%d...",
              tcp->sock, ipaddr_ntoa((const ip_addr_t*)&remote_ip.sin_addr.s_addr), port);
     if (connect(tcp->sock, (struct sockaddr *)(&remote_ip), sizeof(struct sockaddr)) != 0) {
-        close(tcp->sock);
+        closesocket(tcp->sock);
         tcp->sock = -1;
         return -1;
     }
@@ -94,12 +94,12 @@ static int tcp_write(transport_handle_t t, const char *buffer, int len, int time
 {
     int poll;
     transport_tcp_t *tcp = (transport_tcp_t *)transport_get_context_data(t);
+
     if ((poll = transport_poll_write(t, timeout_ms)) <= 0) {
+        LOGE(TAG, "tcp_write, select ret:%d, timeout:%d", poll, timeout_ms);
         return poll;
     }
-    // network_t *n = transport_get_n(t);
-    // return n->net_write(n, (unsigned char *)buffer, len, timeout_ms);
-    return write(tcp->sock, buffer, len);
+    return send(tcp->sock, (const void *)buffer, (size_t)len, 0);
 }
 
 static int tcp_read(transport_handle_t t, char *buffer, int len, int timeout_ms)
@@ -109,9 +109,7 @@ static int tcp_read(transport_handle_t t, char *buffer, int len, int timeout_ms)
     if ((poll = transport_poll_read(t, timeout_ms)) <= 0) {
         return poll;
     }
-    // network_t *n = transport_get_n(t);
-    // int read_len = n->net_read(n, (unsigned char *)buffer, len, timeout_ms);
-    int read_len = read(tcp->sock, buffer, len);
+    int read_len = recv(tcp->sock, (void *)buffer, (size_t)len, 0);
     if (read_len == 0) {
         return -1;
     }
@@ -131,17 +129,22 @@ static int tcp_poll_read(transport_handle_t t, int timeout_ms)
     struct timeval timeout;
     transport_utils_ms_to_timeval(timeout_ms, &timeout);
     ret = select(tcp->sock + 1, &readset, NULL, &errset, &timeout);
-    if (ret > 0 && FD_ISSET(tcp->sock, &errset)) {
-        int sock_errno = 0;
-        uint32_t optlen = sizeof(sock_errno);
-        ret = getsockopt(tcp->sock, SOL_SOCKET, SO_ERROR, &sock_errno, &optlen);
-        if (ret == 0) {
-            LOGE(TAG, "tcp_poll_read select error %d, errno = %d, fd = %d", sock_errno, (sock_errno), tcp->sock);
-        } else {
-            LOGE(TAG, "tcp_poll_read getsockopt error.");
-        }
-        ret = -1;
+    if (ret == 0) {
+        LOGE(TAG, "tcp_poll_read, select ret:%d, timeout", ret);
+        return -1;
     }
+    // FIXME:
+    // if (ret > 0 && FD_ISSET(tcp->sock, &errset)) {
+    //     int sock_errno = 0;
+    //     uint32_t optlen = sizeof(sock_errno);
+    //     ret = getsockopt(tcp->sock, SOL_SOCKET, SO_ERROR, &sock_errno, &optlen);
+    //     if (ret == 0) {
+    //         LOGE(TAG, "tcp_poll_read select error %d, errno = %d, fd = %d", sock_errno, (sock_errno), tcp->sock);
+    //     } else {
+    //         LOGE(TAG, "tcp_poll_read getsockopt error.");
+    //     }
+    //     ret = -1;
+    // }
     return ret;
 }
 
@@ -156,16 +159,21 @@ static int tcp_poll_write(transport_handle_t t, int timeout_ms)
     FD_SET(tcp->sock, &writeset);
     FD_SET(tcp->sock, &errset);
     struct timeval timeout;
+
     transport_utils_ms_to_timeval(timeout_ms, &timeout);
     ret = select(tcp->sock + 1, NULL, &writeset, &errset, &timeout);
+    if (ret == 0) {
+        LOGE(TAG, "tcp_poll_write, select ret:%d, timeout", ret);
+        return -1;
+    }
     if (ret > 0 && FD_ISSET(tcp->sock, &errset)) {
         int sock_errno = 0;
         uint32_t optlen = sizeof(sock_errno);
         ret = getsockopt(tcp->sock, SOL_SOCKET, SO_ERROR, &sock_errno, &optlen);
         if (ret == 0) {
-            LOGE(TAG, "tcp_poll_read select error %d, errno = %d, fd = %d", sock_errno, (sock_errno), tcp->sock);
+            LOGE(TAG, "tcp_poll_write select error %d, errno = %d, fd = %d", sock_errno, (sock_errno), tcp->sock);
         } else {
-            LOGE(TAG, "tcp_poll_read getsockopt error.");
+            LOGE(TAG, "tcp_poll_write getsockopt error.");
         }
         ret = -1;
     }
@@ -177,11 +185,9 @@ static int tcp_close(transport_handle_t t)
     transport_tcp_t *tcp = transport_get_context_data(t);
     int ret = -1;
     if (tcp->sock >= 0) {
-        ret = close(tcp->sock);
+        ret = closesocket(tcp->sock);
         tcp->sock = -1;
     }
-    // network_t *n = transport_get_n(t);
-    // n->net_disconncet(n);
     return ret;
 }
 

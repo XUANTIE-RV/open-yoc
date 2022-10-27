@@ -18,16 +18,16 @@ extern "C" {
 #define CONFIG_MAX_PARTITION_NUM 12
 #endif
 
-#ifndef CONFIG_MTB_CRC_NO_CHECK
-#define CONFIG_MTB_CRC_NO_CHECK 0
-#endif
-
 #ifndef CONFIG_PARITION_NO_VERIFY
 #define CONFIG_PARITION_NO_VERIFY 1
 #endif
 
 #ifndef CONFIG_NOT_SUPORRT_SASC
-#define CONFIG_NOT_SUPORRT_SASC 0
+#define CONFIG_NOT_SUPORRT_SASC 1
+#endif
+
+#ifndef CONFIG_IMG_AUTHENTICITY_NOT_CHECK
+#define CONFIG_IMG_AUTHENTICITY_NOT_CHECK 0
 #endif
 
 typedef int partition_t;
@@ -37,7 +37,7 @@ typedef struct {
     uint32_t base_addr;                         // Flash基地址
     uint32_t start_addr;                        // 分区的偏移地址（不是绝对地址）
     uint32_t length;                            // 分区大小
-    uint16_t sector_size;                       // Flash sector大小
+    uint32_t sector_size;                       // Flash sector大小
     uint8_t  idx;
 
     void    *flash_dev;

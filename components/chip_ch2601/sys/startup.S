@@ -70,8 +70,12 @@ __Vectors:
 
     .text
     .align   2
-    .long    Reset_Handler
-    .rept    15
+    j        Reset_Handler
+    .align   2
+    .long    0x594B5343 /* CSKY ASCII */
+    .long    0x594B5343 /* CSKY ASCII */
+    .align   2
+    .rept    13
     .long    0
     .endr
     .long    Reset_Handler

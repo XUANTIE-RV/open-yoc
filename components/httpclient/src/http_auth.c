@@ -16,14 +16,15 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdarg.h>
+#include <inttypes.h>
 
 #include "lwip/sockets.h"
 #include "mbedtls/base64.h"
 #include "mbedtls/md5.h"
-#include "transport/tperrors.h"
 
 #include "http_utils.h"
 #include "http_auth.h"
+#include "http_client.h"
 
 
 #define MD5_MAX_LEN (33)
@@ -51,7 +52,7 @@ static int md5_printf(char *md, const char *fmt, ...)
     len = vasprintf((char **)&buf, fmt, ap);
     if (buf == NULL) {
         va_end(ap);
-        return WEB_FAIL;
+        return HTTP_CLI_FAIL;
     }
 
     mbedtls_md5_init(&md5_ctx);
@@ -129,7 +130,7 @@ char *http_auth_digest(const char *username, const char *password, http_auth_dat
         }
     }
     asprintf(&auth_str, "Digest username=\"%s\", realm=\"%s\", nonce=\"%s\", uri=\"%s\", algorithm=\"MD5\", "
-             "response=\"%s\", opaque=\"%s\", qop=%s, nc=%08x, cnonce=\"%016llx\"",
+             "response=\"%s\", opaque=\"%s\", qop=%s, nc=%08x, cnonce=\"%016" PRIx64 "\"",
              username, auth_data->realm, auth_data->nonce, auth_data->uri, digest, auth_data->opaque, auth_data->qop, auth_data->nc, auth_data->cnonce);
 _digest_exit:
     free(ha1);

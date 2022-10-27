@@ -60,12 +60,18 @@ static int yoc_spiflash_close(aos_dev_t *dev)
 
 static int yoc_spiflash_read(aos_dev_t *dev, uint32_t addroff, void *buff, int32_t bytesize)
 {
+#if defined(CONFIG_SPIFLASH_READ_DIRECT) && CONFIG_SPIFLASH_READ_DIRECT
+    flash_dev_t *flash = (flash_dev_t*)dev;
+    memcpy(buff, (void *)(flash->info->start + addroff), bytesize);
+    return 0;
+#else
     flash_dev_t *flash = (flash_dev_t*)dev;
     int ret;
 
     ret = csi_spiflash_read(flash->handle, flash->info->start + addroff, buff, bytesize);
 
     return ret < 0 ? -EIO : 0;
+#endif
 }
 
 static int yoc_spiflash_program(aos_dev_t *dev, uint32_t dstaddr, const void *srcbuf, int32_t bytesize)

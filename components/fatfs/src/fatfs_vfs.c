@@ -11,7 +11,7 @@
 #include "fatfs_vfs.h"
 #include "ff.h"
 
-static const char *fatfs_mnt_path = "/fatfs0";
+static char *fatfs_mnt_path = SD_FATFS_MOUNTPOINT;
 
 typedef struct {
     int dd_vfs_fd;
@@ -19,7 +19,6 @@ typedef struct {
     aos_dirent_t *dir;
 } fatfs_dir_t;
 
-#if 0
 static char *translate_relative_path(const char *path)
 {
     int len, prefix_len;
@@ -35,7 +34,7 @@ static char *translate_relative_path(const char *path)
         return NULL;
     }
 
-    len = len - prefix_len;
+    //len = len - prefix_len;
     relpath = (char *)aos_malloc(len + 1);
     if (!relpath) {
         return NULL;
@@ -43,13 +42,13 @@ static char *translate_relative_path(const char *path)
 
     memset(relpath, 0, len + 1);
 
-    p = (char *)(path + prefix_len);
+    //p = (char *)(path + prefix_len);
+    p = (char *)path;
     memcpy(relpath, p, len);
     relpath[len] = '\0';
 
     return relpath;
 }
-#endif
 
 static int _fatfs_mode_conv(int flags)
 {
@@ -78,29 +77,29 @@ static int _fatfs_mode_conv(int flags)
 static int _fatfs_ret_to_err(int ret)
 {
     switch (ret) {
-        case FR_OK:
-            return 0;
-        case FR_NO_FILESYSTEM:
-        case FR_NOT_ENABLED:
-        case FR_DISK_ERR:
-        case FR_INVALID_DRIVE:
-        case FR_NOT_READY:
-            return -ENODEV;
-        case FR_TOO_MANY_OPEN_FILES:
-            return -EMFILE;
-        case FR_EXIST:
-            return -EEXIST;
-        case FR_INVALID_PARAMETER:
-            return -EINVAL;
-        case FR_NO_FILE:
-        case FR_NO_PATH:
-            return -ENOENT;
-        case FR_INVALID_NAME:
-            return -ENAMETOOLONG;
-        case FR_LOCKED:
-            return -ETXTBSY;
-        default:
-            return -EIO;
+    case FR_OK:
+        return 0;
+    case FR_NO_FILESYSTEM:
+    case FR_NOT_ENABLED:
+    case FR_DISK_ERR:
+    case FR_INVALID_DRIVE:
+    case FR_NOT_READY:
+        return -ENODEV;
+    case FR_TOO_MANY_OPEN_FILES:
+        return -EMFILE;
+    case FR_EXIST:
+        return -EEXIST;
+    case FR_INVALID_PARAMETER:
+        return -EINVAL;
+    case FR_NO_FILE:
+    case FR_NO_PATH:
+        return -ENOENT;
+    case FR_INVALID_NAME:
+        return -ENAMETOOLONG;
+    case FR_LOCKED:
+        return -ETXTBSY;
+    default:
+        return -EIO;
     }
 }
 
@@ -118,6 +117,7 @@ static int _fatfs_open(file_t *fp, const char *path, int flags)
     ret = f_open(file, path, _fatfs_mode_conv(flags));
 
     if (ret == FR_OK) {
+
         fp->f_arg = file;
     }
 
@@ -173,19 +173,76 @@ static ssize_t _fatfs_write(file_t *fp, const char *buf, size_t len)
     return _fatfs_ret_to_err(ret);
 }
 
-static off_t _fatfs_lseek(file_t *fp, off_t off, int whence)
+#if 0
+static long int _fatfs_tell(file_t *fp)
 {
     FRESULT ret;
     FIL *file;
 
-    if (whence == SEEK_CUR || whence == SEEK_END) {
-        return -EPERM;
+    file = (FIL*)(fp->f_arg);
+    ret = f_tell(file);
+
+    return ret;
+}
+#endif
+
+static int _fatfs_access(file_t *fp, const char *path, int amode)
+{
+    char *relpath = NULL;
+    FILINFO info;
+    int32_t len, ret;
+
+#if FF_FS_READONLY
+    if (amode == W_OK) {
+        return -EACCES;
+    }
+#endif
+
+    relpath = translate_relative_path(path);
+    if (!relpath) {
+        return -EINVAL;
     }
 
-    file = (FIL*)(fp->f_arg);
-    ret = f_lseek(file, off);
+    len = strlen(relpath);
+    if (relpath[len - 1] == ':' && relpath[len] == '\0') {
+        ret = FR_OK;
+    } else {
+        ret = f_stat(relpath, &info);
+    }
 
-    return _fatfs_ret_to_err(ret);
+    aos_free(relpath);
+    return ret;
+}
+
+static off_t _fatfs_lseek(file_t *fp, off_t off, int whence)
+{
+    int64_t cur_pos, new_pos, size;
+
+    int32_t ret = -EPERM;
+
+    FIL *f = (FIL *)(fp->f_arg);
+
+    new_pos = 0;
+
+    if (f) {
+        if (whence == SEEK_SET) {
+            new_pos = off;
+        } else if (whence == SEEK_CUR) {
+            cur_pos = f_tell(f);
+            new_pos = cur_pos + off;
+        } else if (whence == SEEK_END) {
+            size    = f_size(f);
+            new_pos = size + off;
+        } else {
+            return -EINVAL;
+        }
+
+        if ((ret = f_lseek(f, new_pos)) != FR_OK) {
+            return ret;
+        }
+    }
+
+    return new_pos;
 }
 
 static int _fatfs_sync(file_t *fp)
@@ -199,7 +256,7 @@ static int _fatfs_sync(file_t *fp)
     return _fatfs_ret_to_err(ret);
 }
 
-static int _fatfs_stat(file_t *fp, const char *path, struct stat *st)
+static int _fatfs_stat(file_t *fp, const char *path, struct aos_stat *st)
 {
     FRESULT ret;
     FILINFO fno = {0};
@@ -222,7 +279,7 @@ static int _fatfs_stat(file_t *fp, const char *path, struct stat *st)
 static int _fatfs_unlink(file_t *fp, const char *path)
 {
     FRESULT ret;
- 
+
     ret = f_unlink(path);
 
     return _fatfs_ret_to_err(ret);
@@ -350,36 +407,120 @@ static int _fatfs_rmdir(file_t *fp, const char *path)
     return ret;
 }
 
+static void _fatfs_rewinddir(file_t *fp, aos_dir_t *dir)
+{
+    FF_DIR *dirp;
+    fatfs_dir_t *dp = (fatfs_dir_t *)dir;
+
+    if (!dp) {
+        return;
+    }
+
+    dirp = (FF_DIR*)(fp->f_arg);
+    f_rewinddir(dirp);
+
+    return;
+}
+
+static long _fatfs_telldir(file_t *fp, aos_dir_t *dir)
+{
+    FF_DIR *dirp;
+    fatfs_dir_t *dp = (fatfs_dir_t *)dir;
+
+    if (!dp) {
+        return -1;
+    }
+
+    dirp = (FF_DIR*)(fp->f_arg);
+
+    return (long)(dirp->dptr);
+}
+
+static void _fatfs_seekdir(file_t *fp, aos_dir_t *dir, long loc)
+{
+    FF_DIR *dirp;
+    fatfs_dir_t *dp = (fatfs_dir_t *)dir;
+
+    if (!dp) {
+        return;
+    }
+
+    dirp = (FF_DIR*)(fp->f_arg);
+    dirp->dptr = loc;
+
+    return;
+}
+
+static int _fatfs_statfs (file_t *fp, const char *path, struct aos_statfs *suf)
+{
+    FATFS *fs;
+    int32_t ret = -EPERM;
+    char *relpath = NULL;
+    DWORD fre_clust, fre_sect, tot_sect;
+
+    relpath = translate_relative_path(path);
+    if (!relpath) {
+        return -EINVAL;
+    }
+    /* Get volume information and free clusters*/
+    ret = f_getfree(relpath, &fre_clust, &fs);
+    if (ret != FR_OK) {
+        aos_free(relpath);
+        return ret;
+    }
+
+    /* Get total sectors and free sectors */
+    tot_sect = (fs->n_fatent - 2) * fs->csize;
+    fre_sect = fre_clust * fs->csize;
+    suf->f_blocks = tot_sect;
+    suf->f_bfree = fre_sect;
+#if FF_MAX_SS != FF_MIN_SS
+    suf->f_bsize = fs->ssize;
+#else
+    suf->f_bsize = FF_MIN_SS;
+#endif
+
+    aos_free(relpath);
+
+    return ret;
+}
+
 static const fs_ops_t fatfs_ops = {
     .open       = &_fatfs_open,
     .close      = &_fatfs_close,
     .read       = &_fatfs_read,
     .write      = &_fatfs_write,
+    .access     = &_fatfs_access,
     .lseek      = &_fatfs_lseek,
     .sync       = &_fatfs_sync,
     .stat       = &_fatfs_stat,
     .unlink     = &_fatfs_unlink,
+    .remove     = &_fatfs_unlink,
     .rename     = &_fatfs_rename,
     .opendir    = &_fatfs_opendir,
     .readdir    = &_fatfs_readdir,
     .closedir   = &_fatfs_closedir,
     .mkdir      = &_fatfs_mkdir,
     .rmdir      = &_fatfs_rmdir,
+    .rewinddir  = &_fatfs_rewinddir,
+    .telldir    = &_fatfs_telldir,
+    .seekdir    = &_fatfs_seekdir,
+    .statfs     = &_fatfs_statfs,
     .ioctl      = NULL
 };
 
 int vfs_fatfs_register(void)
 {
     FRESULT ret;
-    FATFS *fs;
-
-    fs = aos_malloc(sizeof(FATFS));
+    static FATFS *fs = NULL;
 
     if (fs == NULL) {
-        return -1;
+        fs = aos_malloc(sizeof(FATFS));
+        if (fs == NULL)
+            return -1;
     }
 
-    ret = f_mount(fs, "", 1);
+    ret = f_mount(fs, fatfs_mnt_path, 1);
 
     if (ret != FR_OK) {
         return -1;
@@ -389,16 +530,10 @@ int vfs_fatfs_register(void)
 }
 
 
-#if 0
+#if 1
 int vfs_fatfs_unregister(void)
 {
-	FRESULT ret;
-
-    SPIFFS_unmount(g_spiffs_mgr->fs);
-    ret = f_mount(NULL, "", 1);
-	if (ret != FR_OK){
-		return -1;
-	}
+    f_mount(NULL, "", 1);
     return aos_unregister_fs(fatfs_mnt_path);
 }
 #endif

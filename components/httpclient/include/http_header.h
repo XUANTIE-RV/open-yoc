@@ -17,7 +17,7 @@
 
 
 #include "aos/queue.h"
-#include "transport/tperrors.h"
+#include "http_client.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -41,10 +41,10 @@ http_header_handle_t http_header_init();
  * @param[in]  header  The header
  *
  * @return
- *     - WEB_OK
- *     - WEB_FAIL
+ *     - HTTP_CLI_OK
+ *     - HTTP_CLI_FAIL
  */
-web_err_t http_header_clean(http_header_handle_t header);
+http_errors_t http_header_clean(http_header_handle_t header);
 
 /**
  * @brief      Cleanup with http_header_clean and destroy http header handle object
@@ -52,10 +52,10 @@ web_err_t http_header_clean(http_header_handle_t header);
  * @param[in]  header  The header
  *
  * @return
- *     - WEB_OK
- *     - WEB_FAIL
+ *     - HTTP_CLI_OK
+ *     - HTTP_CLI_FAIL
  */
-web_err_t http_header_destroy(http_header_handle_t header);
+http_errors_t http_header_destroy(http_header_handle_t header);
 
 /**
  * @brief      Add a key-value pair of http header to the list,
@@ -66,10 +66,10 @@ web_err_t http_header_destroy(http_header_handle_t header);
  * @param[in]  value   The value
  *
  * @return
- *     - WEB_OK
- *     - WEB_FAIL
+ *     - HTTP_CLI_OK
+ *     - HTTP_CLI_FAIL
  */
-web_err_t http_header_set(http_header_handle_t header, const char *key, const char *value);
+http_errors_t http_header_set(http_header_handle_t header, const char *key, const char *value);
 
 /**
  * @brief      Sample as `http_header_set` but the value can be formated
@@ -92,10 +92,10 @@ int http_header_set_format(http_header_handle_t header, const char *key, const c
  * @param[out] value   The value
  *
  * @return
- *     - WEB_OK
- *     - WEB_FAIL
+ *     - HTTP_CLI_OK
+ *     - HTTP_CLI_FAIL
  */
-web_err_t http_header_get(http_header_handle_t header, const char *key, char **value);
+http_errors_t http_header_get(http_header_handle_t header, const char *key, char **value);
 
 /**
  * @brief      Create HTTP header string from the header with index, output string to buffer with buffer_len
@@ -117,10 +117,10 @@ int http_header_generate_string(http_header_handle_t header, int index, char *bu
  * @param[in]  key     The key
  *
  * @return
- *     - WEB_OK
- *     - WEB_FAIL
+ *     - HTTP_CLI_OK
+ *     - HTTP_CLI_FAIL
  */
-web_err_t http_header_delete(http_header_handle_t header, const char *key);
+http_errors_t http_header_delete(http_header_handle_t header, const char *key);
 
 #ifdef __cplusplus
 }

@@ -3,8 +3,8 @@ ifeq ($(V),1)
 CPRE :=
 VERB := --verbose
 endif
-FLASH_SCRIPT=script/flash.sh
-AFTER_BUILD_SCRIPT=script/aft_build.sh
+MK_TEMPFILES_PATH=temp
+AFTER_BUILD_SCRIPT=${MK_TEMPFILES_PATH}/script/aft_build.sh
 SOLUTION_NAME:=$(shell cat package.yaml | grep -w name | sed 's/[[:space:]\"]//g' | awk -F":" '{print $$2}')
 
 MK_GENERATED_IMGS_PATH:=generated
@@ -14,8 +14,8 @@ PRODUCT_BIN:=product
 startup: all
 
 all:
-	@echo "Build Solution by $(BOARD) "
-	$(CPRE) scons $(VERB) --board=$(BOARD) -j4
+	@echo "Build Solution by $(BOARD) $(SDK) "
+	$(CPRE) scons $(VERB) --board=$(BOARD) --sdk=$(SDK) -j4
 	@echo YoC SDK Done
 
 	@echo [INFO] Create bin files
@@ -29,22 +29,16 @@ all:
 
 .PHONY:flash
 flash:
-	$(CPRE) if [ -f ./$(FLASH_SCRIPT) ]; then \
-		chmod +x ./$(FLASH_SCRIPT); \
-		./$(FLASH_SCRIPT) flash; \
-	else \
-		$(PRODUCT_BIN) flash $(MK_GENERATED_IMGS_PATH)/images.zip -w prim;\
-	fi;
+	$(CPRE) scons --flash=prim --board=$(BOARD) --sdk=$(SDK)
+
 
 .PHONY:flashall
 flashall:
-	$(CPRE) if [ -f ./$(FLASH_SCRIPT) ]; then \
-		chmod +x ./$(FLASH_SCRIPT); \
-		./$(FLASH_SCRIPT) flashall; \
-	else \
-		$(PRODUCT_BIN) flash $(MK_GENERATED_IMGS_PATH)/images.zip -a;\
-	fi;
+	$(CPRE) scons --flash=all --board=$(BOARD) --sdk=$(SDK)
 
+.PHONY:erasechip
+erasechip:
+	$(CPRE) scons --flash=erasechip --board=$(BOARD) --sdk=$(SDK)
 sdk:
 	$(CPRE) yoc sdk
 
@@ -52,4 +46,4 @@ sdk:
 clean:
 	$(CPRE) scons -c
 	$(CPRE) find . -name "*.[od]" -delete
-	$(CPRE) rm yoc_sdk yoc.* generated out script misc -rf .gdbinit
+	$(CPRE) rm yoc_sdk yoc.* generated out ${MK_TEMPFILES_PATH} -rf .gdbinit

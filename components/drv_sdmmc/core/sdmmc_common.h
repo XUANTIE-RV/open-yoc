@@ -78,6 +78,18 @@
         (((x) & 0x0000FF00) >> 8) | \
         (((x) & 0x000000FF) << 8))
 #endif
+#if defined(__riscv)
+/*! @brief Reverse byte sequence in uint32_t */
+#define SWAP_WORD_BYTE_SEQUENCE(x) (((x)                 >> 24) | \
+                                    (((x) & 0x00FF0000) >> 8) | \
+                                    (((x) & 0x0000FF00) << 8) | \
+                                    ((x)                  << 8))
+/*! @brief Reverse byte sequence for each half word in uint32_t */
+#define SWAP_HALF_WROD_BYTE_SEQUENCE(x) ((((x) & 0xFF000000) >> 8) | \
+        (((x) & 0x00FF0000) << 8) | \
+        (((x) & 0x0000FF00) >> 8) | \
+        (((x) & 0x000000FF) << 8))
+#endif
 
 /*! @brief Maximum loop count to check the card operation voltage range */
 #define FSL_SDMMC_MAX_VOLTAGE_RETRIES (1000U)
@@ -91,12 +103,14 @@
 /* Common definition for cache line size align */
 #if defined(__CC_ARM)
 #define SDMMC_DATA_BUFFER_ALIGN_CACHE 1
-#endif
-#if defined(__XCC__)
+#elif defined(__XCC__)
 #define SDMMC_DATA_BUFFER_ALIGN_CACHE 64
-#endif
-#if defined(__CSKY__)
+#elif defined(__CSKY__)
 #define SDMMC_DATA_BUFFER_ALIGN_CACHE 16
+#elif defined(__riscv)
+#define SDMMC_DATA_BUFFER_ALIGN_CACHE 64
+#else
+#define SDMMC_DATA_BUFFER_ALIGN_CACHE 64
 #endif
 
 /*! @brief SD/MMC card API's running status. */

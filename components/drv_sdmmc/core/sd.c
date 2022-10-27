@@ -1403,7 +1403,7 @@ status_t SD_ReadBlocks(sd_card_t *card, uint8_t *buffer, uint32_t startBlock, ui
     while (blockLeft) {
         nextBuffer = (buffer + blockDone * FSL_SDMMC_DEFAULT_BLOCK_SIZE);
 
-        if ((!card->noInteralAlign && (!dataAddrAlign || (((uint32_t)nextBuffer) & (sizeof(uint32_t) - 1U)))) || \
+        if ((!card->noInteralAlign && (!dataAddrAlign || (((unsigned long)nextBuffer) & (sizeof(unsigned long) - 1U)))) || \
             card->forceUseBuffer) {
             blockLeft--;
             block_countOneTime = 1U;
@@ -1426,7 +1426,7 @@ status_t SD_ReadBlocks(sd_card_t *card, uint8_t *buffer, uint32_t startBlock, ui
         blockDone += block_countOneTime;
 
         if ((!card->noInteralAlign && (!dataAddrAlign)) || card->forceUseBuffer) {
-            dcache_invalidate(forceBuffer, FSL_SDMMC_DEFAULT_BLOCK_SIZE);
+            // dcache_invalidate(forceBuffer, FSL_SDMMC_DEFAULT_BLOCK_SIZE);
             memcpy(nextBuffer, (uint8_t *)forceBuffer, FSL_SDMMC_DEFAULT_BLOCK_SIZE);
         }
     }
@@ -1453,7 +1453,7 @@ status_t SD_WriteBlocks(sd_card_t *card, const uint8_t *buffer, uint32_t startBl
     while (blockLeft) {
         nextBuffer = (buffer + blockDone * FSL_SDMMC_DEFAULT_BLOCK_SIZE);
 
-        if ((!card->noInteralAlign && (!dataAddrAlign || (((uint32_t)nextBuffer) & (sizeof(uint32_t) - 1U)))) || \
+        if ((!card->noInteralAlign && (!dataAddrAlign || (((unsigned long)nextBuffer) & (sizeof(unsigned long) - 1U)))) || \
             card->forceUseBuffer) {
             blockLeft--;
             block_countOneTime = 1U;
@@ -1607,7 +1607,7 @@ status_t SD_CardInit(sd_card_t *card)
 
 
     /* Set to max frequency in non-high speed mode. */
-    card->busClock_Hz = SDMMCHOST_SET_CARD_CLOCK(card->host.base, card->host.source_clock_hz, 25000000);
+    card->busClock_Hz = SDMMCHOST_SET_CARD_CLOCK(card->host.base, card->host.source_clock_hz, SDHOST_CLOCK);
 
     /* Set to 4-bit data bus mode. */
     if (((card->host.capability.flags) & kSDMMCHOST_Support4BitBusWidth) && (card->flags & kSD_Support4BitWidthFlag)) {

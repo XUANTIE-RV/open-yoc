@@ -34,14 +34,14 @@ typedef struct {
   \param[in]   idx  Device id
   \return      Error code
 */
-csi_error_t drv_efuse_init(csi_efuse_t *efuse, int32_t idx);
+csi_error_t csi_efuse_init(csi_efuse_t *efuse, int32_t idx);
 
 /**
   \brief       De-initialize EFUSEC Interface. stops operation and releases the software resources used by the interface
   \param[in]   efuse  Efuse efuse to operate.
   \return      None
 */
-void drv_efuse_uninit(csi_efuse_t *efuse);
+void csi_efuse_uninit(csi_efuse_t *efuse);
 
 /**
   \brief       Read data from Efuse.
@@ -51,7 +51,7 @@ void drv_efuse_uninit(csi_efuse_t *efuse);
   \param[in]   size  Number of data items to read.
   \return      Number of data items read or error code
 */
-int32_t drv_efuse_read(csi_efuse_t *efuse, uint32_t addr, void *data, uint32_t size);
+int32_t csi_efuse_read(csi_efuse_t *efuse, uint32_t addr, void *data, uint32_t size);
 
 /**
   \brief       Program data to Efuse.
@@ -61,7 +61,7 @@ int32_t drv_efuse_read(csi_efuse_t *efuse, uint32_t addr, void *data, uint32_t s
   \param[in]   cnt   Number of data items to program.
   \return      number of data items programmed or error code
 */
-int32_t drv_efuse_program(csi_efuse_t *efuse, uint32_t addr, const void *data, uint32_t size);
+int32_t csi_efuse_program(csi_efuse_t *efuse, uint32_t addr, const void *data, uint32_t size);
 
 /**
   \brief       Get Efuse information.
@@ -69,7 +69,7 @@ int32_t drv_efuse_program(csi_efuse_t *efuse, uint32_t addr, const void *data, u
   \param[out]  info   Efuse info \refs csi_efuse_info_t.
   \return      Error code
 */
-csi_error_t drv_efuse_get_info(csi_efuse_t *efuse, csi_efuse_info_t *info);
+csi_error_t csi_efuse_get_info(csi_efuse_t *efuse, csi_efuse_info_t *info);
 
 #ifdef __cplusplus
 }

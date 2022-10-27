@@ -5,24 +5,13 @@
 #ifndef KEY_MGR_PARSER_H_
 #define KEY_MGR_PARSER_H_
 
-
+#include <ctype.h>
 #include <stdint.h>
 #include <string.h>
 #include <key_mgr.h>
 
 #define TRUST_BOOT_PUBKEY_N_SIZE    128
 #define TRUST_BOOT_PUBKEY_E_SIZE    128
-
-typedef enum {
-    KEY_MANIFEST = 1,
-    KEY_JTAGKEY,
-    KEY_PUBKEY,
-    KEY_CID,
-    KEY_CIDPRIVKEY,
-    KEY_SOCCONFIG,
-    KEY_LPM,
-    KEY_INVAILD
-} key_type_e;
 
 #define KP_OK             0
 #define KP_ERR_MAGIC_NUM -1
@@ -38,12 +27,19 @@ typedef enum {
 uint32_t parser_init(void);
 
 /**
+  \brief       Update KP infomation .
+  \param[in]   kp_info  A pointer to the kp information buffer
+  \param[in]   key_size  The size of kp information
+*/
+uint32_t parser_update_kp(uint8_t *kp_info, size_t size);
+
+/**
   \brief       TEE get key from kp
   \param[in]   key_type  key type,see \ref key_type_e
   \param[out]  key     Pointer to key
   \return      return key size if > 0, else error code
 */
-uint32_t parser_get_key(key_type_e key_type, key_handle *key, uint32_t *key_size);
+uint32_t parser_get_key(km_key_type_e key_type, key_handle *key, uint32_t *key_size);
 
 /**
   \brief       TEE get kp version

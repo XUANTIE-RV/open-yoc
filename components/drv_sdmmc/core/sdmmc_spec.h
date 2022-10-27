@@ -44,6 +44,10 @@ extern "C" {
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
+#ifndef SDHOST_CLOCK
+#define SDHOST_CLOCK (40000000U)
+#endif
+
 /*! @brief SD/MMC card initialization clock frequency */
 #define SDMMC_CLOCK_400KHZ (400000U)
 /*! @brief SD card bus frequency 1 in high-speed mode */

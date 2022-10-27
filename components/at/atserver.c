@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2019-2020 Alibaba Group Holding Limited
  */
-
+#define _GNU_SOURCE
 #include <aos/aos.h>
 #include <yoc/atserver.h>
 #include "yoc/at_port.h"
@@ -103,6 +103,7 @@ typedef enum {
 #define atmode(at) at.at_mode
 
 static int atserver_process_rpc(void *context, rpc_t *rpc);
+static int show_cmd_handle(void *context, rpc_t *rpc);
 
 static atserver_uservice_t g_atserver;
 
@@ -351,7 +352,11 @@ void atserver_resume(void)
 
 void atserver_show_command(void)
 {
-    uservice_call_sync(g_atserver.srv, ATSERVER_SHOW_CMD, NULL, NULL, 0);
+    int ret = uservice_call_sync(g_atserver.srv, ATSERVER_SHOW_CMD, NULL, NULL, 0);
+    
+    if (ret < 0){
+        show_cmd_handle(NULL, NULL);
+    }
 }
 
 static void atserver_clear_buffer(void)
@@ -913,9 +918,12 @@ static int show_cmd_handle(void *context, rpc_t *rpc)
         atserver_cmd_t *atcmd = (atserver_cmd_t *)node->at;
 
         for (int i = 0; i < node->len; i++) {
-            
-            atserver_channel_send(atcmd->cmd+3, strlen(atcmd->cmd) - 3, g_atserver.timeout);
-            atserver_channel_send(";\r\n", 3, g_atserver.timeout);
+
+			int len = strlen(atcmd->cmd);
+			if (len > 3) {
+            	atserver_channel_send(atcmd->cmd + 3, len - 3, g_atserver.timeout);
+            	atserver_channel_send(";\r\n", 3, g_atserver.timeout);
+			}
 
             atcmd++;
         }

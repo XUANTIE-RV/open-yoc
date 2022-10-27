@@ -22,7 +22,6 @@
  ********************************************************************************/
 #include <stdbool.h>
 #include <sys/types.h>
-//#include <sys/_timespec.h>
 #include <stdlib.h>
 #include <stdint.h>
 
@@ -49,6 +48,7 @@
 #define TICK2MSEC(tick)     ((tick)* (1000 / CLOCKS_PER_SEC))
 
 #define TIME_ZONE           8
+extern long timezone;
 
 /* CLOCK_REALTIME refers to the standard time source.  For most
  * implementations, the standard time source is the system timer interrupt.
@@ -75,7 +75,7 @@
 
 /* Local time is the same as gmtime in this implementation */
 // #  define localtime(c)       gmtime(c)
-#  define localtime_r(c,r)   gmtime_r(c,r)
+// #  define localtime_r(c,r)   gmtime_r(c,r)
 
 /********************************************************************************
  * Public Types
@@ -100,11 +100,14 @@ typedef uint32_t  timer_t;        /* Represents one POSIX timer */
  * nanoseconds.
  */
 
+#ifndef _SYS__TIMESPEC_H_
+#define _SYS__TIMESPEC_H_
 struct timespec
 {
   time_t tv_sec;                   /* Seconds */
   long   tv_nsec;                  /* Nanoseconds */
 };
+#endif
 
 /* struct tm is the standard representation for "broken out" time.
  *
@@ -128,6 +131,7 @@ struct tm
   int tm_isdst;   /* Non-0 if daylight savings time is in effect */
 };
 
+#if !defined(__riscv)
 /* Struct itimerspec is used to define settings for an interval timer */
 
 struct itimerspec
@@ -135,7 +139,9 @@ struct itimerspec
   struct timespec it_value;    /* First time */
   struct timespec it_interval; /* and thereafter */
 };
-
+#else
+#include <sys/timespec.h>
+#endif
 /* forward reference (defined in signal.h) */
 
 struct sigevent;
@@ -158,6 +164,7 @@ extern "C"
  ********************************************************************************/
 int clock_settime(clockid_t clockid, const struct timespec *tp);
 int clock_gettime(clockid_t clockid, struct timespec *tp);
+int clock_gettime_adjust(void);
 
 time_t mktime(struct tm *tp);
 struct tm *gmtime(const time_t *timep);
@@ -170,11 +177,14 @@ char *ctime(  const time_t *timep);
 
 time_t time(  time_t *timep);
 
+int stime(const time_t *t);
+
 clock_t clock(void);
 
 double difftime(time_t tim1, time_t tim2);
 char *asctime(const struct tm *tim_p);
-inline struct tm *localtime(const time_t *tim_p) {return gmtime(tim_p);}
+struct tm *localtime(const time_t *tim_p);
+struct tm *localtime_r(const time_t *timep, struct tm *result);
 
 #undef EXTERN
 #if defined(__cplusplus)

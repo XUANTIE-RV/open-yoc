@@ -147,6 +147,7 @@ struct tls_fwup {
 
 	u32 received_len;
 	u32 total_len;
+	u32 image_size;
 	u32 updated_len;
 	u32 program_base;
 	u32 program_offset;
@@ -198,7 +199,7 @@ int tls_fwup_init(void);
  *
  * @note           None
  */
-u32 tls_fwup_enter(enum tls_fwup_image_src image_src);
+u32 tls_fwup_enter(enum tls_fwup_image_src image_src, uint32_t image_size);
 
 /**
  * @brief          This function is used to exit firmware update progress.

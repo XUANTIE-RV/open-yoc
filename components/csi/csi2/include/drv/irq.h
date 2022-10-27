@@ -54,6 +54,16 @@ __ALWAYS_STATIC_INLINE void csi_irq_disable(uint32_t irq_num)
 void csi_irq_attach(uint32_t irq_num, void *irq_handler, csi_dev_t *dev);
 
 /**
+  \brief       Attach irq handler2 for compatible.
+  \param[in]   irq_num      Number of IRQ.
+  \param[in]   irq_handler2 IRQ Handler.
+  \param[in]   dev          The dev to operate
+  \param[in]   arg          user data of irq_handler2 
+  \return      None.
+*/
+void csi_irq_attach2(uint32_t irq_num, void *irq_handler2, csi_dev_t *dev, void *arg);
+
+/**
   \brief       detach irq handler.
   \param[in]   irq_num Number of IRQ.
   \param[in]   irq_handler IRQ Handler.

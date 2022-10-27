@@ -24,7 +24,7 @@ void csi_clk_enable(csi_dev_t *dev)
     while (map->module != 0xFFFFFFFFU) {
         if ((map->dev_tag == dev->dev_tag) &&
             (map->idx == dev->idx)) {
-            soc_clk_enable((clk_module_t)map->module);
+            soc_clk_enable((clk_module_t)map->module); ///< TODO：打开时钟
             break;
         }
 
@@ -39,7 +39,7 @@ void csi_clk_disable(csi_dev_t *dev)
     while (map->module != 0xFFFFFFFFU) {
         if ((map->dev_tag == dev->dev_tag) &&
             (map->idx == dev->idx)) {
-            soc_clk_disable((clk_module_t)map->module);
+            soc_clk_disable((clk_module_t)map->module); ///< TODO：关闭时钟
             break;
         }
 

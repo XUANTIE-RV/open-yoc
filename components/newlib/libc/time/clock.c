@@ -18,6 +18,11 @@
 
 extern int clock_gettime(clockid_t clockid, struct timespec *tp);
 
+/*
+POSIX.1-2001, POSIX.1-2008, C89, C99.  XSI requires that
+CLOCKS_PER_SEC equals 1000000 independent of the actual
+resolution.
+*/
 clock_t clock(void)
 {
     struct timespec tv;

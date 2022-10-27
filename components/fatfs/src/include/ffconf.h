@@ -69,7 +69,11 @@
 / Locale and Namespace Configurations
 /---------------------------------------------------------------------------*/
 
+#ifndef CONFIG_FATFS_LANGUAGE_CODE
 #define FF_CODE_PAGE	936
+#else
+#define FF_CODE_PAGE	CONFIG_FATFS_LANGUAGE_CODE
+#endif
 /* This option specifies the OEM code page to be used on the target system.
 /  Incorrect code page setting can cause a file open failure.
 /
@@ -151,7 +155,7 @@
 */
 
 
-#define FF_FS_RPATH		0
+#define FF_FS_RPATH		1
 /* This option configures support for relative path.
 /
 /   0: Disable relative path and remove related functions.
@@ -164,12 +168,12 @@
 / Drive/Volume Configurations
 /---------------------------------------------------------------------------*/
 
-#define FF_VOLUMES		2
+#define FF_VOLUMES		4
 /* Number of volumes (logical drives) to be used. (1-10) */
 
 
 #define FF_STR_VOLUME_ID	2
-#define FF_VOLUME_STRS		"fatfs0","fatfs1"
+#define FF_VOLUME_STRS		"fatfs0","fatfs1","mnt/sd","mnt/usb"
 /* FF_STR_VOLUME_ID switches support for volume ID in arbitrary strings.
 /  When FF_STR_VOLUME_ID is set to 1 or 2, arbitrary strings can be used as drive
 /  number in the path name. FF_VOLUME_STRS defines the volume ID strings for each
@@ -236,8 +240,11 @@
 /  To enable exFAT, also LFN needs to be enabled. (FF_USE_LFN >= 1)
 /  Note that enabling exFAT discards ANSI C (C89) compatibility. */
 
-
-#define FF_FS_NORTC		1
+#if (CONFIG_FATFS_MODIFIED_TIME == 0)
+#define FF_FS_NORTC     1
+#else 
+#define FF_FS_NORTC     0
+#endif
 #define FF_NORTC_MON	1
 #define FF_NORTC_MDAY	1
 #define FF_NORTC_YEAR	2018

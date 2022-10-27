@@ -5,6 +5,8 @@
 #define __VERIFY_H__
 
 #include <stdint.h>
+#include <sec_crypto_sha.h>
+
 
 #ifdef __cplusplus
 extern "C" {
@@ -30,8 +32,19 @@ typedef enum {
     SIGNATURE_MAX
 } signature_sch_e;
 
+typedef struct {
+    sc_sha_t sc_sha;
+    sc_sha_context_t sc_ctx;
+    digest_sch_e ds_type;
+} sha_context_t;
+
 int get_length_with_digest_type(digest_sch_e type);
 int get_length_with_signature_type(signature_sch_e type);
+sha_context_t* sha_init(digest_sch_e ds);
+int sha_start(sha_context_t *ctx);
+int sha_update(sha_context_t *ctx, const void *input, uint32_t ilen, int from_mem);
+int sha_finish(sha_context_t *ctx, void *output, uint32_t *olen);
+int sha_deinit(sha_context_t *ctx);
 
 #ifdef __cplusplus
 }

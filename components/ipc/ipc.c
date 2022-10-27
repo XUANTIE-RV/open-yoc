@@ -8,8 +8,16 @@
 #include <aos/aos.h>
 #include <csi_core.h>
 #include <ipc_mem.h>
+#include <assert.h>
 
 #include "internal.h"
+
+#ifndef CONFIG_IPC_RECV_TASK_STACK_SIZE
+#define CONFIG_IPC_RECV_TASK_STACK_SIZE    1024
+#endif
+#ifndef CONFIG_IPC_SERVICE_TASK_STACK_SIZE
+#define CONFIG_IPC_SERVICE_TASK_STACK_SIZE 4096
+#endif
 
 #define IPC_WRITE_EVENT CHANNEL_WRITE_EVENT
 #define IPC_READ_EVENT CHANNEL_READ_EVENT
@@ -66,22 +74,38 @@ static int phy_recv(ipc_t *ipc, phy_data_t *msg, int ms)
     while (1) {
         ret = ipc_channel_recv(ipc, &m, ms);
 
-        if (m.flag & PHY_ACK) {
-            aos_sem_signal(&m.sem);
+#ifdef CONFIG_IPC_PROBE_ENABLE
+        if (m.flag & MESSAGE_PROBE) {
             continue;
         }
+#endif
+
+        // if (m.flag & PHY_ACK) {
+        //     aos_sem_signal(&m.sem);
+        //     continue;
+        // }
 
         if ((msg->flag & SHM_CACHE) && m.data) {
+            #if defined(__riscv)
+            #if (__riscv_xlen == 32)
             csi_dcache_invalid_range((uint32_t *)m.data, SHM_ALIGN_SIZE(m.len, SHM_ALIGN_CACHE));
+            #elif (__riscv_xlen == 64)
+            csi_dcache_invalid_range((uint64_t *)m.data, SHM_ALIGN_SIZE(m.len, SHM_ALIGN_CACHE));
+            #else
+            csi_dcache_invalid_range((uint32_t *)m.data, SHM_ALIGN_SIZE(m.len, SHM_ALIGN_CACHE));
+            #endif
+            #endif
         }
-        memcpy(msg, &m, sizeof(phy_data_t));
-        msg->data = aos_malloc_check(m.len);
-        msg->len  = m.len;
-        if (m.data)
-            memcpy(msg->data, m.data, m.len);
 
-        m.flag |= PHY_ACK;
-        ipc_channel_send(ipc, &m, ms);
+        memcpy(msg, &m, sizeof(phy_data_t));
+        msg->data = (int64_t)aos_malloc_check(m.len);
+        msg->len  = m.len;
+
+        if (m.data)
+            memcpy((void *)msg->data, (void *)m.data, m.len);
+
+        // m.flag |= PHY_ACK;
+        // ipc_channel_send(ipc, &m, ms);
         break;
     }
 
@@ -91,12 +115,20 @@ static int phy_recv(ipc_t *ipc, phy_data_t *msg, int ms)
 static int phy_send(ipc_t *ipc, phy_data_t *msg, int ms)
 {
     if (msg->flag & SHM_CACHE) {
+        #if defined(__riscv)
+        #if (__riscv_xlen == 32)
         csi_dcache_clean_range((uint32_t *)msg->data, SHM_ALIGN_SIZE(msg->len, SHM_ALIGN_CACHE));
+        #elif (__riscv_xlen == 64)
+        csi_dcache_clean_range((uint64_t *)msg->data, SHM_ALIGN_SIZE(msg->len, SHM_ALIGN_CACHE));
+        #else
+        csi_dcache_clean_range((uint32_t *)msg->data, SHM_ALIGN_SIZE(msg->len, SHM_ALIGN_CACHE));
+        #endif
+        #endif
     }
 
-    memcpy(&msg->sem, &ipc->sem, sizeof(aos_sem_t));
+    // memcpy(&msg->sem, &ipc->sem, sizeof(aos_sem_t));
     int ret = ipc_channel_send(ipc, msg, ms);
-    aos_sem_wait(&msg->sem, AOS_WAIT_FOREVER);
+    // aos_sem_wait(&msg->sem, AOS_WAIT_FOREVER);
     return ret;
 }
 
@@ -140,12 +172,12 @@ static int transfer_send(service_t *ser, message_t *msg, int timeout_ms)
     aos_check_return_einval(ser);
 
     phy_data_t phy_msg;
-    shm_t *shm = &ipc->shm;
 
     aos_mutex_lock(&ipc->tx_mutex, AOS_WAIT_FOREVER);
+    shm_t *shm = &ipc->shm[ipc->seq % BLOCK_SIZE];
 
     memcpy(&phy_msg, msg, sizeof(phy_data_t));
-    phy_msg.data = shm->addr;
+    phy_msg.data = (int64_t)shm->addr;
 
     if (shm->flag & SHM_CACHE) {
         phy_msg.flag |= SHM_CACHE;
@@ -158,15 +190,17 @@ static int transfer_send(service_t *ser, message_t *msg, int timeout_ms)
 
     dispatch.total_len = total_len;
     dispatch.resp_len = msg->resp_len;
-    memcpy(&dispatch.queue, &msg->queue, sizeof(aos_queue_t));
+    memcpy(&dispatch.queue, &msg->queue, sizeof(uint64_t));
 
     shm_reset(shm);
     shm_write(shm, (uint8_t *)&dispatch, sizeof(dispatch_t));
 
     while ((total_len > 0) || (shm_available_read_space(shm) > 0)) {
         ret = shm_write(shm, data, total_len);
+        phy_msg.data = (int64_t)shm->addr;
         phy_msg.len = shm_available_read_space(shm);
         phy_send(ipc, &phy_msg, timeout_ms);
+        shm = &ipc->shm[ipc->seq % BLOCK_SIZE];
         total_len -= ret;
         data += ret;
         shm_reset(shm);
@@ -179,7 +213,7 @@ static int transfer_send(service_t *ser, message_t *msg, int timeout_ms)
 
 static int phy_wait(service_t *ser, phy_data_t *msg, int ms)
 {
-    unsigned int len;
+    size_t len;
     return (aos_queue_recv(&ser->queue, ms, msg, &len));
 }
 
@@ -203,7 +237,7 @@ static int transfer_recv(service_t *ser, message_t *msg, int timeout_ms)
         msg->req_data = NULL;
     }
     msg->req_len = total_len;
-    memcpy(&msg->queue, &dispatch->queue, sizeof(aos_queue_t));
+    memcpy(&msg->queue, &dispatch->queue, sizeof(uint64_t));
     msg->resp_len  = dispatch->resp_len;
 
     if (msg->req_data != NULL) {
@@ -214,14 +248,14 @@ static int transfer_recv(service_t *ser, message_t *msg, int timeout_ms)
         recv += recv_len;
     }
 
-    aos_free(phy_msg.data);
+    aos_free((void *)phy_msg.data);
 
     while(recv && total_len > 0) {
         phy_wait(ser, &phy_msg, timeout_ms);
-        memcpy(recv, phy_msg.data, phy_msg.len);
+        memcpy(recv, (void *)phy_msg.data, phy_msg.len);
         recv += phy_msg.len;
         total_len -= phy_msg.len;
-        aos_free(phy_msg.data);
+        aos_free((void *)phy_msg.data);
     }
     aos_mutex_unlock(&ipc->rx_mutex);
 
@@ -245,8 +279,8 @@ static void ipc_task_process_entry(void *arg)
 
         ser = find_service(ipc, data.service_id);
         if (ser) {
-            while (aos_queue_send(&ser->queue, &data, sizeof(phy_data_t)) != 0) {
-                aos_msleep(100);
+            while(aos_queue_send(&ser->queue, &data, sizeof(phy_data_t)) != 0) {
+                aos_msleep(10);
             }
         }
     }
@@ -267,9 +301,9 @@ static void ipc_service_entry(void *priv)
         if (msg.flag & MESSAGE_ACK) {
             msg.resp_data = msg.req_data;
             msg.resp_len  = msg.req_len;
-            int ret = aos_queue_send(&msg.queue, &msg, sizeof(message_t));
+            int ret = aos_queue_send((aos_queue_t *)&msg.queue, &msg, sizeof(message_t));
             if (ret < 0) {
-                LOGE(TAG, "ipc queue send fail(%d)(%p)\n", ret, msg.queue.hdl);
+                LOGE(TAG, "ipc queue send fail(%d)(%p)\n", ret, msg.queue);
             }
             continue;
         }
@@ -280,16 +314,43 @@ static void ipc_service_entry(void *priv)
             }
         }
 
-        ser->process(ipc, &msg, ser->priv);
+        if (ser->process)
+            ser->process(ipc, &msg, ser->priv);
 
         if (msg.req_data && !(msg.flag & MESSAGE_SYNC)) {
-            aos_free(msg.req_data);
+            aos_free((char *)msg.req_data);
             msg.req_data = NULL;
         }
     }
 
     aos_task_exit(0);
 }
+
+#ifdef CONFIG_IPC_PROBE_ENABLE
+static void ipc_probe_entry(void *arg) {
+  ipc_t *ipc = (ipc_t *)arg;
+  phy_data_t data = { .flag = MESSAGE_PROBE, .seq = 1 };
+  unsigned int flag;
+  unsigned int timeout_ms = 100;
+
+  // clear initial value
+  aos_event_get(&ipc->evt, IPC_WRITE_EVENT, AOS_EVENT_OR_CLEAR, &flag, timeout_ms);
+
+  while (1) {
+    channel_put_message(ipc->ch, &data, sizeof(phy_data_t), 0);
+    if (0 == aos_event_get(&ipc->evt, IPC_WRITE_EVENT, AOS_EVENT_OR_CLEAR, &flag, timeout_ms)) {
+      // recover the writable value
+      aos_event_set(&ipc->evt, IPC_WRITE_EVENT, AOS_EVENT_OR);
+      ipc->probe_status = 0;
+      ipc->seq = 2;
+      aos_event_set(&ipc->probe_freeze_evt, IPC_PROBE_EVENT, AOS_EVENT_OR);
+      break;
+    }
+  }
+
+  aos_task_exit(0);
+}
+#endif
 
 int ipc_message_send(ipc_t *ipc, message_t *m, int timeout_ms)
 {
@@ -299,7 +360,7 @@ int ipc_message_send(ipc_t *ipc, message_t *m, int timeout_ms)
 
     memset(&msg_buf, 0x00, sizeof(message_t));
     if (m->flag & MESSAGE_SYNC) {
-        int ret = aos_queue_new(&m->queue, &msg_buf, sizeof(message_t) * 2, sizeof(message_t));
+        int ret = aos_queue_new((aos_queue_t *)&m->queue, &msg_buf, sizeof(message_t) * 2, sizeof(message_t));
 
         if (ret != 0) {
             return -1;
@@ -312,18 +373,47 @@ int ipc_message_send(ipc_t *ipc, message_t *m, int timeout_ms)
         return -1;
     }
 
+#ifdef CONFIG_IPC_PROBE_ENABLE
+    if (ipc->probe_status) {
+        unsigned int flag;
+        long long freeze_t0 = 0;
+        if ((timeout_ms != AOS_WAIT_FOREVER) && (timeout_ms != AOS_NO_WAIT)) {
+            freeze_t0 = aos_now_ms();
+        }
+        if (0 != aos_event_get(&ipc->probe_freeze_evt, IPC_PROBE_EVENT,
+            AOS_EVENT_OR, &flag, timeout_ms)) {
+            return -1;
+        }
+        if (freeze_t0 > 0) {
+            int diff = (int)(aos_now_ms() - freeze_t0);
+            if (diff > timeout_ms) {
+                return -1;
+            }
+            timeout_ms -= diff;
+        }
+    }
+#endif
+
     transfer_send(ser, m, timeout_ms);
 
     if (m->flag & MESSAGE_SYNC) {
-        unsigned int len;
+        size_t len;
         message_t msg;
 
-        aos_queue_recv(&m->queue, AOS_WAIT_FOREVER, &msg, &len);
-        aos_queue_free(&m->queue);
+#if defined(CONFIG_IPC_DEBUG) && defined(CONFIG_IPC_DEBUG_MSGSEND_TIMEOUT)
+        int ret = aos_queue_recv((aos_queue_t *)&m->queue, CONFIG_IPC_DEBUG_MSGSEND_TIMEOUT, &msg, &len);
+        if (ret != 0) {
+            LOGE(TAG, "%s queue %d",  __func__, ret);
+            abort();
+        }
+#else
+        aos_queue_recv((aos_queue_t *)&m->queue, AOS_WAIT_FOREVER, &msg, &len);
+#endif
+        aos_queue_free((aos_queue_t *)&m->queue);
 
         if (msg.resp_len == m->resp_len) {
-            memcpy(m->resp_data, msg.resp_data, msg.resp_len);
-            aos_free(msg.resp_data);
+            memcpy((char *)m->resp_data, (char *)msg.resp_data, msg.resp_len);
+            aos_free((char *)msg.resp_data);
         } else {
             aos_assert(0);
         }
@@ -338,7 +428,7 @@ int ipc_message_ack(ipc_t *ipc, message_t *msg, int timeout_ms)
     msg->flag |= MESSAGE_ACK;
 
     if (msg->req_data) {
-        aos_free(msg->req_data);
+        aos_free((char *)msg->req_data);
     }
     msg->req_data = msg->resp_data;
     msg->req_len  = msg->resp_len;
@@ -349,7 +439,7 @@ int ipc_message_ack(ipc_t *ipc, message_t *msg, int timeout_ms)
     }
     transfer_send(ser, msg, timeout_ms);
     if (msg->resp_data) {
-        aos_free(msg->resp_data);
+        aos_free((char *)msg->resp_data);
         msg->resp_data = NULL;
         msg->req_data = NULL;
     }
@@ -421,20 +511,34 @@ ipc_t *ipc_get(int cpu_id)
         aos_check(!ret, ENOME);
 
         snprintf(name_buf, IPC_NAME_MAX_LEN, "ipc->%d", cpu_id);
-        ret = aos_task_new_ext(&ipc->thread, name_buf, ipc_task_process_entry, ipc, 1024, 9);
+        ret = aos_task_new_ext(&ipc->thread, name_buf, ipc_task_process_entry, ipc, CONFIG_IPC_RECV_TASK_STACK_SIZE, 10);
 
         aos_check(!ret, ENOME);
         ipc->seq     = 1;
 
-        shm_t *shm = &ipc->shm;
-
-        memset(shm, 0x00, sizeof(shm_t));
         drv_ipc_mem_init();
-        shm->addr = drv_ipc_mem_alloc((int *)&shm->size);
-        if (drv_ipc_mem_use_cache() == 1) {
-            shm->flag |= SHM_CACHE;
+        int shm_size = 0;
+        char *shm_start_addr = (char *)drv_ipc_mem_alloc(&shm_size);
+        int blk_len = shm_size / BLOCK_SIZE;
+
+        for (int i = 0; i < BLOCK_SIZE; i ++) {
+            shm_t *shm = &ipc->shm[i];
+
+            memset(shm, 0x00, sizeof(shm_t));
+            shm->addr = shm_start_addr + i * blk_len;
+            shm->size = blk_len;
+            if (drv_ipc_mem_use_cache() == 1) {
+                shm->flag |= SHM_CACHE;
+            }
         }
 
+#ifdef CONFIG_IPC_PROBE_ENABLE
+        ipc->probe_status = 1;
+        ret = aos_event_new(&ipc->probe_freeze_evt, 0);
+        aos_check(!ret, ENOME);
+        ret = aos_task_new_ext(&ipc->probe_thread, "ipc_probe", ipc_probe_entry, ipc, 1024, 32);
+        aos_check(!ret, ENOME);
+#endif
         return ipc;
     }
 
@@ -450,10 +554,11 @@ int ipc_add_service(ipc_t *ipc, int service_id, ipc_process_t cb, void *priv)
     service_t *ser = find_service(ipc, service_id);
 
     if (ser != NULL) {
+        assert(NULL);
         return -1;
     }
 
-    ser = malloc(sizeof(service_t));
+    ser = aos_zalloc(sizeof(service_t));
 
     if (ser) {
         ser->id      = service_id;
@@ -463,7 +568,7 @@ int ipc_add_service(ipc_t *ipc, int service_id, ipc_process_t cb, void *priv)
         slist_add_tail(&ser->next, &ipc->service_list);
         aos_queue_new(&ser->queue, ser->que_buf, SERVER_QUEUE_SIZE, sizeof(phy_data_t));
         snprintf(ser->ser_name, SER_NAME_MAX_LEN, "ser%d->%d", service_id, ipc->des_cpu_id);
-        aos_task_new_ext(&ser->task, ser->ser_name, ipc_service_entry, ser, 4 * 1024, 9);
+        aos_task_new_ext(&ser->task, ser->ser_name, ipc_service_entry, ser, CONFIG_IPC_SERVICE_TASK_STACK_SIZE, 9);
 
         return 0;
     }

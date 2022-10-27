@@ -18,6 +18,10 @@
 
 #define VIC_TSPDR 0XE000EC08
 
+#ifdef RHINO_ARCH_CK802_INT_RESTORE_PATCH
+#define VIC_IRQ0_PEND 0xE000E200
+#endif
+
 .extern g_active_task
 .extern g_preferred_ready_task
 .extern krhino_task_sched_stats_get
@@ -62,6 +66,23 @@ cpu_intrpt_save:
 .type cpu_intrpt_restore, %function
 cpu_intrpt_restore:
     mtcr    r0, psr
+#ifdef RHINO_ARCH_CK802_INT_RESTORE_PATCH
+    btsti   r0, 6
+    bf      .Lret
+
+    lrw     r1, 0x00FF0000
+    and     r1, r0
+    cmpnei  r1, 0
+    bt      .Lret
+
+    lrw     r1, VIC_IRQ0_PEND
+.Lloop:
+    ldw     r2, (r1)
+    btsti   r2, 0
+    bt      .Lloop
+
+.Lret:
+#endif
     rts
 
 /******************************************************************************

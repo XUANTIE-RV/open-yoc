@@ -206,6 +206,12 @@ typedef volatile unsigned int TLS_REG;    /* Hardware register definition */
 #define HR_MEM_AGGR_CFG             (HR_MEM_BASE_ADDR + 0x10)
 #define HR_MEM_BUF_EN               (HR_MEM_BASE_ADDR + 0x14)
 
+/***************************************************************
+* PSRAM CTRL Register
+****************************************************************/
+#define HR_PSRRAM_BASE_ADDR      (DEVICE_BASE_ADDR + 0x2200)
+#define HR_PSRAM_CTRL_ADDR       (HR_PSRRAM_BASE_ADDR+ 0x00)
+#define HR_PSRAM_OVERTIMER_ADDR  (HR_PSRRAM_BASE_ADDR+ 0x04)
 
 /* APB»ùµØÖ·*/
 #define HR_APB_BASE_ADDR 0x40010000

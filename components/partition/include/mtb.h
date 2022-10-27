@@ -5,6 +5,7 @@
 #define __MTB_H__
 
 #include <stdint.h>
+#include <stdbool.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -13,7 +14,7 @@ extern "C" {
 #define BMTB_MAGIC  0x74427254
 #define MTB_MAGIC   0x74427251
 
-#define INVALID_ADDR (0xFFFFFFFF)
+#define INVALID_ADDR (~0)
 
 #define PUBLIC_KEY_NAME_SIZE 8
 #define MTB_MISC_NAME           "misc"
@@ -129,13 +130,13 @@ typedef struct {
 } scn_key_info_t;
 
 typedef struct {
-    uint8_t extend_type : 4; //扩展标志
-    uint8_t first_type : 4;  //type表述
+    uint8_t extend_type : 4;    //扩展标志, 标记分区镜像是否需要验签
+    uint8_t first_type  : 4;    //type表述
 } scn_father_type_t;
 
 typedef struct {
     scn_father_type_t father_type;  //父类型
-    uint8_t son_type;               //描述段子类型
+    uint8_t son_type;               //描述段子类型, reuse flash id for support multi flash
 } scn_type_t;
 
 typedef struct {
@@ -229,14 +230,14 @@ typedef struct {
 } partition_tail_t;
 
 typedef struct {
-    uint32_t using_addr;    // 当前使用的imtb地址(RAM、FLASH)
-    uint32_t prim_addr;     // 当前使用的imtb地址(FLASH)
-    uint32_t backup_addr;   // 备份的imtb地址(FLASH)
-    uint32_t one_size: 16;  // 一份imtb表(或者bmtb+imtb)占用的分区size
-    uint32_t i_offset: 16;  // imtb表的偏移地址，当存在bmtb时才有值，否则为0
-    uint16_t version;       // imtb表的版本号
-    uint16_t cur_piece: 1;  // 当前使用的主imtb表还是备份imtb表，0：主表，1：备份表
-    uint16_t rsv: 15;
+    unsigned long using_addr;    // 当前使用的imtb地址(RAM、FLASH)
+    unsigned long prim_addr;     // 当前使用的imtb地址(FLASH)
+    unsigned long backup_addr;   // 备份的imtb地址(FLASH)
+    uint32_t one_size;           // 一份imtb表(或者bmtb+imtb)占用的分区size
+    uint32_t i_offset: 16;       // imtb表的偏移地址，当存在bmtb时才有值，否则为0
+    uint32_t version: 8;         // imtb表的版本号
+    uint32_t cur_piece: 1;       // 当前使用的主imtb表还是备份imtb表，0：主表，1：备份表
+    uint32_t rsv: 7;
 } mtb_t;
 
 #ifndef CONFIG_MULTI_FLASH_SUPPORT
@@ -307,6 +308,16 @@ uint32_t mtb_get_bmtb_size(const uint8_t *data);
 uint32_t mtb_get_size(void);
 
 /**
+ * Check the image need to verify or not
+ * This is a virtual function, user need implement by themselves
+ *
+ * @param[in]  name         The point to image name buffer
+ *
+ * @return  true: need verify, otherwise is no need to verify
+ */
+bool check_is_need_verify(const char *name);
+
+/**
  * Verify image by image name
  *
  * @param[in]  name         The point to image name buffer
@@ -346,7 +357,7 @@ int get_section_buf(uint32_t addr, uint32_t img_len, scn_type_t *scn_type, uint3
 /**
  *  when mtb version < 4
  */
-int mtb_get_img_scn_addr(uint8_t *mtb_buf, const char *name, uint32_t *scn_addr);
+int mtb_get_img_scn_addr(uint8_t *mtb_buf, const char *name, unsigned long *scn_addr);
 
 /**
  * Read data from an area on a Flash to data buffer in RAM

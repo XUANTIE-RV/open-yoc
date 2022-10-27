@@ -4,6 +4,7 @@
 #ifndef _CLOCK_ALARM_H_
 #define _CLOCK_ALARM_H_
 
+#include <time.h>
 #include <aos/aos.h>
 
 typedef enum {
@@ -94,5 +95,14 @@ void clock_alarm_enable(uint8_t id, uint8_t enable);
  * @return  0为无闹铃；1为有闹铃配置； 2为提前唤醒准备闹的状态
  */
 uint8_t clock_alarm_get_status(void);
+
+/**
+ * 注册闹铃的测试命令行
+ *
+ * @param[in]  无
+ *
+ * @return  .
+ */
+void cli_reg_cmd_clock(void);
 
 #endif

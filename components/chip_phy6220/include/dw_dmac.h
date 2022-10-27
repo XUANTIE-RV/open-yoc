@@ -102,6 +102,7 @@ typedef enum {
 #define DMA_REG_Cfg             0x398
 #define DMA_REG_ChEn            0x3a0
 
+#define DMA_MAX_TRANSPORT_SIZE(ch)      ((ch == 0) ? 0x7ff : 0x1f)
 //typedef struct {
 //    __IOM uint32_t   SAR;       /* offset: 0x00 (R/W) Channel Source Address Register        */
 //    __IOM uint32_t   DAR;       /* offset: 0x04 (R/W) Channel Destination Address Register   */

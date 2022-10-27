@@ -13,14 +13,17 @@
 
 const char *TAG = "INIT";
 
-#ifndef CONSOLE_UART_IDX
-#define CONSOLE_UART_IDX 0
-#endif
+
+static void stduart_init(void)
+{
+    extern void console_init(int idx, uint32_t baud, uint16_t buf_size);
+    console_init(CONSOLE_UART_IDX, CONFIG_CLI_USART_BAUD, CONFIG_CONSOLE_UART_BUFSIZE);
+}
 
 void board_yoc_init()
 {
     board_init();
-    console_init(CONSOLE_UART_IDX, 115200, 128);
+    stduart_init();
 
     ulog_init();
     aos_set_log_level(AOS_LL_DEBUG);

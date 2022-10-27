@@ -257,6 +257,8 @@ const csi_pinmap_t uart_pinmap[] = {
 };
 
 const csi_pinmap_t iic_pinmap[] = {
+    {PA8,             0, PIN_IIC_SCL, PA8_IIC0_SCL},
+    {PA9,             0, PIN_IIC_SDA, PA9_IIC0_SDA},
     {PA15,            0, PIN_IIC_SCL, PA15_IIC0_SCL},
     {PA16,            0, PIN_IIC_SDA, PA16_IIC0_SDA},
     {0xFFFFFFFFU, 0xFFU,       0xFFU,   0xFFFFFFFFU},
@@ -264,16 +266,22 @@ const csi_pinmap_t iic_pinmap[] = {
 
 
 const csi_pinmap_t spi_pinmap[] = {
-    {PA0,             0,   PIN_SPI_CS,    PA0_SPI0_CS},
-    {PA1,             0,  PIN_SPI_SCK,   PA1_SPI0_SCK},
-    {PA23,            0,   PIN_SPI_CS,   PA23_SPI0_CS},
-    {PA24,            0,  PIN_SPI_SCK,  PA24_SPI0_SCK},
-    {PA25,            0, PIN_SPI_MOSI, PA25_SPI0_MOSI},
-    {PA26,            0, PIN_SPI_MISO, PA26_SPI0_MISO},
-    {PA27,            1,   PIN_SPI_CS,   PA27_SPI1_CS},
-    {PA28,            1,  PIN_SPI_SCK,  PA28_SPI1_SCK},
-    {PA29,            1, PIN_SPI_MOSI, PA29_SPI1_MOSI},
-    {PA30,            1, PIN_SPI_MISO, PA30_SPI1_MISO},
+    {PA0,             0,    PIN_SPI_CS,     PA0_SPI0_CS},
+    {PA1,             0,    PIN_SPI_SCK,    PA1_SPI0_SCK},
+    {PA2,             1,    PIN_SPI_CS,     PA2_SPI1_CS},
+    {PA3,             1,    PIN_SPI_SCK,    PA3_SPI1_SCK},
+    {PA4,             0,    PIN_SPI_MOSI,   PA4_SPI0_MOSI},
+    {PA5,             0,    PIN_SPI_MISO,   PA5_SPI0_MISO},
+    {PA6,             1,    PIN_SPI_MOSI,   PA6_SPI1_MOSI},
+    {PA7,             1,    PIN_SPI_MISO,   PA7_SPI1_MISO},
+    {PA23,            0,    PIN_SPI_CS,     PA23_SPI0_CS},
+    {PA24,            0,    PIN_SPI_SCK,    PA24_SPI0_SCK},
+    {PA25,            0,    PIN_SPI_MOSI,   PA25_SPI0_MOSI},
+    {PA26,            0,    PIN_SPI_MISO,   PA26_SPI0_MISO},
+    {PA27,            1,    PIN_SPI_CS,     PA27_SPI1_CS},
+    {PA28,            1,    PIN_SPI_SCK,    PA28_SPI1_SCK},
+    {PA29,            1,    PIN_SPI_MOSI,   PA29_SPI1_MOSI},
+    {PA30,            1,    PIN_SPI_MISO,   PA30_SPI1_MISO},
     {0xFFFFFFFFU, 0xFFU,        0xFFU,    0xFFFFFFFFU},
 };
 
@@ -318,4 +326,3 @@ const csi_clkmap_t clk_map[] = {
     {CODEC_CLK,  DEV_RCHBAND_CODEC_TAG, 0},
     {0xFFFFFFFFU, 0xFFFFU,          0xFFU}
 };
-

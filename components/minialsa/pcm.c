@@ -50,7 +50,6 @@ int aos_pcm_open(aos_pcm_t **pcm_ret, const char *name, aos_pcm_stream_t stream,
     card_dev_t *card;
 
     aos_card_attach("card0", &card); // Do not put it behind of " (aos_pcm_dev_t *)device_open(name)"
-
     if (card == NULL) {
         *pcm_ret = NULL;
         return -1;
@@ -64,7 +63,6 @@ int aos_pcm_open(aos_pcm_t **pcm_ret, const char *name, aos_pcm_stream_t stream,
     }
 
     pcm = &dev->pcm;
-
     aos_mutex_new(&pcm->mutex);
     aos_event_new(&pcm->evt, 0);
     pcm->stream = stream;
@@ -86,10 +84,9 @@ int aos_pcm_close(aos_pcm_t *pcm)
 
     //LOGE(TAG, "pcm close");
     //FIXME: close pcm-device first
-    aos_dev_t *dev = (aos_dev_t *)(((int)(pcm)) + sizeof(aos_pcm_t) - sizeof(aos_pcm_dev_t));
+    aos_dev_t *dev = (aos_dev_t *)(((intptr_t)(pcm)) + sizeof(aos_pcm_t) - sizeof(aos_pcm_dev_t));
 
     device_close(dev);
-
     aos_mutex_free(&pcm->mutex);
     aos_event_free(&pcm->evt);
 
@@ -203,11 +200,14 @@ int aos_pcm_set_params(aos_pcm_t *pcm, int format, aos_pcm_access_t acc, unsigne
 int aos_pcm_hw_params(aos_pcm_t *pcm, aos_pcm_hw_params_t *params)
 {
     int ret;
-
     aos_check_return_einval(pcm && params);
 
     hw_params(pcm)->period_bytes = (hw_params(pcm)->period_size * ( hw_params(pcm)->format / 8)) * hw_params(pcm)->channels;
     hw_params(pcm)->buffer_bytes = (hw_params(pcm)->buffer_size * ( hw_params(pcm)->format / 8)) * hw_params(pcm)->channels;
+
+    if (pcm->ops == NULL) {
+        return -1;
+    }
 
     PCM_LOCK(pcm);
     ret = pcm->ops->hw_params_set(pcm, params);
@@ -266,9 +266,13 @@ aos_pcm_sframes_t aos_pcm_writei(aos_pcm_t *pcm, const void *buffer, aos_pcm_ufr
         ret = pcm->ops->write(pcm, (void *)(send), w_size);
         if (ret < w_size) {
             aos_event_get(&pcm->evt, PCM_EVT_WRITE | PCM_EVT_XRUN, AOS_EVENT_OR_CLEAR, &actl_flags, AOS_WAIT_FOREVER);
-            if ((actl_flags | PCM_EVT_XRUN) == PCM_EVT_XRUN) {
-                LOGW(TAG,"pcm write PCM_EVT_XRUN\r\n");
-            }
+        } else {
+            aos_event_get(&pcm->evt, PCM_EVT_WRITE | PCM_EVT_XRUN, AOS_EVENT_OR_CLEAR, &actl_flags, 0);
+        }
+        if ((actl_flags & PCM_EVT_XRUN) == PCM_EVT_XRUN) {
+            LOGW(TAG,"pcm write PCM_EVT_XRUN\r\n");
+            ret = -EPIPE;
+            break;
         }
 
         w_size -= ret;
@@ -319,7 +323,7 @@ aos_pcm_sframes_t aos_pcm_readi(aos_pcm_t *pcm, void *buffer, aos_pcm_uframes_t 
     int bytes = pcm->ops->read(pcm, buffer, aos_pcm_frames_to_bytes(pcm, size));
     PCM_UNLOCK(pcm);
 
-    pcm_access(pcm, buffer, aos_pcm_frames_to_bytes(pcm, size));
+    pcm_access(pcm, buffer, bytes);
 
     return (aos_pcm_bytes_to_frames(pcm, bytes));
 }
@@ -380,7 +384,7 @@ int aos_pcm_drain(aos_pcm_t *pcm)
             }
         } else {
             unsigned int actl_flags;
-            
+
             aos_event_get(&pcm->evt, PCM_EVT_XRUN, AOS_EVENT_OR_CLEAR, &actl_flags, AOS_WAIT_FOREVER);
         }
     }
@@ -403,7 +407,7 @@ int aos_pcm_wait(aos_pcm_t *pcm, int timeout)
 {
     aos_check_return_einval(pcm);
     unsigned int actl_flags = 0;
-    //int i = 0;
+    int i = 0;
 
     do {
         PCM_LOCK(pcm);
@@ -419,10 +423,10 @@ int aos_pcm_wait(aos_pcm_t *pcm, int timeout)
             }
         }
 
-        //if (i > 0) {
-        //    LOGW(TAG, "pcm wait(%d) size(%d)<%d,wait again\r\n", i, ret, hw_params(pcm)->period_bytes);
-        //}
-        //i++;
+        if (i > 0) {
+            LOGW(TAG, "pcm wait(%d) size(%d)<%d,wait again\r\n", i, ret, hw_params(pcm)->period_bytes);
+        }
+        i++;
 
         aos_event_get(&pcm->evt, PCM_EVT_READ | PCM_EVT_XRUN, AOS_EVENT_OR_CLEAR, &actl_flags, timeout);
 
@@ -472,7 +476,7 @@ int aos_pcm_recover(aos_pcm_t *pcm, int err, int silent)
             }
         }
         PCM_LOCK(pcm);
-        aos_dev_t *dev = (aos_dev_t *)(((int)(pcm)) + sizeof(aos_pcm_t) - sizeof(aos_pcm_dev_t));
+        aos_dev_t *dev = (aos_dev_t *)(((intptr_t)(pcm)) + sizeof(aos_pcm_t) - sizeof(aos_pcm_dev_t));
 
         device_close(dev);
         aos_event_set(&pcm->evt, 0, AOS_EVENT_AND);

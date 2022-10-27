@@ -46,6 +46,7 @@ static int aos_sem_wait(aos_sem_t *sem, int timeout_ms)
 #define SHM_ALIGN_CHECK(size, align) (size == SHM_ALIGN_SIZE(size, align))
 
 #define SER_NAME_MAX_LEN 16
+#define BLOCK_SIZE 4
 
 typedef struct _shm {
     void       *addr;
@@ -59,9 +60,9 @@ typedef struct phy_msg {
     uint8_t         service_id;      /** service id for the service want to comtunicate */
     uint16_t        command;         /** command id the service provide */
     uint32_t        seq;             /** message seq */
-    void           *data;            /** message data */
+    int64_t         data;            /** message data */
     int             len;             /** message len */
-    aos_sem_t       sem;             /** queue for SYNC MESSAGE */
+    int64_t         sem;             /** queue for SYNC MESSAGE */
 } phy_data_t;
 
 #define SERVER_QUEUE_SIZE (sizeof(phy_data_t) * 10)
@@ -80,7 +81,7 @@ typedef struct service {
 typedef struct _dispatch {
     int total_len;
     int resp_len;
-    aos_queue_t queue;
+    int64_t queue;
 } dispatch_t;
 
 struct ipc {
@@ -97,9 +98,15 @@ struct ipc {
     aos_mutex_t rx_mutex;
     aos_sem_t   sem;
     void *priv;
-    shm_t shm;
+    shm_t shm[BLOCK_SIZE];
     uint32_t seq;
     uint32_t seq_bake;
+#ifdef CONFIG_IPC_PROBE_ENABLE
+#define IPC_PROBE_EVENT (0x1)
+    int32_t probe_status;
+    aos_event_t probe_freeze_evt;
+    aos_task_t probe_thread;
+#endif
 };
 
 

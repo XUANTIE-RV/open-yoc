@@ -33,6 +33,7 @@
  */
 
 #include "sdio.h"
+#include "soc.h"
 #include "assert.h"
 
 /*******************************************************************************
@@ -580,7 +581,7 @@ status_t SDIO_SwitchToHighSpeed(sdio_card_t *card)
             if ((temp & 0x03U) == 0x03U) {
                 /* high speed mode , set freq to 50MHZ */
                 card->busClock_Hz =
-                    SDMMCHOST_SET_CARD_CLOCK(card->host.base, card->host.source_clock_hz, 52500000);
+                    SDMMCHOST_SET_CARD_CLOCK(card->host.base, card->host.source_clock_hz, SDHOST_CLOCK);
                 status = kStatus_Success;
                 break;
             } else {
@@ -838,7 +839,34 @@ status_t SDIO_HostInit(sdio_card_t *card)
 {
     assert(card);
 
-    SDMMCHOST_BindingSDIF(&(card->host), 0);
+    uint32_t idx;
+
+#ifdef CONFIG_CSI_V2
+    if (card->host.base == (SDIF_TYPE*)DW_SDIO0_BASE) {
+        idx = 0;
+    } 
+#ifdef DW_SDIO1_BASE
+    else if (card->host.base == (SDIF_TYPE*)DW_SDIO1_BASE) {
+        idx = 1;
+    } 
+#endif
+
+#else
+
+    if (card->host.base == (SDIF_TYPE*)CSKY_SDIO0_BASE) {
+        idx = 0;
+    } 
+#ifdef CSKY_SDIO1_BASE
+    else if (card->host.base == (SDIF_TYPE*)CSKY_SDIO1_BASE) {
+        idx = 1;
+    } 
+#endif
+#endif
+    else {
+        return kStatus_InvalidArgument;
+    }
+    SDMMCHOST_BindingSDIF(&(card->host), idx);
+
     if ((!card->isHostReady) && SDMMCHOST_Init(&(card->host), (void *)(card->usrParam.cd)) != kStatus_Success) {
         return kStatus_Fail;
     }

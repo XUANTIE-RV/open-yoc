@@ -34,6 +34,10 @@ typedef enum {
     BT_MESH_MODEL_EVT_FRIEND_STATUS,
     BT_MESH_MODEL_EVT_PROXY_STATUS,
     BT_MESH_MODEL_EVT_RELAY_STATUS,
+    BT_MESH_MODEL_EVT_HEARTBEAT_STATUS,
+
+    BT_MESH_MODEL_EVT_HEALTH_CURRENT_STATUS,
+    BT_MESH_MODEL_EVT_HEALTH_FAULTS_STATUS,
 
     BT_MESH_MODEL_EVT_PUB_STATUS,
     BT_MESH_MODEL_EVT_SUB_STATUS,
@@ -45,11 +49,11 @@ typedef enum {
 
     BT_MESH_MODEL_EVT_HB_SUB_STATUS,
     BT_MESH_MODEL_EVT_HB_PUB_STATUS,
-/*[Genie begin] add by wenbing.cwb at 2021-01-21*/
+    /*[Genie begin] add by wenbing.cwb at 2021-01-21*/
 #ifdef CONFIG_BT_MESH_CTRL_RELAY
     BT_MESH_MODEL_EVT_CTRL_RELAY_STATUS,
 #endif
-/*[Genie end] add by wenbing.cwb at 2021-01-21*/
+    /*[Genie end] add by wenbing.cwb at 2021-01-21*/
     BT_MESH_MODEL_EVT_NODE_RESET_OP,
     BT_MESH_MODEL_EVT_NODE_RESET_STATUS,
 

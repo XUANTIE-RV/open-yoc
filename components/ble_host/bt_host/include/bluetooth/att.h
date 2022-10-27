@@ -43,6 +43,11 @@ extern "C" {
 #define BT_ATT_ERR_PROCEDURE_IN_PROGRESS	0xfe
 #define BT_ATT_ERR_OUT_OF_RANGE			0xff
 
+/* Handle 0x0000 is reserved for future use */
+#define BT_ATT_FIRST_ATTTRIBUTE_HANDLE          0x0001
+/* 0xffff is defined as the maximum, and thus last, valid attribute handle */
+#define BT_ATT_LAST_ATTTRIBUTE_HANDLE           0xffff
+
 #ifdef __cplusplus
 }
 #endif

@@ -2,15 +2,18 @@
  * Copyright (C) 2019-2020 Alibaba Group Holding Limited
  */
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/select.h>
 #include <lwip/netdb.h>
+#include <lwip/ip_addr.h>
 #include <aos/aos.h>
 
 #include <devices/wifi.h>
+#include <devices/netdrv.h>
 #include <devices/device.h>
 #include <lwip/apps/dhcps.h>
 
@@ -38,6 +41,7 @@ struct ap_prov_context {
     char ap_ssid[33];
     wifi_prov_cb calllback_fn;
     wifi_prov_result_t res;
+    ip_addr_t ip;
 };
 
 typedef struct http_client {
@@ -74,7 +78,7 @@ static char *url_decode(const char *str)
                     return dStr;
                 }
 
-                if (isxdigit(dStr[i + 1]) && isxdigit(dStr[i + 2])) {
+                if (isxdigit((uint8_t)dStr[i + 1]) && isxdigit((uint8_t)dStr[i + 2])) {
 
                     d = 0;
 
@@ -125,6 +129,7 @@ static void http_client_handle(void *args)
     int iNewSockFD = ((http_client_t*)args)->fd;
     int iStatus;
     int socket_recv_size = 2048;
+    char *ip = ipaddr_ntoa(&context->ip);
 
     LOGD(TAG, "Start process client %d", iNewSockFD);
     // waits packets from the connected TCP client
@@ -153,7 +158,8 @@ static void http_client_handle(void *args)
         /** get index.html */
         if ((strstr((char *)socket_recv_buf, "GET / HTTP/1") ||
              strstr((char *)socket_recv_buf, "GET /index.html HTTP/1")) &&
-            (strstr((char *)socket_recv_buf, "Host: 192.168.1.1"))) {
+            (strstr((char *)socket_recv_buf, "Host: ")) && 
+            (strstr((char *)socket_recv_buf, ip)) ) {
 
             LOGD(TAG, "Received HTTP GET, Send response HTTP/1.0");
             /** send response */
@@ -189,14 +195,17 @@ static void http_client_handle(void *args)
         }
 
         if ((strstr((char *)socket_recv_buf, "GET ")) != NULL) {
-
-            LOGD(TAG, "Received HTTP GET, Send response 301");
             /** send response */
-            char *http_header_fmt = "HTTP/1.0 301 Moved Permanently\r\n"
-                                    "Location: http://192.168.1.1/index.html\r\n\r\n";
+            char *http_header_fmt;
+            asprintf(&http_header_fmt,  "HTTP/1.0 301 Moved Permanently\r\n"
+                                        "Location: http://%s/index.html\r\n\r\n", ip);
 
-            sendall(iNewSockFD, (uint8_t*)http_header_fmt, strlen((char *)http_header_fmt), 0);
+            LOGD(TAG, "Received HTTP GET, Send response 301 (IP:%s)", ip);
 
+            if (http_header_fmt) {
+                sendall(iNewSockFD, (uint8_t*)http_header_fmt, strlen((char *)http_header_fmt), 0);
+                free(http_header_fmt);
+            }
             goto Exit;
         }
 
@@ -400,9 +409,8 @@ static int http_server(struct ap_prov_context *context)
         LOGE(TAG, "TCP ERROR: listen tcp server socket fd error %d", iStatus);
         goto Exit1;
     }
-
     aos_task_t task_handle;
-    aos_check_param(!aos_task_new_ext(&task_handle, "dns_server", dns_server_entry, NULL, 2048, 32));
+    aos_check_param(!aos_task_new_ext(&task_handle, "dns_server", dns_server_entry, context, 2048, 32));
 
 Restart:
     iNewSockFD = -1;
@@ -576,6 +584,7 @@ static void process_query(int fd)
             LOGE(TAG, "process_query sendto error.");
         }
     }
+	(void)domain;
 }
 
 static void dns_server_entry(void *arg)
@@ -646,36 +655,33 @@ static void ap_prov_callback(struct ap_prov_context *context)
 static void prov_thread(void *arg)
 {
     int i = 0;
+    ip_addr_t netmask;
+    ip_addr_t gw;
     struct ap_prov_context *context = (struct ap_prov_context *)arg;
 
-    while (1) {
-        if (dhcps_get_client_number() > 0)
-            break;
-        else
-            aos_msleep(1000);
-
-        if (context->prov_enable == 0)
-            goto exit;
-    }
-
-    {
+    while(1) {
         wifi_sta_list_t sta_list = {0};
         hal_wifi_ap_get_sta_list(context->dev, &sta_list);
-        for (i = 0; i < sta_list.num; i++) {
-            LOGD(TAG, "STA[%d]=%02x:%02x:%02x:%02x:%02x:%02x\n",
-                 i,
-                 sta_list.sta[i].mac[0],
-                 sta_list.sta[i].mac[1],
-                 sta_list.sta[i].mac[2],
-                 sta_list.sta[i].mac[3],
-                 sta_list.sta[i].mac[4],
-                 sta_list.sta[i].mac[5]);
+        if (sta_list.num) {
+            for (i = 0; i < sta_list.num; i++) {
+                LOGD(TAG, "STA[%d]=%02x:%02x:%02x:%02x:%02x:%02x\n",
+                    i,
+                    sta_list.sta[i].mac[0],
+                    sta_list.sta[i].mac[1],
+                    sta_list.sta[i].mac[2],
+                    sta_list.sta[i].mac[3],
+                    sta_list.sta[i].mac[4],
+                    sta_list.sta[i].mac[5]);
+            }
+            break;
         }
+        aos_msleep(1000);
     }
+
+    hal_net_get_ipaddr(context->dev, &context->ip, &netmask, &gw);
 
     http_server(context);
 
-exit:
     if (is_dns_server_run == 1) {
         is_dns_server_run = 2;
     }
@@ -699,7 +705,7 @@ static void prov_thread_start(struct ap_prov_context *context)
     aos_task_t task_handle;
     is_prov_runing = 1;
 
-    if (0 != aos_task_new_ext(&task_handle, "prov_thread", prov_thread, context, 5*1024, AOS_DEFAULT_APP_PRI + 3)) {
+    if (0 != aos_task_new_ext(&task_handle, "prov_thread", prov_thread, context, 8 * 1024, AOS_DEFAULT_APP_PRI + 3)) {
         LOGE(TAG, "Create network task failed.");
     }
 }
@@ -782,7 +788,9 @@ static int ap_prov_start(wifi_prov_cb cb)
 
     memset(&config, 0, sizeof(wifi_config_t));
 
-    snprintf(config.ssid, sizeof(config.ssid), "%s[%02x:%02x:%02x:%02x:%02x:%02x]", context->ap_ssid, mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+#define snprintf_nowarn(...) (snprintf(__VA_ARGS__) < 0 ? abort() : (void)0)
+    snprintf_nowarn(config.ssid, sizeof(config.ssid), "%s[%02x:%02x:%02x:%02x:%02x:%02x]",
+                    context->ap_ssid, mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
     config.ssid[sizeof(config.ssid) - 1] = 0;
     config.mode = WIFI_MODE_AP;
 
@@ -822,6 +830,3 @@ int wifi_prov_softap_register(char *ap_ssid)
 
     return 0;
 }
-
-
-

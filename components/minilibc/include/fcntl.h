@@ -71,7 +71,7 @@ extern "C" {
 #define O_DSYNC     O_SYNC          /* Equivalent to OSYNC in NuttX */
 #define O_FSYNC     O_SYNC          /* Equivalent to OSYNC in NuttX */
 #define O_ASYNC     00020000          /* Equivalent to OSYNC in NuttX */
-#define O_BINARY    00000800        /* Open the file in binary (untranslated) mode. */
+#define O_BINARY    00000000        /* Open the file in binary (untranslated) mode. */
 
 /* Unsupported, but required open flags */
 

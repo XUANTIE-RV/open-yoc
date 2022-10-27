@@ -6,30 +6,27 @@
 #include <aos/kernel.h>
 #include <aos/debug.h>
 
-void *yoc_realloc(void *ptr, size_t size, void *caller);
-void *yoc_malloc(int32_t size, void *caller);
-void yoc_free(void *ptr, void *unsed);
 
 void *malloc(size_t size)
 {
-    return yoc_malloc(size, __builtin_return_address(0));
+    return aos_malloc(size);
 }
 
 void free(void *ptr)
 {
     if (ptr)
-        yoc_free(ptr, __builtin_return_address(0));
+        aos_free(ptr);
 }
 
 void *realloc(void *ptr, size_t size)
 {
-    return yoc_realloc(ptr, size, __builtin_return_address(0));
+    return aos_realloc(ptr, size);
 }
 
 void *calloc(size_t nmemb, size_t size)
 {
     int   n   = size * nmemb;
-    void *ptr = yoc_malloc(n, __builtin_return_address(0));
+    void *ptr = aos_malloc(n);
 
     if (ptr) {
         memset(ptr, 0, n);

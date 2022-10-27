@@ -59,14 +59,24 @@ struct bt_mesh_cfg_srv {
 		void (*func)(u8_t hops, u16_t feat);
 	} hb_sub;
 };
+
 #ifdef CONFIG_BT_MESH_EVENT_CALLBACK
   typedef struct {
     uint8_t status;
     uint16_t netkey_idx;
     uint16_t appkey_idx;
   }appkey_status;
-#endif
 
+  typedef struct {
+    uint16_t src_addr;
+	uint16_t dst_addr;
+    uint8_t init_ttl;
+	uint8_t recv_ttl;
+	uint16_t feat;
+	uint16_t net_idx;
+    uint16_t appkey_idx;
+  }hb_status;
+#endif
 
 extern const struct bt_mesh_model_op bt_mesh_cfg_srv_op[];
 extern struct bt_mesh_cfg_srv g_cfg_srv;
@@ -80,6 +90,12 @@ extern struct bt_mesh_cfg_srv g_cfg_srv;
 u8_t bt_mesh_mod_bind(struct bt_mesh_model *model, u16_t key_idx);
 u8_t bt_mesh_mod_sub_add(struct bt_mesh_model *model, u16_t sub_addr);
 u8_t bt_mesh_mod_pub_set(struct bt_mesh_model *model, u16_t pub_addr);
+int  bt_mesh_mod_hb_sub_set(u16_t net_idx, u16_t sub_src, u16_t sub_dst, u8_t sub_period);
+int  bt_mesh_mod_hb_pub_set(u16_t net_idx, u16_t src_addr, u16_t dst_addr, u8_t count_log, u8_t period_log, u8_t ttl, u16_t feat);
+
+#ifdef CONFIG_GENIE_MESH_ENABLE
+s8_t genie_mesh_setup(u16_t key_app_idx);
+#endif
 
 #ifdef __cplusplus
 }

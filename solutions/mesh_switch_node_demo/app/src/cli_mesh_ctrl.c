@@ -28,13 +28,13 @@ void cmd_mesh_control_func(char *wbuf, int wbuf_len, int argc, char **argv)
         ret = gen_onoff_set(onoff, false);
 
         if (ret) {
-            LOGE(TAG, "send unack msg LED faild");
+            LOGE(TAG, "send unack msg LED failed");
         }
     } else if (ack == 1) {
         ret = gen_onoff_set(onoff, true);
 
         if (ret) {
-            LOGE(TAG, "send ack msg LED faild");
+            LOGE(TAG, "send ack msg LED failed");
         }
     }
 }

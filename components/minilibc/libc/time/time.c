@@ -4,8 +4,14 @@
 
 #include <time.h>
 
+long timezone = 8;
+
 extern int clock_gettime(clockid_t clockid, struct timespec *tp);
 
+/*
+SVr4, 4.3BSD, C89, C99, POSIX.1-2001.  POSIX does not specify any
+error conditions.
+*/
 time_t time(time_t *tloc)
 {
   struct timespec ts;

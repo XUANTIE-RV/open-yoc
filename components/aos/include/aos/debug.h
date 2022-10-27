@@ -59,11 +59,13 @@ extern "C" {
 	} while (0)
 #endif
 
+#if CONFIG_OPT_FOOTPRINT_LEVEL == 0
+
 #ifndef CHECK_RET_WITH_GOTO
 #define CHECK_RET_WITH_GOTO(x, label) \
 	do { \
 		if (!(x)) { \
-			printf("%s, %d fail.\n", __FUNCTION__, __LINE__); \
+			LOGE(__FILE__, "%s, %d fail.", __FUNCTION__, __LINE__); \
 			goto label; \
 		}\
 	} while (0)
@@ -73,7 +75,7 @@ extern "C" {
 #define CHECK_RET_WITH_RET(x, ret) \
 	do { \
 		if (!(x)) { \
-			printf("%s, %d fail.\n", __FUNCTION__, __LINE__); \
+			LOGE(__FILE__, "%s, %d fail.", __FUNCTION__, __LINE__); \
 			return ret; \
 		}\
 	} while (0)
@@ -98,6 +100,46 @@ extern "C" {
 		}\
 	} while (0)
 #endif
+
+#else
+
+#ifndef CHECK_RET_WITH_GOTO
+#define CHECK_RET_WITH_GOTO(x, label) \
+	do { \
+		if (!(x)) { \
+			goto label; \
+		}\
+	} while (0)
+#endif
+
+#ifndef CHECK_RET_WITH_RET
+#define CHECK_RET_WITH_RET(x, ret) \
+	do { \
+		if (!(x)) { \
+			return ret; \
+		}\
+	} while (0)
+#endif
+
+#ifndef CHECK_RET_TAG_WITH_GOTO
+#define CHECK_RET_TAG_WITH_GOTO(x, label) \
+	do { \
+		if (!(x)) { \
+			goto label; \
+		}\
+	} while (0)
+#endif
+
+#ifndef CHECK_RET_TAG_WITH_RET
+#define CHECK_RET_TAG_WITH_RET(x, ret) \
+	do { \
+		if (!(x)) { \
+			return ret; \
+		}\
+	} while (0)
+#endif
+
+#endif /* end CONFIG_OPT_FOOTPRINT_LEVEL */
 
 /*
  * Check that an expression is true (non-zero).

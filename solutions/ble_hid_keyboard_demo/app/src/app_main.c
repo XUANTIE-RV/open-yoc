@@ -1,11 +1,13 @@
 /*
- * Copyright (C) 2019-2020 Alibaba Group Holding Limited
+ * Copyright (C) 2019-2022 Alibaba Group Holding Limited
  */
 
 #include <stdlib.h>
 #include <string.h>
 #include <aos/aos.h>
+#ifdef AOS_COMP_CLI
 #include "aos/cli.h"
+#endif
 #include "aos/ble.h"
 #include "app_main.h"
 #include "app_init.h"
@@ -15,10 +17,9 @@
 #include <yoc/bas.h>
 #include <yoc/dis.h>
 
-#define TAG  "DEMO"
+#define TAG "DEMO"
 
 #define DEVICE_NAME "YoC-KEYBOARD"
-#define DEVICE_ADDR {0xE8,0x3B,0xE3,0x88,0xB4,0xC8}
 
 /* send_data.Code -> key map
     0x00    Reserved (no event indicated)
@@ -197,40 +198,40 @@
 */
 
 static uint8_t report_map[] = {
-    0x05, 0x01,       // Usage Page (Generic Desktop)
-    0x09, 0x06,       // Usage (Keyboard)
+    0x05, 0x01, // Usage Page (Generic Desktop)
+    0x09, 0x06, // Usage (Keyboard)
 
-    0xA1, 0x01,       // Collection (Application)
-    0x05, 0x07,       // Usage Page (Key Codes)
-    0x19, 0xe0,       // Usage Minimum (0xE0 -> LeftControl)
-    0x29, 0xe7,       // Usage Maximum (0xE7 -> Right GUI)
-    0x15, 0x00,       // Logical Minimum (0)
-    0x25, 0x01,       // Logical Maximum (1)
-    0x75, 0x01,       // Report Size (1)
-    0x95, 0x08,       // Report Count (8)
-    0x81, 0x02,       // Input (Data, Variable, Absolute)
-    0x95, 0x01,       // Report Count (1)
-    0x75, 0x08,       // Report Size (8)
-    0x81, 0x01,       // Input (Constant) reserved byte(1)
-    //LED输出报告
-    0x95, 0x05,       // Report Count (5)
-    0x75, 0x01,       // Report Size (1)
-    0x05, 0x08,       // Usage Page (Page# for LEDs)
-    0x19, 0x01,       // Usage Minimum (1)
-    0x29, 0x05,       // Usage Maximum (5)
-    0x91, 0x02,       // Output (Data, Variable, Absolute), Led report
-    0x95, 0x01,       // Report Count (1)
-    0x75, 0x03,       // Report Size (3)
-    0x91, 0x01,       // Output (Data, Variable, Absolute), Led report padding
+    0xA1, 0x01, // Collection (Application)
+    0x05, 0x07, // Usage Page (Key Codes)
+    0x19, 0xe0, // Usage Minimum (0xE0 -> LeftControl)
+    0x29, 0xe7, // Usage Maximum (0xE7 -> Right GUI)
+    0x15, 0x00, // Logical Minimum (0)
+    0x25, 0x01, // Logical Maximum (1)
+    0x75, 0x01, // Report Size (1)
+    0x95, 0x08, // Report Count (8)
+    0x81, 0x02, // Input (Data, Variable, Absolute)
+    0x95, 0x01, // Report Count (1)
+    0x75, 0x08, // Report Size (8)
+    0x81, 0x01, // Input (Constant) reserved byte(1)
+    // LED输出报告
+    0x95, 0x05, // Report Count (5)
+    0x75, 0x01, // Report Size (1)
+    0x05, 0x08, // Usage Page (Page# for LEDs)
+    0x19, 0x01, // Usage Minimum (1)
+    0x29, 0x05, // Usage Maximum (5)
+    0x91, 0x02, // Output (Data, Variable, Absolute), Led report
+    0x95, 0x01, // Report Count (1)
+    0x75, 0x03, // Report Size (3)
+    0x91, 0x01, // Output (Data, Variable, Absolute), Led report padding
 
-    0x95, 0x06,       // Report Count (6)
-    0x75, 0x08,       // Report Size (8)
-    0x15, 0x00,       // Logical Minimum (0)
-    0x25, 0x65,       // Logical Maximum (101)
-    0x05, 0x07,       // Usage Page (Key codes)
-    0x19, 0x00,       // Usage Minimum (0)
-    0x29, 0x65,       // Usage Maximum (101)  0x65    Keyboard Application
-    0x81, 0x00,       // Input (Data, Array) Key array(6 bytes)
+    0x95, 0x06, // Report Count (6)
+    0x75, 0x08, // Report Size (8)
+    0x15, 0x00, // Logical Minimum (0)
+    0x25, 0x65, // Logical Maximum (101)
+    0x05, 0x07, // Usage Page (Key codes)
+    0x19, 0x00, // Usage Minimum (0)
+    0x29, 0x65, // Usage Maximum (101)  0x65    Keyboard Application
+    0x81, 0x00, // Input (Data, Array) Key array(6 bytes)
     /*
         0x09, 0x05,       // Usage (Vendor Defined)
         0x15, 0x00,       // Logical Minimum (0)
@@ -239,72 +240,73 @@ static uint8_t report_map[] = {
         0x95, 0x02,       // Report Size (8 bit)
         0xB1, 0x02,       // Feature (Data, Variable, Absolute)
     */
-    0xC0              // End Collection (Application)
+    0xC0 // End Collection (Application)
 };
 
-typedef struct  _SPECIAL_KEY_VALUE_ {
-    uint8_t    Left_Ctrl        : 1;
-    uint8_t    Left_Shift       : 1;
-    uint8_t    Left_Alt         : 1;
-    uint8_t    Left_Gui         : 1;
-    uint8_t    Right_Ctrl       : 1;
-    uint8_t    Right_Shift      : 1;
-    uint8_t    Right_Alt        : 1;
-    uint8_t    Right_Gui        : 1;
+typedef struct _SPECIAL_KEY_VALUE_ {
+    uint8_t Left_Ctrl   : 1;
+    uint8_t Left_Shift  : 1;
+    uint8_t Left_Alt    : 1;
+    uint8_t Left_Gui    : 1;
+    uint8_t Right_Ctrl  : 1;
+    uint8_t Right_Shift : 1;
+    uint8_t Right_Alt   : 1;
+    uint8_t Right_Gui   : 1;
 } SPECIAL_KEY_VALUE_BIT;
 
-typedef union {
-    SPECIAL_KEY_VALUE_BIT  bits;
-    uint8_t           data;
+typedef union
+{
+    SPECIAL_KEY_VALUE_BIT bits;
+    uint8_t               data;
 } SPCL_KEY;
 
-
-typedef struct press_key  {
-    SPCL_KEY  keydata;
-    uint8_t     Rsv;
-    uint8_t   Code1;
-    uint8_t   Code2;
-    uint8_t   Code3;
-    uint8_t   Code4;
-    uint8_t   Code5;
-    uint8_t   Code6;
+typedef struct press_key {
+    SPCL_KEY keydata;
+    uint8_t  Rsv;
+    uint8_t  Code1;
+    uint8_t  Code2;
+    uint8_t  Code3;
+    uint8_t  Code4;
+    uint8_t  Code5;
+    uint8_t  Code6;
 } press_key_data;
 
 static uint8_t report_output_data[1] = {
     0x00,
 };
 
-typedef struct  _KEYBOARD_LED_ {
-    uint8_t    Num_Lock     : 1;
-    uint8_t    Cap_Lock     : 1;
-    uint8_t    Scroll_Lock  : 1;
-    uint8_t    Compose      : 1;
-    uint8_t    Kana         : 1;
-    uint8_t    Rsv          : 3;
+typedef struct _KEYBOARD_LED_ {
+    uint8_t Num_Lock    : 1;
+    uint8_t Cap_Lock    : 1;
+    uint8_t Scroll_Lock : 1;
+    uint8_t Compose     : 1;
+    uint8_t Kana        : 1;
+    uint8_t Rsv         : 3;
 } KEYBOARD_LED_BIT;
 
-typedef union {
-    KEYBOARD_LED_BIT  bits;
-    uint8_t           data;
+typedef union
+{
+    KEYBOARD_LED_BIT bits;
+    uint8_t          data;
 } CTRL_LED;
 
-static press_key_data  send_data;
+static press_key_data send_data;
 
-static int16_t g_conn_handle = -1;
-static int16_t g_paired_hanlde = -1;
+static int16_t    g_conn_handle   = -1;
+static int16_t    g_paired_hanlde = -1;
 static dev_addr_t g_paired_addr;
 
-static bas_handle_t g_bas_handle = NULL;
-static dis_handle_t g_dis_handle = NULL;
+static bas_handle_t  g_bas_handle  = NULL;
+static dis_handle_t  g_dis_handle  = NULL;
 static hids_handle_t g_hids_handle = NULL;
-static bas_t g_bas;
-static aos_sem_t sync_sem;
+static bas_t         g_bas;
+static aos_sem_t     sync_sem;
 #define MANUFACTURER_NAME "PINGTOUGE"
-#define MODEL_NUMBER "MODE_KEYBOARD"
-#define SERIAL_NUMBER "00000001"
-#define HW_REV "0.0.1"
-#define FW_REV "0.0.2"
-#define SW_REV "0.0.3"
+#define MODEL_NUMBER      "MODE_KEYBOARD"
+#define SERIAL_NUMBER     "00000001"
+#define HW_REV            "0.0.1"
+#define FW_REV            "0.0.2"
+#define SW_REV            "0.0.3"
 
 static pnp_id_t pnp_id = {
     VEND_ID_SOURCE_USB,
@@ -314,44 +316,28 @@ static pnp_id_t pnp_id = {
 };
 
 static dis_info_t dis_info = {
-    MANUFACTURER_NAME,
-    MODEL_NUMBER,
-    SERIAL_NUMBER,
-    HW_REV,
-    FW_REV,
-    SW_REV,
-    NULL,
-    NULL,
-    &pnp_id,
+    MANUFACTURER_NAME, MODEL_NUMBER, SERIAL_NUMBER, HW_REV, FW_REV, SW_REV, NULL, NULL, &pnp_id,
 };
 
 static void start_adv(void)
 {
-    ad_data_t ad[3] = {0};
-    uint8_t flag = AD_FLAG_GENERAL | AD_FLAG_NO_BREDR;
-    ad[0].type = AD_DATA_TYPE_FLAGS;
-    ad[0].data = (uint8_t *)&flag;
-    ad[0].len = 1;
+    ad_data_t ad[3] = { 0 };
+    uint8_t   flag  = AD_FLAG_GENERAL | AD_FLAG_NO_BREDR;
+    ad[0].type      = AD_DATA_TYPE_FLAGS;
+    ad[0].data      = (uint8_t *)&flag;
+    ad[0].len       = 1;
 
-    uint8_t uuid16_list[] = {0x12, 0x18, 0x0f, 0x18}; /* UUID_BAS, UUID_HIDS */
-    ad[1].type = AD_DATA_TYPE_UUID16_ALL;
-    ad[1].data = (uint8_t *)uuid16_list;
-    ad[1].len = sizeof(uuid16_list);
+    uint8_t uuid16_list[] = { 0x12, 0x18, 0x0f, 0x18 }; /* UUID_BAS, UUID_HIDS */
+    ad[1].type            = AD_DATA_TYPE_UUID16_ALL;
+    ad[1].data            = (uint8_t *)uuid16_list;
+    ad[1].len             = sizeof(uuid16_list);
 
     ad[2].type = AD_DATA_TYPE_GAP_APPEARANCE;
-    ad[2].data = (uint8_t *)(uint8_t[]) {
-        0xc1, 0x03
-    };
-    ad[2].len = 2;
+    ad[2].data = (uint8_t *)(uint8_t[]){ 0xc1, 0x03 };
+    ad[2].len  = 2;
 
     adv_param_t param = {
-        ADV_IND,
-        ad,
-        NULL,
-        BLE_ARRAY_NUM(ad),
-        0,
-        ADV_FAST_INT_MIN_1,
-        ADV_FAST_INT_MAX_1,
+        ADV_IND, ad, NULL, BLE_ARRAY_NUM(ad), 0, ADV_FAST_INT_MIN_1, ADV_FAST_INT_MAX_1,
     };
 
     int ret = ble_stack_adv_start(&param);
@@ -362,8 +348,6 @@ static void start_adv(void)
         LOGE(TAG, "adv start!");
     }
 }
-
-
 
 static void conn_change(ble_event_en event, void *event_data)
 {
@@ -391,7 +375,7 @@ static void event_smp_complete(ble_event_en event, void *event_data)
     evt_data_smp_pairing_complete_t *e = (evt_data_smp_pairing_complete_t *)event_data;
 
     if (e->err == 0) {
-        g_paired_addr = e->peer_addr;
+        g_paired_addr   = e->peer_addr;
         g_paired_hanlde = e->conn_handle;
     }
 
@@ -435,7 +419,7 @@ static void event_output_write(ble_event_en event, void *event_data)
 
     if (e->len == 1) {
         report_output_data[0] = e->data[0];
-        led_status.data = e->data[0];
+        led_status.data       = e->data[0];
         Light_Led(led_status);
     }
 }
@@ -456,8 +440,7 @@ static void conn_param_update(ble_event_en event, void *event_data)
 {
     evt_data_gap_conn_param_update_t *e = event_data;
 
-    LOGD(TAG, "LE conn param updated: int 0x%04x lat %d to %d\n", e->interval,
-         e->latency, e->timeout);
+    LOGD(TAG, "LE conn param updated: int 0x%04x lat %d to %d\n", e->interval, e->latency, e->timeout);
     (void)e;
 }
 
@@ -475,11 +458,11 @@ static void mtu_exchange(ble_event_en event, void *event_data)
 static void identity_address_resolved(ble_event_en event, void *event_data)
 {
     evt_data_smp_identity_address_t *e = (evt_data_smp_identity_address_t *)event_data;
-    LOGI(TAG, "rpa %02x:%02x:%02x:%02x:%02x:%02x (type %d)",
-         e->rpa.val[5], e->rpa.val[4], e->rpa.val[3], e->rpa.val[2], e->rpa.val[1], e->rpa.val[0], e->rpa.type);
-    LOGI(TAG, "id  %02x:%02x:%02x:%02x:%02x:%02x (type %d)",
-         e->identity_addr.val[5], e->identity_addr.val[4], e->identity_addr.val[3], e->identity_addr.val[2],
-         e->identity_addr.val[1], e->identity_addr.val[0], e->identity_addr.type);
+    LOGI(TAG, "rpa %02x:%02x:%02x:%02x:%02x:%02x (type %d)", e->rpa.val[5], e->rpa.val[4], e->rpa.val[3], e->rpa.val[2],
+         e->rpa.val[1], e->rpa.val[0], e->rpa.type);
+    LOGI(TAG, "id  %02x:%02x:%02x:%02x:%02x:%02x (type %d)", e->identity_addr.val[5], e->identity_addr.val[4],
+         e->identity_addr.val[3], e->identity_addr.val[2], e->identity_addr.val[1], e->identity_addr.val[0],
+         e->identity_addr.type);
 }
 
 static int event_callback(ble_event_en event, void *event_data)
@@ -540,17 +523,18 @@ int key_board_send(press_key_data *senddata)
 {
     int iflag = 0;
 
-    //code data not 0
+    // code data not 0
     if (g_conn_handle != -1) {
-        iflag = hids_key_send(g_hids_handle, (uint8_t *)(senddata), sizeof(send_data));
+        iflag = ble_prf_hids_key_send(g_hids_handle, (uint8_t *)(senddata), sizeof(send_data));
         memset(senddata, 0, sizeof(press_key_data));
-        iflag |= hids_key_send(g_hids_handle, (uint8_t *)(senddata), sizeof(send_data));
+        iflag |= ble_prf_hids_key_send(g_hids_handle, (uint8_t *)(senddata), sizeof(send_data));
         return iflag;
     }
 
     return -1;
 }
 
+#ifdef AOS_COMP_CLI
 static void cmd_keysend_func(char *wbuf, int wbuf_len, int argc, char **argv)
 {
     if (argc == 2) {
@@ -559,7 +543,6 @@ static void cmd_keysend_func(char *wbuf, int wbuf_len, int argc, char **argv)
             send_data.Code6 = atoi(argv[1]);
             key_board_send(&send_data);
             LOGD(TAG, "key send %d", atoi(argv[1]));
-
         }
     }
 }
@@ -574,6 +557,7 @@ void cli_reg_cmd_keysend(void)
 
     aos_cli_register_command(&cmd_info);
 }
+#endif
 
 static ble_event_cb_t ble_cb = {
     .callback = event_callback,
@@ -586,15 +570,15 @@ int main()
 
     board_yoc_init();
 
-    dev_addr_t addr = {DEV_ADDR_LE_RANDOM, DEVICE_ADDR};
     init_param_t init = {
-        .dev_name = DEVICE_NAME,
-        .dev_addr = &addr,
+        .dev_name     = DEVICE_NAME,
+        .dev_addr     = NULL,
         .conn_num_max = 1,
     };
 
+#if defined(AOS_COMP_CLI) || defined(USE_CLI)
     cli_reg_cmd_keysend();
-
+#endif
     aos_sem_new(&sync_sem, 1);
 
     LOGI(TAG, "Bluetooth HID demo!");
@@ -606,58 +590,58 @@ int main()
     ret = ble_stack_event_register(&ble_cb);
 
     if (ret) {
-        LOGE(TAG, "register event faild");
+        LOGE(TAG, "register event failed");
         return -1;
     }
 
     ble_stack_iocapability_set(IO_CAP_IN_YESNO | IO_CAP_OUT_NONE);
 
-    g_bas_handle = bas_init(&g_bas);
+    g_bas_handle = ble_prf_bas_init(&g_bas);
 
     if (g_bas_handle == NULL) {
         LOGE(TAG, "BAS init FAIL!!!!");
         return -1;
     }
 
-    g_dis_handle = dis_init(&dis_info);
+    g_dis_handle = ble_prf_dis_init(&dis_info);
 
     if (g_dis_handle == NULL) {
         LOGE(TAG, "DIS init FAIL!!!!");
         return -1;
     }
 
-    g_hids_handle = hids_init(HIDS_REPORT_PROTOCOL_MODE);
+    g_hids_handle = ble_prf_hids_init(HIDS_REPORT_PROTOCOL_MODE);
 
     if (g_hids_handle == NULL) {
         LOGE(TAG, "HIDS init FAIL!!!!");
         return -1;
     }
 
-    s_flag = set_data_map(report_map, sizeof(report_map), REPORT_MAP);
+    s_flag = ble_prf_hids_set_data_map(report_map, sizeof(report_map), REPORT_MAP);
 
     if (s_flag == -1) {
         LOGE(TAG, "set_report_map FAIL!!!!");
         return s_flag;
     }
 
-    s_flag = set_data_map((uint8_t *)(&send_data), sizeof(send_data), REPORT_INPUT);
+    s_flag = ble_prf_hids_set_data_map((uint8_t *)(&send_data), sizeof(send_data), REPORT_INPUT);
 
     if (s_flag == -1) {
         LOGE(TAG, "set_report_input FAIL!!!!");
         return s_flag;
     }
 
-    s_flag = set_data_map(report_output_data, sizeof(report_output_data), REPORT_OUTPUT);
+    s_flag = ble_prf_hids_set_data_map(report_output_data, sizeof(report_output_data), REPORT_OUTPUT);
 
     if (s_flag == -1) {
         LOGE(TAG, "set_report_output FAIL!!!!");
         return s_flag;
     }
 
-    s_flag = init_hids_call_func(HIDS_IDX_REPORT_OUTPUT_VAL, (void *)event_output_write);
+    s_flag = ble_prf_hids_regist(HIDS_IDX_REPORT_OUTPUT_VAL, (void *)event_output_write);
 
     if (s_flag == -1) {
-        LOGE(TAG, "init_hids_call_func FAIL!!!!");
+        LOGE(TAG, "ble_prf_hids_regist FAIL!!!!");
         return s_flag;
     }
 
@@ -671,4 +655,3 @@ int main()
 
     return 0;
 }
-

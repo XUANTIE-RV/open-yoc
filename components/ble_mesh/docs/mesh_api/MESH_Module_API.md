@@ -4796,7 +4796,7 @@ void (*provisioner_cb)(mesh_provisioner_event_en event, void *p_arg)
 | BT_MESH_EVENT_RECV_UNPROV_DEV_ADV            | Provisioner 节点接收到未入网设备广播 | mesh_node_t* node，参见mesh_node_t（结构体）定义 |
 | BT_MESH_EVENT_PROV_COMP                      | Provisioner节点入网设备成功          | mesh_node_t* node，参见mesh_node_t（结构体）定义 |
 | BT_MESH_EVENT_FOUND_DEV_TIMEOUT              | Provisioner节点查找设备超时          | NULL                                             |
-| BT_MESH_EVENT_PROV_FAILD                     | Provisioner节点入网设备失败          | uint8_t* reason,入网失败原因                     |
+| BT_MESH_EVENT_PROV_FAILED                    | Provisioner节点入网设备失败          | uint8_t* reason,入网失败原因                     |
 | BT_MESH_EVENT_OOB_INPUT_NUM                  | Provisioner节点输入OOB NUM提示       | uint8_t* size,输入数字个数                       |
 | BT_MESH_EVENT_OOB_INPUT_STRING               | Provisioner节点输入OOB STR提示       | uint8_t* szie,输入字符个数                       |
 | BT_MESH_EVENT_OOB_INPUT_STATIC_OOB           | Provisioner节点输入 STATIC OOB 提示  | NULL（static oob默认输入16个字符）               |

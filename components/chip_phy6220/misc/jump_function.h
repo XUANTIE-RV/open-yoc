@@ -548,7 +548,7 @@ llStatus_t LL_PLUS_DisableSlaveLatency0(uint8 connId);
 llStatus_t LL_PLUS_EnableSlaveLatency0(uint8 connId);
 
 // ================= BBB
-void ll_scheduler0(uint32 time);
+//void ll_scheduler0(uint32 time);
 void ll_addTask0(uint8 connId, uint32 time);
 void ll_deleteTask0(uint8 connId);
 

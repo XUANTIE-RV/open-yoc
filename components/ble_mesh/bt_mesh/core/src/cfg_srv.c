@@ -20,9 +20,7 @@
 
 #define BT_DBG_ENABLED IS_ENABLED(CONFIG_BT_MESH_DEBUG_MODEL)
 #include "common/log.h"
-
 #include "host/testing.h"
-
 #include "mesh.h"
 #include "adv.h"
 #include "net.h"
@@ -42,18 +40,26 @@
 
 #define DEFAULT_TTL 7
 
+#ifdef CONFIG_BT_MESH_ENABLE_KEY_DUMP
+#define CONFIG_ENABLE_MESH_KEY_DUMP CONFIG_BT_MESH_ENABLE_KEY_DUMP
+#else
+#ifndef CONFIG_ENABLE_MESH_KEY_DUMP
 #define CONFIG_ENABLE_MESH_KEY_DUMP 0
+#endif
+#endif
+
+#define CID_NVAL 0xFFFF
+#define HB_PUB_COUNT_MIN        0x11
+#define HB_PUB_COUNT_MAX        0xFF
+#define HB_PERIOD_LOG_COUNT_MAX 0x10
 
 static struct bt_mesh_cfg_srv *conf;
-
 
 static struct label {
 	u16_t ref;
 	u16_t addr;
 	u8_t  uuid[16];
 } labels[CONFIG_BT_MESH_LABEL_COUNT];
-
-
 
 struct bt_mesh_cfg_srv g_cfg_srv = {
     .relay = BT_MESH_RELAY_ENABLED,
@@ -70,10 +76,10 @@ struct bt_mesh_cfg_srv g_cfg_srv = {
 #endif
     .default_ttl = 7,
 
+    /* 7 transmissions with 20ms interval */
+    .net_transmit = BT_MESH_TRANSMIT(6, 20),
     /* 3 transmissions with 20ms interval */
-    .net_transmit = BT_MESH_TRANSMIT(2, 20),
-    /* 3 transmissions with 60ms interval */
-    .relay_retransmit = BT_MESH_TRANSMIT(2, 60),
+    .relay_retransmit = BT_MESH_TRANSMIT(2, 20),
 };
 
 struct bt_mesh_cfg_srv* get_cfg_srv()
@@ -296,10 +302,11 @@ static u8_t _mod_pub_set(struct bt_mesh_model *model, u16_t pub_addr,
 		return STATUS_FEAT_NOT_SUPP;
 	}
 
+#if 0
 	if (!model->pub->update && period) {
 		return STATUS_NVAL_PUB_PARAM;
 	}
-
+#endif
 	if (pub_addr == BT_MESH_ADDR_UNASSIGNED) {
 		if (model->pub->addr == BT_MESH_ADDR_UNASSIGNED) {
 			return STATUS_SUCCESS;
@@ -432,6 +439,48 @@ struct bt_mesh_app_key *bt_mesh_app_key_alloc(u16_t app_idx)
 	return NULL;
 }
 
+#ifdef CONFIG_GENIE_MESH_ENABLE
+s8_t genie_mesh_setup(u16_t key_app_idx)
+{
+	struct bt_mesh_elem *elem;
+	struct bt_mesh_model *mod;
+	u8_t elem_cnt, i, j, status;
+	u16_t primary_addr;
+
+	elem_cnt = bt_mesh_elem_count();
+	primary_addr = bt_mesh_primary_addr();
+
+	BT_DBG("start elem %d primary addr %04x", elem_cnt, primary_addr);
+	for (i = 0; i < elem_cnt; i++)
+	{
+		elem = bt_mesh_elem_find(primary_addr + i);
+		if (!elem)
+		{
+			BT_ERR("can not find elem for addr %d", primary_addr + i);
+			return -1;
+		}
+
+		for (j = 0; j < elem->model_count; j++)
+		{
+			mod = bt_mesh_model_find(elem, elem->models[j].id);
+			status = mod_bind(mod, key_app_idx);
+			BT_DBG(">>>model %04x app_key[%02x]<<<", elem->models[j].id, status);
+		}
+
+		for (j = 0; j < elem->vnd_model_count; j++)
+		{
+			mod = bt_mesh_model_find_vnd(elem, elem->vnd_models[j].vnd.company, elem->vnd_models[j].vnd.id);
+			status = mod_bind(mod, key_app_idx);
+			BT_DBG(">>>model %04x %04x app_key[%02x]<<<",
+				   elem->vnd_models[j].vnd.company, elem->vnd_models[j].vnd.id, status);
+		}
+	}
+
+	(void)status;
+	return 0;
+}
+#endif
+
 static u8_t app_key_set(u16_t net_idx, u16_t app_idx, const u8_t val[16],
 			bool update)
 {
@@ -523,51 +572,11 @@ static u8_t app_key_set(u16_t net_idx, u16_t app_idx, const u8_t val[16],
 		bt_mesh_store_app_key(key, 0);
 	}
 
+#ifdef CONFIG_GENIE_MESH_ENABLE
+	genie_mesh_setup(app_idx);
+#endif
 	return STATUS_SUCCESS;
 }
-
-#ifdef CONFIG_GENIE_MESH_ENABLE
-s8_t genie_mesh_setup(void)
-{
-    struct bt_mesh_elem *elem;
-    struct bt_mesh_model *mod;
-    u8_t elem_cnt, i, j, status;
-    u16_t primary_addr;
-    u16_t key_app_idx = 0;
-
-    elem_cnt = bt_mesh_elem_count();
-    primary_addr = bt_mesh_primary_addr();
-
-    BT_DBG("start elem %d primary addr %04x", elem_cnt, primary_addr);
-    for (i = 0; i < elem_cnt; i++)
-    {
-        elem = bt_mesh_elem_find(primary_addr + i);
-        if (!elem)
-        {
-            BT_ERR("can not find elem for addr %d", primary_addr + i);
-            return -1;
-        }
-
-        for (j = 0; j < elem->model_count; j++)
-        {
-            mod = bt_mesh_model_find(elem, elem->models[j].id);
-            status = mod_bind(mod, key_app_idx);
-            BT_DBG(">>>model %04x app_key[%02x]<<<", elem->models[j].id, status);
-        }
-
-        for (j = 0; j < elem->vnd_model_count; j++)
-        {
-            mod = bt_mesh_model_find_vnd(elem, elem->vnd_models[j].vnd.company, elem->vnd_models[j].vnd.id);
-            status = mod_bind(mod, key_app_idx);
-            BT_DBG(">>>model %04x %04x app_key[%02x]<<<",
-                   elem->vnd_models[j].vnd.company, elem->vnd_models[j].vnd.id, status);
-        }
-    }
-
-    (void)status;
-    return 0;
-}
-#endif
 
 static void app_key_add(struct bt_mesh_model *model,
 			struct bt_mesh_msg_ctx *ctx,
@@ -1526,6 +1535,9 @@ static void mod_sub_add(struct bt_mesh_model *model,
 	u8_t *mod_id;
 	u8_t status;
 	bool vnd;
+#ifdef CONFIG_GENIE_MESH_ENABLE
+	int i = 0;
+#endif
 
 	elem_addr = net_buf_simple_pull_le16(buf);
 	if (!BT_MESH_ADDR_IS_UNICAST(elem_addr)) {
@@ -1553,10 +1565,39 @@ static void mod_sub_add(struct bt_mesh_model *model,
 		goto send_status;
 	}
 
+/*
+[Genie begin] changed by lgy at 2021-08-02
+*/
+#ifdef CONFIG_GENIE_MESH_ENABLE
+	for (i = 0; i < elem->model_count; i++)
+	{
+		mod = bt_mesh_model_find(elem, elem->models[i].id);
+		if (mod)
+		{
+			status = bt_mesh_mod_sub_add(mod, sub_addr);
+			if (status != STATUS_SUCCESS)
+			{
+				break;
+			}
+		}
+	}
+	for (i = 0; i < elem->vnd_model_count; i++)
+	{
+		status = bt_mesh_mod_sub_add(&elem->vnd_models[i], sub_addr);
+		if (status != STATUS_SUCCESS)
+		{
+			break;
+		}
+	}
+#else
 	status = bt_mesh_mod_sub_add(mod, sub_addr);
+#endif
+/*
+[Genie end] changed by lgy at 2021-08-02
+*/
 
 send_status:
-#ifdef CONFIG_GENIE_MESH_GLP
+#if defined(CONFIG_GENIE_MESH_GLP) || defined(CONFIG_BT_MESH_LPM)
     k_sleep(1300);
 #endif
 	send_mod_sub_status(model, ctx, status, elem_addr, sub_addr,
@@ -1574,6 +1615,9 @@ static void mod_sub_del(struct bt_mesh_model *model,
 	u16_t *match;
 	u8_t status;
 	bool vnd;
+#ifdef CONFIG_GENIE_MESH_ENABLE
+	int i = 0;
+#endif
 
 	elem_addr = net_buf_simple_pull_le16(buf);
 	if (!BT_MESH_ADDR_IS_UNICAST(elem_addr)) {
@@ -1615,18 +1659,64 @@ static void mod_sub_del(struct bt_mesh_model *model,
 		bt_mesh_lpn_group_del(&sub_addr, 1);
 	}
 
-	match = bt_mesh_model_find_group(mod, sub_addr);
-	if (match) {
-		*match = BT_MESH_ADDR_UNASSIGNED;
+/*
+[Genie begin] changed by lgy at 2021-08-02
+*/
+#ifdef CONFIG_GENIE_MESH_ENABLE
+	for (i = 0; i < elem->model_count; i++)
+	{
+		mod = bt_mesh_model_find(elem, elem->models[i].id);
+		if (mod)
+		{
+			match = bt_mesh_model_find_group(mod, sub_addr);
+			if (match)
+			{
+				*match = BT_MESH_ADDR_UNASSIGNED;
 
-		if (IS_ENABLED(CONFIG_BT_SETTINGS)) {
-			bt_mesh_store_mod_sub(mod);
+				if (IS_ENABLED(CONFIG_BT_SETTINGS))
+				{
+					bt_mesh_store_mod_sub(mod);
+				}
+			}
 		}
 	}
 
+	for (i = 0; i < elem->vnd_model_count; i++)
+	{
+		mod = bt_mesh_model_find_vnd(elem, elem->vnd_models[i].vnd.company, elem->vnd_models[i].vnd.id);
+		if (mod)
+		{
+			match = bt_mesh_model_find_group(mod, sub_addr);
+			if (match)
+			{
+				*match = BT_MESH_ADDR_UNASSIGNED;
+
+				if (IS_ENABLED(CONFIG_BT_SETTINGS))
+				{
+					bt_mesh_store_mod_sub(mod);
+				}
+			}
+		}
+	}
+#else
+	match = bt_mesh_model_find_group(mod, sub_addr);
+	if (match)
+	{
+		*match = BT_MESH_ADDR_UNASSIGNED;
+
+		if (IS_ENABLED(CONFIG_BT_SETTINGS))
+		{
+			bt_mesh_store_mod_sub(mod);
+		}
+	}
+#endif
+	/*
+[Genie end] changed by lgy at 2021-08-02
+*/
+
 send_status:
 
-#ifdef CONFIG_GENIE_MESH_GLP
+#if defined(CONFIG_GENIE_MESH_GLP) || defined(CONFIG_BT_MESH_LPM)
     k_sleep(1300);
 #endif
 
@@ -1703,10 +1793,86 @@ send_status:
 			    mod_id, vnd);
 }
 
+
+
+int bt_mesh_mod_sublist_overwrite(struct net_buf_simple *buf)
+{
+	u16_t elem_addr, model_idx, cid, sub_addr;
+	struct bt_mesh_model *mod;
+	struct bt_mesh_elem *elem;
+	u8_t status;
+
+	elem_addr = net_buf_simple_pull_le16(buf);
+	if (!BT_MESH_ADDR_IS_UNICAST(elem_addr)) {
+		BT_WARN("Prohibited element address");
+		status = STATUS_INVALID_ADDRESS;
+		goto send_status;
+	}
+
+    elem = bt_mesh_elem_find(elem_addr);
+	if (!elem) {
+		mod = NULL;
+		status = STATUS_INVALID_ADDRESS;
+		goto send_status;
+	}
+
+    model_idx = net_buf_simple_pull_le16(buf);
+	cid = net_buf_simple_pull_le16(buf);
+
+	if(cid == CID_NVAL) {
+		mod = bt_mesh_model_find(elem, model_idx);
+	} else {
+        mod = bt_mesh_model_find_vnd(elem, cid, model_idx);
+	}
+
+	if (!mod) {
+		status = STATUS_INVALID_MODEL;
+		goto send_status;
+	}
+
+	if (IS_ENABLED(CONFIG_BT_MESH_LOW_POWER)) {
+		bt_mesh_lpn_group_del(mod->groups, ARRAY_SIZE(mod->groups));
+	}
+
+	mod_sub_list_clear(mod);
+
+
+    u8_t group_size = ARRAY_SIZE(mod->groups);
+	if(group_size < buf->len / 2) {
+       status = STATUS_INSUFF_RESOURCES;
+	   goto send_status;
+	}
+
+	u8_t i = 0;
+	while(buf->len >= 2) {
+      sub_addr  = net_buf_simple_pull_le16(buf);
+      if (!BT_MESH_ADDR_IS_GROUP(sub_addr)) {
+		 status = STATUS_INVALID_ADDRESS;
+		 goto send_status;
+	  }
+      mod->groups[i] = sub_addr;
+	  i++;
+	}
+
+	if (IS_ENABLED(CONFIG_BT_SETTINGS)) {
+	  bt_mesh_store_mod_sub(mod);
+	}
+
+	if (IS_ENABLED(CONFIG_BT_MESH_LOW_POWER)) {
+	  bt_mesh_lpn_group_add(sub_addr);
+	}
+
+   return 0;
+send_status:
+
+ return status;
+}
+
 static void mod_sub_del_all(struct bt_mesh_model *model,
 			    struct bt_mesh_msg_ctx *ctx,
 			    struct net_buf_simple *buf)
 {
+    uint16_t sub_addr;
 	struct bt_mesh_model *mod;
 	struct bt_mesh_elem *elem;
 	u16_t elem_addr;
@@ -1719,6 +1885,9 @@ static void mod_sub_del_all(struct bt_mesh_model *model,
 		BT_WARN("Prohibited element address");
 		return;
 	}
+
+	sub_addr = net_buf_simple_pull_le16(buf);
+	(void)sub_addr;
 
 	BT_DBG("elem_addr 0x%04x", elem_addr);
 
@@ -2823,6 +2992,37 @@ static void node_reset(struct bt_mesh_model *model,
 	}
 }
 
+int node_report_rst_status(uint16_t netkey_idx,uint16_t unicast_addr,struct bt_mesh_send_cb *cb)
+{
+    struct bt_mesh_msg_ctx ctx = {0};
+   /* Needed size: opcode (2 bytes) + msg + MIC */
+	NET_BUF_SIMPLE_DEFINE(msg, 2 + 0 + 4);
+
+	struct bt_mesh_model *cfg_srv_model;
+    extern struct bt_mesh_model *ble_mesh_model_find(uint16_t elem_idx, uint16_t mod_idx, uint16_t CID);
+    /* Find Generic cfg Client Model in device primary element */
+    cfg_srv_model = ble_mesh_model_find(0, BT_MESH_MODEL_ID_CFG_SRV, 0xFFFF);
+
+    if (!cfg_srv_model) {
+        BT_ERR("Cfg srv not support");
+        return -1;
+    }
+
+	bt_mesh_model_msg_init(&msg, OP_NODE_RESET_STATUS);
+
+	ctx.addr = unicast_addr;
+    ctx.net_idx = netkey_idx;
+    ctx.app_idx = BT_MESH_KEY_DEV;
+    ctx.send_ttl = bt_mesh_default_ttl_get();
+    ctx.send_rel = 1;
+
+	if (bt_mesh_model_send(cfg_srv_model, &ctx, &msg, cb, NULL)) {
+		BT_ERR("Unable to send Node Reset Status");
+		return -1;
+	}
+    return 0;
+}
+
 static void send_friend_status(struct bt_mesh_model *model,
 			       struct bt_mesh_msg_ctx *ctx)
 {
@@ -3112,6 +3312,8 @@ static void hb_pub_send_status(struct bt_mesh_model *model,
 		goto send;
 	}
 
+	/* use hb pub ttl as hb pub status ttl to reduce network storm*/
+	ctx->send_ttl = cfg->hb_pub.ttl;
 	net_buf_simple_add_le16(&msg, cfg->hb_pub.dst);
 	net_buf_simple_add_u8(&msg, hb_pub_count_log(cfg->hb_pub.count));
 	net_buf_simple_add_u8(&msg, cfg->hb_pub.period);
@@ -3134,65 +3336,64 @@ static void heartbeat_pub_get(struct bt_mesh_model *model,
 	hb_pub_send_status(model, ctx, STATUS_SUCCESS, NULL);
 }
 
-static void heartbeat_pub_set(struct bt_mesh_model *model,
-			      struct bt_mesh_msg_ctx *ctx,
-			      struct net_buf_simple *buf)
+int ble_mesh_cfg_srv_hb_pub_ttl_set(u8_t ttl)
 {
-	struct hb_pub_param *param = (void *)buf->data;
-	struct bt_mesh_cfg_srv *cfg = model->user_data;
+   struct bt_mesh_hb_pub *pub = NULL;
+   pub = bt_mesh_hb_pub_get();
+   if(!pub) {
+      BT_ERR("hb pub get failed");
+	  return -EINVAL;
+   }
+   pub->ttl = ttl;
+   if (IS_ENABLED(CONFIG_BT_SETTINGS)) {
+      bt_mesh_store_hb_pub();
+   }
+   return 0;
+}
+
+static int _heartbeat_pub_set(struct hb_pub_param *param , struct bt_mesh_cfg_srv *cfg, uint8_t* status)
+{
 	u16_t dst, feat, idx;
-	u8_t status;
-
-	BT_DBG("src 0x%04x", ctx->addr);
-
 	dst = sys_le16_to_cpu(param->dst);
 	/* All other address types but virtual are valid */
 	if (BT_MESH_ADDR_IS_VIRTUAL(dst)) {
-		status = STATUS_INVALID_ADDRESS;
+		*status = STATUS_INVALID_ADDRESS;
 		goto failed;
 	}
-
-	if (param->count_log > 0x11 && param->count_log != 0xff) {
-		status = STATUS_CANNOT_SET;
+	if (param->count_log > HB_PUB_COUNT_MIN && param->count_log != HB_PUB_COUNT_MAX) {
+		*status = STATUS_CANNOT_SET;
 		goto failed;
 	}
-
-	if (param->period_log > 0x10) {
-		status = STATUS_CANNOT_SET;
+	if (param->period_log > HB_PERIOD_LOG_COUNT_MAX) {
+		*status = STATUS_CANNOT_SET;
 		goto failed;
 	}
-
 	if (param->ttl > BT_MESH_TTL_MAX && param->ttl != BT_MESH_TTL_DEFAULT) {
 		BT_ERR("Invalid TTL value 0x%02x", param->ttl);
-		return;
+		*status = STATUS_CANNOT_SET;
+		goto failed;
 	}
-
 	feat = sys_le16_to_cpu(param->feat);
-
 	idx = sys_le16_to_cpu(param->net_idx);
 	if (idx > 0xfff) {
 		BT_ERR("Invalid NetKeyIndex 0x%04x", idx);
-		return;
-	}
-
-	if (!bt_mesh_subnet_get(idx)) {
-		status = STATUS_INVALID_NETKEY;
+		*status = STATUS_INVALID_NETKEY;
 		goto failed;
 	}
-
+	if (!bt_mesh_subnet_get(idx)) {
+		*status = STATUS_INVALID_NETKEY;
+		goto failed;
+	}
 	cfg->hb_pub.dst = dst;
 	cfg->hb_pub.period = param->period_log;
 	cfg->hb_pub.feat = feat & BT_MESH_FEAT_SUPPORTED;
 	cfg->hb_pub.net_idx = idx;
-
 	if (dst == BT_MESH_ADDR_UNASSIGNED) {
 		hb_pub_disable(cfg);
 	} else {
 		/* 2^(n-1) */
 		cfg->hb_pub.count = hb_pwr2(param->count_log, 1);
 		cfg->hb_pub.ttl = param->ttl;
-
-		BT_DBG("period %u ms", hb_pwr2(param->period_log, 1) * 1000);
 
 		/* The first Heartbeat message shall be published as soon
 		 * as possible after the Heartbeat Publication Period state
@@ -3204,18 +3405,73 @@ static void heartbeat_pub_set(struct bt_mesh_model *model,
 			k_delayed_work_cancel(&cfg->hb_pub.timer);
 		}
 	}
-
 	if (IS_ENABLED(CONFIG_BT_SETTINGS)) {
 		bt_mesh_store_hb_pub();
 	}
 
-	hb_pub_send_status(model, ctx, STATUS_SUCCESS, NULL);
+	return 0;
+failed:
+	return -EIO;
+}
 
+static void heartbeat_pub_set(struct bt_mesh_model *model,
+			      struct bt_mesh_msg_ctx *ctx,
+			      struct net_buf_simple *buf)
+{
+	struct hb_pub_param *param = (void *)buf->data;
+	struct bt_mesh_cfg_srv *cfg = model->user_data;
+	uint8_t status;
+    if (_heartbeat_pub_set(param,cfg,&status)) {
+        goto failed;
+	}
+
+	hb_pub_send_status(model, ctx, STATUS_SUCCESS, NULL);
 	return;
 
 failed:
 	hb_pub_send_status(model, ctx, status, param);
 }
+
+
+int bt_mesh_mod_hb_pub_set(u16_t net_idx, u16_t src_addr, u16_t dst_addr, u8_t count_log, u8_t period_log, u8_t ttl, u16_t feat)
+{
+    if(!conf) {
+		BT_ERR("No Configuration Server context provided");
+		return -EINVAL;
+	}
+    struct bt_mesh_cfg_srv *cfg = conf->model->user_data;
+
+	struct bt_mesh_msg_ctx  ctx = {
+       .addr = src_addr,
+	   .net_idx = net_idx,
+	   .app_idx = BT_MESH_KEY_DEV,
+	   .send_ttl = bt_mesh_default_ttl_get(),
+	};
+	struct hb_pub_param param = {
+      .dst = dst_addr,
+	  .count_log = count_log,
+      .period_log = period_log,
+      .ttl = ttl,
+      .feat = feat,
+      .net_idx = net_idx,
+	};
+
+    uint8_t status;
+	int ret = 0;
+	ret = _heartbeat_pub_set(&param, cfg, &status);
+	if(ret) {
+       goto failed;
+	}
+
+    hb_pub_send_status(conf->model, &ctx, STATUS_SUCCESS, NULL);
+
+failed:
+
+    hb_pub_send_status(conf->model, &ctx, status, &param);
+
+	return ret;
+}
+
 
 static void hb_sub_send_status(struct bt_mesh_model *model,
 			       struct bt_mesh_msg_ctx *ctx, u8_t status)
@@ -3259,44 +3515,32 @@ static void heartbeat_sub_get(struct bt_mesh_model *model,
 	hb_sub_send_status(model, ctx, STATUS_SUCCESS);
 }
 
-static void heartbeat_sub_set(struct bt_mesh_model *model,
-			      struct bt_mesh_msg_ctx *ctx,
-			      struct net_buf_simple *buf)
+static int _heartbeat_sub_set(struct bt_mesh_cfg_srv *cfg, uint16_t sub_src, uint16_t sub_dst, uint8_t sub_period, uint8_t *status)
 {
-	struct bt_mesh_cfg_srv *cfg = model->user_data;
-	u16_t sub_src, sub_dst;
-	u8_t sub_period;
-	s32_t period_ms;
-
-	BT_DBG("src 0x%04x", ctx->addr);
-
-	sub_src = net_buf_simple_pull_le16(buf);
-	sub_dst = net_buf_simple_pull_le16(buf);
-	sub_period = net_buf_simple_pull_u8(buf);
-
-	BT_DBG("sub_src 0x%04x sub_dst 0x%04x period 0x%02x",
-	       sub_src, sub_dst, sub_period);
-
+    s32_t period_ms;
 	if (sub_src != BT_MESH_ADDR_UNASSIGNED &&
 	    !BT_MESH_ADDR_IS_UNICAST(sub_src)) {
 		BT_WARN("Prohibited source address");
-		return;
+		*status = STATUS_INVALID_ADDRESS;
+		goto failed;
 	}
 
 	if (BT_MESH_ADDR_IS_VIRTUAL(sub_dst) || BT_MESH_ADDR_IS_RFU(sub_dst) ||
 	    (BT_MESH_ADDR_IS_UNICAST(sub_dst) &&
 	     sub_dst != bt_mesh_primary_addr())) {
 		BT_WARN("Prohibited destination address");
-		return;
+		*status = STATUS_INVALID_ADDRESS;
+		goto failed;
 	}
 
 	if (sub_period > 0x11) {
 		BT_WARN("Prohibited subscription period 0x%02x", sub_period);
-		return;
+		*status = STATUS_CANNOT_SET;
+		goto failed;
 	}
 
-	if (sub_src == BT_MESH_ADDR_UNASSIGNED ||
-	    sub_dst == BT_MESH_ADDR_UNASSIGNED ||
+    /*temp set*/
+	if (sub_dst == BT_MESH_ADDR_UNASSIGNED ||
 	    sub_period == 0x00) {
 		/* Only an explicit address change to unassigned should
 		 * trigger clearing of the values according to
@@ -3332,14 +3576,77 @@ static void heartbeat_sub_set(struct bt_mesh_model *model,
 		cfg->hb_sub.expiry = 0;
 	}
 
-	hb_sub_send_status(model, ctx, STATUS_SUCCESS);
-
-	/* MESH/NODE/CFG/HBS/BV-01-C expects the MinHops to be 0x7f after
+     /* MESH/NODE/CFG/HBS/BV-01-C expects the MinHops to be 0x7f after
 	 * disabling subscription, but 0x00 for subsequent Get requests.
 	 */
 	if (!period_ms) {
 		cfg->hb_sub.min_hops = 0;
 	}
+
+	return 0;
+failed:
+	return -EIO;
+}
+
+int bt_mesh_mod_hb_sub_set(u16_t net_idx, u16_t sub_src, u16_t sub_dst, u8_t sub_period)
+{
+    if(!conf) {
+		BT_ERR("No Configuration Server context provided");
+		return -EINVAL;
+	}
+    struct bt_mesh_cfg_srv *cfg = conf->model->user_data;
+
+	struct bt_mesh_msg_ctx  ctx = {
+	  .addr = bt_mesh_primary_addr(),
+	  .net_idx = net_idx,
+	  .app_idx = BT_MESH_KEY_DEV,
+	  .send_ttl = bt_mesh_default_ttl_get(),
+   };
+
+   int     ret = 0;
+   uint8_t status = 0;
+
+   ret = _heartbeat_sub_set(cfg, sub_src, sub_dst, sub_period, &status);
+   if(ret) {
+       BT_ERR("Heartbeat sub set failed %d", ret);
+	   goto failed;
+   }
+
+	hb_sub_send_status(cfg->model, &ctx, STATUS_SUCCESS);
+    return 0 ;
+failed:
+	hb_sub_send_status(cfg->model, &ctx, status);
+    return ret;
+}
+
+
+static void heartbeat_sub_set(struct bt_mesh_model *model,
+			      struct bt_mesh_msg_ctx *ctx,
+			      struct net_buf_simple *buf)
+{
+	struct bt_mesh_cfg_srv *cfg = model->user_data;
+	u16_t sub_src, sub_dst;
+	u8_t sub_period;
+	int ret;
+
+	BT_DBG("src 0x%04x", ctx->addr);
+
+	sub_src = net_buf_simple_pull_le16(buf);
+	sub_dst = net_buf_simple_pull_le16(buf);
+	sub_period = net_buf_simple_pull_u8(buf);
+
+	uint8_t status = 0;
+    ret = _heartbeat_sub_set(cfg, sub_src, sub_dst, sub_period, &status);
+    if(ret) {
+        BT_ERR("Heartbeat set failed %d", ret);
+		goto failed;
+	}
+
+	hb_sub_send_status(model, ctx, STATUS_SUCCESS);
+
+failed:
+    hb_sub_send_status(model, ctx, status);
+
 }
 
 const struct bt_mesh_model_op bt_mesh_cfg_srv_op[] = {
@@ -3488,11 +3795,15 @@ int bt_mesh_cfg_srv_init(struct bt_mesh_model *model, bool primary)
 
 	cfg->model = model;
 
+    if (cfg->hb_pub.period && cfg->hb_pub.count) {
+	    k_work_submit(&cfg->hb_pub.timer.work);
+	}
+
 	conf = cfg;
 
 /*[Genie begin] add by wenbing.cwb at 2021-01-21*/
 #ifdef CONFIG_BT_MESH_CTRL_RELAY
-	ctrl_relay_init(model);
+	ctrl_relay_init();
 #endif
 /*[Genie end] add by wenbing.cwb at 2021-01-21*/
 
@@ -3565,13 +3876,22 @@ void bt_mesh_heartbeat(u16_t src, u16_t dst, u8_t hops, u16_t feat)
 		return;
 	}
 
-	if (src != cfg->hb_sub.src || dst != cfg->hb_sub.dst) {
-		BT_WARN("No subscription for received heartbeat");
+#if defined(CONFIG_BT_MESH_HB_SRC_UNASSIGNED_ENABLE) &&  CONFIG_BT_MESH_HB_SRC_UNASSIGNED_ENABLE
+	if(cfg->hb_sub.src != BT_MESH_ADDR_UNASSIGNED && src != cfg->hb_sub.src) {
+		return;
+	}
+#else
+	if(src != cfg->hb_sub.src) {
+		return;
+	}
+#endif
+
+	if (dst != cfg->hb_sub.dst) {
 		return;
 	}
 
-	if (k_uptime_get() > cfg->hb_sub.expiry) {
-		BT_WARN("Heartbeat subscription period expired");
+	if (cfg->hb_sub.expiry && k_uptime_get() > cfg->hb_sub.expiry) {
+		//BT_WARN("Heartbeat subscription period expired");
 		return;
 	}
 
@@ -3695,6 +4015,15 @@ struct bt_mesh_hb_pub *bt_mesh_hb_pub_get(void)
 	return &conf->hb_pub;
 }
 
+struct bt_mesh_hb_sub *bt_mesh_hb_sub_get(void)
+{
+	if (!conf) {
+		return NULL;
+	}
+
+	return &conf->hb_sub;
+}
+
 void bt_mesh_hb_pub_disable(void)
 {
 	if (conf) {
@@ -3787,6 +4116,21 @@ u8_t bt_mesh_mod_sub_add(struct bt_mesh_model *model, u16_t sub_addr)
 
 send_status:
 	return status;
+}
+
+
+u8_t bt_mesh_mod_sub_del(struct bt_mesh_model *model, u16_t sub_addr)
+{
+    u16_t *match;
+	match = bt_mesh_model_find_group(model, sub_addr);
+	if (match) {
+		*match = BT_MESH_ADDR_UNASSIGNED;
+
+		if (IS_ENABLED(CONFIG_BT_SETTINGS)) {
+			bt_mesh_store_mod_sub(model);
+		}
+	}
+   return STATUS_SUCCESS;
 }
 
 u8_t bt_mesh_mod_pub_set(struct bt_mesh_model *model, u16_t pub_addr)

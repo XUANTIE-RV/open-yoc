@@ -6,6 +6,8 @@
 #if CONFIG_FOTA_USE_HTTPC == 1
 #include <yoc/netio.h>
 #include <ulog/ulog.h>
+#include <aos/kernel.h>
+#include <errno.h>
 #include <http_client.h>
 #include "util/network.h"
 
@@ -142,6 +144,7 @@ static void _http_cleanup(http_client_handle_t client)
     LOGD(TAG, "httpc cleanup...");
     if (client) {
         http_client_cleanup(client);
+        client = NULL;
     }
 }
 
@@ -149,17 +152,25 @@ static int http_read(netio_t *io, uint8_t *buffer, int length, int timeoutms)
 {
 #define RANGE_BUF_SIZE 56
     int read_len;
+    int reinit_cnt;
     long long time1ms;
     httpc_priv_t *priv = (httpc_priv_t *)io->private;
     http_client_handle_t client = priv->http_client;
 
+    reinit_cnt = 0;
     if (client == NULL) {
-        int ret = 0;
+        int ret;
         int statuscode;
-        char *range = NULL;
-        char *buffer = NULL;
+        char *range;
+        char *cbuffer;
         http_errors_t err;
-        http_client_config_t config = {0};
+        http_client_config_t config;
+
+client_reinit:
+        ret = 0;
+        range = NULL;
+        cbuffer = NULL;
+        memset(&config, 0, sizeof(http_client_config_t));
 
         config.method = HTTP_METHOD_GET;
         config.url = priv->path;
@@ -175,8 +186,8 @@ static int http_read(netio_t *io, uint8_t *buffer, int length, int timeoutms)
         }
         LOGD(TAG, "http client init ok.[%s]", config.url);
         LOGD(TAG, "http read connecting........");
-        buffer = aos_zalloc(BUFFER_SIZE + 1);
-        if (!buffer) {
+        cbuffer = aos_zalloc(BUFFER_SIZE + 1);
+        if (!cbuffer) {
             LOGE(TAG, "http open nomem.");
             ret = -ENOMEM;
             goto exit;
@@ -187,8 +198,8 @@ static int http_read(netio_t *io, uint8_t *buffer, int length, int timeoutms)
             ret = -ENOMEM;
             goto exit;
         }
-        snprintf(range, RANGE_BUF_SIZE, "bytes=%d-", io->offset);
-        LOGD(TAG, "range:%s", range);
+        snprintf(range, RANGE_BUF_SIZE, "bytes=%lu-", (unsigned long)io->offset);
+        LOGD(TAG, "request range: %s", range);
         err = http_client_set_header(client, "Range", range);
         if (err != HTTP_CLI_OK) {
             LOGE(TAG, "set header Range e");
@@ -208,31 +219,39 @@ static int http_read(netio_t *io, uint8_t *buffer, int length, int timeoutms)
             goto exit;
         }
 
-        err = _http_connect(client, buffer, BUFFER_SIZE);
+        err = _http_connect(client, cbuffer, BUFFER_SIZE);
         if (err != HTTP_CLI_OK) {
             LOGE(TAG, "Client connect e");
             ret = -1;
             goto exit;
         }
         statuscode = http_client_get_status_code(client);
+        if (statuscode == 200) {
+            LOGW(TAG, "read finish maybe.");
+            ret = 0;
+            io->size = http_client_get_content_length(client);
+            goto exit;
+        }
         if (statuscode != 206) {
             LOGE(TAG, "not 206 Partial Content");
             ret = -1;
             goto exit;
         }
         io->size = http_client_get_content_length(client);
+        io->size += io->offset;
         LOGD(TAG, "range_len: %d", io->size);
         priv->http_client = client;
 exit:
-        if (buffer) aos_free(buffer);
+        if (cbuffer) aos_free(cbuffer);
         if (range) aos_free(range);
         if (ret != 0) {
             _http_cleanup(client);
+            priv->http_client = NULL;
             return ret;
         }
     }
     if (io->offset >= io->size) {
-        LOGD(TAG, "http_read done: %d %d", io->size, io->offset);
+        LOGW(TAG, "http_read done: offset:%d tsize:%d", io->offset, io->size);
         return 0;
     }
 
@@ -243,11 +262,21 @@ exit:
             break;
         }
         int data_read = http_client_read(client, (char *)buffer + read_len, length - read_len);
-        if (data_read <= 0) {
+        if (data_read < 0) {
+            LOGW(TAG, "http client read error:%d, errno:%d", data_read, errno);
+            if (errno == ENOTCONN && reinit_cnt++ < 1) {
+                LOGD(TAG, "goto http client reinit..");
+                _http_cleanup(client);
+                goto client_reinit;
+            }
+            return data_read;
+        } else if (data_read == 0) {
+            LOGD(TAG, "http client read 0 size");
             break;
         }
         read_len += data_read;
     }
+    io->offset += read_len;
     return read_len;
 }
 

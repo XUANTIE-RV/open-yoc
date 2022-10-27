@@ -24,20 +24,20 @@ extern k_mm_region_t   g_mm_region[];
 extern void soc_hw_timer_init(void);
 
 #if (RHINO_CONFIG_USER_HOOK > 0)
-void krhino_init_hook(void)
+__attribute__((weak)) void krhino_init_hook(void)
 {
 #if (RHINO_CONFIG_HW_COUNT > 0)
     soc_hw_timer_init();
 #endif
 
-    uint32_t h_end = (uint32_t)(&__heap_end);
-    uint32_t h_start = (uint32_t)(&__heap_start);
+    size_t h_end = (size_t)(&__heap_end);
+    size_t h_start = (size_t)(&__heap_start);
 
     if (h_start >= h_end) {
         k_err_proc(RHINO_MM_POOL_SIZE_ERR);
     }
     /* auto define heap size */
-    g_mm_region[0].len = (uint32_t)(&__heap_end) - (uint32_t)(&__heap_start);
+    g_mm_region[0].len = (size_t)(&__heap_end) - (size_t)(&__heap_start);
 }
 
 __attribute__((weak)) void krhino_start_hook(void)

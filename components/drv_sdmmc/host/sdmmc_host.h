@@ -106,10 +106,10 @@ typedef struct {
 #define SDMMCHOST_TUNING_ERROR (2U)
 
 /* function pointer define */
-#define GET_SDMMCHOST_CAPABILITY(base, capability) (drv_sdif_get_capabilities(base, capability))
+#define GET_SDMMCHOST_CAPABILITY(base, capability) (csi_sdif_get_capabilities(base, capability))
 #define GET_SDMMCHOST_STATUS(base) (SDIF_GetControllerStatus(base))
-#define SDMMCHOST_SET_CARD_CLOCK(base, sourceClock_HZ, busClock_HZ) (drv_sdif_set_clock(base, busClock_HZ))
-#define SDMMCHOST_SET_CARD_BUS_WIDTH(base, busWidth) (drv_sdif_bus_width(base, busWidth))
+#define SDMMCHOST_SET_CARD_CLOCK(base, sourceClock_HZ, busClock_HZ) (csi_sdif_set_clock(base, busClock_HZ))
+#define SDMMCHOST_SET_CARD_BUS_WIDTH(base, busWidth) (csi_sdif_bus_width(base, busWidth))
 #define SDMMCHOST_SEND_CARD_ACTIVE(base, timeout) (SDIF_SendCardActive(base, timeout))
 #define SDMMCHOST_ENABLE_CARD_CLOCK(base, enable) (SDIF_EnableCardClock(base, enable))
 

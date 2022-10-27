@@ -181,5 +181,35 @@ const sc_mbedtls_md_info_t sc_mbedtls_sha256_info = {
     sha224_clone_wrap,
     sha224_process_wrap,
 };
+#else
+const sc_mbedtls_md_info_t sc_mbedtls_sha224_info = {
+    SC_MBEDTLS_MD_SHA224,
+    "SHA224",
+    28,
+    64,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+};
+
+const sc_mbedtls_md_info_t sc_mbedtls_sha256_info = {
+    SC_MBEDTLS_MD_SHA256,
+    "SHA256",
+    32,
+    64,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+};
 #endif
 #endif

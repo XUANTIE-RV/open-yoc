@@ -14,6 +14,8 @@
 #include <bluetooth/conn.h>
 #include <bluetooth/gatt.h>
 #include <api/mesh.h>
+#include <bluetooth/hci.h>
+#include <host/conn_internal.h>
 
 #define BT_DBG_ENABLED IS_ENABLED(CONFIG_BT_MESH_DEBUG_PROXY)
 #include "common/log.h"
@@ -29,13 +31,21 @@
 #include "errno.h"
 
 #ifdef CONFIG_GENIE_OTA
-#include "genie_crypto.h"
-#include "genie_ais.h"
+#include "genie_mesh_internal.h"
 #endif
 
 #ifdef CONFIG_GENIE_OTA
 extern int genie_ota_pre_init(void);
 extern void genie_ais_adv_init(uint8_t ad_structure[14], uint8_t is_silent);
+#endif
+
+#ifdef CONFIG_BT_MESH_IBEACON_PROXY
+#define UNPROVISIONED_IBEACON_PROXY_SEND_INTERVAL K_MSEC(100)
+#define UNPROVISIONED_IBEACON_PROXY_SEND_DURATION K_MSEC(5)
+#define PROVISIONED_IBEACON_PROXY_SEND_INTERVAL K_MSEC(100)
+#define PROVISIONED_IBEACON_PROXY_SEND_DURATION K_MSEC(5)
+
+extern bool bt_mesh_is_adv_sending(void);
 #endif
 
 #ifdef CONFIG_BT_MESH_GATT_PROXY
@@ -71,17 +81,32 @@ static const struct bt_le_adv_param slow_adv_param = {
 		.interval_min = BT_GAP_ADV_FAST_INT_MIN_2,
 		.interval_max = BT_GAP_ADV_FAST_INT_MAX_2,
 #else
-		.interval_min = BT_GAP_ADV_SLOW_INT_MIN,
-		.interval_max = BT_GAP_ADV_SLOW_INT_MAX,
+		.interval_min = BT_GAP_ADV_FAST_INT_MIN_2,
+		.interval_max = BT_GAP_ADV_FAST_INT_MAX_2,
 #endif
 };
 #endif
 
-static const struct bt_le_adv_param fast_adv_param = {
+/*[Genie begin] add by wenbing.cwb at 2021-10-15*/
+#ifdef CONFIG_BT_MESH_NPS_OPT
+#define PROXY_ADV_INT_MIN BT_GAP_ADV_FAST_INT_MIN_3
+#define PROXY_ADV_INT_MAX BT_GAP_ADV_FAST_INT_MAX_3
+// #define PROXY_ADV_INT_MIN BT_GAP_ADV_SLOW_INT_MIN
+// #define PROXY_ADV_INT_MAX BT_GAP_ADV_SLOW_INT_MAX
+#endif
+
+static const struct bt_le_adv_param unprov_fast_adv_param = {
 	.options = ADV_OPT,
 	.interval_min = BT_GAP_ADV_FAST_INT_MIN_2,
 	.interval_max = BT_GAP_ADV_FAST_INT_MAX_2,
 };
+
+static struct bt_le_adv_param fast_adv_param = {
+	.options = ADV_OPT,
+	.interval_min = BT_GAP_ADV_FAST_INT_MIN_2,
+	.interval_max = BT_GAP_ADV_FAST_INT_MAX_2,
+};
+/*[Genie end] add by wenbing.cwb at 2021-10-15*/
 
 static bool proxy_adv_enabled;
 
@@ -108,7 +133,10 @@ static struct bt_mesh_proxy_client {
 #if defined(CONFIG_BT_MESH_GATT_PROXY)
 	struct k_work send_beacons;
 #endif
-	struct net_buf_simple    buf;
+#if defined(CONFIG_BT_MESH_IBEACON_PROXY)
+	struct k_delayed_work send_ibeacon;
+#endif
+	struct net_buf_simple buf;
 } clients[CONFIG_BT_MAX_CONN] = {
 	[0 ... (CONFIG_BT_MAX_CONN - 1)] = {
 #if defined(CONFIG_BT_MESH_GATT_PROXY)
@@ -352,6 +380,54 @@ static void proxy_send_beacons(struct k_work *work)
 	}
 }
 
+#ifdef CONFIG_BT_MESH_IBEACON_PROXY
+static void proxy_send_ibeacon(struct k_work *work)
+{
+	static bool is_proxy_sending = true;
+	uint32_t delay_work_timeout = 0;
+	struct bt_mesh_proxy_client *client;
+
+	client = CONTAINER_OF(work, struct bt_mesh_proxy_client, send_ibeacon);
+
+	if (is_proxy_sending)
+	{
+		bt_mesh_proxy_adv_start();
+	}
+
+	if (is_proxy_sending)
+	{
+		if (bt_mesh_is_provisioned())
+		{
+			delay_work_timeout = PROVISIONED_IBEACON_PROXY_SEND_DURATION;
+		}
+		else
+		{
+			delay_work_timeout = UNPROVISIONED_IBEACON_PROXY_SEND_DURATION;
+		}
+	}
+	else
+	{
+		if (bt_mesh_is_provisioned())
+		{
+			delay_work_timeout = PROVISIONED_IBEACON_PROXY_SEND_INTERVAL - PROVISIONED_IBEACON_PROXY_SEND_DURATION;
+		}
+		else
+		{
+			delay_work_timeout = UNPROVISIONED_IBEACON_PROXY_SEND_INTERVAL - UNPROVISIONED_IBEACON_PROXY_SEND_DURATION;
+		}
+	}
+
+	k_delayed_work_submit(&client->send_ibeacon, delay_work_timeout);
+
+	if (!is_proxy_sending && !bt_mesh_is_adv_sending())
+	{
+		bt_mesh_proxy_adv_stop();
+	}
+
+	is_proxy_sending = !is_proxy_sending;
+}
+#endif
+
 void bt_mesh_proxy_beacon_send(struct bt_mesh_subnet *sub)
 {
 	int i;
@@ -578,19 +654,24 @@ uint8_t is_proxy_connected()
 
 static void proxy_connected(struct bt_conn *conn, u8_t err)
 {
-	struct bt_mesh_proxy_client *client;
-	int i;
+    if(conn->role == BT_HCI_ROLE_MASTER) {
+        return;
+    }
+    struct bt_mesh_proxy_client *client;
+    int i;
 
 	conn_count++;
 	BT_DBG("pconn:%p\r\n", conn);
 
 	/* Since we use ADV_OPT_ONE_TIME */
 	proxy_adv_enabled = false;
-	extern int bt_mesh_adv_disable();
 
+#if !(defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE)
+	extern int bt_mesh_adv_disable();
 	//make sure adv and scan stop first
 	bt_mesh_adv_disable();
 	bt_mesh_scan_disable();
+#endif
 
     //enable scan again
 	bt_mesh_scan_enable();
@@ -620,13 +701,17 @@ static void proxy_connected(struct bt_conn *conn, u8_t err)
 #ifdef CONFIG_GENIE_OTA
 	genie_ais_connect((struct bt_conn *)conn);
 #endif
+
 }
 
 static void proxy_disconnected(struct bt_conn *conn, u8_t reason)
 {
-	int i;
+    if(conn->role == BT_HCI_ROLE_MASTER) {
+        return;
+    }
+    int i;
 
-	printf("proxy disconn:%p reason:0x%02x\r\n", conn, reason);
+	BT_DBG("proxy disconn:%p reason:0x%02x", conn, reason);
 
 	conn_count--;
 
@@ -1010,17 +1095,30 @@ static int proxy_send(struct bt_conn *conn, const void *data, u16_t len)
 {
 	BT_DBG("%u bytes: %s", len, bt_hex(data, len));
 
+	struct bt_gatt_notify_params params = {0};
+	u16_t handle = 0;
+
+	params.data = data;
+	params.len = len;
+
 #if defined(CONFIG_BT_MESH_GATT_PROXY)
 	if (gatt_svc == MESH_GATT_PROXY) {
-		return bt_gatt_notify(conn, &proxy_attrs[3], data, len);
+	    handle = bt_gatt_attr_value_handle(&proxy_attrs[3]);
 	}
 #endif
 
 #if defined(CONFIG_BT_MESH_PB_GATT)
 	if (gatt_svc == MESH_GATT_PROV) {
-		return bt_gatt_notify(conn, &prov_attrs[3], data, len);
+		handle = bt_gatt_attr_value_handle(&prov_attrs[3]);
 	}
 #endif
+    extern int gatt_notify(struct bt_conn *conn, u16_t handle,
+		       struct bt_gatt_notify_params *params);
+
+	if (handle)
+	{
+		return gatt_notify(conn, handle, &params);
+	}
 
 	return 0;
 }
@@ -1128,6 +1226,24 @@ static const struct bt_data net_id_ad[] = {
 	BT_DATA(BT_DATA_SVC_DATA16, proxy_svc_data, NET_ID_LEN),
 };
 
+/*[Genie begin] add by wenbing.cwb at 2021-10-19*/
+#ifdef CONFIG_BT_MESH_NPS_OPT
+static void proxy_adv_interval_set(void)
+{
+	if (genie_provision_get_state() == GENIE_PROVISION_SUCCESS)
+	{
+		fast_adv_param.interval_min = PROXY_ADV_INT_MIN;
+		fast_adv_param.interval_max = PROXY_ADV_INT_MAX;
+	}
+	else
+	{
+		fast_adv_param.interval_min = BT_GAP_ADV_FAST_INT_MIN_2;
+		fast_adv_param.interval_max = BT_GAP_ADV_FAST_INT_MAX_2;
+	}
+}
+#endif
+/*[Genie end] add by wenbing.cwb at 2021-10-19*/
+
 static int node_id_adv(struct bt_mesh_subnet *sub)
 {
 	u8_t tmp[16];
@@ -1152,6 +1268,12 @@ static int node_id_adv(struct bt_mesh_subnet *sub)
 	}
 
 	memcpy(proxy_svc_data + 3, tmp + 8, 8);
+
+/*[Genie begin] add by wenbing.cwb at 2021-10-19*/
+#ifdef CONFIG_BT_MESH_NPS_OPT
+	proxy_adv_interval_set();
+#endif
+/*[Genie end] add by wenbing.cwb at 2021-10-19*/
 
 #ifdef CONFIG_GENIE_OTA
     genie_crypto_adv_create(g_ais_adv_data, 1);
@@ -1184,6 +1306,12 @@ static int net_id_adv(struct bt_mesh_subnet *sub)
 
 	memcpy(proxy_svc_data + 3, sub->keys[sub->kr_flag].net_id, 8);
 
+/*[Genie begin] add by wenbing.cwb at 2021-10-19*/
+#ifdef CONFIG_BT_MESH_NPS_OPT
+	proxy_adv_interval_set();
+#endif
+/*[Genie end] add by wenbing.cwb at 2021-10-19*/
+
 #ifdef CONFIG_GENIE_OTA
     genie_crypto_adv_create(g_ais_adv_data, 1);
     err = bt_mesh_adv_enable(&fast_adv_param, net_id_ad,
@@ -1201,6 +1329,11 @@ static int net_id_adv(struct bt_mesh_subnet *sub)
 	proxy_adv_enabled = true;
 
 	return 0;
+}
+
+bool bt_mesh_proxy_adv_enable()
+{
+	return proxy_adv_enabled;
 }
 
 static bool advertise_subnet(struct bt_mesh_subnet *sub)
@@ -1357,7 +1490,7 @@ static size_t gatt_prov_adv_create(struct bt_data prov_sd[2])
 s32_t bt_mesh_proxy_adv_start(void)
 {
 	BT_DBG("");
-
+	proxy_adv_enabled = false;
 	if (gatt_svc == MESH_GATT_NONE) {
 		return K_FOREVER;
 	}
@@ -1371,7 +1504,7 @@ s32_t bt_mesh_proxy_adv_start(void)
 		static size_t prov_sd_len;
 #endif
 		if (prov_fast_adv) {
-			param = &fast_adv_param;
+			param = &unprov_fast_adv_param;
 		} else {
 			param = &slow_adv_param;
 		}
@@ -1380,6 +1513,10 @@ s32_t bt_mesh_proxy_adv_start(void)
 #else
 		gatt_prov_adv_create(prov_sd);
 #endif
+/*[Genie begin] add by wenbing.cwb at 2021-10-19*/
+#ifdef CONFIG_BT_MESH_NPS_OPT
+		err = bt_mesh_adv_enable(param, prov_ad, ARRAY_SIZE(prov_ad), NULL, 0);
+#else
 #ifdef CONFIG_GENIE_OTA
 		genie_crypto_adv_create(g_ais_adv_data, 0);
 		err = bt_mesh_adv_enable(param, prov_ad, ARRAY_SIZE(prov_ad),
@@ -1388,6 +1525,8 @@ s32_t bt_mesh_proxy_adv_start(void)
 		err = bt_mesh_adv_enable(param, prov_ad, ARRAY_SIZE(prov_ad),
 				    prov_sd, prov_sd_len);
 #endif
+#endif
+/*[Genie end] add by wenbing.cwb at 2021-10-19*/
 		if (err == 0) {
 			proxy_adv_enabled = true;
 
@@ -1413,28 +1552,115 @@ s32_t bt_mesh_proxy_adv_start(void)
 	return K_FOREVER;
 }
 
-void bt_mesh_proxy_adv_stop(void)
+int bt_mesh_proxy_adv_stop(void)
 {
 	int err;
 
 	BT_DBG("adv_enabled %u", proxy_adv_enabled);
 
 	if (!proxy_adv_enabled) {
-		return;
+		return -EALREADY;
 	}
 
 	err = bt_mesh_adv_disable();
-	if (err) {
+	if (err && err != -EALREADY) {
 		BT_ERR("Failed to stop advertising (err %d)", err);
 	} else {
 		proxy_adv_enabled = false;
 	}
+	return err;
 }
 
-static struct bt_conn_cb conn_callbacks = {
+static struct bt_conn_cb proxy_conn_callbacks = {
 	.connected = proxy_connected,
 	.disconnected = proxy_disconnected,
 };
+
+/*[Genie begin] add by wenbing.cwb at 2021-10-19*/
+#ifdef CONFIG_BT_MESH_NPS_OPT
+#define PROXY_CID CONFIG_BT_MESH_VENDOR_COMPANY_ID
+#define PROXY_VID 0x0F
+#define PROXY_UPDATE_INTERVAL_TYPE 0x08
+#define PROXY_RESTORE_TIMEROUT K_MSEC(60)
+static k_timer_t restore_timer;
+static uint8_t update_interval = 0;
+int bt_mesh_proxy_update_interval(uint8_t frame_type, void *frame_buf)
+{
+	uint16_t cid = 0;
+	uint8_t vid = 0;
+	uint8_t ctrltype = 0;
+	uint8_t netid = 0;
+	uint8_t msgid = 0;
+	uint8_t packnum = 0;
+	uint8_t length = 0;
+	uint16_t interval = 0;
+	struct net_buf_simple *buf = NULL;
+	struct bt_mesh_subnet *sub = &bt_mesh.sub[0];
+
+	if ((genie_provision_get_state() != GENIE_PROVISION_SUCCESS) || (update_interval == 1))
+	{
+		return -1;
+	}
+
+	buf = (struct net_buf_simple *)frame_buf;
+	if ((frame_type != BT_DATA_MANUFACTURER_DATA) || (frame_type != BT_DATA_SVC_DATA128) || (buf == NULL))
+	{
+		return -1;
+	}
+
+	if (buf->len < 10)
+	{
+		return -1;
+	}
+
+	cid = net_buf_simple_pull_be16(buf);
+	vid = net_buf_simple_pull_u8(buf);
+	ctrltype = net_buf_simple_pull_u8(buf);
+	if ((cid == PROXY_CID) && (vid == PROXY_VID) && (ctrltype == PROXY_UPDATE_INTERVAL_TYPE))
+	{
+		netid = net_buf_simple_pull_u8(buf);
+		if ((netid == sub->keys[0].nid) || (netid == sub->keys[1].nid))
+		{
+			msgid = net_buf_simple_pull_u8(buf);
+			(void)msgid;
+			packnum = net_buf_simple_pull_u8(buf);
+			length = net_buf_simple_pull_u8(buf);
+			if ((packnum == 0x11) && (length == 2))
+			{
+				interval = net_buf_simple_pull_be16(buf);
+				if ((interval <= 400) && (interval >= 100))
+				{
+					fast_adv_param.interval_min = interval * 8 / 5;
+					fast_adv_param.interval_max = fast_adv_param.interval_min;
+					BT_DBG("update proxy interval: %u\n", fast_adv_param.interval_min);
+
+					bt_mesh_proxy_adv_stop();
+					bt_mesh_proxy_adv_start();
+					update_interval = 1;
+
+					k_timer_start(&restore_timer, PROXY_RESTORE_TIMEROUT);
+				}
+			}
+		}
+	}
+
+	return 0;
+}
+
+void restore_timer_cb(void *timer, void *arg)
+{
+	k_timer_stop(&restore_timer);
+
+	fast_adv_param.interval_min = PROXY_ADV_INT_MIN;
+	fast_adv_param.interval_max = PROXY_ADV_INT_MAX;
+	BT_DBG("restore proxy interval: %u\n", fast_adv_param.interval_min);
+
+	bt_mesh_proxy_adv_stop();
+	bt_mesh_proxy_adv_start();
+	update_interval = 0;
+}
+#endif
+/*[Genie end] add by wenbing.cwb at 2021-10-19*/
 
 int bt_mesh_proxy_init(void)
 {
@@ -1449,13 +1675,23 @@ int bt_mesh_proxy_init(void)
 #if defined(CONFIG_BT_MESH_GATT_PROXY)
         k_work_init(&client->send_beacons, proxy_send_beacons);
 #endif
+#if defined(CONFIG_BT_MESH_IBEACON_PROXY)
+		k_delayed_work_init(&client->send_ibeacon, proxy_send_ibeacon);
+		k_delayed_work_submit(&client->send_ibeacon, PROVISIONED_IBEACON_PROXY_SEND_INTERVAL);
+#endif
 	}
 
-	bt_conn_cb_register(&conn_callbacks);
+	bt_conn_cb_register(&proxy_conn_callbacks);
 
 #ifdef CONFIG_GENIE_OTA
     genie_ota_pre_init();
 #endif
+
+/*[Genie begin] add by wenbing.cwb at 2021-10-19*/
+#ifdef CONFIG_BT_MESH_NPS_OPT
+    k_timer_init(&restore_timer, restore_timer_cb, NULL);
+#endif
+/*[Genie end] add by wenbing.cwb at 2021-10-19*/
 
 	return 0;
 }

@@ -167,7 +167,7 @@ static int set(const char *name, size_t len_rd, settings_read_cb read_cb,
 				       " (err %d)", len);
 		} else {
 			bt_dev.name[len] = '\0';
-
+			bt_dev.name_update_force = 1;
 			BT_DBG("Name set to %s", log_strdup(bt_dev.name));
 		}
 		return 0;
@@ -237,6 +237,13 @@ static int commit(void)
 #if defined(CONFIG_BT_DEVICE_NAME_DYNAMIC)
 	if (bt_dev.name[0] == '\0') {
 		bt_set_name(CONFIG_BT_DEVICE_NAME);
+	}
+	else
+	{
+		/* The device name is loaded and name_update_force is set,
+			but the name is not set in Controller
+		*/
+		bt_set_name(bt_get_name());
 	}
 #endif
 	if (!bt_dev.id_count) {

@@ -129,7 +129,7 @@ static int pcmp_param_set(aos_pcm_t *pcm, aos_pcm_hw_params_t *params)
 
     csi_codec_output_config_t output_config;
     csi_codec_output_t *codec = aos_zalloc(sizeof(csi_codec_output_t));
-    codec->ring_buf = aos_zalloc(sizeof(ringbuffer_t));
+    codec->ring_buf = aos_zalloc(sizeof(csi_ringbuf_t));
 
     CHECK_RET_TAG_WITH_RET(NULL != codec, -1);
 
@@ -330,7 +330,7 @@ static int pcmc_param_set(aos_pcm_t *pcm, struct aos_pcm_hw_params *params)
     }
 
     // pcm->pcm_name[4] is ch ascii data, change to decimal num
-    codec->ring_buf = aos_zalloc(sizeof(ringbuffer_t));
+    codec->ring_buf = aos_zalloc(sizeof(csi_ringbuf_t));
     int ret = csi_codec_input_open(&codec_a, codec, pcm->pcm_name[4] - 0x30);
     if (ret != 0) {
         goto pcmc_err1;

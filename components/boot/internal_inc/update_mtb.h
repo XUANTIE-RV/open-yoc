@@ -33,11 +33,6 @@ int mtb_update_backup(mtb_t *mtb, const char *img_name, mtb_partition_info_t *pa
  */
 int mtb_update_valid(mtb_t *mtb);
 
-/**
- * update app_version, imtb_crc32, imtb_signature
- */
-int mtb_update_other(mtb_t *mtb, int is_backup);
-
 #ifdef __cplusplus
 }
 #endif

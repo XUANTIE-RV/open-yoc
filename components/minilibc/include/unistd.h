@@ -17,6 +17,17 @@ extern "C" {
 #define W_OK    2
 #define X_OK    1
 
+/* Standard file descriptors.  */
+#ifndef STDIN_FILENO
+#define	STDIN_FILENO	0	/* Standard input.  */
+#endif
+#ifndef STDOUT_FILENO
+#define	STDOUT_FILENO	1	/* Standard output.  */
+#endif
+#ifndef STDERR_FILENO
+#define	STDERR_FILENO	2	/* Standard error output.  */
+#endif
+
 #ifndef __off_t_defined 
 typedef  int __off_t;
 #define __off_t_defined 

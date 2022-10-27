@@ -23,6 +23,7 @@
 #include <csi_config.h>
 #include "wm_regs.h"
 #include <k_api.h>
+#include "wm_config.h"
 
 extern void systick_handler(void);
 extern void socv_SysTick_Handler(void);

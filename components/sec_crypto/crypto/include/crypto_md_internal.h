@@ -80,10 +80,10 @@ struct sc_mbedtls_md_info_t
 
 extern const sc_mbedtls_md_info_t sc_mbedtls_sha1_info;
 
-#if defined(CONFIG_SEC_CRYPTO_SHA_SW)
+//#if defined(CONFIG_SEC_CRYPTO_SHA_SW)
 extern const sc_mbedtls_md_info_t sc_mbedtls_sha224_info;
 extern const sc_mbedtls_md_info_t sc_mbedtls_sha256_info;
-#endif
+//#endif
 
 #ifdef __cplusplus
 }

@@ -16,7 +16,7 @@ modification history
 #include "k_api.h"
 #include "cpu_pwr_config.h"
 
-//#if RHINO_CONFIG_CPU_PWR_MGMT_SHOW
+//#if RHINO_CONFIG_PWRMGMT_SHOW
 
 #include <stdio.h>
 #include <string.h>

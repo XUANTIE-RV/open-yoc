@@ -54,6 +54,13 @@ typedef struct  {
     uint32_t status;             ///< status of iic transfer
     iic_mode_e mode;
 } dw_iic_priv_t;
+#define RAM_CODE_SECTION(func)  __attribute__((section(".__sram.code."#func)))  func
+static inline void RAM_CODE_SECTION(dw_iic_disable)(dw_iic_reg_t *addr);
+static uint32_t RAM_CODE_SECTION(dw_iic_read_clear_intrbits)(dw_iic_reg_t *addr);
+static void RAM_CODE_SECTION(dw_iic_intr_tx_empty)(int32_t idx, dw_iic_priv_t *iic_priv, uint32_t intr_stat);
+static void RAM_CODE_SECTION(dw_iic_intr_rx_full)(int32_t idx, dw_iic_priv_t *iic_priv, uint32_t intr_stat);
+void RAM_CODE_SECTION(dw_iic_irqhandler)(int32_t idx);
+
 
 #define IIC_DMA_BLOCK_SIZE  2048
 extern int32_t target_iic_init(int32_t idx, uint32_t *base, uint32_t *irq, void **handler);
@@ -65,7 +72,7 @@ static const iic_capabilities_t iic_capabilities = {
     .address_10_bit = 0  /* supports 10-bit addressing */
 };
 
-static __attribute__((section(".__sram.code"))) inline void dw_iic_disable(dw_iic_reg_t *addr)
+static inline void dw_iic_disable(dw_iic_reg_t *addr)
 {
     /* First clear ACTIVITY, then Disable IIC */
     addr->IC_CLR_ACTIVITY;
@@ -120,7 +127,7 @@ static inline void dw_iic_set_addr_mode(dw_iic_priv_t *iic_priv, iic_address_mod
     }
 }
 
-static __attribute__((section(".__sram.code"))) uint32_t dw_iic_read_clear_intrbits(dw_iic_reg_t *addr)
+static uint32_t dw_iic_read_clear_intrbits(dw_iic_reg_t *addr)
 {
     uint32_t  stat = 0;
 
@@ -173,7 +180,7 @@ static __attribute__((section(".__sram.code"))) uint32_t dw_iic_read_clear_intrb
   \brief       interrupt service function for transmit FIFO empty interrupt.
   \param[in]   iic_priv pointer to iic private.
 */
-static __attribute__((section(".__sram.code"))) void dw_iic_intr_tx_empty(int32_t idx, dw_iic_priv_t *iic_priv, uint32_t intr_stat)
+static void dw_iic_intr_tx_empty(int32_t idx, dw_iic_priv_t *iic_priv, uint32_t intr_stat)
 {
     dw_iic_reg_t *addr = (dw_iic_reg_t *)(iic_priv->base);
     uint32_t remain_txfifo;
@@ -245,7 +252,7 @@ static __attribute__((section(".__sram.code"))) void dw_iic_intr_tx_empty(int32_
   \brief       interrupt service function for receive FIFO full interrupt .
   \param[in]   iic_priv pointer to iic private.
 */
-static __attribute__((section(".__sram.code"))) void dw_iic_intr_rx_full(int32_t idx, dw_iic_priv_t *iic_priv, uint32_t intr_stat)
+static void dw_iic_intr_rx_full(int32_t idx, dw_iic_priv_t *iic_priv, uint32_t intr_stat)
 {
     dw_iic_reg_t *addr = (dw_iic_reg_t *)(iic_priv->base);
     uint32_t count;
@@ -304,7 +311,7 @@ static __attribute__((section(".__sram.code"))) void dw_iic_intr_rx_full(int32_t
     }
 
 }
-__attribute__((section(".__sram.code"))) void dw_iic_irqhandler(int32_t idx)
+void dw_iic_irqhandler(int32_t idx)
 {
     dw_iic_priv_t *iic_priv = &iic_instance[idx];
     dw_iic_reg_t *addr = (dw_iic_reg_t *)(iic_priv->base);

@@ -1,6 +1,7 @@
 /*
  * Copyright (C) 2019-2020 Alibaba Group Holding Limited
  */
+#if !defined(CONFIG_USE_LOG_IPC) || (CONFIG_USE_LOG_IPC == 0)
 
 #include <stdio.h>
 #include <aos/kernel.h>
@@ -30,7 +31,7 @@ typedef struct {
     dev_ringbuf_t  read_buffer;
     aos_mutex_t    mutex;
     aos_event_t    event_write_read;
-    int            event_state;
+    volatile int   event_state;
     void (*write_event)(aos_dev_t *dev, int event_id, void *priv);
     void *priv;
     void *init_cfg;
@@ -126,8 +127,7 @@ static void usart_csky_event_cb_fun(int32_t uart_idx, usart_event_e event)
 
 #endif
         if (uart->recv_buf != NULL) {
-            char buffer[16];
-
+            char buffer[32];
             do {
                 ret = csi_usart_receive_query(uart->handle, buffer, sizeof(buffer));
 
@@ -154,7 +154,7 @@ static void usart_csky_event_cb_fun(int32_t uart_idx, usart_event_e event)
     };
 
     case USART_EVENT_RX_OVERFLOW: {
-        char buffer[16];
+        char buffer[32];
         uint32_t ret;
 
         do {
@@ -192,13 +192,13 @@ static int uart_csky_open(aos_dev_t *dev)
         goto error1;
     }
 
-    uart(dev)->recv_buf = (char *)aos_malloc(CONFIG_UART_RECV_BUF_SIZE);
+    uart(dev)->recv_buf = (char *)aos_malloc(CONFIG_UART_RECV_BUF_SIZE + 1);
 
     if (uart(dev)->recv_buf == NULL) {
         goto error2;
     }
 
-    ringbuffer_create(&uart(dev)->read_buffer, uart(dev)->recv_buf, CONFIG_UART_RECV_BUF_SIZE);
+    ringbuffer_create(&uart(dev)->read_buffer, uart(dev)->recv_buf, CONFIG_UART_RECV_BUF_SIZE + 1);
 
     uart(dev)->handle = csi_usart_initialize(dev->id, usart_csky_event_cb_fun);
 
@@ -218,6 +218,9 @@ error0:
 
 static int uart_csky_close(aos_dev_t *dev)
 {
+    aos_event_set(&uart(dev)->event_write_read, EVENT_READ, AOS_EVENT_OR);
+    aos_event_set(&uart(dev)->event_write_read, EVENT_WRITE, AOS_EVENT_OR);
+
     csi_usart_uninitialize(uart(dev)->handle);
     int32_t idx = get_uart_dev_idx(dev->id);
     if (idx != -1) {
@@ -228,6 +231,25 @@ static int uart_csky_close(aos_dev_t *dev)
     aos_free(uart(dev)->recv_buf);
 
     return 0;
+}
+
+static int uart_csky_lpm(aos_dev_t *dev, int state)
+{
+    int ret = 0;
+    usart_handle_t handle = uart(dev)->handle;
+    if(NULL == handle) {
+        LOGE(TAG, "UART handle is NULL! IDX[%d]", uart(dev)->device.id);
+        ret = -1;
+    } else {
+        if(state) {
+            ret = csi_usart_power_control(handle, DRV_POWER_OFF);
+        } else {
+            ret = csi_usart_power_control(handle, DRV_POWER_FULL);
+        }
+        LOGD(TAG, "UART Power control! IDX[%d], state[%d], ret[%d]", uart(dev)->device.id, state, ret);
+    }
+
+    return ret;
 }
 
 static int uart_csky_config(aos_dev_t *dev, uart_config_t *config)
@@ -260,7 +282,7 @@ static int uart_csky_set_buffer_size(aos_dev_t *dev, uint32_t size)
     char *tmp = NULL;
 
     if (size > 0) {
-        tmp = aos_malloc(size);
+        tmp = aos_malloc(size + 1);
 
         if (tmp == NULL) {
             return -ENOMEM;
@@ -271,13 +293,16 @@ static int uart_csky_set_buffer_size(aos_dev_t *dev, uint32_t size)
 
     uart(dev)->recv_buf = tmp;
     if (tmp)
-        ringbuffer_create(&uart(dev)->read_buffer, tmp, size);
+        ringbuffer_create(&uart(dev)->read_buffer, tmp, size + 1);
 
     return 0;
 }
 
 static int uart_csky_send(aos_dev_t *dev, const void *data, uint32_t size)
 {
+    if(dev->ref == 0)
+        return 0;
+
     if (uart(dev)->type == UART_TYPE_CONSOLE) {
         int i;
         for (i = 0; i < size; i++) {
@@ -304,6 +329,9 @@ static int uart_csky_recv(aos_dev_t *dev, void *data, uint32_t size, unsigned in
     time_enter              = aos_now_ms();
     uart(dev)->event_state &= ~USART_EVENT_READ;
 
+    if(dev->ref == 0)
+        return 0;
+
     while (1) {
         if (uart(dev)->recv_buf != NULL)
             ret = ringbuffer_read(&uart(dev)->read_buffer, (uint8_t *)temp_buf, temp_count);
@@ -312,6 +340,7 @@ static int uart_csky_recv(aos_dev_t *dev, void *data, uint32_t size, unsigned in
 
         temp_count = temp_count - ret;
         temp_buf   = (uint8_t *)temp_buf + ret;
+        used_time  = aos_now_ms() - time_enter;
 
         if (temp_count == 0 || timeout_ms == 0 ||
             timeout_ms <= (used_time = aos_now_ms() - time_enter)) {
@@ -359,6 +388,7 @@ static uart_driver_t uart_driver = {
         .uninit = uart_csky_uninit,
         .open   = uart_csky_open,
         .close  = uart_csky_close,
+        .lpm    = uart_csky_lpm,
     },
     .config          = uart_csky_config,
     .set_type        = uart_csky_set_type,
@@ -379,3 +409,5 @@ usart_handle_t dev_get_handler(aos_dev_t *dev)
 
     return uart->handle;
 }
+
+#endif //#if !defined(CONFIG_USE_LOG_IPC) || (CONFIG_USE_LOG_IPC == 0)

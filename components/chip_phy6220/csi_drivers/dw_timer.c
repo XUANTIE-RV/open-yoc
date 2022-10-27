@@ -49,7 +49,8 @@ extern int32_t target_get_timer_count(void);
 extern int32_t target_get_timer(int32_t idx, uint32_t *base, uint32_t *irq, void **handler);
 
 static dw_timer_priv_t timer_instance[CONFIG_TIMER_NUM];
-
+#define RAM_CODE_SECTION(func)  __attribute__((section(".__sram.code."#func)))  func
+void RAM_CODE_SECTION(dw_timer_irqhandler)(int idx);
 
 /**
   \brief      Make all the timers in the idle state.
@@ -63,7 +64,7 @@ static void timer_deactive_control(dw_timer_reg_t *addr)
     addr->TxControl |= DW_TIMER_TXCONTROL_INTMASK;
 }
 
-__attribute__((section(".__sram.code"))) void dw_timer_irqhandler(int idx)
+void dw_timer_irqhandler(int idx)
 {
     dw_timer_priv_t *timer_priv = &timer_instance[idx];
     timer_priv->timeout_flag = 1;

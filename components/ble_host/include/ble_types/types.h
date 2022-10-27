@@ -16,15 +16,15 @@ extern "C" {
 #define bool unsigned char
 #endif
 
-typedef signed char         s8_t;
-typedef signed short        s16_t;
-typedef signed int          s32_t;
-typedef signed long long    s64_t;
+typedef signed char      s8_t;
+typedef signed short     s16_t;
+typedef signed int       s32_t;
+typedef signed long long s64_t;
 
-typedef unsigned char       u8_t;
-typedef unsigned short      u16_t;
-typedef unsigned int        u32_t;
-typedef unsigned long long  u64_t;
+typedef unsigned char      u8_t;
+typedef unsigned short     u16_t;
+typedef unsigned int       u32_t;
+typedef unsigned long long u64_t;
 
 #ifndef _SSIZE_T_DECLARED
 typedef long ssize_t;
@@ -38,7 +38,9 @@ typedef int off_t;
 
 typedef s32_t k_timeout_t;
 
-#define __deprecated
+#ifndef __deprecated
+#define __deprecated __attribute__((deprecated))
+#endif
 
 #ifdef __packed
 #undef __packed

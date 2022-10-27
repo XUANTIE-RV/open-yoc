@@ -36,7 +36,7 @@ minialsa接口如下所示：
 | aos_mixer_first_elem | 查找第一个elem |
 | aos_mixer_last_elem | 查找最后一个elem |
 | aos_mixer_elem_next | 查找下一个elem |
-| aos_mixer_elem_prev | 查找前一个elem |
+| aos_mixer_elem_prev | 查找前一个elem，暂不支持 |
 | aos_mixer_attach | 查找并打开一个mixer |
 | aos_pcm_new | 创建一个pcm设备 |
 | aos_pcm_set_ops | 补充 |
@@ -1289,7 +1289,7 @@ void playback (void)
 ### A Minimal Capture Program
 
 ```c
-void captrue(void)
+void capture(void)
 {
     int i;
     int err;
@@ -1350,6 +1350,9 @@ void mixer(void)
 ## 依赖资源
   - csi
   - aos
+  - drv_snd_xx 声卡驱动组件
+
+  **在使用minialsa的功能API之前，我们需要先对声卡进行初始化操作。以`ch2601`的声卡驱动为例，需要先调用`snd_card_alkaid_register`函数进行初始化。**
 
 
 ## 组件参考

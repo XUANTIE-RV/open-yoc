@@ -79,6 +79,9 @@ struct bt_l2cap_conn_rsp {
 #define BT_L2CAP_CONF_SUCCESS           0x0000
 #define BT_L2CAP_CONF_UNACCEPT          0x0001
 #define BT_L2CAP_CONF_REJECT            0x0002
+#define BT_L2CAP_CONF_UNKNOWN           0x0003
+#define BT_L2CAP_CONF_PENDING           0x0004
+#define BT_L2CAP_CONF_FLOW_SPEC         0x0004
 
 #define BT_L2CAP_CONF_REQ               0x04
 struct bt_l2cap_conf_req {
@@ -118,6 +121,10 @@ struct bt_l2cap_disconn_rsp {
 	u16_t dcid;
 	u16_t scid;
 } __packed;
+
+#define BT_L2CAP_ECHO_REQ            0x08
+
+#define BT_L2CAP_ECHO_RSP            0x09
 
 #define BT_L2CAP_INFO_FEAT_MASK         0x0002
 #define BT_L2CAP_INFO_FIXED_CHAN        0x0003
@@ -238,24 +245,39 @@ struct bt_l2cap_fixed_chan {
 	u16_t		cid;
 	int (*accept)(struct bt_conn *conn, struct bt_l2cap_chan **chan);
 	bt_l2cap_chan_destroy_t destroy;
+#if !(defined(CONFIG_BT_L2CAP_FIXED_CHAN) && CONFIG_BT_L2CAP_FIXED_CHAN)
 	sys_snode_t node;
+#endif
 };
 
+#if !(defined(CONFIG_BT_L2CAP_FIXED_CHAN) && CONFIG_BT_L2CAP_FIXED_CHAN)
 /* Register a fixed L2CAP channel for L2CAP */
 void bt_l2cap_le_fixed_chan_register(struct bt_l2cap_fixed_chan *chan);
+#endif
 
+#if (defined(CONFIG_BT_L2CAP_FIXED_CHAN) && CONFIG_BT_L2CAP_FIXED_CHAN)
+#define BT_L2CAP_CHANNEL_DEFINE(_name, _cid, _accept, _destroy)         \
+	const Z_STRUCT_SECTION_ITERABLE(bt_l2cap_fixed_chan, _name) = { \
+				.cid = _cid,                            \
+				.accept = _accept,                      \
+				.destroy = _destroy,                    \
+			}
+#else
 #define BT_L2CAP_CHANNEL_DEFINE(_name, _cid, _accept, _destroy)         \
 	static struct bt_l2cap_fixed_chan _name = { \
 				.cid = _cid,                            \
 				.accept = _accept,                      \
 				.destroy = _destroy,                    \
 			}
+#endif
 
 /* Need a name different than bt_l2cap_fixed_chan for a different section */
 struct bt_l2cap_br_fixed_chan {
 	u16_t		cid;
 	int (*accept)(struct bt_conn *conn, struct bt_l2cap_chan **chan);
+#if !(defined(CONFIG_BT_L2CAP_FIXED_CHAN) && CONFIG_BT_L2CAP_FIXED_CHAN)
     sys_snode_t node;
+#endif
 };
 
 #define BT_L2CAP_BR_CHANNEL_DEFINE(_name, _cid, _accept)		\
@@ -305,7 +327,7 @@ struct net_buf *bt_l2cap_create_pdu_timeout(struct net_buf_pool *pool,
 					    k_timeout_t timeout);
 
 #define bt_l2cap_create_pdu(_pool, _reserve) \
-	bt_l2cap_create_pdu_timeout(_pool, _reserve, K_FOREVER)
+	bt_l2cap_create_pdu_timeout(_pool, _reserve, K_SECONDS(10))
 
 /* Prepare a L2CAP Response PDU to be sent over a connection */
 struct net_buf *bt_l2cap_create_rsp(struct net_buf *buf, size_t reserve);
@@ -367,6 +389,9 @@ int bt_l2cap_br_chan_connect(struct bt_conn *conn, struct bt_l2cap_chan *chan,
 
 /* Send packet data to connected peer */
 int bt_l2cap_br_chan_send(struct bt_l2cap_chan *chan, struct net_buf *buf);
+
+/* Send echo request fot PTS */
+void bt_l2cap_br_send_echo_request(struct bt_conn *conn, void *data, u16_t len);
 
 /*
  * Handle security level changed on link passing HCI status of performed

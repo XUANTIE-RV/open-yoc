@@ -8,11 +8,14 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
-
+#include <ble_os.h>
 #include <errno.h>
 #include <ctype.h>
 #include <string.h>
 #include <stdarg.h>
+
+#define BT_HFP_AT_STOP_BTYE_DOT 0
+#define BT_HFP_AT_STOP_BTYE_CR  1
 
 #ifdef CONFIG_BT_HFP_HF
 #include <net/buf.h>
@@ -121,6 +124,22 @@ static int get_cmd_value(struct at_client *at, struct net_buf *buf,
 	return 0;
 }
 
+static int is_stoptype(char str, char stop_byte)
+{
+	switch (stop_byte) {
+		case BT_HFP_AT_STOP_BTYE_DOT:
+			if (str == ':' || str == '=')
+				return 1;
+			break;
+		case BT_HFP_AT_STOP_BTYE_CR:
+			if (str == '\r')
+				return 1;
+			break;
+	}
+
+	return 0;
+}
+
 static int get_response_string(struct at_client *at, struct net_buf *buf,
 			       char stop_byte, enum at_state state)
 {
@@ -129,7 +148,7 @@ static int get_response_string(struct at_client *at, struct net_buf *buf,
 	const char *str = (char *)buf->data;
 
 	while (cmd_len < buf->len && at->pos != at->buf_max_len) {
-		if (*str != stop_byte) {
+		if (!is_stoptype(*str, stop_byte)) {
 			at->buf[at->pos++] = *str;
 			cmd_len++;
 			str++;
@@ -199,7 +218,7 @@ static int at_state_start_lf(struct at_client *at, struct net_buf *buf)
 
 static int at_state_get_cmd_string(struct at_client *at, struct net_buf *buf)
 {
-	return get_response_string(at, buf, ':', AT_STATE_PROCESS_CMD);
+	return get_response_string(at, buf, BT_HFP_AT_STOP_BTYE_DOT, AT_STATE_PROCESS_CMD);
 }
 
 static bool is_cmer(struct at_client *at)
@@ -211,10 +230,28 @@ static bool is_cmer(struct at_client *at)
 	return false;
 }
 
+static const struct at_unsolicited *at_hfp_hf_unsol_lookup(struct at_client *hf_at)
+{
+    int i;
+
+    for (i = 0; i < hf_at->unsolicated_size; i++) {
+        if (!strncmp(hf_at->buf, hf_at->unsolicated_array[i].cmd, strlen(hf_at->unsolicated_array[i].cmd))) {
+            return &hf_at->unsolicated_array[i];
+        }
+    }
+
+    return NULL;
+}
+
 static int at_state_process_cmd(struct at_client *at, struct net_buf *buf)
 {
 	if (is_cmer(at)) {
 		at->state = AT_STATE_PROCESS_AG_NW_ERR;
+		return 0;
+	}
+
+	if (at_hfp_hf_unsol_lookup(at)) {
+		at->state = AT_STATE_UNSOLICITED_CMD;
 		return 0;
 	}
 
@@ -229,7 +266,7 @@ static int at_state_process_cmd(struct at_client *at, struct net_buf *buf)
 
 static int at_state_get_result_string(struct at_client *at, struct net_buf *buf)
 {
-	return get_response_string(at, buf, '\r', AT_STATE_PROCESS_RESULT);
+	return get_response_string(at, buf, BT_HFP_AT_STOP_BTYE_CR, AT_STATE_PROCESS_RESULT);
 }
 
 static bool is_ring(struct at_client *at)
@@ -295,11 +332,18 @@ static int at_state_process_ag_nw_err(struct at_client *at, struct net_buf *buf)
 
 static int at_state_unsolicited_cmd(struct at_client *at, struct net_buf *buf)
 {
-	if (at->unsolicited) {
-		return at->unsolicited(at, buf);
-	}
+	const struct at_unsolicited *handler;
 
-	return -ENODATA;
+    handler = at_hfp_hf_unsol_lookup(at);
+    if (!handler) {
+        return -ENOMSG;
+    }
+
+    if (!at_parse_cmd_input(at, buf, handler->cmd, handler->func, handler->type)) {
+        return 0;
+    }
+
+    return -ENOMSG;
 }
 
 /* The order of handler function should match the enum at_state */
@@ -526,9 +570,10 @@ out:
 	return 0;
 }
 
-void at_register_unsolicited(struct at_client *at, at_resp_cb_t unsolicited)
+void at_register_unsolicited(struct at_client *at, const struct at_unsolicited *unsolicated_array, int size)
 {
-	at->unsolicited = unsolicited;
+	at->unsolicated_array = unsolicated_array;
+	at->unsolicated_size = size;
 }
 
 void at_register(struct at_client *at, at_resp_cb_t resp, at_finish_cb_t finish)

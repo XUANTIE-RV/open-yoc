@@ -24,6 +24,10 @@
 #include "net.h"
 #include "foundation.h"
 
+#ifdef CONFIG_BT_MESH_EVENT_CALLBACK
+#include "mesh_event_port.h"
+#endif
+
 #ifdef CONFIG_BT_MESH_HEALTH_CLI
 
 static s32_t msg_timeout = K_SECONDS(2);
@@ -55,6 +59,19 @@ static void health_fault_status(struct bt_mesh_model *model,
 		BT_WARN("Unexpected Health Fault Status message");
 		return;
 	}
+
+#ifdef CONFIG_BT_MESH_EVENT_CALLBACK
+		struct net_buf_simple_state state = {0x00};
+        net_buf_simple_save(buf, &state);
+		bt_mesh_model_evt_t evt_data = {0x00};
+		evt_data.source_addr = ctx->addr;
+		evt_data.user_data = buf;
+		mesh_model_evt_cb event_cb = bt_mesh_event_get_cb_func();
+		if (event_cb) {
+			event_cb(BT_MESH_MODEL_EVT_HEALTH_FAULTS_STATUS, &evt_data);
+		}
+        net_buf_simple_restore(buf, &state);
+#endif
 
 	param = health_cli->op_param;
 
@@ -106,6 +123,16 @@ static void health_current_status(struct bt_mesh_model *model,
 
 	BT_DBG("Test ID 0x%02x Company ID 0x%04x Fault Count %u",
 	       test_id, cid, buf->len);
+
+#ifdef CONFIG_BT_MESH_EVENT_CALLBACK
+    bt_mesh_model_evt_t evt_data = {0x00};
+    evt_data.source_addr = ctx->addr;
+    evt_data.user_data = buf;
+    mesh_model_evt_cb event_cb = bt_mesh_event_get_cb_func();
+    if (event_cb) {
+        event_cb(BT_MESH_MODEL_EVT_HEALTH_CURRENT_STATUS, &evt_data);
+    }
+#endif
 
 	if (!cli->current_status) {
 		BT_WARN("No Current Status callback available");

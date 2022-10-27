@@ -644,10 +644,10 @@ sys_thread_t sys_thread_new(const char *name, lwip_thread_fn thread, void *arg, 
     int stat = aos_task_new_ext(&task, name, thread, arg, stacksize, prio);
 
     if (stat != 0) {
-        return (sys_thread_t)0;
+        return -1;
     }
 
-    return task.hdl;
+    return 0;
 }
 
 #if SYS_LIGHTWEIGHT_PROT

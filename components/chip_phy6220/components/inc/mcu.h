@@ -96,9 +96,9 @@
 #define HAL_ICER   *((volatile uint32_t *)(0xe000e180))
 
 //subWriteReg: write value to register zone: bit[high:low]
-#define   subWriteReg(addr,high,low,value)    write_reg(addr,(read_reg(addr)&\
+#define   subWriteReg(addr,high,low,value)    {write_reg(addr,(read_reg(addr)&\
         (~((((unsigned int)1<<((high)-(low)+1))-1)<<(low))))|\
-        ((unsigned int)(value)<<(low)))
+((unsigned int)(value)<<(low)));__asm volatile("nop");}
 
 #define TIME_BASE               (0x003fffff) // 24bit count shift 2 bit as 1us/bit
 #define TIME_DELTA(x,y)         ( (x>=y) ? x-y : TIME_BASE-y+x )

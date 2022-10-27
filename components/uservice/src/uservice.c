@@ -3,10 +3,10 @@
  */
 
 #include <string.h>
-
-#include <aos/debug.h>
+#ifndef __linux__
 #include <aos/kernel.h>
-
+#include <aos/debug.h>
+#endif
 
 #include "internal.h"
 
@@ -27,6 +27,29 @@ void uservice_unlock(uservice_t *srv)
         TASK_UNLOCK(srv->task);
 }
 
+#ifdef __linux__
+int uservice_call(uservice_t *srv, rpc_t *rpc)
+{
+    aos_assert(srv);
+    aos_assert(srv->task);
+    rpc->srv = srv;
+
+    int count = 10;
+    while (count--) {
+        if (mq_send(srv->task->queue, (const char*)rpc, sizeof(rpc_t), 0) == 0) {
+            return rpc_wait(rpc);
+        } else {
+            if ( count == 1) {
+                LOGW(TAG, "uService %s queue full,send id:%d cur id: %d", srv->name,rpc->cmd_id, srv->task->current_rpc->cmd_id);
+            }
+            aos_msleep(100);
+        }
+    }
+
+    return -1;
+}
+
+#else
 int uservice_call(uservice_t *srv, rpc_t *rpc)
 {
     aos_assert(srv);
@@ -34,11 +57,12 @@ int uservice_call(uservice_t *srv, rpc_t *rpc)
 
     rpc->srv = srv;
 
-#ifdef CONFIG_DEBUG
     if(rpc->data && rpc->data->timeout_ms != 0) {
-        aos_assert(aos_task_self().hdl != srv->task->task.hdl);
+        if (aos_task_self() == srv->task->task) {
+            LOGW(TAG, "cur task == uService task");
+            return -1;
+        }
     }
-#endif
 
     int count = 10;
     while (count--) {
@@ -55,6 +79,7 @@ int uservice_call(uservice_t *srv, rpc_t *rpc)
 
     return -1;
 }
+#endif
 
 int uservice_call_sync(uservice_t *srv, int cmd, void *param, void *resp, size_t size)
 {
@@ -97,7 +122,11 @@ int uservice_call_async(uservice_t *srv, int cmd, void *param, size_t param_size
 
     if (ret == 0) {
         if (param && param_size > 0)
-            rpc_put_buffer(&rpc, param, param_size);
+            ret = rpc_put_buffer(&rpc, param, param_size);
+		if (ret < 0) {
+            rpc_deinit(&rpc);
+		    return ret;
+		}
 
         ret = uservice_call(srv, &rpc);
         rpc_deinit(&rpc);
@@ -137,6 +166,7 @@ int uservice_process(void *context, rpc_t *rpc, const rpc_process_t rpcs[])
             return 0;
         }
     }
+    LOGW(TAG, "cmd is may be error. uService = %s, cmd_id = %d", rpc->srv->name, rpc->cmd_id);
 
     return -1;
 }

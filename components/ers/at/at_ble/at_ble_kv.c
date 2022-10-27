@@ -17,7 +17,7 @@ ad_data_t ad_def[2] = {
 uint8_t manu_data[6] = {0xA8, 0x01, 0x00, 0x01, 0x02, 0x03};
 
 ad_data_t sd_def[2] = {
-    {.type = AD_DATA_TYPE_NAME_COMPLETE, .data = (uint8_t *)SLAVE_DEVICE_NAME_DEF, .len = strlen(SLAVE_DEVICE_NAME_DEF)},
+    {.type = AD_DATA_TYPE_NAME_COMPLETE, .data = (uint8_t *)SLAVE_DEVICE_NAME_DEF, .len = 0},
     {.type = AD_DATA_TYPE_MANUFACTURER_DATA, .data = manu_data, .len = sizeof(manu_data)},
 };
 
@@ -179,7 +179,7 @@ int at_ble_conf_load(at_conf_load *conf_load)
 
         ret = aos_kv_get("BT_ADV_AD_LEN", &conf_load->uart_conf.slave_conf.ad.ad_len, &length);
 
-        uint8_t set_ad_faild = 0;
+        uint8_t set_ad_failed = 0;
 
         if (ret != 0 || conf_load->uart_conf.slave_conf.ad.ad_len == 0) {
             conf_load->uart_conf.slave_conf.param.ad = ad_def;
@@ -190,12 +190,12 @@ int at_ble_conf_load(at_conf_load *conf_load)
             conf_load->uart_conf.slave_conf.param.ad_num = ad_data_covert(conf_load->uart_conf.slave_conf.ad.ad, length, NULL);
 
             if (ret != 0 || conf_load->uart_conf.slave_conf.ad.ad_len != length || conf_load->uart_conf.slave_conf.param.ad_num == 0) {
-                set_ad_faild = 1;
+                set_ad_failed = 1;
             } else {
                 conf_load->uart_conf.slave_conf.param.ad = (ad_data_t *)malloc(sizeof(ad_data_t) * conf_load->uart_conf.slave_conf.param.ad_num);
 
                 if (!conf_load->uart_conf.slave_conf.param.ad) {
-                    set_ad_faild = 1;
+                    set_ad_failed = 1;
                 } else {
                     ad_data_covert(conf_load->uart_conf.slave_conf.ad.ad, length, conf_load->uart_conf.slave_conf.param.ad);
                 }
@@ -203,7 +203,7 @@ int at_ble_conf_load(at_conf_load *conf_load)
 
         }
 
-        if (set_ad_faild) {
+        if (set_ad_failed) {
             conf_load->uart_conf.slave_conf.param.ad = ad_def;
             conf_load->uart_conf.slave_conf.param.ad_num = sizeof(ad_def) / sizeof(ad_def[0]);
         }
@@ -213,7 +213,7 @@ int at_ble_conf_load(at_conf_load *conf_load)
         sd_def[0].type = AD_DATA_TYPE_NAME_COMPLETE;
         sd_def[0].data = conf_load->bt_name;
         sd_def[0].len = strlen((char *)sd_def[0].data);
-        set_ad_faild = 0;
+        set_ad_failed = 0;
         length = 1;
         ret = aos_kv_get("BT_ADV_SD_LEN", &conf_load->uart_conf.slave_conf.sd.ad_len, &length);
 
@@ -227,19 +227,19 @@ int at_ble_conf_load(at_conf_load *conf_load)
             conf_load->uart_conf.slave_conf.param.sd_num = ad_data_covert(conf_load->uart_conf.slave_conf.sd.ad, length, NULL);
 
             if (ret != 0 || conf_load->uart_conf.slave_conf.sd.ad_len != length || conf_load->uart_conf.slave_conf.param.sd_num == 0) {
-                set_ad_faild = 1;
+                set_ad_failed = 1;
             } else {
                 conf_load->uart_conf.slave_conf.param.sd = (ad_data_t *)malloc(sizeof(ad_data_t) * conf_load->uart_conf.slave_conf.param.sd_num);
 
                 if (!conf_load->uart_conf.slave_conf.param.sd) {
-                    set_ad_faild = 1;
+                    set_ad_failed = 1;
                 } else {
                     ad_data_covert(conf_load->uart_conf.slave_conf.sd.ad, length, conf_load->uart_conf.slave_conf.param.sd);
                 }
             }
         }
 
-        if (set_ad_faild) {
+        if (set_ad_failed) {
             conf_load->uart_conf.slave_conf.param.ad = sd_def;
             conf_load->uart_conf.slave_conf.param.ad_num = sizeof(sd_def) / sizeof(sd_def[0]);
         }

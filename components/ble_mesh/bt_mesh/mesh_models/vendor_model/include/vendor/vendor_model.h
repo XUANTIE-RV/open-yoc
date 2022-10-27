@@ -1,41 +1,45 @@
 /*
- * Copyright (C) 2019-2020 Alibaba Group Holding Limited
+ * Copyright (C) 2019-2022 Alibaba Group Holding Limited
  */
 
 #ifndef _VENDOR_MODEL_H
 #define _VENDOR_MODEL_H
 
-#define CONFIG_CID_TAOBAO 0x01A8
-#define CONFIG_MESH_VENDOR_COMPANY_ID CONFIG_CID_TAOBAO
+#define CONFIG_CID_TAOBAO                0x01A8
+#define CONFIG_BT_MESH_VENDOR_COMPANY_ID CONFIG_CID_TAOBAO
 
 #define BT_MESH_MODEL_VND_COMPANY_ID 0x01A8
-#define BT_MESH_MODEL_VND_MODEL_SRV 0x0000
-#define BT_MESH_MODEL_VND_MODEL_CLI 0x0001
+#define BT_MESH_MODEL_VND_MODEL_SRV  0x0000
+#define BT_MESH_MODEL_VND_MODEL_CLI  0x0001
 
-
-#define VENDOR_OP_ATTR_GET_STATUS        0xD0
-#define VENDOR_OP_ATTR_SET_ACK           0xD1
-#define VENDOR_OP_ATTR_SET_UNACK         0xD2
-#define VENDOR_OP_ATTR_STATUS            0xD3
-#define VENDOR_OP_ATTR_TRANS_MSG         0xCF
-#define VENDOR_OP_ATTR_TRANS_INDICATE    0xCE
-#define VENDOR_OP_ATTR_TRANS_ACK         0xCD
-#define VENDOR_OP_ATTR_MESH_AUTOCONFIG   0xD6
-#define VENDOR_OP_ATTR_MESH_AUTOCONFIG_GET   0xD7
+#define VENDOR_OP_ATTR_TRANS_MSG              0xCF
+#define VENDOR_OP_ATTR_TRANS_INDICATE         0xCE
+#define VENDOR_OP_ATTR_TRANS_ACK              0xCD
+#define VENDOR_OP_ATTR_GET_STATUS             0xD0
+#define VENDOR_OP_ATTR_SET_ACK                0xD1
+#define VENDOR_OP_ATTR_SET_UNACK              0xD2
+#define VENDOR_OP_ATTR_STATUS                 0xD3
+#define VENDOR_OP_ATTR_INDICATE               0xD4
+#define VENDOR_OP_ATTR_CONFIRM                0xD5
+#define VENDOR_OP_ATTR_MESH_AUTOCONFIG        0xD6
+#define VENDOR_OP_ATTR_MESH_AUTOCONFIG_GET    0xD7
 #define VENDOR_OP_ATTR_MESH_AUTOCONFIG_STATUS 0xD8
+#define VENDOR_OP_ATTR_INDICATE_TG            0xDE
+#define VENDOR_OP_ATTR_CONFIRM_TG             0xDF
 
-#define VENDOR_OP_ATTR_INDICATE          0xD4
-#define VENDOR_OP_ATTR_CONFIRM           0xD5
-#define VENDOR_OP_ATTR_INDICATE_TG       0xDE
-#define VENDOR_OP_ATTR_CONFIRM_TG        0xDF
-
+#define ATTR_TYPE_REPORT_VERSION    0xFF01
+#define ATTR_TYPE_OVERWRITE_SUBLIST 0xFF02
+#define ATTR_TYPE_REPORT_OTA_CRC    0xFF03
+#define ATTR_TYPE_ACTIVE_CHECK      0xFF04
 
 #define ONOFF_T           0x0100
 #define LIGHTNESS_LEVEL_T 0x0121
 
 #define VENDOR_MODEL_MSG_DFT_RETRY_TIMES 5
 #define VENDOR_MODEL_MSG_MAX_RETRY_TIMES 10
-#define VENDOR_MODEL_MSG_RETRY_PERIOD 500
+#define VENDOR_MODEL_MSG_RETRY_PERIOD    500
+
+#define DEF_VERSION_REPORT_RETRY 5
 
 /**
  * p_elem: pointer to the element which the messsage want to be sent to
@@ -55,23 +59,24 @@
  * */
 typedef struct _vnd_model_msg {
     struct bt_mesh_model *model;
-    uint16_t netkey_idx;
-    uint16_t appkey_idx;
-    uint16_t dst_addr;
-    uint16_t len;
-    uint8_t  retry;
-    uint8_t  retry_period;
-    uint8_t  opid;
-    uint8_t  tid;
-    uint8_t  *data;
+    uint16_t              netkey_idx;
+    uint16_t              appkey_idx;
+    uint16_t              dst_addr;
+    uint16_t              len;
+    uint8_t               trans;
+    uint8_t               net_transmit;
+    uint8_t               retry;
+    uint8_t               retry_period;
+    uint8_t               opid;
+    uint8_t               tid;
+    uint8_t *             data;
 } vnd_model_msg;
 
 typedef struct _vnd_model_msg_n {
-    sys_dnode_t node;
-    s8_t left_retry;
-    long long timeout;
+    sys_dnode_t   node;
+    s8_t          left_retry;
+    long long     timeout;
     vnd_model_msg msg;
 } vnd_model_msg_n;
-
 
 #endif //_VENDOR_MODEL_H

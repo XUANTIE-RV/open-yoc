@@ -98,9 +98,10 @@ Default_IRQHandler:
 
     lw      a1, 144(sp)
     andi    a0, a1, 0x3FF
+    slli    a0, a0, 2
 
     /* clear pending */
-    li      a2, 0xE000E100
+    li      a2, 0xE0801000
     add     a2, a2, a0
     lb      a3, 0(a2)
     li      a4, 1
@@ -193,7 +194,7 @@ Default_IRQHandler:
     sw      t1, 64(sp)
     sw      t0, 68(sp)
 
-//    csrs    mstatus, 8
+    # csrs    mstatus, 8
 
     sw      ra, 0(sp)
     sw      t2, 12(sp)
@@ -243,9 +244,10 @@ Default_IRQHandler:
 
     lw      a1, 144(sp)
     andi    a0, a1, 0x3FF
+    slli    a0, a0, 2
 
     /* clear pending */
-    li      a2, 0xE000E100
+    li      a2, 0xE0801000
     add     a2, a2, a0
     lb      a3, 0(a2)
     li      a4, 1

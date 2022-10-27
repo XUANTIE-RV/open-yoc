@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2020 Alibaba Group Holding Limited
+ * Copyright (C) 2022 Alibaba Group Holding Limited
  */
 
 #ifndef _MODEL_BOUND_OPERATION_H
@@ -7,8 +7,8 @@
 
 #include "mesh_model.h"
 
-
-typedef enum _BIND_OPERATION_ID_ {
+typedef enum _BIND_OPERATION_ID_
+{
     /* !!!START!!! --- Don't add new ID before this ID */
     B_OPS_START_ID = -1,
 
@@ -40,6 +40,5 @@ typedef enum _BIND_OPERATION_ID_ {
     B_OPS_END_ID
 
 } BIND_OPERATION_ID;
-
 
 #endif //_MODEL_BOUND_OPERATION_H

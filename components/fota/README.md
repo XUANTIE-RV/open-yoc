@@ -108,12 +108,9 @@ yoc install fota
 
 | 函数                | 说明                                                         |
 | :-------------------| :----------------------------------------------------------- |
-| fota_upgrade        | 开始下载镜像                                                 |
 | fota_do_check       | 强制检测版本                                                 |
 | fota_start          | 创建FOTA服务                                                 |
 | fota_stop           | 停止FOTA功能，退出FOTA服务                                   |
-| fota_finish         | FOTA完成，调用用户实现的finish接口                           |
-| fota_fail           | FOTA失败，调用用户实现的fail接口，并释放FOTA资源,但不释放FOTA句柄 |
 | fota_config         | 配置FOTA参数                                                 |
 | fota_set_auto_check | 设置是否自动不断检测服务器固件版本并升级的功能               |
 | fota_get_auto_check | 获取是否自动检测判断                                         |
@@ -121,26 +118,11 @@ yoc install fota
 | fota_open           | fota初始化                                                   |
 | fota_close          | 关闭FOTA功能，释放所有资源                                   |
 | fota_register_cop   | 注册为cop平台，即从cop平台下载固件                           |
-| fota_register_coap  | 注册为coap平台，即从coap平台下载固件                         |
 | fota_register       | 注册平台接口                                                 |
 
 
 
 ## 接口详细说明
-
-### fota_upgrade
-
-`int fota_upgrade(fota_t *fota);`
-
-- 功能描述:
-  - 开始下载镜像。
-
-- 参数:
-  - `fota`: fota 句柄。
-
-- 返回值:
-  - 0: 下载镜像成功。
-  - 1: 下载镜像失败。
 
 ### fota_do_check
 
@@ -183,30 +165,6 @@ yoc install fota
 - 返回值:
   - 0: 成功。
   - 1: 失败。
-
-### fota_finish
-
-`void fota_finish(fota_t *fota);`
-
-- 功能描述:
-  - FOTA完成，调用用户实现的finish接口。
-
-- 参数:
-  - `fota`: fota 句柄。
-
-- 返回值:无。
-
-### fota_fail
-
-`void fota_fail(fota_t *fota);`
-
-- 功能描述:
-  - FOTA失败，调用用户实现的fail接口，并释放FOTA资源,但不释放FOTA句柄。
-  
-- 参数:
-  - `fota`: fota 句柄。
-  
-- 返回值:无。
 
 ### fota_config
 
@@ -297,20 +255,6 @@ yoc install fota
 
 - 功能描述:
   - 注册为cop平台，即从cop平台下载固件。
-  
-- 参数:
-  - 无。
-  
-- 返回值:
-  - 0: 注册cop成功。
-  - 1: 注册cop失败。
-
-### fota_register_coap
-
-`int fota_register_coap(void);`
-
-- 功能描述:
-  - 注册为coap平台，即从coap平台下载固件。
   
 - 参数:
   - 无。

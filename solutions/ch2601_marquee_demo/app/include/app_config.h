@@ -15,6 +15,5 @@
 
 #define CONFIG_PWM_MODE
 //#define CONFIG_GPIO_MODE
-#define CONSOLE_UART_IDX 0
 
 #endif

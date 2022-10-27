@@ -1,18 +1,49 @@
 /*
  * Copyright (C) 2019-2020 Alibaba Group Holding Limited
  */
+#include <errno.h>
+#include <stdio.h>
 #include <yoc/fota.h>
 #include <yoc/netio.h>
+#include <aos/kernel.h>
 #include <aos/kv.h>
 #include <aos/version.h>
 #include <ulog/ulog.h>
 #include <yoc/sysinfo.h>
+#if defined(CONFIG_OTA_AB) && (CONFIG_OTA_AB > 0)
+#include <bootab.h>
+#endif
 
-#define COP_IMG_URL "cop_img_url"
-#define COP_VERSION "cop_version"
-#define TO_URL      "flash://misc"
+#define COP_IMG_URL     "cop_img_url"
+#define TO_URL          "flash://misc"
 
 #define TAG "fotacop"
+
+static void cop_res_release(fota_info_t *info)
+{
+    if (info) {
+        if (info->fota_url) {
+            aos_free(info->fota_url);
+            info->fota_url = NULL;
+        }
+        if (info->local_changelog) {
+            aos_free(info->local_changelog);
+            info->local_changelog = NULL;
+        }
+        if (info->changelog) {
+            aos_free(info->changelog);
+            info->changelog = NULL;
+        }
+        if (info->cur_version) {
+            aos_free(info->cur_version);
+            info->cur_version = NULL;
+        }
+        if (info->new_version) {
+            aos_free(info->new_version);
+            info->new_version = NULL;
+        }
+    }
+}
 
 #if CONFIG_FOTA_USE_HTTPC == 1
 #include <http_client.h>
@@ -21,7 +52,7 @@ static int cop_get_ota_url(char *ota_url, int len)
 {
     int ret = -1;
 
-    ret = aos_kv_getstring("otaurl", ota_url, len);
+    ret = aos_kv_getstring(KV_FOTA_FROM_URL, ota_url, len);
     if (ret < 0) {
         strcpy(ota_url, "http://occ.t-head.cn/api/image/ota/pull");
     }
@@ -163,10 +194,13 @@ static void _http_cleanup(http_client_handle_t client)
 }
 
 static int cop_version_check(fota_info_t *info) {
+#define BUF_SIZE 156
+#define URL_SIZE 256
     int ret = 0, rc;
     char *payload = NULL;
     char getvalue[64];
     cJSON *js = NULL;
+    char *urlbuf = NULL;
     char *buffer = NULL;
     http_errors_t err;
     http_client_config_t config = {0};
@@ -177,29 +211,37 @@ static int cop_version_check(fota_info_t *info) {
         ret = -ENOMEM;
         goto out;
     }
-    if ((payload = aos_malloc(156)) == NULL) {
+    if ((payload = aos_malloc(BUF_SIZE)) == NULL) {
         ret = -ENOMEM;
         goto out;
     }
-#if 1
-    snprintf(payload, 156, "{\"cid\":\"%s\",\"model\":\"%s\",\"version\":\"%s\"}",
-             aos_get_device_id(), aos_get_product_model(), aos_get_app_version());
-#else
-    //snprintf(payload, 100, "{\"cid\":\"%s\",\"model\":\"%s\",\"version\":\"%s\"}",
-    //         "00A2C6FB32241D9423F5AF00", "hlb_test", "1.0.0-20181125.1321-R-hlb_tes");
-    // FIXME: for test.
-    snprintf(payload, 156, "{\"cid\":\"%s\",\"model\":\"%s\",\"version\":\"%s\"}",
-            "e6d0d5480440000008376eb1e834a765", "pangu", "1.1.1-20201027.2235-R-pangu");
+
+    char * dev_id = aos_get_device_id();
+    char * pro_model = (char *)aos_get_product_model();
+    char * app_ver =  aos_get_app_version();
+#if defined(CONFIG_OTA_AB) && (CONFIG_OTA_AB > 0)
+    if (strcmp(app_ver, BOOTAB_INIT_VER) == 0) {
+        char cop_first_ver[64];
+        strcpy(cop_first_ver, "1.0.0");
+        app_ver = cop_first_ver;
+    }
 #endif
+    snprintf(payload, BUF_SIZE, "{\"cid\":\"%s\",\"model\":\"%s\",\"version\":\"%s\"}",
+             dev_id ? dev_id : "null", pro_model ? pro_model : "null", app_ver ? app_ver : "null");
     LOGD(TAG, "check: %s", payload);
 
     memset(getvalue, 0, sizeof(getvalue));
     cop_get_ota_url(getvalue, sizeof(getvalue));
     LOGD(TAG, "ota url:%s", getvalue);
 
+    int timeout_ms;
+    if (aos_kv_getint(KV_FOTA_READ_TIMEOUTMS, &timeout_ms) < 0) {
+        timeout_ms = 10000;
+    }
+
     config.method = HTTP_METHOD_POST;
     config.url = getvalue;
-    config.timeout_ms = 10000;
+    config.timeout_ms = timeout_ms;
     config.buffer_size = BUFFER_SIZE;
     config.event_handler = _http_event_handler;
     LOGD(TAG, "http client init start.");
@@ -260,7 +302,7 @@ static int cop_version_check(fota_info_t *info) {
         goto out;
     }
     LOGD(TAG, "version: %s", version->valuestring);
-    aos_kv_setstring(COP_VERSION, version->valuestring);
+    aos_kv_setstring(KV_COP_VERSION, version->valuestring);
 
     cJSON *url = cJSON_GetObjectItem(result, "url");
     if (!(url && cJSON_IsString(url))) {
@@ -270,34 +312,81 @@ static int cop_version_check(fota_info_t *info) {
     }
     LOGD(TAG, "url: %s", url->valuestring);
 
-    char *urlbuf = aos_malloc(156);
+    urlbuf = aos_malloc(URL_SIZE);
     if (urlbuf == NULL) {
         ret = -1;
         goto out;
     }
-    rc = aos_kv_getstring(COP_IMG_URL, urlbuf, 156);
-
+    rc = aos_kv_getstring(COP_IMG_URL, urlbuf, URL_SIZE);
     if (rc <= 0) {
-        aos_kv_setstring(COP_IMG_URL, url->valuestring);
+        rc = aos_kv_setstring(COP_IMG_URL, url->valuestring);
+        if (rc < 0) {
+            ret = -1;
+            goto out;
+        }
     } else {
         if (strcmp(url->valuestring, urlbuf) == 0) {
-            aos_kv_getint("fota_offset", &rc);
+            if (aos_kv_getint(KV_FOTA_OFFSET, &rc) < 0) {
+                rc = 0;
+            }
             LOGI(TAG, "continue fota :%d", rc);
         } else {
-            aos_kv_setstring(COP_IMG_URL, url->valuestring);
-            aos_kv_setint("fota_offset", 0);
+            rc = aos_kv_setstring(COP_IMG_URL, url->valuestring);
+            if (rc < 0) {
+                ret = -1;
+                goto out;
+            }
+            if (aos_kv_setint(KV_FOTA_OFFSET, 0) < 0) {
+                ret = -1;
+                goto out;
+            }
             LOGI(TAG, "restart fota");
         }
     }
-    aos_free(urlbuf);
+
+    cJSON *changelog = cJSON_GetObjectItem(result, "changelog");
+    if (!(changelog && cJSON_IsString(changelog))) {
+        LOGW(TAG, "get changelog failed");
+    } else {
+        LOGD(TAG, "changelog: %s", changelog->valuestring);
+    }
+
+    cJSON *timestamp = cJSON_GetObjectItem(result, "timestamp");
+    if (!(timestamp && cJSON_IsNumber(timestamp))) {
+        LOGW(TAG, "get timestamp failed");
+        info->timestamp = 0;
+    } else {
+        LOGD(TAG, "timestamp: %d", timestamp->valueint);
+        info->timestamp = timestamp->valueint;
+    }
 
     if (info->fota_url) {
         aos_free(info->fota_url);
         info->fota_url = NULL;
     }
+    if (info->changelog) {
+        aos_free(info->changelog);
+        info->changelog = NULL;
+    }
+    if (info->new_version) {
+        aos_free(info->new_version);
+        info->new_version = NULL;
+    }
     info->fota_url = strdup(url->valuestring);
+    if (changelog && changelog->valuestring) {
+        info->changelog = strdup(changelog->valuestring);
+    } else {
+        info->changelog = strdup("fix bug...");
+    }
+    aos_kv_setstring("newchangelog", info->changelog);
+    info->new_version = strdup(version->valuestring);
     LOGD(TAG, "get url: %s", info->fota_url);
+    LOGD(TAG, "get changelog: %s", info->changelog);
 out:
+    if (ret < 0) {
+        LOGE(TAG, "fota cop version check failed.");
+    }
+    if (urlbuf) aos_free(urlbuf);
     if (buffer) aos_free(buffer);
     if (payload) aos_free(payload);
     if (js) cJSON_Delete(js);
@@ -352,7 +441,7 @@ static int cop_get_ota_url(char *ota_url, int len)
 {
     int ret = -1;
 
-    ret = aos_kv_getstring("otaurl", ota_url, len);
+    ret = aos_kv_getstring(KV_FOTA_FROM_URL, ota_url, len);
     if (ret < 0) {
         strcpy(ota_url, "http://occ.t-head.cn/api/image/ota/pull");
     }
@@ -427,8 +516,8 @@ static int cop_version_check(fota_info_t *info) {
     }
     memcpy(ver, cptr, value_len);
     ver[value_len] = 0;
-    LOGD(TAG, "%s: %s", COP_VERSION, ver);
-    aos_kv_setstring(COP_VERSION, ver);
+    LOGD(TAG, "%s: %s", KV_COP_VERSION, ver);
+    aos_kv_setstring(KV_COP_VERSION, ver);
     aos_free(ver);
 
     cptr = json_getvalue(body, "url", &value_len);
@@ -470,11 +559,11 @@ static int cop_version_check(fota_info_t *info) {
         aos_kv_setstring(COP_IMG_URL, http->url);
     } else {
         if (strcmp(http->url, buffer) == 0) {
-            aos_kv_getint("fota_offset", &rc);
+            aos_kv_getint(KV_FOTA_OFFSET, &rc);
             LOGI(TAG, "continue fota :%d", rc);
         } else {
             aos_kv_setstring(COP_IMG_URL, http->url);
-            aos_kv_setint("fota_offset", 0);
+            aos_kv_setint(KV_FOTA_OFFSET, 0);
             LOGI(TAG, "restart fota");
         }
     }
@@ -483,19 +572,62 @@ static int cop_version_check(fota_info_t *info) {
         aos_free(info->fota_url);
         info->fota_url = NULL;
     }
+    if (info->changelog) {
+        aos_free(info->changelog);
+        info->changelog = NULL;
+    }
+    if (info->new_version) {
+        aos_free(info->new_version);
+        info->new_version = NULL;
+    }
     info->fota_url = strdup(http->url);
     LOGD(TAG, "get url: %s", info->fota_url);
     http_deinit(http);
     return 0;
 }
+
+static int cop_init(fota_info_t *info)
+{
+    return 0;
+}
+
+static int restart(void)
+{
+    return 0;
+}
 #endif /* CONFIG_FOTA_USE_HTTPC */
+
+static int cop_init(fota_info_t *info)
+{
+    LOGD(TAG, "%s, %d", __func__, __LINE__);
+    return 0;
+}
+
+static int finish(fota_info_t *info)
+{
+    cop_res_release(info);
+    return 0;
+}
+
+static int fail(fota_info_t *info)
+{
+    cop_res_release(info);
+    return 0;
+}
+
+static int restart(void)
+{
+    LOGD(TAG, "%s, %d", __func__, __LINE__);
+    return 0;
+}
 
 const fota_cls_t fota_cop_cls = {
     "cop",
-    NULL,
+    cop_init,
     cop_version_check,
-    NULL,
-    NULL,
+    finish,
+    fail,
+    restart
 };
 
 int fota_register_cop(void)

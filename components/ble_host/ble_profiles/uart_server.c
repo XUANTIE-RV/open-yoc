@@ -5,8 +5,6 @@
 #include <errno.h>
 #include "yoc/uart_server.h"
 
-
-
 enum {
     YOC_UART_IDX_SVC,
 
@@ -22,9 +20,8 @@ enum {
     YOC_UART_IDX_MAX,
 };
 
-
-//static struct bt_gatt_ccc_cfg_t ccc_data[2] = {};
-static  gatt_service g_uart_profile;
+// static struct bt_gatt_ccc_cfg_t ccc_data[2] = {};
+static gatt_service g_uart_profile;
 
 extern uint8_t llState;
 
@@ -36,16 +33,15 @@ static char tx_char_des[] = "YoC UART TX";
 gatt_attr_t uart_attrs[YOC_UART_IDX_MAX] = {
     [YOC_UART_IDX_SVC] = GATT_PRIMARY_SERVICE_DEFINE(YOC_UART_SERVICE_UUID),
 
-    [YOC_UART_IDX_RX_CHAR] = GATT_CHAR_DEFINE(YOC_UART_RX_UUID,  GATT_CHRC_PROP_WRITE),
-    [YOC_UART_IDX_RX_VAL] = GATT_CHAR_VAL_DEFINE(YOC_UART_RX_UUID, GATT_PERM_READ | GATT_PERM_WRITE),
-    [YOC_UART_IDX_RX_DES] = GATT_CHAR_CUD_DEFINE(rx_char_des, GATT_PERM_READ),
+    [YOC_UART_IDX_RX_CHAR] = GATT_CHAR_DEFINE(YOC_UART_RX_UUID, GATT_CHRC_PROP_WRITE),
+    [YOC_UART_IDX_RX_VAL]  = GATT_CHAR_VAL_DEFINE(YOC_UART_RX_UUID, GATT_PERM_READ | GATT_PERM_WRITE),
+    [YOC_UART_IDX_RX_DES]  = GATT_CHAR_CUD_DEFINE(rx_char_des, GATT_PERM_READ),
 
-    [YOC_UART_IDX_TX_CHAR] = GATT_CHAR_DEFINE(YOC_UART_TX_UUID,  GATT_CHRC_PROP_NOTIFY | GATT_CHRC_PROP_READ),
-    [YOC_UART_IDX_TX_VAL] = GATT_CHAR_VAL_DEFINE(YOC_UART_TX_UUID, GATT_PERM_READ),
-    [YOC_UART_IDX_TX_CCC] = GATT_CHAR_CCC_DEFINE(),
-    [YOC_UART_IDX_TX_DES] = GATT_CHAR_CUD_DEFINE(tx_char_des, GATT_PERM_READ),
+    [YOC_UART_IDX_TX_CHAR] = GATT_CHAR_DEFINE(YOC_UART_TX_UUID, GATT_CHRC_PROP_NOTIFY | GATT_CHRC_PROP_READ),
+    [YOC_UART_IDX_TX_VAL]  = GATT_CHAR_VAL_DEFINE(YOC_UART_TX_UUID, GATT_PERM_READ),
+    [YOC_UART_IDX_TX_CCC]  = GATT_CHAR_CCC_DEFINE(),
+    [YOC_UART_IDX_TX_DES]  = GATT_CHAR_CUD_DEFINE(tx_char_des, GATT_PERM_READ),
 };
-
 
 static void conn_change(ble_event_en event, void *event_data)
 {
@@ -64,9 +60,7 @@ static void conn_change(ble_event_en event, void *event_data)
     }
 
     node->uart_event_callback(event, event_data);
-
 }
-
 
 static void mtu_exchange(ble_event_en event, void *event_data)
 {
@@ -81,14 +75,14 @@ static void mtu_exchange(ble_event_en event, void *event_data)
     if (e->err == 0) {
         if (node->conn_handle == e->conn_handle) {
             node->mtu_exchanged = 1;
-            node->mtu = ble_stack_gatt_mtu_get(node->conn_handle);
+            node->mtu           = ble_stack_gatt_mtu_get(node->conn_handle);
         }
 
         conn_param_t param = {
-            0x08,  //interval min 20ms
-            0x08,  //interval max 20ms
+            0x08, // interval min 20ms
+            0x08, // interval max 20ms
             0,
-            100,   //supervision timeout 1s
+            100, // supervision timeout 1s
         };
         ble_stack_connect_param_update(e->conn_handle, &param);
 
@@ -116,20 +110,20 @@ static void event_char_ccc_change(ble_event_en event, void *event_data)
 static void event_char_write(ble_event_en event, void *event_data)
 {
 
-    evt_data_gatt_char_write_t *e = (evt_data_gatt_char_write_t *)event_data;
-    ble_uart_server_t *uart = g_uart_dev;
+    evt_data_gatt_char_write_t *e    = (evt_data_gatt_char_write_t *)event_data;
+    ble_uart_server_t *         uart = g_uart_dev;
 
     if (!uart) {
         return;
     }
 
-    e->len = e->len < RX_MAX_LEN ?  e->len : RX_MAX_LEN;
+    e->len = e->len < RX_MAX_LEN ? e->len : RX_MAX_LEN;
     uart->uart_recv(e->data, e->len);
-    e->len = 0;
+
     return;
 }
 
-int uart_server_disconn(uart_handle_t handle)
+int ble_prf_uart_server_disconn(uart_handle_t handle)
 {
     ble_uart_server_t *uart = (ble_uart_server_t *)handle;
 
@@ -143,7 +137,6 @@ int uart_server_disconn(uart_handle_t handle)
 
     return 0;
 }
-
 
 static int uart_event_callback(ble_event_en event, void *event_data)
 {
@@ -176,14 +169,13 @@ static ble_event_cb_t ble_cb = {
     .callback = uart_event_callback,
 };
 
-
-int uart_server_send(uart_handle_t handle, const       char *data, int length, bt_uart_send_cb *cb)
+int ble_prf_uart_server_send(uart_handle_t handle, const char *data, int length, bt_uart_send_cb *cb)
 {
 
-    uint32_t count = length;
-    uint16_t wait_timer = 0;
-    int ret = 0;
-    ble_uart_server_t *uart = (ble_uart_server_t *)handle;
+    uint32_t           count      = length;
+    uint16_t           wait_timer = 0;
+    int                ret        = 0;
+    ble_uart_server_t *uart       = (ble_uart_server_t *)handle;
 
     if (!data || !length || !uart || uart->conn_handle < 0 || uart->server_data.tx_ccc_value != CCC_VALUE_NOTIFY) {
         return -1;
@@ -195,7 +187,8 @@ int uart_server_send(uart_handle_t handle, const       char *data, int length, b
 
     while (count) {
         uint16_t send_count = (uart->mtu - 3) < count ? (uart->mtu - 3) : count;
-        ret = ble_stack_gatt_notificate(uart->conn_handle, uart->uart_svc_handle + YOC_UART_IDX_TX_VAL, (uint8_t *)data, send_count);
+        ret = ble_stack_gatt_notificate(uart->conn_handle, uart->uart_svc_handle + YOC_UART_IDX_TX_VAL, (uint8_t *)data,
+                                        send_count);
 
         if (ret == -ENOMEM) {
             wait_timer++;
@@ -227,13 +220,11 @@ int uart_server_send(uart_handle_t handle, const       char *data, int length, b
     }
 
     return 0;
-
 }
 
-
-uart_handle_t uart_server_init(ble_uart_server_t *service)
+uart_handle_t ble_prf_uart_server_init(ble_uart_server_t *service)
 {
-    int ret = 0;
+    int ret               = 0;
     int g_yoc_uart_handle = -1;
 
     if (service == NULL) {
@@ -246,21 +237,20 @@ uart_handle_t uart_server_init(ble_uart_server_t *service)
         return NULL;
     }
 
-    g_yoc_uart_handle = ble_stack_gatt_registe_service(&g_uart_profile, uart_attrs,  BLE_ARRAY_NUM(uart_attrs));
+    g_yoc_uart_handle = ble_stack_gatt_registe_service(&g_uart_profile, uart_attrs, BLE_ARRAY_NUM(uart_attrs));
 
     if (g_yoc_uart_handle < 0) {
         return NULL;
     }
 
     service->uart_svc_handle = g_yoc_uart_handle;
-    service->conn_handle = -1;
+    service->conn_handle     = -1;
 
     g_uart_dev = service;
     return service;
 }
 
-
-int uart_server_adv_control(uint8_t adv_on, adv_param_t *adv_param)
+int ble_prf_uart_server_adv_control(uint8_t adv_on, adv_param_t *adv_param)
 {
     int ret = 0;
 
@@ -281,9 +271,7 @@ int uart_server_adv_control(uint8_t adv_on, adv_param_t *adv_param)
     return 0;
 }
 
-
-
-int uart_server_conn_param_update(uart_handle_t handle, conn_param_t *param)
+int ble_prf_uart_server_conn_param_update(uart_handle_t handle, conn_param_t *param)
 {
     ble_uart_server_t *uart = (ble_uart_server_t *)handle;
 
@@ -293,8 +281,8 @@ int uart_server_conn_param_update(uart_handle_t handle, conn_param_t *param)
 
     uart->conn_param->interval_min = param->interval_min;
     uart->conn_param->interval_max = param->interval_max;
-    uart->conn_param->latency = param->latency;
-    uart->conn_param->timeout = param->timeout;
+    uart->conn_param->latency      = param->latency;
+    uart->conn_param->timeout      = param->timeout;
 
     if (uart->conn_handle < 0) {
         uart->update_param_flag = 1;
@@ -305,6 +293,3 @@ int uart_server_conn_param_update(uart_handle_t handle, conn_param_t *param)
 
     return 0;
 }
-
-
-

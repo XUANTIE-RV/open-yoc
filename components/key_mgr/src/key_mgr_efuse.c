@@ -37,14 +37,14 @@ int32_t efusec_read_bytes(uint32_t addr, uint8_t *buf, uint32_t len)
 #endif
 #ifdef CONFIG_CSI_V2
     csi_efuse_t efuse;
-    ret = drv_efuse_init(&efuse, 0);
+    ret = csi_efuse_init(&efuse, 0);
 
     if (ret < 0U) {
         return ret;
     }
 
-    ret = drv_efuse_read(&efuse, addr, buf, len);
-    drv_efuse_uninit(&efuse);
+    ret = csi_efuse_read(&efuse, addr, buf, len);
+    csi_efuse_uninit(&efuse);
 #endif
     return ret;
 }

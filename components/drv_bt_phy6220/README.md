@@ -5,6 +5,7 @@
 # 示例
 
 ```c
+
 void board_init(void)
 {
     extern int hci_driver_phy6220_register(int idx);

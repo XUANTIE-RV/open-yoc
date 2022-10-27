@@ -1,3 +1,0 @@
-si
-set $mhcr=0
-set $mstatus&=~(0x00000008)

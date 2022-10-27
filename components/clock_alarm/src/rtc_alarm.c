@@ -18,12 +18,14 @@ static uint8_t g_rtc_start = 0;
 
 void rtc_debug(void)
 {
-    struct tm tm_now = {0,};
+    struct tm tm_now = {
+        0,
+    };
     time_t time_rtc_now;
     time_t time_sys_now;
     rtc_init();
 #ifdef CONFIG_CSI_V2
-    int32_t state;
+    int32_t        state;
     csi_rtc_time_t last_time;
 
     state = csi_rtc_get_time(&g_rtc_handle, &last_time);
@@ -34,11 +36,11 @@ void rtc_debug(void)
     }
 
     tm_now.tm_year = last_time.tm_year;
-    tm_now.tm_mon = last_time.tm_mon ;
+    tm_now.tm_mon  = last_time.tm_mon;
     tm_now.tm_mday = last_time.tm_mday;
     tm_now.tm_hour = last_time.tm_hour;
-    tm_now.tm_min = last_time.tm_min ;
-    tm_now.tm_sec = last_time.tm_sec ;
+    tm_now.tm_min  = last_time.tm_min;
+    tm_now.tm_sec  = last_time.tm_sec;
     tm_now.tm_wday = last_time.tm_wday;
     tm_now.tm_yday = last_time.tm_yday;
 #else
@@ -73,27 +75,27 @@ void rtc_irq_handler(int32_t idx, rtc_event_e event)
 
 void rtc_init(void)
 {
+    int ret;
 #ifdef CONFIG_CSI_V2
     int32_t state;
+    state = csi_rtc_init(&g_rtc_handle, 0U);
+
+    if (state < 0) {
+        LOGE(TAG, "rtc init");
+        return;
+    }
+
     if (0 == g_rtc_start) {
-        state = csi_rtc_init(&g_rtc_handle, 0U);
-
-        if (state < 0) {
-            LOGE(TAG, "rtc init");
-            return;
-        }
-
         g_rtc_start = 1;
     }
 
 #else
-    int ret;
+
     if (g_rtc_hd != NULL) {
         return;
     }
 
     g_rtc_hd = csi_rtc_initialize(0, rtc_irq_handler);
-
 
     if (0 == g_rtc_start) {
         ret = csi_rtc_start(g_rtc_hd);
@@ -109,140 +111,86 @@ void rtc_init(void)
 #endif
 }
 
-void rtc_from_system(void)
+void rtc_set_time(struct tm *tm_set)
 {
-    rtc_init();
-
-    struct tm *tm_now;
-    time_t time_t_now = time(NULL);
-    tm_now = gmtime(&time_t_now);
-
-#ifdef  CONFIG_CSI_V2
-
-    if (tm_now == NULL) {
-        LOGE(TAG, "gmtime");
+    if (tm_set == NULL) {
+        LOGE(TAG, "invalid parameters!");
         return;
     }
 
-    int32_t state;
-    csi_rtc_time_t initime;
-    initime.tm_year    = tm_now->tm_year;
-    initime.tm_mon     = tm_now->tm_mon ;
-    initime.tm_mday    = tm_now->tm_mday ;
-    initime.tm_hour    = tm_now->tm_hour;
-    initime.tm_min     = tm_now->tm_min ;
-    initime.tm_sec     = tm_now->tm_sec ;
-    initime.tm_wday    = tm_now->tm_wday;
-    initime.tm_yday    = tm_now->tm_yday;
-    state = csi_rtc_set_time_no_wait(&g_rtc_handle, &initime);
+    rtc_init();
+
+#ifdef CONFIG_CSI_V2
+    int32_t        state;
+    csi_rtc_time_t rtc_time = {0};
+
+    rtc_time.tm_wday = tm_set->tm_wday;
+    rtc_time.tm_mday = tm_set->tm_mday;
+    rtc_time.tm_hour = tm_set->tm_hour;
+    rtc_time.tm_min  = tm_set->tm_min;
+    rtc_time.tm_sec  = tm_set->tm_sec;
+    rtc_time.tm_year = tm_set->tm_year;
+    state            = csi_rtc_set_time_no_wait(&g_rtc_handle, &rtc_time);
 
     if (state < 0) {
-        LOGE(TAG, "rtc set");
+        LOGE(TAG, "rtc set time error!");
     }
-
 #else
-
     if (g_rtc_hd == NULL) {
         LOGE(TAG, "rtc init,from sys");
         return;
     }
 
-    if (tm_now == NULL) {
-        LOGE(TAG, "gmtime");
-        return;
-    }
-
-    if (csi_rtc_set_time(g_rtc_hd, tm_now) < 0) {
+    if (csi_rtc_set_time(g_rtc_hd, tm_set) < 0) {
         LOGE(TAG, "rtc set");
     }
-
 #endif
 }
 
-time_t rtc_to_system(void)
+void rtc_from_system(void)
 {
-    struct tm tm_now = {0,};
-    time_t time_rtc_now;
+    struct tm *tm_now;
+    time_t     time_t_now = time(NULL);
+    tm_now                = gmtime(&time_t_now);
+    rtc_set_time(tm_now);
 
-    rtc_init();
-
-#ifdef  CONFIG_CSI_V2
-    int32_t state;
-    csi_rtc_time_t last_time;
-    state = csi_rtc_get_time(&g_rtc_handle, &last_time);
-
-    if (state < 0) {
-        LOGE(TAG, "rtc get");
-        return 0;
-    }
-
-    tm_now.tm_year = last_time.tm_year ;
-    tm_now.tm_mon = last_time.tm_mon  ;
-    tm_now.tm_mday = last_time.tm_mday ;
-    tm_now.tm_hour = last_time.tm_hour ;
-    tm_now.tm_min = last_time.tm_min  ;
-    tm_now.tm_sec = last_time.tm_sec  ;
-    tm_now.tm_wday = last_time.tm_wday;
-    tm_now.tm_yday = last_time.tm_yday;
-
-#else
-
-    if (g_rtc_hd == NULL) {
-        LOGE(TAG, "rtc init,to sys");
-        return 0;
-    }
-
-    if (csi_rtc_get_time(g_rtc_hd, &tm_now) < 0) {
-        LOGE(TAG, "rtc get");
-        return 0;
-    }
-
-#endif
-    LOGD(TAG, "rtc time [%02d:%02d:%02d]", tm_now.tm_hour + TIME_ZONE, tm_now.tm_min, tm_now.tm_sec);
-
-    time_rtc_now = mktime(&tm_now);
-
-    struct timeval tv;
-    tv.tv_sec = time_rtc_now;
-    tv.tv_usec = 0;
-
-    settimeofday(&tv, NULL);
-
-    return time_rtc_now;
+    event_publish(EVENT_CLOCK_ALARM, NULL);
 }
 
 time_t rtc_get_time(void)
 {
-    struct tm tm_now = {0,};
+    struct tm tm_now = {
+        0,
+    };
 
     rtc_init();
-#ifdef  CONFIG_CSI_V2
-    int32_t state;
+#ifdef CONFIG_CSI_V2
+    int32_t        state;
     csi_rtc_time_t last_time;
     state = csi_rtc_get_time(&g_rtc_handle, &last_time);
 
     if (state < 0) {
-        LOGE(TAG, "rtc get");
+        LOGE(TAG, "%s: rtc get time failed!", __FUNCTION__);
         return 0;
     }
 
-    tm_now.tm_year = last_time.tm_year ;
-    tm_now.tm_mon = last_time.tm_mon  ;
-    tm_now.tm_mday = last_time.tm_mday ;
-    tm_now.tm_hour = last_time.tm_hour ;
-    tm_now.tm_min = last_time.tm_min  ;
-    tm_now.tm_sec = last_time.tm_sec  ;
+    tm_now.tm_year = last_time.tm_year;
+    tm_now.tm_mon  = last_time.tm_mon;
+    tm_now.tm_mday = last_time.tm_mday;
+    tm_now.tm_hour = last_time.tm_hour;
+    tm_now.tm_min  = last_time.tm_min;
+    tm_now.tm_sec  = last_time.tm_sec;
     tm_now.tm_wday = last_time.tm_wday;
     tm_now.tm_yday = last_time.tm_yday;
 #else
 
     if (g_rtc_hd == NULL) {
-        LOGE(TAG, "rtc init,get time");
+        LOGE(TAG, "%s: rtc init failed!", __FUNCTION__);
         return 0;
     }
 
     if (csi_rtc_get_time(g_rtc_hd, &tm_now) < 0) {
-        LOGE(TAG, "rtc get");
+        LOGE(TAG, "%s: rtc get time failed!", __FUNCTION__);
         return 0;
     }
 
@@ -250,12 +198,21 @@ time_t rtc_get_time(void)
     return mktime(&tm_now);
 }
 
+void rtc_to_system(void)
+{
+    time_t         time_rtc_now = rtc_get_time();
+    struct timeval tv;
+    tv.tv_sec  = time_rtc_now;
+    tv.tv_usec = 0;
+
+    settimeofday(&tv, NULL);
+}
 
 void rtc_set_alarm(struct tm *tm_set)
 {
     rtc_init();
 #ifdef CONFIG_CSI_V2
-    int32_t state;
+    int32_t        state;
     csi_rtc_time_t alarm_time = {0};
 
     alarm_time.tm_wday = tm_set->tm_wday;

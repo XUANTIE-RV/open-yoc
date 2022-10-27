@@ -1,8 +1,8 @@
 
 ## 第一部分： 基础信息
-name: ble_host                                            # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
-version: v7.4.4                                    # <必选项> 组件版本号
-description: ble_host stack                          # <必选项> 建议至少20字以上
+name: ble_host                                      # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
+version: v7.6.0                                     # <必选项> 组件版本号
+description: ble_host stack                         # <必选项> 建议至少20字以上
 type: common                                        # <必选项> 组件类型，为：solution, chip, board, common, sdk
 
 tag: 通用组件                                       # <可选项> 组件分类，缺省值： ''
@@ -86,6 +86,10 @@ license: Apache license v2.0                        # <可选项> 源代码的�
 #   libpath:                               # 指定静态库所在的路径（相对于该组件路径）
 #     - libs                               #   -Llibs
 build_config:
+  libs:                                  # 该组件中支持的二进制静态库,如：libxxx.a, libyyy.a
+    - t_head_voice_call ?<CONFIG_BT_HFP_HF>                      #   -lxxx
+  libpath:                               # 指定静态库所在的路径（相对于该组件路径）
+    - bt_host/audio/aec/<cpu>                               #   -Llibs
   internal_include:
     - bt_shell/bt_host
     - bt_shell/bt_host/test
@@ -93,7 +97,10 @@ build_config:
     - bt_host/port/include
     - ble_profiles/include
     - bt_host/port/core/settings/include
+    - bt_host/sbc/decoder/include
+    - bt_host/sbc/encoder/include
     - include
+    - bt_host/host
   include:
     - include
     - bt_host
@@ -122,34 +129,67 @@ source_file:
   - bt_crypto/tinycrypt/source/ecc_dh.c
   - bt_crypto/tinycrypt/source/ecc.c
   - bt_crypto/tinycrypt/source/hmac.c
+  - bt_host/sbc/decoder/srce/alloc.c ?<CONFIG_BT_A2DP>
+  - bt_host/sbc/decoder/srce/bitalloc.c ?<CONFIG_BT_A2DP>
+  - bt_host/sbc/decoder/srce/bitalloc-sbc.c ?<CONFIG_BT_A2DP>
+  - bt_host/sbc/decoder/srce/bitstream-decode.c ?<CONFIG_BT_A2DP>
+  - bt_host/sbc/decoder/srce/decoder-oina.c ?<CONFIG_BT_A2DP>
+  - bt_host/sbc/decoder/srce/decoder-private.c ?<CONFIG_BT_A2DP>
+  - bt_host/sbc/decoder/srce/decoder-sbc.c ?<CONFIG_BT_A2DP>
+  - bt_host/sbc/decoder/srce/dequant.c ?<CONFIG_BT_A2DP>
+  - bt_host/sbc/decoder/srce/framing.c ?<CONFIG_BT_A2DP>
+  - bt_host/sbc/decoder/srce/framing-sbc.c ?<CONFIG_BT_A2DP>
+  - bt_host/sbc/decoder/srce/oi_codec_version.c ?<CONFIG_BT_A2DP>
+  - bt_host/sbc/decoder/srce/synthesis-sbc.c ?<CONFIG_BT_A2DP>
+  - bt_host/sbc/decoder/srce/synthesis-dct8.c ?<CONFIG_BT_A2DP>
+  - bt_host/sbc/decoder/srce/synthesis-8-generated.c ?<CONFIG_BT_A2DP>
+  - bt_host/sbc/encoder/srce/sbc_analysis.c ?<CONFIG_BT_A2DP>
+  - bt_host/sbc/encoder/srce/sbc_dct.c ?<CONFIG_BT_A2DP>
+  - bt_host/sbc/encoder/srce/sbc_dct_coeffs.c ?<CONFIG_BT_A2DP>
+  - bt_host/sbc/encoder/srce/sbc_enc_bit_alloc_mono.c ?<CONFIG_BT_A2DP>
+  - bt_host/sbc/encoder/srce/sbc_enc_bit_alloc_ste.c ?<CONFIG_BT_A2DP>
+  - bt_host/sbc/encoder/srce/sbc_enc_coeffs.c ?<CONFIG_BT_A2DP>
+  - bt_host/sbc/encoder/srce/sbc_encoder.c ?<CONFIG_BT_A2DP>
+  - bt_host/sbc/encoder/srce/sbc_packing.c ?<CONFIG_BT_A2DP>
   - bt_host/host/uuid.c
   - bt_host/host/hci_core.c
-  #- bt_host/host/avdtp.c
+  - bt_host/host/avdtp.c ?<CONFIG_BT_BREDR>
   - bt_host/host/keys.c
   - bt_host/host/monitor.c
   - bt_host/host/smp_null.c
-  #- bt_host/host/a2dp.c
+  - bt_host/host/a2dp_sink.c ?<CONFIG_BT_BREDR>
+  - bt_host/host/avrcp.c ?<CONFIG_BT_BREDR>
+  - bt_host/host/avrcp_ct.c ?<CONFIG_BT_BREDR>
+  - bt_host/host/avrcp_tg.c ?<CONFIG_BT_BREDR>
   - bt_host/host/crypto.c
   #- bt_host/host/hci_raw.c
   - bt_host/host/conn.c
-  #- bt_host/host/keys_br.c
+  - bt_host/host/fsm.c ?<CONFIG_BT_HOST_OPTIMIZE>
+  - bt_host/host/keys_br.c ?<CONFIG_BT_BREDR>
   - bt_host/host/hci_ecc.c
   - bt_host/host/settings.c
   - bt_host/host/smp.c
   - bt_host/host/l2cap.c
-  #- bt_host/host/hfp_hf.c
-  #- bt_host/host/sdp.c
+  - bt_host/host/testing.c  ?<CONFIG_BT_TESTING>
+  - bt_host/host/hfp_hf.c ? <CONFIG_BT_BREDR>
+  - bt_host/host/sdp.c ?<CONFIG_BT_BREDR>
   - bt_host/host/hci_api.c
-  #- bt_host/host/l2cap_br.c
+  - bt_host/host/l2cap_br.c ?<CONFIG_BT_BREDR>
   - bt_host/host/att.c
-  #- bt_host/host/at.c
+  - bt_host/host/at.c ? <CONFIG_BT_BREDR>
+  - bt_host/host/rfcomm.c ?<CONFIG_BT_HFP_HF>
   - bt_host/host/gatt.c
+  - bt_host/audio/audio_output_csi1.c ?<CONFIG_BT_A2DP>
+  - bt_host/audio/audio_decode_sbc.c ?<CONFIG_BT_A2DP>
+  - bt_host/audio/audio_output_ao.c ?<CONFIG_BT_A2DP>
+  - bt_host/audio/audio_hfp_i2s.c ?<CONFIG_BT_HFP_HF>
   - bt_host/hci_driver/h4_driver.c
   - bt_host/hci_driver/h5_driver.c
   - bt_host/hci_driver/h5.c
   - bt_host/hci_driver/bt_list.c
   - bt_host/hci_driver/bt_skbuff.c
   - bt_host/aos/ble.c
+  - bt_host/aos/bt_stack.c
   - bt_host/port/core/settings/src/settings_init.c
   - bt_host/port/core/settings/src/settings_line.c
   - bt_host/port/core/settings/src/settings_kv.c
@@ -166,17 +206,21 @@ source_file:
   - bt_host/common/hex.c
   - bt_host/common/dec.c
   - bt_host/common/rpa.c
+  - bt_shell/cli_bt.c ?<CONFIG_BT_SHELL>
+  - bt_shell/cli_ble.c ?<CONFIG_BT_PRF_TEST>
   - bt_shell/bt_host/bt.c ?<CONFIG_BT_SHELL>
   - bt_shell/bt_host/gatt.c ?<CONFIG_BT_SHELL>
-  - ble_profiles/bas.c
-  - ble_profiles/dis.c
-  - ble_profiles/hids.c
-  - ble_profiles/hrs.c
+  - bt_shell/bt_host/btsnoop.c ?<CONFIG_BTSOOP>
+  - ble_profiles/bas.c ?<CONFIG_BT_PRF_BAS>
+  - ble_profiles/dis.c ?<CONFIG_BT_PRF_DIS>
+  - ble_profiles/hids.c ?<CONFIG_BT_PRF_HIDS>
+  - ble_profiles/hrs.c ?<CONFIG_BT_PRF_HRS>
   - ble_profiles/ibeacons.c
   - ble_profiles/ota_server.c
   - ble_profiles/uart_client.c
   - ble_profiles/uart_server.c
-
+  - ble_profiles/ais_client.c          ?<CONFIG_OTA_SERVER>
+  - ble_profiles/ais_server.c          ?<CONFIG_OTA_CLIENT>
 ## 第五部分：配置信息
 # def_config:                              # 组件的可配置项
 #   CONFIG_DEBUG: y
@@ -185,6 +229,7 @@ source_file:
 def_config:
     CONFIG_BT: 1
     CONFIG_BT_SMP_ALLOW_UNAUTH_OVERWRITE: 1
+    CONFIG_DATA_CB_STATIC_STACK: 1
 
 ## 第六部分：安装信息
 # install:

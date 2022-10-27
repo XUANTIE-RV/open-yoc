@@ -556,6 +556,7 @@ _symrom_LL_EXT_SetSlaveLatencyOverride = 0x0000cfec;
 _symrom_LL_EXT_SetTxPower = 0x00004184;
 _symrom_LL_EXT_SetTxPower0 = 0x0000cf7c;
 _symrom_LL_ExtAdvReportCback = 0x00008188;
+_symrom_LL_AdvSetTerminatedCback = 0x00008378;
 _symrom_LL_extAdvTimerExpProcess = 0x00012640;
 _symrom_LL_ExtendedCreateConnection = 0x0000c378;
 _symrom_LL_extInitTimerExpProcess = 0x0001264e;

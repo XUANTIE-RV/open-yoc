@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <k_config.h>
 
 /* Enable interrupts when returning from the handler */
 #define MSTATUS_PRV1 0x1880
@@ -81,7 +82,9 @@ cpu_first_task_start:
 .global tspend_handler
 .type tspend_handler, %function
 tspend_handler:
-    addi    sp, sp, -128
+//    csrrw    sp, mscratch, sp
+
+    addi     sp, sp, -128
     fsw      f31, 0(sp)
     fsw      f30, 4(sp)
     fsw      f29, 8(sp)
@@ -148,18 +151,20 @@ tspend_handler:
     sw      x29, 108(sp)
     sw      x30, 112(sp)
     sw      x31, 116(sp)
+
     csrr    t0, mepc
     sw      t0, 120(sp)
 
     la      a1, g_active_task
     lw      a1, (a1)
     sw      sp, (a1)
+#if (RHINO_CONFIG_TASK_STACK_OVF_CHECK > 0)
+    jal    krhino_stack_ovf_check
+#endif
 
-    li      t0, 0xE000E100
-    lw      t1, (t0)
-    li      t2, 0xFEFFFFFF
-    and     t1, t1, t2
-    sw      t1, (t0)
+#if (RHINO_CONFIG_SYS_STATS > 0)
+    jal    krhino_task_sched_stats_get
+#endif
 
 __task_switch_nosave:
     la      a0, g_preferred_ready_task
@@ -244,5 +249,5 @@ __task_switch_nosave:
 
     addi    sp, sp, 128
 
-
+//    csrrw    sp, mscratch, sp
     mret

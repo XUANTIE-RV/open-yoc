@@ -36,6 +36,7 @@
 #define SPI_BUSY_TIMEOUT    0x1000000
 #define SPI_NULL_PARAM_CHK(para)  HANDLE_PARAM_CHK(para, ERR_SPI(DRV_ERROR_PARAMETER))
 
+
 typedef struct {
 #ifdef CONFIG_LPM
     uint8_t spi_power_status;
@@ -67,6 +68,13 @@ typedef struct {
     uint8_t  transfer_stat;     //TRANSFER_STAT_* : 0 - idle, 1 - send , 2 -receive , 3 - transceive
     uint32_t tot_num;
 } dw_spi_priv_t;
+
+#define RAM_CODE_SECTION(func)  __attribute__((section(".__sram.code."#func)))  func
+static int32_t RAM_CODE_SECTION(dw_spi_set_mode)(spi_handle_t handle, DWENUM_SPI_MODE mode);
+static void RAM_CODE_SECTION(dw_spi_intr_rx_full)(int32_t idx, dw_spi_priv_t *spi_priv);
+static void RAM_CODE_SECTION(dw_spi_intr_tx_empty)(int32_t idx, dw_spi_priv_t *spi_priv);
+void RAM_CODE_SECTION(dw_spi_irqhandler)(int32_t idx);
+
 #define SPI_DMA_BLOCK_SIZE  1024
 extern int32_t target_spi_init(int32_t idx, uint32_t *base, uint32_t *irq, void **handler, uint32_t *ssel);
 static int32_t dw_spi_set_mode(spi_handle_t handle, DWENUM_SPI_MODE mode);
@@ -396,7 +404,7 @@ int32_t csi_spi_config_ss_mode(spi_handle_t handle, spi_ss_mode_e ss_mode)
   \param[in]   mode     SPI_Mode
   \return      error code
 */
-static __attribute__((section(".__sram.code"))) int32_t dw_spi_set_mode(spi_handle_t handle, DWENUM_SPI_MODE mode)
+static int32_t dw_spi_set_mode(spi_handle_t handle, DWENUM_SPI_MODE mode)
 {
     dw_spi_priv_t *spi_priv = handle;
     dw_spi_reg_t *addr = (dw_spi_reg_t *)(spi_priv->base);
@@ -439,7 +447,7 @@ static __attribute__((section(".__sram.code"))) int32_t dw_spi_set_mode(spi_hand
   \brief       interrupt service function for receive FIFO full interrupt .
   \param[in]   spi_priv pointer to spi private.
 */
-static __attribute__((section(".__sram.code")))  void dw_spi_intr_rx_full(int32_t idx, dw_spi_priv_t *spi_priv)
+static void dw_spi_intr_rx_full(int32_t idx, dw_spi_priv_t *spi_priv)
 {
     dw_spi_reg_t *addr = (dw_spi_reg_t *)(spi_priv->base);
 
@@ -505,7 +513,7 @@ static __attribute__((section(".__sram.code")))  void dw_spi_intr_rx_full(int32_
   \brief       interrupt service function for transmit FIFO empty interrupt.
   \param[in]   spi_priv pointer to spi private.
 */
-static __attribute__((section(".__sram.code"))) void dw_spi_intr_tx_empty(int32_t idx, dw_spi_priv_t *spi_priv)
+static void dw_spi_intr_tx_empty(int32_t idx, dw_spi_priv_t *spi_priv)
 {
     dw_spi_reg_t *addr = (dw_spi_reg_t *)(spi_priv->base);
     uint8_t temp = addr->ICR;
@@ -597,7 +605,7 @@ static __attribute__((section(".__sram.code"))) void dw_spi_intr_tx_empty(int32_
   \brief       handler the interrupt.
   \param[in]   spi      Pointer to \ref SPI_RESOURCES
 */
-__attribute__((section(".__sram.code"))) void dw_spi_irqhandler(int32_t idx)
+void dw_spi_irqhandler(int32_t idx)
 {
     dw_spi_priv_t *spi_priv = &spi_instance[idx];
     dw_spi_reg_t *addr = (dw_spi_reg_t *)(spi_priv->base);

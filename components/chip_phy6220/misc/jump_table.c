@@ -47,7 +47,7 @@
 #include "rom_sym_def.h"
 #include "jump_function.h"
 #include "global_config.h"
-#include "OSAL_Tasks.h"
+//#include "OSAL_Tasks.h"
 #include "rf_phy_driver.h"
 #include "pwrmgr.h"
 #include "gpio.h"

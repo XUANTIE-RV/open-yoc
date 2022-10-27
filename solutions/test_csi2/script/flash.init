@@ -1,9 +1,0 @@
-
-si
-set $mhcr=0
-set $mstatus&=~(0x00000008)
-
-download ihex verify=no $(ProjectPath)/generated/boot.hex
-download ihex verify=no $(ProjectPath)/generated/imtb.hex
-download ihex verify=no $(ProjectPath)/generated/bmtb.hex
-download ihex verify=no $(ProjectPath)/generated/prim.hex

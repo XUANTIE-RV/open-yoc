@@ -57,6 +57,16 @@ int __attribute__((weak)) dut_hal_xtalcap_store(uint32_t xtalcap)
     return 0;
 }
 
+int __attribute__((weak)) dut_hal_freqoff_get(int32_t *freqoff)
+{
+    return 0;
+}
+
+int __attribute__((weak)) dut_hal_freqoff_store(int32_t freqoff)
+{
+    return 0;
+}
+
 int __attribute__((weak)) dut_hal_ble_transmit_stop(void)
 {
     return 0;

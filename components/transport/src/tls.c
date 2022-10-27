@@ -78,7 +78,7 @@ static ssize_t tls_read(tls_t *tls, char *data, size_t datalen, uint32_t timeout
 {
     int ret;
 
-    LOGD(TAG, "tls read...");
+    // LOGD(TAG, "tls read...");
     mbedtls_ssl_conf_read_timeout(&(tls->conf), timeout_ms);
 
     while (1) {
@@ -368,7 +368,13 @@ static int tls_low_level_conn(const char *hostname, int hostlen, int port, const
             // int ret = tcp_connect(hostname, hostlen, port, &tls->sockfd, cfg);
             char buf[32];
             snprintf(buf, 32, "%d", port);
-            int ret = mbedtls_net_connect(&tls->server_fd, hostname, buf, MBEDTLS_NET_PROTO_TCP);
+            char *use_host = strndup(hostname, hostlen);
+            if (use_host == NULL) {
+                return -ENOMEM;
+            }
+            LOGD(TAG, "use_host:%s, port:%d", use_host, port);
+            int ret = mbedtls_net_connect(&tls->server_fd, use_host, buf, MBEDTLS_NET_PROTO_TCP);
+            free(use_host);
             LOGD(TAG, "_tls_net connect %d ", ret);
             tls->sockfd = tls->server_fd.fd;
             if (ret < 0) {

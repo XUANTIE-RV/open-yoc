@@ -350,7 +350,7 @@ struct tls_wif {
 #if TLS_CONFIG_AP
     bool   wmm_set;
     void  *client_event_callback;
-#if TLS_CONFIG_AP_OPT_FWD
+#if defined(TLS_CONFIG_AP_OPT_FWD) && TLS_CONFIG_AP_OPT_FWD
     int (*rx_ip_cb)(const u8 *bssid, u8 *buf, u32 buf_len);
 #endif
 #endif

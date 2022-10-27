@@ -14,12 +14,24 @@
 #include <soc.h>
 #include <drv/wdt.h>
 #include <mcu_phy_bumbee.h>
-extern size_t cpu_intrpt_save(void);
+#define RST_FROM_ROM_BOOT  0
+#define RST_FROM_APP_RST_HANDLER 1
 
-__attribute__((section(".__sram.code"))) void drv_reboot(int cmd)
+extern size_t cpu_intrpt_save(void);
+extern void set_sleep_flag(int flag);
+
+__attribute__((section(".__sram.code.drv_reboot"))) void drv_reboot(int cmd)
 {
     csi_irq_save();
 
+    if(cmd==RST_FROM_ROM_BOOT)
+    {
+        set_sleep_flag(0);
+    }
+    else
+    {
+        set_sleep_flag(1);
+    }
 
     volatile int dly = 100;
 

@@ -308,7 +308,7 @@ int32_t csi_spi_receive(spi_handle_t handle, void *data, uint32_t num)
 */
 int32_t csi_spi_transfer(spi_handle_t handle, const void *data_out, void *data_in, uint32_t num_out, uint32_t num_in)
 {
-    int ret;
+    int ret = TLS_SPI_STATUS_OK;
     dw_spi_priv_t *spi_priv = handle;
 	uint32_t length = 0;
     uint32_t remain_length ;

@@ -75,6 +75,7 @@ void do_irq(void)
 
     CSI_INTRPT_ENTER();
 
+    ///< 获取是哪个中断发生了（irqn）
     irqn = soc_irq_get_irq_num();
 
     if (g_irq_table[irqn] && g_irq_table[irqn]->irq_handler) {

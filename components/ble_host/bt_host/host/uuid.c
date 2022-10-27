@@ -106,10 +106,10 @@ void bt_uuid_to_str(const struct bt_uuid *uuid, char *str, size_t len)
 
 	switch (uuid->type) {
 	case BT_UUID_TYPE_16:
-		snprintk(str, len, "%04x", BT_UUID_16(uuid)->val);
+		snprintf(str, len, "%04x", BT_UUID_16(uuid)->val);
 		break;
 	case BT_UUID_TYPE_32:
-		snprintk(str, len, "%08x", BT_UUID_32(uuid)->val);
+		snprintf(str, len, "%08x", BT_UUID_32(uuid)->val);
 		break;
 	case BT_UUID_TYPE_128:
 		memcpy(&tmp0, &BT_UUID_128(uuid)->val[0], sizeof(tmp0));
@@ -119,7 +119,7 @@ void bt_uuid_to_str(const struct bt_uuid *uuid, char *str, size_t len)
 		memcpy(&tmp4, &BT_UUID_128(uuid)->val[10], sizeof(tmp4));
 		memcpy(&tmp5, &BT_UUID_128(uuid)->val[12], sizeof(tmp5));
 
-		snprintk(str, len, "%08x-%04x-%04x-%04x-%08x%04x",
+		snprintf(str, len, "%08x-%04x-%04x-%04x-%08x%04x",
 			 tmp5, tmp4, tmp3, tmp2, tmp1, tmp0);
 		break;
 	default:

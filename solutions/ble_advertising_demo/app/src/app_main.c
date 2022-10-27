@@ -1,7 +1,6 @@
 /*
- * Copyright (C) 2019-2020 Alibaba Group Holding Limited
+ * Copyright (C) 2019-2022 Alibaba Group Holding Limited
  */
-
 #include <stdlib.h>
 #include <string.h>
 #include <aos/aos.h>
@@ -11,42 +10,39 @@
 #include "app_init.h"
 #include "pin_name.h"
 
-#define TAG "DEMO"
+#define TAG         "DEMO"
 #define DEVICE_NAME "YoC ADV"
-#define DEVICE_ADDR {0xCC,0x3B,0xE3,0x82,0xBA,0xC0}
+#define DEVICE_ADDR                                                                                                    \
+    {                                                                                                                  \
+        0xCC, 0x3B, 0xE3, 0x82, 0xBA, 0xC0                                                                             \
+    }
 
 static aos_sem_t sync_sem;
-static int connected = 0;
-static int start_adv(void)
+static int       connected = 0;
+static int       start_adv(void)
 {
-    int ret;
-    ad_data_t ad[2] = {0};
-    ad_data_t sd[1] = {0};
+    int       ret;
+    ad_data_t ad[2] = { 0 };
+    ad_data_t sd[1] = { 0 };
 
     uint8_t flag = AD_FLAG_GENERAL | AD_FLAG_NO_BREDR;
 
     ad[0].type = AD_DATA_TYPE_FLAGS;
     ad[0].data = (uint8_t *)&flag;
-    ad[0].len = 1;
+    ad[0].len  = 1;
 
-    uint8_t uuid16_list[] = {0x0d, 0x18};
-    ad[1].type = AD_DATA_TYPE_UUID16_ALL;
-    ad[1].data = (uint8_t *)uuid16_list;
-    ad[1].len = sizeof(uuid16_list);
+    uint8_t uuid16_list[] = { 0x0d, 0x18 };
+    ad[1].type            = AD_DATA_TYPE_UUID16_ALL;
+    ad[1].data            = (uint8_t *)uuid16_list;
+    ad[1].len             = sizeof(uuid16_list);
 
-    uint8_t manu_data[10] = {0x01, 0x02, 0x3, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x10};
-    sd[0].type = AD_DATA_TYPE_MANUFACTURER_DATA;
-    sd[0].data = (uint8_t *)manu_data;
-    sd[0].len = sizeof(manu_data);
+    uint8_t manu_data[10] = { 0x01, 0x02, 0x3, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x10 };
+    sd[0].type            = AD_DATA_TYPE_MANUFACTURER_DATA;
+    sd[0].data            = (uint8_t *)manu_data;
+    sd[0].len             = sizeof(manu_data);
 
     adv_param_t param = {
-        ADV_IND,
-        ad,
-        sd,
-        BLE_ARRAY_NUM(ad),
-        BLE_ARRAY_NUM(sd),
-        ADV_FAST_INT_MIN_2,
-        ADV_FAST_INT_MAX_2,
+        ADV_IND, ad, sd, BLE_ARRAY_NUM(ad), BLE_ARRAY_NUM(sd), ADV_FAST_INT_MIN_2, ADV_FAST_INT_MAX_2,
     };
 
     ret = ble_stack_adv_start(&param);
@@ -57,7 +53,8 @@ static int start_adv(void)
         LOGI(TAG, "adv start!");
     }
 
-    LOGI(TAG, "adv_type:%x;adv_interval_min:%.3f ms;adv_interval_max:%.3f ms", param.type, param.interval_min * 0.625, param.interval_max * 0.625);
+    LOGI(TAG, "adv_type:%x;adv_interval_min:%.3f ms;adv_interval_max:%.3f ms", param.type, param.interval_min * 0.625,
+         param.interval_max * 0.625);
     return ret;
 }
 
@@ -79,8 +76,7 @@ static void conn_param_update(ble_event_en event, void *event_data)
 {
     evt_data_gap_conn_param_update_t *e = event_data;
 
-    LOGI(TAG, "LE conn param updated: int 0x%04x lat %d to %d\n", e->interval,
-         e->latency, e->timeout);
+    LOGI(TAG, "LE conn param updated: int 0x%04x lat %d to %d\n", e->interval, e->latency, e->timeout);
 }
 
 static void mtu_exchange(ble_event_en event, void *event_data)
@@ -125,10 +121,10 @@ static ble_event_cb_t ble_cb = {
 
 int main(void)
 {
-    dev_addr_t addr = {DEV_ADDR_LE_RANDOM, DEVICE_ADDR};
+    dev_addr_t   addr = { DEV_ADDR_LE_RANDOM, DEVICE_ADDR };
     init_param_t init = {
-        .dev_name = DEVICE_NAME,
-        .dev_addr = &addr,
+        .dev_name     = DEVICE_NAME,
+        .dev_addr     = &addr,
         .conn_num_max = 1,
     };
 
@@ -141,6 +137,7 @@ int main(void)
     LOGI(TAG, "Bluetooth advertising demo!");
 
     ble_stack_init(&init);
+    ble_stack_setting_load();
     ble_stack_event_register(&ble_cb);
 
     while (1) {
@@ -153,4 +150,3 @@ int main(void)
 
     return 0;
 }
-

@@ -28,7 +28,7 @@ bool         memory_manager_initialized = false;
  * memory blocks. This is a debug version only feature
  */
 tls_os_sem_t    *mem_sem;
-#if WM_MEM_DEBUG
+#if defined(WM_MEM_DEBUG) && WM_MEM_DEBUG
 
 
 struct dl_list memory_used_list;

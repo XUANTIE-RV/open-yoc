@@ -19,12 +19,14 @@
 
 
 #if defined (__CSKY_DSP__) || defined(__CSKY_DSPV2__) || defined(__CSKY_VDSPV2__) || defined (__CSKY_HARD_FLOAT__) || defined(__C807__)
-#define CSK_CPU_STACK_EXTRAL    68
+#define CSK_CPU_STACK_EXTRAL    88
 #define RHINO_CONFIG_MM_MAXMSIZEBIT 27
-#elif defined (__I805__)
-#define CSK_CPU_STACK_EXTRAL    260
+#elif defined(__I805__) || defined(__riscv)
+#define CSK_CPU_STACK_EXTRAL    280
+#define RHINO_CONFIG_MM_MAXMSIZEBIT 28
 #else
-#define CSK_CPU_STACK_EXTRAL    0
+#define CSK_CPU_STACK_EXTRAL    20
+#define RHINO_CONFIG_MM_MAXMSIZEBIT 17
 #endif
 
 #define RHINO_CONFIG_STD_MALLOC              1
@@ -42,7 +44,11 @@
 #define RHINO_CONFIG_TIMER                   1
 #define RHINO_CONFIG_BUF_QUEUE               1
 #define RHINO_CONFIG_MM_BLK                  1
+#define RHINO_CONFIG_MM_BLK_SIZE             256
+#define RHINO_CONFIG_MM_TLF                  1
 #define RHINO_CONFIG_MM_TLF_BLK_SIZE         4096
+#define RHINO_CONFIG_MM_MINISIZEBIT          6
+#define RHINO_CONFIG_MM_TRACE_LVL            4
 
 #ifdef CONFIG_DEBUG_MM
 #define RHINO_CONFIG_MM_DEBUG                1
@@ -57,9 +63,9 @@
 
 /* kernel dynamic tick conf */
 #ifdef CONFIG_KERNEL_PWR_MGMT
-#define RHINO_CONFIG_CPU_PWR_MGMT            1
+#define RHINO_CONFIG_PWRMGMT            1
 #else
-#define RHINO_CONFIG_CPU_PWR_MGMT            0
+#define RHINO_CONFIG_PWRMGMT            0
 #endif
 
 /*
@@ -154,9 +160,7 @@
 #define RHINO_CONFIG_CPU_USAGE_TASK_STACK    (50 + CSK_CPU_STACK_EXTRAL)
 
 /* kernel stats conf */
-#ifndef RHINO_CONFIG_KOBJ_LIST
 #define RHINO_CONFIG_KOBJ_LIST               1
-#endif
 
 
 #endif /* CONFIG_H */

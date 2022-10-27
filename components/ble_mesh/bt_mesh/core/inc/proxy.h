@@ -27,12 +27,18 @@ void bt_mesh_proxy_beacon_send(struct bt_mesh_subnet *sub);
 struct net_buf_simple *bt_mesh_proxy_get_buf(void);
 
 s32_t bt_mesh_proxy_adv_start(void);
-void bt_mesh_proxy_adv_stop(void);
+int bt_mesh_proxy_adv_stop(void);
 
 void bt_mesh_proxy_identity_start(struct bt_mesh_subnet *sub);
 void bt_mesh_proxy_identity_stop(struct bt_mesh_subnet *sub);
 
 bool bt_mesh_proxy_relay(struct net_buf_simple *buf, u16_t dst);
 void bt_mesh_proxy_addr_add(struct net_buf_simple *buf, u16_t addr);
+
+/*[Genie begin] add by wenbing.cwb at 2021-10-19*/
+#ifdef CONFIG_BT_MESH_NPS_OPT
+int bt_mesh_proxy_update_interval(uint8_t frame_type, void *frame_buf);
+#endif
+/*[Genie end] add by wenbing.cwb at 2021-10-19*/
 
 int bt_mesh_proxy_init(void);

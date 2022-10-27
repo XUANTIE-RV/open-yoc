@@ -113,8 +113,9 @@ trng_capabilities_t csi_trng_get_capabilities(int32_t idx)
 */
 int32_t csi_trng_get_data(trng_handle_t handle, void *data, uint32_t num)
 {
-	volatile int32_t i;
-	volatile int32_t j;
+    volatile int32_t i;
+    volatile int32_t j;
+    uint32_t seed = 0;
     TRNG_NULL_PARAM_CHK(handle);
     TRNG_NULL_PARAM_CHK(data);
     TRNG_NULL_PARAM_CHK(num);
@@ -124,12 +125,13 @@ int32_t csi_trng_get_data(trng_handle_t handle, void *data, uint32_t num)
     trng_priv->status.busy = 1U;
     trng_priv->status.data_valid = 0U;
 
-    tls_crypto_random_init(tls_os_get_time(), CRYPTO_RNG_SWITCH_32);
-	for(i=0;i<32;i++)
-	{
-		for(j=0;j<3;j++)
-		{}
-	}
+    seed = tls_random_seed_generation();
+    tls_crypto_random_init(seed, CRYPTO_RNG_SWITCH_32);
+    for(i=0;i<32;i++)
+    {
+        for(j=0;j<3;j++)
+        {}
+    }
     tls_crypto_random_bytes(data, num);
     tls_crypto_random_stop();
 

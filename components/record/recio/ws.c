@@ -171,9 +171,7 @@ static void ws_rec_deinit(ws_config_t *priv)
 			cnt = 0;
 			// backup
 			for (int i = 0; i < s_sock_count; i++) {
-				tmp[i].path_pre = s_socks_mgr[i].path_pre;
-				tmp[i].sock = s_socks_mgr[i].sock;
-				tmp[i].sendmtx.hdl = s_socks_mgr[i].sendmtx.hdl;
+				tmp[i] = s_socks_mgr[i];
 			}
 			// check is released or not
 			for (int i = 0; i < s_sock_count; i++) {
@@ -183,9 +181,8 @@ static void ws_rec_deinit(ws_config_t *priv)
 					cnt ++;
 					continue;
 				}
-				s_socks_mgr[cc].path_pre = tmp[i].path_pre;
-				s_socks_mgr[cc].sock = tmp[i].sock;
-				s_socks_mgr[cc].sendmtx.hdl = tmp[i].sendmtx.hdl;
+				s_socks_mgr[cc] = tmp[i];
+
 				cc ++;
 			}
 			s_sock_count = cc;

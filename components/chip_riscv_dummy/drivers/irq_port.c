@@ -12,41 +12,57 @@
 #include <csi_config.h>
 #include <stdbool.h>
 #include <csi_core.h>
+#include <soc.h>
 
 void soc_irq_enable(uint32_t irq_num)
 {
+///< 使能中断控制器中对应的中断
 #ifdef CONFIG_SYSTEM_SECURE
     csi_vic_enable_sirq((int32_t)irq_num);
 #else
 #ifdef __arm__
     NVIC_EnableIRQ(irq_num);
 #else
+#if __riscv_xlen == 32
     csi_vic_enable_irq((int32_t)irq_num);
+#elif __riscv_xlen == 64
+    csi_plic_enable_irq(PLIC_BASE, (int32_t)irq_num);
+#endif /*__riscv_xlen*/
 #endif
 #endif
 }
 
 void soc_irq_disable(uint32_t irq_num)
 {
+///< 关闭中断控制器中对应的中断
 #ifdef CONFIG_SYSTEM_SECURE
     csi_vic_disable_sirq((int32_t)irq_num);
 #else
 #ifdef __arm__
     NVIC_DisableIRQ(irq_num);
 #else
+#if __riscv_xlen == 32
     csi_vic_disable_irq((int32_t)irq_num);
+#elif __riscv_xlen == 64
+    csi_plic_disable_irq(PLIC_BASE, (int32_t)irq_num);
+#endif /*__riscv_xlen*/
 #endif
 #endif
 }
 
 bool soc_irq_is_enabled(uint32_t irq_num)
 {
+///< 获取中断控制器中对应的中断是否使能的状态
     bool ret;
 
 #ifdef __arm__
     if (__NVIC_GetEnableIRQ(irq_num)) {
 #else
+#if __riscv_xlen == 32
     if (csi_vic_get_enabled_irq((int32_t)irq_num)) {
+#elif __riscv_xlen == 64
+    if (csi_plic_get_enabled_irq(PLIC_BASE, (int32_t)irq_num)) {
+#endif /*__riscv_xlen*/
 #endif
         ret = true;
     } else {
@@ -58,25 +74,32 @@ bool soc_irq_is_enabled(uint32_t irq_num)
 
 void soc_irq_priority(uint32_t irq_num, uint32_t priority)
 {
+///< 设置中断控制器中对应的中断的优先级
 #ifdef __arm__
     __NVIC_SetPriority(irq_num, priority);
 #else
+#if __riscv_xlen == 32
     csi_vic_set_prio((int32_t)irq_num, priority);
+#elif __riscv_xlen == 64
+    csi_plic_set_prio(PLIC_BASE, (int32_t)irq_num, priority);
+#endif /*__riscv_xlen*/
 #endif
 }
 
 void soc_irq_enable_wakeup(uint32_t irq_num)
 {
+///< 使能中断控制器对应的中断的唤醒
 #ifdef __arm__
-#else
+#elif __riscv_xlen == 32
     csi_vic_set_wakeup_irq((int32_t)irq_num);
 #endif
 }
 
 void soc_irq_disable_wakeup(uint32_t irq_num)
 {
+///< 禁止中断控制器对应的中断的唤醒
 #ifdef __arm__
-#else
+#elif __riscv_xlen == 32
     csi_vic_clear_wakeup_irq((int32_t)irq_num);
 #endif
 }

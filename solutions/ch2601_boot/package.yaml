@@ -1,0 +1,61 @@
+name: ch2601_boot
+version: v7.6.0                                     # <必选项> 组件版本号
+description: BootLoader for ch2601
+
+type: solution
+
+hw_info:
+  board_name: ch2601_evb
+  ld_script: gcc_flash.ld
+
+depends:                                       # 该组件依赖其他的组件
+  - csi: v7.6.0
+  - chip_ch2601: v7.6.0
+  - ch2601_evb: v7.6.0
+  - boot: v7.6.0
+  - partition: v7.6.2
+  - sec_crypto: v7.6.0
+  - key_mgr: v7.6.0
+
+# 编译参数
+build_config:
+  include:
+    - app/include
+  libs:
+    # - diff
+    # - diff_dbg    # diff debug
+  libpath: ""
+  ldflag: '-Wl,-zmax-page-size=1024 -Wl,-Map=boot.map'
+
+
+# 源文件
+source_file:
+  - app/src/*.c
+  - porting/*.c
+
+def_config:
+  CONFIG_DEBUG: 2
+  # CONFIG_MM_DETECT_ERROR: 1
+  CONFIG_NEWLIB_STUB: 1
+  # CONFIG_NO_OTA_UPGRADE: 0
+  CONFIG_OTA_NO_DIFF: 1
+  CONFIG_PARITION_NO_VERIFY: 1
+  CONFIG_NOT_SUPORRT_SASC: 1
+  CONFIG_TB_KP: 0
+  CONFIG_MANTB_VERSION: 4
+  CONFIG_ARCH_INTERRUPTSTACK: 6144
+  CONFIG_DISABLE_IRQ: 1
+
+  # RSA_USING_ID2KEY: 1
+  # CONFIG_SYSTEM_SECURE: 1
+
+  #sec_crypto
+  #CONFIG_SEC_CRYPTO_AES_SW: 1
+  CONFIG_SEC_CRYPTO_SHA_SW: 1
+  #CONFIG_SEC_CRYPTO_RSA_SW: 1
+  #CONFIG_SEC_CRYPTO_RNG_SW: 1
+
+  CONFIG_MLIBC_PATH: stdio2
+
+  CONFIG_XIP: y
+  CONFIG_CPU_E906: y

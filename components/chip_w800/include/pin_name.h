@@ -93,26 +93,32 @@ typedef enum {
     PB0_UART3_TX   = 0,
     PB0_SPI_DI     = 1,
     PB0_PWM        = 2,
+    PB0_PSRAM_CK   = 3,
 
     PB1_UART3_RX   = 0,
     PB1_SPI_CK     = 1,
     PB1_PWM        = 2,
+    PB1_PSRAM_CS   = 3,
 
     PB2_UART2_TX   = 0,
     PB2_SPI_CK     = 1,
     PB2_PWM        = 2,
+    PB2_PSRAM_DAT0 = 3,
 
     PB3_UART2_RX   = 0,
     PB3_SPI_DI     = 1,
     PB3_PWM        = 2,
+    PB3_PSRAM_DAT1 = 3,
 
     PB4_UART2_RTS  = 0,
     PB4_UART4_TX   = 1,
     PB4_SPI_CS     = 2,
+    PB4_PSRAM_DAT2 = 3,
 
     PB5_UART2_CTS  = 0,
     PB5_UART4_RX   = 1,
     PB5_SPI_DO     = 2,
+    PB5_PSRAM_DAT3 = 3,
 
     PB6_UART1_TX   = 0,
 

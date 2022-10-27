@@ -41,7 +41,7 @@
 #endif
 
 extern volatile sysclk_t       g_system_clk;
-int g_spif_ref_clk = SYS_CLK_DLL_64M;
+int g_spif_ref_clk = SYS_CLK_RC_32M;
 extern void trap_c(uint32_t *regs);
 extern uint32_t g_system_clk;
 
@@ -58,6 +58,7 @@ extern void Default_Handler();
 extern void tspend_handler();
 extern void Default_IRQHandler_phy6220();
 extern int spif_config(sysclk_t ref_clk, uint8_t div,  uint32_t rd_instr,  uint8_t mode_bit, uint8_t QE);
+extern int spif_read_id(uint32_t* pid);
 
 uint32_t PHY6220_Vectors[64] = {0};
 /**
@@ -67,7 +68,7 @@ uint32_t PHY6220_Vectors[64] = {0};
   * @return None
   */
 
-__attribute__((section(".__sram.code")))  void hal_cache_init(void)
+__attribute__((section(".__sram.code.hal_cache_init")))  void hal_cache_init(void)
 {
     volatile int dly = 100;
     //clock gate
@@ -198,7 +199,9 @@ static void hal_low_power_io_init(void)
     drv_pm_ram_retention(RET_SRAM0 | RET_SRAM1 | RET_SRAM2);
     //hal_pwrmgr_RAM_retention(RET_SRAM0);
     hal_pwrmgr_RAM_retention_set();
+#if (defined(CONFIG_SYS_CLK_XTAL_16M) && CONFIG_SYS_CLK_XTAL_16M > 0)
     hal_pwrmgr_LowCurrentLdo_enable();
+#endif
     //========= low power module clk gate
 #if(PHY_MCU_TYPE==MCU_BUMBEE_CK802)
     *(volatile uint32_t *)0x40000008 = 0x001961f1;  //
@@ -214,7 +217,7 @@ static void hal_low_power_io_init(void)
 static void hal_init(void)
 {
     hal_low_power_io_init();
-
+    hal_rtc_clock_config(g_clk32K_config);
     //hal_pwrmgr_init();
 }
 
@@ -243,7 +246,11 @@ void SystemInit(void)
 
     __disable_irq();
 
-    g_system_clk = SYS_CLK_DLL_48M;
+#ifdef CONFIG_SYS_CLK_48M
+    g_system_clk = SYS_CLK_DLL_48M;//SYS_CLK_XTAL_16M;//SYS_CLK_DLL_48M;
+#else
+    g_system_clk = SYS_CLK_XTAL_16M;//SYS_CLK_XTAL_16M;//SYS_CLK_DLL_48M;
+#endif
 
 #ifdef CONFIG_USE_XTAL_CLK
     g_clk32K_config = CLK_32K_XTAL;//CLK_32K_XTAL,CLK_32K_RCOSC
@@ -252,8 +259,6 @@ void SystemInit(void)
 #endif
 
     g_spif_ref_clk = SYS_CLK_DLL_64M;
-
-    hal_rtc_clock_config(g_clk32K_config);
 
     JUMP_FUNCTION(CK802_TRAP_C) = (uint32_t)&trap_c;           //register trap irq handler
 
@@ -264,6 +269,8 @@ void SystemInit(void)
 #endif
 
     init_config();
+
+	config_irq_priority();
 
     hal_rfphy_init();
 
@@ -283,14 +290,14 @@ void SystemInit(void)
 
     __set_VBR((uint32_t)(PHY6220_Vectors));
 
-    config_irq_priority();
 
     csi_coret_config(drv_get_sys_freq() / CONFIG_SYSTICK_HZ, CORET_IRQn);    //10ms
     drv_irq_enable(CORET_IRQn);
 
     //replace TS_PEND IRQ with IRQ0
-    drv_irq_enable(0);
-    csi_vic_set_prio(0, 3);
+    drv_irq_enable(TSPEND_IRQn);
+    csi_vic_set_prio(TSPEND_IRQn, 3);
+    spif_read_id(NULL);
     hal_cache_init();
 
     hal_mpu_config();
@@ -298,5 +305,3 @@ void SystemInit(void)
 
     hal_init();
 }
-
-

@@ -69,9 +69,10 @@ Default_IRQHandler:
 
     lw      a1, 40(sp)
     andi    a0, a1, 0x3FF
+    slli    a0, a0, 2
 
     /* clear pending */
-    li      a2, 0xE000E100
+    li      a2, 0xE0801000
     add     a2, a2, a0
     lb      a3, 0(a2)
     li      a4, 1
@@ -153,9 +154,10 @@ Default_IRQHandler:
 
     lw      a1, 40(sp)
     andi    a0, a1, 0x3FF
+    slli    a0, a0, 2
 
     /* clear pending */
-    li      a2, 0xE000E100
+    li      a2, 0xE0801000
     add     a2, a2, a0
     lb      a3, 0(a2)
     li      a4, 1

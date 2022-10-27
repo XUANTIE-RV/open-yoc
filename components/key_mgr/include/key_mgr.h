@@ -4,7 +4,9 @@
 
 #ifndef KM_H
 #define KM_H
+#include <ctype.h>
 #include <stdint.h>
+#include <stddef.h>
 
 #ifndef CONFIG_MAX_PUB_KEY_NUM
 #define MAX_PUB_KEY_NUM 10
@@ -37,9 +39,18 @@ typedef enum {
     KEY_ID_IMG_DECRYPT_KEY          = 14,
     KEY_ID_CHALLENGE_KEY            = 15,
     KEY_ID_RPMB_KEY	                = 16,
+    KEY_ID_MAC                      = 30,
+    KEY_ID_MESSAGE_AUTH             = 31,
+    KEY_ID_PRODUCT_KEY              = 32,
+    KEY_ID_PRODUCT_SECRET           = 33,
+    KEY_ID_PRODUCT_ID               = 34,
+    KEY_ID_DEVICE_NAME              = 35,
+    KEY_ID_DEVICE_SECRET            = 36,    
     /* yoc */
-    KM_ID_PUBKEY_E                 = 49,
+    KM_ID_PUBKEY_E                  = 49,
     /* user */
+    KEY_ID_SAD                      = 59, /* SDK Authentication data */
+    KEY_ID_SDK_PUBKEY               = 60, /* SDK public key */
     KEY_ID_USER_DEFINE_BASE         = 64,
     /* NOTE add user key type here */
 
@@ -79,6 +90,13 @@ uint32_t km_init(void);
   \brief       km uninitialiez.
 */
 void km_uninit(void);
+
+/**
+  \brief       Update KP infomation .
+  \param[in]   kp_info  A pointer to the kp information buffer
+  \param[in]   key_size  The size of kp information
+*/
+uint32_t km_update_kp(uint8_t *kp_info, size_t key_size);
 
 /**
   \brief       Get key from km

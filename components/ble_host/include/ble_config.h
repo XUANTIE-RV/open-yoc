@@ -5,7 +5,7 @@
 #ifndef __BLE_CONFIG_H_
 #define __BLE_CONFIG_H_
 
-#include <ble_default_config.h>
+#include <aos/bt_default_config.h>
 #ifdef  CONFIG_BT_MESH
 #include "ble_mesh_default_config.h"
 #endif

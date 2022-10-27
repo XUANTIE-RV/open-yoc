@@ -1,9 +1,0 @@
-Import('app_build')
-
-src = [
-    'main.c'
-]
-inc = [
-    '.'
-]
-app_build('adc_test',src,inc)

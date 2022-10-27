@@ -67,14 +67,14 @@ typedef int32_t status_t;
 
 #define SDK_ALIGN(var, alignbytes) var
 
-static inline uint32_t cpu_to_dma(uint32_t addr)
+static inline unsigned long cpu_to_dma(unsigned long addr)
 {
     return addr;
 }
 
-static inline uint32_t *ptr_cpu_to_dma(uint32_t *addr)
+static inline unsigned long *ptr_cpu_to_dma(unsigned long *addr)
 {
-    return (uint32_t *)cpu_to_dma((uint32_t)addr);
+    return (unsigned long *)cpu_to_dma((unsigned long)addr);
 }
 
 typedef enum {
@@ -240,27 +240,27 @@ typedef struct {
   \param[in]   user_data User_data Callback function parameter.
   \return sdif Handle if success
 */
-sdif_handle_t drv_sdif_initialize(uint32_t idx, sdif_callback_t *callback, void *user_data);
+sdif_handle_t csi_sdif_initialize(uint32_t idx, sdif_callback_t *callback, void *user_data);
 
 /**
   \brief       De-initialize SD Interface. stops operation and releases the software resources used by the interface
   \param[in]   handle  SDIF handle to operate.
 */
-void drv_sdif_uninitialize(uint32_t idx, sdif_handle_t handle);
+void csi_sdif_uninitialize(uint32_t idx, sdif_handle_t handle);
 
 /**
   \brief  Initializes the SDIF config
   \param[in]   idx SDIF index
   \param[in]   config  SDIF config descriptor \ref sdif_config_t
 */
-void drv_sdif_config(sdif_handle_t handle, sdif_config_t *config);
+void csi_sdif_config(sdif_handle_t handle, sdif_config_t *config);
 
 /**
   \brief       Get driver capabilities.
   \param[in]   handle  SDIF handle to operate.
   \param[out]  capability SDIF capability information \ref sdif_capabilities_t
  */
-void drv_sdif_get_capabilities(sdif_handle_t handle, sdif_capability_t *capability);
+void csi_sdif_get_capabilities(sdif_handle_t handle, sdif_capability_t *capability);
 
 
 /**
@@ -270,12 +270,12 @@ void drv_sdif_get_capabilities(sdif_handle_t handle, sdif_capability_t *capabili
   \param[in]  retries total number of tries
   \return  Error code
  */
-int32_t drv_sdif_send_command(sdif_handle_t handle, sdif_command_t *cmd, uint32_t retries);
+int32_t csi_sdif_send_command(sdif_handle_t handle, sdif_command_t *cmd, uint32_t retries);
 
 /**
   \brief  SDIF transfer function data/cmd in a non-blocking way
       this API should be use in interrupt mode, when use this API user
-      must call drv_sdif_create_state first, all status check through
+      must call csi_sdif_create_state first, all status check through
       interrupt
   \param[in] handle  SDIF handle to operate.
   \param[in] dma_config DMA config structure \ref sdif_dma_config_t
@@ -287,7 +287,7 @@ int32_t drv_sdif_send_command(sdif_handle_t handle, sdif_command_t *cmd, uint32_
   \param[in] transfer  SDIF transfer configuration collection. \ref sdif_transfer_t
   \return Error code
   */
-int32_t drv_sdif_transfer(sdif_handle_t handle, sdif_dma_config_t *dma_config, sdif_transfer_t *transfer);
+int32_t csi_sdif_transfer(sdif_handle_t handle, sdif_dma_config_t *dma_config, sdif_transfer_t *transfer);
 
 /**
  \brief    Poll-wait for the response to the last command to be ready.  This
@@ -297,7 +297,7 @@ int32_t drv_sdif_transfer(sdif_handle_t handle, sdif_dma_config_t *dma_config, s
  \param[in]  handle  SDIF handle to operate.
  \param[in]  cmd : The command that was sent.  See 32-bit command definitions above.
 */
-void drv_sdif_transfer_abort(sdif_handle_t handle);
+void csi_sdif_transfer_abort(sdif_handle_t handle);
 
 /**
  \brief Called after change in Bus width has been selected (via ACMD6).  Most
@@ -306,7 +306,7 @@ void drv_sdif_transfer_abort(sdif_handle_t handle);
  \param[in]  handle  SDIF handle to operate.
  \param[in]  bus_width Wide bus mode \ref sdif_bus_width_e.
 */
-void drv_sdif_bus_width(sdif_handle_t handle, sdif_bus_width_e bus_width);
+void csi_sdif_bus_width(sdif_handle_t handle, sdif_bus_width_e bus_width);
 
 /**
  \brief Set SDIF clocking
@@ -314,21 +314,21 @@ void drv_sdif_bus_width(sdif_handle_t handle, sdif_bus_width_e bus_width);
  \param[in]  Target_hz card bus clock frequency united in Hz.
  \return  Error code
 */
-uint32_t drv_sdif_set_clock(sdif_handle_t handle, uint32_t target_hz);
+uint32_t csi_sdif_set_clock(sdif_handle_t handle, uint32_t target_hz);
 
 /**
   \brief  Get sdif handle
   \param[in]   Idx sdif index
   \return      SDIF handle
 */
-sdif_handle_t drv_sdif_get_handle(uint32_t idx);
+sdif_handle_t csi_sdif_get_handle(uint32_t idx);
 
 /**
   \brief  Get sdif index
   \param[out]   Handle  SDIF handle to operate.
   \return       SDIF index
 */
-uint32_t drv_sdif_get_idx(sdif_handle_t handle);
+uint32_t csi_sdif_get_idx(sdif_handle_t handle);
 
 #ifdef __cplusplus
 }

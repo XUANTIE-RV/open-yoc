@@ -17,6 +17,7 @@
 
 static clock_alarm_ctx_t g_clock_alarm_array[CLOCK_ALARM_NUM];
 static uint8_t g_clock_alarm_status = 0;
+static uint8_t g_clock_alarm_init = 0;
 static clock_alarm_cb_t g_clock_alarm_cb;
 
 static void clock_timer_callback(void *arg);
@@ -45,8 +46,7 @@ static void get_kv_config_time(uint8_t id)
     sprintf(name, "%s%02d%s", "clock_alarm_", id, "_time");
     aos_kv_getint(name, &time);
     g_clock_alarm_array[idx].time = (time_t)time;
-    if (time <= 0) {
-        g_clock_alarm_array[idx].time = 0;
+    if (time == 0) {
         g_clock_alarm_array[idx].id = 0;
         g_clock_alarm_array[idx].period = CLOCK_ALARM_PERIOD_DISABLE;
         g_clock_alarm_array[idx].enable = 0;
@@ -314,7 +314,7 @@ static void clock_alarm_handle(void)
     uint8_t idx = 0;
     time_t alarm_time = 0;
     uint8_t min_id = 0;
-    time_t time_rtc_now = rtc_to_system();
+    time_t time_rtc_now = rtc_get_time();
 
     /* get mini enable clock before update */
     min_id = get_mini_clock_id();
@@ -375,7 +375,6 @@ static void clock_alarm_handle(void)
 static void local_event_cb(uint32_t event_id, const void *param, void *context)
 {
     if (event_id == EVENT_CLOCK_ALARM) {
-        LOGD(TAG, "EVENT_CLOCK_ALARM");
         clock_alarm_handle();
     } else if (event_id == EVENT_CLOCK_TIMEOUT) {
         LOGD(TAG, "EVENT_CLOCK_TIMEOUT");
@@ -387,8 +386,13 @@ static void local_event_cb(uint32_t event_id, const void *param, void *context)
 
 int clock_alarm_init(clock_alarm_cb_t alarm_cb)
 {
+    if(g_clock_alarm_init != 0) {
+        LOGD(TAG, "clock alarm has already inited!");
+        return 0;
+    }
+
     if (alarm_cb == NULL) {
-        return -1;
+        LOGW(TAG, "callback fn not set!");
     }
 
     rtc_init();
@@ -410,6 +414,7 @@ int clock_alarm_init(clock_alarm_cb_t alarm_cb)
     event_subscribe(EVENT_CLOCK_ALARM, local_event_cb, NULL);
     event_subscribe(EVENT_CLOCK_TIMEOUT, local_event_cb, NULL);
     event_publish(EVENT_CLOCK_ALARM, NULL);
+    g_clock_alarm_init = 1;
     return 0;
 }
 
@@ -419,10 +424,7 @@ int clock_alarm_init(clock_alarm_cb_t alarm_cb)
 int clock_alarm_set(uint8_t id, clock_alarm_config_t *cfg_time)
 {
     uint8_t idx = 0;
-    time_t abs_time = 0;
-    if(NULL != cfg_time) {
-        abs_time = convert_to_absolute_time(cfg_time);
-    }
+    time_t abs_time = convert_to_absolute_time(cfg_time);
 
     if (id == 0) {
         if (abs_time == 0) {

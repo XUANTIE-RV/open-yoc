@@ -10,7 +10,7 @@
 
 static void except_process_function(int errno, const char *file, int line, const char *func_name, void *caller)
 {
-#ifdef CONFIG_DEBUG
+#if defined(CONFIG_DEBUG) && (CONFIG_DEBUG > 0)
     printf("Except! errno is %s, function: %s at %s:%d, caller: %p\n", strerror(errno), func_name, file, line, caller);
     while(1);
 #else

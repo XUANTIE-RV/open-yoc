@@ -286,8 +286,11 @@ typedef struct {
 /**
  * Init. the 'lv' library.
  */
+#if defined(AOS_COMP_LINKVISUAL) && AOS_COMP_LINKVISUAL
+void lvgl_init(void);
+#else
 void lv_init(void);
-
+#endif
 
 /**
  * Deinit the 'lv' library

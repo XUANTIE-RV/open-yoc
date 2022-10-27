@@ -1,2 +1,3 @@
-# sdk chip for ch2601
+# ╦ейЖ
+sdk chip for ch2601
 

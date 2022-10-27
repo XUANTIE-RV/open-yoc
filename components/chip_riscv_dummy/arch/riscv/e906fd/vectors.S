@@ -66,27 +66,27 @@ Default_IRQHandler:
     sw      t5, 56(sp)
     sw      t6, 60(sp)
 
-    addi    sp,  sp, -160
-    fsd     ft0, (0 +0 )(sp)
-    fsd     ft1, (4 +4 )(sp)
-    fsd     ft2, (8 +8 )(sp)
-    fsd     ft3, (12+12)(sp)
-    fsd     ft4, (16+16)(sp)
-    fsd     ft5, (20+20)(sp)
-    fsd     ft6, (24+24)(sp)
-    fsd     ft7, (28+28)(sp)
-    fsd     fa0, (32+32)(sp)
-    fsd     fa1, (36+36)(sp)
-    fsd     fa2, (40+40)(sp)
-    fsd     fa3, (44+44)(sp)
-    fsd     fa4, (48+48)(sp)
-    fsd     fa5, (52+52)(sp)
-    fsd     fa6, (56+56)(sp)
-    fsd     fa7, (60+60)(sp)
-    fsd     ft8, (64+64)(sp)
-    fsd     ft9, (68+68)(sp)
-    fsd     ft10,(72+72)(sp)
-    fsd     ft11,(76+76)(sp)
+    addi    sp,  sp, -80
+    fsw     ft0, 0(sp)
+    fsw     ft1, 4(sp)
+    fsw     ft2, 8(sp)
+    fsw     ft3, 12(sp)
+    fsw     ft4, 16(sp)
+    fsw     ft5, 20(sp)
+    fsw     ft6, 24(sp)
+    fsw     ft7, 28(sp)
+    fsw     fa0, 32(sp)
+    fsw     fa1, 36(sp)
+    fsw     fa2, 40(sp)
+    fsw     fa3, 44(sp)
+    fsw     fa4, 48(sp)
+    fsw     fa5, 52(sp)
+    fsw     fa6, 56(sp)
+    fsw     fa7, 60(sp)
+    fsw     ft8, 64(sp)
+    fsw     ft9, 68(sp)
+    fsw     ft10,72(sp)
+    fsw     ft11,76(sp)
 
     andi    t1, t1, 0x3FF
     slli    t1, t1, 2
@@ -96,11 +96,12 @@ Default_IRQHandler:
 
     csrc    mstatus, 8
 
-    lw      a1, 224(sp)
+    lw      a1, 144(sp)
     andi    a0, a1, 0x3FF
+    slli    a0, a0, 2
 
     /* clear pending */
-    li      a2, 0xE000E100
+    li      a2, 0xE0801000
     add     a2, a2, a0
     lb      a3, 0(a2)
     li      a4, 1
@@ -112,28 +113,28 @@ Default_IRQHandler:
     csrs    mstatus, t0
     csrw    mcause, a1
 
-    fld     ft0, (0 +0 )(sp)
-    fld     ft1, (4 +4 )(sp)
-    fld     ft2, (8 +8 )(sp)
-    fld     ft3, (12+12)(sp)
-    fld     ft4, (16+16)(sp)
-    fld     ft5, (20+20)(sp)
-    fld     ft6, (24+24)(sp)
-    fld     ft7, (28+28)(sp)
-    fld     fa0, (32+32)(sp)
-    fld     fa1, (36+36)(sp)
-    fld     fa2, (40+40)(sp)
-    fld     fa3, (44+44)(sp)
-    fld     fa4, (48+48)(sp)
-    fld     fa5, (52+52)(sp)
-    fld     fa6, (56+56)(sp)
-    fld     fa7, (60+60)(sp)
-    fld     ft8, (64+64)(sp)
-    fld     ft9, (68+68)(sp)
-    fld     ft10,(72+72)(sp)
-    fld     ft11,(76+76)(sp)
+    flw     ft0, 0(sp)
+    flw     ft1, 4(sp)
+    flw     ft2, 8(sp)
+    flw     ft3, 12(sp)
+    flw     ft4, 16(sp)
+    flw     ft5, 20(sp)
+    flw     ft6, 24(sp)
+    flw     ft7, 28(sp)
+    flw     fa0, 32(sp)
+    flw     fa1, 36(sp)
+    flw     fa2, 40(sp)
+    flw     fa3, 44(sp)
+    flw     fa4, 48(sp)
+    flw     fa5, 52(sp)
+    flw     fa6, 56(sp)
+    flw     fa7, 60(sp)
+    flw     ft8, 64(sp)
+    flw     ft9, 68(sp)
+    flw     ft10,72(sp)
+    flw     ft11,76(sp)
 
-    addi    sp, sp, 160
+    addi    sp, sp, 80
 
     lw      t0, 68(sp)
     csrw    mepc, t0
@@ -193,7 +194,7 @@ Default_IRQHandler:
     sw      t1, 64(sp)
     sw      t0, 68(sp)
 
-//    csrs    mstatus, 8
+    # csrs    mstatus, 8
 
     sw      ra, 0(sp)
     sw      t2, 12(sp)
@@ -210,27 +211,30 @@ Default_IRQHandler:
     sw      t5, 56(sp)
     sw      t6, 60(sp)
 
-    addi    sp,  sp, -160
-    fsd     ft0, (0 +0 )(sp)
-    fsd     ft1, (4 +4 )(sp)
-    fsd     ft2, (8 +8 )(sp)
-    fsd     ft3, (12+12)(sp)
-    fsd     ft4, (16+16)(sp)
-    fsd     ft5, (20+20)(sp)
-    fsd     ft6, (24+24)(sp)
-    fsd     ft7, (28+28)(sp)
-    fsd     fa0, (32+32)(sp)
-    fsd     fa1, (36+36)(sp)
-    fsd     fa2, (40+40)(sp)
-    fsd     fa3, (44+44)(sp)
-    fsd     fa4, (48+48)(sp)
-    fsd     fa5, (52+52)(sp)
-    fsd     fa6, (56+56)(sp)
-    fsd     fa7, (60+60)(sp)
-    fsd     ft8, (64+64)(sp)
-    fsd     ft9, (68+68)(sp)
-    fsd     ft10,(72+72)(sp)
-    fsd     ft11,(76+76)(sp)
+    addi    sp,  sp, -80
+    fsw     ft0, 0(sp)
+    fsw     ft1, 4(sp)
+    fsw     ft2, 8(sp)
+    fsw     ft3, 12(sp)
+    fsw     ft4, 16(sp)
+    fsw     ft5, 20(sp)
+    fsw     ft6, 24(sp)
+    fsw     ft7, 28(sp)
+    fsw     fa0, 32(sp)
+    fsw     fa1, 36(sp)
+    fsw     fa2, 40(sp)
+    fsw     fa3, 44(sp)
+    fsw     fa4, 48(sp)
+    fsw     fa5, 52(sp)
+    fsw     fa6, 56(sp)
+    fsw     fa7, 60(sp)
+    fsw     ft8, 64(sp)
+    fsw     ft9, 68(sp)
+    fsw     ft10,72(sp)
+    fsw     ft11,76(sp)
+
+    andi    t1, t1, 0x3FF
+    slli    t1, t1, 2
 
     la      t0, do_irq
     jalr    t0
@@ -238,11 +242,12 @@ Default_IRQHandler:
     csrc    mstatus, 8
 
 
-    lw      a1, 224(sp)
+    lw      a1, 144(sp)
     andi    a0, a1, 0x3FF
+    slli    a0, a0, 2
 
     /* clear pending */
-    li      a2, 0xE000E100
+    li      a2, 0xE0801000
     add     a2, a2, a0
     lb      a3, 0(a2)
     li      a4, 1
@@ -260,28 +265,28 @@ Default_IRQHandler:
     csrs    mstatus, t0
     csrw    mcause, a1
     
-    fld     ft0, (0 +0 )(sp)
-    fld     ft1, (4 +4 )(sp)
-    fld     ft2, (8 +8 )(sp)
-    fld     ft3, (12+12)(sp)
-    fld     ft4, (16+16)(sp)
-    fld     ft5, (20+20)(sp)
-    fld     ft6, (24+24)(sp)
-    fld     ft7, (28+28)(sp)
-    fld     fa0, (32+32)(sp)
-    fld     fa1, (36+36)(sp)
-    fld     fa2, (40+40)(sp)
-    fld     fa3, (44+44)(sp)
-    fld     fa4, (48+48)(sp)
-    fld     fa5, (52+52)(sp)
-    fld     fa6, (56+56)(sp)
-    fld     fa7, (60+60)(sp)
-    fld     ft8, (64+64)(sp)
-    fld     ft9, (68+68)(sp)
-    fld     ft10,(72+72)(sp)
-    fld     ft11,(76+76)(sp)
+    flw     ft0, 0(sp)
+    flw     ft1, 4(sp)
+    flw     ft2, 8(sp)
+    flw     ft3, 12(sp)
+    flw     ft4, 16(sp)
+    flw     ft5, 20(sp)
+    flw     ft6, 24(sp)
+    flw     ft7, 28(sp)
+    flw     fa0, 32(sp)
+    flw     fa1, 36(sp)
+    flw     fa2, 40(sp)
+    flw     fa3, 44(sp)
+    flw     fa4, 48(sp)
+    flw     fa5, 52(sp)
+    flw     fa6, 56(sp)
+    flw     fa7, 60(sp)
+    flw     ft8, 64(sp)
+    flw     ft9, 68(sp)
+    flw     ft10,72(sp)
+    flw     ft11,76(sp)
 
-    addi    sp, sp, 160
+    addi    sp, sp, 80
 
 
     lw      t0, 68(sp)
@@ -311,28 +316,28 @@ Default_IRQHandler:
     csrs    mstatus, t0
     csrw    mcause, a1
 
-    fld     ft0, (0 +0 )(sp)
-    fld     ft1, (4 +4 )(sp)
-    fld     ft2, (8 +8 )(sp)
-    fld     ft3, (12+12)(sp)
-    fld     ft4, (16+16)(sp)
-    fld     ft5, (20+20)(sp)
-    fld     ft6, (24+24)(sp)
-    fld     ft7, (28+28)(sp)
-    fld     fa0, (32+32)(sp)
-    fld     fa1, (36+36)(sp)
-    fld     fa2, (40+40)(sp)
-    fld     fa3, (44+44)(sp)
-    fld     fa4, (48+48)(sp)
-    fld     fa5, (52+52)(sp)
-    fld     fa6, (56+56)(sp)
-    fld     fa7, (60+60)(sp)
-    fld     ft8, (64+64)(sp)
-    fld     ft9, (68+68)(sp)
-    fld     ft10,(72+72)(sp)
-    fld     ft11,(76+76)(sp)
+    flw     ft0, 0(sp)
+    flw     ft1, 4(sp)
+    flw     ft2, 8(sp)
+    flw     ft3, 12(sp)
+    flw     ft4, 16(sp)
+    flw     ft5, 20(sp)
+    flw     ft6, 24(sp)
+    flw     ft7, 28(sp)
+    flw     fa0, 32(sp)
+    flw     fa1, 36(sp)
+    flw     fa2, 40(sp)
+    flw     fa3, 44(sp)
+    flw     fa4, 48(sp)
+    flw     fa5, 52(sp)
+    flw     fa6, 56(sp)
+    flw     fa7, 60(sp)
+    flw     ft8, 64(sp)
+    flw     ft9, 68(sp)
+    flw     ft10,72(sp)
+    flw     ft11,76(sp)
 
-    addi    sp, sp, 160
+    addi    sp, sp, 80
 
 
     lw      t0, 68(sp)
@@ -443,6 +448,23 @@ Default_Handler:
     .set    \handler_name, Default_Handler
     .endm
 
-    def_irq_handler trap0_handler
     def_irq_handler tspend_handler
     def_irq_handler CORET_IRQHandler
+    def_irq_handler STIM0_IRQHandler
+    def_irq_handler STIM1_IRQHandler
+    def_irq_handler STIM2_IRQHandler
+    def_irq_handler STIM3_IRQHandler
+    def_irq_handler TIM0_IRQHandler
+    def_irq_handler TIM1_IRQHandler
+    def_irq_handler TIM2_IRQHandler
+    def_irq_handler TIM3_IRQHandler
+    def_irq_handler USART_IRQHandler
+    def_irq_handler GPIO0_IRQHandler
+    def_irq_handler GPIO1_IRQHandler
+    def_irq_handler GPIO2_IRQHandler
+    def_irq_handler GPIO3_IRQHandler
+    def_irq_handler GPIO4_IRQHandler
+    def_irq_handler GPIO5_IRQHandler
+    def_irq_handler GPIO6_IRQHandler
+    def_irq_handler GPIO7_IRQHandler
+    def_irq_handler PAD_IRQHandler

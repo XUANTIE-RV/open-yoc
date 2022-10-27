@@ -35,6 +35,13 @@ extern void registers_restore(uint32_t *addr, uint32_t *mem, int size);
 
 #define ERR_GPIO(errno) (CSI_DRV_ERRNO_GPIO_BASE | errno)
 #define GPIO_NULL_PARAM_CHK(para)    HANDLE_PARAM_CHK(para, ERR_GPIO(DRV_ERROR_PARAMETER))
+#define RAM_CODE_SECTION(func)  __attribute__((section(".__sram.code."#func)))  func
+static void RAM_CODE_SECTION(dw_gpio_irq_clear)(gpio_pin_handle_t pin, uint32_t idx);
+void RAM_CODE_SECTION(dw_gpio_irqhandler)(int idx);
+void RAM_CODE_SECTION(csi_gpio_prepare_sleep_action)();
+void RAM_CODE_SECTION(csi_gpio_wakeup_sleep_action)();
+void RAM_CODE_SECTION(csi_pinmux_prepare_sleep_action)();
+void RAM_CODE_SECTION(csi_pinmux_wakeup_sleep_action)(void);
 
 typedef void *gpio_port_handle_t;
 
@@ -191,7 +198,7 @@ static int32_t dw_gpio_set_irq_mode(gpio_pin_handle_t pin, gpio_irq_mode_e irq_m
  * return: SUCCESS.
  */
 
-static __attribute__((section(".__sram.code"))) void dw_gpio_irq_clear(gpio_pin_handle_t pin, uint32_t idx)
+static void dw_gpio_irq_clear(gpio_pin_handle_t pin, uint32_t idx)
 {
     dw_gpio_pin_priv_t *gpio_pin_priv = pin;
 
@@ -246,7 +253,7 @@ static void dw_gpio_irq_disable(gpio_pin_handle_t pin)
     gpio_control_reg->INTEN = val;
 }
 
-void __attribute__((section(".__sram.code"))) dw_gpio_irqhandler(int idx)
+void dw_gpio_irqhandler(int idx)
 {
     if (idx >= CONFIG_GPIO_NUM) {
         return;
@@ -374,27 +381,27 @@ static void do_wakeup_sleep_action(void *handle)
 }
 #endif
 
-__attribute__((section(".__sram.code"))) void csi_gpio_prepare_sleep_action()
+void csi_gpio_prepare_sleep_action()
 {
     uint32_t addr = AP_GPIOA_BASE;
     registers_save(gpio_regs_saved, (uint32_t *)addr, 16);
     phy_gpioretention_prepare_sleep_action();
 }
 
-__attribute__((section(".__sram.code"))) void csi_gpio_wakeup_sleep_action()
+void csi_gpio_wakeup_sleep_action()
 {
     uint32_t addr = AP_GPIOA_BASE;
     registers_save((uint32_t *)addr, gpio_regs_saved, 16);
     phy_gpioretention_prepare_wakeup_action();
 }
 
-__attribute__((section(".__sram.code"))) void csi_pinmux_prepare_sleep_action()
+void csi_pinmux_prepare_sleep_action()
 {
     uint32_t addr = AP_IOMUX_BASE;
     registers_save(pinmux_regs_saved, (uint32_t *)addr, 21);
 }
 
-__attribute__((section(".__sram.code"))) void csi_pinmux_wakeup_sleep_action(void)
+void csi_pinmux_wakeup_sleep_action(void)
 {
     uint32_t addr = AP_IOMUX_BASE;
     registers_restore((uint32_t *)addr, pinmux_regs_saved, 21);

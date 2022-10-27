@@ -38,7 +38,7 @@
 extern uint32_t hclk, pclk;
 extern uint32_t osal_sys_tick;
 
-__attribute__((section(".__sram.code"))) void hal_clk_gate_enable(MODULE_e module)
+__attribute__((section(".__sram.code.hal_clk_gate_enable"))) void hal_clk_gate_enable(MODULE_e module)
 {
     if (module < MOD_CP_CPU) {
         AP_PCR->SW_CLK |= BIT(module);
@@ -80,7 +80,7 @@ void hal_clk_get_modules_state(uint32_t *buff)
     *(buff + 2) = AP_PCR->CACHE_CLOCK_GATE;
 }
 
-__attribute__((section(".__sram.code"))) void hal_clk_reset(MODULE_e module)
+__attribute__((section(".__sram.code.hal_clk_reset"))) void hal_clk_reset(MODULE_e module)
 {
     if (module < MOD_CP_CPU) {
         if ((module >= MOD_TIMER5) && (module <= MOD_TIMER6)) {
@@ -254,9 +254,11 @@ void hal_rtc_clock_config(CLK32K_e clk32Mode)
         subWriteReg(&(AP_AON->PMCTL0), 31, 27, 0x16);
         //pGlobal_config[LL_SWITCH]&=0xffffffee;
     }
+#if !(defined(CONFIG_SYS_CLK_XTAL_16M) && CONFIG_SYS_CLK_XTAL_16M > 0)
     //ZQ 20200812 for rc32k wakeup
     subWriteReg(&(AP_AON->PMCTL0),28,28,0x1);//turn on 32kxtal
     subWriteReg(&(AP_AON->PMCTL1),18,17,0x0);// reduce 32kxtal bias current
+#endif
 }
 
 uint32_t hal_systick(void)

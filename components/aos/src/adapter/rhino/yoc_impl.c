@@ -31,26 +31,26 @@ static k_mm_region_head_t hobbit_mm_region_head;
 #if (RHINO_CONFIG_HW_COUNT > 0)
 
 #define MS_PER_SECS     1000
-void soc_hw_timer_init(void)
+__attribute__((weak)) void soc_hw_timer_init(void)
 {
 }
 
-hr_timer_t soc_hr_hw_cnt_get(void)
+__attribute__((weak)) hr_timer_t soc_hr_hw_cnt_get(void)
 {
     return krhino_sys_time_get();
 }
 
-lr_timer_t soc_lr_hw_cnt_get(void)
+__attribute__((weak)) lr_timer_t soc_lr_hw_cnt_get(void)
 {
     return soc_hr_hw_cnt_get();
 }
 #endif
 
 /* auto define heap size */
-k_mm_region_t g_mm_region[] = {
+__attribute__((weak)) k_mm_region_t g_mm_region[] = {
     {(uint8_t *)&__heap_start, (size_t)0},
 };
-int g_region_num  = sizeof(g_mm_region)/sizeof(k_mm_region_t);
+__attribute__((weak)) int g_region_num  = sizeof(g_mm_region)/sizeof(k_mm_region_t);
 
 #if (RHINO_CONFIG_INTRPT_GUARD > 0)
 void soc_intrpt_guard(void)
@@ -82,7 +82,7 @@ size_t soc_get_cur_sp(void)
 #endif
 }
 
-void soc_err_proc(kstat_t err)
+__attribute__((weak)) void soc_err_proc(kstat_t err)
 {
     switch(err) {
     case RHINO_TASK_STACK_OVF:

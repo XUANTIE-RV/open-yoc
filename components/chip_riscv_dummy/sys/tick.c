@@ -11,7 +11,6 @@
 #include <soc.h>
 #include <csi_config.h>
 #include <sys_clk.h>
-#include <board_config.h>
 #include <drv/common.h>
 #include <drv/irq.h>
 #include <drv/tick.h>
@@ -20,59 +19,19 @@
 
 #define __WEAK         __attribute__((weak))
 
-#ifndef CONFIG_TICK_TIMER_IDX
-#define CONFIG_TICK_TIMER_IDX   0U
-#endif
-
-static csi_timer_t tick_timer;
+static csi_dev_t tick_dev;
 
 static volatile uint32_t csi_tick = 0U;
-static volatile uint32_t last_time_ms = 0U;
-static volatile uint64_t last_time_us = 0U;
-
-extern void krhino_tick_proc(void);
-extern void xPortSysTickHandler(void);
-extern void OSTimeTick(void);
 
 void csi_tick_increase(void)
 {
     csi_tick++;
 }
 
-static void tick_event_cb(csi_timer_t *timer_handle, void *arg)
-{
-    csi_tick_increase();
-#if defined(CONFIG_KERNEL_RHINO)
-    krhino_tick_proc();
-#elif defined(CONFIG_KERNEL_FREERTOS)
-    xPortSysTickHandler();
-#elif defined(CONFIG_KERNEL_UCOS)
-    OSTimeTick();
-#endif
-}
-
-csi_error_t csi_tick_init(void)
-{
-    csi_error_t ret;
-
-    csi_tick = 0U;
-    ret = csi_timer_init(&tick_timer, CONFIG_TICK_TIMER_IDX);
-
-    if (ret == CSI_OK) {
-        ret = csi_timer_attach_callback(&tick_timer, tick_event_cb, NULL);
-
-        if (ret == CSI_OK) {
-            ret = csi_timer_start(&tick_timer, (1000000U / CONFIG_SYSTICK_HZ));
-        }
-    }
-
-    return ret;
-}
-
 void csi_tick_uninit(void)
 {
-    csi_timer_stop(&tick_timer);
-    csi_timer_uninit(&tick_timer);
+    csi_irq_disable(tick_dev.irq_num);
+    csi_irq_detach(tick_dev.irq_num);
 }
 
 uint32_t csi_tick_get(void)
@@ -80,95 +39,176 @@ uint32_t csi_tick_get(void)
     return csi_tick;
 }
 
+#if __riscv_xlen == 64
+static void tick_irq_handler(csi_timer_t *timer_handle, void *arg)
+{
+    csi_tick_increase();
+    csi_clint_config(CORET_BASE, (soc_get_coretim_freq()/ CONFIG_SYSTICK_HZ), CORET_IRQn);
+#ifndef CONFIG_KERNEL_NONE
+    extern void aos_sys_tick_handler(void);
+    aos_sys_tick_handler();
+#endif
+}
+
+csi_error_t csi_tick_init(void)
+{
+    csi_tick = 0U;
+    tick_dev.irq_num = (uint8_t)CORET_IRQn;
+
+    csi_plic_set_prio(PLIC_BASE, CORET_IRQn, 31U);
+
+    csi_irq_attach((uint32_t)tick_dev.irq_num, &tick_irq_handler, &tick_dev);
+    csi_clint_config(CORET_BASE, (soc_get_coretim_freq() / CONFIG_SYSTICK_HZ), CORET_IRQn);
+    csi_irq_enable((uint32_t)tick_dev.irq_num);
+
+    return CSI_OK;
+}
+
 uint32_t csi_tick_get_ms(void)
 {
-    uint32_t time = last_time_ms, freq;
-    freq = csi_timer_get_load_value(&tick_timer) * CONFIG_SYSTICK_HZ;
+    uint32_t time;
 
-    while (freq) {
-        time = (csi_tick * (1000U / CONFIG_SYSTICK_HZ)) + ((csi_timer_get_load_value(&tick_timer) - csi_timer_get_remaining_value(&tick_timer)) / (freq / 1000U));
-
-        if (time >= last_time_ms) {
-            break;
-        }
-    }
-
-    last_time_ms = time;
+    time = (uint32_t)(csi_clint_get_value() * 1000U / (uint64_t)soc_get_coretim_freq());
     return time;
 }
 
 uint64_t csi_tick_get_us(void)
 {
-    uint64_t time, freq;
-    uint32_t temp;
-    freq = soc_get_timer_freq(CONFIG_TICK_TIMER_IDX);
+    uint64_t time;
 
-    while (1) {
-        /* the time of coretim pass */
-        temp = csi_timer_get_load_value(&tick_timer) - csi_timer_get_remaining_value(&tick_timer);
-        time = ((uint64_t)temp * 1000U) / (freq / 1000U);
-        /* the time of csi_tick */
-        time += ((uint64_t)csi_tick * (1000000U / CONFIG_SYSTICK_HZ));
-
-        if (time >= last_time_us) {
-            break;
-        }
-    }
-
-    last_time_us = time;
+    time = csi_clint_get_value() * 1000U * 1000U / (uint64_t)soc_get_coretim_freq();
     return time;
 }
 
 static void _mdelay(void)
 {
-    uint32_t load = csi_timer_get_load_value(&tick_timer);
-    uint32_t start_r = csi_timer_get_remaining_value(&tick_timer);
-    uint32_t cur_r;
-    uint32_t cnt   = (soc_get_timer_freq(CONFIG_TICK_TIMER_IDX) / 1000U);
+    uint64_t start = csi_clint_get_value();
+    uint64_t cur;
+    uint32_t cnt = (soc_get_coretim_freq() / 1000U);
 
     while (1) {
-        cur_r = csi_timer_get_remaining_value(&tick_timer);
+        cur = csi_clint_get_value();
 
-        if (start_r > cur_r) {
-            if ((start_r - cur_r) >= cnt) {
+        if (start > cur) {
+            if ((start - cur) >= cnt) {
                 break;
             }
         } else {
-            if (((load - cur_r) + start_r) >= cnt) {
+            if (cur - start >= cnt) {
                 break;
             }
         }
     }
 }
+
+static void _10udelay(void)
+{
+    uint64_t start = csi_clint_get_value();
+    uint32_t cnt = (soc_get_coretim_freq() / 1000U / 100U);
+
+    while (1) {
+        uint64_t cur = csi_clint_get_value();
+
+        if (start > cur) {
+            if ((start - cur) >= cnt) {
+                break;
+            }
+        } else {
+            if (cur - start >= cnt) {
+                break;
+            }
+        }
+    }
+}
+
+#else
+
+static void tick_irq_handler(void *arg)
+{
+    csi_tick_increase();
+    csi_coret_config(soc_get_coretim_freq() / CONFIG_SYSTICK_HZ, CORET_IRQn);
+#ifndef CONFIG_KERNEL_NONE
+    extern void aos_sys_tick_handler(void);
+    aos_sys_tick_handler();
+#endif
+}
+
+csi_error_t csi_tick_init(void)
+{
+    tick_dev.irq_num = CORET_IRQn;
+    csi_vic_set_prio(CORET_IRQn, 31U);
+    csi_irq_attach(tick_dev.irq_num, &tick_irq_handler, &tick_dev);
+    csi_coret_config((soc_get_coretim_freq() / CONFIG_SYSTICK_HZ), CORET_IRQn);
+    csi_irq_enable(tick_dev.irq_num);
+    return CSI_OK;
+}
+
+uint32_t csi_tick_get_ms(void)
+{
+    uint32_t time;
+    time = ((((uint64_t)csi_coret_get_valueh() << 32U) | csi_coret_get_value())) / (soc_get_coretim_freq() / 1000U);
+    return time;
+}
+
+uint64_t csi_tick_get_us(void)
+{
+    uint64_t time;
+    time = ((((uint64_t)csi_coret_get_valueh() << 32U) | csi_coret_get_value())) / (soc_get_coretim_freq() / 1000000U);
+    return time;
+}
+
+void _mdelay(void)
+{
+    unsigned long long start, cur, delta;
+    uint32_t startl = csi_coret_get_value();
+    uint32_t starth = csi_coret_get_valueh();
+    uint32_t curl, curh;
+    uint32_t cnt = (soc_get_coretim_freq() / 1000U);
+    start = ((unsigned long long)starth << 32U) | startl;
+
+    while (1) {
+        curl = csi_coret_get_value();
+        curh = csi_coret_get_valueh();
+        cur = ((unsigned long long)curh << 32U) | curl;
+        delta = cur - start;
+
+        if (delta >= cnt) {
+            return;
+        }
+    }
+}
+
+static void _10udelay(void)
+{
+    unsigned long long start, cur;
+    uint32_t startl = csi_coret_get_value();
+    uint32_t starth = csi_coret_get_valueh();
+    uint32_t curl, curh;
+    uint32_t cnt = (soc_get_coretim_freq() / 1000U / 100U);
+    start = ((unsigned long long)starth << 32U) | startl;
+
+    while (1) {
+        curl = csi_coret_get_value();
+        curh = csi_coret_get_valueh();
+        cur = ((unsigned long long)curh << 32U) | curl;
+        if (start > cur) {
+            if ((start - cur) >= cnt) {
+                break;
+            }
+        } else {
+            if (cur - start >= cnt) {
+                break;
+            }
+        }
+    }
+}
+#endif /*__riscv_xlen*/
 
 __WEAK void mdelay(uint32_t ms)
 {
     while (ms) {
         ms--;
         _mdelay();
-    }
-}
-
-
-static void _10udelay(void)
-{
-    uint32_t load = csi_timer_get_load_value(&tick_timer);
-    uint32_t start_r = csi_timer_get_remaining_value(&tick_timer);
-    uint32_t cur_r;
-    uint32_t cnt   = (soc_get_timer_freq(CONFIG_TICK_TIMER_IDX) / 10U);
-
-    while (1) {
-        cur_r = csi_timer_get_remaining_value(&tick_timer);
-
-        if (start_r > cur_r) {
-            if ((start_r - cur_r) >= cnt) {
-                break;
-            }
-        } else {
-            if (((load - cur_r) + start_r) >= cnt) {
-                break;
-            }
-        }
     }
 }
 

@@ -11,12 +11,10 @@ void dump_data(uint8_t *data, int32_t len)
     int32_t i;
 
     for (i = 0; i < len; i++) {
-        if (i % 16 == 0) {
+        if (i % 16 == 0 && i != 0) {
             printf("\n");
         }
-
         printf("%02x ", data[i]);
     }
-
     printf("\n");
 }

@@ -515,6 +515,7 @@ static int app_key_set(const char *name, size_t len_rd,
 //     return 0;
 // }
 
+#if 0
 static int papp_key_set(const char *name, size_t len_rd, settings_read_cb read_cb,
 		   void *cb_arg)
 {
@@ -568,6 +569,7 @@ static int papp_key_set(const char *name, size_t len_rd, settings_read_cb read_c
 
     return 0;
 }
+#endif
 #endif
 
 static int hb_pub_set(const char *name, size_t len_rd,
@@ -810,6 +812,7 @@ static int prov_node_set(const char *name, size_t len_rd, settings_read_cb read_
     struct bt_mesh_node_t node_info = {0};
     int node_id = 0;
     int err;
+    uint8_t lpm_flag = 0;
 
     if (name == NULL) {
         BT_ERR("Invail name NULL");
@@ -830,8 +833,25 @@ static int prov_node_set(const char *name, size_t len_rd, settings_read_cb read_
     bt_addr_le_t addr;
     addr.type = node_info.addr_type;
     memcpy(addr.a.val, node_info.addr_val, 6);
-    provisioner_prov_restore_nodes_info(&addr, node_info.dev_uuid, node_info.oob_info, node_info.element_num,
-                                        node_info.unicast_addr, node_info.net_idx, node_info.flags, node_info.iv_index, node_info.dev_key, 0);
+
+#ifdef CONFIG_BT_MESH_LPM
+	lpm_flag = node_info.support_lpm;
+#endif
+    int node_index = provisioner_prov_restore_nodes_info(&addr, node_info.dev_uuid, node_info.oob_info, node_info.element_num,
+                                        node_info.unicast_addr, node_info.net_idx, node_info.flags, node_info.iv_index, node_info.dev_key, 0 ,lpm_flag, node_info.hb_period_log);
+    if (node_index < 0)
+    {
+        BT_ERR("Fail restore node %d", node_index);
+        return node_index;
+    }
+
+    err = provisioner_node_version_set(node_index, node_info.version);
+    if (err)
+    {
+        BT_ERR("Fail restore node version %d", err);
+        return err;
+    }
+
     return 0;
 }
 #endif
@@ -988,6 +1008,14 @@ static int mesh_commit(void)
         /* Nothing to do since we're not yet provisioned */
         return 0;
     }
+
+#ifdef CONFIG_GENIE_MESH_ENABLE
+    if (bt_mesh.app_keys[0].net_idx == BT_MESH_KEY_UNUSED)
+    {
+        BT_ERR("no app key 0\n");
+        return 0;
+    }
+#endif
 
     if (IS_ENABLED(CONFIG_BT_MESH_PB_GATT)) {
         bt_mesh_proxy_prov_disable(true);
@@ -1616,19 +1644,29 @@ static void clear_prov_nodes(int node_index)
 static void store_pending_prov_nodes(void)
 {
     struct bt_mesh_node_t *node = NULL;
-    char path[20] = {0};
-    int i;
-
+    char path[24] = {0};
     int node_count = provisioner_get_prov_node_count();
+	extern u16_t bt_mesh_provisioner_get_node_size();
+	uint16_t node_size = bt_mesh_provisioner_get_node_size();
+	uint16_t valid_node_count = 0;
+	int ret = 0;
 
-    for (i = 0; i < node_count; i++) {
-        node = bt_mesh_provisioner_get_node_info_by_id(i);
-
-        if (node && node->flag == MESH_NODE_FLAG_STORE) {
-            snprintk(path, sizeof(path), "bt/mesh/Node/%d", i);
-            settings_save_one(path, node, sizeof(*node));
-        }
-    }
+	for(uint16_t node_index = 0; node_index < node_size; node_index++) {
+		node = bt_mesh_provisioner_get_node_info_by_id(node_index);
+	    if(node) {
+            if (node->flag == MESH_NODE_FLAG_STORE) {
+               snprintk(path, sizeof(path), "bt/mesh/Node/%d", node_index);
+               ret = settings_save_one(path, node, sizeof(*node));
+			   if(ret) {
+				   BT_ERR("Failed to store nodes %d %d", node_index, ret);
+			   }
+            }
+			valid_node_count++;
+			if(valid_node_count == node_count) {
+			   return;
+			}
+		}
+	}
 }
 #endif
 
@@ -1697,10 +1735,12 @@ static void store_pending(struct k_work *work)
 
 void bt_mesh_store_rpl(struct bt_mesh_rpl *entry)
 {
+#ifndef CONFIG_GENIE_MESH_ENABLE
     entry->store = true;
     if ((entry->seq) % CONFIG_BT_MESH_RPL_STORE_RATE == 0) {
         schedule_store(BT_MESH_RPL_PENDING);
     }
+#endif
 }
 
 void bt_mesh_clear_node_rpl(uint16_t addr)

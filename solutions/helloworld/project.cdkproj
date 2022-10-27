@@ -1,65 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Project Name="helloworld" Version="1">
-  <Description>YoC helloworld SDK</Description>
+<Project Name="helloworld" Version="1" Language="CPP">
+  <Description>helloworld</Description>
   <MonitorProgress>
-    <FlashOperate>300</FlashOperate>
-    <DebugLaunch>25</DebugLaunch>
+    <FlashOperate>217</FlashOperate>
+    <DebugLaunch>118</DebugLaunch>
   </MonitorProgress>
-  <Chips>
-    <Chip ID="chip_sc5654" Version="v7.4.y" IsBasic="false"/>
-  </Chips>
-  <Boards>
-    <Board ID="cb5654" Version="v7.4.y" IsBasic="false"/>
-  </Boards>
-  <Packages>
-    <Package ID="sdk_chip_sc5654" Version="v7.4.y" IsBasic="false"/>
-    <Package ID="rhino_arch" Version="v7.4.y" IsBasic="false"/>
-    <Package ID="rhino_pwrmgmt" Version="v7.4.y" IsBasic="false"/>
-    <Package ID="chip_sc5654" Version="v7.4.y" IsBasic="false"/>
-    <Package ID="csi" Version="v7.4.y" IsBasic="false"/>
-    <Package ID="cb5654" Version="v7.4.y" IsBasic="false"/>
-    <Package ID="drv_wifi_rtl8723ds" Version="v7.4.y" IsBasic="false"/>
-    <Package ID="aos" Version="v7.4.y" IsBasic="false"/>
-    <Package ID="lwip" Version="v7.4.y" IsBasic="false"/>
-    <Package ID="drv_bt_rtl8723ds" Version="v7.4.y" IsBasic="false"/>
-    <Package ID="netmgr" Version="v7.4.y" IsBasic="false"/>
-    <Package ID="drv_sdmmc" Version="v7.4.y" IsBasic="false"/>
-    <Package ID="aos_hal" Version="v7.4.y" IsBasic="false"/>
-    <Package ID="minilibc" Version="v7.4.y" IsBasic="false"/>
-    <Package ID="hal_csi" Version="v7.4.y" IsBasic="false"/>
-    <Package ID="partition" Version="v7.4.y" IsBasic="false"/>
-    <Package ID="sec_crypto" Version="v7.4.y" IsBasic="false"/>
-    <Package ID="cli" Version="v7.4.y" IsBasic="false"/>
-    <Package ID="ulog" Version="v7.4.y" IsBasic="false"/>
-    <Package ID="drivers" Version="v7.4.y" IsBasic="false"/>
-    <Package ID="drv_snd_sc5654" Version="v7.4.y" IsBasic="false"/>
-    <Package ID="uservice" Version="v7.4.y" IsBasic="false"/>
-    <Package ID="minialsa" Version="v7.4.y" IsBasic="false"/>
-    <Package ID="posix" Version="v7.4.y" IsBasic="false"/>
-    <Package ID="vfs" Version="v7.4.y" IsBasic="false"/>
-    <Package ID="button" Version="v7.4.y" IsBasic="false"/>
-    <Package ID="rhino" Version="v7.4.y" IsBasic="false"/>
-    <Package ID="ipc" Version="v7.4.y" IsBasic="false"/>
-    <Package ID="kv" Version="v7.4.y" IsBasic="false"/>
-    <Package ID="fota" Version="v7.4.y" IsBasic="false"/>
-    <Package ID="httpclient" Version="v7.4.y" IsBasic="false"/>
-    <Package ID="transport" Version="v7.4.y" IsBasic="false"/>
-    <Package ID="mbedtls" Version="v7.4.y" IsBasic="false"/>
-    <Package ID="cjson" Version="v7.4.y" IsBasic="false"/>
-  </Packages>
   <MergedToYaml>yes</MergedToYaml>
   <Dependencies Name="BuildSet"/>
   <PackPathes>$(ProjectPath)/../../components|$(ProjectPath)/../../boards|$(ProjectPath)/Boards|$(ProjectPath)/Chips|$(ProjectPath)/Packages</PackPathes>
-  <DebugSessions>
-    <watchExpressions/>
-    <memoryExpressions>;;;</memoryExpressions>
-    <statistics>;;MHZ;</statistics>
-    <peripheralTabs/>
-    <WatchDisplayFormat>0</WatchDisplayFormat>
-    <LocalDisplayFormat>0</LocalDisplayFormat>
-    <debugLayout/>
-    <memoryTabColSizeExpressions>100:8;100:8;100:8;100:8;</memoryTabColSizeExpressions>
-  </DebugSessions>
+  <VendorInfo>
+    <VendorName>NULL</VendorName>
+  </VendorInfo>
   <BuildConfigs>
     <BuildConfig Name="BuildSet">
       <Target>
@@ -122,7 +73,7 @@
             <Init>yes</Init>
           </RAM5>
         </RAMBank>
-        <CPU>CK802</CPU>
+        <CPU>e907fp</CPU>
         <UseMiniLib>yes</UseMiniLib>
         <Endian>little</Endian>
         <UseHardFloat>no</UseHardFloat>
@@ -138,7 +89,7 @@
         <Preprocessor>no</Preprocessor>
         <Disassmeble>yes</Disassmeble>
         <CallGraph>no</CallGraph>
-        <Map>no</Map>
+        <Map>yes</Map>
       </Output>
       <User>
         <BeforeCompile>
@@ -147,20 +98,21 @@
         </BeforeCompile>
         <BeforeMake>
           <RunUserProg>yes</RunUserProg>
-          <UserProgName>"$(ProjectPath)/script/pre_build.sh"</UserProgName>
+          <UserProgName>"$(ProjectPath)/script/before_build.sh"</UserProgName>
         </BeforeMake>
         <AfterMake>
           <RunUserProg>yes</RunUserProg>
-          <UserProgName>"$(ProjectPath)/script/aft_build.sh"</UserProgName>
+          <UserProgName>"$(ProjectPath)/script/after_build.sh"</UserProgName>
         </AfterMake>
+        <Tools/>
       </User>
       <Compiler>
-        <Define>CONFIG_INIT_TASK_STACK_SIZE=2048;CONFIG_TCPIP=1;AOS_COMP_CLI="y";CLI_CONFIG_INBUF_SIZE=256;CLI_CONFIG_OUTBUF_SIZE=512;CLI_CONFIG_MAX_COMMANDS=64;CLI_CONFIG_MAX_ARG_NUM=16;CLI_CONFIG_MAX_ONCECMD_NUM=4;CLI_CONFIG_TASK_PRIORITY=60;CONFIG_UART_RECV_BUF_SIZE=1024;CONFIG_KERNEL_WORKQUEUE=1;CONFIG_KERNEL_RHINO=1;CONFIG_FOTA_IMG_AUTHENTICITY_NOT_CHECK=1;CONFIG_CJSON_WITHOUT_DOUBLE="y";CONFIG_CSI_V1=1;CONFIG_CSI="csi1";CONFIG_NON_ADDRESS_FLASH=1;BOARD_CB5654=1;CONFIG_CPU="ck803ef";CONFIG_CPU_CK803EF=1;CONFIG_VENDOR_NAME="silan";CONFIG_ARCH_INTERRUPTSTACK=1024;CONFIG_SYSTICK_HZ=100;CONFIG_NOT_SUPORRT_SASC=1;CONFIG_SEC_CRYPTO_SHA_SW=1;CONFIG_SEC_CRYPTO_RSA_SW=1;STDIO_UART=1;CONFIG_FOTA_BUFFER_SIZE=4096;CONFIG_CLI=1;CONFIG_DEBUG=1;CONFIG_PARITION_NO_VERIFY=1;__AOST_AOS_COMP_CLI__="y";__AOST_CLI_CONFIG_INBUF_SIZE__=256;__AOST_CLI_CONFIG_OUTBUF_SIZE__=512;__AOST_CLI_CONFIG_MAX_COMMANDS__=64;__AOST_CLI_CONFIG_MAX_ARG_NUM__=16;__AOST_CLI_CONFIG_MAX_ONCECMD_NUM__=4;__AOST_CLI_CONFIG_TASK_PRIORITY__=60;__AOST_BOARD_CB5654__=1;__AOST_STDIO_UART__=1;__AOST_CPU__="CK803EF";__AOST_ARCH__="CSKY";__ARCH___=1;__CPU_CK803EF__=1;__AOST_VENDOR__="SILAN";__AOST_CHIP__="CHIP_SC5654";__AOST_BOARD__="CB5654";__AOST_ALGORITHMS_PATH__="/mnt/d/ws/yoc7.4.1_test/components/chip_sc5654/configs/SC5654A_SPIFlash_CDK.elf";__AOST_CHIP_PATH__="/mnt/d/ws/yoc7.4.1_test/components/chip_sc5654";__AOST_BOARD_PATH__="/mnt/d/ws/yoc7.4.1_test/boards/cb5654";__AOST_SOLUTION_PATH__="/mnt/d/ws/yoc7.4.1_test/solutions/helloworld";</Define>
+        <Define/>
         <Undefine/>
-        <Optim>Optimize (-Os)</Optim>
+        <Optim>Optimize (-O2)</Optim>
         <DebugLevel>Default (-g)</DebugLevel>
-        <IncludePath>$(ProjectPath)/src;$(ProjectPath)/include</IncludePath>
-        <OtherFlags>-mhigh-registers -mdsp -ffunction-sections -fdata-sections -mhard-float -Wl,-zmax-page-size=1024 -Wno-address -Wno-unused-but-set-variable -Wno-main -Wno-unused-function -Os</OtherFlags>
+        <IncludePath/>
+        <OtherFlags/>
         <Verbose>no</Verbose>
         <Ansi>no</Ansi>
         <Syntax>no</Syntax>
@@ -170,35 +122,39 @@
         <AllWarn>yes</AllWarn>
         <WarnErr>no</WarnErr>
         <OneElfS>no</OneElfS>
+        <OneElfSPerData>no</OneElfSPerData>
         <Fstrict>no</Fstrict>
       </Compiler>
       <Asm>
-        <Define>CONFIG_INIT_TASK_STACK_SIZE=2048;CONFIG_TCPIP=1;AOS_COMP_CLI="y";CLI_CONFIG_INBUF_SIZE=256;CLI_CONFIG_OUTBUF_SIZE=512;CLI_CONFIG_MAX_COMMANDS=64;CLI_CONFIG_MAX_ARG_NUM=16;CLI_CONFIG_MAX_ONCECMD_NUM=4;CLI_CONFIG_TASK_PRIORITY=60;CONFIG_UART_RECV_BUF_SIZE=1024;CONFIG_KERNEL_WORKQUEUE=1;CONFIG_KERNEL_RHINO=1;CONFIG_FOTA_IMG_AUTHENTICITY_NOT_CHECK=1;CONFIG_CJSON_WITHOUT_DOUBLE="y";CONFIG_CSI_V1=1;CONFIG_CSI="csi1";CONFIG_NON_ADDRESS_FLASH=1;BOARD_CB5654=1;CONFIG_CPU="ck803ef";CONFIG_CPU_CK803EF=1;CONFIG_VENDOR_NAME="silan";CONFIG_ARCH_INTERRUPTSTACK=1024;CONFIG_SYSTICK_HZ=100;CONFIG_NOT_SUPORRT_SASC=1;CONFIG_SEC_CRYPTO_SHA_SW=1;CONFIG_SEC_CRYPTO_RSA_SW=1;STDIO_UART=1;CONFIG_FOTA_BUFFER_SIZE=4096;CONFIG_CLI=1;CONFIG_DEBUG=1;CONFIG_PARITION_NO_VERIFY=1;__AOST_AOS_COMP_CLI__="y";__AOST_CLI_CONFIG_INBUF_SIZE__=256;__AOST_CLI_CONFIG_OUTBUF_SIZE__=512;__AOST_CLI_CONFIG_MAX_COMMANDS__=64;__AOST_CLI_CONFIG_MAX_ARG_NUM__=16;__AOST_CLI_CONFIG_MAX_ONCECMD_NUM__=4;__AOST_CLI_CONFIG_TASK_PRIORITY__=60;__AOST_BOARD_CB5654__=1;__AOST_STDIO_UART__=1;__AOST_CPU__="CK803EF";__AOST_ARCH__="CSKY";__ARCH___=1;__CPU_CK803EF__=1;__AOST_VENDOR__="SILAN";__AOST_CHIP__="CHIP_SC5654";__AOST_BOARD__="CB5654";__AOST_ALGORITHMS_PATH__="/mnt/d/ws/yoc7.4.1_test/components/chip_sc5654/configs/SC5654A_SPIFlash_CDK.elf";__AOST_CHIP_PATH__="/mnt/d/ws/yoc7.4.1_test/components/chip_sc5654";__AOST_BOARD_PATH__="/mnt/d/ws/yoc7.4.1_test/boards/cb5654";__AOST_SOLUTION_PATH__="/mnt/d/ws/yoc7.4.1_test/solutions/helloworld";</Define>
+        <Define/>
         <Undefine/>
-        <IncludePath>$(ProjectPath)/src;$(ProjectPath)/include</IncludePath>
+        <IncludePath/>
         <OtherFlags/>
         <DebugLevel>gdwarf2</DebugLevel>
       </Asm>
       <Linker>
         <Garbage>yes</Garbage>
         <Garbage2>yes</Garbage2>
-        <LDFile>$(ProjectPath)/gcc_eflash.ld</LDFile>
+        <LDFile/>
         <LibName/>
         <LibPath/>
-        <OtherFlags>-Wl,-zmax-page-size=1024 ,-ckmap="yoc.map"</OtherFlags>
+        <OtherFlags/>
         <AutoLDFile>no</AutoLDFile>
         <LinkType>whole-archive</LinkType>
+        <IncludeAllLibs>yes</IncludeAllLibs>
       </Linker>
       <Debug>
-        <LoadApplicationAtStartup>no</LoadApplicationAtStartup>
+        <LoadApplicationAtStartup>yes</LoadApplicationAtStartup>
         <Connector>ICE</Connector>
-        <StopAt>no</StopAt>
+        <StopAt>yes</StopAt>
         <StopAtText>main</StopAtText>
-        <InitFile>$(ProjectPath)/script/gdbinit</InitFile>
-        <AutoRun>no</AutoRun>
-        <ResetType>Hard Reset</ResetType>
+        <InitFile>$(ProjectPath)/gdbinit</InitFile>
+        <AfterLoadFile/>
+        <AutoRun>yes</AutoRun>
+        <ResetType>nReset</ResetType>
         <SoftResetVal/>
         <ResetAfterLoad>no</ResetAfterLoad>
+        <AfterResetFile/>
         <Dumpcore>no</Dumpcore>
         <DumpcoreText>$(ProjectPath)/$(ProjectName).cdkcore</DumpcoreText>
         <ConfigICE>
@@ -207,6 +163,7 @@
           <CPUNumber>0</CPUNumber>
           <Clock>12000</Clock>
           <Delay>10</Delay>
+          <NResetDelay>100</NResetDelay>
           <WaitReset>500</WaitReset>
           <DDC>yes</DDC>
           <TRST>no</TRST>
@@ -220,6 +177,11 @@
           <GDBName/>
           <GDBServerType>Local</GDBServerType>
           <OtherFlags/>
+          <ICEEnablePCSampling>yes</ICEEnablePCSampling>
+          <ICESamplingFreq>1000</ICESamplingFreq>
+          <RemoteICEEnablePCSampling>yes</RemoteICEEnablePCSampling>
+          <RemoteICESamplingPort>1026</RemoteICESamplingPort>
+          <Version>latest</Version>
         </ConfigICE>
         <ConfigSIM>
           <SIMTarget>soccfg/cskyv2/rhea802.xml</SIMTarget>
@@ -227,6 +189,7 @@
           <NoGraphic>yes</NoGraphic>
           <Log>no</Log>
           <SimTrace>no</SimTrace>
+          <Version>latest</Version>
         </ConfigSIM>
         <ConfigOpenOCD>
           <OpenOCDExecutablePath/>
@@ -235,12 +198,15 @@
           <OpenOCDTclPortEnable>no</OpenOCDTclPortEnable>
           <OpenOCDTclPort>6666</OpenOCDTclPort>
           <OpenOCDConfigOptions/>
+          <OpenOCDTimeout>5000</OpenOCDTimeout>
+          <PluginID>openocd-sifive</PluginID>
+          <Version>latest</Version>
         </ConfigOpenOCD>
       </Debug>
       <Flash>
-        <InitFile>$(ProjectPath)/script/flash.init</InitFile>
+        <InitFile>$(ProjectPath)/cdkinitflash</InitFile>
         <Erase>Erase Sectors</Erase>
-        <Algorithms Path="">/mnt/d/ws/yoc7.4.1_test/components/chip_sc5654/configs/SC5654A_SPIFlash_CDK.elf</Algorithms>
+        <Algorithms Path=""/>
         <Program>yes</Program>
         <Verify>yes</Verify>
         <ResetAndRun>no</ResetAndRun>
@@ -252,4 +218,14 @@
       </Flash>
     </BuildConfig>
   </BuildConfigs>
+  <DebugSessions>
+    <watchExpressions/>
+    <memoryExpressions>;;;</memoryExpressions>
+    <statistics>;;MHZ;</statistics>
+    <peripheralTabs/>
+    <WatchDisplayFormat>0</WatchDisplayFormat>
+    <LocalDisplayFormat>0</LocalDisplayFormat>
+    <debugLayout/>
+    <memoryTabColSizeExpressions>100:8;100:8;100:8;100:8;</memoryTabColSizeExpressions>
+  </DebugSessions>
 </Project>

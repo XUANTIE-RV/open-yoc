@@ -2,7 +2,7 @@
 #include "k_api.h"
 #include "cpu_pwr_config.h"
 
-//#if RHINO_CONFIG_CPU_PWR_MGMT
+//#if RHINO_CONFIG_PWRMGMT
 
 #include "cpu_pwr_hal_lib.h"
 #include "pwr_debug.h"
@@ -157,4 +157,4 @@ kstat_t board_cpu_pwr_topo_create(void)
     return retVal;
 }
 
-//#endif /* RHINO_CONFIG_CPU_PWR_MGMT */
+//#endif /* RHINO_CONFIG_PWRMGMT */

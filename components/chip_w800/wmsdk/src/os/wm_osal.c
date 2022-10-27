@@ -23,6 +23,7 @@
 #include "wm_type_def.h"
 #include "wm_osal.h"
 #include "wm_mem.h"
+#include "wm_config.h"
 
 #include "k_api.h"
 
@@ -175,11 +176,17 @@ tls_os_status_t tls_os_task_del(u8 prio,void (*freefun)(void))
     ktask_t *ptask = NULL;
 
     if (2 == prio)
+    {
         ptask = g_wm_task2; /* wm task priority is unique */
+    }
     else if (8 == prio)
+    {
         ptask = g_wm_task8;
+    }
     else if (9 == prio)
+    {
         ptask = g_wm_task9;
+    }
 
 	if (ptask)
 	{
@@ -187,11 +194,17 @@ tls_os_status_t tls_os_task_del(u8 prio,void (*freefun)(void))
 	    if (RHINO_SUCCESS == ret)
 	    {
     	    if (2 == prio)
+    	    {
                 g_wm_task2 = NULL;
+    	    }
             else if (8 == prio)
+            {
                 g_wm_task8 = NULL;
+            }
             else if (9 == prio)
+            {
                 g_wm_task9 = NULL;
+            }
     		if (freefun){
     			freefun();
     		}

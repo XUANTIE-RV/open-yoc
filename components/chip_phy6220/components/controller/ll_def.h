@@ -1505,6 +1505,7 @@ extern llPeriodicScannerInfo_t    g_llPeriodAdvSyncInfo[];
 //#define    LL_TASK_SLAVE_CONN             0x03
 //#define    LL_TASK_MASTER_CONN            0x04
 #define    LL_TASK_OTHERS                 0x10
+#define    LL_TASK_EXTENDED_SCAN_PENDING  0x11
 #define    LL_TASK_INVALID                0xFF
 extern uint8    llTaskState;
 

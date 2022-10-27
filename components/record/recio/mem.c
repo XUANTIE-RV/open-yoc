@@ -13,6 +13,7 @@
 typedef struct _mem_conf {
     uint32_t    address;
     int         size;
+    int         wpos;
 } mem_conf_t;
 
 static int mem_open(recio_t *io, const char *path)
@@ -55,13 +56,23 @@ static int mem_read(recio_t *io, uint8_t *buffer, int length, int timeoutms)
 {
     mem_conf_t *priv = (mem_conf_t *)io->private;
 
-    memcpy(buffer, (void *)priv->address, priv->size);
+    memcpy(buffer, (void *)((unsigned long)priv->address), priv->size);
     LOGD(TAG, "mem read:0x%x, %d", priv->address, priv->size);
     return priv->size;
 }
 
 static int mem_write(recio_t *io, uint8_t *buffer, int length, int timeoutms)
 {
+    mem_conf_t *priv = (mem_conf_t *)io->private;
+
+    uint8_t * wbuf = (void *)((unsigned long)priv->address);
+
+    if (priv->wpos + length <= priv->size) {
+        memcpy(&wbuf[priv->wpos], buffer, length);
+        priv->wpos += length;
+        return length;
+    }
+
     return -1;
 }
 

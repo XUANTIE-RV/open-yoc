@@ -24,6 +24,10 @@
 extern "C" {
 #endif
 
+#ifndef CONFIG_BT_RFCOMM_STASK_STACK_SIZE
+#define CONFIG_BT_RFCOMM_STASK_STACK_SIZE 1024
+#endif
+
 /* RFCOMM channels (1-30): pre-allocated for profiles to avoid conflicts */
 enum {
 	BT_RFCOMM_CHAN_HFP_HF = 1,
@@ -96,7 +100,7 @@ struct bt_rfcomm_dlc {
 
 	/* Stack & kernel data for TX thread */
 	struct k_thread            tx_thread;
-	BT_STACK(stack, 256);
+	BT_STACK(stack, CONFIG_BT_RFCOMM_STASK_STACK_SIZE);
 };
 
 struct bt_rfcomm_server {

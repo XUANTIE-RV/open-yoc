@@ -5,10 +5,14 @@
 #ifndef __MESH_PROVISIONER_H_
 #define __MESH_PROVISIONER_H_
 
+#include "aos/ble.h"
 
 #define DEVICE_NAME_MAX_LENGTH 28
 #define CID_NVAL 0xFFFF
-#define DEF_MAX_PROV_RETRY 3
+#define DEF_MAX_PROV_RETRY 5
+#define DEF_DEV_REPORT_TIMEOUT (500)//ms
+#define DEF_REPORT_DEV_SURVIVE_TIME (24000)//ms
+#define DEF_REPORT_QUEUE_LENGTH (25)
 
 
 typedef struct {
@@ -30,9 +34,12 @@ typedef enum {
     BT_MESH_EVENT_RECV_UNPROV_DEV_ADV,
     BT_MESH_EVENT_PROV_COMP,
     BT_MESH_EVENT_FOUND_DEV_TIMEOUT,
-    BT_MESH_EVENT_PROV_FAILD,
+    BT_MESH_EVENT_PROV_FAILED,
+    BT_MESH_EVENT_PROV_FAILED_WITH_INFO,
     BT_MESH_EVENT_OOB_INPUT_NUM,
+    BT_MESH_EVENT_OOB_INPUT_NUM_WITH_INFO,
     BT_MESH_EVENT_OOB_INPUT_STRING,
+    BT_MESH_EVENT_OOB_INPUT_STRING_WITH_INFO,
     BT_MESH_EVENT_OOB_INPUT_STATIC_OOB,
 } mesh_provisioner_event_en;
 
@@ -41,20 +48,48 @@ typedef enum {
 typedef void (*provisioner_cb)(mesh_provisioner_event_en event, void *p_arg);
 
 typedef struct {
+    uint8_t addr[6];
+    uint8_t addr_type;
+    uint8_t uuid[16];
+    uint8_t size;
+} oob_input_info_t;
+
+typedef struct {
+    uint8_t addr[6];
+    uint8_t addr_type;
+    uint8_t uuid[16];
+    uint8_t reason;
+    uint8_t bearer;
+} prov_failed_info_t;
+
+
+typedef struct {
     uint8_t *uuid;
     uint8_t uuid_length;
     uint8_t filter_start;
 } uuid_filter_t;
 
 typedef struct {
-    uint16_t unicast_addr_local;
+    dev_addr_t *addr;
+    uint8_t     size;
+} mac_filter_t;
+
+
+typedef struct {
     uint16_t unicast_addr_start;
+    uint16_t unicast_addr_end;
     uint8_t  attention_time;
     provisioner_cb cb;
 } provisioner_config_t;
 
 typedef struct {
-    const struct bt_mesh_provisioner *provisioner;
+    klist_t    list;
+    dev_addr_t addr;
+} mac_filters_dev;
+
+
+typedef struct {
+    struct bt_mesh_provisioner *provisioner;
 } ble_mesh_provisioner_t;
 
 int ble_mesh_provisioner_init(provisioner_config_t *param);
@@ -64,6 +99,16 @@ int ble_mesh_provisioner_enable();
 int ble_mesh_provisioner_disable();
 
 int ble_mesh_provisioner_dev_filter(uint8_t enable, uuid_filter_t *filter);
+
+int ble_mesh_provisioner_mac_filter_enable();
+
+int ble_mesh_provisioner_mac_filter_disable();
+
+int ble_mesh_provisioner_mac_filter_clear();
+
+int ble_mesh_provisioner_mac_filter_dev_add(uint8_t           mac_size,dev_addr_t *mac);
+
+int ble_mesh_provisioner_mac_filter_dev_rm(uint8_t            mac_size,dev_addr_t *mac);
 
 int ble_mesh_provisioner_show_dev(uint8_t enable, uint32_t timeout);
 

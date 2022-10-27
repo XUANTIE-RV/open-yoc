@@ -96,8 +96,9 @@ typedef enum {
 
 int32_t at_cmd_echo_on(void);
 int32_t at_cmd_event_on(void);
-
+#ifndef ARRAY_SIZE
 #define ARRAY_SIZE(array) (sizeof(array)/sizeof(array[0]))
+#endif
 int is_digit_str(const char *str);
 int at_parse_param_safe(char *fmt, char *buf, void **pval);
 

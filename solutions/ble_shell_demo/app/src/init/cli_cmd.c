@@ -1,8 +1,5 @@
 /*
- * Copyright (C) 2019-2020 Alibaba Group Holding Limited
- */
-/*
- * Copyright (C) 2019-2020 Alibaba Group Holding Limited
+ * Copyright (C) 2019-2022 Alibaba Group Holding Limited
  */
 
 #include <aos/aos.h>

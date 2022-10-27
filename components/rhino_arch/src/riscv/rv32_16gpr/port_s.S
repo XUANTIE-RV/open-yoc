@@ -104,12 +104,6 @@ tspend_handler:
     lw      a1, (a1)
     sw      sp, (a1)
 
-    li      t0, 0xE000E100
-    lw      t1, (t0)
-    li      t2, 0xFEFFFFFF
-    and     t1, t1, t2
-    sw      t1, (t0)
-
 __task_switch_nosave:
     la      a0, g_preferred_ready_task
     la      a1, g_active_task

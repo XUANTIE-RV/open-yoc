@@ -89,7 +89,7 @@ int32_t csi_i2s_config(i2s_handle_t handle, i2s_config_t *config)
 {
     I2S_NULL_PARAM_CHK(handle);
 
-    uint32_t value;
+    uint32_t value = 16;
     //ck_i2s_priv_v2_t *priv = (ck_i2s_priv_v2_t *)handle;
     //ck_i2s_v2_reg_t *addr = (ck_i2s_v2_reg_t *)priv->base;
 

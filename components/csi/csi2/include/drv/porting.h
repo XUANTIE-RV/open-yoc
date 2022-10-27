@@ -17,6 +17,17 @@
 #include <stdbool.h>
 #include <drv/common.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+typedef enum {
+    BOOTREASON_WDT      = 0,    // System WDT reset
+    BOOTREASON_SOFT     = 1,    // soft reset
+    BOOTREASON_POWER    = 2,    // chip power on reset
+    BOOTREASON_OTHER    = 0xFF
+} boot_reason_t;
+
 /**
   \brief       Soc get device frequence.
   \param[in]   idx      Device index
@@ -39,6 +50,7 @@ uint32_t soc_get_wdt_freq(uint32_t idx);
 uint32_t soc_get_sdio_freq(uint32_t idx);
 uint32_t soc_get_coretim_freq(void);
 uint32_t soc_get_cur_cpu_freq(void);
+boot_reason_t soc_get_boot_reason(void);
 
 /**
   \brief       Soc get device frequence.
@@ -86,10 +98,23 @@ void soc_dcache_clean_invalid_all(void);
 void soc_dcache_invalid_range(unsigned long addr, uint32_t size);
 
 /**
+  \brief       SOC Dcache invalid all.
+  \return      None
+*/
+void soc_dcache_invalid(void);
+
+/**
   \brief       SOC Dcache clean all.
   \return      None
 */
 void soc_dcache_clean(void);
+
+
+/**
+  \brief       SOC Dcache clean by range.
+  \return      None
+*/
+void soc_dcache_clean_range(unsigned long addr, uint32_t size);
 
 /**
   \brief       SOC Icache invalid all.
@@ -120,6 +145,10 @@ csi_error_t soc_pm_enter_sleep(csi_pm_mode_t mode);
   \return      Error code
 */
 csi_error_t soc_pm_config_wakeup_source(uint32_t wakeup_num, bool enable);
+#endif
+
+#ifdef __cplusplus
+}
 #endif
 
 #endif /* _DRV_PORTING_H_ */

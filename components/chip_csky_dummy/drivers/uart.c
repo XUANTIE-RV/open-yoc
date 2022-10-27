@@ -71,7 +71,7 @@ static uint8_t find_max_prime_num(uint32_t num)
 static void dw_uart_intr_recv_data(csi_uart_t *uart)
 {
     dw_uart_regs_t *uart_base = (dw_uart_regs_t *)uart->dev.reg_base;
-    uint32_t rxfifo_num = dw_uart_get_receive_fifo_waiting_data(uart_base);
+    uint32_t rxfifo_num = dw_uart_get_receive_fifo_waiting_data(uart_base); ///< TODO：获取接收FIFO中数据的数量到rxfifo_num
     uint32_t rxdata_num = (rxfifo_num > uart->rx_size) ? uart->rx_size : rxfifo_num;
 
     if ((uart->rx_data == NULL) || (uart->rx_size == 0U)) {
@@ -79,14 +79,14 @@ static void dw_uart_intr_recv_data(csi_uart_t *uart)
             uart->callback(uart, UART_EVENT_RECEIVE_FIFO_READABLE, uart->arg);
         } else {
             do {
-                dw_uart_getchar(uart_base);
+                dw_uart_getchar(uart_base); ///< TODO：从数据寄存器读取一个字符
             } while (--rxfifo_num);
         }
 
     } else {
 
         do {
-            *uart->rx_data = dw_uart_getchar(uart_base);
+            *uart->rx_data = dw_uart_getchar(uart_base); ///< TODO：从数据寄存器读取一个字符到*uart->rx_data
             uart->rx_size--;
             uart->rx_data++;
         } while (--rxdata_num);
@@ -113,13 +113,13 @@ static void uart_intr_send_data(csi_uart_t *uart)
     }
 
     for (i = 0U; i < trans_num; i++) {
-        dw_uart_putchar(uart_base, *uart->tx_data);
+        dw_uart_putchar(uart_base, *uart->tx_data); ///< TODO：写数据寄存器发送一个字符的数据
         uart->tx_size--;
         uart->tx_data++;
     }
 
     if (uart->tx_size == 0U) {
-        dw_uart_disable_trans_irq(uart_base);
+        dw_uart_disable_trans_irq(uart_base); ///< TODO：关闭串口发送中断
         uart->state.writeable = 1U;
 
         if (uart->callback) {
@@ -135,7 +135,7 @@ static void uart_intr_line_error(csi_uart_t *uart)
 
     uart->state.readable = 1U;
     uart->state.writeable = 1U;
-    uart_status = dw_uart_get_line_status(uart_base);
+    uart_status = dw_uart_get_line_status(uart_base); ///< TODO：获取串口状态到uart_status
 
     if (uart->callback) {
         if (uart_status & DW_UART_LSR_OE_ERROR) {
@@ -163,8 +163,9 @@ void dw_uart_irq_handler(void *arg)
 
     uint8_t intr_state;
 
-    intr_state = (uint8_t)(uart_base->IIR & 0xfU);
+    intr_state = (uint8_t)(uart_base->IIR & 0xfU); ///< TODO：获取串口中断的状态到intr_state
 
+    ///< 根据不同中断状态执行不同的处理函数
     switch (intr_state) {
         case DW_UART_IIR_IID_RECV_LINE_STATUS:  /* interrupt source: Overrun/parity/framing errors or break interrupt */
             uart_intr_line_error(uart);
@@ -191,6 +192,7 @@ csi_error_t csi_uart_init(csi_uart_t *uart, uint32_t idx)
     csi_error_t ret = CSI_OK;
     dw_uart_regs_t *uart_base;
 
+    ///< 获取中断号、基地址等相关信息
     ret = target_get(DEV_DW_UART_TAG, idx, &uart->dev);
 
     if (ret == CSI_OK) {
@@ -204,6 +206,8 @@ csi_error_t csi_uart_init(csi_uart_t *uart, uint32_t idx)
         uart->tx_data = NULL;
         uart->tx_dma  = NULL;
         uart->rx_dma  = NULL;
+
+        ///< 禁止中断控制器的对应的中断，注销中断服务函数
         dw_uart_disable_trans_irq(uart_base);
         dw_uart_disable_recv_irq(uart_base);
     }
@@ -223,6 +227,7 @@ void csi_uart_uninit(csi_uart_t *uart)
     uart->rx_data = NULL;
     uart->tx_data = NULL;
 
+    ///< 禁止中断控制器的对应的中断，注销中断服务函数
     dw_uart_disable_trans_irq(uart_base);
     dw_uart_disable_recv_irq(uart_base);
     csi_irq_disable((uint32_t)(uart->dev.irq_num));
@@ -241,6 +246,8 @@ ATTRIBUTE_DATA csi_error_t csi_uart_baud(csi_uart_t *uart, uint32_t baud)
     dw_uart_regs_t *uart_base;
     uint8_t temp[16];
     uart_base = (dw_uart_regs_t *)HANDLE_REG_BASE(uart);
+
+    ///< TODO：配置串口的波特率
 
     tx_pin_uart_to_gpio(uart->dev.idx, &tx_pin);
     rx_pin_uart_to_gpio(uart->dev.idx, &rx_pin);
@@ -277,6 +284,7 @@ csi_error_t csi_uart_format(csi_uart_t *uart,  csi_uart_data_bits_t data_bits,
     tx_pin_uart_to_gpio(uart->dev.idx, &tx_pin);
     rx_pin_uart_to_gpio(uart->dev.idx, &rx_pin);
 
+    ///< TODO：设置数据宽度
     switch (data_bits) {
         case UART_DATA_BITS_5:
             ret = dw_uart_config_data_bits(uart_base, 5U);
@@ -299,6 +307,7 @@ csi_error_t csi_uart_format(csi_uart_t *uart,  csi_uart_data_bits_t data_bits,
             break;
     }
 
+    ///< TODO：设置校验位
     if (ret == 0) {
         switch (parity) {
             case UART_PARITY_NONE:
@@ -318,6 +327,7 @@ csi_error_t csi_uart_format(csi_uart_t *uart,  csi_uart_data_bits_t data_bits,
                 break;
         }
 
+        ///< TODO：设置停止位
         if (ret == 0) {
             switch (stop_bits) {
                 case UART_STOP_BITS_1:
@@ -368,19 +378,19 @@ csi_error_t csi_uart_flowctrl(csi_uart_t *uart,  csi_uart_flowctrl_t flowctrl)
 
     switch (flowctrl) {
         case UART_FLOWCTRL_CTS:
-            dw_uart_wait_idle(uart_base);
-            dw_uart_enable_auto_flow_control(uart_base);
+            dw_uart_wait_idle(uart_base); ///< TODO：在一定时间内串口不繁忙
+            dw_uart_enable_auto_flow_control(uart_base); ///< TODO：使能自动流控
             break;
 
         case UART_FLOWCTRL_RTS_CTS:
-            dw_uart_wait_idle(uart_base);
-            dw_uart_enable_rts(uart_base);
-            dw_uart_enable_auto_flow_control(uart_base);
+            dw_uart_wait_idle(uart_base); ///< TODO：在一定时间内串口不繁忙
+            dw_uart_enable_rts(uart_base); ///< TODO：设置RTS
+            dw_uart_enable_auto_flow_control(uart_base); ///< TODO：使能自动流控
             break;
 
         case UART_FLOWCTRL_NONE:
-            dw_uart_wait_idle(uart_base);
-            dw_uart_disable_auto_flow_control(uart_base);
+            dw_uart_wait_idle(uart_base); ///< TODO：在一定时间内串口不繁忙
+            dw_uart_disable_auto_flow_control(uart_base); ///< TODO：关闭自动流控
             break;
 
         case UART_FLOWCTRL_RTS:
@@ -401,6 +411,8 @@ void csi_uart_putc(csi_uart_t *uart, uint8_t ch)
 
     uart_base = (dw_uart_regs_t *)uart->dev.reg_base;
 
+    ///< TODO：在一定时间内串口不繁忙则写数据寄存器发送数据
+
     while (!dw_uart_putready(uart_base) && timeout--);
 
     if (timeout) {
@@ -414,6 +426,8 @@ ATTRIBUTE_DATA uint8_t csi_uart_getc(csi_uart_t *uart)
 
     dw_uart_regs_t *uart_base;
     uart_base = (dw_uart_regs_t *)uart->dev.reg_base;
+
+    ///< TODO：有数据来了，读取一字字符后作为函数返回值返回
 
     while (!dw_uart_getready(uart_base));
 
@@ -432,9 +446,10 @@ int32_t csi_uart_receive(csi_uart_t *uart, void *data, uint32_t size, uint32_t t
 
     recv_start = csi_tick_get_ms();
     dw_uart_regs_t *uart_base = (dw_uart_regs_t *)uart->dev.reg_base;
-    intr_en_status = dw_uart_get_intr_en_status(uart_base);
-    dw_uart_disable_recv_irq(uart_base);
+    intr_en_status = dw_uart_get_intr_en_status(uart_base); ///< TODO：获取中断使能的状态intr_en_status
+    dw_uart_disable_recv_irq(uart_base); ///< TODO：关闭接收数据中断
 
+    ///< TODO：在超时时间内循环接收大小为size的数据并把接收到的数据长度记录为recv_num，超时则超时退出
     while (recv_num < (int32_t)size) {
         while (!dw_uart_getready(uart_base)) {
             if ((csi_tick_get_ms() - recv_start) >= timeout) {
@@ -453,7 +468,7 @@ int32_t csi_uart_receive(csi_uart_t *uart, void *data, uint32_t size, uint32_t t
         }
     }
 
-    dw_uart_set_intr_en_status(uart_base, intr_en_status);
+    dw_uart_set_intr_en_status(uart_base, intr_en_status); ///< TODO：使用intr_en_status恢复中断的状态
 
     return recv_num;
 }
@@ -464,7 +479,7 @@ csi_error_t dw_uart_receive_intr(csi_uart_t *uart, void *data, uint32_t num)
     uart->rx_data = (uint8_t *)data;
     uart->rx_size = num;
 
-    dw_uart_enable_recv_irq(uart_base);
+    dw_uart_enable_recv_irq(uart_base); ///< TODO：使能接收数据中断
 
     return CSI_OK;
 }
@@ -478,6 +493,7 @@ csi_error_t csi_uart_receive_async(csi_uart_t *uart, void *data, uint32_t size)
 
     csi_error_t ret;
 
+    ///< 调用异步或dma接收接口
     ret = uart->receive(uart, data, size);
 
     if (ret == CSI_OK) {
@@ -502,8 +518,10 @@ int32_t csi_uart_send(csi_uart_t *uart, const void *data, uint32_t size, uint32_
 
     uart_base = (dw_uart_regs_t *)uart->dev.reg_base;
     /* store the status of intr */
-    intr_en_status = dw_uart_get_intr_en_status(uart_base);
-    dw_uart_disable_trans_irq(uart_base);
+    intr_en_status = dw_uart_get_intr_en_status(uart_base); ///< TODO：获取中断使能的状态intr_en_status
+    dw_uart_disable_trans_irq(uart_base); ///< TODO：关闭发送数据中断
+
+    ///< TODO：在一定时间内串口不繁忙则写数据寄存器发送数据，发送的长度记为trans_num；超时则超时退出
     send_start = csi_tick_get_ms();
 
     while (trans_num < (int32_t)size) {
@@ -524,7 +542,7 @@ int32_t csi_uart_send(csi_uart_t *uart, const void *data, uint32_t size, uint32_
         }
     }
 
-    dw_uart_set_intr_en_status(uart_base, intr_en_status);
+    dw_uart_set_intr_en_status(uart_base, intr_en_status); ///< TODO：使用intr_en_status恢复中断的状态
 
     return trans_num;
 }
@@ -535,7 +553,7 @@ csi_error_t dw_uart_send_intr(csi_uart_t *uart, const void *data, uint32_t size)
 
     uart->tx_data = (uint8_t *)data;
     uart->tx_size = size;
-    dw_uart_enable_trans_irq(uart_base);
+    dw_uart_enable_trans_irq(uart_base); ///< TODO：打开发送数据中断
 
     return CSI_OK;
 }
@@ -548,6 +566,7 @@ csi_error_t csi_uart_send_async(csi_uart_t *uart, const void *data, uint32_t siz
     CSI_PARAM_CHK(uart->send, CSI_ERROR);
 
     csi_error_t ret;
+    ///< 异步或dma发送接口
     ret = uart->send(uart, data, size);
 
     if (ret == CSI_OK) {
@@ -566,11 +585,13 @@ csi_error_t csi_uart_attach_callback(csi_uart_t *uart, void  *callback, void *ar
 
     uart->callback = callback;
     uart->arg = arg;
+    ///<设置收发函数
     uart->send = dw_uart_send_intr;
     uart->receive = dw_uart_receive_intr;
+    ///<注册uart中断服务函数，打开中断控制器中对应的中断
     csi_irq_attach((uint32_t)(uart->dev.irq_num), &dw_uart_irq_handler, &uart->dev);
     csi_irq_enable((uint32_t)(uart->dev.irq_num));
-    dw_uart_enable_recv_irq(uart_base);
+    dw_uart_enable_recv_irq(uart_base); ///< TODO：开uart接收中断
 
     return CSI_OK;
 }
@@ -586,7 +607,9 @@ void csi_uart_detach_callback(csi_uart_t *uart)
     uart->arg = NULL;
     uart->send = NULL;
     uart->receive = NULL;
-    dw_uart_disable_recv_irq(uart_base);
+
+    dw_uart_disable_recv_irq(uart_base); ///< TODO：关uart接收中断
+    ///< 关闭中断控制器中对应的中断，注销中断服务函数
     csi_irq_disable((uint32_t)(uart->dev.irq_num));
     csi_irq_detach((uint32_t)(uart->dev.irq_num));
 }
@@ -608,24 +631,28 @@ static void dw_uart_dma_event_cb(csi_dma_ch_t *dma, csi_dma_event_t event, void 
 
     if (event == DMA_EVENT_TRANSFER_ERROR) {/* DMA transfer ERROR */
         if ((uart->tx_dma != NULL) && (uart->tx_dma->ch_id == dma->ch_id)) {
+            ///< 关闭DMA通道
             csi_dma_ch_stop(dma);
-            dw_uart_set_tx_etb_func(uart_base, 0U);
-            dw_uart_fifo_init(uart_base);
+            dw_uart_set_tx_etb_func(uart_base, 0U); ///< TODO：关闭串口发送数据的ETB功能
+            dw_uart_fifo_init(uart_base); ///< TODO：串口fifo的初始化
 
             uart->state.writeable = 1U;
 
+            ///< 调用用户回调，反馈结果给上层调用
             if (uart->callback) {
                 uart->callback(uart, UART_EVENT_ERROR_OVERFLOW, uart->arg);
             }
         } else {
+            ///< 关闭DMA通道
             csi_dma_ch_stop(dma);
-            dw_uart_set_rx_etb_func(uart_base, 0U);
-            dw_uart_fifo_init(uart_base);
+            dw_uart_set_rx_etb_func(uart_base, 0U); ///< TODO：关闭串口接收数据的ETB功能
+            dw_uart_fifo_init(uart_base); ///< TODO：串口fifo的初始化
             /* enable received data available */
-            dw_uart_enable_recv_irq(uart_base);
+            dw_uart_enable_recv_irq(uart_base); ///< TODO：使能接收数据中断
 
             uart->state.readable = 1U;
 
+            ///< 调用用户回调，反馈结果给上层调用
             if (uart->callback) {
                 uart->callback(uart, UART_EVENT_ERROR_FRAMING, uart->arg);
             }
@@ -633,30 +660,35 @@ static void dw_uart_dma_event_cb(csi_dma_ch_t *dma, csi_dma_event_t event, void 
     } else if (event == DMA_EVENT_TRANSFER_DONE) {/* DMA transfer complete */
         if ((uart->tx_dma != NULL) && (uart->tx_dma->ch_id == dma->ch_id)) {
 
+            ///< TODO：等待数据发送完成
             while(1) {
                 if (dw_uart_get_trans_fifo_waiting_data(uart_base) == 0U) {
                     break;
                 }
             }
 
-            dw_uart_set_tx_etb_func(uart_base, 0U);
+            dw_uart_set_tx_etb_func(uart_base, 0U); ///< TODO：关闭串口发送数据的ETB功能
+            ///< 关闭DMA通道
             csi_dma_ch_stop(dma);
-            dw_uart_fifo_init(uart_base);
+            dw_uart_fifo_init(uart_base); ///< TODO：关闭串口接收数据的ETB功能
 
             uart->state.writeable = 1U;
 
+            ///< 调用用户回调，反馈结果给上层调用
             if (uart->callback) {
                 uart->callback(uart, UART_EVENT_SEND_COMPLETE, uart->arg);
             }
         } else {
-            dw_uart_set_rx_etb_func(uart_base, 0U);
+            dw_uart_set_rx_etb_func(uart_base, 0U); ///< TODO：关闭串口接收数据的ETB功能
+            //< 关闭DMA通道
             csi_dma_ch_stop(dma);
-            dw_uart_fifo_init(uart_base);
+            dw_uart_fifo_init(uart_base); ///< TODO：关闭串口接收数据的ETB功能
             /* enable received data available */
-            dw_uart_enable_recv_irq(uart_base);
+            dw_uart_enable_recv_irq(uart_base); ///< TODO：使能接收数据中断
 
             uart->state.readable = 1U;
 
+            ///< 调用回调，反馈结果给上层调用
             if (uart->callback) {
                 uart->callback(uart, UART_EVENT_RECEIVE_COMPLETE, uart->arg);
             }
@@ -674,6 +706,7 @@ csi_error_t dw_uart_send_dma(csi_uart_t *uart, const void *data, uint32_t num)
 
     uart->tx_data = (uint8_t *)data;
     uart->tx_size = num;
+    ///< TODO：关闭串口收发中断
     dw_uart_disable_recv_irq(uart_base);
     dw_uart_disable_trans_irq(uart_base);
     config.src_inc = DMA_ADDR_INC;
@@ -703,9 +736,9 @@ csi_error_t dw_uart_send_dma(csi_uart_t *uart, const void *data, uint32_t num)
     }
 
     soc_dcache_clean_invalid_range((unsigned long)uart->tx_data, uart->tx_size);
-    dw_uart_set_fcr_reg(uart_base, fcr_reg);
+    dw_uart_set_fcr_reg(uart_base, fcr_reg); ///< TODO：设置FIFO的触发级别
     csi_dma_ch_start(uart->tx_dma, (void *)uart->tx_data, (uint8_t *) & (uart_base->THR), uart->tx_size);
-    dw_uart_set_tx_etb_func(uart_base, DW_UART_HTX_TX_ETB_FUNC_EN);
+    dw_uart_set_tx_etb_func(uart_base, DW_UART_HTX_TX_ETB_FUNC_EN); ///< TODO：使能串口发送数据的ETB功能
 
     return CSI_OK;
 }
@@ -719,6 +752,7 @@ csi_error_t dw_uart_receive_dma(csi_uart_t *uart, void *data, uint32_t num)
     dw_uart_regs_t *uart_base = (dw_uart_regs_t *)uart->dev.reg_base;
     csi_dma_ch_t *dma = (csi_dma_ch_t *)uart->rx_dma;
 
+    ///< TODO：关闭串口收发中断
     dw_uart_disable_trans_irq(uart_base);
     dw_uart_disable_recv_irq(uart_base);
     uart->rx_data = (uint8_t *)data;
@@ -746,9 +780,9 @@ csi_error_t dw_uart_receive_dma(csi_uart_t *uart, void *data, uint32_t num)
         }
 
         soc_dcache_clean_invalid_range((unsigned long)uart->rx_data, uart->rx_size);
-        dw_uart_set_fcr_reg(uart_base, fcr_reg | DW_UART_FCR_RFIFOR_RESET);
+        dw_uart_set_fcr_reg(uart_base, fcr_reg | DW_UART_FCR_RFIFOR_RESET); ///< TODO：用fcr_reg设置FIFO的触发级别
         csi_dma_ch_start(uart->rx_dma, (uint8_t *) & (uart_base->RBR), (void *)uart->rx_data, uart->rx_size);
-        dw_uart_set_rx_etb_func(uart_base, DW_UART_HTX_RX_ETB_FUNC_EN);
+        dw_uart_set_rx_etb_func(uart_base, DW_UART_HTX_RX_ETB_FUNC_EN); ///< TODO：使能串口接收数据的ETB功能
     }
     return ret;
 }
@@ -760,10 +794,12 @@ csi_error_t csi_uart_link_dma(csi_uart_t *uart, csi_dma_ch_t *tx_dma, csi_dma_ch
     csi_error_t ret = CSI_OK;
 
     if (tx_dma != NULL) {
+        ///< 获取一个dma通道到tx_dma
         tx_dma->parent = uart;
         ret = csi_dma_ch_alloc(tx_dma, -1, -1);
 
         if (ret == CSI_OK) {
+            ///< 获取一个dma通道成功后设置DMA回调函数及dma发送函数
             csi_dma_ch_attach_callback(tx_dma, dw_uart_dma_event_cb, NULL);
             uart->tx_dma = tx_dma;
             uart->send = dw_uart_send_dma;
@@ -771,12 +807,17 @@ csi_error_t csi_uart_link_dma(csi_uart_t *uart, csi_dma_ch_t *tx_dma, csi_dma_ch
             tx_dma->parent = NULL;
         }
     } else {
+        ///< 清除 uart dma 发
         if (uart->tx_dma) {
+            ///< 清除 uart dma 发送参数
             csi_dma_ch_detach_callback(uart->tx_dma);
+            ///< 释放dma 通道
             csi_dma_ch_free(uart->tx_dma);
+            ///< 清除 uart dma 发送接口
             uart->tx_dma = NULL;
         }
 
+        ///< 设置 uart  发送接口为中断发送接口
         uart->send = dw_uart_send_intr;
     }
 

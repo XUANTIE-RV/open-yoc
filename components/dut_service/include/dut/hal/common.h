@@ -55,4 +55,9 @@ int dut_hal_factorydata_read(uint32_t offset, uint8_t *buffer, uint32_t length);
  */
 int dut_hal_factorydata_store(uint32_t offset, uint8_t *buffer, uint32_t length);
 
+int dut_hal_test_gpio_read(uint8_t wrgpio, uint8_t *value);
+
+int dut_hal_test_gpio_write(uint8_t wrgpio, uint8_t value);
+
+int dut_hal_rx_current_test(uint32_t sleep_time);
 #endif

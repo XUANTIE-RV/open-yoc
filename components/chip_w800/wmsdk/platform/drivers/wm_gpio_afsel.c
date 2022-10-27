@@ -566,6 +566,108 @@ void wm_adc_config(u8 Channel)
                 break;                
         }
 }
+void wm_psram_ck_config(enum tls_io_name io_name)
+{
+	switch(io_name)
+	{
+		case WM_IO_PB_00:
+			tls_io_cfg_set(io_name, WM_IO_OPTION4);
+			break;
+
+		case WM_IO_PA_15:
+			tls_io_cfg_set(io_name, WM_IO_OPTION1);
+			break;
+
+		default:
+			TLS_DBGPRT_ERR("psram ck afsel config error!");
+			break;
+	}
+}
+void wm_psram_cs_config(enum tls_io_name io_name)
+{
+	switch(io_name)
+	{
+		case WM_IO_PB_01:
+			tls_io_cfg_set(io_name, WM_IO_OPTION4);
+			break;
+
+		case WM_IO_PB_27:
+			tls_io_cfg_set(io_name, WM_IO_OPTION1);
+			break;
+
+		default:
+			TLS_DBGPRT_ERR("psram cs afsel config error!");
+			break;
+	}
+}
+void wm_psram_dat0_config(enum tls_io_name io_name)
+{
+	switch(io_name)
+	{
+		case WM_IO_PB_02:
+			tls_io_cfg_set(io_name, WM_IO_OPTION4);
+			break;
+
+		case WM_IO_PB_28:
+			tls_io_cfg_set(io_name, WM_IO_OPTION1);
+			break;
+
+		default:
+			TLS_DBGPRT_ERR("psram dat0 afsel config error!");
+			break;
+	}
+}
+void wm_psram_dat1_config(enum tls_io_name io_name)
+{
+	switch(io_name)
+	{
+		case WM_IO_PB_03:
+			tls_io_cfg_set(io_name, WM_IO_OPTION4);
+			break;
+
+		case WM_IO_PB_29:
+			tls_io_cfg_set(io_name, WM_IO_OPTION1);
+			break;
+
+		default:
+			TLS_DBGPRT_ERR("psram dat1 afsel config error!");
+			break;
+	}
+}
+void wm_psram_dat2_config(enum tls_io_name io_name)
+{
+	switch(io_name)
+	{
+		case WM_IO_PB_04:
+			tls_io_cfg_set(io_name, WM_IO_OPTION4);
+			break;
+
+		case WM_IO_PB_30:
+			tls_io_cfg_set(io_name, WM_IO_OPTION1);
+			break;
+
+		default:
+			TLS_DBGPRT_ERR("psram dat2 afsel config error!");
+			break;
+	}
+}
+void wm_psram_dat3_config(enum tls_io_name io_name)
+{
+	switch(io_name)
+	{
+		case WM_IO_PB_05:
+			tls_io_cfg_set(io_name, WM_IO_OPTION4);
+			break;
+
+		case WM_IO_PB_31:
+			tls_io_cfg_set(io_name, WM_IO_OPTION1);
+			break;
+
+		default:
+			TLS_DBGPRT_ERR("psram dat3 afsel config error!");
+			break;
+	}
+}
 
 void wm_gpio_af_disable(void)
 {

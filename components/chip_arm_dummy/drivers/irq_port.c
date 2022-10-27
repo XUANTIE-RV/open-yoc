@@ -15,6 +15,7 @@
 
 void soc_irq_enable(uint32_t irq_num)
 {
+///< 使能中断控制器中对应的中断
 #ifdef CONFIG_SYSTEM_SECURE
     csi_vic_enable_sirq((int32_t)irq_num);
 #else
@@ -28,6 +29,7 @@ void soc_irq_enable(uint32_t irq_num)
 
 void soc_irq_disable(uint32_t irq_num)
 {
+///< 关闭中断控制器中对应的中断
 #ifdef CONFIG_SYSTEM_SECURE
     csi_vic_disable_sirq((int32_t)irq_num);
 #else
@@ -41,6 +43,7 @@ void soc_irq_disable(uint32_t irq_num)
 
 bool soc_irq_is_enabled(uint32_t irq_num)
 {
+///< 获取中断控制器中对应的中断是否使能的状态
     bool ret;
 
 #ifdef __arm__
@@ -58,6 +61,7 @@ bool soc_irq_is_enabled(uint32_t irq_num)
 
 void soc_irq_priority(uint32_t irq_num, uint32_t priority)
 {
+///< 设置中断控制器中对应的中断的优先级
 #ifdef __arm__
     __NVIC_SetPriority(irq_num, priority);
 #else
@@ -67,6 +71,7 @@ void soc_irq_priority(uint32_t irq_num, uint32_t priority)
 
 void soc_irq_enable_wakeup(uint32_t irq_num)
 {
+///< 使能中断控制器对应的中断的唤醒
 #ifdef __arm__
 #else
     csi_vic_set_wakeup_irq((int32_t)irq_num);
@@ -75,6 +80,7 @@ void soc_irq_enable_wakeup(uint32_t irq_num)
 
 void soc_irq_disable_wakeup(uint32_t irq_num)
 {
+///< 禁止中断控制器对应的中断的唤醒
 #ifdef __arm__
 #else
     csi_vic_clear_wakeup_irq((int32_t)irq_num);

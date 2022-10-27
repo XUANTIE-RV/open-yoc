@@ -1,3 +1,6 @@
+/*
+ * Copyright (C) 2019-2020 Alibaba Group Holding Limited
+ */
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
@@ -25,7 +28,7 @@ int snd_card_free(snd_card_drv_t *card)
 int aos_card_attach(const char *name, card_dev_t **card)
 {
     *card = (card_dev_t *)device_open(name);
-    return *card > 0? 0 : -1;
+    return *card == NULL? 0 : -1;
 }
 
 int aos_card_lpm(const char *name ,int state)

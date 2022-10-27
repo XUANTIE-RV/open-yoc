@@ -126,7 +126,7 @@ typedef	_CLOCK_T_	clock_t;
 #endif
 
 #if !defined(__time_t_defined) && !defined(_TIME_T_DECLARED)
-typedef	int32_t	time_t;
+typedef	_TIME_T_	time_t;
 #define	__time_t_defined
 #define	_TIME_T_DECLARED
 #endif
@@ -236,10 +236,14 @@ typedef	__suseconds_t	suseconds_t;
 typedef	__int64_t	sbintime_t;
 
 #include <sys/features.h>
+#ifdef __THEAD_SIZEOF_PTHREAD_ATTR_T
+#include <sys/_pthreadtypes.h>
+#else
 // #include <sys/_pthreadtypes.h>
+typedef void    *pthread_t;
+#endif
 #include <machine/types.h>
 
-typedef void    *pthread_t;
 // typedef int      pthread_once_t;
 // typedef int      pid_t;
 

@@ -27,7 +27,7 @@ static void cache_init(void)
     uint32_t mxstatus = __get_MXSTATUS();
     mxstatus |= (1 << 22);
     __set_MXSTATUS(mxstatus);
-    csi_dcache_enable();
+
     csi_icache_enable();
 }
 
@@ -77,6 +77,7 @@ void SystemInit(void)
     cache_init();
     section_init();
     interrupt_init();
+    soc_set_sys_freq(10000000);
     csi_tick_init();
 }
 

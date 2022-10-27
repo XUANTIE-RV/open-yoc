@@ -31,7 +31,7 @@
 #include <soc.h>
 #include <clock.h>
 
-#include "OSAL.h"
+//#include "OSAL.h"
 #include "clock.h"
 #include "pwrmgr.h"
 #include "error.h"

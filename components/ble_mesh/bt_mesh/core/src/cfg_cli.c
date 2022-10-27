@@ -825,13 +825,12 @@ static void node_reset_status(struct bt_mesh_model *model,
 		ctx->net_idx, ctx->app_idx, ctx->addr, buf->len,
 		bt_hex(buf->data, buf->len));
 
-#ifdef CONFIG_BT_MESH_EVENT_CALLBACK
-    bt_mesh_model_evt_t evt_data;
-    evt_data.source_addr = ctx->addr;
-    evt_data.user_data = buf;
-    mesh_model_evt_cb event_cb = bt_mesh_event_get_cb_func();
-    if (event_cb) {
-        event_cb(BT_MESH_MODEL_EVT_NODE_RESET_STATUS, &evt_data);
+#if  defined(CONFIG_BT_MESH_EVENT_CALLBACK) && defined (CONFIG_BT_MESH_PROVISIONER)
+    int ret = 0;
+    extern int provisioner_upper_reset_node(uint16_t unicast_addr);
+    ret = provisioner_upper_reset_node(ctx->addr);
+    if(ret == -ENODEV) {
+        BT_ERR("Get %04x rst status,Node removed already",ctx->addr);
     }
 #endif
 	if (cli->op_pending != OP_NODE_RESET_STATUS) {
@@ -958,6 +957,61 @@ static int cli_wait(void)
 	return err;
 }
 
+#if defined(CONFIG_BT_BQB) && CONFIG_BT_BQB
+static struct bt_mesh_app_key *_app_key_alloc(void)
+{
+    int i;
+
+    for (i = 0; i < ARRAY_SIZE(bt_mesh.app_keys); i++) {
+        if (!bt_mesh.app_keys[i].appkey_active) {
+            return &bt_mesh.app_keys[i];
+        }
+    }
+    return NULL;
+}
+
+uint8_t bt_mesh_app_key_add(uint16_t app_idx, uint16_t net_idx,
+                          const uint8_t key[16])
+{
+    struct bt_mesh_app_key *app_key = NULL;
+    if (!bt_mesh_subnet_get(net_idx)) {
+        return STATUS_INVALID_NETKEY;
+    }
+
+    app_key = bt_mesh_app_key_find(app_idx);
+    if (app_key) {
+        if (app_key->app_idx == app_idx) {
+            if (app_key->net_idx != net_idx) {
+                return STATUS_INVALID_BINDING;
+            }
+
+            if (memcmp(key, app_key->keys[0].val, 16)) {
+                return STATUS_IDX_ALREADY_STORED;
+            }
+
+            return STATUS_SUCCESS;
+        }
+    } else {
+            app_key = _app_key_alloc();
+            if(!app_key) {
+                return STATUS_INSUFF_RESOURCES;
+            }
+            if (bt_mesh_app_id(key, &app_key->keys[0].id)) {
+                return STATUS_CANNOT_SET;
+            }
+            app_key->net_idx = net_idx;
+            app_key->app_idx = app_idx;
+            app_key->updated = false;
+			app_key->appkey_active = 1;
+            memcpy(app_key->keys[0].val, key, 16);
+            if (IS_ENABLED(CONFIG_BT_SETTINGS)) {
+                BT_DBG("Storing AppKey persistently");
+                bt_mesh_store_app_key(app_key, 0);
+            }
+        }
+        return STATUS_SUCCESS;
+}
+#endif
 int bt_mesh_cfg_comp_data_get(u16_t net_idx, u16_t addr, u8_t page,
 			      u8_t *status, struct net_buf_simple *comp)
 {
@@ -1700,6 +1754,16 @@ int bt_mesh_cfg_mod_sub_del(u16_t net_idx, u16_t addr, u16_t elem_addr,
 		       mod_id, CID_NVAL, status);
 }
 
+
+int bt_mesh_cfg_mod_sub_del_all(u16_t net_idx, u16_t addr, u16_t elem_addr,
+                                u16_t sub_addr, u16_t mod_id, u8_t *status)
+{
+
+    return mod_sub(OP_MOD_SUB_DEL_ALL, net_idx, addr, elem_addr, sub_addr,
+                   mod_id, CID_NVAL, status);
+}
+
+
 int bt_mesh_cfg_mod_sub_del_vnd(u16_t net_idx, u16_t addr, u16_t elem_addr,
 				 u16_t sub_addr, u16_t mod_id, u16_t cid,
 				 u8_t *status)
@@ -1708,8 +1772,20 @@ int bt_mesh_cfg_mod_sub_del_vnd(u16_t net_idx, u16_t addr, u16_t elem_addr,
 		return -EINVAL;
 	}
 
-	return mod_sub(OP_MOD_SUB_DEL, net_idx, addr, elem_addr, sub_addr,
-		       mod_id, cid, status);
+    return mod_sub(OP_MOD_SUB_DEL, net_idx, addr, elem_addr, sub_addr,
+                   mod_id, cid, status);
+}
+
+int bt_mesh_cfg_mod_sub_del_vnd_all(u16_t net_idx, u16_t addr, u16_t elem_addr,
+                                    u16_t sub_addr, u16_t mod_id, u16_t cid,
+                                    u8_t *status)
+{
+    if (cid == CID_NVAL) {
+        return -EINVAL;
+    }
+
+    return mod_sub(OP_MOD_SUB_DEL_ALL, net_idx, addr, elem_addr, sub_addr,
+                   mod_id, cid, status);
 }
 
 int bt_mesh_cfg_mod_sub_overwrite(u16_t net_idx, u16_t addr, u16_t elem_addr,
@@ -2058,7 +2134,7 @@ static int mod_pub_set(u16_t net_idx, u16_t addr, u16_t elem_addr,
 
 	net_buf_simple_add_le16(&msg, elem_addr);
 	net_buf_simple_add_le16(&msg, pub->addr);
-	net_buf_simple_add_le16(&msg, (pub->app_idx & (pub->cred_flag << 12)));
+	net_buf_simple_add_le16(&msg, (pub->app_idx | (pub->cred_flag << 12)));
 	net_buf_simple_add_u8(&msg, pub->ttl);
 	net_buf_simple_add_u8(&msg, pub->period);
 	net_buf_simple_add_u8(&msg, pub->transmit);

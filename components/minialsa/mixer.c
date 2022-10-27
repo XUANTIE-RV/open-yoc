@@ -36,6 +36,8 @@ int aos_mixer_attach(aos_mixer_t *mixer, const char *card_name)
 {
     card_dev_t *card;
 
+    aos_check_return_einval(mixer && card_name);
+
     aos_card_attach(card_name, &card);
     if (card == NULL) {
         return -1;
@@ -101,11 +103,13 @@ aos_mixer_elem_t *aos_mixer_last_elem(aos_mixer_t *mixer)
     aos_check_return_val(mixer && mixer->card, NULL);
 
     aos_mixer_elem_t *elem;
+    slist_t *tmp;
 
-    slist_for_each_entry(&mixer->elems_head, elem, aos_mixer_elem_t, next);
-    mixer->cur_elem = elem;
+    slist_for_each_entry_safe(&mixer->elems_head, tmp, elem, aos_mixer_elem_t, next) {
+        mixer->cur_elem = elem;
+    }
 
-    return elem;
+    return mixer->cur_elem;
 }
 
 aos_mixer_elem_t *aos_mixer_elem_next(aos_mixer_elem_t *elem_p)

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2020 Alibaba Group Holding Limited
+ * Copyright (C) 2019-2022 Alibaba Group Holding Limited
  */
 
 #include <stdlib.h>
@@ -12,20 +12,26 @@
 #include <yoc/hrs.h>
 #include "aos/kv.h"
 
+#if defined(CONFIG_OTA_CLIENT) && CONFIG_OTA_CLIENT > 0
+#include "ota_client.h"
+#endif
 
 #define TAG "DEMO"
 
 #define DEVICE_NAME "YoC HRS"
-#define DEVICE_ADDR {0xCC,0x3B,0xE3,0x88,0xBF,0xC0}
+#define DEVICE_ADDR                                                                                                    \
+    {                                                                                                                  \
+        0xCC, 0x3B, 0xE3, 0x88, 0xBF, 0xC0                                                                             \
+    }
 #define MEA_CHA_FLAG 0X00
 
 uint8_t g_hrs_mea_level = 0;
 
-int16_t g_conn_hanlde = 0xFFFF;
-int16_t adv_onging = 0;
-hrs_t g_hrs;
-hrs_handle_t g_hrs_handle = NULL;
-char node_name[40] = {0};
+int16_t      g_conn_hanlde = 0xFFFF;
+int16_t      adv_onging    = 0;
+hrs_t        g_hrs;
+hrs_handle_t g_hrs_handle  = NULL;
+char         node_name[40] = { 0 };
 
 static void conn_change(ble_event_en event, void *event_data)
 {
@@ -45,8 +51,7 @@ static void conn_param_update(ble_event_en event, void *event_data)
 {
     evt_data_gap_conn_param_update_t *e = event_data;
 
-    LOGI(TAG, "LE conn param updated: int 0x%04x lat %d to %d\n", e->interval,
-         e->latency, e->timeout);
+    LOGI(TAG, "LE conn param updated: int 0x%04x lat %d to %d\n", e->interval, e->latency, e->timeout);
 }
 
 static void mtu_exchange(ble_event_en event, void *event_data)
@@ -87,32 +92,25 @@ static int event_callback(ble_event_en event, void *event_data)
 
 static int start_adv(void)
 {
-    int ret;
-    ad_data_t ad[3] = {0};
+    int       ret;
+    ad_data_t ad[3] = { 0 };
 
     uint8_t flag = AD_FLAG_GENERAL | AD_FLAG_NO_BREDR;
-    ad[0].type = AD_DATA_TYPE_FLAGS;
-    ad[0].data = (uint8_t *)&flag;
-    ad[0].len = 1;
+    ad[0].type   = AD_DATA_TYPE_FLAGS;
+    ad[0].data   = (uint8_t *)&flag;
+    ad[0].len    = 1;
 
-    uint8_t uuid16_list[] = {0x0d, 0x18}; /* UUID_HRS */
-    ad[1].type = AD_DATA_TYPE_UUID16_ALL;
-    ad[1].data = (uint8_t *)uuid16_list;
-    ad[1].len = sizeof(uuid16_list);
-
+    uint8_t uuid16_list[] = { 0x0d, 0x18 }; /* UUID_HRS */
+    ad[1].type            = AD_DATA_TYPE_UUID16_ALL;
+    ad[1].data            = (uint8_t *)uuid16_list;
+    ad[1].len             = sizeof(uuid16_list);
 
     ad[2].type = AD_DATA_TYPE_NAME_COMPLETE;
     ad[2].data = (uint8_t *)node_name;
-    ad[2].len = strlen(node_name);
+    ad[2].len  = strlen(node_name);
 
     adv_param_t param = {
-        ADV_IND,
-        ad,
-        NULL,
-        BLE_ARRAY_NUM(ad),
-        0,
-        ADV_FAST_INT_MIN_1,
-        ADV_FAST_INT_MAX_1,
+        ADV_IND, ad, NULL, BLE_ARRAY_NUM(ad), 0, ADV_FAST_INT_MIN_1, ADV_FAST_INT_MAX_1,
     };
 
     ret = ble_stack_adv_start(&param);
@@ -133,21 +131,21 @@ static ble_event_cb_t ble_cb = {
 
 int main()
 {
-    uint8_t mea_data[2] = {0, 60};
-    uint8_t mea_size = sizeof(mea_data) / sizeof(mea_data[0]);
-    dev_addr_t addr = {DEV_ADDR_LE_RANDOM, DEVICE_ADDR};
-    int length = 40, ret = -1;
+    uint8_t    mea_data[2] = { 0, 60 };
+    uint8_t    mea_size    = sizeof(mea_data) / sizeof(mea_data[0]);
+    dev_addr_t addr        = { DEV_ADDR_LE_RANDOM, DEVICE_ADDR };
+    int        length = 40, ret = -1;
 
     g_hrs_mea_level = 0;
-    g_conn_hanlde = 0xFFFF;
-    adv_onging = 0;
-    g_hrs_handle = NULL;
+    g_conn_hanlde   = 0xFFFF;
+    adv_onging      = 0;
+    g_hrs_handle    = NULL;
 
     board_yoc_init();
 
     memset(node_name, 0X00, sizeof(node_name));
 
-    LOGI(TAG, "Bluetooth HRS demo!");
+    LOGI(TAG, "Bluetooth HRS demo, Version %s", aos_get_app_version());
     ret = aos_kv_get("HRS_NAME", node_name, &length);
 
     if (ret != 0 || strlen(node_name) == 0) {
@@ -156,20 +154,30 @@ int main()
 
     LOGI(TAG, "DEV_NAME:%s", node_name);
     init_param_t init = {
-        .dev_name = NULL,
-        .dev_addr = &addr,
+        .dev_name     = NULL,
+        .dev_addr     = &addr,
         .conn_num_max = 1,
     };
+
     ble_stack_init(&init);
+
+    ble_stack_setting_load();
 
     ble_stack_event_register(&ble_cb);
 
-    g_hrs_handle = hrs_init(&g_hrs);
+    g_hrs_handle = ble_prf_hrs_init(&g_hrs);
 
     if (g_hrs_handle == NULL) {
         LOGE(TAG, "HRS init FAIL!!!!");
         return -1;
     }
+
+#if defined(CONFIG_OTA_CLIENT) && CONFIG_OTA_CLIENT > 0
+    ret = ota_client_init();
+    if (ret) {
+        LOGE(TAG, "Ota client init failed %d", ret);
+    }
+#endif
 
     while (1) {
         if (!adv_onging) {
@@ -183,7 +191,7 @@ int main()
 
         mea_data[0] = MEA_CHA_FLAG;
         mea_data[1]++;
-        ret = hrs_measure_level_update(g_hrs_handle, mea_data, mea_size);
+        ret = ble_prf_hrs_measure_level_update(g_hrs_handle, mea_data, mea_size);
 
         if (ret != 0) {
             LOGD(TAG, "update fail:%d", ret);
@@ -198,4 +206,3 @@ int main()
 
     return 0;
 }
-

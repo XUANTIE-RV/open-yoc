@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2019-2022 Alibaba Group Holding Limited
+ */
+
 #include <stdbool.h>
 #include <aos/aos.h>
 #include <aos/kv.h>
@@ -44,7 +48,7 @@ void board_yoc_init()
 
     board_init();
 
-    console_init(CONSOLE_UART_IDX, 115200, 0);
+    console_init(CONSOLE_UART_IDX, 115200, 128);
 
     ulog_init();
     aos_set_log_level(AOS_LL_DEBUG);
@@ -61,6 +65,8 @@ void board_yoc_init()
     /* kvfs init */
     aos_kv_init("kv");
 
+#if defined(AOS_COMP_CLI) || defined(USE_CLI)
+    board_cli_init();
+#endif
     LOGI(TAG, "Build:%s,%s", __DATE__, __TIME__);
 }
-

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CDK_Workspace Name="mesh_shell" Database="" DoubleClick="Yes">
+  <Project Name="mesh_shell" Path="mesh_shell.cdkproj" Active="Yes"/>
+  <BuildMatrix>
+    <WorkspaceConfiguration Name="Debug" Selected="yes">
+      <Environment/>
+      <Project Name="mesh_shell" ConfigName="BuildSet"/>
+    </WorkspaceConfiguration>
+  </BuildMatrix>
+  <DefaultPackPath>$(CDKPath)/CSKY/PACK</DefaultPackPath>
+</CDK_Workspace>

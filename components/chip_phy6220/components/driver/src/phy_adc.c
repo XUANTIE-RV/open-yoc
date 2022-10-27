@@ -264,7 +264,7 @@ int phy_adc_start_int_dis(void)
     //hal_pwrmgr_lock(MOD_ADCC);
     //JUMP_FUNCTION(V29_IRQ_HANDLER)                  =   (uint32_t)&hal_ADC_IRQHandler;
 
-	MASK_ADC_INT;	
+	AP_ADCC->intr_mask = 0x1ff;
 	drv_irq_disable(ADCC_IRQn);
 	drv_irq_unregister(ADCC_IRQn);
 
@@ -384,6 +384,7 @@ int phy_adc_config_channel(adc_Cfg_t cfg, adc_event_cb_t evt_handler)
         for (i = 2; i < 8; i++) {
             if (cfg.channel & BIT(i)) {
                 gpio_pin_e pin = s_pinmap[i];
+                phy_gpio_pull_set(pin,GPIO_FLOATING); 
                 phy_gpio_ds_control(pin, Bit_ENABLE);
                 phy_gpio_cfg_analog_io(pin, Bit_ENABLE);
 
@@ -468,6 +469,8 @@ int phy_adc_config_channel(adc_Cfg_t cfg, adc_event_cb_t evt_handler)
         set_differential_mode();
 
         //LOG("%d %d %x\n",pin,pin_neg,*(volatile int*)0x40003800);
+        phy_gpio_pull_set(pin,GPIO_FLOATING); 	
+        phy_gpio_pull_set(pin_neg,GPIO_FLOATING); 	
         phy_gpio_cfg_analog_io(pin, Bit_ENABLE);
         phy_gpio_cfg_analog_io(pin_neg, Bit_ENABLE);
         //LOG("%d %d %x\n",pin,pin_neg,*(volatile int*)0x40003800);
@@ -538,44 +541,81 @@ static void phy_adc_load_calibration_value(void)
         adc_cal_read_flag = TRUE;
         adc_cal_negtive = read_reg(0x11001000) & 0x0fff;
         adc_cal_postive = (read_reg(0x11001000) >> 16) & 0x0fff;
-		//printf("->adc_cal_negtive:%x\n",adc_cal_negtive);
-		//printf("->adc_cal_postive:%x\n",adc_cal_postive);
+
+		if((adc_cal_negtive < 0x733)||(adc_cal_negtive > 0x8cc) ||(adc_cal_postive < 0x733)||(adc_cal_postive > 0x8cc)){
+			adc_cal_negtive = 0xfff;
+			adc_cal_postive = 0xfff;
+		}
     }
 }
 
+
+//#if(SDK_VER_CHIP==__DEF_CHIP_QFN32__)
+const unsigned int adc_Lambda[ADC_CH_NUM] =
+{	
+	0, //ADC_CH0 =0,
+    0, //ADC_CH1 =1,
+		
+	4591524,//P11,
+	4307418,//P23,
+	4322922,//P24,
+	4514182,//P14,
+	4182689,//P15,
+	4047198,//P20,
+
+    0,//GPIO_DUMMY,  //ADC_CH_VOICE =8,
+};
+
+//#elif(SDK_VER_CHIP == __DEF_CHIP_TSOP16__)
+/*
+const unsigned short adc_Lambda[ADC_CH_NUM] =
+{
+    0, //ADC_CH0 =0,
+    0, //ADC_CH1 =1,
+    867,//P11,
+    0,//P23,
+    0,//P24,
+    857,//P14,
+    800,//P15,
+    780,//P20,
+    0,//GPIO_DUMMY,  //ADC_CH_VOICE =8,
+};
+*/
+//#endif
 int phy_adc_value_cal(adc_CH_t ch, uint16_t *buf, uint32_t size, bool high_resol, bool diff_mode)
 {
-    uint32_t i;
-    unsigned int adc_sum = 0;
-	float result = 0;
-		
-    for (i = 0; i < size; i++) {
-        adc_sum += (buf[i] & 0xfff);
-    }
+	volatile float result = 0.0;
 
-    phy_adc_load_calibration_value();
-	result = (800 * adc_sum) / size;//800=0.8*1000
-
-	//printf("->[%d %d]",buf[0],adc_sum);	
-    if ((adc_cal_postive != 0xfff) && (adc_cal_negtive != 0xfff)) {
-        float delta = ((int)(adc_cal_postive - adc_cal_negtive)) / 2.0;
-
-        if (ch & 0x01) {
-            result = (diff_mode) ? ((result - 2048 - delta) * 2 / (adc_cal_postive + adc_cal_negtive))
-                     : ((result + delta) / (adc_cal_postive + adc_cal_negtive));
-        } else {
-            result = (diff_mode) ? ((result - 2048 - delta) * 2 / (adc_cal_postive + adc_cal_negtive))
-                     : ((result - delta) / (adc_cal_postive + adc_cal_negtive));
+    phy_adc_load_calibration_value();  
+	result = (float)buf[0];
+	//printf("\n->%d %d %d %d\n",ch,adc_Lambda[ch],(int)result,size);
+	//printf("\n->%d\n",(int)result);
+    if((adc_cal_postive!=0xfff)&&(adc_cal_negtive!=0xfff)){
+        float delta = ((int)(adc_cal_postive-adc_cal_negtive))/2.0;
+        if(ch&0x01)
+        {
+            result = (diff_mode) ? ((result-2048-delta)*2/(adc_cal_postive+adc_cal_negtive)) 
+            : ((result-delta) /(adc_cal_postive+adc_cal_negtive));
         }
-
-    } else {
-        result = (diff_mode) ? (result / 2048 - 1) : (result / 4096);
-    }
+        else
+        {
+            result = (diff_mode) ? ((result-2048-delta)*2/(adc_cal_postive+adc_cal_negtive)) 
+            : ((result+delta) /(adc_cal_postive+adc_cal_negtive));
+        }
+        
+    }else{
 	
-    if (high_resol == FALSE) {
-        result = result * 4;
-    }
-
+			result = (diff_mode) ? (float)(result / 2048 -1) : (float)(result /4096);
+    } 
+	
+	if(high_resol == TRUE)
+	{
+		result *= 800;
+	}
+	else
+	{
+		result = (float)result *(float)adc_Lambda[ch]*0.8*0.001;
+	}
     return (int)result;
 }
 
@@ -609,6 +649,8 @@ adc_handle_t drv_adc_initialize(int32_t idx, adc_event_cb_t cb_event)
 
     adc_priv->evt_handler = cb_event;
 
+	hal_clk_reset(MOD_ADCC);
+
     hal_clk_gate_enable(MOD_ADCC);
 
     phy_adc_init();
@@ -627,7 +669,7 @@ int32_t drv_adc_uninitialize(adc_handle_t handle)
     //hal_pwrmgr_register(MOD_ADCC,NULL,NULL);
     phy_clear_adcc_cfg();
     //hal_adc_init();
-
+	AP_AON->PMCTL2_1 = 0x00;
     hal_clk_gate_disable(MOD_ADCC);
 
     return 0;
@@ -687,8 +729,13 @@ int32_t drv_adc_config(adc_handle_t handle, adc_conf_t *config)
     adc_priv->mode = config->mode;
     adc_priv->intrp_mode = config->intrp_mode;
 
-
-    adc_priv->cfg.is_continue_mode = TRUE;
+    if (config->mode == ADC_SINGLE) {
+        return ADC_PARAM_INVALID;
+    } else if (config->mode == ADC_CONTINUOUS) {
+        adc_priv->cfg.is_continue_mode = TRUE;
+    } else if (config->mode == ADC_SCAN) {
+        adc_priv->cfg.is_continue_mode = TRUE;
+    }
 
     adc_CLOCK_SEL_t clk;
 
@@ -856,7 +903,7 @@ static uint32_t wait_data_ready(uint32_t sampling_frequency, int data_num, int c
 static int read_multiple_channel_n(adc_handle_t handle, uint32_t *data, uint32_t read_len)
 {
 	ck_adc_priv_t *adc_priv = handle;
-	uint8_t channel_mask = adc_priv->channel;;
+	uint8_t channel_mask = adc_priv->channel;
 	uint32_t adc_sum = 0;
 	uint16_t adc_avg[1];
 	int ch = 2,ch_cur = 0,n = 0,i = 7;
@@ -876,23 +923,33 @@ static int read_multiple_channel_n(adc_handle_t handle, uint32_t *data, uint32_t
 			break;
 		
 		ch_cur=(ch%2)?(ch-1):(ch+1);
+		
+        uint8_t status_read = 0;
+		while(!(read_reg(0x4005003c)&BIT(ch_cur))) {
+            if (status_read++ >= 2) {
+                break;
+            }
+            WaitMs(1);
+        };
+		
+		subWriteReg(0x40050038,ch_cur,ch_cur,1);
 
-        int temp = (++i)%8;
-        i = temp;
+		++i;
+        i&=0x07;
 		adc_sum = 0;
-		for (n = 0; n < 16; n++) {					
+		for (n = 0; n < 29; n++) {					
 			adc_sum += (uint16_t)(read_reg(ADC_CH_BASE + (ch_cur * 0x80) + ((n+2) * 4))&0xfff);
 			adc_sum +=  (uint16_t)((read_reg(ADC_CH_BASE + (ch_cur * 0x80) + ((n+2) * 4))>>16)&0xfff);
 		}
 		
 		//data[i] = (uint16_t)(adc_sum>>5);	
 			
-		adc_avg[0] = (uint16_t)(adc_sum>>5);
-		high_resol = (adc_priv->cfg.is_high_resolution   & (1ul<<ch))?TRUE:FALSE;
-		diff_mode =  (adc_priv->cfg.is_differential_mode & (1ul<<ch))?TRUE:FALSE;
+		adc_avg[0] = (uint16_t)(adc_sum/58);
+		high_resol = (s_adc_cfg.is_high_resolution   & (1ul<<ch))?TRUE:FALSE;
+		diff_mode =  (s_adc_cfg.is_differential_mode & (1ul<<ch))?TRUE:FALSE;
 		//printf("[%x %x ]",s_adc_cfg.is_high_resolution,s_adc_cfg.is_differential_mode);
 		//printf("[%d %d %d]",i,high_resol,diff_mode);
-		data[i] = phy_adc_value_cal(ch_cur,adc_avg,1,high_resol,diff_mode);
+		data[i] = phy_adc_value_cal(ch,adc_avg,1,high_resol,diff_mode);
 		//printf("[%d %d %d ] ",i,data[i],ch_cur);
 	
 		ch++;
@@ -913,7 +970,7 @@ int32_t drv_adc_read(adc_handle_t handle, uint32_t *data, uint32_t num)
     }
 
     if (adc_priv->mode == ADC_SINGLE) {
-        read_multiple_channel_n(handle, data, num);
+        //read_data_one_channel_n(handle, data, num);
     } else if (adc_priv->mode == ADC_CONTINUOUS) {
         read_multiple_channel_n(handle, data, num);
     } else if (adc_priv->mode == ADC_SCAN) {

@@ -12,6 +12,10 @@ extern "C" {
 #define CONFIG_RAM_MAX_USE 50*1024 //BYTE
 #endif
 
+#if CONFIG_MANTB_VERSION < 4
+#error "Not support, CONFIG_MANTB_VERSION must be defined as 4"
+#endif
+
 int update_init(void);
 
 #ifdef __cplusplus

@@ -29,12 +29,12 @@
 /** Define the debugging level: warning */
 #define TLS_DBG_LEVEL_WARNING       TLS_DBG_OFF
 /** Define the debugging level: error */
-#define TLS_DBG_LEVEL_ERR           TLS_DBG_OFF
+#define TLS_DBG_LEVEL_ERR           TLS_DBG_ON
 /** Define the debugging level: dump */
 #define TLS_DBG_LEVEL_DUMP          TLS_DBG_OFF
 
 /** general debug info switch, default: off */
-#define TLS_GENERAL_DBG             TLS_DBG_OFF
+#define TLS_GENERAL_DBG             TLS_DBG_ON
 
 #if TLS_DBG_SIMPLE
 #define __TLS_DBGPRT_INFO(fmt, ...)       printf(fmt, ##__VA_ARGS__)

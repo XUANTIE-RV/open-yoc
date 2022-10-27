@@ -2,11 +2,12 @@
  * Copyright (C) 2017-2019 Alibaba Group Holding Limited
  */
 
+
 /******************************************************************************
  * @file     csi_rv32_gcc.h
  * @brief    CSI Header File for GCC.
  * @version  V1.0
- * @date     01. Sep 2020
+ * @date     01. Sep 2018
  ******************************************************************************/
 
 #ifndef _CSI_RV32_GCC_H_
@@ -96,11 +97,72 @@ __ALWAYS_STATIC_INLINE uint32_t __get_MXSTATUS(void)
 /**
   \brief   Set MXSTATUS
   \details Writes the given value to the MXSTATUS Register.
-  \param [in]    mxstatus  MXSTATUS Register value to set
+  \param [in]    MXSTATUS Register value to set
  */
 __ALWAYS_STATIC_INLINE void __set_MXSTATUS(uint32_t mxstatus)
 {
     __ASM volatile("csrw mxstatus, %0" : : "r"(mxstatus));
+}
+
+/**
+  \brief   Get MEXSTATUS
+  \details Returns the content of the MEXSTATUS Register.
+  \return               MEXSTATUS Register value
+ */
+__ALWAYS_STATIC_INLINE uint32_t __get_MEXSTATUS(void)
+{
+    uint32_t result;
+
+    __ASM volatile("csrr %0, mexstatus" : "=r"(result));
+    return (result);
+}
+
+/**
+  \brief   Set MEXSTATUS
+  \details Writes the given value to the MSTATUS Register.
+  \param [in]    MEXSTATUS Register value to set
+ */
+__ALWAYS_STATIC_INLINE void __set_MEXSTATUS(uint32_t mexstatus)
+{
+    __ASM volatile("csrw mexstatus, %0" : : "r"(mexstatus));
+}
+
+
+/**
+  \brief   Get MRADDR
+  \details Returns the content of the MRADDR Register.
+  \return               MRADDR Register value
+ */
+__ALWAYS_STATIC_INLINE uint32_t __get_MRADDR(void)
+{
+    uint32_t result;
+
+    __ASM volatile("csrr %0, mraddr" : "=r"(result));
+    return (result);
+}
+
+/**
+  \brief   Get FXCR
+  \details Returns the content of the FXCR Register.
+  \return               FXCR Register value
+ */
+__ALWAYS_STATIC_INLINE uint32_t __get_FXCR(void)
+{
+    uint32_t result;
+
+    __ASM volatile("csrr %0, fxcr" : "=r"(result));
+    return (result);
+}
+
+
+/**
+  \brief   Set FXCR
+  \details Writes the given value to the FXCR Register.
+  \param [in]     FXCR Register value to set
+ */
+__ALWAYS_STATIC_INLINE void __set_FXCR(uint32_t fxcr)
+{
+    __ASM volatile("csrw fxcr, %0" : : "r"(fxcr));
 }
 
 /**
@@ -142,11 +204,34 @@ __ALWAYS_STATIC_INLINE uint32_t __get_MHCR(void)
 /**
   \brief   Set MHCR
   \details Writes the given value to the MHCR Register.
-  \param [in]    mstatus  MHCR Register value to set
+  \param [in]           MHCR Register value to set
  */
 __ALWAYS_STATIC_INLINE void __set_MHCR(uint32_t mhcr)
 {
     __ASM volatile("csrw mhcr, %0" : : "r"(mhcr));
+}
+
+/**
+  \brief   Get MHINT
+  \details Returns the content of the MHINT Register.
+  \return               MHINT Register value
+ */
+__ALWAYS_STATIC_INLINE uint32_t __get_MHINT(void)
+{
+    uint32_t result;
+
+    __ASM volatile("csrr %0, mhint" : "=r"(result));
+    return (result);
+}
+
+/**
+  \brief   Set MHINT
+  \details Writes the given value to the MHINT Register.
+  \param [in]           MHINT Register value to set
+ */
+__ALWAYS_STATIC_INLINE void __set_MHINT(uint32_t mhint)
+{
+    __ASM volatile("csrw mhint, %0" : : "r"(mhint));
 }
 
 /**
@@ -909,7 +994,6 @@ __ALWAYS_STATIC_INLINE void __enable_excp_irq(void)
     __enable_irq();
 }
 
-
 /**
   \brief   Disable interrupts and exceptions
   \details Disables interrupts and exceptions by clearing the IE-bit and EE-bit in the PSR.
@@ -997,9 +1081,7 @@ __ALWAYS_STATIC_INLINE void __DSB(void)
  */
 __ALWAYS_STATIC_INLINE void __ICACHE_IALL(void)
 {
-#if defined(__riscv_xtheade) || defined(__riscv_xtheadc)
     __ASM volatile("icache.iall");
-#endif
 }
 
 /**
@@ -1009,9 +1091,7 @@ __ALWAYS_STATIC_INLINE void __ICACHE_IALL(void)
  */
 __ALWAYS_STATIC_INLINE void __ICACHE_IPA(uint32_t addr)
 {
-#if defined(__riscv_xtheade) || defined(__riscv_xtheadc)
     __ASM volatile("icache.ipa %0" : : "r"(addr));
-#endif
 }
 
 /**
@@ -1020,9 +1100,7 @@ __ALWAYS_STATIC_INLINE void __ICACHE_IPA(uint32_t addr)
  */
 __ALWAYS_STATIC_INLINE void __DCACHE_IALL(void)
 {
-#if defined(__riscv_xtheade) || defined(__riscv_xtheadc)
     __ASM volatile("dcache.iall");
-#endif
 }
 
 /**
@@ -1031,9 +1109,7 @@ __ALWAYS_STATIC_INLINE void __DCACHE_IALL(void)
  */
 __ALWAYS_STATIC_INLINE void __DCACHE_CALL(void)
 {
-#if defined(__riscv_xtheade) || defined(__riscv_xtheadc)
     __ASM volatile("dcache.call");
-#endif
 }
 
 /**
@@ -1042,9 +1118,7 @@ __ALWAYS_STATIC_INLINE void __DCACHE_CALL(void)
  */
 __ALWAYS_STATIC_INLINE void __DCACHE_CIALL(void)
 {
-#if defined(__riscv_xtheade) || defined(__riscv_xtheadc)
     __ASM volatile("dcache.ciall");
-#endif
 }
 
 /**
@@ -1054,9 +1128,7 @@ __ALWAYS_STATIC_INLINE void __DCACHE_CIALL(void)
  */
 __ALWAYS_STATIC_INLINE void __DCACHE_IPA(uint32_t addr)
 {
-#if defined(__riscv_xtheade) || defined(__riscv_xtheadc)
     __ASM volatile("dcache.ipa %0" : : "r"(addr));
-#endif
 }
 
 /**
@@ -1066,9 +1138,7 @@ __ALWAYS_STATIC_INLINE void __DCACHE_IPA(uint32_t addr)
  */
 __ALWAYS_STATIC_INLINE void __DCACHE_CPA(uint32_t addr)
 {
-#if defined(__riscv_xtheade) || defined(__riscv_xtheadc)
     __ASM volatile("dcache.cpa %0" : : "r"(addr));
-#endif
 }
 
 /**
@@ -1078,9 +1148,7 @@ __ALWAYS_STATIC_INLINE void __DCACHE_CPA(uint32_t addr)
  */
 __ALWAYS_STATIC_INLINE void __DCACHE_CIPA(uint32_t addr)
 {
-#if defined(__riscv_xtheade) || defined(__riscv_xtheadc)
     __ASM volatile("dcache.cipa %0" : : "r"(addr));
-#endif
 }
 
 

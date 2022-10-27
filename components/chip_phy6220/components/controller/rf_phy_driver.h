@@ -120,7 +120,7 @@ extern volatile  uint32_t       g_dtmAccessCode ;
 /*******************************************************************************
  * MACRO
  */
-
+#define RF_PHY_EXT_PREAMBLE_US                      (8)             // ext ble preamble length
 
 #define PHY_REG_RD(x)                               *(volatile uint32_t *)(x)
 #define PHY_REG_WT(x,y)                             *(volatile uint32_t *)(x) = (y)
@@ -208,6 +208,7 @@ extern volatile  uint32_t       g_dtmAccessCode ;
 #define PKT_FMT_BLR500K                             3
 #define PKT_FMT_BLR125K                             4
 
+#ifdef CONFIG_CHIP_PACKAGE_QFN32
 #define RF_PHY_TX_POWER_EXTRA_MAX                   0x3f
 #define RF_PHY_TX_POWER_MAX                         0x1f
 #define RF_PHY_TX_POWER_MIN                         0x00
@@ -217,6 +218,27 @@ extern volatile  uint32_t       g_dtmAccessCode ;
 #define RF_PHY_TX_POWER_N2DBM                       0x0f
 #define RF_PHY_TX_POWER_N5DBM                       0x0a
 #define RF_PHY_TX_POWER_N20DBM                      0x01
+
+#elif defined(CONFIG_CHIP_PACKAGE_SOP16) || defined(CONFIG_CHIP_PACKAGE_SOP24)
+
+#define RF_PHY_TX_POWER_EXTRA_MAX                   0x3f
+#define RF_PHY_TX_POWER_MAX                         0x1f
+#define RF_PHY_TX_POWER_MIN                         0x00
+
+#define RF_PHY_TX_POWER_5DBM                        0x1d
+#define RF_PHY_TX_POWER_4DBM                        0x17
+#define RF_PHY_TX_POWER_3DBM                        0x15
+#define RF_PHY_TX_POWER_0DBM                        0x0d
+
+#define RF_PHY_TX_POWER_N2DBM                       0x0a
+#define RF_PHY_TX_POWER_N5DBM                       0x06
+#define RF_PHY_TX_POWER_N6DBM                       0x05
+#define RF_PHY_TX_POWER_N10DBM                      0x03
+#define RF_PHY_TX_POWER_N15DBM                      0x02
+#define RF_PHY_TX_POWER_N20DBM                      0x01
+#else
+    #error "Please check chip package type"
+#endif
 
 #define RF_PHY_FREQ_FOFF_00KHZ                      0
 #define RF_PHY_FREQ_FOFF_20KHZ                      5
@@ -248,6 +270,9 @@ extern volatile  uint32_t       g_dtmAccessCode ;
 #define RF_PHY_DTM_MANUL_MAX_GAIN                    0x08
 
 #define RF_PHY_DTM_MANUL_ALL                         0xFF
+
+#define RF_PHY_DEFAULT_XTAL_CAP                      0x09
+#define RF_PHY_DEFAULT_FREQOFF                       RF_PHY_FREQ_FOFF_00KHZ
 /*******************************************************************************
  * FUNCION DEFINE
  */
@@ -273,74 +298,18 @@ uint8_t     rf_phy_direct_test_ate(uint32_t cmdWord, uint8_t regPatchNum, uint32
 
 void        rf_phy_dtm_zigbee_pkt_gen(void);
 
-/**************************************************************************************
- * @fn          rf_phy_dtm_ext_rx_demod_burst
- *
- * @brief       This function process for rf phy direct test, test mode interup
- *
- * input parameters
- *
- * @param       rfChnIdx        :   rf channel = 2402+(rfChnIdx<<1)
- *              rfFoff          :   rf freq offset = rfFoff*4KHz
- *              pktLength       :   pkt length(Byte)
- *              rxWindow        :   rx demod window length(us)
- *              rxTimeOut       :   rx on time (ms)
- *
- * output parameters
- *
- * @param       rxEstFoff       :   rx demod estimated frequency offset
- *              rxEstRssi       :   rx demod estimated rssi
- *              rxEstCarrSens   :   rx demod estimated carrier sense
- *              rxPktNum        :   rx demod received pkt number
- *
- * @return      none
- */
-void    rf_phy_dtm_ext_rx_demod_burst(uint8_t rfChnIdx,int8_t rfFoff,uint8_t xtal_cap,uint8_t pktLength,uint32 rxTimeOut,uint32 rxWindow,
-                                                    int16_t* rxEstFoff,uint8_t* rxEstRssi,uint8_t* rxEstCarrSens,uint16_t* rxPktNum);
-
-/**************************************************************************************
- * @fn          rf_phy_dtm_ext_tx_mt_burst
- *
- * @brief       This function process for rf phy direct test, test mode interup
- *
- * input parameters
- *
- * @param       txPower     :   rf tx power
- *              rfChnIdx    :   rf channel = 2402+(rfChnIdx<<1)
- *              rfFoff      :   rf freq offset = rfFoff*4KHz
- *              pktType     :   modulaiton data type, 0: prbs9, 1: 1111000: 2 10101010
- *              pktLength   :   pkt length(Byte)
- *
- *              txPktNum    :   burst pkt tx number
- *              txPktIntv   :   txPkt intv,0 txPkt intv is pkt interval =  ceil((L+249)/625) * 625
- *
- * output parameters
- *
- * @param       none
- *
- * @return      none
- */
+void    rf_phy_dtm_ext_tx_singleTone(uint8_t txPower, uint8_t rfChnIdx,uint8_t xtal_cap,int8_t rfFoff ,uint32 testTimeUs);
+void    rf_phy_dtm_ext_tx_modulation(uint8_t txPower, uint8_t rfChnIdx,uint8_t xtal_cap,int8_t rfFoff ,uint8_t pktType,uint32 testTimeUs);
 void    rf_phy_dtm_ext_tx_mod_burst(uint8_t txPower, uint8_t rfChnIdx,uint8_t xtal_cap,int8_t rfFoff ,
                                                 uint8_t pktType, uint8_t pktLength,uint32 txPktNum,uint32 txPktIntv);
+void    rf_phy_dtm_ext_rx_demod_burst(uint8_t rfChnIdx,int8_t rfFoff,uint8_t xtal_cap,uint8_t pktLength,uint32 rxTimeOut,uint32 rxWindow,
+                                                    int16_t* rxEstFoff,uint8_t* rxEstRssi,uint8_t* rxEstCarrSens,uint16_t* rxPktNum);
+void    rf_phy_dtm_tx_singleTone(uint8_t rfPhyPktFmt,uint8_t txPower, uint8_t rfChnIdx,uint8_t xtal_cap,int8_t rfFoff ,uint32 testTimeUs);
+void    rf_phy_dtm_tx_modulation(uint8_t rfPhyPktFmt,uint8_t txPower, uint8_t rfChnIdx,uint8_t xtal_cap,int8_t rfFoff ,uint8_t pktType,uint32 testTimeUs);
+void    rf_phy_dtm_tx_mod_burst(uint8_t rfPhyPktFmt,uint8_t txPower, uint8_t rfChnIdx,uint8_t xtal_cap,int8_t rfFoff ,
+                                                uint8_t pktType, uint8_t pktLength,uint32 txPktNum,uint32 txPktIntv);
+void    rf_phy_dtm_rx_demod_burst(uint8_t rfPhyPktFmt,uint8_t rfChnIdx,int8_t rfFoff,uint8_t xtal_cap,uint8_t pktLength,uint32 rxTimeOut,uint32 rxWindow,
+                                                    int16_t* rxEstFoff,uint8_t* rxEstRssi,uint8_t* rxEstCarrSens,uint16_t* rxPktNum);
 
-/**************************************************************************************
- * @fn          rf_phy_dtm_ext_tx_singleTone
- *
- * @brief       This function process for rf phy direct test, test mode interup
- *
- * input parameters
- *
- * @param       txPower     :   rf tx power
- *              rfChnIdx    :   rf channel = 2402+(rfChnIdx<<1)
- *              rfFoff      :   rf freq offset = rfFoff*4KHz
- *              testTimeUs  :   test loop active time(ms)
- *
- * output parameters
- *
- * @param       none
- *
- * @return      none
- */
-void    rf_phy_dtm_ext_tx_singleTone(uint8_t txPower, uint8_t rfChnIdx,uint8_t xtal_cap,int8_t rfFoff ,uint32 testTimeUs);
-
+void    rf_phy_dtm_ext_acc_code_set(uint32 accCode);
 #endif

@@ -59,17 +59,15 @@
 
 struct bt_sdp {
 	struct bt_l2cap_br_chan chan;
-	struct kfifo           partial_resp_queue;
-	/* TODO: Allow more than one pending request */
 };
 
 static struct bt_sdp_record *db;
 static u8_t num_services;
 
-static struct bt_sdp bt_sdp_pool[CONFIG_BT_MAX_CONN];
+static struct bt_sdp bt_sdp_pool[CONFIG_BT_BR_MAX_CONN];
 
 /* Pool for outgoing SDP packets */
-NET_BUF_POOL_FIXED_DEFINE(sdp_pool, CONFIG_BT_MAX_CONN,
+NET_BUF_POOL_FIXED_DEFINE(sdp_pool, CONFIG_BT_BR_MAX_CONN,
 			  BT_L2CAP_BUF_SIZE(SDP_MTU), NULL);
 
 #define SDP_CLIENT_CHAN(_ch) CONTAINER_OF(_ch, struct bt_sdp_client, chan.chan)
@@ -90,7 +88,7 @@ struct bt_sdp_client {
 	struct net_buf                      *rec_buf;
 };
 
-static struct bt_sdp_client bt_sdp_client_pool[CONFIG_BT_MAX_CONN];
+static struct bt_sdp_client bt_sdp_client_pool[CONFIG_BT_BR_MAX_CONN];
 
 enum {
 	BT_SDP_ITER_STOP,
@@ -157,11 +155,7 @@ static void bt_sdp_connected(struct bt_l2cap_chan *chan)
 						   struct bt_l2cap_br_chan,
 						   chan);
 
-	struct bt_sdp *sdp = CONTAINER_OF(ch, struct bt_sdp, chan);
-
 	BT_DBG("chan %p cid 0x%04x", ch, ch->tx.cid);
-
-	k_fifo_init(&sdp->partial_resp_queue);
 }
 
 /** @brief Callback for SDP disconnection
@@ -178,11 +172,11 @@ static void bt_sdp_disconnected(struct bt_l2cap_chan *chan)
 						   struct bt_l2cap_br_chan,
 						   chan);
 
-	struct bt_sdp *sdp = CONTAINER_OF(ch, struct bt_sdp, chan);
-
 	BT_DBG("chan %p cid 0x%04x", ch, ch->tx.cid);
 
-	(void)memset(sdp, 0, sizeof(*sdp));
+	ch->chan.conn = NULL;
+	ch->tx.cid = 0;
+	ch->rx.cid = 0;
 }
 
 /* @brief Creates an SDP PDU
@@ -942,6 +936,7 @@ static u16_t create_attr_list(struct bt_sdp *sdp, struct bt_sdp_record *record,
 {
 	struct select_attrs_data sad;
 	u8_t idx_att;
+	(void)idx_att;
 
 	sad.num_filters = num_filters;
 	sad.rec = record;
@@ -1426,6 +1421,8 @@ void bt_sdp_init(void)
 		.sec_level = BT_SECURITY_L0,
 	};
 	int res;
+
+	NET_BUF_POOL_INIT(sdp_pool);
 
 	res = bt_l2cap_br_server_register(&server);
 	if (res) {

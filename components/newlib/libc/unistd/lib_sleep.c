@@ -4,7 +4,10 @@
 #include <stdint.h>
 #include <aos/kernel.h>
 
-uint32_t sleep(uint32_t seconds)
+/*
+POSIX.1-2001, POSIX.1-2008.
+*/
+__attribute__((weak)) uint32_t sleep(uint32_t seconds)
 {
     if (seconds) {
         aos_msleep(seconds * 1000);

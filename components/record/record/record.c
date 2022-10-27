@@ -22,6 +22,7 @@ typedef struct _record_node {
     int             quit;
     aos_event_t     quit_event;
     data_ready_func d_rdy_func;
+    data_release_func d_release_func;
     void            *user_data;
     int             chunk_size;
     // TODO: for debug
@@ -44,6 +45,10 @@ static int recio_register_with_path(const char *path)
         return recio_register_ringb(path);
     } else if (strstr(path, "sdbuffer://")) {
         return recio_register_sdbuf(path);
+#ifdef CONFIG_CHIP_BL606P
+    } else if (strstr(path, "usb://")) {
+        return recio_register_usb(path);
+#endif
     } else {
         LOGW(TAG, "not support yet");
     }
@@ -73,18 +78,16 @@ static void _record_task(void *arg)
         goto out;
     }
     while(!node->quit) {
-        if (node->d_rdy_func) {
-            node->d_rdy_func(node->user_data);
-            aos_msleep(1);
-        } else {
-            aos_msleep(40);
-        }
         bytes = recio_read(node->read_hdl, sendbuffer, node->chunk_size, 0);
-        if (bytes < 0) {
-            LOGI(TAG, "ws rec file finish, from:%s, to:%s, bytes:%d", node->from, node->to, bytes);
-            break;
+        if (bytes <= 0) {
+            //LOGD(TAG, "wait");
+            if (node->d_rdy_func) {
+                node->d_rdy_func(node->user_data);
+            } else {
+                aos_msleep(40);
+            }
         } else if (bytes > 0) {
-            // LOGD(TAG, "w %d", bytes);
+            //LOGD(TAG, "w %d, chunk %d", bytes, node->chunk_size);
             node->read_bytes += bytes;
             bytes = recio_write(node->write_hdl, sendbuffer, bytes, 0);
             if (bytes > 0) {
@@ -124,14 +127,16 @@ int record_start(rec_hdl_t hdl)
     if (node->chunk_size <= 0) {
         node->chunk_size = READ_PIECE_SIZE;
     }
-    aos_task_new("rec-thread", _record_task, (void *)node, 4096);
 
+    aos_task_t  task_handle;
+    aos_task_new_ext(&task_handle, "rec_task", _record_task, (void *)node, 4096,
+                        AOS_DEFAULT_APP_PRI - 4);
     return 0;
 }
 
 int record_stop(rec_hdl_t hdl)
 {
-    unsigned flags;
+    unsigned int flags;
     record_node_t *node = (record_node_t *)hdl;
 
     if (node == NULL) {
@@ -139,14 +144,16 @@ int record_stop(rec_hdl_t hdl)
     }
 
     node->quit = 1;
-
-    if (node->quit_event.hdl)
+    if (node->d_release_func) {
+        node->d_release_func(node->user_data);
+    }
+    if (aos_event_is_valid(&node->quit_event))
         aos_event_get(&node->quit_event, 0x01, AOS_EVENT_OR_CLEAR, &flags, AOS_WAIT_FOREVER);
     if (node->read_hdl)
         recio_close(node->read_hdl);
     if (node->write_hdl)
         recio_close(node->write_hdl);
-    if (node->quit_event.hdl)
+    if (aos_event_is_valid(&node->quit_event))
         aos_event_free(&node->quit_event);
 
     return 0;
@@ -173,6 +180,15 @@ void record_set_data_ready_cb(rec_hdl_t hdl, data_ready_func cb, void *arg)
     if (hdl) {
         record_node_t *node = (record_node_t *)hdl;
         node->d_rdy_func = cb;
+        node->user_data = arg;
+    }
+}
+
+void record_set_data_release_cb(rec_hdl_t hdl, data_release_func cb, void *arg)
+{
+    if (hdl) {
+        record_node_t *node = (record_node_t *)hdl;
+        node->d_release_func = cb;
         node->user_data = arg;
     }
 }

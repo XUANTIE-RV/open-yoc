@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2020 Alibaba Group Holding Limited
+ * Copyright (C) 2019-2022 Alibaba Group Holding Limited
  */
 
 #include <stdlib.h>
@@ -14,19 +14,22 @@
 #define TAG "DEMO"
 
 #define DEVICE_NAME "YoC BAS"
-#define DEVICE_ADDR {0xCC,0x3B,0xE3,0x88,0xBA,0xC0}
+#define DEVICE_ADDR                                                                                                    \
+    {                                                                                                                  \
+        0xCC, 0x3B, 0xE3, 0x88, 0xBA, 0xC0                                                                             \
+    }
 
 uint8_t g_battery_level = 0;
 
-static int16_t g_conn_handle = -1;
-static bas_t g_bas;
+static int16_t      g_conn_handle = -1;
+static bas_t        g_bas;
 static bas_handle_t g_bas_handle = NULL;
-static int adv_onging = 0;
+static int          adv_onging   = 0;
 
 static void conn_change(ble_event_en event, void *event_data)
 {
     evt_data_gap_conn_change_t *e = (evt_data_gap_conn_change_t *)event_data;
-    adv_onging = 0;
+    adv_onging                    = 0;
 
     if (e->connected == CONNECTED) {
         g_conn_handle = e->conn_handle;
@@ -41,8 +44,7 @@ static void conn_param_update(ble_event_en event, void *event_data)
 {
     evt_data_gap_conn_param_update_t *e = event_data;
 
-    LOGI(TAG, "LE conn param updated: int 0x%04x lat %d to %d\n", e->interval,
-         e->latency, e->timeout);
+    LOGI(TAG, "LE conn param updated: int 0x%04x lat %d to %d\n", e->interval, e->latency, e->timeout);
 }
 
 static void mtu_exchange(ble_event_en event, void *event_data)
@@ -83,27 +85,21 @@ static int event_callback(ble_event_en event, void *event_data)
 
 static int start_adv()
 {
-    int ret;
-    ad_data_t ad[2] = {0};
+    int       ret;
+    ad_data_t ad[2] = { 0 };
 
     uint8_t flag = AD_FLAG_GENERAL | AD_FLAG_NO_BREDR;
-    ad[0].type = AD_DATA_TYPE_FLAGS;
-    ad[0].data = (uint8_t *)&flag;
-    ad[0].len = 1;
+    ad[0].type   = AD_DATA_TYPE_FLAGS;
+    ad[0].data   = (uint8_t *)&flag;
+    ad[0].len    = 1;
 
-    uint8_t uuid16_list[] = {0x0f, 0x18}; /* UUID_BAS */
-    ad[1].type = AD_DATA_TYPE_UUID16_ALL;
-    ad[1].data = (uint8_t *)uuid16_list;
-    ad[1].len = sizeof(uuid16_list);
+    uint8_t uuid16_list[] = { 0x0f, 0x18 }; /* UUID_BAS */
+    ad[1].type            = AD_DATA_TYPE_UUID16_ALL;
+    ad[1].data            = (uint8_t *)uuid16_list;
+    ad[1].len             = sizeof(uuid16_list);
 
     adv_param_t param = {
-        ADV_IND,
-        ad,
-        NULL,
-        BLE_ARRAY_NUM(ad),
-        0,
-        ADV_FAST_INT_MIN_1,
-        ADV_FAST_INT_MAX_1,
+        ADV_IND, ad, NULL, BLE_ARRAY_NUM(ad), 0, ADV_FAST_INT_MIN_1, ADV_FAST_INT_MAX_1,
     };
 
     ret = ble_stack_adv_start(&param);
@@ -124,34 +120,36 @@ static ble_event_cb_t ble_cb = {
 
 int app_main()
 {
-    int batter_level = 0;
-    int ret = 0;
-    dev_addr_t addr = {DEV_ADDR_LE_RANDOM, DEVICE_ADDR};
-    init_param_t init = {
-        .dev_name = DEVICE_NAME,
-        .dev_addr = &addr,
+    int          batter_level = 0;
+    int          ret          = 0;
+    dev_addr_t   addr         = { DEV_ADDR_LE_RANDOM, DEVICE_ADDR };
+    init_param_t init         = {
+        .dev_name     = DEVICE_NAME,
+        .dev_addr     = &addr,
         .conn_num_max = 1,
     };
-    adv_onging = 0;
+    adv_onging      = 0;
     g_battery_level = 0;
-    g_conn_handle = -1;
-    g_bas_handle = NULL;
+    g_conn_handle   = -1;
+    g_bas_handle    = NULL;
 
     ret = ble_stack_init(&init);
 
     if (ret) {
-        LOGE(TAG, "ble stack init faild %d", ret);
+        LOGE(TAG, "ble stack init failed %d", ret);
         return -1;
     }
+
+    ble_stack_setting_load();
 
     ret = ble_stack_event_register(&ble_cb);
 
     if (ret) {
-        LOGE(TAG, "register stack event faild");
+        LOGE(TAG, "register stack event failed");
         return -1;
     }
 
-    g_bas_handle = bas_init(&g_bas);
+    g_bas_handle = ble_prf_bas_init(&g_bas);
 
     if (g_bas_handle == NULL) {
         LOGE(TAG, "BAS init FAIL!!!!");
@@ -164,7 +162,7 @@ int app_main()
             start_adv();
         }
 
-        bas_level_update(g_bas_handle, batter_level++);
+        ble_prf_bas_level_update(g_bas_handle, batter_level++);
 
         if (batter_level > 100) {
             batter_level = 0;
@@ -186,4 +184,3 @@ int main()
 
     return 0;
 }
-

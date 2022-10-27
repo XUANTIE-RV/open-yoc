@@ -21,7 +21,7 @@ yoc install ble_host
 
 # 配置
 
-本组件的默认配置位于components\ble_host\include\ble_default_config.h文件中，对于开发者，不需要修改默认值，如果有修改的需求，需要将新的定义配置到相应Solution中的package.yaml文件，新的配置将覆盖默认值。
+本组件的默认配置位于components\ble_host\bt_host\include\aos\bt_default_config.h文件中，对于开发者，不需要修改默认值，如果有修改的需求，需要将新的定义配置到相应Solution中的package.yaml文件，新的配置将覆盖默认值。
 
 下面是本组件的一些配置选项
 

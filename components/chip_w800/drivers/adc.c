@@ -103,8 +103,6 @@ adc_handle_t drv_adc_initialize(int32_t idx, adc_event_cb_t cb_event)
     adc_priv->cb_event  = cb_event;
     adc_priv->base = CSKY_ADC_CTL_BASE;
 
-    ck_adc_reg_t *addr = (ck_adc_reg_t *)(adc_priv->base);
-
 	/*config adc clock as 1MHz*/
 	tls_adc_set_clk(0x28);
 	drv_irq_register(ADC_IRQn, ADC_IRQHandler);
@@ -179,7 +177,6 @@ int32_t drv_adc_config(adc_handle_t handle, adc_conf_t *config)
     }
 
     uint32_t *ch_arr = config->channel_array;
-    int i = 0;
 
     ck_adc_priv_t *adc_priv = (ck_adc_priv_t *)handle;
     ck_adc_reg_t *addr = (ck_adc_reg_t *)(adc_priv->base);

@@ -12,11 +12,18 @@
 extern "C" {
 #endif
 
+#ifdef CONFIG_SD_FATFS_MOUNTPOINT
+#define SD_FATFS_MOUNTPOINT CONFIG_SD_FATFS_MOUNTPOINT
+#else
+#define SD_FATFS_MOUNTPOINT "/mnt/sd"
+#endif
+
 /**
  * @brief  register file system of fat
  * @return 0 on success
  */
 int vfs_fatfs_register(void);
+int vfs_fatfs_unregister(void);
 
 #ifdef __cplusplus
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2020 Alibaba Group Holding Limited
+ * Copyright (C) 2022 Alibaba Group Holding Limited
  */
 
 #include <api/mesh.h>
@@ -12,7 +12,7 @@
 #if defined(CONFIG_BT_MESH_MODEL_GEN_LEVEL_CLI)
 
 extern u8_t bt_mesh_default_ttl_get(void);
-
+extern uint8_t mesh_gen_tid(void);
 
 struct bt_mesh_model_pub g_generic_level_cli_pub = {
     .msg = NET_BUF_SIMPLE(2 + 5 + 4),
@@ -24,22 +24,22 @@ static void _generic_level_cli_prepear_buf(struct bt_mesh_model *model, struct n
     return;
 }*/
 
-static void _generic_level_cli_status(struct bt_mesh_model *model,
-                                  struct bt_mesh_msg_ctx *ctx,
-                                  struct net_buf_simple *buf)
+static void _generic_level_cli_status(struct bt_mesh_model *model, struct bt_mesh_msg_ctx *ctx,
+                                      struct net_buf_simple *buf)
 {
-    model_message message;
-    message.source_addr = ctx->addr;
-    message.status_data = buf;
+    model_message message = { 0 };
+    message.trans         = ctx->trans;
+    message.source_addr   = ctx->addr;
+    message.status_data   = buf;
     model_event(BT_MESH_MODEL_LEVEL_STATUS, &message);
     return;
 }
 
-
-int ble_mesh_generic_level_get(uint16_t netkey_idx, uint16_t appkey_idx,uint16_t unicast_addr,struct bt_mesh_model *model)
+int ble_mesh_generic_level_get(uint16_t netkey_idx, uint16_t appkey_idx, uint16_t unicast_addr,
+                               struct bt_mesh_model *model)
 {
-    int err;
-    struct bt_mesh_msg_ctx ctx = {0};
+    int                    err;
+    struct bt_mesh_msg_ctx ctx = { 0 };
 
     if (model == NULL) {
         return -EINVAL;
@@ -57,10 +57,10 @@ int ble_mesh_generic_level_get(uint16_t netkey_idx, uint16_t appkey_idx,uint16_t
 
     ctx.net_idx = netkey_idx;
 
-    ctx.app_idx = appkey_idx;
+    ctx.app_idx  = appkey_idx;
     ctx.send_ttl = bt_mesh_default_ttl_get();
 
-    err =  bt_mesh_model_send(model, &ctx, msg, NULL, NULL);
+    err = bt_mesh_model_send(model, &ctx, msg, NULL, NULL);
 
     if (err) {
         LOGE(TAG, "generic level get send fail %d", err);
@@ -70,11 +70,12 @@ int ble_mesh_generic_level_get(uint16_t netkey_idx, uint16_t appkey_idx,uint16_t
     return 0;
 }
 
-int ble_mesh_generic_level_set(uint16_t netkey_idx, uint16_t appkey_idx,uint16_t unicast_addr,struct bt_mesh_model *model, set_level_arg *send_arg, bool ack)
+int ble_mesh_generic_level_set(uint16_t netkey_idx, uint16_t appkey_idx, uint16_t unicast_addr,
+                               struct bt_mesh_model *model, set_level_arg *send_arg, bool ack)
 {
-    int err;
-    struct bt_mesh_msg_ctx ctx = {0};
-    //uint8_t extra_size = send_arg->send_trans ? 5 : 3;
+    int                    err;
+    struct bt_mesh_msg_ctx ctx = { 0 };
+    // uint8_t extra_size = send_arg->send_trans ? 5 : 3;
 
     if (model == NULL || send_arg == NULL) {
         return -EINVAL;
@@ -83,6 +84,8 @@ int ble_mesh_generic_level_set(uint16_t netkey_idx, uint16_t appkey_idx,uint16_t
     if (0x0000 == unicast_addr) {
         return -EADDRNOTAVAIL;
     }
+
+    send_arg->tid = mesh_gen_tid();
 
     struct net_buf_simple *msg = NET_BUF_SIMPLE(2 + 5 + 4);
 
@@ -100,12 +103,12 @@ int ble_mesh_generic_level_set(uint16_t netkey_idx, uint16_t appkey_idx,uint16_t
         net_buf_simple_add_u8(msg, send_arg->delay);
     }
 
-    ctx.addr = unicast_addr;
-    ctx.net_idx = netkey_idx;
-    ctx.app_idx = appkey_idx;
+    ctx.addr     = unicast_addr;
+    ctx.net_idx  = netkey_idx;
+    ctx.app_idx  = appkey_idx;
     ctx.send_ttl = bt_mesh_default_ttl_get();
 
-    err =  bt_mesh_model_send(model, &ctx, msg, NULL, NULL);
+    err = bt_mesh_model_send(model, &ctx, msg, NULL, NULL);
 
     if (err) {
         LOGE(TAG, "generic level send fail %d", err);
@@ -113,16 +116,17 @@ int ble_mesh_generic_level_set(uint16_t netkey_idx, uint16_t appkey_idx,uint16_t
     }
 
     LOGI(TAG, "SEND level %x, TID %d", send_arg->level, send_arg->tid);
-    send_arg->tid++;
+
     return 0;
 }
 
-int ble_mesh_generic_level_delta_set(uint16_t netkey_idx, uint16_t appkey_idx,uint16_t unicast_addr,struct bt_mesh_model *model, set_level_arg *send_arg, bool ack)
+int ble_mesh_generic_level_delta_set(uint16_t netkey_idx, uint16_t appkey_idx, uint16_t unicast_addr,
+                                     struct bt_mesh_model *model, set_level_arg *send_arg, bool ack)
 
 {
-    int err;
-    struct bt_mesh_msg_ctx ctx = {0};
-    //uint8_t extra_size = send_arg->send_trans ? 7 : 5;
+    int                    err;
+    struct bt_mesh_msg_ctx ctx = { 0 };
+    // uint8_t extra_size = send_arg->send_trans ? 7 : 5;
 
     if (model == NULL || send_arg == NULL) {
         return -EINVAL;
@@ -131,6 +135,8 @@ int ble_mesh_generic_level_delta_set(uint16_t netkey_idx, uint16_t appkey_idx,ui
     if (0x0000 == unicast_addr) {
         return -EADDRNOTAVAIL;
     }
+
+    send_arg->tid = mesh_gen_tid();
 
     struct net_buf_simple *msg = NET_BUF_SIMPLE(2 + 7 + 4);
 
@@ -148,12 +154,12 @@ int ble_mesh_generic_level_delta_set(uint16_t netkey_idx, uint16_t appkey_idx,ui
         net_buf_simple_add_u8(msg, send_arg->delay);
     }
 
-    ctx.addr = unicast_addr;
-    ctx.net_idx = netkey_idx;
-    ctx.app_idx = appkey_idx;
+    ctx.addr     = unicast_addr;
+    ctx.net_idx  = netkey_idx;
+    ctx.app_idx  = appkey_idx;
     ctx.send_ttl = bt_mesh_default_ttl_get();
 
-    err =  bt_mesh_model_send(model, &ctx, msg, NULL, NULL);
+    err = bt_mesh_model_send(model, &ctx, msg, NULL, NULL);
 
     if (err) {
         LOGE(TAG, "generic level delta send fail %d", err);
@@ -161,19 +167,22 @@ int ble_mesh_generic_level_delta_set(uint16_t netkey_idx, uint16_t appkey_idx,ui
     }
 
     LOGI(TAG, "SEND level delta %x, TID %d", send_arg->delta, send_arg->tid);
-    send_arg->tid++;
+
     return 0;
 }
 
-int ble_mesh_generic_level_move_set(uint16_t netkey_idx, uint16_t appkey_idx,uint16_t unicast_addr,struct bt_mesh_model *model,set_level_arg *send_arg, bool ack)
+int ble_mesh_generic_level_move_set(uint16_t netkey_idx, uint16_t appkey_idx, uint16_t unicast_addr,
+                                    struct bt_mesh_model *model, set_level_arg *send_arg, bool ack)
 {
-    int err;
-    struct bt_mesh_msg_ctx ctx = {0};
-    //uint8_t extra_size = send_arg->send_trans ? 5 : 3;
+    int                    err;
+    struct bt_mesh_msg_ctx ctx = { 0 };
+    // uint8_t extra_size = send_arg->send_trans ? 5 : 3;
 
     if (model == NULL || send_arg == NULL) {
         return -EINVAL;
     }
+
+    send_arg->tid = mesh_gen_tid();
 
     if (0x0000 == unicast_addr) {
         return -EADDRNOTAVAIL;
@@ -195,12 +204,12 @@ int ble_mesh_generic_level_move_set(uint16_t netkey_idx, uint16_t appkey_idx,uin
         net_buf_simple_add_u8(msg, send_arg->delay);
     }
 
-    ctx.addr = unicast_addr;
-    ctx.net_idx = netkey_idx;
-    ctx.app_idx = appkey_idx;
+    ctx.addr     = unicast_addr;
+    ctx.net_idx  = netkey_idx;
+    ctx.app_idx  = appkey_idx;
     ctx.send_ttl = bt_mesh_default_ttl_get();
 
-    err =  bt_mesh_model_send(model, &ctx, msg, NULL, NULL);
+    err = bt_mesh_model_send(model, &ctx, msg, NULL, NULL);
 
     if (err) {
         LOGE(TAG, "generic level move send fail %d", err);
@@ -208,14 +217,13 @@ int ble_mesh_generic_level_move_set(uint16_t netkey_idx, uint16_t appkey_idx,uin
     }
 
     LOGI(TAG, "SEND level move %x, TID %d", send_arg->move, send_arg->tid);
-    send_arg->tid++;
+
     return 0;
 }
 
 const struct bt_mesh_model_op g_generic_level_cli_op[GEN_LEVEL_CLI_OPC_NUM] = {
-    { BT_MESH_MODEL_OP_2(0x82, 0x08), 2, _generic_level_cli_status},
+    { BT_MESH_MODEL_OP_2(0x82, 0x08), 2, _generic_level_cli_status },
     BT_MESH_MODEL_OP_END,
 };
 
 #endif
-

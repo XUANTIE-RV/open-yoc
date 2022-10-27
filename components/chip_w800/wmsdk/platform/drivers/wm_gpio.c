@@ -253,10 +253,9 @@ u8 tls_gpio_read(enum tls_io_name gpio_pin)
  */
 void tls_gpio_write(enum tls_io_name gpio_pin, u8 value)
 {
-	u32 cpu_sr = 0;
 	u32 reg;
 	u32	reg_en;
-  u8  pin;
+    u8  pin;
     u16 offset;
 
     if (gpio_pin >= WM_IO_PB_00)

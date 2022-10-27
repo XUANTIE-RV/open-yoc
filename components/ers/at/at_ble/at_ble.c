@@ -19,7 +19,7 @@
 #define TAG "at_ble_cmd"
 
 #define UART_BUF_SIZE 16
-#define GET_TX_POWER_FAILD 0XFFFFFFFF
+#define GET_TX_POWER_FAILED 0XFFFFFFFF
 
 #define AT_BLE_UART_CONFIG_SLAVE(server) server.at_config.uart_conf.slave_conf
 #define AT_BLE_UART_CONFIG_MASTER(server) server.at_config.uart_conf.master_conf
@@ -283,7 +283,7 @@ void at_cmd_bt_adv(char *cmd, int type, char *data)
             adv_type = adv_type - '0';
 
             if (adv_type != ADV_IND && adv_type != ADV_NONCONN_IND) {
-                goto FAILD;
+                goto failed;
             } else {
                 ble_server.temp_adv_set.type = adv_type;
             }
@@ -293,7 +293,7 @@ void at_cmd_bt_adv(char *cmd, int type, char *data)
             interval_min = atoi((char *)interval_min_str);
 
             if (interval_min < AD_INT_MIN_MIN || interval_min > AD_INT_MIN_MAX) {
-                goto FAILD;
+                goto failed;
             } else {
                 ble_server.temp_adv_set.interval_min = interval_min;
             }
@@ -305,7 +305,7 @@ void at_cmd_bt_adv(char *cmd, int type, char *data)
             interval_max = atoi((char *)interval_max_str);
 
             if (interval_max < AD_INT_MAX_MIN || interval_max > AD_INT_MAX_MAX) {
-                goto FAILD;
+                goto failed;
             } else {
                 ble_server.temp_adv_set.interval_max = interval_max;
             }
@@ -382,7 +382,7 @@ void at_cmd_bt_adv(char *cmd, int type, char *data)
             return;
         }
 
-FAILD:
+failed:
         AT_BACK_ERRNO(ERR_AT(AT_ERR_INVAL));
         return;
 
@@ -843,7 +843,7 @@ _STATIC inline int get_tx_power(uint8_t tx_set)
         }
     }
 
-    return GET_TX_POWER_FAILD;
+    return GET_TX_POWER_FAILED;
 }
 
 void at_cmd_bt_tx_power(char *cmd, int type, char *data)

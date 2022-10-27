@@ -7,9 +7,8 @@
 
 #include <aos/aos.h>
 #include <aos/list.h>
-#ifdef CONFIG_CSI_V2
-#include <drv/gpio_pin.h>
-#endif
+#include <aos/hal/gpio.h>
+#include <aos/hal/adc.h>
 
 #define ADC_NAME_MAX (10)
 typedef struct button_ops {
@@ -22,16 +21,13 @@ typedef struct button_ops {
 
 typedef struct gpio_button_param {
     int                 pin_id;
-#ifdef CONFIG_CSI_V2
-    csi_gpio_pin_t      pin_hdl;
-#else
-    gpio_pin_handle_t   pin_hdl;
-#endif
+    gpio_dev_t         *pin_hdl;
     button_gpio_level_t active_level;
 } gpio_button_param_t;
 
 typedef struct adc_button_param {
     char    adc_name[ADC_NAME_MAX];
+    adc_dev_t *adc_hdl;
     int     channel;
     int     range;
     int     vref;
@@ -41,7 +37,7 @@ struct button {
     slist_t         next;
     int             repeat;
     int             state;
-    int             old_evt_id;
+    int             old_press_type;
     int             active;
     int             irq_flag;
     bool            is_pressed;
@@ -50,7 +46,7 @@ struct button {
     int            *press_time;
     int             press_time_subscript;
     int             press_time_cnt;
-    int             event_id;
+    int             press_type;
     int             event_flag;
     long long       happened_ms; //event happen tick
     long long       st_ms;    //enter irq time

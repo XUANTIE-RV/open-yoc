@@ -81,8 +81,10 @@ struct QUEUE_ITEM{
 
 static void controller_rcv_pkt_ready(int available_hci_packets_num);
 static void host_rcv_pkt(uint8_t *data, uint16_t len);
-static void  hci_dbg_hexstring(const char *msg, const uint8_t *ptr, int a_length);
 
+#if (HCI_DBG == TRUE)
+static void  hci_dbg_hexstring(const char *msg, const uint8_t *ptr, int a_length);
+#endif
 
 /*
  * GLOBAL FUNCTION DECLARATIONS

@@ -5,58 +5,116 @@
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
-#include <yoc/button.h>
-#ifdef CONFIG_CSI_V2
+
 #include <soc.h>
-#else
-#include <pinmux.h>
-#endif
+
+#include <yoc/button.h>
 #include "internal.h"
-#include <drv/adc.h>
-#include <devices/adc.h>
 
-#define b_adc_param(b) ((adc_button_param_t*)(b->param))
+#define b_adc_param(b) ((adc_button_param_t *)(b->param))
 
-int button_adc_check(button_t *b, int vol)
+static adc_dev_t *button_adc_find(uint8_t port)
 {
-    int range = b_adc_param(b)->range;
-    int vref  = b_adc_param(b)->vref;
+    button_t *b = NULL;
 
-    if (vol < (vref + range) && vol > (vref - range)) {
+    slist_for_each_entry(&g_button_srv.button_head, b, button_t, next)
+    {
+        button_ops_t *ops = &adc_ops;
+        adc_dev_t    *adc = b_adc_param(b)->adc_hdl;
+
+        if ((b->ops == ops) && adc && (adc->port == port)) {
+            return adc;
+        }
+    }
+
+    return NULL;
+}
+
+static uint32_t button_adc_get_value(adc_dev_t *adc_dev)
+{
+    /* fixme: why 64?workaround hal or csi driver Cross-border access */
+    uint32_t val[64];
+
+    int avr_count = 2;
+    uint32_t avr_val = 0;
+    int      ret;
+
+    memset(val, 0, sizeof(val));
+
+    ret = hal_adc_value_multiple_get(adc_dev, val, avr_count, 1000);
+    if (ret == 0) {
+        for (int i = 0; i < avr_count; i++) {
+            avr_val += val[i];
+        }
+        avr_val /= avr_count;
+    }
+
+    return avr_val;
+}
+
+static int button_adc_check(button_t *button, uint32_t value)
+{
+    int range = b_adc_param(button)->range;
+    int vref  = b_adc_param(button)->vref;
+
+    if (value < (vref + range) && value > (vref - range)) {
         return 1;
     } else {
         return 0;
     }
 }
 
-static int button_adc_read(button_t *b)
+static int button_adc_init(button_t *button)
 {
-    int ret = 0, vol = 0;
-    uint32_t ch = 0;
-    hal_adc_config_t config;
+    uint8_t port = b_adc_param(button)->channel;
 
-    aos_dev_t *dev = adc_open(b_adc_param(b)->adc_name);
-    ch = b_adc_param(b)->channel;
-    adc_config_default(&config);
+    adc_dev_t *adc = button_adc_find(port);
 
-#ifdef CONFIG_CSI_V2
-#else
-    config.channel = &ch;
-#endif
-    ret = adc_config(dev, &config);
-
-    if (ret == 0) {
-
-#ifdef CONFIG_CSI_V2
-        ret = adc_read(dev, ch, &vol, 0);
-#else
-        ret = adc_read(dev, &vol, 0);
-#endif
+    if (adc == NULL) {
+        adc       = (adc_dev_t *)aos_malloc_check(sizeof(adc_dev_t));
+        adc->port = port;
+        hal_adc_init(adc);
     }
 
-    adc_close(dev);
+    b_adc_param(button)->adc_hdl = adc;
 
-    return button_adc_check(b, vol);
+    return 0;
+}
+
+static int button_adc_deinit(button_t *button)
+{
+    adc_dev_t *adc = b_adc_param(button)->adc_hdl;
+
+    if (adc) {
+        hal_adc_finalize(adc);
+        aos_free(adc);
+        b_adc_param(button)->adc_hdl = NULL;
+    }
+
+    return 0;
+}
+
+/* ADC 按键扫描时，无需每个button都读一次 */
+static int      g_adc_start_read = 0;
+static uint32_t g_adc_value      = 0;
+
+void button_adc_start_read()
+{
+    g_adc_start_read = 1;
+}
+
+static int button_adc_read(button_t *button)
+{
+    uint32_t value = 0;
+
+    if (g_adc_start_read == 1) {
+        g_adc_value      = button_adc_get_value(b_adc_param(button)->adc_hdl);
+        g_adc_start_read = 0;
+    }
+
+    value = g_adc_value;
+
+    return button_adc_check(button, value);
 }
 
 static int button_adc_enable(button_t *button)
@@ -74,7 +132,9 @@ static int button_adc_disable(button_t *button)
 }
 
 button_ops_t adc_ops = {
-    .read = button_adc_read,
-    .irq_enable = button_adc_enable,
+    .init        = button_adc_init,
+    .deinit      = button_adc_deinit,
+    .read        = button_adc_read,
+    .irq_enable  = button_adc_enable,
     .irq_disable = button_adc_disable,
 };

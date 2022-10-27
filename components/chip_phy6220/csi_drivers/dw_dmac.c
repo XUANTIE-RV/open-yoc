@@ -48,6 +48,15 @@ static const dma_capabilities_t dma_capabilities = {
 #define writel(b, addr) \
     *((volatile uint32_t *)(addr)) = b
 
+#define RAM_CODE_SECTION(func)  __attribute__((section(".__sram.code."#func)))  func
+static void RAM_CODE_SECTION(dw_dma_set_channel)(uint32_t addr, uint8_t ch, uint32_t source, uint32_t dest, uint32_t size);
+static void RAM_CODE_SECTION(dw_dma_set_burstlength)(uint32_t addr, uint8_t ch, uint8_t burstlength);
+static void RAM_CODE_SECTION(dw_dmac_intr_ch_error)(int32_t idx);
+static void RAM_CODE_SECTION(dw_dmac_intr_ch_complete)(int32_t idx);
+void RAM_CODE_SECTION(dw_dmac_irqhandler)(int32_t idx);
+void RAM_CODE_SECTION(csi_dma_start)(int32_t ch, void *psrcaddr,void *pdstaddr, uint32_t length);
+void RAM_CODE_SECTION(csi_dma_stop)(int32_t ch);
+
 static void dw_dma_set_channel(uint32_t addr, uint8_t ch, uint32_t source, uint32_t dest, uint32_t size)
 {
     writel(size, addr + (ch % 4) * 0x58 + DMA_REG_CTRLbx);
@@ -160,8 +169,7 @@ static void dw_dmac_intr_ch_error(int32_t idx)
     }
 }
 
-
-static __attribute__((section(".__sram.code")))  void dw_dmac_intr_ch_complete(int32_t idx)
+static void dw_dmac_intr_ch_complete(int32_t idx)
 {
     dw_dma_priv_t *dma_priv = &dma_instance[idx];
     uint32_t addr = dma_priv->base;
@@ -174,7 +182,7 @@ static __attribute__((section(".__sram.code")))  void dw_dmac_intr_ch_complete(i
     }
 }
 
-__attribute__((section(".__sram.code"))) void dw_dmac_irqhandler(int32_t idx)
+void dw_dmac_irqhandler(int32_t idx)
 {
     uint32_t status;
     uint8_t ch_num;
@@ -200,7 +208,7 @@ __attribute__((section(".__sram.code"))) void dw_dmac_irqhandler(int32_t idx)
 
     for (ch_num = 0; ch_num < CONFIG_DMA_CHANNEL_NUM; ch_num++) {
         if (status & (1ul << ch_num)) {
-            dw_dmac_intr_ch_complete(ch_num);
+            dw_dmac_intr_ch_error(ch_num);
         }
     }
 
@@ -421,7 +429,7 @@ int32_t csi_dma_config_channel(int32_t ch, dma_config_t *config, dma_event_cb_t 
             return ret;
         }
 
-        ret = dw_dma_assign_hdhs_interface(addr, dma_priv->ch_num, config->hs_if, config->hs_if);
+        ret = dw_dma_assign_hdhs_interface(addr, dma_priv->ch_num, 0, config->hs_if);
 
         if (ret < 0) {
             return ret;
@@ -435,7 +443,7 @@ int32_t csi_dma_config_channel(int32_t ch, dma_config_t *config, dma_event_cb_t 
             return ret;
         }
 
-        ret = dw_dma_assign_hdhs_interface(addr, dma_priv->ch_num, config->hs_if, config->hs_if);
+        ret = dw_dma_assign_hdhs_interface(addr, dma_priv->ch_num, config->hs_if, 0);
 
         if (ret < 0) {
             return ret;
@@ -472,13 +480,13 @@ void csi_dma_start(int32_t ch, void *psrcaddr,
         return;
     }
 
-    uint8_t i;
+    uint8_t i = 0;
 
-    for (i = 2; i > 0; i--) {
-        if (!((length * dma_priv->src_tw / dma_priv->dst_tw) % (2 << i))) {
-            break;
-        }
-    }
+    //for (i = 2; i > 0; i--) {
+    //    if (!((length * dma_priv->src_tw / dma_priv->dst_tw) % (2 << i))) {
+    //        break;
+    //    }
+    //}
 
     int32_t grouplen = i;
 

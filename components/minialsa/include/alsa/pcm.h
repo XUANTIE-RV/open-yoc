@@ -67,21 +67,23 @@ typedef int aos_pcm_uframes_t;
 typedef int aos_pcm_sframes_t;
 
 typedef struct aos_pcm_hw_params {
-    int access;
-    int format;
-    int subformat;
-    int sample_bits;
-    int frame_bits;
-    int channels;
-    int rate;
-    int period_time;
-    int period_size;
-    int period_bytes;
-    int periods;
-    int buffer_time;
-    int buffer_size;
-    int buffer_bytes;
-    int tick_time;
+    int   access;
+    int   format;
+    int   subformat;
+    int   sample_bits;
+    int   frame_bits;
+    int   channels;
+    int   rate;
+    int   period_time;
+    int   period_size;
+    int   period_bytes;
+    int   periods;
+    int   buffer_time;
+    int   buffer_size;
+    int   buffer_bytes;
+    int   tick_time;
+    char *pcm_buffer;
+    int   pcm_size;
 } aos_pcm_hw_params_t;
 
 typedef struct aos_pcm_sw_params {

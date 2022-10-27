@@ -40,6 +40,7 @@ typedef struct {
     aes_endian_mode_e endian;
     aes_crypto_mode_e enc;
     aes_status_t status;
+    uint8_t key[16];
 } ck_aes_priv_t;
 
 #define LL_ENC_BASE         0x40040000               // LL HW AES engine Base address 
@@ -83,8 +84,6 @@ aes_handle_t csi_aes_initialize(int32_t idx, aes_event_cb_t cb_event)
     uint32_t irq = 0u;
     uint32_t base = 0u;
 
-    hal_clk_gate_enable(MOD_AES);
-
     ck_aes_priv_t *aes_priv = &aes_handle[idx];
 
     aes_priv->base = base;
@@ -99,7 +98,7 @@ aes_handle_t csi_aes_initialize(int32_t idx, aes_event_cb_t cb_event)
     aes_priv->keylen = AES_KEY_LEN_BITS_128;
     aes_priv->endian = AES_ENDIAN_LITTLE;
     aes_priv->status.busy = 0;
-
+    hal_clk_gate_enable(MOD_AES);
     return (aes_handle_t)aes_priv;
 }
 
@@ -116,7 +115,7 @@ int32_t csi_aes_uninitialize(aes_handle_t handle)
     ck_aes_priv_t *aes_priv = handle;
     aes_priv->cb = NULL;
 
-    hal_clk_gate_disable(MOD_AES);
+    //hal_clk_gate_disable(MOD_AES);
 
     return 0;
 }
@@ -192,24 +191,14 @@ int32_t csi_aes_set_key(aes_handle_t handle, void *context, void *key, aes_key_l
 {
     AES_NULL_PARA_CHK(handle);
     AES_NULL_PARA_CHK(key);
-    uint8_t *aes_key = key;
 
-    if ((key_len != AES_KEY_LEN_BITS_128) || (enc != AES_CRYPTO_MODE_ENCRYPT)) {
+    if ((key_len != AES_KEY_LEN_BITS_128)) {
         return ERR_AES(DRV_ERROR_PARAMETER);
     }
 
-    // disable AES engine
-    *(volatile uint32_t *) LL_ENC_BASE = 0x0;
-
-    //config KEY, the reg write order is recommend by Xiao Guijun
-    *(volatile uint32_t *)(LL_ENC_BASE + 0x2c) = aes_key[0] << 24 | aes_key[1] << 16 | aes_key[2] << 8 | aes_key[3];
-    aes_key += 4;
-    *(volatile uint32_t *)(LL_ENC_BASE + 0x28) = aes_key[0] << 24 | aes_key[1] << 16 | aes_key[2] << 8 | aes_key[3];
-    aes_key += 4;
-    *(volatile uint32_t *)(LL_ENC_BASE + 0x24) = aes_key[0] << 24 | aes_key[1] << 16 | aes_key[2] << 8 | aes_key[3];
-    aes_key += 4;
-    *(volatile uint32_t *)(LL_ENC_BASE + 0x20) = aes_key[0] << 24 | aes_key[1] << 16 | aes_key[2] << 8 | aes_key[3];
-
+    ck_aes_priv_t *aes_priv = (ck_aes_priv_t *)handle;
+    memcpy(aes_priv->key,key,16);
+    aes_priv->enc = enc;
     return 0;
 }
 
@@ -237,8 +226,8 @@ int32_t csi_aes_ecb_crypto(aes_handle_t handle, void *context, void *in, void *o
 {
     uint8_t *plaintext;
     uint8_t *ciphertext;
-    volatile int delay;
-    uint32_t temp;
+
+    int ret = 0;
 
     AES_NULL_PARA_CHK(handle);
     AES_NULL_PARA_CHK(in);
@@ -251,141 +240,34 @@ int32_t csi_aes_ecb_crypto(aes_handle_t handle, void *context, void *in, void *o
 
     plaintext = (uint8_t *)in;
     ciphertext = (uint8_t *)out;
+    int i = 0;
 
-    //config data in, the reg write order is recommend by Xiao Guijun
-    *(volatile uint32_t *)(LL_ENC_BASE + 0x3c) = plaintext[0] << 24 | plaintext[1] << 16 | plaintext[2] << 8 | plaintext[3];
-    plaintext += 4;
-    *(volatile uint32_t *)(LL_ENC_BASE + 0x38) = plaintext[0] << 24 | plaintext[1] << 16 | plaintext[2] << 8 | plaintext[3];
-    plaintext += 4;
-    *(volatile uint32_t *)(LL_ENC_BASE + 0x34) = plaintext[0] << 24 | plaintext[1] << 16 | plaintext[2] << 8 | plaintext[3];
-    plaintext += 4;
-    *(volatile uint32_t *)(LL_ENC_BASE + 0x30) = plaintext[0] << 24 | plaintext[1] << 16 | plaintext[2] << 8 | plaintext[3];
-
-    //set AES ctrl reg
-    if (aes_priv->endian == AES_ENDIAN_BIG) {
-        *(volatile uint32_t *)(LL_ENC_BASE + 0x04) = 0xf10;         // single mode, encrypt, revert bytes in word
-    } else {
-        *(volatile uint32_t *)(LL_ENC_BASE + 0x04) = 0x710;
+    if(aes_priv->enc == AES_CRYPTO_MODE_ENCRYPT) {
+       for (i = 0; i < len; i += 16) {
+            extern int bt_encrypt_be(const uint8_t key[16], const uint8_t plaintext[16],
+		                                uint8_t enc_data[16]);
+            ret = bt_encrypt_be(aes_priv->key,plaintext, ciphertext);
+            if(ret) {
+                return ret;
+            }
+            plaintext += 16;
+            ciphertext += 16;
+        }
+	}else if(aes_priv->enc == AES_CRYPTO_MODE_DECRYPT){
+        for (i = 0; i < len; i += 16) {
+            extern int bt_decrypt_be(const uint8_t key[16], const uint8_t plaintext[16],
+		                                uint8_t enc_data[16]);
+            ret = bt_decrypt_be(aes_priv->key,plaintext, ciphertext);
+            if(ret) {
+                return ret;
+            }
+            plaintext += 16;
+            ciphertext += 16;
+        }
     }
-
-    //set AES en
-    *(volatile uint32_t *) LL_ENC_BASE = 0x1;
-
-    // need delay 10-20 cycle for single mode encrypt
-    delay = 20;
-
-    while (delay --);
-
-    // read ciphertext
-    temp = *(volatile uint32_t *)(LL_ENC_BASE + 0x5c);
-    ciphertext[0] = (temp >> 24) & 0xff;
-    ciphertext[1] = (temp >> 16) & 0xff;
-    ciphertext[2] = (temp >> 8) & 0xff;
-    ciphertext[3] = temp & 0xff;
-    ciphertext += 4;
-
-    temp = *(volatile uint32_t *)(LL_ENC_BASE + 0x58);
-    ciphertext[0] = (temp >> 24) & 0xff;
-    ciphertext[1] = (temp >> 16) & 0xff;
-    ciphertext[2] = (temp >> 8) & 0xff;
-    ciphertext[3] = temp & 0xff;
-    ciphertext += 4;
-
-    temp = *(volatile uint32_t *)(LL_ENC_BASE + 0x54);
-    ciphertext[0] = (temp >> 24) & 0xff;
-    ciphertext[1] = (temp >> 16) & 0xff;
-    ciphertext[2] = (temp >> 8) & 0xff;
-    ciphertext[3] = temp & 0xff;
-    ciphertext += 4;
-
-    temp = *(volatile uint32_t *)(LL_ENC_BASE + 0x50);
-    ciphertext[0] = (temp >> 24) & 0xff;
-    ciphertext[1] = (temp >> 16) & 0xff;
-    ciphertext[2] = (temp >> 8) & 0xff;
-    ciphertext[3] = temp & 0xff;
-
-    // disable AES
-    *(int *) 0x40040000 = 0x0;
-
-    aes_priv->status.busy = 0;
 
     return 0;
 }
-
-#if 1
-void LL_ENC_AES128_Encrypt0(uint8_t *key,
-                            uint8_t *plaintext,
-                            uint8_t *ciphertext)
-{
-    volatile int delay;
-    uint32_t temp;
-
-    // disable AES engine
-    *(volatile uint32_t *) LL_ENC_BASE = 0x0;
-
-    //config KEY, the reg write order is recommend by Xiao Guijun
-    *(volatile uint32_t *)(LL_ENC_BASE + 0x2c) = key[0] << 24 | key[1] << 16 | key[2] << 8 | key[3];
-    key += 4;
-    *(volatile uint32_t *)(LL_ENC_BASE + 0x28) = key[0] << 24 | key[1] << 16 | key[2] << 8 | key[3];
-    key += 4;
-    *(volatile uint32_t *)(LL_ENC_BASE + 0x24) = key[0] << 24 | key[1] << 16 | key[2] << 8 | key[3];
-    key += 4;
-    *(volatile uint32_t *)(LL_ENC_BASE + 0x20) = key[0] << 24 | key[1] << 16 | key[2] << 8 | key[3];
-
-    //config data in, the reg write order is recommend by Xiao Guijun
-    *(volatile uint32_t *)(LL_ENC_BASE + 0x3c) = plaintext[0] << 24 | plaintext[1] << 16 | plaintext[2] << 8 | plaintext[3];
-    plaintext += 4;
-    *(volatile uint32_t *)(LL_ENC_BASE + 0x38) = plaintext[0] << 24 | plaintext[1] << 16 | plaintext[2] << 8 | plaintext[3];
-    plaintext += 4;
-    *(volatile uint32_t *)(LL_ENC_BASE + 0x34) = plaintext[0] << 24 | plaintext[1] << 16 | plaintext[2] << 8 | plaintext[3];
-    plaintext += 4;
-    *(volatile uint32_t *)(LL_ENC_BASE + 0x30) = plaintext[0] << 24 | plaintext[1] << 16 | plaintext[2] << 8 | plaintext[3];
-
-    //set AES ctrl reg
-    *(volatile uint32_t *)(LL_ENC_BASE + 0x04) = 0xf10;         // single mode, encrypt, revert bytes in word
-
-    //set AES en
-    *(volatile uint32_t *) LL_ENC_BASE = 0x1;
-
-    // need delay 10-20 cycle for single mode encrypt
-    delay = 20;
-
-    while (delay --);
-
-    // read ciphertext
-    temp = *(volatile uint32_t *)(LL_ENC_BASE + 0x5c);
-    ciphertext[0] = (temp >> 24) & 0xff;
-    ciphertext[1] = (temp >> 16) & 0xff;
-    ciphertext[2] = (temp >> 8) & 0xff;
-    ciphertext[3] = temp & 0xff;
-    ciphertext += 4;
-
-    temp = *(volatile uint32_t *)(LL_ENC_BASE + 0x58);
-    ciphertext[0] = (temp >> 24) & 0xff;
-    ciphertext[1] = (temp >> 16) & 0xff;
-    ciphertext[2] = (temp >> 8) & 0xff;
-    ciphertext[3] = temp & 0xff;
-    ciphertext += 4;
-
-    temp = *(volatile uint32_t *)(LL_ENC_BASE + 0x54);
-    ciphertext[0] = (temp >> 24) & 0xff;
-    ciphertext[1] = (temp >> 16) & 0xff;
-    ciphertext[2] = (temp >> 8) & 0xff;
-    ciphertext[3] = temp & 0xff;
-    ciphertext += 4;
-
-    temp = *(volatile uint32_t *)(LL_ENC_BASE + 0x50);
-    ciphertext[0] = (temp >> 24) & 0xff;
-    ciphertext[1] = (temp >> 16) & 0xff;
-    ciphertext[2] = (temp >> 8) & 0xff;
-    ciphertext[3] = temp & 0xff;
-
-    // disable AES
-    *(int *) 0x40040000 = 0x0;
-
-    return;
-}
-#endif
 
 /**
   \brief       aes cbc encrypt or decrypt

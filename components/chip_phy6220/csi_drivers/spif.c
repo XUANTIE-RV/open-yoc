@@ -30,6 +30,21 @@
 
 #define ERR_SPIFLASH(errno) (CSI_DRV_ERRNO_SPIFLASH_BASE | errno)
 #define SPIFLASH_NULL_PARAM_CHK(para) HANDLE_PARAM_CHK(para, ERR_SPIFLASH(DRV_ERROR_PARAMETER))
+#define RAM_CODE_SECTION(func)  __attribute__((section(".__sram.code."#func)))  func
+static inline uint32_t RAM_CODE_SECTION(spif_lock)();
+static inline void RAM_CODE_SECTION(spif_unlock)(uint32_t vic_iser);
+static void RAM_CODE_SECTION(hal_cache_tag_flush)(void);
+static uint8_t RAM_CODE_SECTION(_spif_read_status_reg_x)(void);
+static int RAM_CODE_SECTION(_spif_wait_nobusy_x)(uint8_t flg, uint32_t tout_ns);
+static int RAM_CODE_SECTION(hal_flash_write)(uint32_t addr, uint8_t *data, uint32_t size);
+static int RAM_CODE_SECTION(hal_flash_read)(uint32_t addr, uint8_t *data, uint32_t size);
+int RAM_CODE_SECTION(hal_flash_erase_sector)(unsigned int addr);
+int RAM_CODE_SECTION(hal_flash_erase_block64)(unsigned int addr);
+int RAM_CODE_SECTION(hal_flash_erase_all)(void);
+uint32_t RAM_CODE_SECTION(phy_WriteFlash)(uint32_t offset, uint32_t  value);
+int RAM_CODE_SECTION(phy_ProgramPage64)(unsigned long offset, const unsigned char *buf,  int size);    // size must be <=256
+uint32_t RAM_CODE_SECTION(phy_ReadFlash)(unsigned int addr, uint32_t *value);
+
 
 static uint8_t spiflash_init_flag = 0;
 
@@ -55,6 +70,7 @@ extern void spif_set_deep_sleep(void);
 extern void spif_release_deep_sleep(void);
 extern void spif_cmd(uint8_t op, uint8_t addrlen, uint8_t rdlen, uint8_t wrlen, uint8_t mbit, uint8_t dummy);
 extern void spif_rddata(uint8_t *data, uint8_t len);
+extern void WaitRTCCount(uint32_t rtcDelyCnt);
 
 #define SPIF_TIMEOUT       1000000
 
@@ -89,7 +105,7 @@ extern void spif_rddata(uint8_t *data, uint8_t len);
 //}
 
 
-__attribute__((section(".__sram.code")))  static inline uint32_t spif_lock()
+static inline uint32_t spif_lock()
 {
     _HAL_CS_ALLOC_();
     HAL_ENTER_CRITICAL_SECTION();
@@ -102,7 +118,7 @@ __attribute__((section(".__sram.code")))  static inline uint32_t spif_lock()
     return vic_iser;
 }
 
-__attribute__((section(".__sram.code")))  static inline void spif_unlock(uint32_t vic_iser)
+static inline void spif_unlock(uint32_t vic_iser)
 {
     _HAL_CS_ALLOC_();
     HAL_ENTER_CRITICAL_SECTION();
@@ -131,7 +147,7 @@ __attribute__((section(".__sram.code")))  static inline void spif_unlock(uint32_
 
 #define spif_wait_nobusy(flg, tout_ns, return_val)   {if(_spif_wait_nobusy_x(flg, tout_ns)){if(return_val){ return return_val;}}}
 
-__attribute__((section(".__sram.code")))  static void hal_cache_tag_flush(void)
+static void hal_cache_tag_flush(void)
 {
     _HAL_CS_ALLOC_();
     HAL_ENTER_CRITICAL_SECTION();
@@ -163,7 +179,7 @@ __attribute__((section(".__sram.code")))  static void hal_cache_tag_flush(void)
     HAL_EXIT_CRITICAL_SECTION();
 }
 
-__attribute__((section(".__sram.code")))  static uint8_t _spif_read_status_reg_x(void)
+static uint8_t _spif_read_status_reg_x(void)
 {
     uint8_t status;
     spif_cmd(FCMD_RDST, 0, 2, 0, 0, 0);
@@ -172,12 +188,13 @@ __attribute__((section(".__sram.code")))  static uint8_t _spif_read_status_reg_x
     return status;
 }
 
-__attribute__((section(".__sram.code")))  static int _spif_wait_nobusy_x(uint8_t flg, uint32_t tout_ns)
+static int _spif_wait_nobusy_x(uint8_t flg, uint32_t tout_ns)
 {
     uint8_t status;
     volatile int tout = (int)(tout_ns);
 
     for (; tout ; tout --) {
+        WaitRTCCount(1);//increase polling interval
         status = _spif_read_status_reg_x();
 
         if ((status & flg) == 0) {
@@ -188,7 +205,7 @@ __attribute__((section(".__sram.code")))  static int _spif_wait_nobusy_x(uint8_t
     return PPlus_ERR_BUSY;
 }
 
-__attribute__((section(".__sram.code")))  static int hal_flash_write(uint32_t addr, uint8_t *data, uint32_t size)
+static int hal_flash_write(uint32_t addr, uint8_t *data, uint32_t size)
 {
     uint8_t retval;
     uint32_t cs = spif_lock();
@@ -204,7 +221,7 @@ __attribute__((section(".__sram.code")))  static int hal_flash_write(uint32_t ad
     return retval;
 }
 
-__attribute__((section(".__sram.code")))  static int hal_flash_read(uint32_t addr, uint8_t *data, uint32_t size)
+static int hal_flash_read(uint32_t addr, uint8_t *data, uint32_t size)
 {
     uint32_t cs = spif_lock();
     volatile uint8_t *u8_spif_addr = (volatile uint8_t *)((addr & 0x7ffff) | SPIF_ADDR_START);
@@ -251,7 +268,7 @@ __attribute__((section(".__sram.code")))  static int hal_flash_read(uint32_t add
     return PPlus_SUCCESS;
 }
 
-__attribute__((section(".__sram.code")))  int hal_flash_erase_sector(unsigned int addr)
+int hal_flash_erase_sector(unsigned int addr)
 {
     uint8_t retval;
     uint32_t cs = spif_lock();
@@ -273,10 +290,11 @@ __attribute__((section(".__sram.code")))  int hal_flash_erase_sector(unsigned in
     return retval;
 }
 
-__attribute__((section(".__sram.code")))  int hal_flash_erase_block64(unsigned int addr)
+int hal_flash_erase_block64(unsigned int addr)
 {
-    uint32_t cs = spif_lock();
     uint8_t retval;
+    uint32_t cs = spif_lock();
+
     uint32_t cb = AP_PCR->CACHE_BYPASS;
     SPIF_STATUS_WAIT_IDLE(SPIF_WAIT_IDLE_CYC);
     spif_wait_nobusy(SFLG_WIP, SPIF_TIMEOUT, PPlus_ERR_BUSY);
@@ -292,10 +310,11 @@ __attribute__((section(".__sram.code")))  int hal_flash_erase_block64(unsigned i
     return retval;
 }
 
-__attribute__((section(".__sram.code")))  int hal_flash_erase_all(void)
+int hal_flash_erase_all(void)
 {
-    uint32_t cs = spif_lock();
     uint8_t retval;
+    uint32_t cs = spif_lock();
+
     uint32_t cb = AP_PCR->CACHE_BYPASS;
     SPIF_STATUS_WAIT_IDLE(SPIF_WAIT_IDLE_CYC);
     spif_wait_nobusy(SFLG_WIP, SPIF_TIMEOUT, PPlus_ERR_BUSY);
@@ -322,7 +341,7 @@ uint32_t phy_flash_chip_erase(void)
 }
 
 // write a Word to flash
-__attribute__((section(".__sram.code")))  uint32_t phy_WriteFlash(uint32_t offset, uint32_t  value)
+uint32_t phy_WriteFlash(uint32_t offset, uint32_t  value)
 {
     uint32_t temp = value;
     offset &= 0x00ffffff;
@@ -332,7 +351,7 @@ __attribute__((section(".__sram.code")))  uint32_t phy_WriteFlash(uint32_t offse
 }
 
 // program 64 bytes into flash
-__attribute__((section(".__sram.code")))  int phy_ProgramPage64(unsigned long offset, const unsigned char *buf,  int size)    // size must be <=256
+int phy_ProgramPage64(unsigned long offset, const unsigned char *buf,  int size)    // size must be <=256
 {
     offset &= 0x00ffffff;
 
@@ -352,7 +371,7 @@ void phy_release_flash_deep_sleep(void)
 }
 
 // read one byte from flash
-__attribute__((section(".__sram.code")))  uint32_t phy_ReadFlash(unsigned int addr, uint32_t *value)
+uint32_t phy_ReadFlash(unsigned int addr, uint32_t *value)
 {
     uint32_t temp;
     uint32_t ret;

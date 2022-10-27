@@ -75,10 +75,16 @@ void do_irq(void)
 
     CSI_INTRPT_ENTER();
 
+    ///< 获取是哪个中断发生了（irqn）
     irqn = soc_irq_get_irq_num();
+
+    if (irqn == Machine_External_IRQn)
+        irqn =  *(uint32_t *)(PLIC_BASE + 0x200000 + 4) & 0x3FF;
 
     if (g_irq_table[irqn] && g_irq_table[irqn]->irq_handler) {
         g_irq_table[irqn]->irq_handler(g_irq_table[irqn]);
+
+        *(volatile uint32_t *)(PLIC_BASE + 0x200000 + 4) = irqn;
     } else {
         Default_Handler();
     }

@@ -1,8 +1,0 @@
-Import('app_build')
-src = [
-    'main.c'
-]
-inc = [
-    '.'
-]
-app_build('ble_uart_server',src,inc)

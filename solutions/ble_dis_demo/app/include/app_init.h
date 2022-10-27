@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2019-2022 Alibaba Group Holding Limited
+ */
+
 #ifndef __APP_INIT_H
 #define __APP_INIT_H
 

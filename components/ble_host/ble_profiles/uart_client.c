@@ -7,11 +7,8 @@
 #include <aos/aos.h>
 #include "yoc/uart_client.h"
 
-
-
-#define UUID_COMPARE_LENGTH 10
-#define MAX_DEV_SURVIVE_TIME 10000 //ms
-
+#define UUID_COMPARE_LENGTH  10
+#define MAX_DEV_SURVIVE_TIME 10000 // ms
 
 enum {
     DISC_IDLE = 0,
@@ -22,13 +19,13 @@ enum {
 
 typedef struct _report_dev {
     dev_addr_t addr;
-    long long time_found;
+    long long  time_found;
 } report_dev;
 
 typedef struct {
-    uint8_t front;
-    uint8_t rear;
-    uint8_t length;
+    uint8_t    front;
+    uint8_t    rear;
+    uint8_t    length;
     report_dev dev[10];
 } dev_data_queue;
 
@@ -37,16 +34,16 @@ typedef struct _bt_uuid {
 } bt_uuid;
 
 struct bt_uuid_128 {
-    bt_uuid uuid;
+    bt_uuid  uuid;
     uint16_t val[16];
 };
 
 static ble_uart_client_t *g_uart_dev = NULL;
-static dev_data_queue g_dev_list;
-static client_config *g_cli_config = NULL;
-static uint8_t g_disconn_flag = 0;
-static dev_addr_t g_conn_last;
-static uint8_t g_conn_same_flag  = 0;
+static dev_data_queue     g_dev_list;
+static client_config *    g_cli_config   = NULL;
+static uint8_t            g_disconn_flag = 0;
+static dev_addr_t         g_conn_last;
+static uint8_t            g_conn_same_flag = 0;
 
 static void conn_change(ble_event_en event, void *event_data)
 {
@@ -61,12 +58,12 @@ static void conn_change(ble_event_en event, void *event_data)
 
     if (e->connected == CONNECTED) {
         ble_stack_gatt_mtu_exchange(e->conn_handle);
-        node->conn_handle = e->conn_handle;
-        connect_info_t info = {0};
+        node->conn_handle   = e->conn_handle;
+        connect_info_t info = { 0 };
         ble_stack_connect_info_get(e->conn_handle, &info);
 
         if (!memcmp(&info.peer_addr, &g_conn_last, sizeof(dev_addr_t))) {
-            g_conn_same_flag  = 1;
+            g_conn_same_flag = 1;
         } else {
             memcpy(&g_conn_last, &info.peer_addr, sizeof(dev_addr_t));
         }
@@ -75,10 +72,7 @@ static void conn_change(ble_event_en event, void *event_data)
     }
 
     node->uart_event_callback(event, event_data);
-
 }
-
-
 
 static void mtu_exchange(ble_event_en event, void *event_data)
 {
@@ -93,13 +87,14 @@ static void mtu_exchange(ble_event_en event, void *event_data)
     if (e->err == 0) {
         if (node->conn_handle == e->conn_handle) {
             node->mtu_exchanged = 1;
-            node->mtu = ble_stack_gatt_mtu_get(node->conn_handle);
+            node->mtu           = ble_stack_gatt_mtu_get(node->conn_handle);
 
             if (!g_conn_same_flag) {
                 ble_stack_gatt_discovery_primary(node->conn_handle, YOC_UART_SERVICE_UUID, 0x0001, 0xFFFF);
             } else {
                 uint8_t ccc_enable = CCC_VALUE_NOTIFY;
-                int ret = ble_stack_gatt_write_response(e->conn_handle, node->client_data.uart_profile.uart_ccc_handle, &ccc_enable, sizeof(ccc_enable), 0);
+                int ret = ble_stack_gatt_write_response(e->conn_handle, node->client_data.uart_profile.uart_ccc_handle,
+                                                        &ccc_enable, sizeof(ccc_enable), 0);
 
                 if (ret < 0) {
                     return;
@@ -117,12 +112,12 @@ static void mtu_exchange(ble_event_en event, void *event_data)
     }
 }
 
-
 int find_uart_uuid_by_ad(uint8_t *data, uint16_t len)
 {
-    uint8_t *pdata = data;
-    ad_data_t ad = {0};
-    uint8_t uuid_temp[16] = {0x7e, 0x31, 0x35, 0xd4, 0x12, 0xf3, 0x11, 0xe9, 0xab, 0x14, 0xd6, 0x63, 0xbd, 0x87, 0x3d, 0x93};
+    uint8_t * pdata = data;
+    ad_data_t ad    = { 0 };
+    uint8_t   uuid_temp[16]
+        = { 0x7e, 0x31, 0x35, 0xd4, 0x12, 0xf3, 0x11, 0xe9, 0xab, 0x14, 0xd6, 0x63, 0xbd, 0x87, 0x3d, 0x93 };
 
     while (len) {
         if (pdata[0] == 0) {
@@ -152,7 +147,6 @@ int find_uart_uuid_by_ad(uint8_t *data, uint16_t len)
     return -1;
 }
 
-
 static bool is_dev_data_queue_empty(dev_data_queue *queue)
 {
     return queue->front == queue->rear;
@@ -173,11 +167,10 @@ static report_dev *get_dev_data(dev_data_queue *queue)
         return NULL;
     } else {
         report_dev *data = &queue->dev[queue->front];
-        queue->front = (queue->front + 1) % 10;
+        queue->front     = (queue->front + 1) % 10;
         return data;
     }
 }
-
 
 static int put_dev_data(dev_data_queue *queue, dev_addr_t *dev)
 {
@@ -189,7 +182,7 @@ static int put_dev_data(dev_data_queue *queue, dev_addr_t *dev)
         return -1;
     }
 
-    for (int i = queue->front; i < queue->rear ; i++) {
+    for (int i = queue->front; i < queue->rear; i++) {
         if (!memcmp(&queue->dev[i].addr, dev, sizeof(dev_addr_t))) {
             return 0;
         }
@@ -197,22 +190,21 @@ static int put_dev_data(dev_data_queue *queue, dev_addr_t *dev)
 
     memcpy(&queue->dev[queue->rear].addr, dev, sizeof(dev_addr_t));
     queue->dev[queue->rear].time_found = aos_now_ms();
-    queue->rear = (queue->rear + 1) % 10;
+    queue->rear                        = (queue->rear + 1) % 10;
     return 0;
 }
 
-
-dev_addr_t *found_dev_get()
+dev_addr_t *ble_prf_found_dev_get()
 {
-    report_dev *dev = NULL;
-    long long time_now = 0;
-    long long survive_time = 0;
+    report_dev *dev          = NULL;
+    long long   time_now     = 0;
+    long long   survive_time = 0;
 
     do {
         dev = get_dev_data(&g_dev_list);
 
         if (dev) {
-            time_now = aos_now_ms();
+            time_now     = aos_now_ms();
             survive_time = time_now - dev->time_found;
         }
 
@@ -227,19 +219,19 @@ dev_addr_t *found_dev_get()
 
 static void device_find(ble_event_en event, void *event_data)
 {
-    int ret = -1;
-    int uuid_peer = -1;
-    evt_data_gap_dev_find_t ee;
+    int                      ret       = -1;
+    int                      uuid_peer = -1;
+    evt_data_gap_dev_find_t  ee;
     evt_data_gap_dev_find_t *e;
-    uint8_t find_dev = 0;
-    memcpy(&ee, event_data, sizeof(evt_data_gap_dev_find_t));////
+    uint8_t                  find_dev = 0;
+    memcpy(&ee, event_data, sizeof(evt_data_gap_dev_find_t)); ////
 
-    e = &ee;
+    e                  = &ee;
     conn_param_t param = {
-        0x06,  //interval min 7.5ms
-        0x06,  //interval max 7.5ms
+        0x06, // interval min 7.5ms
+        0x06, // interval max 7.5ms
         0,
-        100,   //supervision timeout 1s
+        100, // supervision timeout 1s
     };
 
     if (!g_cli_config) {
@@ -288,12 +280,11 @@ static void device_find(ble_event_en event, void *event_data)
         ret = ble_stack_connect(&e->dev_addr, &param, 0);
 
         if (ret < 0) {
-            uart_client_scan_start();
+            ble_prf_uart_client_scan_start();
             return;
         }
     }
 }
-
 
 static uint8_t UUID_EQUAL_LEN(uuid_t *uuid1, uuid_t *uuid2, uint8_t comp_len)
 {
@@ -305,29 +296,31 @@ static uint8_t UUID_EQUAL_LEN(uuid_t *uuid1, uuid_t *uuid2, uint8_t comp_len)
     return (0 == memcmp(&((struct bt_uuid_128 *)uuid1)->val, &((struct bt_uuid_128 *)uuid2)->val, comp_len));
 }
 
-
 static void service_discovery(ble_event_en event, void *event_data)
 {
     int ret;
 
-    static uint8_t discovery_state = 0;
-    ble_uart_client_t *uart = g_uart_dev;
+    static uint8_t     discovery_state = 0;
+    ble_uart_client_t *uart            = g_uart_dev;
 
     if (!uart) {
         return;
     }
 
-
     if (event == EVENT_GATT_DISCOVERY_COMPLETE) {
         evt_data_gatt_discovery_complete_t *e = event_data;
 
         if (discovery_state == DISC_SRV) {
-            ble_stack_gatt_discovery_char(e->conn_handle, YOC_UART_RX_UUID, uart->client_data.uart_profile.uart_handle + 1, uart->client_data.uart_profile.uart_end_handle);
+            ble_stack_gatt_discovery_char(e->conn_handle, YOC_UART_RX_UUID,
+                                          uart->client_data.uart_profile.uart_handle + 1,
+                                          uart->client_data.uart_profile.uart_end_handle);
         } else if (discovery_state == DISC_CHAR) {
-            ble_stack_gatt_discovery_descriptor(e->conn_handle, UUID_GATT_CCC, uart->client_data.uart_profile.uart_char_handle + 1, 0xffff);
+            ble_stack_gatt_discovery_descriptor(e->conn_handle, UUID_GATT_CCC,
+                                                uart->client_data.uart_profile.uart_char_handle + 1, 0xffff);
         } else if (discovery_state == DISC_DES) {
             uint8_t ccc_enable = CCC_VALUE_NOTIFY;
-            ret = ble_stack_gatt_write_response(e->conn_handle, uart->client_data.uart_profile.uart_ccc_handle, &ccc_enable, sizeof(ccc_enable), 0);
+            ret = ble_stack_gatt_write_response(e->conn_handle, uart->client_data.uart_profile.uart_ccc_handle,
+                                                &ccc_enable, sizeof(ccc_enable), 0);
 
             if (ret < 0) {
                 return;
@@ -345,32 +338,31 @@ static void service_discovery(ble_event_en event, void *event_data)
 
     if (event == EVENT_GATT_DISCOVERY_SVC) {
         evt_data_gatt_discovery_svc_t *e = event_data;
-        discovery_state = DISC_SRV;
+        discovery_state                  = DISC_SRV;
 
         if (UUID_EQUAL_LEN(&e->uuid, YOC_UART_SERVICE_UUID, UUID_COMPARE_LENGTH)) {
-            uart->client_data.uart_profile.uart_handle = e->start_handle;
+            uart->client_data.uart_profile.uart_handle     = e->start_handle;
             uart->client_data.uart_profile.uart_end_handle = e->end_handle;
         }
     }
 
     if (event == EVENT_GATT_DISCOVERY_CHAR) {
-        evt_data_gatt_discovery_char_t *e = event_data;
+        evt_data_gatt_discovery_char_t *e               = event_data;
         uart->client_data.uart_profile.uart_char_handle = e->val_handle;
-        discovery_state = DISC_CHAR;
+        discovery_state                                 = DISC_CHAR;
     }
 
     if (event == EVENT_GATT_DISCOVERY_CHAR_DES) {
-        evt_data_gatt_discovery_char_des_t *e = event_data;
+        evt_data_gatt_discovery_char_des_t *e          = event_data;
         uart->client_data.uart_profile.uart_ccc_handle = e->attr_handle;
-        discovery_state = DISC_DES;
-
+        discovery_state                                = DISC_DES;
     }
 }
 
 static void event_notify(ble_event_en event, void *event_data)
 {
-    evt_data_gatt_notify_t *e = (evt_data_gatt_notify_t *)event_data;
-    ble_uart_client_t *uart = g_uart_dev;
+    evt_data_gatt_notify_t *e    = (evt_data_gatt_notify_t *)event_data;
+    ble_uart_client_t *     uart = g_uart_dev;
 
     if (!uart) {
         return;
@@ -421,11 +413,9 @@ static int uart_event_callback(ble_event_en event, void *event_data)
     return 0;
 }
 
-
-
-int uart_client_scan_start()
+int ble_prf_uart_client_scan_start()
 {
-    int ret;
+    int          ret;
     scan_param_t param = {
         SCAN_PASSIVE,
         SCAN_FILTER_DUP_ENABLE,
@@ -442,20 +432,20 @@ int uart_client_scan_start()
     return 0;
 }
 
-
 static ble_event_cb_t ble_cb = {
     .callback = uart_event_callback,
 };
 
-int uart_client_send(uart_handle_t handle, const       char *data, int length, bt_uart_send_cb *cb)
+int ble_prf_uart_client_send(uart_handle_t handle, const char *data, int length, bt_uart_send_cb *cb)
 {
-    uint32_t count = length;
-    int ret = 0;
+    uint32_t count      = length;
+    int      ret        = 0;
     uint16_t wait_timer = 0;
 
     ble_uart_client_t *uart = handle;
 
-    if (data == NULL || length <= 0 || !uart || uart->conn_handle < 0 || !uart->client_data.uart_profile.notify_enabled) {
+    if (data == NULL || length <= 0 || !uart || uart->conn_handle < 0 || !uart->client_data.uart_profile.notify_enabled)
+    {
         return -1;
     }
 
@@ -465,7 +455,8 @@ int uart_client_send(uart_handle_t handle, const       char *data, int length, b
 
     while (count) {
         uint16_t send_count = (uart->mtu - 3) < count ? (uart->mtu - 3) : count;
-        ret = ble_stack_gatt_write_no_response(uart->conn_handle, uart->client_data.uart_profile.uart_handle + 2, (uint8_t *)data, send_count, 0);
+        ret = ble_stack_gatt_write_no_response(uart->conn_handle, uart->client_data.uart_profile.uart_handle + 2,
+                                               (uint8_t *)data, send_count, 0);
 
         if (ret == -ENOMEM) {
             wait_timer++;
@@ -497,7 +488,7 @@ int uart_client_send(uart_handle_t handle, const       char *data, int length, b
     return 0;
 }
 
-int uart_client_conn(dev_addr_t *conn_mac, conn_param_t *conn_param)
+int ble_prf_uart_client_conn(dev_addr_t *conn_mac, conn_param_t *conn_param)
 {
     if (!g_cli_config) {
         return -1;
@@ -514,8 +505,7 @@ int uart_client_conn(dev_addr_t *conn_mac, conn_param_t *conn_param)
     return 0;
 }
 
-
-int uart_client_disconn(uart_handle_t handle)
+int ble_prf_uart_client_disconn(uart_handle_t handle)
 {
     ble_uart_client_t *uart = handle;
 
@@ -528,13 +518,12 @@ int uart_client_disconn(uart_handle_t handle)
     }
 
     uart->client_data.client_conf.conn_def_on = 0;
-    g_disconn_flag = 1;
+    g_disconn_flag                            = 1;
 
     return 0;
 }
 
-
-uart_handle_t uart_client_init(ble_uart_client_t *service)
+uart_handle_t ble_prf_uart_client_init(ble_uart_client_t *service)
 {
     int ret = 0;
 
@@ -549,16 +538,16 @@ uart_handle_t uart_client_init(ble_uart_client_t *service)
     }
 
     service->conn_handle = -1;
-    g_cli_config = &service->client_data.client_conf;
-    g_uart_dev = service;
-    g_dev_list.front = 0;
-    g_dev_list.rear = 0;
-    g_dev_list.length = 10;
+    g_cli_config         = &service->client_data.client_conf;
+    g_uart_dev           = service;
+    g_dev_list.front     = 0;
+    g_dev_list.rear      = 0;
+    g_dev_list.length    = 10;
 
     return service;
 }
 
-int uart_client_conn_param_update(uart_handle_t handle, conn_param_t *param)
+int ble_prf_uart_client_conn_param_update(uart_handle_t handle, conn_param_t *param)
 {
     ble_uart_client_t *uart = (ble_uart_client_t *)handle;
 
@@ -568,8 +557,8 @@ int uart_client_conn_param_update(uart_handle_t handle, conn_param_t *param)
 
     uart->conn_param->interval_min = param->interval_min;
     uart->conn_param->interval_max = param->interval_max;
-    uart->conn_param->latency = param->latency;
-    uart->conn_param->timeout = param->timeout;
+    uart->conn_param->latency      = param->latency;
+    uart->conn_param->timeout      = param->timeout;
 
     if (uart->conn_handle < 0) {
         uart->update_param_flag = 1;
@@ -579,6 +568,3 @@ int uart_client_conn_param_update(uart_handle_t handle, conn_param_t *param)
 
     return 0;
 }
-
-
-

@@ -538,7 +538,7 @@ int phy_gpioretention_register(gpio_pin_e pin)
     }
 }
 
-__attribute__((section(".__sram.code"))) void phy_gpioretention_prepare_sleep_action(void)
+__attribute__((section(".__sram.code.phy_gpioretention_prepare_sleep_action"))) void phy_gpioretention_prepare_sleep_action(void)
 {
     gpio_pin_e pin=0;
     if(c_gpio_retention == 0x00000000)
@@ -553,7 +553,21 @@ __attribute__((section(".__sram.code"))) void phy_gpioretention_prepare_sleep_ac
     }
 }
 
-__attribute__((section(".__sram.code"))) void phy_gpioretention_prepare_wakeup_action(void)
+__attribute__((section(".__sram.code.phy_gpioretention_disable"))) void phy_gpioretention_disable(void)
+{
+    gpio_pin_e pin=0;
+
+    for(pin=0;pin<GPIO_NUM;pin++)
+    {
+        if ((pin == P32) || (pin == P33) || (pin == P34)) {
+            AP_AON->PMCTL0 &= ~BIT(retention_reg[pin][1]);
+        } else {
+            AP_AON->IOCTL[retention_reg[pin][0]] &= ~BIT(retention_reg[pin][1]);
+        }
+    }
+}
+
+__attribute__((section(".__sram.code.phy_gpioretention_prepare_wakeup_action"))) void phy_gpioretention_prepare_wakeup_action(void)
 {
     gpio_pin_e pin=0;
 

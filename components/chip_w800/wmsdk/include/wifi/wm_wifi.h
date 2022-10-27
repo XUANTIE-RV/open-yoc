@@ -10,6 +10,8 @@
 #ifndef TLS_WIFI_FUNC_H
 #define TLS_WIFI_FUNC_H
 
+#include "wm_config.h"
+
 /* Return Error definition*/
 /** invalid SSID */
 #define	WM_WIFI_ERR_SSID		   -1
@@ -401,6 +403,18 @@ void tls_wifi_data_recv_cb_register(tls_wifi_data_recv_callback callback);
  */
 void tls_wifi_data_ext_recv_cb_register(tls_wifi_data_ext_recv_callback callback);
 
+
+/**
+ * @brief	  This function is used to register recv wifi management frame
+ *				   callback function
+ *
+ * @param[in]	   callback   point to receive Wi-Fi management frame function
+ *
+ * @return	  None
+ *
+ * @note		   None
+ */
+void tls_wifi_mgmt_ext_recv_cb_register(tls_wifi_data_ext_recv_callback callback);
 /**
  * @brief          This function is used to set oneshot config flag
  *
@@ -410,8 +424,8 @@ void tls_wifi_data_ext_recv_cb_register(tls_wifi_data_ext_recv_callback callback
  *                      3: AP+WEBSERVER
  *                      4: bt
  *
- * @return         0£ºsuccess
- *                 -1£ºfailed
+ * @return         0 success
+ *                 -1 failed
  *
  * @note           None
  */
@@ -809,7 +823,7 @@ int tls_wps_start_pbc(void);
  * @note           None
  */
 void tls_ethernet_data_rx_callback(net_rx_data_cb callback);
-#if TLS_CONFIG_AP_OPT_FWD
+#if defined(TLS_CONFIG_AP_OPT_FWD) && TLS_CONFIG_AP_OPT_FWD
 /**
  * @brief          This function is used to forward IP data packets
  *                 by routing, only for APSTA mode.

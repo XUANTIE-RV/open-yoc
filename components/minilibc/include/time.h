@@ -35,7 +35,7 @@
 #define NSEC_PER_MSEC       1000000
 #define TICK2MSEC(tick)     ((tick)* (1000 / CLOCKS_PER_SEC))
 
-#define TIME_ZONE           8
+extern long timezone;
 
 /* CLOCK_REALTIME refers to the standard time source.  For most
  * implementations, the standard time source is the system timer interrupt.
@@ -148,6 +148,7 @@ clock_t clock(void);
 
 double difftime(time_t tim1, time_t tim2);
 char *asctime(const struct tm *tim_p);
+int stime(const time_t *t);
 
 #undef EXTERN
 #if defined(__cplusplus)
@@ -157,13 +158,13 @@ char *asctime(const struct tm *tim_p);
 /* Local time need to add timezone diff */
 static inline struct tm *localtime_get(const time_t *t)
 {
-  time_t mt = *t + TIME_ZONE * 3600;
+  time_t mt = *t + timezone * 3600;
   return gmtime(&mt);
 }
 
 static inline struct tm *localtime_get_r(const time_t *t, struct tm *result)
 {
-  time_t mt = *t + TIME_ZONE * 3600;
+  time_t mt = *t + timezone * 3600;
   return gmtime_r(&mt, result);
 }
 

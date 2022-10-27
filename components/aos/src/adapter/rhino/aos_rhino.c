@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdint.h>
+#include <inttypes.h>
 #include <sys/time.h>
 
 #include <k_api.h>
@@ -12,9 +13,6 @@
 #include <k_default_config.h>
 #include <k_sys.h>
 #include <k_time.h>
-
-#include <k_api.h>
-#include "debug_api.h"
 
 #include <aos/kernel.h>
 #include <aos/list.h>
@@ -32,6 +30,8 @@
 #endif
 
 static unsigned int used_bitmap;
+static long long start_time_ms = 0;
+
 static int rhino2stderrno(int ret)
 {
     switch (ret) {
@@ -64,6 +64,8 @@ static int rhino2stderrno(int ret)
 
     case RHINO_BLK_TIMEOUT:
         return -ETIMEDOUT ;
+    case RHINO_NO_PEND_WAIT:
+        return -EBUSY;
     case RHINO_KOBJ_BLK:
         return -EAGAIN;
 
@@ -99,6 +101,14 @@ static int rhino2stderrno(int ret)
     return -1;
 }
 
+#define CHECK_HANDLE(handle)                                 \
+    do                                                       \
+    {                                                        \
+        if(handle == NULL || (void *)(*handle) == NULL)      \
+        {                                                    \
+            return -EINVAL;                                  \
+        }                                                    \
+    } while (0)
 
 /* imp in watchdog.c */
 //int aos_reboot(void)
@@ -113,6 +123,64 @@ const char *aos_version_get(void)
 }
 
 #if (RHINO_CONFIG_KOBJ_DYN_ALLOC > 0)
+aos_status_t aos_task_create(aos_task_t *task, const char *name, void (*fn)(void *),
+                             void *arg, void *stack, size_t stack_size, int32_t prio, uint32_t options)
+{
+    int       ret;
+
+    if(task == NULL) {
+        return -EINVAL;
+    }
+
+#if (RHINO_CONFIG_SCHED_CFS > 0)
+    ret = (int)krhino_cfs_task_dyn_create((ktask_t **)task, name, arg, AOS_DEFAULT_APP_PRI,
+                                          stack_size / sizeof(cpu_stack_t), fn, options & AOS_TASK_AUTORUN);
+#else
+    ret = (int)krhino_task_dyn_create((ktask_t **)task, name, arg, prio,
+                                      0, stack_size / sizeof(cpu_stack_t), fn, options & AOS_TASK_AUTORUN);
+#endif
+    return rhino2stderrno(ret);
+}
+
+aos_status_t aos_task_suspend(aos_task_t *task)
+{
+    int ret;
+    ktask_t *ktask;
+
+    CHECK_HANDLE(task);
+    ktask = (ktask_t *)(*task);
+    ret = krhino_task_suspend(ktask);
+
+    return rhino2stderrno(ret);
+}
+
+aos_status_t aos_task_resume(aos_task_t *task)
+{
+    int ret;
+    ktask_t *ktask;
+
+    CHECK_HANDLE(task);
+
+    ktask = (ktask_t *)(*task);
+    ret = krhino_task_resume(ktask);
+
+    return rhino2stderrno(ret);
+}
+
+aos_status_t aos_task_delete(aos_task_t *task)
+{
+    int ret;
+    ktask_t *ktask;
+
+    CHECK_HANDLE(task);
+
+    ktask = (ktask_t *)(*task);
+
+    ret = (int)krhino_task_dyn_del(ktask);
+
+    return rhino2stderrno(ret);
+}
+
 int aos_task_new(const char *name, void (*fn)(void *), void *arg,
                  int stack_size)
 {
@@ -122,6 +190,9 @@ int aos_task_new(const char *name, void (*fn)(void *), void *arg,
 
     aos_check_return_einval(name && fn && (stack_size >= AOS_MIN_STACK_SIZE));
 
+#if defined(CSK_CPU_STACK_EXTRAL)
+    stack_size += CSK_CPU_STACK_EXTRAL;
+#endif
     ret = (int)krhino_task_dyn_create(&task_handle, name, arg, AOS_DEFAULT_APP_PRI, 0,
                                       stack_size / sizeof(cpu_stack_t), fn, 1u);
 
@@ -136,34 +207,37 @@ int aos_task_new_ext(aos_task_t *task, const char *name, void (*fn)(void *), voi
     aos_check_return_einval(task && fn && (stack_size >= AOS_MIN_STACK_SIZE) &&
                             (prio >= 0 && prio < RHINO_CONFIG_PRI_MAX));
 
-    ret = (int)krhino_task_dyn_create((ktask_t **)(&(task->hdl)), name, arg, prio, 0,
+#if defined(CSK_CPU_STACK_EXTRAL)
+    stack_size += CSK_CPU_STACK_EXTRAL;
+#endif
+    ret = (int)krhino_task_dyn_create((ktask_t **)(task), name, arg, prio, 0,
                                       stack_size / sizeof(cpu_stack_t), fn, 1u);
 
     return rhino2stderrno(ret);
 }
 
-ktask_t *debug_task_find(char *name)
-{
-#if (RHINO_CONFIG_KOBJ_LIST > 0)
-    klist_t *listnode;
-    ktask_t *task;
+// ktask_t *debug_task_find(char *name)
+// {
+// #if (RHINO_CONFIG_KOBJ_LIST > 0)
+//     klist_t *listnode;
+//     ktask_t *task;
 
-    for (listnode = g_kobj_list.task_head.next;
-         listnode != &g_kobj_list.task_head; listnode = listnode->next) {
-        task = krhino_list_entry(listnode, ktask_t, task_stats_item);
-        if (0 == strcmp(name, task->task_name)) {
-            return task;
-        }
-    }
-#endif
+//     for (listnode = g_kobj_list.task_head.next;
+//          listnode != &g_kobj_list.task_head; listnode = listnode->next) {
+//         task = krhino_list_entry(listnode, ktask_t, task_stats_item);
+//         if (0 == strcmp(name, task->task_name)) {
+//             return task;
+//         }
+//     }
+// #endif
 
-    return NULL;
-}
+//     return NULL;
+// }
 
 void aos_task_wdt_attach(void (*will)(void *), void *args)
 {
 #ifdef CONFIG_SOFTWDT
-    aos_wdt_attach((uint32_t)krhino_cur_task_get(), will, args);
+    aos_wdt_attach((long)krhino_cur_task_get(), will, args);
 #else
     (void)will;
     (void)args;
@@ -173,7 +247,7 @@ void aos_task_wdt_attach(void (*will)(void *), void *args)
 void aos_task_wdt_detach()
 {
 #ifdef CONFIG_SOFTWDT
-    uint32_t index = (uint32_t)krhino_cur_task_get();
+    long index = (long)krhino_cur_task_get();
 
     aos_wdt_feed(index, 0);
     aos_wdt_detach(index);
@@ -185,10 +259,10 @@ void aos_task_wdt_feed(int time)
 #ifdef CONFIG_SOFTWDT
     ktask_t *task = krhino_cur_task_get();
 
-    if (!aos_wdt_exists((uint32_t)task))
-        aos_wdt_attach((uint32_t)task, NULL, (void*)task->task_name);
+    if (!aos_wdt_exists((long)task))
+        aos_wdt_attach((long)task, NULL, (void*)task->task_name);
 
-    aos_wdt_feed((uint32_t)task, time);
+    aos_wdt_feed((long)task, time);
 #endif
 }
 
@@ -199,15 +273,17 @@ void aos_task_exit(int code)
     krhino_task_dyn_del(NULL);
 }
 
-aos_task_t aos_task_self()
+aos_task_t aos_task_self(void)
 {
-    aos_task_t task;
-    task.hdl = krhino_cur_task_get();
-
-    return task;
+    return (aos_task_t)krhino_cur_task_get();
 }
 
 #endif
+
+aos_task_t aos_task_find(char *name)
+{
+    return (aos_task_t)krhino_task_find(name);
+}
 
 const char *aos_task_name(void)
 {
@@ -216,7 +292,7 @@ const char *aos_task_name(void)
 
 const char *aos_task_get_name(aos_task_t *task)
 {
-    return ((ktask_t*)task->hdl)->task_name;
+    return ((ktask_t*)*task)->task_name;
 }
 
 int aos_task_key_create(aos_task_key_t *key)
@@ -241,31 +317,36 @@ void aos_task_key_delete(aos_task_key_t key)
         return;
     }
 
-    used_bitmap &= ~(1 << key);
+    uint32_t bit = 1 << key;
+
+    if ((used_bitmap & bit) == bit) {
+        used_bitmap &= ~(bit);
+        krhino_task_info_set(krhino_cur_task_get(), key, NULL);
+    }
 }
 
 #if (RHINO_CONFIG_TASK_INFO > 0)
 int aos_task_setspecific(aos_task_key_t key, void *vp)
 {
-    int ret;
+    uint32_t bit = 1 << key;
 
-    if (!(used_bitmap & (1 << key))) {
+    if ((used_bitmap & bit) == bit) {
+        int ret = krhino_task_info_set(krhino_cur_task_get(), key, vp);
+        return rhino2stderrno(ret);
+    } else {
         return -EINVAL;
     }
-    ret = krhino_task_info_set(krhino_cur_task_get(), key, vp);
-
-    return rhino2stderrno(ret);
 }
 
 void *aos_task_getspecific(aos_task_key_t key)
 {
     void *vp = NULL;
 
-    if (!(used_bitmap & (1 << key))) {
-        return vp;
-    }
+    uint32_t bit = 1 << key;
 
-    krhino_task_info_get(krhino_cur_task_get(), key, &vp);
+    if ((used_bitmap & bit) == bit) {
+        krhino_task_info_get(krhino_cur_task_get(), key, &vp);
+    }
 
     return vp;
 }
@@ -274,47 +355,53 @@ void *aos_task_getspecific(aos_task_key_t key)
 #if (RHINO_CONFIG_KOBJ_DYN_ALLOC > 0)
 int aos_mutex_new(aos_mutex_t *mutex)
 {
-    kstat_t   ret;
+    kstat_t ret;
+    kmutex_t *m;
 
     aos_check_return_einval(mutex);
 
-    mutex->hdl = aos_malloc(sizeof(kmutex_t));
-
-    if (mutex->hdl == NULL) {
+    m = aos_malloc(sizeof(kmutex_t));
+    if (m == NULL) {
         return -ENOMEM;
     }
 
-    ret = krhino_mutex_create(mutex->hdl, "AOS");
+    ret = krhino_mutex_create(m, "AOS");
 
     if (ret != RHINO_SUCCESS) {
-        aos_free(mutex->hdl);
-        mutex->hdl = NULL;
+        aos_free(m);
+        return rhino2stderrno(ret);
     }
+    *mutex = m;
 
-    return rhino2stderrno(ret);
+    return 0;
 }
 
 void aos_mutex_free(aos_mutex_t *mutex)
 {
-    aos_check_return(mutex && mutex->hdl);
+    aos_check_return(mutex && *mutex);
 
-    krhino_mutex_del(mutex->hdl);
+    krhino_mutex_del((kmutex_t *)*mutex);
 
-    aos_free(mutex->hdl);
+    aos_free(*mutex);
 
-    mutex->hdl = NULL;
+    *mutex = NULL;
 }
 
 int aos_mutex_lock(aos_mutex_t *mutex, unsigned int timeout)
 {
     kstat_t ret;
 
-    aos_check_return_einval(mutex && mutex->hdl);
+    CHECK_HANDLE(mutex);
 
     if (timeout == AOS_WAIT_FOREVER) {
-        ret = krhino_mutex_lock(mutex->hdl, RHINO_WAIT_FOREVER);
+        ret = krhino_mutex_lock((kmutex_t *)*mutex, RHINO_WAIT_FOREVER);
     } else {
-        ret = krhino_mutex_lock(mutex->hdl, MS2TICK(timeout));
+        ret = krhino_mutex_lock((kmutex_t *)*mutex, MS2TICK(timeout));
+    }
+
+    /* rhino allow nested */
+    if (ret == RHINO_MUTEX_OWNER_NESTED) {
+        ret = RHINO_SUCCESS;
     }
 
     return rhino2stderrno(ret);
@@ -324,9 +411,13 @@ int aos_mutex_unlock(aos_mutex_t *mutex)
 {
     kstat_t ret;
 
-    aos_check_return_einval(mutex && mutex->hdl);
+    CHECK_HANDLE(mutex);
 
-    ret = krhino_mutex_unlock(mutex->hdl);
+    ret = krhino_mutex_unlock((kmutex_t *)*mutex);
+    /* rhino allow nested */
+    if (ret == RHINO_MUTEX_OWNER_NESTED) {
+        ret = RHINO_SUCCESS;
+    }
 
     return rhino2stderrno(ret);
 }
@@ -339,7 +430,7 @@ int aos_mutex_is_valid(aos_mutex_t *mutex)
         return 0;
     }
 
-    k_mutex = mutex->hdl;
+    k_mutex = (kmutex_t *)*mutex;
 
     if (k_mutex == NULL) {
         return 0;
@@ -355,49 +446,76 @@ int aos_mutex_is_valid(aos_mutex_t *mutex)
 #endif
 
 #if ((RHINO_CONFIG_KOBJ_DYN_ALLOC > 0)&&(RHINO_CONFIG_SEM > 0))
-int aos_sem_new(aos_sem_t *sem, int count)
+aos_status_t aos_sem_create(aos_sem_t *sem, uint32_t count, uint32_t options)
 {
     kstat_t ret;
+    ksem_t *s;
 
-    aos_check_return_einval(sem);
+    (void)options;
+    if (sem == NULL) {
+        return -EINVAL;
+    }
 
-    sem->hdl = aos_malloc(sizeof(ksem_t));
-
-    if (sem->hdl == NULL) {
+    s = aos_malloc(sizeof(ksem_t));
+    if (s == NULL) {
         return -ENOMEM;
     }
 
-    ret = krhino_sem_create(sem->hdl, "AOS", count);
-
+    ret = krhino_sem_create(s, "AOS", count);
     if (ret != RHINO_SUCCESS) {
-        aos_free(sem->hdl);
-        sem->hdl = NULL;
+        aos_free(s);
+        return rhino2stderrno(ret);
     }
 
-    return rhino2stderrno(ret);
+    *sem = s;
+
+    return 0;
+}
+
+int aos_sem_new(aos_sem_t *sem, int count)
+{
+    kstat_t ret;
+    ksem_t *s;
+
+    aos_check_return_einval(sem);
+
+    s = aos_malloc(sizeof(ksem_t));
+    if (s == NULL) {
+        return -ENOMEM;
+    }
+
+    ret = krhino_sem_create(s, "AOS", count);
+    if (ret != RHINO_SUCCESS) {
+        aos_free(s);
+        return rhino2stderrno(ret);
+    }
+
+    *sem = s;
+
+    return 0;
 }
 
 void aos_sem_free(aos_sem_t *sem)
 {
-    aos_check_return(sem && sem->hdl);
+    aos_check_return(sem && *sem);
 
-    krhino_sem_del(sem->hdl);
+    krhino_sem_del((ksem_t *)*sem);
 
-    aos_free(sem->hdl);
+    aos_free(*sem);
 
-    sem->hdl = NULL;
+    *sem = NULL;
 }
 
 int aos_sem_wait(aos_sem_t *sem, unsigned int timeout)
 {
     kstat_t ret;
 
-    aos_check_return_einval(sem && sem->hdl);
+    CHECK_HANDLE(sem);
 
     if (timeout == AOS_WAIT_FOREVER) {
-        ret = krhino_sem_take(sem->hdl, RHINO_WAIT_FOREVER);
+        ret = krhino_sem_take((ksem_t *)*sem, RHINO_WAIT_FOREVER);
     } else {
-        ret = krhino_sem_take(sem->hdl, MS2TICK(timeout));
+        ret = krhino_sem_take((ksem_t *)*sem, MS2TICK(timeout));
     }
 
     return rhino2stderrno(ret);
@@ -405,16 +523,16 @@ int aos_sem_wait(aos_sem_t *sem, unsigned int timeout)
 
 void aos_sem_signal(aos_sem_t *sem)
 {
-    aos_check_return(sem && sem->hdl);
+    aos_check_return(sem && *sem);
 
-    krhino_sem_give(sem->hdl);
+    krhino_sem_give((ksem_t *)*sem);
 }
 
 void aos_sem_signal_all(aos_sem_t *sem)
 {
-    aos_check_return(sem && sem->hdl);
+    aos_check_return(sem && *sem);
 
-    krhino_sem_give_all(sem->hdl);
+    krhino_sem_give_all((ksem_t *)*sem);
 }
 
 int aos_sem_is_valid(aos_sem_t *sem)
@@ -425,7 +543,7 @@ int aos_sem_is_valid(aos_sem_t *sem)
         return 0;
     }
 
-    k_sem = sem->hdl;
+    k_sem = *sem;
 
     if (k_sem == NULL) {
         return 0;
@@ -440,6 +558,91 @@ int aos_sem_is_valid(aos_sem_t *sem)
 
 #endif
 
+#if (RHINO_CONFIG_TASK_SEM > 0)
+
+int aos_task_sem_new(aos_task_t *task, aos_sem_t *sem, const char *name, int count)
+{
+    kstat_t ret;
+
+    CHECK_HANDLE(task);
+    aos_check_return_einval(sem);
+
+    *sem = aos_malloc(sizeof(ksem_t));
+
+    if (*sem == NULL) {
+        return -ENOMEM;
+    }
+    if (name == NULL) {
+        ret = krhino_task_sem_create((ktask_t *)(*task), (ksem_t *)*sem, "AOS", count);
+    } else {
+        ret = krhino_task_sem_create((ktask_t *)(*task), (ksem_t *)*sem, name, count);
+    }
+
+    if (ret != RHINO_SUCCESS) {
+        aos_free(*sem);
+        *sem = NULL;
+    }
+    return rhino2stderrno(ret);
+}
+
+int aos_task_sem_free(aos_task_t *task)
+{
+    kstat_t ret;
+    ktask_t *ktask;
+
+    CHECK_HANDLE(task);
+
+    ktask = (ktask_t *)(*task);
+    ret = krhino_task_sem_del(ktask);
+    if (ret == RHINO_SUCCESS) {
+        aos_free(ktask->task_sem_obj);
+    }
+    return rhino2stderrno(ret);
+}
+
+void aos_task_sem_signal(aos_task_t *task)
+{
+    aos_check_return(task && *task);
+
+    krhino_task_sem_give((ktask_t *)(*task));
+}
+
+int aos_task_sem_wait(unsigned int timeout)
+{
+    kstat_t ret;
+
+    if (timeout == AOS_WAIT_FOREVER) {
+        ret = krhino_task_sem_take(RHINO_WAIT_FOREVER);
+    } else {
+        ret = krhino_task_sem_take(MS2TICK(timeout));
+    }
+
+    return rhino2stderrno(ret);
+}
+
+int aos_task_sem_count_set(aos_task_t *task, int count)
+{
+    kstat_t ret;
+
+    CHECK_HANDLE(task);
+
+    ret = krhino_task_sem_count_set((ktask_t *)(*task), count);
+    return rhino2stderrno(ret);
+}
+
+int aos_task_sem_count_get(aos_task_t *task, int *count)
+{
+    kstat_t ret;
+
+    CHECK_HANDLE(task);
+    aos_check_return_einval(count);
+
+    ret = krhino_task_sem_count_get((ktask_t *)(*task), (sem_count_t *)count);
+    return rhino2stderrno(ret);
+}
+
+#endif /* RHINO_CONFIG_TASK_SEM */
+
 #if (RHINO_CONFIG_EVENT_FLAG > 0)
 
 int aos_event_new(aos_event_t *event, unsigned int flags)
@@ -448,19 +651,18 @@ int aos_event_new(aos_event_t *event, unsigned int flags)
 
     aos_check_return_einval(event);
 
-    ret = (int)krhino_event_dyn_create((kevent_t **)(&(event->hdl)), "AOS", flags);
+    ret = krhino_event_dyn_create((kevent_t **)(event), "AOS", flags);
 
     return rhino2stderrno(ret);
 }
 
 void aos_event_free(aos_event_t *event)
 {
-    aos_check_return(event && event->hdl);
+    aos_check_return(event && *event);
 
+    (void)krhino_event_dyn_del((kevent_t *)*event);
 
-    (void)krhino_event_dyn_del(event->hdl);
-
-    event->hdl = NULL;
+    *event = NULL;
 }
 
 int aos_event_get
@@ -474,12 +676,12 @@ int aos_event_get
 {
     kstat_t ret;
 
-    aos_check_return_einval(event && event->hdl);
+    CHECK_HANDLE(event);
 
     if (timeout == AOS_WAIT_FOREVER) {
-        ret = krhino_event_get(event->hdl, flags, opt, actl_flags, RHINO_WAIT_FOREVER);
+        ret = krhino_event_get((kevent_t *)*event, flags, opt, actl_flags, RHINO_WAIT_FOREVER);
     } else {
-        ret = krhino_event_get(event->hdl, flags, opt, actl_flags, MS2TICK(timeout));
+        ret = krhino_event_get((kevent_t *)*event, flags, opt, actl_flags, MS2TICK(timeout));
     }
 
     return rhino2stderrno(ret);
@@ -489,9 +691,9 @@ int aos_event_set(aos_event_t *event, unsigned int flags, unsigned char opt)
 {
     kstat_t ret;
 
-    aos_check_return_einval(event && event->hdl);
+    CHECK_HANDLE(event);
 
-    ret = krhino_event_set(event->hdl, flags, opt);
+    ret = krhino_event_set((kevent_t *)*event, flags, opt);
 
     return rhino2stderrno(ret);
 }
@@ -504,7 +706,7 @@ int aos_event_is_valid(aos_event_t *event)
         return 0;
     }
 
-    k_event = event->hdl;
+    k_event = (kevent_t *)*event;
 
     if (k_event == NULL) {
         return 0;
@@ -520,63 +722,94 @@ int aos_event_is_valid(aos_event_t *event)
 
 #if (RHINO_CONFIG_BUF_QUEUE > 0)
 
-int aos_queue_new(aos_queue_t *queue, void *buf, unsigned int size, int max_msg)
+aos_status_t aos_queue_create(aos_queue_t *queue, size_t size, size_t max_msg, uint32_t options)
 {
-    kstat_t ret;
+    kstat_t      ret;
+    kbuf_queue_t *q;
+    size_t       malloc_len;
+    void        *real_buf;
+
+    (void)options;
+    if (queue == NULL || size == 0) {
+        return -EINVAL;
+    }
+
+    malloc_len = sizeof(kbuf_queue_t) + size;
+    q = (kbuf_queue_t *)aos_malloc(malloc_len);
+    if (q == NULL) {
+        return -ENOMEM;
+    }
+    real_buf = (uint8_t *)q + sizeof(kbuf_queue_t);
+
+    ret = krhino_buf_queue_create(q, "AOS", real_buf, size, max_msg);
+    if (ret != RHINO_SUCCESS) {
+        aos_free(q);
+        return rhino2stderrno(ret);
+    }
+
+    *queue = q;
+
+    return 0;
+}
+
+int aos_queue_new(aos_queue_t *queue, void *buf, size_t size, int max_msg)
+{
+    kstat_t      ret;
+    kbuf_queue_t *q;
+    size_t       malloc_len;
+    void        *real_buf;
 
     aos_check_return_einval(queue && buf && (size > 0) && (max_msg > 0));
 
-    queue->hdl = aos_malloc(sizeof(kbuf_queue_t));
-
-    if (queue->hdl == NULL) {
+    malloc_len = sizeof(kbuf_queue_t) + (buf == NULL? size : 0);
+    q = (kbuf_queue_t *)aos_malloc(malloc_len);
+    if (q == NULL) {
         return -ENOMEM;
     }
+    real_buf = (buf == NULL) ? ((uint8_t *)q + sizeof(kbuf_queue_t)) : buf;
 
-    ret = krhino_buf_queue_create(queue->hdl, "AOS", buf, size, max_msg);
-
+    ret = krhino_buf_queue_create(q, "AOS", real_buf, size, max_msg);
     if (ret != RHINO_SUCCESS) {
-        aos_free(queue->hdl);
-        queue->hdl = NULL;
+        aos_free(q);
+        return rhino2stderrno(ret);
     }
 
-    return rhino2stderrno(ret);
+    *queue = q;
+
+    return 0;
 }
 
 void aos_queue_free(aos_queue_t *queue)
 {
-    aos_check_return(queue && queue->hdl);
+    aos_check_return(queue && *queue);
 
-    krhino_buf_queue_del(queue->hdl);
+    krhino_buf_queue_del((kbuf_queue_t *)*queue);
 
-    aos_free(queue->hdl);
+    aos_free(*queue);
 
-    queue->hdl = NULL;
+    *queue = NULL;
 }
 
-int aos_queue_send(aos_queue_t *queue, void *msg, unsigned int size)
+int aos_queue_send(aos_queue_t *queue, void *msg, size_t size)
 {
     int ret;
 
-    aos_check_return_einval(queue && queue->hdl && msg && size);
+    CHECK_HANDLE(queue);
 
-    ret = krhino_buf_queue_send(queue->hdl, msg, size);
-
+    ret = krhino_buf_queue_send((kbuf_queue_t *)*queue, msg, size);
     return rhino2stderrno(ret);
 }
 
-int aos_queue_recv(aos_queue_t *queue, unsigned int ms, void *msg,
-                   unsigned int *size)
+int aos_queue_recv(aos_queue_t *queue, unsigned int ms, void *msg, size_t *size)
 {
     int ret;
 
-    aos_check_return_einval(queue && queue->hdl && msg && size);
-
+    CHECK_HANDLE(queue);
     if (ms == AOS_WAIT_FOREVER) {
-        ret = krhino_buf_queue_recv(queue->hdl, RHINO_WAIT_FOREVER, msg, size);
+        ret = krhino_buf_queue_recv((kbuf_queue_t *)*queue, RHINO_WAIT_FOREVER, msg, size);
     } else {
-        ret = krhino_buf_queue_recv(queue->hdl, MS2TICK(ms), msg, size);
+        ret = krhino_buf_queue_recv((kbuf_queue_t *)*queue, MS2TICK(ms), msg, size);
     }
-    //printf("aos_queue_recv ret %d\n", ret);
     return rhino2stderrno(ret);
 }
 
@@ -588,7 +821,7 @@ int aos_queue_is_valid(aos_queue_t *queue)
         return 0;
     }
 
-    k_queue = queue->hdl;
+    k_queue = (kbuf_queue_t *)*queue;
 
     if (k_queue == NULL) {
         return 0;
@@ -607,15 +840,14 @@ void *aos_queue_buf_ptr(aos_queue_t *queue)
         return NULL;
     }
 
-    return ((kbuf_queue_t *)queue->hdl)->buf;
+    return ((kbuf_queue_t *)*queue)->buf;
 }
 
 int aos_queue_get_count(aos_queue_t *queue)
 {
-    aos_check_return_einval(queue && (queue->hdl));
-
     kbuf_queue_info_t info;
-    kstat_t ret = krhino_buf_queue_info_get((kbuf_queue_t *)queue->hdl, &info);
+    CHECK_HANDLE(queue);
+    kstat_t ret = krhino_buf_queue_info_get((kbuf_queue_t *)*queue, &info);
 
     return ret == RHINO_SUCCESS ? info.cur_num : -EPERM;
 }
@@ -625,10 +857,12 @@ int aos_queue_get_count(aos_queue_t *queue)
 int aos_timer_new(aos_timer_t *timer, void (*fn)(void *, void *),
                   void *arg, int ms, int repeat)
 {
-    aos_check_return_einval(timer && fn);
+    kstat_t ret;
 
-    sys_time_t round = repeat == 0 ? 0 : ms;
-    kstat_t ret = krhino_timer_dyn_create(((ktimer_t **)(&timer->hdl)), "AOS", (timer_cb_t)fn, MS2TICK(ms), MS2TICK(round), arg, 1);
+    aos_check_return_einval(timer && fn);
+    sys_time_t round = (repeat == 0 ? 0 : ms);
+
+    ret = krhino_timer_dyn_create((ktimer_t **)(timer), "AOS", (timer_cb_t)fn, MS2TICK(ms), MS2TICK(round), arg, 1);
 
     return rhino2stderrno(ret);
 }
@@ -636,30 +870,31 @@ int aos_timer_new(aos_timer_t *timer, void (*fn)(void *, void *),
 int aos_timer_new_ext(aos_timer_t *timer, void (*fn)(void *, void *),
                       void *arg, int ms, int repeat, unsigned char auto_run)
 {
-    aos_check_return_einval(timer && fn);
+    kstat_t ret;
 
-    sys_time_t round = repeat == 0 ? 0 : ms;
-    kstat_t ret = krhino_timer_dyn_create(((ktimer_t **)(&timer->hdl)), "AOS", (timer_cb_t)fn, MS2TICK(ms), MS2TICK(round), arg, auto_run);
+    aos_check_return_einval(timer && fn);
+    sys_time_t round = (repeat == 0 ? 0 : ms);
+
+    ret = krhino_timer_dyn_create((ktimer_t **)(timer), "AOS", (timer_cb_t)fn, MS2TICK(ms), MS2TICK(round), arg, auto_run);
 
     return rhino2stderrno(ret);
 }
 
 void aos_timer_free(aos_timer_t *timer)
 {
-    aos_check_return(timer && timer->hdl);
+    aos_check_return(timer && *timer);
 
-    krhino_timer_dyn_del(timer->hdl);
-    timer->hdl = NULL;
+    krhino_timer_dyn_del((ktimer_t *)*timer);
+    *timer = NULL;
 }
 
 int aos_timer_start(aos_timer_t *timer)
 {
     int ret;
 
-    aos_check_return_einval(timer && timer->hdl);
+    CHECK_HANDLE(timer);
 
-    ret = krhino_timer_start(timer->hdl);
-
+    ret = krhino_timer_start((ktimer_t *)*timer);
     return rhino2stderrno(ret);
 }
 
@@ -667,10 +902,9 @@ int aos_timer_stop(aos_timer_t *timer)
 {
     int ret;
 
-    aos_check_return_einval(timer && timer->hdl);
+    CHECK_HANDLE(timer);
 
-    ret = krhino_timer_stop(timer->hdl);
-
+    ret = krhino_timer_stop((ktimer_t *)*timer);
     return rhino2stderrno(ret);
 }
 
@@ -678,10 +912,9 @@ int aos_timer_change(aos_timer_t *timer, int ms)
 {
     int ret;
 
-    aos_check_return_einval(timer && timer->hdl);
+    CHECK_HANDLE(timer);
 
-    ret = krhino_timer_change(timer->hdl, MS2TICK(ms), MS2TICK(ms));
-
+    ret = krhino_timer_change((ktimer_t *)*timer, MS2TICK(ms), MS2TICK(ms));
     return rhino2stderrno(ret);
 }
 
@@ -689,8 +922,9 @@ int aos_timer_change_once(aos_timer_t *timer, int ms)
 {
     int ret;
 
-    aos_check_return_einval(timer && timer->hdl);
-    ret = krhino_timer_change(timer->hdl, MS2TICK(ms), 0);
+    CHECK_HANDLE(timer);
+
+    ret = krhino_timer_change((ktimer_t *)*timer, MS2TICK(ms), 0);
 
     return rhino2stderrno(ret);
 }
@@ -703,7 +937,8 @@ int aos_timer_is_valid(aos_timer_t *timer)
         return 0;
     }
 
-    k_timer = timer->hdl;
+    k_timer = (ktimer_t *)*timer;
+
     if (k_timer == NULL) {
         return 0;
     }
@@ -713,6 +948,25 @@ int aos_timer_is_valid(aos_timer_t *timer)
     }
 
     return 1;
+}
+
+int aos_timer_gettime(aos_timer_t *timer, uint64_t value[4])
+{
+    ktimer_t *ktimer = NULL;
+    uint64_t init_ms;
+    uint64_t round_ms;
+
+    CHECK_HANDLE(timer);
+    ktimer = (ktimer_t *)*timer;
+    init_ms = (uint64_t)krhino_ticks_to_ms(ktimer->init_count);
+    round_ms = (uint64_t)krhino_ticks_to_ms(ktimer->round_ticks);
+
+    value[0] = init_ms / 1000;
+    value[1] = (init_ms % 1000) * 1000000UL;
+    value[2] = round_ms / 1000;
+    value[3] = (round_ms % 1000) * 1000000UL ;
+
+    return 0;
 }
 #endif
 
@@ -743,6 +997,32 @@ int aos_workqueue_create(aos_workqueue_t *workqueue, int pri, int stack_size)
     return rhino2stderrno(ret);
 }
 
+int aos_workqueue_create_ext(aos_workqueue_t *workqueue, const char *name, int pri, int stack_size)
+{
+    kstat_t ret;
+
+    aos_check_return_einval(workqueue && name);
+
+    workqueue->hdl = (cpu_stack_t *)aos_malloc(sizeof(kworkqueue_t) + stack_size);
+
+    if (workqueue->hdl == NULL) {
+        return -ENOMEM;
+    }
+
+    workqueue->stk = (cpu_stack_t*)((char *)workqueue->hdl + sizeof(kworkqueue_t));
+
+    ret = krhino_workqueue_create(workqueue->hdl, name, pri, workqueue->stk,
+                                  stack_size / sizeof(cpu_stack_t));
+
+    if (ret != RHINO_SUCCESS) {
+        aos_free(workqueue->hdl);
+        workqueue->hdl = NULL;
+        workqueue->stk = NULL;
+    }
+
+    return rhino2stderrno(ret);
+}
+
 void aos_workqueue_del(aos_workqueue_t *workqueue)
 {
     aos_check_return(workqueue && workqueue->hdl && workqueue->stk);
@@ -754,55 +1034,53 @@ void aos_workqueue_del(aos_workqueue_t *workqueue)
 int aos_work_init(aos_work_t *work, void (*fn)(void *), void *arg, int dly)
 {
     kstat_t  ret;
-    //kwork_t *w;
+    kwork_t *w;
 
     aos_check_return_einval(work);
 
-    work->hdl = aos_malloc(sizeof(kwork_t));
+    w = aos_malloc(sizeof(kwork_t));
 
-    if (work->hdl == NULL) {
+    if (w == NULL) {
         return -ENOMEM;
     }
 
-    ret = krhino_work_init(work->hdl, fn, arg, MS2TICK(dly));
+    ret = krhino_work_init(w, fn, arg, MS2TICK(dly));
 
     if (ret != RHINO_SUCCESS) {
-        aos_free(work->hdl);
-        work->hdl = NULL;
-
+        aos_free(w);
+        return rhino2stderrno(ret);
     }
-
-    return rhino2stderrno(ret);
+    *work = w;
+    return 0;
 }
 
 void aos_work_destroy(aos_work_t *work)
 {
     kwork_t *w;
 
-    if (work == NULL) {
-        return;
-    }
+    aos_check_return(work && *work);
 
-    w = work->hdl;
+    w = *work;
 
     if (w->timer != NULL) {
         krhino_timer_stop(w->timer);
         krhino_timer_dyn_del(w->timer);
     }
 
-    aos_free(work->hdl);
-    work->hdl = NULL;
+    aos_free(w);
+    *work = NULL;
 }
 
 int aos_work_run(aos_workqueue_t *workqueue, aos_work_t *work)
 {
     int ret;
 
-    if ((workqueue == NULL) || (work == NULL)) {
+    if (workqueue == NULL) {
         return -EINVAL;
     }
+    CHECK_HANDLE(work);
 
-    ret = krhino_work_run(workqueue->hdl, work->hdl);
+    ret = krhino_work_run(workqueue->hdl, (kwork_t *)*work);
 
     return rhino2stderrno(ret);
 }
@@ -811,11 +1089,9 @@ int aos_work_sched(aos_work_t *work)
 {
     int ret;
 
-    if (work == NULL) {
-        return -EINVAL;
-    }
+    CHECK_HANDLE(work);
 
-    ret = krhino_work_sched(work->hdl);
+    ret = krhino_work_sched((kwork_t *)*work);
 
     return rhino2stderrno(ret);
 }
@@ -824,11 +1100,9 @@ int aos_work_cancel(aos_work_t *work)
 {
     int ret;
 
-    if (work == NULL) {
-        return -EINVAL;
-    }
+    CHECK_HANDLE(work);
 
-    ret = krhino_work_cancel(work->hdl);
+    ret = krhino_work_cancel((kwork_t *)*work);
 
     if (ret != RHINO_SUCCESS) {
         return -EBUSY;
@@ -846,6 +1120,11 @@ long long aos_now(void)
 long long aos_now_ms(void)
 {
     return krhino_sys_time_get();
+}
+
+long long aos_sys_tick_get(void)
+{
+    return krhino_sys_tick_get();
 }
 
 void aos_msleep(int ms)
@@ -878,7 +1157,7 @@ void aos_start(void)
     krhino_start();
 }
 
-k_status_t aos_kernel_intrpt_enter(void)
+int aos_kernel_intrpt_enter(void)
 {
     kstat_t ret = krhino_intrpt_enter();
 
@@ -891,7 +1170,7 @@ k_status_t aos_kernel_intrpt_enter(void)
     return 0;
 }
 
-k_status_t aos_kernel_intrpt_exit(void)
+int aos_kernel_intrpt_exit(void)
 {
     krhino_intrpt_exit();
     return 0;
@@ -914,6 +1193,7 @@ int aos_get_mminfo(int32_t *total, int32_t *used, int32_t *mfree, int32_t *peak)
 int aos_mm_dump(void)
 {
 #if defined(CONFIG_DEBUG) && defined(CONFIG_DEBUG_MM)
+    extern uint32_t dumpsys_mm_info_func(uint32_t mm_status);
     dumpsys_mm_info_func(0);
 #endif
 
@@ -1001,11 +1281,11 @@ static uint32_t aos_task_get_stack_space(void *task_handle)
         return 0;
     }
 
-    uint32_t stack_free;
+    size_t stack_free;
     kstat_t ret = krhino_task_stack_min_free(task_handle, &stack_free);
 
     if (ret == RHINO_SUCCESS) {
-        return 4 * stack_free;
+        return (uint32_t)(4 * stack_free);
     } else {
         return 0;
     }
@@ -1023,6 +1303,8 @@ void aos_task_show_info(void)
         return;
 
 #if (RHINO_CONFIG_SYS_STATS > 0)
+#ifdef AOS_COMP_DEBUG
+    extern void debug_task_cpu_usage_stats(void);
     static int show_first = 1;
     debug_task_cpu_usage_stats();
     if (show_first) {
@@ -1031,6 +1313,7 @@ void aos_task_show_info(void)
         debug_task_cpu_usage_stats();
         show_first = 0;
     }
+#endif
 #endif
 
 #if (RHINO_CONFIG_CPU_USAGE_STATS > 0)
@@ -1065,7 +1348,7 @@ void aos_task_show_info(void)
         uint32_t strack_size = task_array[i]->stack_size * 4;
         uint32_t min_free = aos_task_get_stack_space(task_array[i]);
 #if (RHINO_CONFIG_SYS_STATS > 0)
-        printf(" %p   %8d %8d   %2d%% %8lld %8.1f\n",
+        printf(" %p   %8d %8d   %2d%% %8"PRId64" %8.1f\n",
                task_array[i]->task_stack_base,
                strack_size,
                strack_size - min_free,
@@ -1073,7 +1356,7 @@ void aos_task_show_info(void)
                task_array[i]->tick_remain,
                debug_task_cpu_usage_get(task_array[i]) / 100.0);
 #else
-        printf(" %p   %8d %8d   %2d%% %8lld\n",
+        printf(" %p   %8d %8d   %2d%% %8"PRId64"\n",
                task_array[i]->task_stack_base,
                strack_size,
                strack_size - min_free,
@@ -1152,350 +1435,86 @@ int32_t aos_irq_context(void)
     return g_intrpt_nested_level[cpu_cur_get()] > 0u || g_sched_lock[cpu_cur_get()] > 0u;
 }
 
-#if defined(CONFIG_DEBUG) && defined(CONFIG_DEBUG_MM)
-
-#define MAGIC_NUM 4
-
-#define ISFIXEDBLK(mh, ptr)                                                                        \
-    (mh->fix_pool && ((void *)ptr >= ((mblk_pool_t*)(mh->fix_pool))->pool_start)) &&                    \
-     ((void *)ptr < ((mblk_pool_t*)(mh->fix_pool))->pool_end)                 \
-        ? 1                                                                                        \
-        : 0
-
-static int malloc_size(uint8_t *ret)
+void *aos_zalloc(size_t size)
 {
-    if (g_kmm_head->fix_pool != NULL && ISFIXEDBLK(g_kmm_head, ret))
-        return RHINO_CONFIG_MM_BLK_SIZE - MAGIC_NUM;
-    else {
-        k_mm_list_t *b = (k_mm_list_t *)((char *)ret - MMLIST_HEAD_SIZE);
-        return (b->buf_size & (~MM_ALIGN_MASK)) - MAGIC_NUM;
+    void *tmp = NULL;
+
+    if (size == 0) {
+        return NULL;
     }
-}
-
-static int memory_overflow(uint8_t *q, uint32_t *caller)
-{
-    if (g_kmm_head->fix_pool != NULL && ISFIXEDBLK(g_kmm_head, q)) {
-        uint8_t *p = q + RHINO_CONFIG_MM_BLK_SIZE - MAGIC_NUM;
-        return p[0] == 0x50 && p[1] == 0x50 && p[2] == 0x50 && p[3] == 0x50 ? 0 : 1;
-    } else {
-        k_mm_list_t *b = (k_mm_list_t *)((char *)q - MMLIST_HEAD_SIZE);
 
 #if (RHINO_CONFIG_MM_DEBUG > 0u)
-        if (caller)
-            *caller = b->owner & 0xFFFFFFFE;
-        if (b->dye != RHINO_MM_FREE_DYE && b->dye != RHINO_MM_CORRUPT_DYE) {
-            return 1;
-        }
-
-        if (b->owner & 1) {
-            uint8_t * p = q + (b->buf_size & (~MM_ALIGN_MASK)) - MAGIC_NUM;
-            return p[0] == 0x50 && p[1] == 0x50 && p[2] == 0x50 && p[3] == 0x50 ? 0 : 1;
-        }
+    tmp = krhino_mm_alloc(size | AOS_UNSIGNED_INT_MSB);
+    krhino_owner_return_addr(tmp);
 #else
-        uint8_t * p = q + (b->buf_size & (~MM_ALIGN_MASK)) - MAGIC_NUM;
-        return p[0] == 0x50 && p[1] == 0x50 && p[2] == 0x50 && p[3] == 0x50 ? 0 : 1;
+    tmp = krhino_mm_alloc(size);
 #endif
+
+    if (tmp) {
+        memset(tmp, 0, size);
     }
 
-    return 0;
+    return tmp;
 }
 
-struct mm_node {
-    k_mm_list_t *b;
-    int overflow;
-
-    slist_t next;
-};
-
-static struct mem_list {
-    uint32_t caller;
-    uint32_t count;
-    uint32_t size;
-    slist_t node;
-} * mmlist = NULL;
-static int mm_count = 0;
-static struct mm_node *node_list_head = NULL;
-
-static void malloc_inc(struct mm_node *node)
+void *aos_malloc(size_t size)
 {
-    uint32_t caller = node->b->owner & 0xFFFFFFFE;
-    uint32_t size = node->b->buf_size & (~MM_ALIGN_MASK);
-    if (caller == 0)
-        return;
+    void *tmp = NULL;
 
-    int found = 0;
-    for (int i = 0; i < mm_count; i++) {
-        if (mmlist[i].caller == caller) {
-            mmlist[i].count++;
-            mmlist[i].size += size;
-            slist_add_tail(&node->next, &mmlist[i].node);
-
-            // if (mmlist[i].count > 20) {
-            //     printf("waring:  malloc caller: %x, total size: %d, count is %d\n", caller, mmlist[i].size, mmlist[i].count);
-            // }
-            found = 1;
-            break;
-        }
-    }
-
-retry:
-    if (found == 0) {
-        for (int i = 0; i < mm_count; i++) {
-            if (mmlist[i].caller == 0) {
-                mmlist[i].caller = caller;
-                mmlist[i].count  = 1;
-                mmlist[i].size   = size;
-                slist_add_tail(&node->next, &mmlist[i].node);
-
-                found = 1;
-                break;
-            }
-        }
-    }
-
-    if (found == 0) {
-        mmlist = krhino_mm_realloc(mmlist, sizeof(struct mem_list) * (mm_count + 8));
-
-        memset(mmlist + mm_count, 0, sizeof(struct mem_list) * 8);
-        mm_count += 8;
-        goto retry;
-    }
-}
-
-static void print_blockx(struct mm_node *node)
-{
-    k_mm_list_t *b = node->b;
-
-    printf("         %p ", b);
-#if (RHINO_CONFIG_MM_DEBUG > 0u)
-    printf( b->dye != RHINO_MM_FREE_DYE && b->dye != RHINO_MM_CORRUPT_DYE? "!" : " ");
-#endif
-    printf(b->buf_size & RHINO_MM_FREE ? "free ": "used ");
-
-    if ((b->buf_size & (~MM_ALIGN_MASK))) {
-        printf(" %6lu ", (unsigned long) (b->buf_size & (~MM_ALIGN_MASK)));
-    } else {
-        printf(" sentinel ");
+    if (size == 0) {
+        return NULL;
     }
 
 #if (RHINO_CONFIG_MM_DEBUG > 0u)
-    printf(" %8x ", b->dye);
-    printf(" 0x%-8x ", b->owner);
-#endif
-
-    printf("%s\r\n", node->overflow == 0 ? "" : "overflow");
-}
-
-static void dump_kmm_map(k_mm_head *mmhead)
-{
-    k_mm_region_info_t *reginfo, *nextreg;
-    k_mm_list_t *next, *cur;
-
-    if (!mmhead) {
-        return;
-    }
-
-    int count = 0;
-
-    reginfo = mmhead->regioninfo;
-    while (reginfo) {
-        cur = (k_mm_list_t *) ((char *) reginfo - MMLIST_HEAD_SIZE);
-        while (cur) {
-            count++;
-            if ((cur->buf_size & (~MM_ALIGN_MASK))) {
-                next = MM_GET_NEXT_BLK(cur);
-            } else {
-                next = NULL;
-            }
-            cur = next;
-        }
-        nextreg = reginfo->next;
-        reginfo = nextreg;
-    }
-
-    node_list_head = krhino_mm_alloc(sizeof(struct mm_node) * count);
-    memset(node_list_head, 0, sizeof(struct mm_node) * count);
-    aos_alloc_trace(node_list_head, 0x12345678);
-
-    int i = 0;
-    reginfo = mmhead->regioninfo;
-    while (reginfo) {
-        cur = (k_mm_list_t *) ((char *) reginfo - MMLIST_HEAD_SIZE);
-        while (cur) {
-            if (cur->owner != 0x12345678) {
-                node_list_head[i].b = cur;
-                node_list_head[i].overflow = 0;
-                if (memory_overflow(cur->mbinfo.buffer, NULL) && i > 0)
-                    node_list_head[i].overflow = 1;
-                i++;
-            }
-
-            if ((cur->buf_size & (~MM_ALIGN_MASK))) {
-                next = MM_GET_NEXT_BLK(cur);
-            } else {
-                next = NULL;
-            }
-            cur = next;
-        }
-        nextreg = reginfo->next;
-        reginfo = nextreg;
-    }
-
-    for (i = 0; i < count; i++) {
-        malloc_inc(&node_list_head[i]);
-    }
-}
-
-void aos_malloc_show(int mm)
-{
-    aos_kernel_sched_suspend();
-    dump_kmm_map(g_kmm_head);
-    for (int i = 0; i < mm_count; i++) {
-        if (mmlist[i].caller != 0) {
-            struct mm_node *node;
-            printf("%3d: caller=0x%x, count=%2d, total size=%d\n", i, mmlist[i].caller, mmlist[i].count, mmlist[i].size);
-
-            if (mm) {
-                slist_for_each_entry(&mmlist[i].node, node, struct mm_node, next) {
-                    print_blockx(node);
-                }
-                printf("\r\n");
-            }
-        }
-    }
-
-    krhino_mm_free(mmlist);
-    krhino_mm_free(node_list_head);
-
-    node_list_head = NULL;
-    mmlist = NULL;
-    mm_count = 0;
-
-    aos_kernel_sched_resume();
-}
-
-void *yoc_malloc(int32_t size, void *caller)
-{
-    aos_kernel_sched_suspend();
-    uint8_t *ret = krhino_mm_alloc(size + MAGIC_NUM);
-    uint8_t *p   = ret + malloc_size(ret);
-
-    *(p++) = 0x50;
-    *(p++) = 0x50;
-    *(p++) = 0x50;
-    *(p++) = 0x50;
-    aos_alloc_trace(ret, (uint32_t)caller + 1);
-
-    aos_kernel_sched_resume();
-
-    return ret;
-}
-
-void *yoc_realloc(void *ptr, size_t size, void *caller)
-{
-    aos_kernel_sched_suspend();
-    ptr = krhino_mm_realloc(ptr, size + MAGIC_NUM);
-
-    uint8_t *p = (uint8_t*)ptr + malloc_size(ptr);
-
-    *(p++) = 0x50;
-    *(p++) = 0x50;
-    *(p++) = 0x50;
-    *(p++) = 0x50;
-    aos_alloc_trace(ptr, (uint32_t)caller + 1);
-
-    aos_kernel_sched_resume();
-
-    return ptr;
-}
-
-void yoc_free(void *ptr, void *unsed)
-{
-    aos_kernel_sched_suspend();
-
-    uint32_t caller = 0;
-
-    if (!memory_overflow(ptr, &caller)) {
-        krhino_mm_free(ptr);
-        aos_kernel_sched_resume();
-        return;
-    }
-
-    printf("b->buf_size = %d, ptr=%p\n", malloc_size(ptr), ptr);
-    printf("WARNING, memory maybe corrupt!!, malloc function: 0x%x\n", caller);
-    while (1);
-}
-
+    tmp = krhino_mm_alloc(size | AOS_UNSIGNED_INT_MSB);
+    krhino_owner_return_addr(tmp);
 #else
+    tmp = krhino_mm_alloc(size);
+#endif
 
-void *yoc_malloc(int32_t size, void *caller)
-{
-    aos_kernel_sched_suspend();
-    void *ret = krhino_mm_alloc(size);
-    aos_alloc_trace(ret, (uint32_t)caller);
-    aos_kernel_sched_resume();
-
-    return ret;
+    return tmp;
 }
 
-void *yoc_realloc(void *ptr, size_t size, void *caller)
+void *aos_calloc(size_t nitems, size_t size)
 {
-    aos_kernel_sched_suspend();
-    ptr = krhino_mm_realloc(ptr, size);
-    aos_alloc_trace(ptr, (uint32_t)caller);
-    aos_kernel_sched_resume();
+    void *tmp = NULL;
+    size_t len = (size_t)nitems*size;
 
-    return ptr;
+    if (len == 0) {
+        return NULL;
+    }
+
+#if (RHINO_CONFIG_MM_DEBUG > 0u)
+    tmp = krhino_mm_alloc(len | AOS_UNSIGNED_INT_MSB);
+    krhino_owner_return_addr(tmp);
+#else
+    tmp = krhino_mm_alloc(len);
+#endif
+
+    if (tmp) {
+        memset(tmp, 0, len);
+    }
+
+    return tmp;
 }
 
-void yoc_free(void *ptr, void *caller)
+void *aos_realloc(void *mem, size_t size)
 {
-    aos_kernel_sched_suspend();
-    krhino_mm_free(ptr);
-    aos_kernel_sched_resume();
+    void *tmp = NULL;
+
+#if (RHINO_CONFIG_MM_DEBUG > 0u)
+    tmp = krhino_mm_realloc(mem, size | AOS_UNSIGNED_INT_MSB);
+    krhino_owner_return_addr(tmp);
+#else
+    tmp = krhino_mm_realloc(mem, size);
+#endif
+
+    return tmp;
 }
 
-void aos_malloc_show(int mm)
+void *aos_zalloc_check(size_t size)
 {
-
-}
-
-#endif // defined(CONFIG_DEBUG) && defined(CONFIG_DEBUG_MM)
-
-void *aos_zalloc(unsigned int size)
-{
-    void *ptr = yoc_malloc(size, __builtin_return_address(0));
-
-    if (ptr)
-        memset(ptr, 0, size);
-
-    return ptr;
-}
-
-void *aos_malloc(unsigned int size)
-{
-    return yoc_malloc(size, __builtin_return_address(0));
-}
-
-void *aos_calloc(unsigned int size, int num)
-{
-    void *ptr = yoc_malloc(size * num, __builtin_return_address(0));
-
-    if (ptr)
-        memset(ptr, 0, size * num);
-
-    return ptr;
-}
-
-void *aos_realloc(void *ptr, unsigned int size)
-{
-    return yoc_realloc(ptr, size, __builtin_return_address(0));
-}
-
-
-void *aos_zalloc_check(unsigned int size)
-{
-    void *ptr = yoc_malloc(size, __builtin_return_address(0));
+    void *ptr = aos_malloc(size);
 
     aos_check_mem(ptr);
     if (ptr) {
@@ -1505,38 +1524,59 @@ void *aos_zalloc_check(unsigned int size)
     return ptr;
 }
 
-void *aos_malloc_check(unsigned int size)
+void aos_alloc_trace(void *addr, uintptr_t allocator)
 {
-    void *p = yoc_malloc(size, __builtin_return_address(0));
+#if (RHINO_CONFIG_MM_DEBUG > 0u)
+    krhino_owner_attach(addr, allocator);
+#endif
+}
+
+void aos_free(void *mem)
+{
+    if (mem == NULL) {
+        return;
+    }
+
+    krhino_mm_free(mem);
+}
+
+void aos_calendar_time_set(uint64_t now_ms)
+{
+    start_time_ms = now_ms - krhino_sys_time_get();
+}
+
+uint64_t aos_calendar_time_get(void)
+{
+    return krhino_sys_time_get() + start_time_ms;
+}
+
+uint64_t aos_calendar_localtime_get(void)
+{
+    if ((aos_calendar_time_get() - 8 * 3600 * 1000) < 0) {
+        return aos_calendar_time_get();
+    }
+    return aos_calendar_time_get() + 8 * 3600 * 1000;
+}
+
+void *aos_malloc_check(size_t size)
+{
+    void *p = aos_malloc(size);
     aos_check_mem(p);
 
     return p;
 }
 
-void *aos_calloc_check(unsigned int size, int num)
+void *aos_calloc_check(size_t size, size_t num)
 {
     return aos_zalloc_check(size * num);
 }
 
-void *aos_realloc_check(void *ptr, unsigned int size)
+void *aos_realloc_check(void *ptr, size_t size)
 {
-    void *new_ptr = yoc_realloc(ptr, size, __builtin_return_address(0));
+    void *new_ptr = aos_realloc(ptr, size);
     aos_check_mem(new_ptr);
 
     return new_ptr;
-}
-
-void aos_alloc_trace(void *addr, size_t allocator)
-{
-#if (RHINO_CONFIG_MM_DEBUG > 0u && RHINO_CONFIG_GCC_RETADDR > 0u)
-    krhino_owner_attach(addr, allocator);
-#endif
-}
-
-void aos_free(void *ptr)
-{
-    if (ptr)
-        yoc_free(ptr, __builtin_return_address(0));
 }
 
 void aos_freep(char **ptr)
@@ -1545,4 +1585,180 @@ void aos_freep(char **ptr)
         aos_free(*ptr);
         *ptr = NULL;
     }
+}
+
+void *aos_malloc_align(size_t alignment, size_t size)
+{
+    void *ptr;
+    void *align_ptr;
+    int uintptr_size;
+    size_t align_size;
+
+    /* sizeof pointer */
+    uintptr_size = sizeof(void *);
+    uintptr_size -= 1;
+
+    /* align the alignment size to uintptr size byte */
+    alignment = ((alignment + uintptr_size) & ~uintptr_size);
+
+    /* get total aligned size */
+    align_size = ((size + uintptr_size) & ~uintptr_size) + alignment;
+    /* allocate memory block from heap */
+#if (RHINO_CONFIG_MM_DEBUG > 0u)
+    ptr = aos_malloc(align_size | AOS_UNSIGNED_INT_MSB);
+    aos_alloc_trace(ptr, (size_t)__builtin_return_address(0));
+#else
+    ptr = aos_malloc(align_size);
+#endif
+    if (ptr != NULL) {
+        /* the allocated memory block is aligned */
+        if (((unsigned long)ptr & (alignment - 1)) == 0) {
+            align_ptr = (void *)((unsigned long)ptr + alignment);
+        } else {
+            align_ptr = (void *)(((unsigned long)ptr + (alignment - 1)) & ~(alignment - 1));
+        }
+
+        /* set the pointer before alignment pointer to the real pointer */
+        *((unsigned long *)((unsigned long)align_ptr - sizeof(void *))) = (unsigned long)ptr;
+
+        ptr = align_ptr;
+    }
+
+    return ptr;
+}
+
+void aos_free_align(void *ptr)
+{
+    void *real_ptr;
+
+    /* NULL check */
+    if (ptr == NULL)
+        return;
+    real_ptr = (void *)*(unsigned long *)((unsigned long)ptr - sizeof(void *));
+    aos_free(real_ptr);
+}
+
+aos_status_t aos_task_ptcb_get(aos_task_t *task, void **ptcb)
+{
+    CPSR_ALLOC();
+    CHECK_HANDLE(task);
+    if (ptcb == NULL) {
+        return -EINVAL;
+    }
+
+    RHINO_CRITICAL_ENTER();
+    *(ptcb) = ((ktask_t *)*task)->ptcb;
+    RHINO_CRITICAL_EXIT();
+
+    return 0;
+}
+
+aos_status_t aos_task_ptcb_set(aos_task_t *task, void *ptcb)
+{
+    CPSR_ALLOC();
+    CHECK_HANDLE(task);
+
+    RHINO_CRITICAL_ENTER();
+    ((ktask_t *)*task)->ptcb = ptcb;
+    RHINO_CRITICAL_EXIT();
+
+    return 0;
+}
+
+aos_status_t aos_task_pri_change(aos_task_t *task, uint8_t pri, uint8_t *old_pri)
+{
+    kstat_t ret;
+
+    CHECK_HANDLE(task);
+
+    ret = krhino_task_pri_change((ktask_t *)*task, pri, old_pri);
+
+    return rhino2stderrno(ret);
+}
+
+aos_status_t aos_task_pri_get(aos_task_t *task, uint8_t *priority)
+{
+    CPSR_ALLOC();
+    CHECK_HANDLE(task);
+    if (priority == NULL) {
+        return -EINVAL;
+    }
+
+    RHINO_CRITICAL_ENTER();
+    *priority = ((ktask_t *)*task)->b_prio;
+    RHINO_CRITICAL_EXIT();
+
+    return 0;
+}
+
+aos_status_t aos_task_sched_policy_set(aos_task_t *task, uint8_t policy, uint8_t pri)
+{
+    kstat_t ret;
+
+    CHECK_HANDLE(task);
+
+    if (policy != KSCHED_FIFO && policy != KSCHED_RR && policy != KSCHED_CFS) {
+        return -EINVAL;
+    }
+
+    ret = krhino_sched_param_set((ktask_t *)*task, policy, pri);
+    return rhino2stderrno(ret);
+}
+
+aos_status_t aos_task_sched_policy_get(aos_task_t *task, uint8_t *policy)
+{
+    kstat_t ret = 0;
+
+    CHECK_HANDLE(task);
+    if (policy == NULL) {
+        return -EINVAL;
+    }
+
+    ret = krhino_sched_policy_get((ktask_t *)*task, policy);
+    return rhino2stderrno(ret);
+}
+
+uint32_t aos_task_sched_policy_get_default()
+{
+#if (RHINO_CONFIG_SCHED_CFS > 0)
+    return KSCHED_CFS;
+#else
+    return KSCHED_RR;
+#endif
+}
+
+aos_status_t aos_task_time_slice_set(aos_task_t *task, uint32_t slice)
+{
+    kstat_t ret;
+    CHECK_HANDLE(task);
+
+    ret = krhino_task_time_slice_set((ktask_t *)*task, MS2TICK(slice));
+    return rhino2stderrno(ret);
+}
+
+aos_status_t aos_task_time_slice_get(aos_task_t *task, uint32_t *slice)
+{
+    uint32_t time_slice;
+    CPSR_ALLOC();
+    CHECK_HANDLE(task);
+    if (slice == NULL) {
+        return -EINVAL;
+    }
+
+    RHINO_CRITICAL_ENTER();
+    time_slice = ((ktask_t *)*task)->time_slice;
+    RHINO_CRITICAL_EXIT();
+    *slice = (uint32_t)krhino_ticks_to_ms(time_slice);
+
+    return 0;
+}
+
+uint32_t aos_sched_get_priority_max(uint32_t policy)
+{
+    return RHINO_CONFIG_PRI_MAX;
+}
+
+void aos_sys_tick_handler(void)
+{
+    krhino_tick_proc();
 }

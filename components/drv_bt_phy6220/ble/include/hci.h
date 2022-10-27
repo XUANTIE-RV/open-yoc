@@ -57,7 +57,7 @@ extern "C"
  * INCLUDES
  */
 #include "bcomdef.h"
-#include "OSAL.h"
+#include "comdef.h"
 #include "ll.h"
 //#include "hal_assert.h"
 

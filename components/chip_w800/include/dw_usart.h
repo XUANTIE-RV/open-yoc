@@ -10,106 +10,75 @@
 #ifndef __DW_USART_H
 #define __DW_USART_H
 
-#include <stdio.h>
-#include "errno.h"
-#include "soc.h"
+#include <soc.h>
 
-#define BAUDRATE_DEFAULT       19200
-#define UART_BUSY_TIMEOUT      1000000
-#define UART_RECEIVE_TIMEOUT   1000
-#define UART_TRANSMIT_TIMEOUT  1000
-#define UART_MAX_FIFO		   0x10
-/* UART register bit definitions */
 
-#define USR_UART_BUSY           0x01
-#define USR_UART_TFE            0x04
-#define USR_UART_RFNE           0x08
-#define LSR_DATA_READY          0x01
-#define LSR_THR_EMPTY           0x20
-#define IER_RDA_INT_ENABLE      0x01
-#define IER_THRE_INT_ENABLE     0x02
-#define IIR_NO_ISQ_PEND         0x01
-#define IIR_RECV_LINE_ENABLE    0x04
+#define UART_MAX_FIFO          32
 
-#define LCR_SET_DLAB            0x80   /* enable r/w DLR to set the baud rate */
-#define LCR_PARITY_ENABLE       0x08   /* parity enabled */
-#define LCR_PARITY_EVEN         0x10   /* Even parity enabled */
-#define LCR_PARITY_ODD          0xef   /* Odd parity enabled */
-#define LCR_WORD_SIZE_5         0xfc   /* the data length is 5 bits */
-#define LCR_WORD_SIZE_6         0x01   /* the data length is 6 bits */
-#define LCR_WORD_SIZE_7         0x02   /* the data length is 7 bits */
-#define LCR_WORD_SIZE_8         0x03   /* the data length is 8 bits */
-#define LCR_STOP_BIT1           0xfb   /* 1 stop bit */
-#define LCR_STOP_BIT2           0x04   /* 1.5 stop bit */
+#define UART_RX_INT_FLAG (UIS_RX_FIFO | UIS_RX_FIFO_TIMEOUT | UIS_BREAK |\
+                          UIS_OVERRUN | UIS_FRM_ERR | UIS_PARITY_ERR)
+#define UART_RX_ERR_INT_FLAG (UIS_BREAK | UIS_FRM_ERR | \
+                              UIS_PARITY_ERR)
 
-#define DW_LSR_PFE              0x80
-#define DW_LSR_TEMT             0x40
-#define DW_LSR_THRE             0x40
-#define	DW_LSR_BI               0x10
-#define	DW_LSR_FE               0x08
-#define	DW_LSR_PE               0x04
-#define	DW_LSR_OE               0x02
-#define	DW_LSR_DR               0x01
-#define DW_LSR_TRANS_EMPTY      0x20
+#define UART_TX_INT_FLAG (UIS_TX_FIFO | UIS_TX_FIFO_EMPTY)
 
-#define DW_FCR_FIFOE            0x01
-#define DW_FCR_RFIFOR           0x02
-#define DW_FCR_XFIFOR           0x04
-#define DW_FCR_RT_FIFO_SINGLE   0x0 << 6    /* rcvr trigger 1 character in the FIFO */
-#define DW_FCR_RT_FIFO_QUARTER  0x1 << 6     /* rcvr trigger FIFO 1/4 full */
-#define DW_FCR_RT_FIFO_HALF     0x2 << 6     /* rcvr trigger FIFO 1/2 full */
-#define DW_FCR_RT_FIFO_LESSTWO  0x3 << 6     /* rcvr trigger FIFO 2 less than full */
-#define DW_FCR_TET_FIFO_EMPTY   0x0 << 4     /* tx empty trigger FIFO empty */
-#define DW_FCR_TET_FIFO_TWO     0x1 << 4   /* tx empty trigger 2 characters in the FIFO */
-#define DW_FCR_TET_FIFO_QUARTER 0x2 << 4   /* tx empty trigger FIFO 1/4 full */
-#define DW_FCR_TET_FIFO_HALF    0x3 << 4  /* tx empty trigger FIFO 1/2 full*/
+#define UART_TXEN_BIT           (0x40)
+#define UART_RXEN_BIT           (0x80)
+#define UART_PARITYEN_BIT       (0x08)
+#define UART_PARITYODD_BIT      (0x10)
+#define UART_BITSTOP_VAL        (0x03)                  /// 1 stop-bit; no crc; 8 data-bits
 
-#define DW_IIR_THR_EMPTY        0x02    /* threshold empty */
-#define DW_IIR_RECV_DATA        0x04    /* received data available */
-#define DW_IIR_RECV_LINE        0x06    /* receiver line status */
-#define DW_IIR_CHAR_TIMEOUT     0x0c    /* character timeout */
+#define ERR_UART(errno) (CSI_DRV_ERRNO_USART_BASE | errno)
 
-#define DW_MCR_AFCE             0x20    /* Auto Flow Control Enable */
-#define DW_MCR_RTS              0x02
+enum {
+    WM_UART_0 = 0,
+    WM_UART_1 = 1,
+    WM_UART_2 = 2,
+    WM_UART_3 = 3,
+    WM_UART_4 = 4,
+    WM_UART_MAX = 5,
+};
 
-#define DW_USART_HTX_RX_ETB_FUNC_Pos (6)
-#define DW_USART_HTX_RX_ETB_FUNC_Msk (0x1U << DW_USART_HTX_RX_ETB_FUNC_Pos)
-
-#define DW_USART_HTX_TX_ETB_FUNC_Pos (7)
-#define DW_USART_HTX_TX_ETB_FUNC_Msk (0x1U << DW_USART_HTX_TX_ETB_FUNC_Pos)
-
-#define DW_USART_FCR_RT_Pos         (6)
-#define DW_USART_FCR_TET_Pos        (4)
-#define DW_USART_FCR_RFIFOR_Pos     (1)
 
 typedef struct {
-    union {
-        __IM uint32_t RBR;           /* Offset: 0x000 (R/ )  Receive buffer register */
-        __OM uint32_t THR;           /* Offset: 0x000 ( /W)  Transmission hold register */
-        __IOM uint32_t DLL;          /* Offset: 0x000 (R/W)  Clock frequency division low section register */
-    };
-    union {
-        __IOM uint32_t DLH;          /* Offset: 0x004 (R/W)  Clock frequency division high section register */
-        __IOM uint32_t IER;          /* Offset: 0x004 (R/W)  Interrupt enable register */
-    };
-    union {
-        __IM uint32_t IIR;             /* Offset: 0x008 (R/ )  Interrupt identification register */
-        __OM uint32_t FCR;             /* Offset: 0x008 ( /W)  FIFO control register */
-    };
-    __IOM uint32_t LCR;            /* Offset: 0x00C (R/W)  Line control register */
-    __IOM uint32_t MCR;            /* Offset: 0x010 (R/W)  Modem control register */
-    __IM uint32_t LSR;             /* Offset: 0x014 (R/ )  Line state register */
-    __IM uint32_t MSR;             /* Offset: 0x018 (R/ )  Modem state register */
-    uint32_t RESERVED1[21];
-    __IOM uint32_t FAR;            /* Offset: 0x070 (R/W)  FIFO accesss register */
-    __IM uint32_t TFR;             /* Offset: 0x074 (R/ )  transmit FIFO read */
-    __OM uint32_t RFW;             /* Offset: 0x078 ( /W)  receive FIFO write */
-    __IM uint32_t USR;             /* Offset: 0x07c (R/ )  UART state register */
-    __IM uint32_t TFL;             /* Offset: 0x080 (R/ )  transmit FIFO level */
-    __IM uint32_t RFL;             /* Offset: 0x084 (R/ )  receive FIFO level */
-    uint32_t RESERVED2[7];
-    __IOM uint32_t HTX;            /* Offset: 0x0a4 (R/W)  Halt TX */
+    __IOM uint32_t UR_LC;
+    __IOM uint32_t UR_FC;
+    __IOM uint32_t UR_DMAC;
+    __IOM uint32_t UR_FIFOC;
+    __IOM uint32_t UR_BD;
+    __IOM uint32_t UR_INTM;
+    __IOM uint32_t UR_INTS;
+    __IOM uint32_t UR_FIFOS;
+    __IOM uint32_t UR_TXW;                    /**< tx windows register */
+    __IOM uint32_t UR_RES0;
+    __IOM uint32_t UR_RES1;
+    __IOM uint32_t UR_RES2;
+    __IOM uint32_t UR_RXW;
 } dw_usart_reg_t;
+
+typedef struct {
+    uint32_t base;
+    uint32_t irq;
+    usart_event_cb_t cb_event;           ///< Event callback
+    int32_t idx;
+
+    uint32_t rx_total_num;
+    uint32_t tx_total_num;
+
+    uint8_t *rx_buf;
+    uint8_t *tx_buf;
+
+    volatile uint32_t rx_cnt;
+    volatile uint32_t tx_cnt;
+
+    volatile uint32_t tx_busy;
+    volatile uint32_t rx_busy;
+
+    uint32_t last_tx_num;
+    uint32_t last_rx_num;
+} dw_usart_priv_t;
+
+
 
 #endif /* __DW_USART_H */
 

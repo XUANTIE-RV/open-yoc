@@ -24,6 +24,7 @@
 #define CSK_CPU_STACK_EXTRAL    280
 #else
 #define CSK_CPU_STACK_EXTRAL    20
+#define RHINO_CONFIG_MM_MAXMSIZEBIT 17
 #endif
 
 #define RHINO_CONFIG_STD_MALLOC              1
@@ -38,11 +39,18 @@
 #define RHINO_CONFIG_QUEUE                   1
 #define RHINO_CONFIG_TASK_SEM                1
 #define RHINO_CONFIG_EVENT_FLAG              1
-#define RHINO_CONFIG_TIMER                   1
+#ifndef CONFIG_KERNEL_TIMER
+#define RHINO_CONFIG_TIMER                   0
+#else
+#define RHINO_CONFIG_TIMER                   CONFIG_KERNEL_TIMER
+#endif
 #define RHINO_CONFIG_BUF_QUEUE               1
+#define RHINO_CONFIG_MM_TLF                  1
+#define RHINO_CONFIG_MM_TLF_BLK_SIZE         512
 #define RHINO_CONFIG_MM_BLK                  1
-#define RHINO_CONFIG_MM_TLF_BLK_SIZE         0
-
+#define RHINO_CONFIG_MM_BLK_SIZE             64
+#define RHINO_CONFIG_MM_MINISIZEBIT          6
+#define RHINO_CONFIG_MM_TRACE_LVL            4
 #ifdef CONFIG_DEBUG_MM
 #define RHINO_CONFIG_MM_DEBUG                1
 #define RHINO_CONFIG_GCC_RETADDR             1
@@ -56,9 +64,9 @@
 
 /* kernel dynamic tick conf */
 #ifdef CONFIG_KERNEL_PWR_MGMT
-#define RHINO_CONFIG_CPU_PWR_MGMT            1
+#define RHINO_CONFIG_PWRMGMT            1
 #else
-#define RHINO_CONFIG_CPU_PWR_MGMT            0
+#define RHINO_CONFIG_PWRMGMT            0
 #endif
 
 /*
@@ -71,7 +79,11 @@
 
 /* kernel task conf */
 #define RHINO_CONFIG_TASK_SUSPEND            1
-#define RHINO_CONFIG_TASK_INFO               0
+#ifdef CONFIG_KERNEL_TASK_INFO
+#define RHINO_CONFIG_TASK_INFO               (CONFIG_KERNEL_TASK_INFO)
+#else
+#define RHINO_CONFIG_TASK_INFO               1
+#endif
 #define RHINO_CONFIG_TASK_DEL                1
 #define RHINO_CONFIG_TASK_WAIT_ABORT         0
 #define RHINO_CONFIG_TASK_STACK_OVF_CHECK    0
@@ -155,7 +167,7 @@
 
 /* kernel stats conf */
 #ifndef RHINO_CONFIG_KOBJ_LIST
-#define RHINO_CONFIG_KOBJ_LIST               1
+#define RHINO_CONFIG_KOBJ_LIST               0
 #endif
 
 

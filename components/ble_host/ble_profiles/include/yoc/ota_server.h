@@ -19,10 +19,20 @@ typedef enum {
 
 typedef void (*ota_event_callback_t)(ota_state_en ota_state);
 
-int ble_ota_init(ota_event_callback_t cb);
+int ble_prf_ota_servrer_init(ota_event_callback_t cb);
 
-void ble_ota_process();
+void ble_prf_ota_service_process();
+
+/// deprecated fucntion ble_ota_init, use ble_prf_ota_servrer_init instead
+static inline __bt_deprecated int ble_ota_init(ota_event_callback_t cb)
+{
+    return ble_prf_ota_servrer_init(cb);
+}
+
+/// deprecated fucntion ble_ota_init, use ble_prf_ota_servrer_init instead
+static inline __bt_deprecated void ble_ota_process()
+{
+    return ble_prf_ota_service_process();
+}
 
 #endif /* _TAG_BLE_OTA_ */
-
-/******************************** END OF FILE *********************************/

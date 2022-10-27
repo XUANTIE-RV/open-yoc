@@ -33,6 +33,10 @@
 
 static struct bt_keys key_pool[CONFIG_BT_MAX_PAIRED];
 
+#ifdef CONFIG_BT_BREDR
+extern struct bt_keys_link_key keys_br_pool[CONFIG_BT_MAX_PAIRED];
+#endif
+
 #define BT_KEYS_STORAGE_LEN_COMPAT (BT_KEYS_STORAGE_LEN - sizeof(uint32_t))
 
 #if IS_ENABLED(CONFIG_BT_KEYS_OVERWRITE_OLDEST)
@@ -116,6 +120,19 @@ void bt_foreach_bond(u8_t id, void (*func)(const struct bt_bond_info *info,
 			func(&info, user_data);
 		}
 	}
+
+#ifdef CONFIG_BT_BREDR
+	for (i = 0; i < ARRAY_SIZE(keys_br_pool); i++) {
+		struct bt_keys_link_key *keys = &keys_br_pool[i];
+
+		if (bt_addr_cmp(&keys->addr, BT_ADDR_ANY)) {
+			struct bt_bond_info info = {0};
+
+			bt_addr_copy(&info.addr.a, &keys->addr);
+			func(&info, user_data);
+		}
+	}
+#endif
 }
 
 void bt_keys_foreach(int type, void (*func)(struct bt_keys *keys, void *data),
@@ -267,7 +284,7 @@ void bt_keys_clear(struct bt_keys *keys)
 	(void)memset(keys, 0, sizeof(*keys));
 }
 
-#if defined(CONFIG_BT_SETTINGS)
+#if defined(CONFIG_BT_SETTINGS) && CONFIG_BT_SETTINGS
 int bt_keys_store(struct bt_keys *keys)
 {
 	char key[BT_SETTINGS_KEY_MAX];
@@ -414,6 +431,11 @@ int bt_key_settings_init()
 {
     SETTINGS_HANDLER_DEFINE(bt_keys, "bt/keys", NULL, keys_set, keys_commit,
 			       NULL);
+
+#if defined(CONFIG_BT_BREDR)
+	bt_br_key_settings_init();
+#endif
+
     return 0;
 }
 

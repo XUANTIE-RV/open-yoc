@@ -1,8 +1,0 @@
-Import('app_build')
-src = [
-    'main.c'
-]
-inc = [
-    '.'
-]
-app_build('smartcard_test',src,inc)

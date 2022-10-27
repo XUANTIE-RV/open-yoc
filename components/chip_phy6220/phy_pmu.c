@@ -43,7 +43,7 @@ static phy_pmu_priv_t pmu_handle[CONFIG_PMU_NUM];
 #define CONFIG_CORETIM_REGISTER_NUM_SAVE    2
 static uint32_t cortim_regs_saved[CONFIG_CORETIM_REGISTER_NUM_SAVE];
 
-#define CONFIG_VIC_REGISTER_NUM_SAVE    3
+#define CONFIG_VIC_REGISTER_NUM_SAVE    11
 static uint32_t vic_regs_saved[CONFIG_VIC_REGISTER_NUM_SAVE];
 
 #define CONFIG_CPU_REGISTER_NUM_SAVE    28
@@ -55,10 +55,15 @@ uint32_t g_arch_cpu_saved[CONFIG_CPU_REGISTER_NUM_SAVE];
 //
 static void do_prepare_sleep_action(int32_t idx)
 {
+    int i = 0;
     /* save vic register */
     vic_regs_saved[0] = VIC->ISER[0U];
     vic_regs_saved[1] = VIC->ISPR[0U];
     vic_regs_saved[2] = VIC->IPTR;
+    for (i = 0;i < 8; i++)
+    {
+        vic_regs_saved[3 + i] = VIC->IPR[i];
+    }
 
     /* save the coretim register */
     cortim_regs_saved[0] = CORET->LOAD;
@@ -67,10 +72,15 @@ static void do_prepare_sleep_action(int32_t idx)
 
 static void do_wakeup_sleep_action(int32_t idx)
 {
+    int i = 0;
     /* resume vic register */
     VIC->ISER[0U] = vic_regs_saved[0];
     VIC->ISPR[0U] = vic_regs_saved[1];
     VIC->IPTR = vic_regs_saved[2];
+    for (i = 0;i < 8; i++)
+    {
+        VIC->IPR[i] = vic_regs_saved[3 + i];
+    }
 
     /* resume the coretim register */
     CORET->LOAD = cortim_regs_saved[0];
@@ -193,6 +203,7 @@ int32_t csi_pmu_enter_sleep(pmu_handle_t handle, pmu_mode_e mode)
             if (pmu_priv->cb) {
                 pmu_priv->cb(pmu_priv->idx, PMU_EVENT_PREPARE_SLEEP, mode);
             }
+            set_sleep_flag(0);
             *((unsigned int *)0x4000f0c0) = 0x2;
             subWriteReg(0x4000f01c, 6, 6, 0x00); //disable software control
             enter_sleep_off_mode(SYSTEM_OFF_MODE);

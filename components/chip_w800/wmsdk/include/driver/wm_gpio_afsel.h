@@ -371,6 +371,18 @@ void wm_gpio_af_disable(void);
 /**
  * @}
  */
+void wm_psram_ck_config(enum tls_io_name io_name);
+
+void wm_psram_cs_config(enum tls_io_name io_name);
+
+void wm_psram_dat0_config(enum tls_io_name io_name);
+
+void wm_psram_dat1_config(enum tls_io_name io_name);
+
+void wm_psram_dat2_config(enum tls_io_name io_name);
+
+void wm_psram_dat3_config(enum tls_io_name io_name);
+
 
 #endif /* end of WM_GPIO_AFSEL_H */
 

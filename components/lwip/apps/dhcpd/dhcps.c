@@ -710,8 +710,8 @@ static uint8_t dhcps_check_msg_and_handle_options(struct pbuf *packet_buffer)
 {
     int dhcp_message_option_offset;
     dhcp_message_repository = (struct dhcp_msg *)packet_buffer->payload;
-    dhcp_message_option_offset = ((int)dhcp_message_repository->options
-                                  - (int)packet_buffer->payload);
+    dhcp_message_option_offset = ((long)dhcp_message_repository->options
+                                  - (long)packet_buffer->payload);
     dhcp_message_total_options_lenth = (packet_buffer->len
                                         - dhcp_message_option_offset);
     memcpy(client_addr, dhcp_message_repository->chaddr, 6);
@@ -914,9 +914,8 @@ void dhcps_init(struct netif *pnetif)
              (ip4_addr4(&dhcps_local_address)) + 1);
 #else
 
-    if (dhcps_ip_table_semaphore.hdl != NULL) {
+    if (sys_sem_valid(&dhcps_ip_table_semaphore)) {
         sys_sem_free(&dhcps_ip_table_semaphore);
-        dhcps_ip_table_semaphore.hdl = NULL;
     }
 
     sys_sem_new(&dhcps_ip_table_semaphore, 1);
@@ -955,9 +954,8 @@ void dhcps_deinit(void)
         dhcps_pcb = NULL;
     }
 
-    if (dhcps_ip_table_semaphore.hdl != NULL) {
+    if (sys_sem_valid(&dhcps_ip_table_semaphore)) {
         sys_sem_free(&dhcps_ip_table_semaphore);
-        dhcps_ip_table_semaphore.hdl = NULL;
     }
 }
 

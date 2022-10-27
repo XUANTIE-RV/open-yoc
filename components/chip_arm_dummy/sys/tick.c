@@ -27,9 +27,6 @@ static volatile uint32_t last_time_ms = 0U;
 static volatile uint64_t last_time_us = 0U;
 
 extern void csi_coret_clear_irq(void);
-extern void krhino_tick_proc(void);
-extern void xPortSysTickHandler(void);
-extern void OSTimeTick(void);
 
 void csi_tick_increase(void)
 {
@@ -40,12 +37,9 @@ void tick_irq_handler(void *arg)
 {
     csi_tick_increase();
     csi_coret_clear_irq();
-#if defined(CONFIG_KERNEL_RHINO)
-    krhino_tick_proc();
-#elif defined(CONFIG_KERNEL_FREERTOS)
-    xPortSysTickHandler();
-#elif defined(CONFIG_KERNEL_UCOS)
-    OSTimeTick();
+#ifndef CONFIG_KERNEL_NONE
+    extern void aos_sys_tick_handler(void);
+    aos_sys_tick_handler();
 #endif
 }
 
