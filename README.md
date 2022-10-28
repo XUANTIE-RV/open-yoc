@@ -104,4 +104,4 @@ yoc install yocopen -b v7.6.0
 | --- | --- | --- |
 |[CDK](https://occ.t-head.cn/community/download?id=575997419775328256)|>=V2.16.2|集成开发环境IDE|
 |[yoctools](https://yoc.docs.t-head.cn/yocbook/Chapter2-%E5%BF%AB%E9%80%9F%E4%B8%8A%E6%89%8B%E6%8C%87%E5%BC%95/YocTools.html)|>=2.0.42|Linux下命令行构建编译工具|
-|[玄铁工具链](https://occ.t-head.cn/community/download?id=4090445921563774976)|V2.6.1|riscv编译所需工具链，可通过yoc命令安装(yoc toolchain --riscv -f)，也可以自行下载安装，并集成到系统变量|
+|[玄铁工具链](https://occ.t-head.cn/community/download?id=4090445921563774976)|V2.6.1|riscv编译所需工具链，可通过yoc命令安装(yoc toolchain --riscv -f)；也可以自行下载安装，并在系统变量中设置对应的路径信息|
