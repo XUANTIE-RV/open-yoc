@@ -2,8 +2,16 @@
 
 ## 介绍
 
-YoC是一个基于AliOS Things的基础软件平台。它为开发人员提供了统一的芯片CSI接口。还提供针对蓝牙、WiFi、语音、视觉应用等优化的组件。可以通过集成开发环境(IDE)剑驰CDK进行开发，并使用系统性能分析工具来调试、开发和部署功能组件。它有助于SoC公司和开发人员快速交付定制的SDK，可以显著缩短产品上市时间。
+YoC是一个基于AliOS Things的基础软件平台。它为开发人员提供了统一的芯片CSI接口。还提供针对蓝牙、WiFi、语音、视觉应用等优化的组件。可以通过IDE(集成开发环境剑池CDK)进行开发，并使用系统性能分析工具来调试、开发和部署功能组件。它有助于SoC公司和开发人员快速交付定制的SDK，可以显著缩短产品上市时间。
 
+## 架构
+
+<img src="https://github.com/T-head-Semi/open-yoc/blob/v7.6.0/components/yocopen/yoc.png?raw=true">
+
+- 内核：YoC内核通过OSAL标准接口可以支持主流的RTOS内核，主要设计内核系统中对象的实现，包括信号量、互斥体、队列、WorkQueue、软时钟以及任务调度和内存管理。其通过CSI标准接口适配底层硬件能力，芯片移植相关集中在CSI适配。
+- 面向领域子系统：面向领域子系统的YoC提供的专用组件组成，通过虚拟组件方式进行管理。涉及覆盖连接领域、蓝牙领域、穿戴领域、智能语音领域、GUI图形领域以及多媒体视频视觉领域。
+- 应用框架：YoC 提供多种应用领域中软件框架，进一步简化应用方案的开发难度。
+- IoT应用：面向不同领域的IoT应用，YoC提供了不同场景下的解决方案和Demo，为开发者提供参考。
 
 ## 开发板
 
@@ -90,7 +98,11 @@ yoc install yocopen -b v7.6.0
 
 - 平头哥开源社区: https://occ.t-head.cn/
 
-- yoc使用手册yocbook: [yocbook](https://yoc.docs.t-head.cn/yocbook/Chapter1-YoC%E6%A6%82%E8%BF%B0/)
+- YoC使用手册yocbook: [yocbook](https://yoc.docs.t-head.cn/yocbook/Chapter1-YoC%E6%A6%82%E8%BF%B0/)
+
+## 许可证
+
+YoC系统完全开源，代码版本遵循Apache License 2.0开源许可协议，可以免费在商业产品中使用，并且不需要公开私有代码。
 
 ## Release Note
 
