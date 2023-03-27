@@ -1,0 +1,19 @@
+name: POWER_MANAGER
+vendor: WJ
+license: Copyright (C) 2017-2019 Alibaba Group Holding Limited
+description: wj power_manager
+type: devices
+
+versions:
+    hobbit1_v1.0:
+        drv_path: ./hobbit1_v1.0
+
+    hobbit3_v1.0:
+        drv_path: ./hobbit3_v1.0
+
+    pangu_v1.0:
+        drv_path: ./pangu_v1.0
+
+    jupiter_v1.0:
+        drv_path: ./jupiter_v1.0
+

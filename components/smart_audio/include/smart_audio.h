@@ -4,12 +4,15 @@
 #ifndef _YOC_SMART_AUDIO_H_
 #define _YOC_SMART_AUDIO_H_
 
-#include <media.h>
-#include <media_typedef.h>
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#include <av/media.h>
+#include <av/media_typedef.h>
 #include <aos/list.h>
 
 #define VOLUME_SAVE_KV_NAME "volume"
-#define INTERRUPT_REASON_BY_USER 255
 #define SMART_AUDIO_DEFAULT_VOLUME 60
 
 typedef enum {
@@ -55,6 +58,11 @@ typedef enum {
 } smtaudio_sub_state_t;
 
 typedef enum {
+    SMTAUDIO_INTERRUPT_REASON_BY_USER = SMTAUDIO_TYPE_ALL + 1,
+    SMTAUDIO_INTERRUPT_REASON_BY_REMOTE
+} smtaudio_interrupt_reason_t;
+
+typedef enum {
     SMTAUDIO_PLAYER_EVENT_ERROR = AUI_PLAYER_EVENT_ERROR,
     SMTAUDIO_PLAYER_EVENT_START = AUI_PLAYER_EVENT_START,
     SMTAUDIO_PLAYER_EVENT_STOP = AUI_PLAYER_EVENT_FINISH,
@@ -62,6 +70,7 @@ typedef enum {
     SMTAUDIO_PLAYER_EVENT_UNDER_RUN = AUI_PLAYER_EVENT_UNDER_RUN,
     SMTAUDIO_PLAYER_EVENT_OVER_RUN = AUI_PLAYER_EVENT_OVER_RUN,
     SMTAUDIO_PLAYER_EVENT_PAUSE = AUI_PLAYER_EVENT_PAUSE,
+    SMTAUDIO_PLAYER_EVENT_PAUSE_BY_REMOTE = 100, //just for bt music pause by remote
 } smtaudio_player_evtid_t;
 
 typedef struct smtaudio_ops_node {
@@ -277,5 +286,9 @@ void smtaudio_enable_ready_list(int enable);
  * @return 0 forbid, 1 allow
  */
 int smtaudio_enter_lpm_check(void);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif //_YOC_SMART_AUDIO_H_

@@ -155,7 +155,7 @@
         <Connector>ICE</Connector>
         <StopAt>yes</StopAt>
         <StopAtText>main</StopAtText>
-        <InitFile/>
+        <InitFile>$(ProjectPath)/gdbinit</InitFile>
         <AfterLoadFile/>
         <AutoRun>yes</AutoRun>
         <ResetType>Hard Reset</ResetType>
@@ -201,7 +201,7 @@
         </ConfigOpenOCD>
       </Debug>
       <Flash>
-        <InitFile>$(ProjectPath)/temp/script/flash.init</InitFile>
+        <InitFile>$(ProjectPath)cdkinitflash</InitFile>
         <Erase>Erase Sectors</Erase>
         <Algorithms Path=""/>
         <Program>yes</Program>

@@ -102,7 +102,11 @@ static int grep_mac_addr_from_str(char *mac_str, device_info *devices, uint8_t s
     uint8_t dev_index        = 0;
     char    mac_str_temp[20] = { 0x0 };
 
-    for (dev_index = 0; dev_index < size && mac_str != '\0'; dev_index++) {
+    if (!mac_str) {
+        return -1;
+    }
+
+    for (dev_index = 0; dev_index < size && *mac_str != '\0'; dev_index++) {
         memcpy(mac_str_temp, mac_str, 19);
         ret = str2bt_dev_addr(mac_str_temp, &devices[dev_index].addr);
 

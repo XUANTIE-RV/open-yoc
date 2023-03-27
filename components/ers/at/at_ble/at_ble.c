@@ -981,6 +981,7 @@ void at_cmd_bt_mac(char *cmd, int type, char *data)
 
         AT_BACK_OK();
     } else if (type == READ_CMD) {
+        memset(dev.val, 0x00, sizeof(dev.val));
         if (ble_server.at_config.addr.type  == 1) {
             snprintf((char *)dev_str, sizeof(dev_str), "%02x:%02x:%02x:%02x:%02x:%02x,1", \
                      ble_server.at_config.addr.val[5],  ble_server.at_config.addr.val[4], ble_server.at_config.addr.val[3], ble_server.at_config.addr.val[2], ble_server.at_config.addr.val[1], ble_server.at_config.addr.val[0]);
@@ -1134,11 +1135,11 @@ void at_cmd_bt_conn_update(char *cmd, int type, char *data)
     }
 }
 
-void at_ble_uartmode_recv(aos_dev_t *dev)
+void at_ble_uartmode_recv(rvm_dev_t *dev)
 {
     int ret;
 
-    ret = uart_recv(dev, ble_server.uart_buffer, AT_BLE_UART_BUFFER_SIZE, 25);
+    ret = rvm_hal_uart_recv(dev, ble_server.uart_buffer, AT_BLE_UART_BUFFER_SIZE, 25);
 
     if (ret > 0) {
         ble_server.recv_cb.uart_mode_recv_cb((char *)ble_server.uart_buffer, ret, NULL);

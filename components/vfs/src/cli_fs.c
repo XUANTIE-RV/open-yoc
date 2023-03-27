@@ -339,14 +339,12 @@ static int ls_handler(const char *dirpath,
 
         if (entryp != NULL) {
             char *fullpath = aos_malloc(strlen(dirpath) + strlen(entryp->d_name) + 1);
-            printf("fullpath: %s\n", fullpath);
 
             if (fullpath == NULL) {
                 return -1;
             }
 
             sprintf(fullpath, "%s/%s", dirpath, entryp->d_name);
-            printf("2fullpath: %s\n", fullpath);
             ret = aos_stat(fullpath, &buf);
 
             aos_free(fullpath);
@@ -410,11 +408,11 @@ static int ls_handler(const char *dirpath,
                 details[9] = 'x';
             }
 
-            printf(" %s", details);
+            printf("%s ", details);
         }
 
         if ((lsflags & LSFLAGS_SIZE) != 0) {
-            printf("%8d", buf.st_size);
+            printf("%14d", buf.st_size);
         }
     }
 
@@ -438,7 +436,7 @@ static int ls_handler(const char *dirpath,
     return 0;
 }
 
-void cmd_ls(char *wbuf, int wbuf_len, int argc, char **argv)
+static void cmd_ls(char *wbuf, int wbuf_len, int argc, char **argv)
 {
     struct aos_stat st = {0};
     char *path;
@@ -450,7 +448,7 @@ void cmd_ls(char *wbuf, int wbuf_len, int argc, char **argv)
     /* Get the ls options */
 
     int option;
-
+    optind = 0;
     while ((option = getopt(argc, argv, "ls")) != -1) {
         switch (option) {
         case 'l':
@@ -512,12 +510,8 @@ void cmd_ls(char *wbuf, int wbuf_len, int argc, char **argv)
         ls_handler(path, NULL, (void *)lsflags);
     } else {
         /* List the directory contents */
-
-        printf("%s:\n", path);
-
         nsh_foreach_direntry("ls", path, ls_handler,
                              (void *)((uintptr_t)lsflags));
-
     }
 
     return;
@@ -534,7 +528,7 @@ void cli_reg_cmd_ls(void)
     aos_cli_register_command(&cmd_info);
 }
 
-void cmd_rm(char *wbuf, int wbuf_len, int argc, char **argv)
+static void cmd_rm(char *wbuf, int wbuf_len, int argc, char **argv)
 {
     int ret = -1;
     char *path;
@@ -584,7 +578,7 @@ void cli_reg_cmd_rm(void)
     aos_cli_register_command(&cmd_info);
 }
 
-void cmd_cat(char *wbuf, int wbuf_len, int argc, char **argv)
+static void cmd_cat(char *wbuf, int wbuf_len, int argc, char **argv)
 {
     int i;
     int ret = 0;
@@ -609,7 +603,42 @@ void cli_reg_cmd_cat(void)
     aos_cli_register_command(&cmd_info);
 }
 
-void cmd_mkdir(char *wbuf, int wbuf_len, int argc, char **argv)
+static void cmd_echo(char *wbuf, int wbuf_len, int argc, char **argv)
+{
+    int fd;
+    ssize_t ret = 0;
+
+    if (argc != 3) {
+        printf(g_fmtcmdfailed, argv[0], "Invalid argument", argc);
+        return;
+    }
+
+    fd = aos_open(argv[2], O_WRONLY|O_APPEND);
+    if (fd < 0) {
+        printf(g_fmtcmdfailed, argv[0], "open", fd);
+        return;
+    }
+
+    ret = aos_write(fd, argv[1], strlen(argv[1]));
+    if (ret != strlen(argv[1])) {
+        printf(g_fmtcmdfailed, argv[0], "write", (int)ret);
+    }
+
+    aos_close(fd);
+}
+
+void cli_reg_cmd_echo(void)
+{
+    static const struct cli_command cmd_info = {
+        "echo",
+        "echo string file",
+        cmd_echo
+    };
+
+    aos_cli_register_command(&cmd_info);
+}
+
+static void cmd_mkdir(char *wbuf, int wbuf_len, int argc, char **argv)
 {
     int ret = -1;
 
@@ -635,7 +664,7 @@ void cli_reg_cmd_mkdir(void)
     aos_cli_register_command(&cmd_info);
 }
 
-void cmd_mv(char *wbuf, int wbuf_len, int argc, char **argv)
+static void cmd_mv(char *wbuf, int wbuf_len, int argc, char **argv)
 {
     int ret;
 
@@ -658,6 +687,242 @@ void cli_reg_cmd_mv(void)
         "mv",
         "mv oldpath newpath",
         cmd_mv
+    };
+
+    aos_cli_register_command(&cmd_info);
+}
+
+#define BUFF_SIZE       (1024 * 64)
+#define NS_PER_SEC      1000000000
+
+static double time_diff(struct timespec *start, struct timespec *end)
+{
+    double diff;
+
+    if (end->tv_nsec < start->tv_nsec) {
+        diff = (double)(NS_PER_SEC + end->tv_nsec - start->tv_nsec)/NS_PER_SEC;
+        diff += end->tv_sec - 1 - start->tv_sec;
+    } else {
+        diff = (double)(end->tv_nsec - start->tv_nsec)/NS_PER_SEC;
+        diff += end->tv_sec - start->tv_sec;
+    }
+
+    return diff;
+}
+
+static void cmd_cp(char *wbuf, int wbuf_len, int argc, char **argv)
+{
+    int ret, src_fd = 0, dst_fd = 0, rd_data = 0, wr_data = 0;
+    uint8_t *buf = NULL;
+    struct timespec begin, end;
+    double rd_time = 0.0, wr_time = 0.0;
+
+    /* Perform the mount */
+    if (argc != 3) {
+        printf(g_fmtarginvalid, argv[0]);
+        return;
+    }
+
+    src_fd = aos_open(argv[1], O_RDONLY);
+    if (src_fd < 0) {
+        printf(g_fmtcmdfailed, argv[0], "open src file", src_fd);
+        return;
+    }
+
+    dst_fd = aos_open(argv[2], O_WRONLY | O_CREAT);
+    if (dst_fd < 0) {
+        printf(g_fmtcmdfailed, argv[0], "open dst file", dst_fd);
+        goto out;
+    }
+
+    buf = aos_malloc(BUFF_SIZE);
+    if (!buf) {
+        printf(g_fmtcmdfailed, argv[0], "malloc", BUFF_SIZE);
+        goto out;
+    }
+
+    while (1) {
+        clock_gettime(CLOCK_MONOTONIC, &begin);
+        ret = aos_read(src_fd, buf, BUFF_SIZE);
+        if (ret < 0) {
+            printf(g_fmtcmdfailed, argv[0], "read()", ret);
+            break;
+        }
+        else if (ret == 0) {
+            /* It's the end of file */
+            break;
+        }
+        clock_gettime(CLOCK_MONOTONIC, &end);
+        rd_time += time_diff(&begin, &end);
+        rd_data += ret;
+
+        clock_gettime(CLOCK_MONOTONIC, &begin);
+        ret = aos_write(dst_fd, buf, ret);
+        if (ret < 0) {
+            printf(g_fmtcmdfailed, argv[0], "write()", ret);
+            break;
+        }
+        clock_gettime(CLOCK_MONOTONIC, &end);
+        wr_time += time_diff(&begin, &end);
+        wr_data += ret;
+    }
+
+out:
+    if (rd_time > 0)
+        printf("Read  data %d B, speed %.2f MB/s\n", rd_data,
+               (double)rd_data / 1024 / 1024 / rd_time);
+    if (wr_time > 0)
+        printf("Write data %d B, speed %.2f MB/s\n", wr_data,
+               (double)wr_data / 1024 / 1024 / wr_time);
+
+    if (buf)
+        aos_free(buf);
+    if (dst_fd)
+        aos_close(dst_fd);
+    if (src_fd)
+        aos_close(src_fd);
+}
+
+void cli_reg_cmd_cp(void)
+{
+    static const struct cli_command cmd_info = {
+        "cp",
+        "cp srcfile dstfile",
+        cmd_cp
+    };
+
+    aos_cli_register_command(&cmd_info);
+}
+
+static void cmd_diff(char *wbuf, int wbuf_len, int argc, char **argv)
+{
+    int ret1, ret2, diff = 0, fd1 = 0, fd2 = 0, size = BUFF_SIZE >> 1;
+    uint8_t *buf1 = NULL, *buf2 = NULL;
+
+    /* Perform the mount */
+    if (argc != 3) {
+        printf(g_fmtarginvalid, argv[0]);
+        return;
+    }
+
+    fd1 = aos_open(argv[1], O_RDONLY);
+    if (fd1 < 0) {
+        printf(g_fmtcmdfailed, argv[0], "open file1", fd1);
+        return;
+    }
+    fd2 = aos_open(argv[2], O_RDONLY);
+    if (fd2 < 0) {
+        printf(g_fmtcmdfailed, argv[0], "open file2", fd2);
+        goto out;
+    }
+
+    buf1 = aos_malloc(size);
+    if (!buf1) {
+        printf(g_fmtcmdfailed, argv[0], "malloc buf1", size);
+        goto out;
+    }
+    buf2 = aos_malloc(size);
+    if (!buf2) {
+        printf(g_fmtcmdfailed, argv[0], "malloc buf2", size);
+        goto out;
+    }
+
+    while (1) {
+        ret1 = aos_read(fd1, buf1, size);
+        if (ret1 < 0) {
+            printf(g_fmtcmdfailed, argv[0], "read() file1", ret1);
+            goto out;
+        }
+
+        ret2 = aos_read(fd2, buf2, size);
+        if (ret2 < 0) {
+            printf(g_fmtcmdfailed, argv[0], "read() file2", ret2);
+            goto out;
+        }
+
+        if (ret1 != ret2) {
+            diff = 1;
+            break;
+        }
+        if (ret1 == 0) /* Reach the end of file */
+            break;
+        if (memcmp(buf1, buf2, ret1)) {
+            diff = 1;
+            break;
+        }
+    }
+
+    if (diff)
+        printf("They are different\n");
+    else
+        printf("They are identical\n");
+out:
+    if (buf1)
+        aos_free(buf1);
+    if (buf2)
+        aos_free(buf2);
+    if (fd1)
+        aos_close(fd1);
+    if (fd2)
+        aos_close(fd2);
+}
+
+void cli_reg_cmd_diff(void)
+{
+    static const struct cli_command cmd_info = {
+        "diff",
+        "diff file1 file2",
+        cmd_diff
+    };
+
+    aos_cli_register_command(&cmd_info);
+}
+
+static void cmd_df(char *wbuf, int wbuf_len, int argc, char **argv)
+{
+    int ret = -1;
+    struct aos_statfs sfs;
+    unsigned long long total, used, free;
+    char *dir = NULL;
+
+    if (argc == 1) {
+        dir = "/";
+    } else if(argc == 2) {
+        dir = argv[1];
+    }
+
+    if (dir) {
+        ret = aos_statfs(dir, &sfs);
+        if (ret < 0) {
+            printf(g_fmtcmdfailed, argv[0], "df", ret);
+            return;
+        }
+        total = ((unsigned long long)sfs.f_bsize * (unsigned long long)sfs.f_blocks) >> 10;
+        if (total == 0) {
+            printf("total size error!\r\n");
+            return;
+        }
+        free = ((unsigned long long)sfs.f_bsize * (unsigned long long)sfs.f_bavail) >> 10;
+        used = total - free;
+
+        printf("%10s%10s%10s%7s    %s\n", "Total", "Used", "Free", "Use%", "Mount");
+        if (!strcmp(dir, "/")) {
+            printf("%10llu%10llu%10llu%6llu%%    %s\n", total, used, free,
+                    used * 100 / total, dir);
+        } else {
+            printf("%10llu%10llu%10llu     0%%    %s\n", total, used, free, dir);
+        }
+    }
+
+    return;
+}
+
+void cli_reg_cmd_df(void)
+{
+    static const struct cli_command cmd_info = {
+        "df",
+        "df path",
+        cmd_df
     };
 
     aos_cli_register_command(&cmd_info);

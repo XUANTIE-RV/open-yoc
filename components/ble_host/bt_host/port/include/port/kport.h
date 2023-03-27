@@ -35,7 +35,7 @@
 #define UINT_MAX (~0U)
 #endif
 
-#ifdef CONFIG_OBJECT_TRACING
+#if (defined(CONFIG_OBJECT_TRACING) && CONFIG_OBJECT_TRACING)
 #define _OBJECT_TRACING_NEXT_PTR(type) struct type *__next
 #define _OBJECT_TRACING_INIT .__next = NULL,
 #else
@@ -52,7 +52,7 @@ typedef sys_dlist_t _wait_q_t;
 
 /*attention: this is intialied as zero,the queue variable shoule use
  * k_queue_init\k_lifo_init\k_fifo_init again*/
-#if defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE
+#if (defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE)
 #define _K_QUEUE_INITIALIZER(obj) \
     {                             \
        SYS_SLIST_STATIC_INIT(&obj.queue_list), \

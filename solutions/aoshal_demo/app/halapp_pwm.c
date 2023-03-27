@@ -46,11 +46,13 @@ static uint32_t get_pwm_channel(uint8_t gpio_pin, uint8_t pwm_id, const csi_pinm
 }
 
 /* output one pwm signal */
-int hal_pwm_out_demo(uint8_t gpio_pin, uint8_t pwm_id, uint32_t freq, float duty_cycle)
+int hal_pwm_out_demo(uint8_t gpio_pin, uint8_t pwm_id, uint32_t freq, float duty_cycle,
+                     uint32_t freq_chg, float duty_cycle_chg)
 {
     int32_t ret;
     uint8_t port;
     pwm_dev_t pwm = {0};
+    pwm_config_t para = {duty_cycle_chg, freq_chg};
 
     printf(" hal_pwm_out_demo start\r\n");
 
@@ -58,7 +60,11 @@ int hal_pwm_out_demo(uint8_t gpio_pin, uint8_t pwm_id, uint32_t freq, float duty
     csi_pin_set_mux(gpio_pin, pin_func);
 
     port = get_pwm_channel(gpio_pin, pwm_id, pwm_pinmap);
-    port &= PWM_PORT_MASK;
+
+#if defined(CONFIG_CHIP_CH2601)
+    port = port / 2;
+#endif
+
     if (pwm_id == 0) {
         port |= PWM0_GROUP_MASK;
     } else if (pwm_id == 1) {
@@ -79,6 +85,12 @@ int hal_pwm_out_demo(uint8_t gpio_pin, uint8_t pwm_id, uint32_t freq, float duty
     hal_pwm_start(&pwm);
 
     aos_msleep(5000);
+
+#if !defined(CONFIG_CHIP_D1)
+    hal_pwm_para_chg(&pwm, para);
+
+    aos_msleep(5000);
+#endif
 
     hal_pwm_stop(&pwm);
 

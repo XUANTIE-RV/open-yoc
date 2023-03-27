@@ -1,0 +1,4 @@
+#USB:
+#- timeout: [50000,100000,20000]
+#- mode: [TIMER_MODE_FREE_RUNNING,TIMER_MODE_RELOAD]
+#- timer_idx: [0,1,2,3]

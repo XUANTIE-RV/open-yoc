@@ -57,7 +57,6 @@ __attribute__((weak)) void boot_load_and_jump(void)
     printf("load img & jump to [%s]\n", jump_to);
     part = partition_open(jump_to);
     part_info = partition_info_get(part);
-    partition_close(part);
 
     static_addr = part_info->start_addr + part_info->base_addr;
     load_addr = part_info->load_addr;
@@ -69,7 +68,7 @@ __attribute__((weak)) void boot_load_and_jump(void)
     printf("load&jump 0x%lx,0x%lx,%d\n", static_addr, load_addr, image_size);
     if (static_addr != load_addr) {
         printf("start to copy data from 0x%lx to 0x%lx, size: %d\n", static_addr, load_addr, image_size);
-        if (boot_flash_read(static_addr, (void *)(load_addr), image_size) < 0) {
+        if (partition_read(part, part_info->start_addr, (void *)(load_addr), image_size) < 0) {
             printf("copy failed.\n");
             goto fail;
         }

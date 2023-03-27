@@ -153,7 +153,7 @@ int settings_save(void)
 		}
 	}
 #endif
-#if defined(CONFIG_SETTINGS_DYNAMIC_HANDLERS)
+#if (defined(CONFIG_SETTINGS_DYNAMIC_HANDLERS) && CONFIG_SETTINGS_DYNAMIC_HANDLERS)
 	struct settings_handler *ch;
 	SYS_SLIST_FOR_EACH_CONTAINER(&settings_handlers, ch, node) {
 		if (ch->h_export) {

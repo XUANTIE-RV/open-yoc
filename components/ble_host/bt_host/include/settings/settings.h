@@ -18,7 +18,7 @@ extern "C" {
 #endif
 
 #ifndef CONFIG_SETTINGS_DYNAMIC_HANDLERS
-#define CONFIG_SETTINGS_DYNAMIC_HANDLERS
+#define CONFIG_SETTINGS_DYNAMIC_HANDLERS 1
 #endif
 
 /**
@@ -563,7 +563,7 @@ int settings_name_next(const char *name, const char **next);
  * @}
  */
 
-#ifdef CONFIG_SETTINGS_RUNTIME
+#if (defined(CONFIG_SETTINGS_RUNTIME) && CONFIG_SETTINGS_RUNTIME)
 
 /**
  * @defgroup settings_rt Settings subsystem runtime

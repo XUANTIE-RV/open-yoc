@@ -9,7 +9,7 @@
 #include <errno.h>
 #include <atomic.h>
 
-#ifdef CONFIG_BT_HCI_RAW
+#if (defined(CONFIG_BT_HCI_RAW) && CONFIG_BT_HCI_RAW)
 #include <bluetooth/hci_driver.h>
 #include <bluetooth/hci_raw.h>
 
@@ -28,7 +28,7 @@
 
 static struct k_fifo *raw_rx;
 
-#if defined(CONFIG_BT_HCI_RAW_H4_ENABLE)
+#if (defined(CONFIG_BT_HCI_RAW_H4_ENABLE) && CONFIG_BT_HCI_RAW_H4_ENABLE)
 static u8_t raw_mode = BT_HCI_RAW_MODE_H4;
 #else
 static u8_t raw_mode;

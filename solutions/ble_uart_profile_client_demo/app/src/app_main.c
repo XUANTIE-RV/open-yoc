@@ -8,7 +8,6 @@
 #include "aos/ble.h"
 #include "app_main.h"
 #include "app_init.h"
-#include "pin_name.h"
 #include "common/log.h"
 #include "yoc/uart_client.h"
 

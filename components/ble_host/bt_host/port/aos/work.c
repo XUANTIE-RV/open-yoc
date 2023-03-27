@@ -114,7 +114,7 @@ s32_t k_delayed_work_remaining_get(struct k_delayed_work *work)
 #include <aos/kernel.h>
 
 #ifndef CONFIG_BLUETOOTH_WORK_QUEUE_STACK_SIZE
-#ifdef CONFIG_BT_MESH
+#if (defined(CONFIG_BT_MESH) && CONFIG_BT_MESH)
 #define CONFIG_BLUETOOTH_WORK_QUEUE_STACK_SIZE (1500)
 #else
 #define CONFIG_BLUETOOTH_WORK_QUEUE_STACK_SIZE (1024)
@@ -134,7 +134,7 @@ static void k_work_submit_to_queue(struct k_work_q *work_q,
 {
     if (!atomic_test_and_set_bit(work->flags, K_WORK_STATE_PENDING)) {
         k_fifo_put(&work_q->fifo, work);
-#if defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE
+#if (defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE)
         k_sem_give(&g_work_queue_main.sem);
 #endif
     }
@@ -146,7 +146,7 @@ static void work_queue_thread(void *arg)
     UNUSED(arg);
 
     while (1) {
-#if defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE
+#if (defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE)
         k_sem_take(&g_work_queue_main.sem, K_FOREVER);
         work = k_fifo_get(&g_work_queue_main.fifo, K_FOREVER);
         if (!work)
@@ -173,7 +173,7 @@ static void work_queue_thread(void *arg)
 
 int k_work_q_start(void)
 {
-#if defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE
+#if (defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE)
     k_sem_init(&g_work_queue_main.sem, 0, 0);
 #endif
     k_fifo_init(&g_work_queue_main.fifo);

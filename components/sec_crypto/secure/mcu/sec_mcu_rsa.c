@@ -95,7 +95,7 @@ uint32_t sc_rsa_encrypt(sc_rsa_t *rsa, sc_rsa_context_t *context, void *src,
         ctx.n = context->n;
         ctx.d = context->d;
         ctx.e = context->e;
-        s_get_keybit(&ctx, context->key_bits);
+        s_get_keybit((void *)&ctx, context->key_bits);
         ctx.padding_type = context->padding_type;
         ret = csi_rsa_encrypt(&rsa->csi_rsa, &ctx, src, src_size, out);
         if (ret) {
@@ -122,7 +122,7 @@ uint32_t sc_rsa_decrypt(sc_rsa_t *rsa, sc_rsa_context_t *context, void *src,
         ctx.n = context->n;
         ctx.d = context->d;
         ctx.e = context->e;
-        s_get_keybit(&ctx, context->key_bits);
+        s_get_keybit((void *)&ctx, context->key_bits);
         ctx.padding_type = context->padding_type;
 
         ret =
@@ -153,7 +153,7 @@ uint32_t sc_rsa_sign(sc_rsa_t *rsa, sc_rsa_context_t *context, void *src,
         ctx.n = context->n;
         ctx.d = context->d;
         ctx.e = context->e;
-        s_get_keybit(&ctx, context->key_bits);
+        s_get_keybit((void *)&ctx, context->key_bits);
         ctx.padding_type   = context->padding_type;
         context->hash_type = hash_type;
 
@@ -184,7 +184,7 @@ bool sc_rsa_verify(sc_rsa_t *rsa, sc_rsa_context_t *context, void *src,
         ctx.n = context->n;
         ctx.d = context->d;
         ctx.e = context->e;
-        s_get_keybit(&ctx, context->key_bits);
+        s_get_keybit((void *)&ctx, context->key_bits);
         ctx.padding_type   = context->padding_type;
         context->hash_type = hash_type;
 

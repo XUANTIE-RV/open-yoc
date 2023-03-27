@@ -1,0 +1,12 @@
+name: PWMR
+vendor: WJ
+license: Copyright (C) 2017-2020 Alibaba Group Holding Limited
+description: WJ pwmr
+type: devices
+
+versions:
+    v1.0:
+        drv_path: v1.0
+        test_path: test/v1.0
+        rtl_path: xxxx
+

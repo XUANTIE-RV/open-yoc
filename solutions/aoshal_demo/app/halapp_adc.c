@@ -2,7 +2,7 @@
  * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
-#if (!CONFIG_CHIP_D1)
+#if !defined(CONFIG_CHIP_D1)
 
 #include <stdio.h>
 #include <stdlib.h>

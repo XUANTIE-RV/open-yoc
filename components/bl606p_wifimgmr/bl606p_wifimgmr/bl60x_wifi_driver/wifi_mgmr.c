@@ -311,7 +311,8 @@ static bool stateGlobalGuard_fw_powersaving(void *ch, struct event *event)
 
     msg = event->data;
     if (WIFI_MGMR_EVENT_FW_POWERSAVING == msg->ev) {
-        bl_os_printf("------>>>>>> Powersaving CMD, mode: %u\r\n", (unsigned int)msg->data1);
+        extern int bl_printf(const char *fmt, ...);
+        bl_printf("------>>>>>> Powersaving CMD, mode: %u\r\n", (unsigned int)msg->data1);
 //TODO mode check?
         bl_main_powersaving((int)msg->data1);
     }
@@ -452,22 +453,6 @@ static bool stateGlobal_cfg_req(void *ch, struct event *event)
     if (WIFI_MGMR_EVENT_FW_CFG_REQ == msg->ev) {
         cfg_req = (wifi_mgmr_cfg_element_msg_t*)msg->data;
         bl_main_cfg_task_req(cfg_req->ops, cfg_req->task, cfg_req->element, cfg_req->type, cfg_req->buf, NULL);
-    }
-
-    return false;
-}
-
-static bool stateGlobal_mode_req(void *ch, struct event *event)
-{
-    wifi_mgmr_msg_t *msg;
-    uint8_t ap_or_sta;
-    uint32_t mode;
-
-    msg = event->data;
-    if (WIFI_MGMR_EVENT_FW_MODE_REQ == msg->ev) {
-        ap_or_sta = (uint8_t)msg->data1;
-        mode = (uint32_t)msg->data2;
-        return bl_main_set_mode(ap_or_sta, mode);
     }
 
     return false;
@@ -634,9 +619,8 @@ const static struct state stateGlobal = {
       {EVENT_TYPE_FW, (void*)WIFI_MGMR_EVENT_FW_SCAN, &stateGlobalGuard_fw_scan, &stateGlobalAction, &stateIdle},
       {EVENT_TYPE_FW,  (void*)WIFI_MGMR_EVENT_FW_DATA_RAW_SEND, &stateSnifferGuard_raw_send, &stateGlobalAction, &stateIdle},
       {EVENT_TYPE_FW,  (void*)WIFI_MGMR_EVENT_FW_CFG_REQ, &stateGlobal_cfg_req, &stateGlobalAction, &stateIdle},
-      {EVENT_TYPE_FW,  (void*)WIFI_MGMR_EVENT_FW_MODE_REQ, &stateGlobal_mode_req, &stateGlobalAction, &stateIdle},
    },
-   .numTransitions = 12,
+   .numTransitions = 11,
    .data = "group",
    .entryAction = &stateEnter,
    .exitAction = &stateExit,
@@ -1422,7 +1406,6 @@ int wifi_mgmr_init(void)
     wifiMgmr.ap_bcn_int = 100;
     wifiMgmr.ap_info_ttl_curr = -1;
     wifiMgmr.scan_item_timeout = WIFI_MGMR_CONFIG_SCAN_ITEM_TIMEOUT;
-    wifiMgmr.ap_mode = wifiMgmr.sta_mode = WIFI_MODE_802_11B | WIFI_MODE_802_11G | WIFI_MODE_802_11N_2_4;
     return ret;
 }
 

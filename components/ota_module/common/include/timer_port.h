@@ -4,15 +4,10 @@
 #ifndef _TIMER_PORT_H_
 #define _TIMER_PORT_H_
 #include "aos/kernel.h"
-#include "bluetooth/bluetooth.h"
-#include "ble_os_port.h"
 
 typedef union
 {
-#if (RHINO_CONFIG_TIMER > 0)
     aos_timer_t aos_timer;
-#endif
-    k_timer_t k_timer;
 } timer_s;
 
 typedef struct {

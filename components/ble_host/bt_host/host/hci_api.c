@@ -53,7 +53,7 @@
 #include "soc.h"
 #include "hci_api.h"
 
-#if defined(CONFIG_BT_USE_HCI_API) && CONFIG_BT_USE_HCI_API
+#if (defined(CONFIG_BT_USE_HCI_API) && CONFIG_BT_USE_HCI_API)
 
 #define __hci_api_weak__ __attribute__((weak))
 
@@ -551,7 +551,7 @@ __hci_api_weak__  int hci_api_le_set_data_len(int16_t conn_handle, uint16_t tx_o
 
 static int hci_vs_set_bd_add(uint8_t addr[6])
 {
-#if defined(CONFIG_BT_HCI_VS_EXT)
+#if (defined(CONFIG_BT_HCI_VS_EXT) && CONFIG_BT_HCI_VS_EXT)
     struct net_buf *buf;
     int err;
 
@@ -950,8 +950,8 @@ __hci_api_weak__ int hci_api_white_list_clear()
 }
 
 
-#if defined(CONFIG_BT_HCI_VS_EXT)
-#if defined(CONFIG_BT_DEBUG)
+#if (defined(CONFIG_BT_HCI_VS_EXT) && CONFIG_BT_HCI_VS_EXT)
+#if (defined(CONFIG_BT_DEBUG) && CONFIG_BT_DEBUG)
 static const char *vs_hw_platform(u16_t platform)
 {
     static const char *const plat_str[] = {
@@ -1030,7 +1030,7 @@ static void hci_vs_init(void)
         return;
     }
 
-#if defined(CONFIG_BT_DEBUG)
+#if (defined(CONFIG_BT_DEBUG) && CONFIG_BT_DEBUG)
     rp.info = (void *)rsp->data;
     BT_INFO("HW Platform: %s (0x%04x)",
             vs_hw_platform(sys_le16_to_cpu(rp.info->hw_platform)),
@@ -1076,7 +1076,7 @@ static void hci_vs_init(void)
 
 __hci_api_weak__  int hci_api_vs_init()
 {
-#if defined(CONFIG_BT_HCI_VS_EXT)
+#if (defined(CONFIG_BT_HCI_VS_EXT) && CONFIG_BT_HCI_VS_EXT)
     hci_vs_init();
     return 0;
 #else
@@ -1726,7 +1726,7 @@ static const struct event_handler prio_events[] = {
 	EVENT_HANDLER(BT_HCI_EVT_CMD_STATUS, hci_cmd_status,
 		      sizeof(struct bt_hci_evt_cmd_status)),
 #endif
-#if defined(CONFIG_BT_CONN)
+#if (defined(CONFIG_BT_CONN) && CONFIG_BT_CONN)
 	EVENT_HANDLER(BT_HCI_EVT_DATA_BUF_OVERFLOW,
 		      hci_data_buf_overflow,
 		      sizeof(struct bt_hci_evt_data_buf_overflow)),
@@ -1755,7 +1755,7 @@ __hci_api_weak__ int bt_recv_prio(struct net_buf *buf)
     return 0;
 }
 
-#if defined(CONFIG_BT_CONN)
+#if (defined(CONFIG_BT_CONN) && CONFIG_BT_CONN)
 /* command FIFO + conn_change signal + MAX_CONN * 2 (tx & tx_notify) */
 #define EV_COUNT (2 + (CONFIG_BT_MAX_CONN * 2))
 #else
@@ -1801,7 +1801,7 @@ static void hci_tx_thread(void *p1)
 __hci_api_weak__ int hci_api_init()
 {
 
-#if !defined(CONFIG_BT_WAIT_NOP)
+#if !(defined(CONFIG_BT_WAIT_NOP) && CONFIG_BT_WAIT_NOP)
     k_sem_init(&ncmd_sem,1,1);
 #else
     k_sem_init(&ncmd_sem,0,1);

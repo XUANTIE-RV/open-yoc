@@ -1,3 +1,8 @@
+
+#include <board.h>
+
+#if defined(CONFIG_BOARD_AUDIO) && CONFIG_BOARD_AUDIO
+
 #ifdef CONFIG_SMART_AUDIO
 #include <smart_audio.h>
 
@@ -219,3 +224,4 @@ id,db,与上一个db的差值
 226,0.000,0.176
 */
 #endif /*CONFIG_SMART_AUDIO*/
+#endif /*CONFIG_BOARD_AUDIO*/

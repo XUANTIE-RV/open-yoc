@@ -31,7 +31,8 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
+#ifdef CONFIG_KERNEL_NONE
+#include <drv/tick.h>
 #include "sdmmc_event.h"
 
 #if defined(__XCC__)
@@ -58,10 +59,10 @@ static volatile uint32_t *SDMMCEVENT_GetInstance(uint32_t sdif, sdmmc_event_t ev
  * Variables
  ******************************************************************************/
 /*! @brief Card detect event. */
-static volatile uint32_t g_eventCardDetect[2];
+static volatile uint32_t g_eventCardDetect[4];
 
 /*! @brief transfer complete event. */
-static volatile uint32_t g_eventtransfer_complete[2];
+static volatile uint32_t g_eventtransfer_complete[4];
 
 /*! @brief Time variable unites as milliseconds. */
 static volatile uint32_t g_eventTimeMilliseconds;
@@ -69,25 +70,9 @@ static volatile uint32_t g_eventTimeMilliseconds;
 /*******************************************************************************
  * Code
  ******************************************************************************/
-void SysTick_Handler(void)
-{
-    g_eventTimeMilliseconds++;
-}
 
 void SDMMCEVENT_InitTimer(void)
 {
-#if defined(__CC_ARM)
-    /* Set systick reload value to generate 1ms interrupt */
-    SysTick_Config(silan_get_mcu_cclk() / 1000U);
-#endif
-
-#if defined(__XCC__)
-    silan_timer_task_request(SysTick_Handler);
-#endif
-
-#if defined(__CSKY__)
-    //silan_timer_task_request(SysTick_Handler);
-#endif
 }
 
 static volatile uint32_t *SDMMCEVENT_GetInstance(uint32_t sdif, sdmmc_event_t eventType)
@@ -131,14 +116,14 @@ bool SDMMCEVENT_Wait(uint32_t sdif, sdmmc_event_t eventType, uint32_t timeoutMil
     volatile uint32_t *event = SDMMCEVENT_GetInstance(sdif, eventType);
 
     if (timeoutMilliseconds && event) {
-        startTime = g_eventTimeMilliseconds;
+        startTime = csi_tick_get_ms();
 
         do {
 #ifdef CONFIG_CHIP_TX216
             mdelay(1);
             elapsedTime++;
 #else
-            elapsedTime = (g_eventTimeMilliseconds - startTime);
+            elapsedTime = (csi_tick_get_ms() - startTime);
 #endif
         } while ((*event == 0U) && (elapsedTime < timeoutMilliseconds));
 
@@ -173,10 +158,11 @@ void SDMMCEVENT_Delete(uint32_t sdif, sdmmc_event_t eventType)
 
 void SDMMCEVENT_Delay(uint32_t milliseconds)
 {
-    uint32_t startTime = g_eventTimeMilliseconds;
+    uint32_t startTime = csi_tick_get_ms();
     uint32_t periodTime = 0;
 
     while (periodTime < milliseconds) {
-        periodTime = g_eventTimeMilliseconds - startTime;
+        periodTime = csi_tick_get_ms() - startTime;
     }
 }
+#endif /*CONFIG_KERNEL_NONE*/

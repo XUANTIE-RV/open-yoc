@@ -41,6 +41,30 @@ void cli_reg_cmd_mv(void);
  */
 void cli_reg_cmd_rm(void);
 
+/**
+ * @brief command for df
+ * @return
+ */
+void cli_reg_cmd_df(void);
+
+/**
+ * @brief command for cp
+ * @return
+ */
+void cli_reg_cmd_cp(void);
+
+/**
+ * @brief command for diff
+ * @return
+ */
+void cli_reg_cmd_diff(void);
+
+/**
+ * @brief command for echo
+ * @return
+ */
+void cli_reg_cmd_echo(void);
+
 #ifdef __cplusplus
 }
 #endif

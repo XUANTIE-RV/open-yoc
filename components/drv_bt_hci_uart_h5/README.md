@@ -35,7 +35,7 @@
  * @param  [in] config
  * @return  
  */
-void bt_hci_uart_h5_register(int uart_idx, uart_config_t config);
+void bt_hci_uart_h5_register(int uart_idx, rvm_hal_uart_config_t config);
 ```
 
 H5驱动注册接口
@@ -62,14 +62,14 @@ void board_yoc_init()
     drv_pinmux_config(PIN_YYY, FUNC_UART_RX_YYY)
 
     //获取默认uart配置
-    uart_config_t uart_config;
-    uart_config_default(&uart_config);
+    rvm_hal_uart_config_t uart_config;
+    rvm_hal_uart_config_default(&uart_config);
 
     //根据设计，配置uart参数
     uart_config.baud_rate = 115200;
     
     //注册H5驱动
-    extern void bt_hci_uart_h5_register(int uart_idx, uart_config_t config);
+    extern void bt_hci_uart_h5_register(int uart_idx, rvm_hal_uart_config_t config);
     bt_hci_uart_h5_register(0, uart_config);
 
     //H5驱动初始化

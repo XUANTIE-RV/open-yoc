@@ -1019,8 +1019,6 @@ struct sm_connect_req
     struct mac_addr bssid;
     /// Channel on which we have to connect (if not specified, set -1 in the chan.freq field)
     struct scan_chan_tag chan;
-    /// WiFi Mode
-    uint32_t mode;
     /// Connection flags (see @ref sm_connect_flags)
     u32_l flags;
     /// Control port Ethertype
@@ -1189,8 +1187,6 @@ struct cfg_start_cfm
 /// Structure containing the parameters of the @ref APM_START_REQ message.
 struct apm_start_req
 {
-    /// WiFi mode
-    u32_l mode;
     /// Basic rate set
     struct mac_rateset basic_rates;
     /// Control channel on which we have to enable the AP

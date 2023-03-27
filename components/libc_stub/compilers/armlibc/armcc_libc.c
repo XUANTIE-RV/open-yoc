@@ -5,23 +5,19 @@
 #include <string.h>
 #include <stdio.h>
 #include <sys/time.h>
-#include "k_config.h"
 #include "aos/kernel.h"
 
-#include "aos/hal/uart.h"
-
 volatile int errno = 0;
-extern uart_dev_t uart_0;
 
 #if defined (__CC_ARM) && defined(__MICROLIB)
 void __aeabi_assert(const char *expr, const char *file, int line)
 {
     while (1);
 }
-extern uint64_t krhino_sys_time_get(void);
+
 int gettimeofday(struct timeval *tv, void *tzp)
 {
-    uint64_t t = krhino_sys_time_get();
+    uint64_t t = aos_now_ms();
     tv->tv_sec = t / 1000;
     tv->tv_usec = (t % 1000) * 1000;
     return 0;
@@ -101,11 +97,8 @@ char * strdup(const char *s)
 #pragma weak fputc
 int fputc(int ch, FILE *f)
 {
-    /* Send data. */
-    if (ch == '\n') {
-      hal_uart_send(&uart_0, (void *)"\r", 1, AOS_WAIT_FOREVER);
-    }
-    hal_uart_send(&uart_0, &ch, 1, AOS_WAIT_FOREVER);
+    extern int uart_write(const void *buf, size_t size);
+    uart_write(&ch, 1);
     return ch;
 }
 

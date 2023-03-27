@@ -25,7 +25,7 @@
 
 #include <devices/rtl8723ds_bt.h>
 #include <devices/uart.h>
-#include <devices/hal/hci_impl.h>
+#include <devices/impl/hci_impl.h>
 #include <devices/device.h>
 #include <devices/driver.h>
 #include <drv/gpio.h>
@@ -43,8 +43,8 @@
 
 #define TAG "HCI"
 
-// static aos_dev_t* uart_dev;
-//static uart_config_t g_uart_config;
+// static rvm_dev_t* uart_dev;
+//static rvm_hal_uart_config_t g_uart_config;
 static void *g_priv;
 static hci_event_cb_t  g_event;
 static aos_event_t g_uart_event;
@@ -72,7 +72,7 @@ static void uart_event(void *args)
     //}
 }
 
-static int h5_hal_open(aos_dev_t *dev)
+static int h5_hal_open(rvm_dev_t *dev)
 {
     tUSERIAL_CFG userial_init_cfg = {
         (USERIAL_DATABITS_8 | USERIAL_PARITY_EVEN | USERIAL_STOPBITS_1),
@@ -80,29 +80,33 @@ static int h5_hal_open(aos_dev_t *dev)
         USERIAL_HW_FLOW_CTRL_OFF,
         g_uart_id
     };
+
+    if (g_bt_dis_pin != -1) {
 #ifdef CONFIG_CSI_V2
-    csi_gpio_pin_t gpio;
+        csi_gpio_pin_t gpio;
 
-    csi_gpio_pin_init(&gpio, g_bt_dis_pin);
-    // aos_check(&gpio, EIO);
-    csi_gpio_pin_dir(&gpio, GPIO_DIRECTION_OUTPUT);
-    csi_gpio_pin_write(&gpio, 0);
-    aos_msleep(200);
-    csi_gpio_pin_write(&gpio, 1);
+        csi_gpio_pin_init(&gpio, g_bt_dis_pin);
+        // aos_check(&gpio, EIO);
+        csi_gpio_pin_dir(&gpio, GPIO_DIRECTION_OUTPUT);
+        csi_gpio_pin_write(&gpio, 0);
+        aos_msleep(200);
+        csi_gpio_pin_write(&gpio, 1);
+        aos_msleep(500);
 #else
-    gpio_pin_handle_t gpio;
+        gpio_pin_handle_t gpio;
 
-    drv_pinmux_config(g_bt_dis_pin, PIN_FUNC_GPIO);
-    gpio = csi_gpio_pin_initialize(g_bt_dis_pin, NULL);
-    aos_check(gpio, EIO);
-    csi_gpio_pin_config_mode(gpio, GPIO_MODE_PULLNONE);
-    csi_gpio_pin_config_direction(gpio, GPIO_DIRECTION_OUTPUT);
+        drv_pinmux_config(g_bt_dis_pin, PIN_FUNC_GPIO);
+        gpio = csi_gpio_pin_initialize(g_bt_dis_pin, NULL);
+        aos_check(gpio, EIO);
+        csi_gpio_pin_config_mode(gpio, GPIO_MODE_PULLNONE);
+        csi_gpio_pin_config_direction(gpio, GPIO_DIRECTION_OUTPUT);
 
-    csi_gpio_pin_write(gpio, 0);
-    aos_msleep(200);
-    csi_gpio_pin_write(gpio, 1);
+        csi_gpio_pin_write(gpio, 0);
+        aos_msleep(200);
+        csi_gpio_pin_write(gpio, 1);
+        aos_msleep(500);
 #endif
-    aos_msleep(500);
+    }
 
     aos_check(!aos_event_new(&g_uart_event, 0), EIO);
 
@@ -113,7 +117,7 @@ static int h5_hal_open(aos_dev_t *dev)
     return 0;
 }
 
-static int h5_hal_close(aos_dev_t *dev)
+static int h5_hal_close(rvm_dev_t *dev)
 {
     LOGD(TAG, "%s", __func__);
 
@@ -122,17 +126,17 @@ static int h5_hal_close(aos_dev_t *dev)
     return 0;
 }
 
-static int h5_send_data(aos_dev_t *dev, uint8_t *data, uint32_t size)
+static int h5_send_data(rvm_dev_t *dev, uint8_t *data, uint32_t size)
 {
     return userial_vendor_send_data(data, size);
 }
 
-static int h5_recv_data(aos_dev_t *dev, uint8_t *data, uint32_t size)
+static int h5_recv_data(rvm_dev_t *dev, uint8_t *data, uint32_t size)
 {
     return userial_vendor_recv_data(data, size, 0);
 }
 
-static int h5_set_event(aos_dev_t *dev, hci_event_cb_t event, void *priv)
+static int h5_set_event(rvm_dev_t *dev, hci_event_cb_t event, void *priv)
 {
     g_event = event;
     g_priv = priv;
@@ -140,21 +144,21 @@ static int h5_set_event(aos_dev_t *dev, hci_event_cb_t event, void *priv)
     return 0;
 }
 
-static int h5_start(aos_dev_t *dev, hci_driver_send_cmd_t send_cmd)
+static int h5_start(rvm_dev_t *dev, hci_driver_send_cmd_t send_cmd)
 {
     hw_config_start(send_cmd);
 
     return 0;
 }
 
-static aos_dev_t *h5_hal_init(driver_t *drv, void *g_uart_config, int id)
+static rvm_dev_t *h5_hal_init(driver_t *drv, void *g_uart_config, int id)
 {
-    hci_driver_t *h5_dev = (hci_driver_t *)device_new(drv, sizeof(hci_driver_t), id);
+    hci_driver_t *h5_dev = (hci_driver_t *)rvm_hal_device_new(drv, sizeof(hci_driver_t), id);
 
-    return (aos_dev_t *)h5_dev;
+    return (rvm_dev_t *)h5_dev;
 }
 
-#define h5_hal_uninit device_free
+#define h5_hal_uninit rvm_hal_device_free
 
 static hci_driver_t h5_driver = {
     .drv = {
@@ -180,6 +184,6 @@ void bt_rtl8723ds_register(rtl8723ds_bt_config *config)
 {
     g_bt_dis_pin = config->bt_dis_pin;
     g_uart_id = config->uart_id;
-    driver_register(&h5_driver.drv, NULL, 0);
+    rvm_driver_register(&h5_driver.drv, NULL, 0);
 }
 

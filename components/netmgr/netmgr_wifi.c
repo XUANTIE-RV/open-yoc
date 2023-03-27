@@ -23,29 +23,29 @@ static const char *TAG = "netmgr_wifi";
 static int netmgr_wifi_provision(netmgr_dev_t *node)
 {
 
-    aos_dev_t *dev = node->dev;
+    rvm_dev_t *dev = node->dev;
     wifi_setting_t *config = &node->config.wifi_config;
-    //wifi_ap_record_t ap_info;
-    //hal_wifi_sta_get_link_status(dev, &ap_info);
+    //rvm_hal_wifi_ap_record_t ap_info;
+    //rvm_hal_wifi_sta_get_link_status(dev, &ap_info);
 
     netmgr_subscribe(EVENT_WIFI_LINK_UP);
     netmgr_subscribe(EVENT_WIFI_LINK_DOWN);
     netmgr_subscribe(EVENT_WIFI_EXCEPTION);
     netmgr_subscribe(EVENT_WIFI_SMARTCFG);
 
-    if (hal_wifi_reset(dev) < 0) {
+    if (rvm_hal_wifi_reset(dev) < 0) {
         event_publish(EVENT_NETMGR_NET_DISCON, NULL);
         return -1;
     }
 
-    //hal_wifi_set_mode(dev, WIFI_MODE_STA);
-    wifi_config_t *wifi_config = aos_zalloc(sizeof(wifi_config_t));
+    //rvm_hal_wifi_set_mode(dev, WIFI_MODE_STA);
+    rvm_hal_wifi_config_t *wifi_config = aos_zalloc(sizeof(rvm_hal_wifi_config_t));
     if (wifi_config == NULL)
         return -1;
     wifi_config->mode = WIFI_MODE_STA;
     strcpy(wifi_config->ssid, config->ssid_psk.ssid);
     strcpy(wifi_config->password, config->ssid_psk.psk);
-    int ret = hal_wifi_start(dev, wifi_config);
+    int ret = rvm_hal_wifi_start(dev, wifi_config);
     aos_free(wifi_config);
 
     if (ret == 0) {
@@ -61,14 +61,14 @@ static int netmgr_wifi_provision(netmgr_dev_t *node)
 
 static int netmgr_wifi_unprovision(netmgr_dev_t *node)
 {
-    aos_dev_t *dev = node->dev;
+    rvm_dev_t *dev = node->dev;
 
     netmgr_unsubscribe(EVENT_WIFI_LINK_UP);
     netmgr_unsubscribe(EVENT_WIFI_LINK_DOWN);
     netmgr_unsubscribe(EVENT_WIFI_EXCEPTION);
     netmgr_unsubscribe(EVENT_WIFI_SMARTCFG);
 
-    hal_wifi_deinit(dev);
+    rvm_hal_wifi_deinit(dev);
 
     return 0;
 }
@@ -82,7 +82,7 @@ static int netmgr_wifi_reset(netmgr_dev_t *node)
 static int netmgr_wifi_info(netmgr_dev_t *node)
 {
 
-    aos_dev_t *dev = node->dev;
+    rvm_dev_t *dev = node->dev;
     int ret, i;
 
     unsigned char mac[6] = {0};
@@ -91,13 +91,13 @@ static int netmgr_wifi_info(netmgr_dev_t *node)
     ip_addr_t gw;
     ip_addr_t dns_svr[2];
 
-    wifi_ap_record_t ap_info = {0};
+    rvm_hal_wifi_ap_record_t ap_info = {0};
 
 
     /** ifconfig */
-    hal_net_get_ipaddr(dev, &ipaddr, &netmask, &gw);
-    hal_net_get_mac_addr(dev, mac);
-    ret = hal_net_get_dns_server(dev, dns_svr, 2);
+    rvm_hal_net_get_ipaddr(dev, &ipaddr, &netmask, &gw);
+    rvm_hal_net_get_mac_addr(dev, mac);
+    ret = rvm_hal_net_get_dns_server(dev, dns_svr, 2);
 
     printf("\nwifi0\tLink encap:WiFi  HWaddr ");
     printf("%02x:%02x:%02x:%02x:%02x:%02x\n", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
@@ -114,7 +114,7 @@ static int netmgr_wifi_info(netmgr_dev_t *node)
     }
 
     /** iw dev wlan0 link */
-    hal_wifi_sta_get_link_status(dev, &ap_info);
+    rvm_hal_wifi_sta_get_link_status(dev, &ap_info);
 
     if ((ap_info.link_status == WIFI_STATUS_LINK_UP) ||
         (ap_info.link_status == WIFI_STATUS_GOTIP)) {
@@ -152,7 +152,7 @@ static int wifi_cfg_ssid_psk(struct netmgr_uservice *netmgr, rpc_t *rpc)
     }
 
     if (node != NULL) {
-        //aos_dev_t *dev = node->dev;
+        //rvm_dev_t *dev = node->dev;
         //netdev_driver_t *drv = dev->drv;
         wifi_setting_t *config = &node->config.wifi_config;
 
@@ -204,16 +204,16 @@ static int wifi_evt_link_execept(struct netmgr_uservice *netmgr, rpc_t *rpc)
 static int wifi_evt_smartcfg(struct netmgr_uservice *netmgr, rpc_t *rpc)
 {
     netmgr_dev_t *node = netmgr_find_dev(&netmgr->dev_list, "wifi");
-    aos_dev_t *dev = node->dev;
+    rvm_dev_t *dev = node->dev;
 
     static int do_action = 1;
 
     if (do_action) {
-        hal_wifi_set_smartcfg(dev, do_action);
+        rvm_hal_wifi_set_smartcfg(dev, do_action);
         do_action = 0;
         LOGI(TAG, "Smartconfig ENABLE");
     } else {
-        hal_wifi_set_smartcfg(dev, do_action);
+        rvm_hal_wifi_set_smartcfg(dev, do_action);
         do_action = 1;
         LOGI(TAG, "Smartconfig DISABLE");
     }
@@ -246,7 +246,7 @@ static netmgr_dev_t *netmgr_wifi_init(struct netmgr_uservice *netmgr)
 
         if (node) {
             wifi_setting_t *config = &node->config.wifi_config;
-            node->dev = device_open_id("wifi", 0);
+            node->dev = rvm_hal_device_open("wifi0");
             aos_assert(node->dev);
             node->provision = netmgr_wifi_provision;
             node->unprovision = netmgr_wifi_unprovision;
@@ -269,7 +269,7 @@ static netmgr_dev_t *netmgr_wifi_init(struct netmgr_uservice *netmgr)
 #endif
             slist_add_tail((slist_t *)node, &netmgr->dev_list);
 
-            ival = hal_wifi_init(node->dev);
+            ival = rvm_hal_wifi_init(node->dev);
             if (ival != 0) {
                 aos_free(node);
                 return NULL;
@@ -291,15 +291,15 @@ static netmgr_dev_t *netmgr_wifi_init(struct netmgr_uservice *netmgr)
 void netmgr_dev_wifi_deinit(netmgr_hdl_t hdl)
 {
     netmgr_dev_t *node = (netmgr_dev_t *)hdl;
-    aos_dev_t *dev = node->dev;
+    rvm_dev_t *dev = node->dev;
     netmgr_unreg_srv_func(API_WIFI_CONFIG_SSID_PSK, wifi_cfg_ssid_psk);
     netmgr_unreg_srv_func(EVENT_WIFI_LINK_UP, wifi_evt_link_up);
     netmgr_unreg_srv_func(EVENT_WIFI_LINK_DOWN, wifi_evt_link_down);
     netmgr_unreg_srv_func(EVENT_WIFI_EXCEPTION, wifi_evt_link_execept);
     netmgr_unreg_srv_func(EVENT_WIFI_SMARTCFG, wifi_evt_smartcfg);
 
-    hal_wifi_deinit(dev);
-    device_close(dev);
+    rvm_hal_wifi_deinit(dev);
+    rvm_hal_device_close(dev);
     slist_del((slist_t *)node, &netmgr_svc.dev_list);
     aos_free(node);
 }

@@ -8,7 +8,7 @@
 #include <ulog/ulog.h>
 #include "board.h"
 #include "app_main.h"
-#ifdef CONFIG_USE_LOG_IPC
+#if defined(CONFIG_LOG_IPC_CP) && CONFIG_LOG_IPC_CP
 #include <log_ipc.h>
 #endif
 
@@ -18,9 +18,9 @@ static void stduart_init(void)
 {
     extern void console_init(int idx, uint32_t baud, uint16_t buf_size);
     console_init(CONSOLE_UART_IDX, CONFIG_CLI_USART_BAUD, CONFIG_CONSOLE_UART_BUFSIZE);
-#ifdef CONFIG_USE_LOG_IPC
-    ipc_uart_csky_register(CONSOLE_UART_IDX, ipc_log_rx_read, ipc_log_tx_write);
-    ipc_log_cp_init(1);
+#if defined(CONFIG_LOG_IPC_CP) && CONFIG_LOG_IPC_CP
+    log_ipc_uart_register(CONSOLE_UART_IDX, log_ipc_rx_read, log_ipc_tx_write);
+    log_ipc_cp_init(1);
 #endif
 }
 

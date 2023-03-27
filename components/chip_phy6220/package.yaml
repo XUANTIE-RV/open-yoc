@@ -1,6 +1,6 @@
 
 ## 第一部分： 基础信息
-version: v7.6.0                                     # <必选项> 组件版本号
+version: v7.7.0
 name: chip_phy6220                                   # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
 description: phy6220 chip CSI driver SDK.            # <必选项> 建议至少20字以上
 type: chip                                          # <可选项> 组件类型，为：solution, chip, board, common，缺省值 common
@@ -17,7 +17,7 @@ license: Apache license v2.0                        # <可选项> 源代码的�
 #   - minilibc: v7.3.0
 #   - aos: >=v7.3.0
 depends:
-  - dut_service: v7.6.0
+  - dut_service: v7.7.0
 
 ## 第三部分：板级信息
 # hw_info:                                 # 对 solution、board、chip 三个字段的改进，统称为 hw_info 字段
@@ -130,6 +130,7 @@ source_file:
 
 ## 第五部分：配置信息
 def_config:                              # 组件的可配置项
+    CONFIG_ARCH_INTERRUPTSTACK: 1024
     RHINO_ARCH_CK802_INT_RESTORE_PATCH: 1
     CONFIG_CSI_V1: 1
     CONFIG_CSI: "csi1"

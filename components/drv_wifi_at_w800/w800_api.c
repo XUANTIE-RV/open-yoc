@@ -500,7 +500,7 @@ int w800_set_wifi_mode(int mode)
 }
 
 
-int w800_get_mac(aos_dev_t *dev, uint8_t *out_mac)
+int w800_get_mac(rvm_dev_t *dev, uint8_t *out_mac)
 {
     int ret = -1;
     int mac[6];

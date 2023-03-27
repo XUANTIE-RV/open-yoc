@@ -24,6 +24,8 @@
  *     void   cpu_intrpt_restore(size_t psr);
  ******************************************************************************/
 
+.equ RISCV_MSTATUS_MIE,        (1<<3)       /*machine-level interrupt bit*/
+
 .global cpu_intrpt_save
 .type cpu_intrpt_save, %function
 cpu_intrpt_save:
@@ -35,6 +37,13 @@ cpu_intrpt_save:
 .type cpu_intrpt_restore, %function
 cpu_intrpt_restore:
     csrw    mstatus, a0
+    ret
+
+.global cpu_is_irq_enable
+.type cpu_is_irq_enable, %function
+cpu_is_irq_enable:
+    csrr a0, mstatus
+    andi a0, a0, RISCV_MSTATUS_MIE
     ret
 
 /******************************************************************************

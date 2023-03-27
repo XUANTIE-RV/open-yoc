@@ -118,20 +118,24 @@ yoc install partition
 | partition_read | 从分区指定地址读取数据 |
 | partition_write | 从分区指定地址写入数据 |
 | partition_erase | 擦除指定区域数据 |
+| partition_erase_size | 擦除指定区域数据 |
 | partition_verify | 校验指定分区 |
 | partition_all_verify | 校验所有分区 |
 | partition_get_digest | 获取指定分区SHA摘要和SHA类型 |
 | partition_set_region_safe | 安全设置指定分区 |
-| partition_flash_open | 打开FLASH |
-| partition_flash_close | 关闭FLASH |
-| partition_flash_info_get | 获取FLASH信息 |
-| partition_flash_read | 读取FLASH数据 |
-| partition_flash_write | 写入FLASH数据 |
-| partition_flash_erase | 擦除FLASH数据 |
-| partition_flash_register | 注册FLASH操作函数 |
+| partition_device_find | 查找并打开存储设备 |
+| partition_device_close | 关闭存储设备 |
+| partition_device_info_get | 获取存储设备信息 |
+| partition_device_read | 读取FLASH数据 |
+| partition_device_write | 写入FLASH数据 |
+| partition_device_erase | 擦除FLASH数据 |
+| partition_device_register | 注册存储设备操作函数 |
+| partition_eflash_register | 注册eFLASH操作函数 |
+| partition_flash_register | 注册SPI/QSPI FLASH操作函数 |
+| partition_emmc_register | 注册eMMC操作函数 |
+| partition_sd_register | 注册SD操作函数 |
 | mtb_init | MTB初始化 |
 | mtb_get | 获取MTB句柄 |
-| mtb_get_addr | 获取MTB地址 |
 | mtb_get_bmtb_size | 获取BMTB大小 |
 | mtb_get_size | 安全设置指定分区 |
 | mtb_image_verify | 校验映像 |
@@ -237,7 +241,7 @@ partition_info_t *partition_info_get(partition_t partition);
    - 小于0: 数据写入失败，返回-EINVAL（参数检测错误）或者-EIO（IO错误）。
 
 ### partition_erase
-`int partition_erase(partition_t partition, off_t off_set, uint32_t block_count);`
+`int partition_erase(partition_t partition, off_t off_set, uint32_t sector_count);`
 
 - 功能描述:
    - 擦除指定区域数据。
@@ -245,7 +249,22 @@ partition_info_t *partition_info_get(partition_t partition);
 - 参数:
    - `partition`: 分区句柄。
    - `off_set`: 分区起始地址。
-   - `block_count`: 分区块数量。
+   - `sector_count`: 需要擦除的sector个数。
+
+- 返回值:
+   - 0: 数据擦除成功。
+   - 小于0: 数据擦除失败，返回-EINVAL（参数检测错误）或者-EIO（IO错误）。
+
+### partition_erase_size
+`int partition_erase_size(partition_t partition, off_t off_set, size_t size);`
+
+- 功能描述:
+   - 擦除指定区域数据。
+
+- 参数:
+   - `partition`: 分区句柄。
+   - `off_set`: 分区起始地址。
+   - `size`: 需要擦除的size。
 
 - 返回值:
    - 0: 数据擦除成功。
@@ -305,11 +324,11 @@ partition_info_t *partition_info_get(partition_t partition);
    - 0: 设置成功。
    - 小于0: 设置失败。
 
-### partition_flash_open
-`void *partition_flash_open(int id);`
+### partition_device_find
+`void *partition_device_find(storage_info_t *storage_info);`
 
 - 功能描述:
-   - 打开指定FLASH。
+   - 打开指定的存储设备。
 
 - 参数:
    - `id`:  FLASH id。
@@ -332,7 +351,7 @@ partition_info_t *partition_info_get(partition_t partition);
    - 小于0: 关闭失败。
    
 ### partition_flash_info_get
-`int partition_flash_info_get(void *handle, partition_flash_info_t *info);`
+`int partition_flash_info_get(void *handle, partition_device_info_t *info);`
 
 - 功能描述:
    - 获取指定FLASH信息。
@@ -345,7 +364,7 @@ partition_info_t *partition_info_get(partition_t partition);
    - 0: 获取成功。
    - 小于0: 获取失败。
 
-#### partition_flash_info_t
+#### partition_device_info_t
 
 | 成员 | 类型 | 说明 |
 | :--- | :--- | :--- |
@@ -418,7 +437,7 @@ partition_info_t *partition_info_get(partition_t partition);
 | :--- | :--- | :--- |
 | open | void *(*open)(int id) | 打开函数 |
 | close | int (*close)(void *handle) | 关闭函数 |
-| info_get | int (*info_get)(void *handle, partition_flash_info_t *info) | 信息获取函数 |
+| info_get | int (*info_get)(void *handle, partition_device_info_t *info) | 信息获取函数 |
 | read | int (*read)(void *handle, uint32_t addr, void *data, size_t data_len) | 数据读取函数 |
 | write | int (*write)(void *handle, uint32_t addr, void *data, size_t data_len) | 数据写入函数 |
 | erase |  int (*erase)(void *handle, uint32_t addr, size_t len) | 数据擦除函数 |
@@ -448,18 +467,6 @@ partition_info_t *partition_info_get(partition_t partition);
 - 返回值:
    - 非空: MTB句柄。
    - NULL: 获取失败。
-   
-### mtb_get_addr
-`uint32_t mtb_get_addr(uint8_t is_prim);`
-
-- 功能描述:
-   - 获取MTB地址。
-
-- 参数:
-   - `is_prim`:  是否为主地址的标记，0表示备份地址，1表示主地址。
-   
-- 返回值:
-   - FLASH地址。
 
 ### mtb_get_bmtb_size
 `uint32_t mtb_get_bmtb_size(const uint8_t *data);`
@@ -518,11 +525,11 @@ partition_info_t *partition_info_get(partition_t partition);
 | :--- | :--- | :--- |
 | name | 字符数组 | 分区名称 |
 | pub_key_name | 字符数组 | 公钥名称 |
-| start_addr | uint32_t | 起始地址 |
-| end_addr | uint32_t | 结束地址 |
+| start_addr | uint64_t | 起始地址 |
+| end_addr | uint64_t | 结束地址 |
 | load_addr | uint32_t | 加载地址 |
 | img_size | uint8_t | 映像大小 |
-| part_type | scn_type_t | 分区类型 |
+
 
 ### mtb_get_img_info
 `int mtb_get_img_info(const char *name, img_info_t *img_info);`
@@ -550,7 +557,7 @@ partition_info_t *partition_info_get(partition_t partition);
 | img_type | uint8_t | 映像类型 |
 
 ### get_section_buf
-`int get_section_buf(uint32_t addr, uint32_t img_len, scn_type_t *scn_type, uint32_t *scn_size);`
+`int get_section_buf(uint32_t addr, uint32_t img_len, scn_type_t *scn_type, uint32_t *scn_size, img_info_t *img_info);`
 
 - 功能描述:
    
@@ -795,7 +802,7 @@ typedef struct {
 #include <yoc_init.h>
 void board_base_init()
 {
-    flash_csky_register(0);
+    rvm_eflash_drv_register(0);
     partition_init();
 }
 ```
@@ -833,7 +840,7 @@ ssize_t kvp_flash_write(int32_t bytesize, void *buff, int32_t off, int32_t blk_n
 
 ssize_t kvp_flash_erase(int32_t blk_num)
 {
-    return partition_erase(g_eflash_part, blk_num * g_block_size, 1);
+    return partition_erase(g_eflash_part, blk_num * g_block_size, g_block_size);
 }
 
 extern int __kv_core_init(int eblock_num, int eblock_for_gc, int eblock_size);
@@ -845,7 +852,7 @@ int aos_kv_init(const char *partname)
     g_eflash_part = partition_open(partname);
 
     if (g_eflash_part >= 0) {
-        hal_logic_partition_t *lp = hal_flash_get_info(g_eflash_part);
+        hal_logic_partition_t *lp = partition_info_get(g_eflash_part);
         aos_assert(lp);
 
         g_block_size = lp->sector_size;

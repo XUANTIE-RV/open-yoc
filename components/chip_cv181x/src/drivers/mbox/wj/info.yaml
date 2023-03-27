@@ -1,0 +1,27 @@
+name: MBOX
+vendor: WJ
+license: Copyright (C) 2017-2019 Alibaba Group Holding Limited
+description: WJ MOBX
+type: devices
+
+versions:
+    v1.0:
+        drv_path: v1.0
+        test_path: test/v1.0
+        rtl_path: xxxx
+    v2.0:
+        drv_path: v2.0
+        test_path: test/v2.0
+        rtl_path: xxxx
+    v3.0:
+        drv_path: v3.0
+        test_path: test/v3.0
+        rtl_path: xxxx
+    v4.0:
+        drv_path: v4.0
+        test_path: test/v4.0
+        rtl_path: xxxx
+    v5.0:
+        drv_path: v5.0
+        test_path: test/v5.0
+        rtl_path: xxxx

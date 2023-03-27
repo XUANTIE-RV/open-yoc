@@ -21,11 +21,7 @@ extern "C" {
                      (unsigned long *)scn_addr, SEACH_MODE_EXTEND_TYPE)
 
 // mtb old
-int mtbv_init(void);
-int mtbv_get_part_info(uint8_t *name, uint32_t *part_addr, uint32_t *part_size);
-int mtbv_get_img_info(const char *name, img_info_t *img_info);
 int get_section_addr(unsigned long bm_addr, const scn_type_t *seach_type, uint8_t *seach_name, unsigned long *scn_addr, uint32_t mode);
-int mtbv_image_verify(const char *name);
 
 // mtbv4
 int mtbv4_init(void);
@@ -35,9 +31,6 @@ int mtbv4_image_verify(const char *name);
 int mtbv4_partition_count(void);
 int mtbv4_get_partition_info(const char *name, mtb_partition_info_t *part_info);
 int mtbv4_get_partition_info_with_index(int index, mtb_partition_info_t *part_info);
-
-// common
-int get_data_from_faddr(unsigned long addr, void *data, size_t data_len);
 
 #ifdef __cplusplus
 }

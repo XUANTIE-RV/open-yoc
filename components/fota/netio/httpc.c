@@ -154,7 +154,7 @@ static int http_read(netio_t *io, uint8_t *buffer, int length, int timeoutms)
     int read_len;
     int reinit_cnt;
     long long time1ms;
-    httpc_priv_t *priv = (httpc_priv_t *)io->private;
+    httpc_priv_t *priv = (httpc_priv_t *)io->priv;
     http_client_handle_t client = priv->http_client;
 
     reinit_cnt = 0;
@@ -285,7 +285,7 @@ static int http_open(netio_t *io, const char *path)
     const char *cert;
 
     LOGD(TAG, "http open:%s", path);
-    cert = (const char *)io->cls->private;
+    cert = (const char *)io->cls->priv;
 
     io->size = 0;
     io->offset = 0;
@@ -299,7 +299,7 @@ static int http_open(netio_t *io, const char *path)
     priv->http_client = NULL;
     priv->path = path;
     priv->cert = cert;
-    io->private = priv;
+    io->priv = priv;
 #if 0 // just for test, mem leak...
     char *tempbuffer = (char *)aos_malloc(400);
     if (tempbuffer == NULL) {
@@ -326,7 +326,7 @@ static int http_seek(netio_t *io, size_t offset, int whence)
 
 static int http_close(netio_t *io)
 {
-    httpc_priv_t *priv = (httpc_priv_t *)io->private;
+    httpc_priv_t *priv = (httpc_priv_t *)io->priv;
     http_client_handle_t client = priv->http_client;
     _http_cleanup(client);
     aos_free(priv);
@@ -343,7 +343,7 @@ netio_cls_t httpc_cls = {
 
 int netio_register_httpc(const char *cert)
 {
-    httpc_cls.private = (void *)cert;
+    httpc_cls.priv = (void *)cert;
     return netio_register(&httpc_cls);
 }
 #endif

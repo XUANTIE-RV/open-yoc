@@ -18,12 +18,14 @@ extern "C" {
   * @param[out]  output     output data buf
   * @param[out]  olen       output length
   * @param[in]   from_mem   the input data source, 0：flash， 1：ram
+  * @param[in]   part_info  the input data's partition information
   *
   * @return  0: On success， otherwise is error
 */
 /* TODO weak */
 int hash_calc_start(digest_sch_e ds, const unsigned char *input, int ilen,
-                    unsigned char *output, uint32_t *olen, int from_mem);
+                    unsigned char *output, uint32_t *olen,
+                    int from_mem, partition_info_t *part_info);
 
 /*
   * @param[in]   ds         digest_sch_e

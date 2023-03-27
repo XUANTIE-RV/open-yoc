@@ -34,8 +34,6 @@ struct __mic {
     aui_mic_evt_t cb;
     int           evt_cnt;
     uint8_t       rbuf[FRAME_SIZE];
-    char         *recv_buf;
-    dev_ringbuf_t ring_buffer;
     audio_t       audio[MIC_KWS_MAX];
     mic_ops_t    *ops;
     int           mute_state;
@@ -123,14 +121,16 @@ static int event_id_to_audio_id(int event_id)
     return -1;
 }
 
-void aui_mic_send_wakeup_event(void)
+void aui_mic_send_wakeup_check(int checked)
 {
     evt_param_t param;
-    param.ptr = NULL;
+    param.ival = checked;
+    param.evt_id = MIC_EVENT_SESSION_WWV;
 
     uservice_call_async(g_mic.srv, _EVENT_CMD, &param, sizeof(param));
 }
 
+/* 适配层的语音事件回调处理，中转到MIC微服务 */
 static void mic_event_hdl(mic_t *mic, mic_event_id_t event_id, void *data, int size)
 {
     evt_param_t param;
@@ -154,7 +154,7 @@ static void mic_event_hdl(mic_t *mic, mic_event_id_t event_id, void *data, int s
         }
     } else if (event_id == MIC_EVENT_SESSION_STOP) {
         // stop
-    } else if (event_id == MIC_EVENT_PCM_DATA || event_id == MIC_EVENT_KWS_DATA) {
+    } else if (event_id == MIC_EVENT_PCM_DATA) {
 
         int audio_type = event_id_to_audio_id(event_id);
         if (audio_type >= 0) {
@@ -165,14 +165,33 @@ static void mic_event_hdl(mic_t *mic, mic_event_id_t event_id, void *data, int s
                 LOGE(TAG, "audio(%d) is full, len(%d), size(%d)", audio_type, len, size);
             }
 
-            if (mic->evt_cnt < 2) { // CONFIG_MIC_RINGBUF_RAME
+            /* 减少uservice数据事件通知次数 */
+            if (mic->evt_cnt < 2) {
                 mic->evt_cnt++;
-            } else {
-                LOGE(TAG, "mic->evt_cnt %d >= 2, audio_recv_flag %d", mic->evt_cnt, audio_recv_flag);
             }
+            // else {
+            //     LOGD(TAG, "mic->evt_cnt %d >= 2, audio_recv_flag %d", mic->evt_cnt, audio_recv_flag);
+            // }
+            
         } else {
             LOGE(TAG, "event_id error");
         }
+    } else if (event_id == MIC_EVENT_KWS_DATA) {
+        /* MIC_EVENT_KWS_DATA  一次回调所有数据，数据保存部署模块中 */
+        param.ptr =  data;
+        param.size = size;
+    } else if (event_id == MIC_EVENT_SESSION_DOA) {
+        param.ptr =  data;
+        param.size = size;
+    } else if (event_id == MIC_EVENT_LOCAL_ASR) {
+        param.ptr =  strdup(data);
+        param.size = size;
+    } else if (event_id == MIC_EVENT_VAD_BEGIN) {
+        // stop
+    } else if (event_id == MIC_EVENT_VAD_END) {
+        // stop
+    } else {
+        ;
     }
 
     if (mic->evt_cnt < 2 || audio_recv_flag == 0) {
@@ -180,13 +199,13 @@ static void mic_event_hdl(mic_t *mic, mic_event_id_t event_id, void *data, int s
     }
 }
 
+/* MIC微服务中的事件处理函数，回调到应用 */
 static int _event_hdl(mic_t *mic, rpc_t *rpc)
 {
     evt_param_t *param = (evt_param_t *)rpc_get_buffer(rpc, NULL);
 
     switch (param->evt_id) {
         case MIC_EVENT_PCM_DATA:
-        case MIC_EVENT_KWS_DATA:
             while (1) {
                 int audio_type = event_id_to_audio_id(param->evt_id);
 
@@ -200,7 +219,16 @@ static int _event_hdl(mic_t *mic, rpc_t *rpc)
                 }
             }
             break;
-
+        case MIC_EVENT_KWS_DATA:
+            if (mic->cb) {
+                mic->cb(mic->source, param->evt_id, param->ptr, param->size);
+            }
+            break;
+        case MIC_EVENT_SESSION_WWV:
+            if (mic->cb) {
+                mic->cb(mic->source, MIC_EVENT_SESSION_WWV, param->ptr, 0);
+            } 
+            break;
         case MIC_EVENT_SESSION_START:
             if (mic->cb) {
                 mic->cb(mic->source, MIC_EVENT_SESSION_START, param->ptr, sizeof(mic_kws_t));
@@ -216,7 +244,30 @@ static int _event_hdl(mic_t *mic, rpc_t *rpc)
                 mic->cb(mic->source, MIC_EVENT_SESSION_STOP, NULL, 0);
             }
             break;
+        case MIC_EVENT_SESSION_DOA:
+            if (mic->cb) {
+                mic->cb(mic->source, MIC_EVENT_SESSION_DOA, param->ptr, 0);
+            }
+            break;
+        case MIC_EVENT_LOCAL_ASR:
+            if (mic->cb) {
+                mic->cb(mic->source, MIC_EVENT_LOCAL_ASR, param->ptr, 0);
+            }
 
+            if (param->ptr) {
+                aos_free(param->ptr);
+            }
+            break;
+        case MIC_EVENT_VAD_BEGIN:
+            if (mic->cb) {
+                mic->cb(mic->source, MIC_EVENT_VAD_BEGIN, NULL, 0);
+            }
+            break;
+        case MIC_EVENT_VAD_END:
+            if (mic->cb) {
+                mic->cb(mic->source, MIC_EVENT_VAD_END, NULL, 0);
+            }
+            break;
         default:
             break;
     }
@@ -293,9 +344,29 @@ int aui_mic_control(mic_ctrl_cmd_t cmd, ...)
         mic->mute_state = va_arg(ap, int);
     } else if (cmd == MIC_CTRL_NOTIFY_PLAYER_STATUS) {
         int status = va_arg(ap, int);
-        int delay = va_arg(ap, int);
+        int delay  = va_arg(ap, int);
         if (mic->ops->notify_play_status) {
             mic->ops->notify_play_status(mic, status, delay);
+        }
+    } else if (cmd == MIC_CTRL_WAKEUP_LEVEL) {
+        char *word = va_arg(ap, char*);
+        int level = va_arg(ap, int);
+        if (mic->ops->set_wakeup_level) {
+            mic->ops->set_wakeup_level(mic, word, level);
+        }
+    } else if (cmd == MIC_CTRL_START_DOA) {
+        if (mic->ops->start_doa) {
+            mic->ops->start_doa(mic);
+        }
+    } else if (cmd == MIC_CTRL_ENABLE_LINEAR_AEC_DATA) {
+        int enable = va_arg(ap, int);
+        if (mic->ops->enable_linear_aec_data) {
+            mic->ops->enable_linear_aec_data(mic, enable);
+        }
+    } else if (cmd == MIC_CTRL_ENABLE_ASR) {
+        int enable = va_arg(ap, int);
+        if (mic->ops->enable_asr) {
+            mic->ops->enable_asr(mic, enable);
         }
     }
 
@@ -308,6 +379,7 @@ int aui_mic_init(utask_t *task, aui_mic_evt_t evt_cb)
 {
     aos_check_return_einval(task);
 
+    /* The voice service runs throughout its lifecycle and does not need to be released. */
     if (g_mic.srv != NULL || g_mic.ops == NULL) {
         return -1;
     }
@@ -338,6 +410,8 @@ int aui_mic_init(utask_t *task, aui_mic_evt_t evt_cb)
 
 int aui_mic_deinit(void)
 {
+    /* The voice service runs throughout its lifecycle and does not need to be released. */
+#if 0
     aos_check_return_einval(g_mic.srv && g_mic.ops);
 
     uservice_call_sync(g_mic.srv, _DEINIT_CMD, NULL, NULL, 0);
@@ -345,9 +419,8 @@ int aui_mic_deinit(void)
     mic_t *mic = &g_mic;
     utask_remove(mic->task, mic->srv);
     uservice_destroy(mic->srv);
-    aos_free(mic->recv_buf);
     memset(mic, 0x00, sizeof(mic_t));
-
+#endif
     return 0;
 }
 

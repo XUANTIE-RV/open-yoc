@@ -4,28 +4,28 @@
 1. 将在CPU1和CPU2中进行业务时需要的打印通过cpu0的串口实时显示出来；
 2. 将cpu1或cpu2的异常信息显示出来。
 
-void ipc_uart_csky_register(int idx, int (*read)(const uint8_t *buf, uint32_t size),
+void log_ipc_uart_register(int idx, int (*read)(const uint8_t *buf, uint32_t size),
                             int (*write)(const uint8_t *data, uint32_t size));
 	CPU1和CPU2的核间串口注册函数。
 	idx：核间串口idx
-	int (*read)(const uint8_t *buf, uint32_t size)：核间字符读取回调函数，即调用ipc_log_rx_read
-	int (*write)(const uint8_t *data, uint32_t size)：核间字符写入回调函数，即调用ipc_log_tx_write
+	int (*read)(const uint8_t *buf, uint32_t size)：核间字符读取回调函数，即调用log_ipc_rx_read
+	int (*write)(const uint8_t *data, uint32_t size)：核间字符写入回调函数，即调用log_ipc_tx_write
 
 
-int ipc_log_rx_read(const uint8_t * buffer, uint32_t size);
+int log_ipc_rx_read(const uint8_t * buffer, uint32_t size);
     核间字符读取。
 	buffer：待读取的字符buffer
 	size：待读取buffer的大小
 	
-int ipc_log_tx_write(const uint8_t * buffer, uint32_t size);
+int log_ipc_tx_write(const uint8_t * buffer, uint32_t size);
     核间字符写入。
 	buffer：待写入的字符buffer
 	size：待写入buffer的大小
 
-int ipc_log_cp_init(void);
+int log_ipc_cp_init(void);
     CPU1和CPU2核间串口初始化函数
 
-int ipc_log_ap_init(void);
+int log_ipc_ap_init(void);
 	CPU0核间串口初始化函数
 
 # 示例
@@ -38,10 +38,10 @@ cpu1 & cpu2：
 ```c
 void board_yoc_init()
 {
-#if defined(CONFIG_USE_LOG_IPC) && CONFIG_USE_LOG_IPC
-    ipc_uart_csky_register(CONSOLE_IDX, ipc_log_rx_read, ipc_log_tx_write);
+#if defined(CONFIG_LOG_IPC_CP) && CONFIG_LOG_IPC_CP
+    log_ipc_uart_register(CONSOLE_IDX, log_ipc_rx_read, log_ipc_tx_write);
 
-    ipc_log_cp_init();
+    log_ipc_cp_init();
 #else
 
 #endif
@@ -62,7 +62,7 @@ int main()
 
     ulog_init();
 
-    ipc_log_ap_init();
+    log_ipc_ap_init();
 
     /* 日志等级配置 */
 #if !defined(CONFIG_DEBUG) || (CONFIG_DEBUG == 0)

@@ -10,8 +10,11 @@
 #include <sys/time.h>
 #include <stdarg.h>
 #include <stdlib.h>
-#include <k_api.h>
+#include <string.h>
 #include <aos/kernel.h>
+#if defined(CONFIG_KERNEL_RHINO) && CONFIG_KERNEL_RHINO
+#include <k_api.h>
+#endif
 #ifdef CONFIG_AOS_LWIP
 #include <sys/socket.h>
 #ifdef TELNETD_ENABLED
@@ -460,7 +463,9 @@ void _system(const char *s)
 
 void abort(void)
 {
+#if defined(CONFIG_KERNEL_RHINO) && CONFIG_KERNEL_RHINO
     k_err_proc(RHINO_SYS_FATAL_ERR);
+#endif
     __builtin_unreachable(); // fix noreturn warning
 }
 

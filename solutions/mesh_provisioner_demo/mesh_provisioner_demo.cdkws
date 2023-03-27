@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CDK_Workspace Name="mesh_provisioner_demo" Database="" DoubleClick="Yes">
+  <DefaultPackPath>$(CDKWS)\__workspace_pack__</DefaultPackPath>
+  <Project Name="mesh_provisioner_demo" Path="mesh_provisioner_demo.cdkproj" Active="Yes"/>
+  <BuildMatrix>
+    <WorkspaceConfiguration Name="Debug" Selected="yes">
+      <Environment/>
+      <Project Name="mesh_provisioner_demo" ConfigName="BuildSet"/>
+    </WorkspaceConfiguration>
+  </BuildMatrix>
+</CDK_Workspace>

@@ -1,6 +1,4 @@
 #include <stdbool.h>
-#include <drv/display.h>
-#include <drv/g2d.h>
 #include <aos/kv.h>
 #include <debug/dbg.h>
 #include <uservice/uservice.h>
@@ -13,7 +11,7 @@
 static void stduart_init(void)
 {
     extern void console_init(int idx, uint32_t baud, uint16_t buf_size);
-    console_init(CONSOLE_UART_IDX, 115200, 512);
+    console_init(CONSOLE_UART_IDX, CONFIG_CLI_USART_BAUD, CONFIG_CONSOLE_UART_BUFSIZE);
 }
 
 extern void board_cli_init();

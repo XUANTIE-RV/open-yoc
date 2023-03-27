@@ -1,0 +1,13 @@
+name: USI_IIC
+vendor: WJ
+license: Copyright (C) 2017-2019 Alibaba Group Holding Limited
+description: usi iic
+type: devices
+
+versions:
+    v1.0:
+        drv_path: ./
+        test_path: test/v1.0
+        rtl_path: xxxx
+    v2.0:
+        drv_path: v2.0

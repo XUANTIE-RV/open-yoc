@@ -61,7 +61,7 @@ struct test_svc_t {
     .value4 = "test value 4",
 };
 
-#if defined(CONFIG_BT_GATT_CLIENT)
+#if (defined(CONFIG_BT_GATT_CLIENT) && CONFIG_BT_GATT_CLIENT)
 
 static int event_gatt_mtu_exchange(ble_event_en event, void *event_data)
 {

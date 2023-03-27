@@ -12,10 +12,11 @@ all:
 	$(CPRE) scons $(VERB) --board=$(BOARD) --sdk=$(SDK) -j8
 	@echo YoC SDK Done
 
-# copy c906 firmware to ipc_demo
+# copy c906 firmware
 .PHONY:install
 install:
-	$(CPRE) bash pack.sh
+	$(CPRE) cp yoc.bin ../../boards/bl606p_evb_e907/bootimgs/c906.bin -arf
+	$(CPRE) head -n 20 yoc.asm > ../../boards/bl606p_evb_e907/bootimgs/c906.asm
 
 .PHONY:clean
 clean:

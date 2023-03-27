@@ -32,15 +32,15 @@ typedef struct {
 } vfs_dir_t;
 
 typedef struct {
-    int32_t f_type;    /* fs type */
-    int32_t f_bsize;   /* optimized transport block size */
-    int32_t f_blocks;  /* total blocks */
-    int32_t f_bfree;   /* available blocks */
-    int32_t f_bavail;  /* number of blocks that non-super users can acquire */
-    int32_t f_files;   /* total number of file nodes */
-    int32_t f_ffree;   /* available file nodes */
-    int32_t f_fsid;    /* fs id */
-    int32_t f_namelen; /* max file name length */
+    long f_type;    /* fs type */
+    long f_bsize;   /* optimized transport block size */
+    long f_blocks;  /* total blocks */
+    long f_bfree;   /* available blocks */
+    long f_bavail;  /* number of blocks that non-super users can acquire */
+    long f_files;   /* total number of file nodes */
+    long f_ffree;   /* available file nodes */
+    long f_fsid;    /* fs id */
+    long f_namelen; /* max file name length */
 } vfs_statfs_t;
 
 typedef void (*vfs_poll_notify_t)(void *fds, void *arg);

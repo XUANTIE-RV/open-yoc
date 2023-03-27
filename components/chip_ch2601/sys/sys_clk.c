@@ -129,6 +129,46 @@ uint32_t soc_get_apb_freq(uint32_t idx)
     return (uint32_t)(g_system_clock / div);
 }
 
+uint32_t soc_get_ahb_freq(uint32_t idx)
+{
+    return 0;
+}
+
+uint32_t soc_get_sys_freq(void)
+{
+    return 0;
+}
+
+uint32_t soc_get_usi_freq(uint32_t idx)
+{
+    return 0;
+}
+
+uint32_t soc_get_sdio_freq(uint32_t idx)
+{
+    return 0;
+}
+
+uint32_t soc_get_emmc_freq(uint32_t idx)
+{
+    return 0;
+}
+
+uint32_t soc_get_usb_freq(uint32_t idx)
+{
+    return 0;
+}
+
+uint32_t soc_get_ref_clk_freq(uint32_t idx)
+{
+    return 0;
+}
+
+void soc_clk_init(void)
+{
+    return;
+}
+
 csi_error_t soc_sysclk_config(system_clk_config_t *config)
 {
     /* config pll */

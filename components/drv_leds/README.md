@@ -10,16 +10,16 @@
 
 | 函数                 | 说明        |
 | :------------------- | :---------- |
-| led_open/led_open_id | 打开led     |
-| led_close            | 关闭led     |
-| led_control          | 控制led     |
-| led_rgb_register     | 注册led设备 |
+| rvm_hal_led_open             | 打开led     |
+| rvm_hal_led_close            | 关闭led     |
+| rvm_hal_led_control          | 控制led     |
+| led_rgb_register             | 注册led设备 |
 
 ## 接口详细说明
 
-### led_open
+### rvm_hal_led_open
 
-`aos_dev_t *led_open(const char *name);`
+`rvm_dev_t *rvm_hal_led_open(const char *name);`
 
 - 功能描述:
   - 打卡led设备。
@@ -29,21 +29,9 @@
   - 0: 打开成功。
   - -1: 打开失败。
 
-### led_open_id
+### rvm_hal_led_close
 
-`aos_dev_t *led_open_id(const char *name);`
-
-- 功能描述:
-  - 打卡led设备。
-- 参数:
-  - `name`: led驱动名。
-- 返回值:
-  - 0: 打开成功。
-  - -1: 打开失败。
-
-### led_close
-
-`int led_close(aos_dev_t *dev);`
+`int rvm_hal_led_close(rvm_dev_t *dev);`
 
 - 功能描述:
   - 关闭led设备。
@@ -53,9 +41,9 @@
   - 0: 关闭成功。
   - -1: 关闭失败
 
-### led_control
+### rvm_hal_led_control
 
-`int led_control(aos_dev_t *dev, int color, int on_time, int off_time)`
+`int rvm_hal_led_control(rvm_dev_t *dev, int color, int on_time, int off_time)`
 
 - 功能描述:
   - led控制。
@@ -103,25 +91,25 @@ void app_set_led_state(int state)
     switch (state)
     {
         case LED_LOADING:
-            led_control(led_dev, COLOR_WHITE, 0, 0);
+            rvm_hal_led_control(led_dev, COLOR_WHITE, 0, 0);
             break;
         case LED_NET_DOWN:
-            led_control(led_dev, COLOR_WHITE, 50, 500);
+            rvm_hal_led_control(led_dev, COLOR_WHITE, 50, 500);
             break;
         case LED_NET_READY:
-            led_control(led_dev, COLOR_WHITE, 50, 3000);
+            rvm_hal_led_control(led_dev, COLOR_WHITE, 50, 3000);
             break;
         case LED_PLAYING:
-            led_control(led_dev, COLOR_WHITE, 50, 1000);
+            rvm_hal_led_control(led_dev, COLOR_WHITE, 50, 1000);
             break;
         case LED_NET_CONFIG:
-            led_control(led_dev, COLOR_WHITE, 50, 100);
+            rvm_hal_led_control(led_dev, COLOR_WHITE, 50, 100);
             break;
         case LED_TALKING:
-            led_control(led_dev, COLOR_WHITE, 0, 0);
+            rvm_hal_led_control(led_dev, COLOR_WHITE, 0, 0);
             break;
         default:
-            led_control(led_dev, COLOR_BLACK, 0, 0);
+            rvm_hal_led_control(led_dev, COLOR_BLACK, 0, 0);
             break;
     }
 }

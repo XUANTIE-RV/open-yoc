@@ -58,7 +58,7 @@ AT 组件是由 `AT Server` 和 `AT Parser` 的组成，组件完成 AT 命令�
 #### 初始化一个AT指令解析器
 
 ```c
-atparser_uservice_t *atparser_init(utask_t *task, const char *name, uart_config_t *config)
+atparser_uservice_t *atparser_init(utask_t *task, const char *name, void *config)
 ```
 
 根据指定的微服务任务,串口名以及串口配置信息创建一个AT 指令解析器，成功则返回atparser_uservice_t指针，失败返回NULL
@@ -274,7 +274,7 @@ int atparser_recv_str(atparser_uservice_t *at, const char *str);
 #### 初始化AT Server 服务
 
 ```c
-int atserver_init(utask_t *task, const char*name, uart_config_t *config);
+int atserver_init(utask_t *task, const char*name, void *config);
 ```
 
 根据传入的微服务任务，串口名以及串口配置参数，初始化AT server 服务，成功返回0，失败返回负值
@@ -500,14 +500,14 @@ static int _gotip_handler(atparser_uservice_t *at, void *priv, oob_data_t *oob_d
 
 int esp8266_module_init(void)
 {
-    uart_config_t config;
+    rvm_hal_uart_config_t config;
     utask_t *task = utask_new("esp8266", 1 * 1024, QUEUE_MSG_COUNT, AOS_DEFAULT_APP_PRI + 4);  //创建atparser 所需的utask
 
     if (task == NULL) {
         return -1;
     }
 
-    uart_config_default(&config);  // 初始化uart参数
+    rvm_hal_uart_config_default(&config);  // 初始化uart参数
     config.baud_rate = 115200;     // uart baud为115200
 
     g_atparser_uservice_t = atparser_init(task, “uart0”, &config); //初始化atparser 微服务
@@ -537,8 +537,8 @@ const atserver_cmd_t at_cmd[] = {
 
 void at_server_init(utask_t *task)
 {
-    uart_config_t config;
-    uart_config_default(&config);
+    rvm_hal_uart_config_t config;
+    rvm_hal_uart_config_default(&config);
 
     utask_t *task = utask_new("at_srv", 2 * 1024, QUEUE_MSG_COUNT, AOS_DEFAULT_APP_PRI);
 

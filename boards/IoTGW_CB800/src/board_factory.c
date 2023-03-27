@@ -4,7 +4,7 @@
 
 #include <stdlib.h>
 #include <aos/aos.h>
-#include <board_config.h>
+#include <board.h>
 #include "drv/gpio.h"
 #include "pin_name.h"
 #include "pinmux.h"
@@ -14,7 +14,7 @@
 int board_ftmode_check(void)
 {
     gpio_pin_handle_t pin_hd;
-    bool pin_val = 0;
+    bool              pin_val = 0;
 
     drv_pinmux_config(PA7, PIN_FUNC_GPIO);
     pin_hd = csi_gpio_pin_initialize(PA7, NULL);
@@ -39,7 +39,7 @@ int board_ftmode_check(void)
 
 int board_gpio_test(void)
 {
-    gpio_pin_handle_t     handle1, handle2;
+    gpio_pin_handle_t handle1, handle2;
 
     drv_pinmux_config(PA1, PIN_FUNC_GPIO);
     drv_pinmux_config(PA4, PIN_FUNC_GPIO);
@@ -120,13 +120,12 @@ int board_gpio_test(void)
     return 0;
 }
 
-
 #define PSRAM_TEST_VALUE 0xA5
 
 int board_ex_sram_test(void)
 {
     uint32_t addr = 0x30000000;
-    int i = 0;
+    int      i    = 0;
 
     memset((uint8_t *)addr, PSRAM_TEST_VALUE, 0x1000);
 
@@ -163,5 +162,3 @@ int board_ex_sram_test(void)
 /********************************************************************************/
 /* for fct test end
 ********************************************************************************/
-
-

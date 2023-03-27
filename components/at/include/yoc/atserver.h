@@ -17,7 +17,7 @@ extern "C" {
 #endif
 
 #define BUFFER_MIN_SIZE (128)
-#define BUFFER_MAX_SIZE (1024 + 16)
+#define BUFFER_MAX_SIZE (1024 * 2 + 16)
 #define BUFFER_STEP_SIZE (32)
 
 typedef enum {
@@ -64,7 +64,7 @@ typedef struct atserver_cmd {
     const cmd_callback cb;
 } atserver_cmd_t;
 
-int  atserver_init(utask_t *task, const char *name, uart_config_t *config);
+int  atserver_init(utask_t *task, const char *name, void *config);
 int  atserver_channel_init(utask_t *task, const char *name, void *config, at_channel_t *channel);
 int  atserver_send(const char *format, ...);
 int  atserver_sendv(const char *command, va_list args);

@@ -66,8 +66,8 @@ static uart_dev_t s_uart_handle;
 static void *g_uart_event_cb = NULL;
 #else
 typedef struct {
-    aos_dev_t* uart_dev;
-    uart_config_t config;
+    rvm_dev_t* uart_dev;
+    rvm_hal_uart_config_t config;
     //struct termios termios;     /* serial terminal of BT port */
     //char port_name[VND_PORT_NAME_MAXLEN];
 } vnd_userial_cb_t;
@@ -160,10 +160,17 @@ void userial_vendor_init()
 int userial_vendor_open(tUSERIAL_CFG *p_cfg, void *uart_event)
 {
     uint32_t baud;
+#if CONFIG_DRV_BT_AOS_HAL
     hal_uart_data_width_t data_bits;
     hal_uart_parity_t parity;
     hal_uart_stop_bits_t stop_bits;
     hal_uart_flow_control_t fc;
+#else
+    rvm_hal_uart_data_width_t data_bits;
+    rvm_hal_uart_parity_t parity;
+    rvm_hal_uart_stop_bits_t stop_bits;
+    rvm_hal_uart_flow_control_t fc;
+#endif
 
     if (!userial_to_tcio_baud(p_cfg->baud, &baud)) {
         return -1;
@@ -239,21 +246,23 @@ int userial_vendor_open(tUSERIAL_CFG *p_cfg, void *uart_event)
     hal_uart_recv_cb_reg(&s_uart_handle, uart_event);
     g_uart_event_cb = uart_event;
 #else
-    vnd_userial.uart_dev = uart_open_id("uart", p_cfg->uart_id);
+    char devname[32] = {0};
+    snprintf(devname, sizeof(devname), "uart%d", p_cfg->uart_id);
+    vnd_userial.uart_dev = rvm_hal_device_open(devname);
 
     if (vnd_userial.uart_dev == NULL) {
         return -1;
     }
 
-    uart_config_default(&vnd_userial.config);
+    rvm_hal_uart_config_default(&vnd_userial.config);
     vnd_userial.config.baud_rate = 115200;
     vnd_userial.config.parity = parity;
     vnd_userial.config.data_width = data_bits;
     vnd_userial.config.stop_bits = stop_bits;
     vnd_userial.config.flow_control = fc;
-    uart_config(vnd_userial.uart_dev, &vnd_userial.config);
+    rvm_hal_uart_config(vnd_userial.uart_dev, &vnd_userial.config);
 
-    uart_set_event(vnd_userial.uart_dev, uart_event, NULL);
+    rvm_hal_uart_set_event(vnd_userial.uart_dev, uart_event, NULL);
 #endif
     return 0;
 }
@@ -274,7 +283,7 @@ void userial_vendor_close(void)
 #else
     aos_check_param(vnd_userial.uart_dev);
 
-    uart_close(vnd_userial.uart_dev);
+    rvm_hal_uart_close(vnd_userial.uart_dev);
     vnd_userial.uart_dev = NULL;
 #endif
 }
@@ -308,8 +317,8 @@ void userial_vendor_set_baud(uint8_t userial_baud)
     userial_to_tcio_baud(userial_baud, &tcio_baud);
 
     vnd_userial.config.baud_rate = tcio_baud;
-    uart_config(vnd_userial.uart_dev, &vnd_userial.config);
-    uart_set_buffer_size(vnd_userial.uart_dev, 10240);
+    rvm_hal_uart_config(vnd_userial.uart_dev, &vnd_userial.config);
+    rvm_hal_uart_set_buffer_size(vnd_userial.uart_dev, 10240);
 #endif
 }
 
@@ -326,8 +335,8 @@ void userial_vendor_set_parity(uint8_t mode)
 #else
     aos_check_param(vnd_userial.uart_dev);
     vnd_userial.config.parity = mode;
-    uart_config(vnd_userial.uart_dev, &vnd_userial.config);
-    uart_set_buffer_size(vnd_userial.uart_dev, 10240);
+    rvm_hal_uart_config(vnd_userial.uart_dev, &vnd_userial.config);
+    rvm_hal_uart_set_buffer_size(vnd_userial.uart_dev, 10240);
 #endif
 }
 /*******************************************************************************
@@ -374,7 +383,7 @@ void userial_vendor_set_hw_fctrl(uint8_t hw_fctrl)
     } else {
         vnd_userial.config.flow_control = FLOW_CONTROL_DISABLED;
     }
-    uart_config(vnd_userial.uart_dev, &vnd_userial.config);
+    rvm_hal_uart_config(vnd_userial.uart_dev, &vnd_userial.config);
 #endif
 }
 
@@ -383,7 +392,7 @@ int userial_vendor_send_data(uint8_t *data, uint32_t len)
 #if CONFIG_DRV_BT_AOS_HAL
     return hal_uart_send_poll(&s_uart_handle, data, len);
 #else
-    return uart_send(vnd_userial.uart_dev, data, len);
+    return rvm_hal_uart_send_poll(vnd_userial.uart_dev, data, len);
 #endif
 }
 
@@ -396,6 +405,6 @@ int userial_vendor_recv_data(uint8_t *data, uint32_t len, uint32_t timeout)
 
     return recv_size;
 #else
-    return uart_recv(vnd_userial.uart_dev, data, len, timeout);
+    return rvm_hal_uart_recv(vnd_userial.uart_dev, data, len, timeout);
 #endif
 }

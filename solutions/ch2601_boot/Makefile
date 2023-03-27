@@ -13,7 +13,7 @@ all:
 
 .PHONY:flash
 flash:
-	$(CPRE) product flashbin boot.bin 0x18000000 -f ch2601_flash.elf -x .gdbinit -v 
+	$(CPRE) product flashbin boot.bin 0x18000000 -f ch2601_flash.elf -x gdbinitflash -v 
 
 .PHONY:install
 install:

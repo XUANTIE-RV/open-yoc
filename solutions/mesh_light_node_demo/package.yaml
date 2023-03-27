@@ -1,7 +1,7 @@
 
 ## 第一部分： 基础信息
 name: mesh_light_node_demo
-version: v7.6.0                                     # <必选项> 组件版本号
+version: v7.7.0                                    # <必选项> 组件版本号
 description: YoC MESH SDK                           # <必选项> 建议至少20字以上
 type: solution                                      # <必选项> 组件类型，为：solution, chip, board, common, sdk
 
@@ -14,12 +14,14 @@ type: solution                                      # <必选项> 组件类型�
 #   - minilibc: v7.4.0
 #   - aos: v7.4.0
 sdk_chip:
-  - sdk_chip_phy6220: v7.6.0
+  - sdk_chip_phy6220: v7.7.0
+  - sdk_chip_IoTGW_CB800: v7.7.0
+  - sdk_chip_d1: v7.7.0
 depends:
-  - drv_light: v7.6.0
-  - ble_mesh: v7.6.0
-  - sdk_chip_phy6220: v7.6.0
-  - ota_module: v7.6.0
+  - drv_light: v7.7.0
+  - ble_mesh: v7.7.0
+  - sdk_chip_phy6220: v7.7.0
+  - ota_module: v7.7.0
 
 ## 第三部分：板级信息
 # hw_info:                                 # 对 solution、board、chip 三个字段的改进，统称为 hw_info 字段
@@ -88,7 +90,12 @@ build_config:
 #   - src/*.c                              # 例：组件 src 目录下所有的扩展名为 c 的源代码文件
 source_file:
   - "app/src/*.c"
-  - "app/src/init/*.c"
+  - "app/src/init/cli_cmd.c"
+  - app/src/init/cli_triples.c ?<CONFIG_USE_CLI_TRIPLES>
+  - "app/src/init/init.c"
+  - "app/src/init/mesh_com_init.c"
+  - "app/src/init/occ_auth.c"
+  - "app/src/led/*.c"
 
 ## 第五部分：配置信息
 # def_config:                              # 组件的可配置项
@@ -97,17 +104,11 @@ source_file:
 #   CONFIG_CLI: y
 def_config:
 # Kernel Config
-  CONFIG_ARCH_INTERRUPTSTACK: 1024
-  CONFIG_INIT_TASK_STACK_SIZE: 2048
-  CONFIG_KERNEL_TIMER_STACK_SIZE: 1536
   #CONFIG_IDLE_TASK_STACK_SIZE: 1096
   #CONFIG_SYS_CLK_48M: 0
 # BLE HOST Config
   CONFIG_BT_L2CAP_RX_MTU: 131
   CONFIG_BT_L2CAP_TX_MTU: 131
-  CONFIG_BT_HOST_OPTIMIZE: 1
-  CONFIG_BT_USE_HCI_API: 0
-  CONFIG_BT_USE_MM: 1
 
 # BLE MESH Config
   CONFIG_BT_MESH_PROV_TRANSMIT_COUNT: 2
@@ -135,8 +136,14 @@ def_config:
   CONFIG_OTA_CLIENT_PROCTOCOL_AIS: 1
 # Smartliving config
   CONFIG_GW_SMARTLIVING_SUPPORT: 0
+  CONFIG_USE_CLI_TRIPLES: 0
 # OCC AUTH
   CONFIG_OCC_AUTH: 0
+
+# Board config
+  CONFIG_BOARD_BT: 1
+  CONFIG_BOARD_LED: 1
+
 # Debug config
   CONFIG_DEBUG: 1
   #MESH_DEBUG_PROV: 1

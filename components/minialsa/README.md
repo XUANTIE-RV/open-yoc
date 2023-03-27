@@ -1232,7 +1232,7 @@ typedef int aos_pcm_sframes_t;
 
 | 成员 | 类型 | 说明 |
 | :--- | :--- | :--- |
-| device | aos_dev_t | 设备 |
+| device | rvm_dev_t | 设备 |
 | priv | void* | 自定义数据 |
 
 

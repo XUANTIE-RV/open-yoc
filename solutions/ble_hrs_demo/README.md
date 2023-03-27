@@ -53,7 +53,7 @@ int main(void)
     ble_stack_event_register(&ble_cb);
 
     /* HRS组件初始化 */
-    g_hrs_handle = hrs_init(&g_hrs);
+    g_hrs_handle = ble_prf_hrs_init(&g_hrs);
 	......
 
     while (1) {
@@ -62,7 +62,7 @@ int main(void)
 		......
             
         /* 更新心率数据至对端 */
-        ret = hrs_measure_level_update(g_hrs_handle, mea_data, mea_size);
+        ret = ble_prf_hrs_measure_level_update(g_hrs_handle, mea_data, mea_size);
 		......
             
         aos_msleep(1000);

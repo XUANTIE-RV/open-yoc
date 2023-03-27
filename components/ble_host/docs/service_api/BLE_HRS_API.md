@@ -46,12 +46,12 @@ HRS组件处理流程如下图所示：
 
 # 4. 接口定义
 
-### **hrs_init**
+### **ble_prf_hrs_init**
 
 - 函数原型
 
 ```c
-hrs_handle_t hrs_init(hrs_t *hrs)
+hrs_handle_t ble_prf_hrs_init(hrs_t *hrs)
 ```
 
 - 功能描述
@@ -83,12 +83,12 @@ hrs_handle_t hrs_init(hrs_t *hrs)
 
   无
 
-### **hrs_measure_level_update**
+### **ble_prf_hrs_measure_level_update**
 
 - 函数原型
 
 ```c
-int hrs_measure_level_update(hrs_handle_t handle, uint8_t *data, uint8_t length)
+int ble_prf_hrs_measure_level_update(hrs_handle_t handle, uint8_t *data, uint8_t length)
 ```
 
 - 功能描述

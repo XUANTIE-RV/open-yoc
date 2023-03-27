@@ -101,8 +101,8 @@ MEM_SIZE and MEMP_NUM_XXX will be invalid */
 #define LWIP_IPV4                       1
 #define IP_FORWARD                      0
 #define IP_OPTIONS_ALLOWED              1
-#define IP_REASSEMBLY                   0
-#define IP_FRAG                         0
+#define IP_REASSEMBLY                   1
+#define IP_FRAG                         1
 #define IP_REASS_MAXAGE                 3
 #define IP_REASS_MAX_PBUFS              6
 #define LWIP_RANDOMIZE_INITIAL_LOCAL_PORTS     1

@@ -9,6 +9,10 @@
 #include <debug/dbg.h>
 #include <debug/debug_infoget.h>
 #include <debug/debug_overview.h>
+
+typedef int (*KMM_PRINT)(const char *fmt, ...);
+
+KMM_PRINT print = aos_debug_printf;
 #endif
 
 #define KMM_CRITICAL_ENTER(head, cpsr)                 \
@@ -22,10 +26,6 @@
         g_sched_lock[cpu_cur_get()]--;                 \
         MM_CRITICAL_EXIT(head, cpsr);                  \
     } while(0);
-
-typedef int (*KMM_PRINT)(const char *fmt, ...);
-
-KMM_PRINT print = printf;
 
 #if (RHINO_CONFIG_MM_DEBUG > 0)
 uint8_t g_mmlk_cnt;
@@ -316,9 +316,6 @@ uint32_t dumpsys_mm_info_func(uint32_t mm_status)
 
     if (mm_status != KMM_ERROR_LOCKED) {
         KMM_CRITICAL_ENTER(g_kmm_head, flags_cpsr);
-    } else {
-        extern int printk(const char *fmt, ...);
-        print = printk;
     }
 
     print("\r\n");

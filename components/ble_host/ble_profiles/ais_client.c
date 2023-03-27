@@ -370,14 +370,17 @@ int ble_prf_ais_client_conn(ais_handle_t handle, dev_addr_t *peer_addr, conn_par
     peer.type = peer_addr->type;
 
     conn_param = *(struct bt_le_conn_param *)param;
-    conn       = bt_conn_create_le(&peer, &conn_param);
-    if (conn) {
-        handle->conn_handle = conn;
-        /* stack will hold this connection, release directly */
-        bt_conn_unref(conn);
-    } else {
+    struct bt_conn_le_create_param create_param = BT_CONN_LE_CREATE_PARAM_INIT(
+    BT_CONN_LE_OPT_NONE, BT_GAP_SCAN_FAST_INTERVAL, BT_GAP_SCAN_FAST_INTERVAL);
+
+    if (bt_conn_le_create(&peer, &create_param, &conn_param,
+			      &conn)) {
         return -1;
+	} else {
+        handle->conn_handle = conn;
+        bt_conn_unref(conn);
     }
+
     return 0;
 }
 

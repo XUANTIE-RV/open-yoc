@@ -1,1 +1,0 @@
-put *.amr file here.

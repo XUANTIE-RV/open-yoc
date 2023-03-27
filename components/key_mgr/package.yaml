@@ -1,7 +1,7 @@
 
 ## 第一部分： 基础信息
 name: key_mgr                                       # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
-version: v7.6.0                                     # <必选项> 组件版本号
+version: v7.7.0                                    # <必选项> 组件版本号
 description: 密钥管理组件                           # <必选项> 建议至少20字以上
 type: common                                        # <必选项> 组件类型，为：solution, chip, board, common, sdk
 tag: 核心模块                                       # <可选项> 组件分类，缺省值： ''
@@ -54,6 +54,7 @@ source_file:
 #   CONFIG_CLI: y
 #   CONFIG_KEY_FROM_APP                    # KEY 信息通过应用程序配置
 def_config:
+  CONFIG_COMP_KEY_MGR: 1
   CONFIG_TB_KP: 0
   CONFIG_KEY_FROM_OTP: 0
   CONFIG_KEY_FROM_APP: 0                   # KEY 信息通过应用程序配置

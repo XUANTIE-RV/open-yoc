@@ -37,7 +37,7 @@
 
 #define ATT_CMD_MASK				0x40
 
-#if defined(CONFIG_BT_EATT)
+#if (defined(CONFIG_BT_EATT) && CONFIG_BT_EATT)
 #define ATT_CHAN_MAX				(CONFIG_BT_EATT_MAX + 1)
 #else
 #define ATT_CHAN_MAX				1
@@ -101,7 +101,7 @@ struct bt_att_chan {
 	ATOMIC_DEFINE(flags, ATT_NUM_FLAGS);
 	struct bt_att_req	*req;
 	struct k_delayed_work	timeout_work;
-#if defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE
+#if (defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE)
 	atomic_t                tx_sem;
 #else
 	struct k_sem            tx_sem;
@@ -236,7 +236,7 @@ static void bt_att_sent(struct bt_l2cap_chan *ch)
 		return;
 	}
 
-#if defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE
+#if (defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE)
 	atomic_inc(&chan->tx_sem);
 #else
 	k_sem_give(&chan->tx_sem);
@@ -337,7 +337,7 @@ static int bt_att_chan_send(struct bt_att_chan *chan, struct net_buf *buf,
 	BT_DBG("chan %p flags %u code 0x%02x", chan, atomic_get(chan->flags),
 	       hdr->code);
 	(void)hdr;
-#if defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE
+#if (defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE)
 	if (atomic_get(&chan->tx_sem) <= 0) {
 		return -EAGAIN;
 	}
@@ -452,7 +452,7 @@ static int bt_att_chan_req_send(struct bt_att_chan *chan,
 		return -EMSGSIZE;
 	}
 
-#if defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE
+#if (defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE)
 	if (atomic_get(&chan->tx_sem) <= 0) {
 		return -EAGAIN;
 	}
@@ -476,7 +476,7 @@ static int bt_att_chan_req_send(struct bt_att_chan *chan,
 	if (err < 0) {
 		net_buf_unref(req->buf);
 		req->buf = NULL;
-#if defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE
+#if (defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE)
 		atomic_inc(&chan->tx_sem);
 #else
 		k_sem_give(&chan->tx_sem);
@@ -561,7 +561,7 @@ process:
 	return 0;
 }
 
-#if defined(CONFIG_BT_GATT_CLIENT)
+#if (defined(CONFIG_BT_GATT_CLIENT) && CONFIG_BT_GATT_CLIENT)
 static u8_t att_mtu_rsp(struct bt_att_chan *chan, struct net_buf *buf)
 {
 	struct bt_att_exchange_mtu_rsp *rsp;
@@ -1248,7 +1248,7 @@ static u8_t att_read_blob_req(struct bt_att_chan *chan, struct net_buf *buf)
 			    BT_ATT_OP_READ_BLOB_RSP, handle, offset);
 }
 
-#if defined(CONFIG_BT_GATT_READ_MULTIPLE)
+#if (defined(CONFIG_BT_GATT_READ_MULTIPLE) && CONFIG_BT_GATT_READ_MULTIPLE)
 static u8_t att_read_mult_req(struct bt_att_chan *chan, struct net_buf *buf)
 {
 	struct bt_conn *conn = chan->chan.chan.conn;
@@ -1295,7 +1295,7 @@ static u8_t att_read_mult_req(struct bt_att_chan *chan, struct net_buf *buf)
 	return 0;
 }
 
-#if defined(CONFIG_BT_EATT)
+#if (defined(CONFIG_BT_EATT) && CONFIG_BT_EATT)
 static u8_t read_vl_cb(const struct bt_gatt_attr *attr, void *user_data)
 {
 	struct read_data *data = user_data;
@@ -1856,7 +1856,7 @@ static u8_t att_write_cmd(struct bt_att_chan *chan, struct net_buf *buf)
 	return att_write_rsp(chan, 0, 0, handle, 0, buf->data, buf->len);
 }
 
-#if defined(CONFIG_BT_SIGNING)
+#if (defined(CONFIG_BT_SIGNING) && CONFIG_BT_SIGNING)
 static u8_t att_signed_write_cmd(struct bt_att_chan *chan, struct net_buf *buf)
 {
 	struct bt_conn *conn = chan->chan.chan.conn;
@@ -1887,8 +1887,8 @@ static u8_t att_signed_write_cmd(struct bt_att_chan *chan, struct net_buf *buf)
 }
 #endif /* CONFIG_BT_SIGNING */
 
-#if defined(CONFIG_BT_GATT_CLIENT)
-#if defined(CONFIG_BT_SMP)
+#if (defined(CONFIG_BT_GATT_CLIENT) && CONFIG_BT_GATT_CLIENT)
+#if (defined(CONFIG_BT_SMP) && CONFIG_BT_SMP)
 static int att_change_security(struct bt_conn *conn, u8_t err)
 {
 	bt_security_t sec;
@@ -1972,7 +1972,7 @@ static u8_t att_error_rsp(struct bt_att_chan *chan, struct net_buf *buf)
 	}
 
 	err = rsp->error;
-#if defined(CONFIG_BT_SMP)
+#if (defined(CONFIG_BT_SMP) && CONFIG_BT_SMP)
 	if (chan->req->retrying) {
 		goto done;
 	}
@@ -2029,7 +2029,7 @@ static u8_t att_handle_read_blob_rsp(struct bt_att_chan *chan,
 	return att_handle_rsp(chan, buf->data, buf->len, 0);
 }
 
-#if defined(CONFIG_BT_GATT_READ_MULTIPLE)
+#if (defined(CONFIG_BT_GATT_READ_MULTIPLE) && CONFIG_BT_GATT_READ_MULTIPLE)
 static u8_t att_handle_read_mult_rsp(struct bt_att_chan *chan,
 				     struct net_buf *buf)
 {
@@ -2038,7 +2038,7 @@ static u8_t att_handle_read_mult_rsp(struct bt_att_chan *chan,
 	return att_handle_rsp(chan, buf->data, buf->len, 0);
 }
 
-#if defined(CONFIG_BT_EATT)
+#if (defined(CONFIG_BT_EATT) && CONFIG_BT_EATT)
 static u8_t att_handle_read_mult_vl_rsp(struct bt_att_chan *chan,
 					struct net_buf *buf)
 {
@@ -2161,12 +2161,12 @@ static const struct att_handler {
 		sizeof(struct bt_att_read_blob_req),
 		ATT_REQUEST,
 		att_read_blob_req },
-#if defined(CONFIG_BT_GATT_READ_MULTIPLE)
+#if (defined(CONFIG_BT_GATT_READ_MULTIPLE) && CONFIG_BT_GATT_READ_MULTIPLE)
 	{ BT_ATT_OP_READ_MULT_REQ,
 		BT_ATT_READ_MULT_MIN_LEN_REQ,
 		ATT_REQUEST,
 		att_read_mult_req },
-#if defined(CONFIG_BT_EATT)
+#if (defined(CONFIG_BT_EATT) && CONFIG_BT_EATT)
 	{ BT_ATT_OP_READ_MULT_VL_REQ,
 		BT_ATT_READ_MULT_MIN_LEN_REQ,
 		ATT_REQUEST,
@@ -2197,14 +2197,14 @@ static const struct att_handler {
 		sizeof(struct bt_att_write_cmd),
 		ATT_COMMAND,
 		att_write_cmd },
-#if defined(CONFIG_BT_SIGNING)
+#if (defined(CONFIG_BT_SIGNING) && CONFIG_BT_SIGNING)
 	{ BT_ATT_OP_SIGNED_WRITE_CMD,
 		(sizeof(struct bt_att_write_cmd) +
 		 sizeof(struct bt_att_signature)),
 		ATT_COMMAND,
 		att_signed_write_cmd },
 #endif /* CONFIG_BT_SIGNING */
-#if defined(CONFIG_BT_GATT_CLIENT)
+#if (defined(CONFIG_BT_GATT_CLIENT) && CONFIG_BT_GATT_CLIENT)
 	{ BT_ATT_OP_ERROR_RSP,
 		sizeof(struct bt_att_error_rsp),
 		ATT_RESPONSE,
@@ -2233,12 +2233,12 @@ static const struct att_handler {
 		sizeof(struct bt_att_read_blob_rsp),
 		ATT_RESPONSE,
 		att_handle_read_blob_rsp },
-#if defined(CONFIG_BT_GATT_READ_MULTIPLE)
+#if (defined(CONFIG_BT_GATT_READ_MULTIPLE) && CONFIG_BT_GATT_READ_MULTIPLE)
 	{ BT_ATT_OP_READ_MULT_RSP,
 		sizeof(struct bt_att_read_mult_rsp),
 		ATT_RESPONSE,
 		att_handle_read_mult_rsp },
-#if defined(CONFIG_BT_EATT)
+#if (defined(CONFIG_BT_EATT) && CONFIG_BT_EATT)
 	{ BT_ATT_OP_READ_MULT_VL_RSP,
 		sizeof(struct bt_att_read_mult_vl_rsp),
 		ATT_RESPONSE,
@@ -2474,7 +2474,7 @@ static void att_chan_detach(struct bt_att_chan *chan)
 
 	/* Ensure that any waiters are woken up */
 	for (i = 0; i < CONFIG_BT_ATT_TX_MAX; i++) {
-#if defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE
+#if (defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE)
 		atomic_inc(&chan->tx_sem);
 #else
 		k_sem_give(&chan->tx_sem);
@@ -2586,7 +2586,7 @@ static void bt_att_disconnected(struct bt_l2cap_chan *chan)
 	bt_gatt_disconnected(ch->chan.conn);
 }
 
-#if defined(CONFIG_BT_SMP)
+#if (defined(CONFIG_BT_SMP) && CONFIG_BT_SMP)
 static void bt_att_encrypt_change(struct bt_l2cap_chan *chan,
 				  u8_t hci_status)
 {
@@ -2663,7 +2663,7 @@ static void bt_att_released(struct bt_l2cap_chan *ch)
 	BT_DBG("chan %p", chan);
 
 	// k_mem_slab_free(&chan_slab, (void **)&chan);
-#if defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE
+#if (defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE)
 	atomic_set(&chan->tx_sem, 0);
 #else
 	k_sem_delete(&chan->tx_sem);
@@ -2682,7 +2682,7 @@ static struct bt_att_chan *att_chan_new(struct bt_att *att, atomic_val_t flags)
 		.recv = bt_att_recv,
 		.sent = bt_att_sent,
 		.status = bt_att_status,
-	#if defined(CONFIG_BT_SMP)
+	#if (defined(CONFIG_BT_SMP) && CONFIG_BT_SMP)
 		.encrypt_change = bt_att_encrypt_change,
 	#endif /* CONFIG_BT_SMP */
 		.released = bt_att_released,
@@ -2713,7 +2713,7 @@ static struct bt_att_chan *att_chan_new(struct bt_att *att, atomic_val_t flags)
 	// (void)memset(chan, 0, sizeof(*chan));
 	chan->chan.chan.ops = &ops;
 
-#if defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE
+#if (defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE)
 	atomic_set(&chan->tx_sem, CONFIG_BT_ATT_TX_MAX);
 #else
 	k_sem_init(&chan->tx_sem, CONFIG_BT_ATT_TX_MAX, CONFIG_BT_ATT_TX_MAX);
@@ -2758,7 +2758,7 @@ static int bt_att_accept(struct bt_conn *conn, struct bt_l2cap_chan **ch)
 
 BT_L2CAP_CHANNEL_DEFINE(att_fixed_chan, BT_L2CAP_CID_ATT, bt_att_accept, NULL);
 
-#if defined(CONFIG_BT_EATT)
+#if (defined(CONFIG_BT_EATT) && CONFIG_BT_EATT)
 int bt_eatt_connect(struct bt_conn *conn, u8_t num_channels)
 {
 	struct bt_att_chan *att_chan = att_get_fixed_chan(conn);
@@ -2829,7 +2829,7 @@ static void bt_eatt_init(void)
 	int err;
 	static struct bt_l2cap_server eatt_l2cap = {
 		.psm = BT_EATT_PSM,
-#if defined(CONFIG_BT_EATT_SEC_LEVEL)
+#if (defined(CONFIG_BT_EATT_SEC_LEVEL) && CONFIG_BT_EATT_SEC_LEVEL)
 		.sec_level = CONFIG_BT_EATT_SEC_LEVEL,
 #endif
 		.accept = bt_eatt_accept,

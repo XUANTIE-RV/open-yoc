@@ -13,6 +13,8 @@
 #include "bootab.h"
 #include "bootablog.h"
 
+#define NORMAL_ERASE_FLAG 0xFFFFFFFF
+
 typedef struct {
 #define MAX_BOOT_CNT    (32)
 #define MAX_BOOT_CNT_RE (30)
@@ -21,7 +23,6 @@ typedef struct {
 
 typedef struct {
 #define B_IMGS_VERSION_LEN  (64)
-#define B_MAX_VER           (0xFFFFFFFF)
 #define B_ROLLBACK_EN_FLAG  (0xFFFF0000)
 #define B_FINISH_FLAG       (0x38)
     uint32_t active_ver;                    //分区激活版本号,以小的为准
@@ -37,8 +38,8 @@ typedef struct {
 
 static bootab_flag_t g_bootab_flag[2];
 static char g_cur_slot[4];
-static uint32_t g_erase_flag = 0xFFFFFFFF;
-static uint32_t g_flash_sector;
+static uint32_t g_erase_flag = NORMAL_ERASE_FLAG;
+static uint32_t g_flash_erase_size;
 static partition_info_t *g_envab_info;
 
 #define CHECK_PARAMS(ab, envinfo)                   \
@@ -57,9 +58,16 @@ static partition_info_t *g_envab_info;
 
 static bool check_ab_valid(bootab_flag_t *bootab_flag)
 {
-    if ((bootab_flag->active_ver == B_MAX_VER)
-        || (bootab_flag->active_ver != B_MAX_VER && bootab_flag->finish == B_FINISH_FLAG && bootab_flag->active_ver != 0)) {
-        return true;
+    if (g_erase_flag == NORMAL_ERASE_FLAG) {
+        if ((bootab_flag->active_ver == NORMAL_ERASE_FLAG)
+            || (bootab_flag->active_ver != NORMAL_ERASE_FLAG && bootab_flag->finish == B_FINISH_FLAG && bootab_flag->active_ver != 0)) {
+            return true;
+        }
+    } else {
+        if ((bootab_flag->active_ver == 0)
+            || (bootab_flag->active_ver != 0 && bootab_flag->finish == B_FINISH_FLAG && bootab_flag->active_ver != NORMAL_ERASE_FLAG)) {
+            return true;
+        }
     }
     return false;
 }
@@ -69,11 +77,12 @@ static int get_envab_offset(const char *ab)
     if (strcmp(ab, "a") == 0) {
         return 0;
     }
-    return g_flash_sector;
+    return g_flash_erase_size;
 }
 
 int bootab_init(void)
 {
+    uint32_t erase_flag;
     partition_t partition = partition_open(B_ENVAB_NAME);
     partition_info_t *part_info = partition_info_get(partition);
     if (partition < 0) {
@@ -83,12 +92,18 @@ int bootab_init(void)
         BABLOGE("init e, get envab failed.");
         goto errout;
     }
-    if (part_info->length < (OTA_AB_IMG_INFO_OFFSET_GET(part_info->sector_size) + OTA_AB_IMG_HEAD_SIZE)) {
+    if (part_info->length < (OTA_AB_IMG_INFO_OFFSET_GET(part_info->erase_size) + OTA_AB_IMG_HEAD_SIZE)) {
         BABLOGE("the envab size is not enough.");
         goto errout;
     }
+    erase_flag = NORMAL_ERASE_FLAG;
+    if (!partition_read(partition, part_info->erase_size - 4, &erase_flag, 4)) {
+        g_erase_flag = erase_flag;
+    }
+    BABLOGD("erase flag is 0x%x", g_erase_flag);
+
     g_envab_info = part_info;
-    g_flash_sector = g_envab_info->sector_size;
+    g_flash_erase_size = g_envab_info->erase_size;
 
     int retry = 0;
     do {
@@ -99,11 +114,11 @@ int bootab_init(void)
     } while (retry++ < 3);
     if (retry > 2) {
         BABLOGW("erase bootab partition.");
-        partition_erase(partition, 0, part_info->length / part_info->sector_size);
+        partition_erase_size(partition, 0, part_info->length);
         goto errout;
     }
     partition_close(partition);
-    BABLOGI("current slot:%s, env_partition:%d, sector:%d", g_cur_slot, partition, g_flash_sector);
+    BABLOGI("current slot:%s, env_partition:%d, sector:%d", g_cur_slot, partition, g_flash_erase_size);
     return 0;
 errout:
     partition_close(partition);
@@ -129,16 +144,24 @@ const char *bootab_get_current_ab(void)
     valid[0] = check_ab_valid(&g_bootab_flag[0]);
 
     // check b
-    partition_read(partition, g_flash_sector + sizeof(bootab_bc_t), (uint8_t *)&g_bootab_flag[1], sizeof(bootab_flag_t));
+    partition_read(partition, g_flash_erase_size + sizeof(bootab_bc_t), (uint8_t *)&g_bootab_flag[1], sizeof(bootab_flag_t));
     valid[1] = check_ab_valid(&g_bootab_flag[1]);
 
     // select a/b
     if (valid[0] && valid[1]) {
         BABLOGD("both parts are valid,[0x%x, 0x%x]", g_bootab_flag[0].active_ver, g_bootab_flag[1].active_ver);
-        if (g_bootab_flag[0].active_ver <= g_bootab_flag[1].active_ver) {
-            BABLOGD("%s is valid", "a");
-            ab = "a";
-            goto exit;
+        if (g_erase_flag == NORMAL_ERASE_FLAG) {
+            if (g_bootab_flag[0].active_ver <= g_bootab_flag[1].active_ver) {
+                BABLOGD("%s is valid", "a");
+                ab = "a";
+                goto exit;
+            }
+        } else {
+            if (g_bootab_flag[0].active_ver >= g_bootab_flag[1].active_ver) {
+                BABLOGD("%s is valid", "a");
+                ab = "a";
+                goto exit;
+            }
         }
         BABLOGD("%s is valid", "b");
         ab = "b";
@@ -212,7 +235,7 @@ int bootab_set_bootcount(const char *ab, int old_cnt)
         BABLOGD("is a soft reset!!!, bootcount++");
     }
 
-    bootab_bc.W[old_cnt] = 0;
+    bootab_bc.W[old_cnt] = ~g_erase_flag;
 
     offset = get_envab_offset(ab) + 4 * old_cnt;
     partition_t partition = partition_open(B_ENVAB_NAME);
@@ -258,8 +281,8 @@ int bootab_clear_flags(const char *ab)
     CHECK_PARAMS(ab, g_envab_info);
     BABLOGD("clear flags on [%s]", ab);
     partition_t partition = partition_open(B_ENVAB_NAME);
-    BABLOGD("@@erase to [%d], offset:[0x%x], size: %d", partition, get_envab_offset(ab), g_flash_sector);
-    int ret = partition_erase(partition, get_envab_offset(ab), 1);
+    BABLOGD("@@erase to [%d], offset:[0x%x], size: %d", partition, get_envab_offset(ab), g_flash_erase_size);
+    int ret = partition_erase_size(partition, get_envab_offset(ab), g_flash_erase_size);
     partition_close(partition);
     if (ret < 0) {
         BABLOGE("clear flags failed.ret:%d", ret);
@@ -288,8 +311,13 @@ int bootab_set_valid(const char *ab, const char *img_version)
         goto errout;
     }
     offset = get_envab_offset(ab) + sizeof(bootab_bc_t);
-    BABLOGD("offset:0x%lx, 0x%x, 0x%x", offset, boot_flag.active_ver, boot_flag.active_ver - 1);
-    boot_flag.active_ver = boot_flag.active_ver - 1;
+    if (g_erase_flag == NORMAL_ERASE_FLAG) {
+        BABLOGD("offset:0x%lx, 0x%x, 0x%x", offset, boot_flag.active_ver, boot_flag.active_ver - 1);
+        boot_flag.active_ver = boot_flag.active_ver - 1;
+    } else {
+        BABLOGD("offset:0x%lx, 0x%x, 0x%x", offset, boot_flag.active_ver, boot_flag.active_ver + 1);
+        boot_flag.active_ver = boot_flag.active_ver + 1;
+    }
     boot_flag.rb_flag = B_ROLLBACK_EN_FLAG;
     boot_flag.finish = B_FINISH_FLAG;
     if (img_version) {
@@ -297,7 +325,7 @@ int bootab_set_valid(const char *ab, const char *img_version)
     } else {
         memset(&boot_flag.img_version, 0xFF, sizeof(boot_flag.img_version));
     }
-    BABLOGD("@@write to [%d], offset:[0x%lx], size: %d", partition, offset, sizeof(bootab_flag_t));
+    BABLOGD("@@write to [%d], offset:[0x%lx], size: %d", partition, offset, (int)sizeof(bootab_flag_t));
     ret = partition_write(partition, offset, &boot_flag, sizeof(bootab_flag_t));
     if (ret < 0) {
         BABLOGE("write flash error.");
@@ -339,7 +367,7 @@ int bootab_set_invalid(const char *ab)
     ver_flag_offset = offset;
     val = 0;
     partition_t partition = partition_open(B_ENVAB_NAME);
-    BABLOGD("@@write to [%d], offset:[0x%lx], size: %d", partition, ver_flag_offset, sizeof(boot_flag.active_ver));
+    BABLOGD("@@write to [%d], offset:[0x%lx], size: %d", partition, ver_flag_offset, (int)sizeof(boot_flag.active_ver));
     ret = partition_write(partition, ver_flag_offset, (uint8_t *)&val, sizeof(boot_flag.active_ver));
     partition_close(partition);
     if (ret < 0) {
@@ -370,7 +398,7 @@ int bootab_set_fallback_enable(const char *ab)
         } else {
             boot_flag.rb_flag = B_ROLLBACK_EN_FLAG;
             rb_flag_offset = offset + sizeof(boot_flag.active_ver);
-            BABLOGD("@@write to [%d], offset:[0x%lx], size: %d", partition, rb_flag_offset, sizeof(boot_flag.rb_flag));
+            BABLOGD("@@write to [%d], offset:[0x%lx], size: %d", partition, rb_flag_offset, (int)sizeof(boot_flag.rb_flag));
             ret = partition_write(partition, rb_flag_offset, (void *)&boot_flag.rb_flag, sizeof(boot_flag.rb_flag));
             if (ret < 0) {
                 BABLOGE("write flash error.");
@@ -402,9 +430,9 @@ int bootab_set_fallback_disable(const char *ab)
         goto errout;
     }
     if (boot_flag.rb_flag == B_ROLLBACK_EN_FLAG) {
-        boot_flag.rb_flag = 0;
+        boot_flag.rb_flag = !g_erase_flag;
         rb_flag_offset = offset + sizeof(boot_flag.active_ver);
-        BABLOGD("@@write to [%d], offset:[0x%lx], size: %d", partition, rb_flag_offset, sizeof(boot_flag.rb_flag));
+        BABLOGD("@@write to [%d], offset:[0x%lx], size: %d", partition, rb_flag_offset, (int)sizeof(boot_flag.rb_flag));
         ret = partition_write(partition, rb_flag_offset, (void *)&boot_flag.rb_flag, sizeof(boot_flag.rb_flag));
         if (ret < 0) {
             BABLOGE("write flash error.");
@@ -640,13 +668,14 @@ int bootab_upgrade_partition_slice(const char *partition_name, const char *file_
         return -EINVAL;
     }
     // erase sectors
-    uint32_t erase_offset = ((offset + g_flash_sector -1) / g_flash_sector) * g_flash_sector;
-    uint32_t block_count = (wsize + g_flash_sector - 1) / g_flash_sector;
-    BABLOGD("erase offset:0x%x block_count:%d", erase_offset, block_count);
-    ret = partition_erase(partition, erase_offset, block_count);
-    if (ret < 0) {
-        BABLOGE("erase error");
-        goto fail;
+    uint32_t erase_offset = ((offset + part_info->erase_size -1) / part_info->erase_size) * part_info->erase_size;
+    if (erase_offset + part_info->erase_size <= part_info->length) {
+        BABLOGD("##erase part offset:0x%x erase_size:%d", erase_offset, wsize);
+        ret = partition_erase_size(partition, erase_offset, wsize);
+        if (ret < 0) {
+            BABLOGE("erase error");
+            goto fail;
+        }
     }
     BABLOGD("@@write to partition[%d], offset:[0x%x], size: %d", partition, offset, wsize);
 #if _BOOTAB_DUMP_DATA_

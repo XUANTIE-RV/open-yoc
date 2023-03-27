@@ -1313,6 +1313,7 @@ int ble_mesh_node_OOB_input_num(uint32_t num)
 
 #endif
 
+#if defined(CONFIG_BT_MESH_MODEL_VENDOR_SRV) && CONFIG_BT_MESH_MODEL_VENDOR_SRV > 0
 static int version_char_to_u32(char *ver_str, unsigned int *version)
 {
     int v1 = 0, v2 = 0, v3 = 0;
@@ -1360,6 +1361,7 @@ static void set_support_ota_protocol(uint8_t *ota_protocol)
 #endif
     return;
 }
+#endif
 
 int ble_mesh_vendor_srv_model_version_report(uint16_t dst_addr, uint8_t ack_ttl)
 {

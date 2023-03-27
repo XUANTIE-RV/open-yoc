@@ -29,7 +29,7 @@ ipc_demo只适用于bl606p的e907
 1. 编译
 
    ```bash
-   // 在c906侧执行过make clean && make && makeinstall之后执行以下命令
+   // 在c906侧执行过make clean && make && make install之后执行以下命令
    make clean
    make
    ```

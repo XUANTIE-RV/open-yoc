@@ -6,7 +6,7 @@ extern "C" {
 #endif
 
 #include "pin_name.h"
-#include "board_config.h"
+#include "board.h"
 
 #define CMD_READ_ID		0x10
 #define CMD_READ_STATUS	0x11
@@ -157,6 +157,7 @@ UINT8 N_ISP_READ_PAGE(UINT32 ISP_ADDR,PUINT8 ISP_BUFFER);
 UINT8 N_MULTI_PLAY(UINT8 PlayListNum,PUINT8 DATA_BUFFER);
 void N_WAKUP(void);
 void TwoWirePlaySample(void);
+void board_nsp_audio_play(uint8_t index, uint8_t vol);
 
 #ifdef __cplusplus
 }

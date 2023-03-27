@@ -69,7 +69,7 @@ static inline const char *bt_fsm_ev_string(bt_fsm_ev_en ev)
         case BT_FSM_EV_DEFINE(HCI_CMD, CMD_CMPLETE)   : {return FSM_STRING((HCI_CMD, CMD_CMPLETE));};
         case BT_FSM_EV_DEFINE(HCI_CMD, CMD_SENT)      : {return FSM_STRING((HCI_CMD, CMD_SENT));};
         case BT_FSM_EV_DEFINE(BT_MESH, ADV_SEND)       : {return FSM_STRING((BT_MESH, ADV_SEND));};
-#if defined(CONFIG_BT_MESH_PROXY) && CONFIG_BT_MESH_PROXY
+#if (defined(CONFIG_BT_MESH_PROXY) && CONFIG_BT_MESH_PROXY)
         case BT_FSM_EV_DEFINE(BT_MESH, ADV_PROXY_SEND) : {return FSM_STRING((BT_MESH, ADV_PROXY_SEND));};
 #endif
         default:

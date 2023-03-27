@@ -69,6 +69,36 @@ make SDK=sdk_chip_ch2601
 make flashall SDK=sdk_chip_ch2601
 ```
 
+#### cv181x平台
+
+1. 编译
+
+```bash
+make clean
+make SDK=sdk_chip_cv181xh
+```
+
+2. 烧写
+
+```bash
+make flashall SDK=sdk_chip_cv181xh
+```
+
+#### f133平台
+
+1. 编译
+
+```bash
+make clean
+make SDK=sdk_chip_f133
+```
+
+2. 烧写
+
+```bash
+make flashall SDK=sdk_chip_f133
+```
+
 ### 调试
 
 ```bash
@@ -114,7 +144,7 @@ loglevel       : set sync log level
 ​
 ================ AliOS Things Command end ===============
 ```
-​
+
 tasklist 命令可以列出当前系统的所有任务的状态的状态、优先级、任务对战大小等状态信息。
 ​
 ```cli

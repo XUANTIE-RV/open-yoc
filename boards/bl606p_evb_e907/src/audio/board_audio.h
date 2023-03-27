@@ -12,16 +12,6 @@
 #define AUIDO_PA_MUTE_PIN 41 // 03m-12; dvk-41; x32-17
 
 /**
- * 获取算法处理核的CPUID号
- */
-int  board_get_alg_cpuid(void);
-
-/**
- * 音频系统初始化
- */
-void board_audio_init(void);
-
-/**
  * 采集增益配置
  *
  * @param[in]  id  通道id,0为起始值

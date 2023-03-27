@@ -46,7 +46,7 @@
 
 #include <ble_os.h>
 
-#if defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE
+#if (defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE)
 #include <bluetooth/bluetooth.h>
 #include <bluetooth/conn.h>
 #include <bluetooth/l2cap.h>
@@ -144,14 +144,14 @@
 #define PACKET_TYPE_TO_INDEX(type) ((type) - 1)
 
 #ifndef CONFIG_DATA_READY_CB_TASK_STACK_SIZE
-#define CONFIG_DATA_READY_CB_TASK_STACK_SIZE 1024
+#define CONFIG_DATA_READY_CB_TASK_STACK_SIZE 2048
 #endif
 
 #ifndef CONFIG_DATA_READY_CB_TASK_PRI
 #define CONFIG_DATA_READY_CB_TASK_PRI 8
 #endif
 
-#if defined(CONFIG_DATA_CB_STATIC_STACK) && CONFIG_DATA_CB_STATIC_STACK
+#if (defined(CONFIG_DATA_CB_STATIC_STACK) && CONFIG_DATA_CB_STATIC_STACK)
 ktask_t          g_data_cb_task;
 cpu_stack_t      g_data_cb_stack[CONFIG_DATA_READY_CB_TASK_STACK_SIZE/4] = {0};
 #endif
@@ -243,7 +243,7 @@ typedef struct HCI_H5_CB {
 
     uint8_t     cleanuping;
 
-    aos_dev_t   *hci_dev;
+    rvm_dev_t   *hci_dev;
 } tHCI_H5_CB;
 
 static tHCI_H5_CB rtk_h5;
@@ -946,7 +946,7 @@ static uint16_t h5_wake_up()
         }
 #endif
         //we adopt the hci_drv interface to send data
-        bytes_sent = hci_send(rtk_h5.hci_dev, data, data_len);
+        bytes_sent = rvm_hal_hci_send(rtk_h5.hci_dev, data, data_len);
 
         hci_skb_free(&skb);
     }
@@ -1500,7 +1500,7 @@ static int create_data_ready_cb_thread()
     }
 
     
-#if defined(CONFIG_DATA_CB_STATIC_STACK) && CONFIG_DATA_CB_STATIC_STACK
+#if (defined(CONFIG_DATA_CB_STATIC_STACK) && CONFIG_DATA_CB_STATIC_STACK)
     if (krhino_task_create(&g_data_cb_task, "data_ready_cb", NULL, CONFIG_DATA_READY_CB_TASK_PRI, 0u, g_data_cb_stack,
                        CONFIG_DATA_READY_CB_TASK_STACK_SIZE/4, data_ready_cb_thread, 1u) != 0) {
         BT_ERR("pthread_create thread_data_ready_cb failed!");
@@ -1525,12 +1525,12 @@ static int create_data_ready_cb_thread()
 }
 
 
-static void hci_event(hci_event_t event, uint32_t size, void *priv)
+static void hci_event(rvm_hal_hci_event_t event, uint32_t size, void *priv)
 {
     hci_h5_receive_msg(NULL , 0);
 }
 
-#if defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE
+#if (defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE)
 static int _h5_hci_cmd_send_cb(u16_t opcode, u8_t status, struct net_buf *buf, void *args)
 {
 	struct {
@@ -1568,7 +1568,7 @@ static int hci_driver_send_cmd_cb(uint16_t opcode, uint8_t* send_data, uint32_t 
     if (send_len > 0)
         net_buf_add_mem(buf, send_data, send_len);
 
-#if defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE
+#if (defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE)
 	struct {
 		struct k_sem *sync;
 		struct net_buf *rsp;
@@ -1676,13 +1676,13 @@ static void hci_h5_int_init(packet_recv h5_callbacks)
     rtk_h5.rx_state = H5_W4_PKT_DELIMITER;
     rtk_h5.rx_esc_state = H5_ESCSTATE_NOESC;
 
-    rtk_h5.hci_dev = hci_open("hci");
+    rtk_h5.hci_dev = rvm_hal_hci_open("hci");
 
-    ASSERT(rtk_h5.hci_dev, "hci_open failed");
+    ASSERT(rtk_h5.hci_dev, "rvm_hal_hci_open failed");
 
-    hci_set_event(rtk_h5.hci_dev, hci_event, NULL);
+    rvm_hal_hci_set_event(rtk_h5.hci_dev, hci_event, NULL);
 
-    hci_start(rtk_h5.hci_dev, hci_driver_send_cmd_cb);
+    rvm_hal_hci_start(rtk_h5.hci_dev, hci_driver_send_cmd_cb);
 }
 
 /*******************************************************************************
@@ -1736,7 +1736,7 @@ static void hci_h5_cleanup(void)
 static uint8_t data_buffer[4096] = {0};
 static uint32_t hci_h5_receive_msg(uint8_t *byte, uint16_t length)
 {
-    uint32_t read_len = hci_recv(rtk_h5.hci_dev, data_buffer, sizeof(data_buffer));
+    uint32_t read_len = rvm_hal_hci_recv(rtk_h5.hci_dev, data_buffer, sizeof(data_buffer));
 
     if (read_len > 0) {
 

@@ -14,7 +14,7 @@
 #include <aos/debug.h>
 #include <aos/queue.h>
 
-#include <devices/hal/hci_impl.h>
+#include <devices/impl/hci_impl.h>
 #include <devices/device.h>
 #include <devices/driver.h>
 #include <drv/gpio.h>
@@ -226,7 +226,7 @@ static void host_rcv_pkt(uint8_t *data, uint16_t len)
         g_event(HCI_EVENT_READ, len, g_priv);
     }
 }
-static int h4_hal_open(aos_dev_t *dev)
+static int h4_hal_open(rvm_dev_t *dev)
 {
     LOGD(TAG, "%s", __func__);
     tls_bt_status_t status;
@@ -265,7 +265,7 @@ static int h4_hal_open(aos_dev_t *dev)
     return 0;
 }
 
-static int h4_hal_close(aos_dev_t *dev)
+static int h4_hal_close(rvm_dev_t *dev)
 {
     LOGD(TAG, "%s", __func__);
     struct QUEUE_ITEM *item = NULL;
@@ -289,7 +289,7 @@ static int h4_hal_close(aos_dev_t *dev)
     return 0;
 }
 
-static int h4_send_data(aos_dev_t *dev, uint8_t *data, uint32_t size)
+static int h4_send_data(rvm_dev_t *dev, uint8_t *data, uint32_t size)
 {
     HCIDBG("%s", __FUNCTION__);    
 #if (HCI_DBG == TRUE)    
@@ -313,7 +313,7 @@ static int h4_send_data(aos_dev_t *dev, uint8_t *data, uint32_t size)
     
     return ret;
 }
-static int h4_recv_data(aos_dev_t *dev, uint8_t *data, uint32_t size)
+static int h4_recv_data(rvm_dev_t *dev, uint8_t *data, uint32_t size)
 {
     HCIDBG("%s, size=%d", __FUNCTION__, size);
     uint32_t act_size = 0;
@@ -361,7 +361,7 @@ static int h4_recv_data(aos_dev_t *dev, uint8_t *data, uint32_t size)
     return act_size;
 }
 
-static int h4_set_event(aos_dev_t *dev, hci_event_cb_t event, void *priv)
+static int h4_set_event(rvm_dev_t *dev, hci_event_cb_t event, void *priv)
 {
     LOGD(TAG,"%s", __FUNCTION__);
     g_event = event;
@@ -370,25 +370,25 @@ static int h4_set_event(aos_dev_t *dev, hci_event_cb_t event, void *priv)
     return 0;
 }
 
-static int h4_start(aos_dev_t *dev, hci_driver_send_cmd_t send_cmd)
+static int h4_start(rvm_dev_t *dev, hci_driver_send_cmd_t send_cmd)
 {
     LOGD(TAG,"%s", __FUNCTION__);
     //maybe, we do not care this function;
     return 0;
 }
-static aos_dev_t *h4_hal_init(driver_t *drv, void *config, int id)
+static rvm_dev_t *h4_hal_init(driver_t *drv, void *config, int id)
 {
     LOGD(TAG,"%s", __FUNCTION__);
     
     drv_irq_register(BLE_IRQn, BLE_IRQHandler);
     drv_irq_register(BT_IRQn, BT_IRQHandler);
     
-    hci_driver_t *h4_dev = (hci_driver_t *)device_new(drv, sizeof(hci_driver_t), id);
+    hci_driver_t *h4_dev = (hci_driver_t *)rvm_hal_device_new(drv, sizeof(hci_driver_t), id);
 
-    return (aos_dev_t *)h4_dev;
+    return (rvm_dev_t *)h4_dev;
 }
 
-#define h4_hal_uninit device_free
+#define h4_hal_uninit rvm_hal_device_free
 
 static hci_driver_t h4_driver = {
     .drv = {
@@ -415,7 +415,7 @@ void bt_w800_register()
 {
     LOGD(TAG,"%s", __FUNCTION__);
     w800_board_init();
-    driver_register(&h4_driver.drv, NULL, 0);
+    rvm_driver_register(&h4_driver.drv, NULL, 0);
 }
 
 /**

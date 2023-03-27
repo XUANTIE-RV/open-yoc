@@ -53,6 +53,13 @@ yoc install ble_host
 | CONFIG_BT_DEBUG_SMP         | 0          | 启用协议栈SMP调试                                            |
 | CONFIG_BT_DEBUG_ATT         | 0          | 启用协议栈ATT调试                                            |
 | CONFIG_BT_DEBUG_GATT        | 0          | 启用协议栈GATT调试                                           |
+| CONFIG_BT_BREDR             | 0          | 启用协议栈BR特性                                      |
+| CONFIG_BT_HFP_HF            | 0          | 启用协议栈HFP特性                                          |
+| CONFIG_BT_HFP               | 0          | 启用协议栈HFP_HF特性                                          |
+| CONFIG_BT_HFP_AUDIO_I2S     | 0          | HFP的音频传输使用I2S传输                                            |
+| CONFIG_BT_A2DP              | 0          | 启用协议栈A2DP特性                                            |
+| CONFIG_BT_A2DP_AUDIO_OUTPUT_INSIDE | 0          | A2DP的音频播放在协议栈内部完成                          |
+| CONFIG_BT_MAX_PAIRED        | 2          | 保存的linkkey个数                                           |
 
 # 接口
 

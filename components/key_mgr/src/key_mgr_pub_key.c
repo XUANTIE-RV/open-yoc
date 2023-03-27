@@ -1,7 +1,7 @@
 /**
 * Copyright (C) 2017 C-SKY Microsystems Co., All rights reserved.
 */
-#ifndef CONFIG_KEY_MGR_NO_PUB_PARTITION
+#ifdef CONFIG_KEY_MGR_HAVE_PUB_PARTITION
 
 #include "key_mgr_pub_key.h"
 #include "key_mgr.h"
@@ -165,7 +165,7 @@ static int get_pub_key_from_pkey_part(const char *pub_key_name, unsigned long *k
     return KM_ERR;
 }
 
-static int pkey_part_init(uint32_t part_start, uint32_t part_end)
+static int pkey_part_init(uint32_t part_start, uint32_t part_end, partition_info_t *pkey_info)
 {
     int i;
     int size, body_size;
@@ -189,7 +189,7 @@ static int pkey_part_init(uint32_t part_start, uint32_t part_end)
         // dump_data(buf, len);
 #else
         uint8_t buf[MAX_PUB_KEY_NUM * sizeof(pkey_t) + sizeof(pkey_head_t)];
-        if (get_data_from_addr(part_start, buf, size)) {
+        if (get_data_from_addr(part_start, buf, size, pkey_info)) {
             goto err;
         }
 #endif
@@ -315,16 +315,15 @@ static int kp_check(uint8_t *kp_data)
 }
 #endif /* CONFIG_TB_KP */
 
-
-
-uint32_t pub_key_init_internal(uint32_t otp_part_start, uint32_t otp_part_end, 
-                                      uint32_t pkey_part_start, uint32_t pkey_part_end)
+uint32_t pub_key_init_internal(uint32_t otp_part_start, uint32_t otp_part_end,
+                               uint32_t pkey_part_start, uint32_t pkey_part_end,
+                               partition_info_t *otp_info, partition_info_t *pkey_info)
 {
     int ret;
 
     memset(&g_pub_key_info, 0, sizeof(g_pub_key_info));
 
-    ret = pkey_part_init(pkey_part_start, pkey_part_end);
+    ret = pkey_part_init(pkey_part_start, pkey_part_end, pkey_info);
 
     if (otp_part_start == INVALID_ADDR) {
         return ret;
@@ -354,7 +353,7 @@ uint32_t pub_key_init_internal(uint32_t otp_part_start, uint32_t otp_part_end,
         KM_LOGD("efuse read len:%d", ret);        
     } else {
         // FIXME: for test,规定从0x8FFF000地址获取KP数据，为了测试使用
-        if (get_data_from_addr(otp_part_start, buf, otp_part_size)) {
+        if (get_data_from_addr(otp_part_start, buf, otp_part_size, otp_info)) {
             goto fail;
         }
         ret = otp_part_size;
@@ -365,7 +364,7 @@ uint32_t pub_key_init_internal(uint32_t otp_part_start, uint32_t otp_part_end,
         goto fail;
     }
 #else
-    if (get_data_from_addr(otp_part_start, buf, otp_part_size)) {
+    if (get_data_from_addr(otp_part_start, buf, otp_part_size, otp_info)) {
         goto fail;
     }
 #endif /* CONFIG_CHIP_PANGU */
@@ -396,7 +395,7 @@ uint32_t pub_key_init_internal(uint32_t otp_part_start, uint32_t otp_part_end,
             key_meta++;
         }        
     }
-
+#if 0
     idx_head = (manifest_idx_head_t *)buf;
     otp_pub_start = (otp_pub_key_head_t *)((unsigned long)buf + idx_head->total_size);
     if (otp_pub_start->magic != OTP_PUB_REGION_MAGIC) {
@@ -471,6 +470,7 @@ uint32_t pub_key_init_internal(uint32_t otp_part_start, uint32_t otp_part_end,
         i += data_len + sizeof(otp_pub_key_store_t);
         p += data_len + sizeof(otp_pub_key_store_t);
     }
+#endif
     KM_LOGD("pub key init ok");
 	free(buf);
     return 0;
@@ -508,35 +508,44 @@ void km_show_pub_key_info(void)
 
 uint32_t km_pub_key_init(void)
 {
-    mtb_partition_info_t part_info;
+    partition_t partition;
+    partition_info_t *part_info;
     uint32_t part_start, part_end, ppart_start, ppart_end;
 
     part_start = INVALID_ADDR;
     part_end = INVALID_ADDR;
-    if (!mtb_get_partition_info(MTB_IMAGE_NAME_OTP, &part_info)) {
-        part_start = part_info.start_addr;
-        part_end = part_info.end_addr;
+    partition = partition_open(MTB_IMAGE_NAME_OTP);
+    part_info = partition_info_get(partition);
+    if (part_info) {
+        part_start = part_info->start_addr + part_info->base_addr;
+        part_end = part_start + part_info->length;
     } else {
         KM_LOGW("mtb cant f `otp`");
-        if (!mtb_get_partition_info(MTB_IMAGE_NAME_KP, &part_info)) {
-            part_start = part_info.start_addr;
-            part_end = part_info.end_addr;
+        partition = partition_open(MTB_IMAGE_NAME_KP);
+        part_info = partition_info_get(partition);
+        if (part_info) {
+            part_start = part_info->start_addr + part_info->base_addr;
+            part_end = part_start + part_info->length;
             KM_LOGI("mtb find `kp` at 0x%x", part_start);
         } else {
             KM_LOGW("mtb cant f `kp`");
         }
     }
 
+    partition_t pkey;
+    partition_info_t *pkey_info;
     ppart_start = INVALID_ADDR;
     ppart_end = INVALID_ADDR;
-    if (!mtb_get_partition_info(MTB_IMAGE_NAME_PKEY, &part_info)) {
-        ppart_start = part_info.start_addr;
-        ppart_end = part_info.end_addr;
+    pkey = partition_open(MTB_IMAGE_NAME_KP);
+    pkey_info = partition_info_get(pkey);
+    if (pkey_info) {
+        ppart_start = part_info->start_addr + part_info->base_addr;
+        ppart_end = part_start + part_info->length;
     } else {
         KM_LOGI("mtb cant f `pkey`");
     }
 
-    if (pub_key_init_internal(part_start, part_end, ppart_start, ppart_end)) {
+    if (pub_key_init_internal(part_start, part_end, ppart_start, ppart_end, part_info, pkey_info)) {
         KM_LOGI("pub key init e");
     }
     KM_LOGD("km_pub_key_init over");
@@ -548,4 +557,4 @@ uint32_t km_pub_key_init(void)
 }
 
 #endif /* defined(CONFIG_CHIP_CH2201) */
-#endif
+#endif /*CONFIG_KEY_MGR_HAVE_PUB_PARTITION*/

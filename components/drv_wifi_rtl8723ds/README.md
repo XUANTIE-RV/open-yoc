@@ -18,26 +18,26 @@ RTL8723块是一款低功耗WIFI+蓝牙二合一WIFI模块，SDIO接口，支持
 
 ```c
 typedef struct net_ops {
-    int (*get_mac_addr)(aos_dev_t *dev, uint8_t *mac);
-    int (*set_mac_addr)(aos_dev_t *dev, const uint8_t *mac);
+    int (*get_mac_addr)(rvm_dev_t *dev, uint8_t *mac);
+    int (*set_mac_addr)(rvm_dev_t *dev, const uint8_t *mac);
 
-    int (*get_dns_server)(aos_dev_t *dev, ip_addr_t ipaddr[], uint32_t num);
-    int (*set_dns_server)(aos_dev_t *dev, ip_addr_t ipaddr[], uint32_t num);
+    int (*get_dns_server)(rvm_dev_t *dev, ip_addr_t ipaddr[], uint32_t num);
+    int (*set_dns_server)(rvm_dev_t *dev, ip_addr_t ipaddr[], uint32_t num);
 
-    int (*set_hostname)(aos_dev_t *dev, const char *name);
-    const char* (*get_hostname)(aos_dev_t *dev);
+    int (*set_hostname)(rvm_dev_t *dev, const char *name);
+    const char* (*get_hostname)(rvm_dev_t *dev);
 
-    int (*set_link_up)(aos_dev_t *dev);
-    int (*set_link_down)(aos_dev_t *dev);
+    int (*set_link_up)(rvm_dev_t *dev);
+    int (*set_link_down)(rvm_dev_t *dev);
 
-    int (*start_dhcp)(aos_dev_t *dev);
-    int (*stop_dhcp)(aos_dev_t *dev);
-    int (*set_ipaddr)(aos_dev_t *dev, const ip_addr_t *ipaddr, const ip_addr_t *netmask, const ip_addr_t *gw);
-    int (*get_ipaddr)(aos_dev_t *dev, ip_addr_t *ipaddr, ip_addr_t *netmask, ip_addr_t *gw);
-    int (*ping)(aos_dev_t *dev, int type, char *remote_ip);
+    int (*start_dhcp)(rvm_dev_t *dev);
+    int (*stop_dhcp)(rvm_dev_t *dev);
+    int (*set_ipaddr)(rvm_dev_t *dev, const ip_addr_t *ipaddr, const ip_addr_t *netmask, const ip_addr_t *gw);
+    int (*get_ipaddr)(rvm_dev_t *dev, ip_addr_t *ipaddr, ip_addr_t *netmask, ip_addr_t *gw);
+    int (*ping)(rvm_dev_t *dev, int type, char *remote_ip);
 
-    int (*subscribe)(aos_dev_t *dev, uint32_t event, event_callback_t cb, void *param);
-    int (*unsubscribe)(aos_dev_t *dev, uint32_t event, event_callback_t cb, void *param);
+    int (*subscribe)(rvm_dev_t *dev, uint32_t event, event_callback_t cb, void *param);
+    int (*unsubscribe)(rvm_dev_t *dev, uint32_t event, event_callback_t cb, void *param);
 } net_ops_t;
 ```
 
@@ -81,45 +81,45 @@ typedef struct net_ops {
   typedef struct wifi_driver {
 
     /** common APIs */
-    int (*init)(aos_dev_t *dev);
-    int (*)(aos_dev_t *dev);
-    int (*reset)(aos_dev_t *dev);
-    int (*set_mode)(aos_dev_t *dev, wifi_mode_t mode);
-    int (*get_mode)(aos_dev_t *dev, wifi_mode_t *mode);
-    int (*install_event_cb)(aos_dev_t *dev, wifi_event_func *evt_cb);
+    int (*init)(rvm_dev_t *dev);
+    int (*)(rvm_dev_t *dev);
+    int (*reset)(rvm_dev_t *dev);
+    int (*set_mode)(rvm_dev_t *dev, rvm_hal_wifi_mode_t mode);
+    int (*get_mode)(rvm_dev_t *dev, rvm_hal_wifi_mode_t *mode);
+    int (*install_event_cb)(rvm_dev_t *dev, rvm_hal_wifi_event_func *evt_cb);
 
     /** conf APIs */
-    int (*set_protocol)(aos_dev_t *dev, uint8_t protocol_bitmap); //11bgn
-    int (*get_protocol)(aos_dev_t *dev, uint8_t *protocol_bitmap);
-    int (*set_country)(aos_dev_t *dev, wifi_country_t country);
-    int (*get_country)(aos_dev_t *dev, wifi_country_t *country);
-    int (*set_mac_addr)(aos_dev_t *dev, const uint8_t *mac);
-    int (*get_mac_addr)(aos_dev_t *dev, uint8_t *mac);
-    int (*set_auto_reconnect)(aos_dev_t *dev, bool en);
-    int (*get_auto_reconnect)(aos_dev_t *dev, bool *en);
-    int (*set_lpm)(aos_dev_t *dev, wifi_lpm_mode_t mode); //ps on/pff
-    int (*get_lpm)(aos_dev_t *dev, wifi_lpm_mode_t *mode);
-    int (*power_on)(aos_dev_t *dev); //the wifi module power on/off
-    int (*power_off)(aos_dev_t *dev); 
+    int (*set_protocol)(rvm_dev_t *dev, uint8_t protocol_bitmap); //11bgn
+    int (*get_protocol)(rvm_dev_t *dev, uint8_t *protocol_bitmap);
+    int (*set_country)(rvm_dev_t *dev, rvm_hal_wifi_country_t country);
+    int (*get_country)(rvm_dev_t *dev, rvm_hal_wifi_country_t *country);
+    int (*set_mac_addr)(rvm_dev_t *dev, const uint8_t *mac);
+    int (*get_mac_addr)(rvm_dev_t *dev, uint8_t *mac);
+    int (*set_auto_reconnect)(rvm_dev_t *dev, bool en);
+    int (*get_auto_reconnect)(rvm_dev_t *dev, bool *en);
+    int (*set_lpm)(rvm_dev_t *dev, rvm_hal_wifi_lpm_mode_t mode); //ps on/pff
+    int (*get_lpm)(rvm_dev_t *dev, rvm_hal_wifi_lpm_mode_t *mode);
+    int (*power_on)(rvm_dev_t *dev); //the wifi module power on/off
+    int (*power_off)(rvm_dev_t *dev);
 
     /** connection APIs */
-    int (*start_scan)(aos_dev_t *dev, wifi_scan_config_t *config, bool block);
-    int (*start)(aos_dev_t *dev, wifi_config_t * config); //start ap or sta
-    int (*stop)(aos_dev_t *dev);//stop ap or sta
-    int (*sta_get_link_status)(aos_dev_t *dev, wifi_ap_record_t *ap_info);
-    int (*ap_get_sta_list)(aos_dev_t *dev, wifi_sta_list_t *sta);
+    int (*start_scan)(rvm_dev_t *dev, wifi_scan_config_t *config, bool block);
+    int (*start)(rvm_dev_t *dev, rvm_hal_wifi_config_t * config); //start ap or sta
+    int (*stop)(rvm_dev_t *dev);//stop ap or sta
+    int (*sta_get_link_status)(rvm_dev_t *dev, rvm_hal_wifi_ap_record_t *ap_info);
+    int (*ap_get_sta_list)(rvm_dev_t *dev, rvm_hal_wifi_sta_list_t *sta);
 
 
     /** promiscuous APIs */
-    int (*start_monitor)(aos_dev_t *dev, wifi_promiscuous_cb_t cb);
-    int (*stop_monitor)(aos_dev_t *dev);
-    int (*send_80211_raw_frame)(aos_dev_t *dev, void *buffer, uint16_t len);
-    int (*set_channel)(aos_dev_t *dev, uint8_t primary, wifi_second_chan_t second);
-    int (*get_channel)(aos_dev_t *dev, uint8_t *primary, wifi_second_chan_t *second);
+    int (*start_monitor)(rvm_dev_t *dev, rvm_hal_wifi_promiscuous_cb_t cb);
+    int (*stop_monitor)(rvm_dev_t *dev);
+    int (*send_80211_raw_frame)(rvm_dev_t *dev, void *buffer, uint16_t len);
+    int (*set_channel)(rvm_dev_t *dev, uint8_t primary, rvm_hal_wifi_second_chan_t second);
+    int (*get_channel)(rvm_dev_t *dev, uint8_t *primary, rvm_hal_wifi_second_chan_t *second);
 
 
     /* esp8266 related API */
-    int (*set_smartcfg)(aos_dev_t *dev, int enable);
+    int (*set_smartcfg)(rvm_dev_t *dev, int enable);
 
 } wifi_driver_t;
   ```
@@ -149,7 +149,7 @@ typedef struct net_ops {
       WIFI_MODE_APSTA,        /**< WiFi station + soft-AP mode */
       WIFI_MODE_P2P,          /**< WiFi P2P mode */
       WIFI_MODE_MAX
-  } wifi_mode_t;
+  } rvm_hal_wifi_mode_t;
   ```
 
 - **`install_event_cb`**
@@ -171,7 +171,7 @@ typedef struct net_ops {
       WIFI_COUNTRY_US,     /**< country USA, channel range [1, 11] */
       WIFI_COUNTRY_EU,     /**< country Europe, channel range [1, 13] */
       WIFI_COUNTRY_MAX
-  } wifi_country_t;
+  } rvm_hal_wifi_country_t;
   ```
 
   
@@ -195,7 +195,7 @@ typedef struct net_ops {
       WIFI_LPM_KEEP_SOCKET,   /**< power save with socket maintain */
       WIFI_LPM_KEEP_LINK,     /**< power save with wifi link connecting maintain */
       WIFI_LPM_POWEROFF,      /**< power save with power off */
-  } wifi_lpm_mode_t;
+  } rvm_hal_wifi_lpm_mode_t;
   ```
 
 - **`power_on、power_off`**
@@ -219,15 +219,15 @@ typedef struct net_ops {
 
   ```c
   typedef struct {
-      wifi_status_link_t link_status;       /* if not connected, following data is not valid */
+      rvm_hal_wifi_status_link_t link_status;       /* if not connected, following data is not valid */
       uint8_t bssid[6];                     /* MAC address of AP */
       uint8_t ssid[MAX_SSID_SIZE + 1];      /* SSID of AP */
       uint8_t channel;                      /* channel of AP */
       int8_t  rssi;                         /* signal strength of AP */
-      wifi_second_chan_t second;            /* second channel of AP */
-      wifi_encrypt_type_t encryptmode;      /* encrypt mode of AP */
-      wifi_auth_mode_t authmode;            /* authmode of AP */
-  } wifi_ap_record_t;
+      rvm_hal_wifi_second_chan_t second;            /* second channel of AP */
+      rvm_hal_wifi_encrypt_type_t encryptmode;      /* encrypt mode of AP */
+      rvm_hal_wifi_auth_mode_t authmode;            /* authmode of AP */
+  } rvm_hal_wifi_ap_record_t;
   ```
 
 - **`ap_get_sta_list`**
@@ -237,17 +237,17 @@ typedef struct net_ops {
   ```c
   typedef struct {
       uint8_t mac[6];  /**< mac address of sta that associated with soft-AP */
-  } wifi_sta_info_t;
+  } rvm_hal_wifi_sta_info_t;
   
   typedef struct {
-      wifi_sta_info_t sta[HAL_WIFI_MAX_CONN_NUM]; /**< station list */
+      rvm_hal_wifi_sta_info_t sta[HAL_WIFI_MAX_CONN_NUM]; /**< station list */
       int       num; /**< number of station that associated with soft-AP */
-  } wifi_sta_list_t;
+  } rvm_hal_wifi_sta_list_t;
   ```
 
 - **`start_monitor、stop_monitor`**
 
-  启动（关闭）信道扫描，扫描信息通过回调函数`wifi_promiscuous_cb_t`上传给用户
+  启动（关闭）信道扫描，扫描信息通过回调函数`rvm_hal_wifi_promiscuous_cb_t`上传给用户
 
 
 - **`send_80211_raw_frame`**

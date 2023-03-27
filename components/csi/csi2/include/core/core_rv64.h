@@ -288,11 +288,28 @@ typedef struct {
 #define CACHE_MHCR_IE_Pos                      0U                                            /*!< CACHE MHCR: IE Position */
 #define CACHE_MHCR_IE_Msk                      (0x1UL << CACHE_MHCR_IE_Pos)                  /*!< CACHE MHCR: IE Mask */
 
-#define CACHE_INV_ADDR_Pos                     5U
+#define CACHE_INV_ADDR_Pos                     6U
 #define CACHE_INV_ADDR_Msk                     (0xFFFFFFFFUL << CACHE_INV_ADDR_Pos)
 
 /*@} end of group CSI_CACHE */
 
+// MSTATUS Register
+#define MSTATUS_TVM_MASK (1L << 20)     // mstatus.TVM                      [20]
+#define MSTATUS_MPP_MASK (3L << 11)     // mstatus.SPP                      [11:12]
+#define MSTATUS_MPP_M    (3L << 11)     // Machine mode                     11
+#define MSTATUS_MPP_S    (1L << 11)     // Supervisor mode                  01
+#define MSTATUS_MPP_U    (0L << 11)     // User mode                        00
+
+// SSTATUS Register
+#define SSTATUS_SPP_MASK (3L << 8)      // sstatus.SPP                      [8:9]
+#define SSTATUS_SPP_S    (1L << 8)      // Supervisor mode                  01
+#define SSTATUS_SPP_U    (0L << 8)      // User mode                        00
+
+typedef enum {
+    USER_MODE        = 0,
+    SUPERVISOR_MODE  = 1,
+    MACHINE_MODE     = 3,
+} cpu_work_mode_t;
 /**
   \ingroup  CSI_core_register
   \defgroup CSI_CINT     Core Local Interrupt (CLINT)
@@ -401,7 +418,11 @@ typedef struct {
 __STATIC_INLINE void csi_plic_enable_irq(uint64_t plic_base, int32_t IRQn)
 {
     PLIC_Type *plic = (PLIC_Type *)plic_base;
+#if defined(CONFIG_RISCV_SMODE) && CONFIG_RISCV_SMODE
+    plic->PLIC_H0_SIE[IRQn/32] = plic->PLIC_H0_SIE[IRQn/32] | (0x1 << (IRQn%32));
+#else
     plic->PLIC_H0_MIE[IRQn/32] = plic->PLIC_H0_MIE[IRQn/32] | (0x1 << (IRQn%32));
+#endif
 }
 
 /**
@@ -412,7 +433,11 @@ __STATIC_INLINE void csi_plic_enable_irq(uint64_t plic_base, int32_t IRQn)
 __STATIC_INLINE void csi_plic_disable_irq(uint64_t plic_base, int32_t IRQn)
 {
     PLIC_Type *plic = (PLIC_Type *)plic_base;
+#if defined(CONFIG_RISCV_SMODE) && CONFIG_RISCV_SMODE
+    plic->PLIC_H0_SIE[IRQn/32] = plic->PLIC_H0_SIE[IRQn/32] & (~(0x1 << (IRQn%32)));
+#else
     plic->PLIC_H0_MIE[IRQn/32] = plic->PLIC_H0_MIE[IRQn/32] & (~(0x1 << (IRQn%32)));
+#endif
 }
 
 /**
@@ -445,7 +470,11 @@ __STATIC_INLINE void csi_plic_disable_sirq(uint64_t plic_base, int32_t IRQn)
 __STATIC_INLINE uint32_t csi_plic_get_enabled_irq(uint64_t plic_base, int32_t IRQn)
 {
     PLIC_Type *plic = (PLIC_Type *)plic_base;
+#if defined(CONFIG_RISCV_SMODE) && CONFIG_RISCV_SMODE
+    return (uint32_t)((plic->PLIC_H0_SIE[IRQn/32] >> IRQn%32) & 0x1);
+#else
     return (uint32_t)((plic->PLIC_H0_MIE[IRQn/32] >> IRQn%32) & 0x1);
+#endif
 }
 
 /**
@@ -630,11 +659,50 @@ __STATIC_INLINE void csi_mpu_disable_region(uint32_t idx)
 __STATIC_INLINE uint32_t csi_clint_config(uint64_t clint_base, uint32_t ticks, int32_t IRQn)
 {
     CLINT_Type *clint = (CLINT_Type *)clint_base;
+#ifdef __QEMU_RUN
     uint64_t value = (((uint64_t)clint->MTIMECMPH0) << 32) + (uint64_t)clint->MTIMECMPL0;
 
     value = value + (uint64_t)ticks;
     clint->MTIMECMPH0 = (uint32_t)(value >> 32);
     clint->MTIMECMPL0 = (uint32_t)value;
+#else
+#if defined(CONFIG_RISCV_SMODE) && CONFIG_RISCV_SMODE
+    uint64_t value = (((uint64_t)clint->STIMECMPH0) << 32) + (uint64_t)clint->STIMECMPL0;
+
+    if ((value != 0) && (value != 0xffffffffffffffff)) {
+        value = value + (uint64_t)ticks;
+    } else {
+        value = __get_MTIME() + ticks;
+    }
+    clint->STIMECMPH0 = (uint32_t)(value >> 32);
+    clint->STIMECMPL0 = (uint32_t)value;
+#else
+    uint64_t value = (((uint64_t)clint->MTIMECMPH0) << 32) + (uint64_t)clint->MTIMECMPL0;
+
+    if ((value != 0) && (value != 0xffffffffffffffff)) {
+        value = value + (uint64_t)ticks;
+    } else {
+        value = __get_MTIME() + ticks;
+    }
+    clint->MTIMECMPH0 = (uint32_t)(value >> 32);
+    clint->MTIMECMPL0 = (uint32_t)value;
+#endif
+#endif /*__QEMU_RUN*/
+
+    return (0UL);
+}
+
+__STATIC_INLINE uint32_t csi_coret_disable(uint64_t clint_base)
+{
+    CLINT_Type *clint = (CLINT_Type *)clint_base;
+    uint32_t value = 0xffffffff;
+#if defined(CONFIG_RISCV_SMODE) && CONFIG_RISCV_SMODE
+    clint->STIMECMPH0 = (uint32_t)value;
+    clint->STIMECMPL0 = (uint32_t)value;
+#else
+    clint->MTIMECMPH0 = (uint32_t)value;
+    clint->MTIMECMPL0 = (uint32_t)value;
+#endif
     return (0UL);
 }
 
@@ -645,7 +713,12 @@ __STATIC_INLINE uint32_t csi_clint_config(uint64_t clint_base, uint32_t ticks, i
 __STATIC_INLINE uint64_t csi_clint_get_load(uint64_t clint_base)
 {
     CLINT_Type *clint = (CLINT_Type *)clint_base;
+#if defined(CONFIG_RISCV_SMODE) && CONFIG_RISCV_SMODE
+    uint64_t value = (((uint64_t)clint->STIMECMPH0) << 32) + (uint64_t)clint->STIMECMPL0;
+#else
     uint64_t value = (((uint64_t)clint->MTIMECMPH0) << 32) + (uint64_t)clint->MTIMECMPL0;
+#endif
+
     return value;
 }
 
@@ -656,7 +729,12 @@ __STATIC_INLINE uint64_t csi_clint_get_load(uint64_t clint_base)
 __STATIC_INLINE uint32_t csi_clint_get_loadh(uint64_t clint_base)
 {
     CLINT_Type *clint = (CLINT_Type *)clint_base;
+#if defined(CONFIG_RISCV_SMODE) && CONFIG_RISCV_SMODE
+    uint64_t value = (((uint64_t)clint->STIMECMPH0) << 32) + (uint64_t)clint->STIMECMPL0;
+#else
     uint64_t value = (((uint64_t)clint->MTIMECMPH0) << 32) + (uint64_t)clint->MTIMECMPL0;
+#endif
+
     return (value >> 32) & 0xFFFFFFFF;
 }
 
@@ -894,26 +972,36 @@ __STATIC_INLINE void csi_l2cache_clean_invalid(void)
 /**
   \brief   D-Cache Invalidate by address
   \details Invalidates D-Cache for the given address
-  \param[in]   addr    address (aligned to 32-byte boundary)
+  \param[in]   addr    address (aligned to 64-byte boundary)
   \param[in]   dsize   size of memory block (in number of bytes)
 */
-__STATIC_INLINE void csi_dcache_invalid_range (uint64_t *addr, int64_t dsize)
+__STATIC_INLINE void csi_dcache_invalid_range(uint64_t *addr, int64_t dsize)
 {
 #if (__DCACHE_PRESENT == 1U)
     int64_t op_size = dsize + (uint64_t)addr % 64;
     uint64_t op_addr = (uint64_t)addr;
     int64_t linesize = 64;
+    cpu_work_mode_t cpu_work_mode;
+    cpu_work_mode = (cpu_work_mode_t)__get_CPU_WORK_MODE();
 
     __DSB();
 
-    while (op_size > 0) {
-        __DCACHE_IPA(op_addr);
-        op_addr += linesize;
-        op_size -= linesize;
+    if (cpu_work_mode == MACHINE_MODE) {
+        while (op_size > 0) {
+            __DCACHE_IPA(op_addr);
+            op_addr += linesize;
+            op_size -= linesize;
+        }
+    } else if (cpu_work_mode == SUPERVISOR_MODE) {
+        while (op_size > 0) {
+            __DCACHE_IVA(op_addr);
+            op_addr += linesize;
+            op_size -= linesize;
+        }
     }
 
+    __SYNC_IS();
     __DSB();
-    __ISB();
 #endif
 }
 
@@ -921,27 +1009,37 @@ __STATIC_INLINE void csi_dcache_invalid_range (uint64_t *addr, int64_t dsize)
 /**
   \brief   D-Cache Clean by address
   \details Cleans D-Cache for the given address
-  \param[in]   addr    address (aligned to 32-byte boundary)
+  \param[in]   addr    address (aligned to 64-byte boundary)
   \param[in]   dsize   size of memory block (in number of bytes)
 */
-__STATIC_INLINE void csi_dcache_clean_range (uint64_t *addr, int64_t dsize)
+__STATIC_INLINE void csi_dcache_clean_range(uint64_t *addr, int64_t dsize)
 {
 
 #if (__DCACHE_PRESENT == 1)
     int64_t op_size = dsize + (uint64_t)addr % 64;
     uint64_t op_addr = (uint64_t) addr & CACHE_INV_ADDR_Msk;
     int64_t linesize = 64;
+    cpu_work_mode_t cpu_work_mode;
+    cpu_work_mode = (cpu_work_mode_t)__get_CPU_WORK_MODE();
 
     __DSB();
 
-    while (op_size > 0) {
-        __DCACHE_CPA(op_addr);
-        op_addr += linesize;
-        op_size -= linesize;
+    if (cpu_work_mode == MACHINE_MODE) {
+        while (op_size > 0) {
+            __DCACHE_CPA(op_addr);
+            op_addr += linesize;
+            op_size -= linesize;
+        }
+    } else if (cpu_work_mode == SUPERVISOR_MODE) {
+        while (op_size > 0) {
+            __DCACHE_CVA(op_addr);
+            op_addr += linesize;
+            op_size -= linesize;
+        }
     }
 
+    __SYNC_IS();
     __DSB();
-    __ISB();
 #endif
 
 }
@@ -950,26 +1048,36 @@ __STATIC_INLINE void csi_dcache_clean_range (uint64_t *addr, int64_t dsize)
 /**
   \brief   D-Cache Clean and Invalidate by address
   \details Cleans and invalidates D_Cache for the given address
-  \param[in]   addr    address (aligned to 16-byte boundary)
-  \param[in]   dsize   size of memory block (aligned to 16-byte boundary)
+  \param[in]   addr    address (aligned to 64-byte boundary)
+  \param[in]   dsize   size of memory block (aligned to 64-byte boundary)
 */
-__STATIC_INLINE void csi_dcache_clean_invalid_range (uint64_t *addr, int64_t dsize)
+__STATIC_INLINE void csi_dcache_clean_invalid_range(uint64_t *addr, int64_t dsize)
 {
 #if (__DCACHE_PRESENT == 1U)
     int64_t op_size = dsize + (uint64_t)addr % 64;
     uint64_t op_addr = (uint64_t) addr;
     int64_t linesize = 64;
+    cpu_work_mode_t cpu_work_mode;
+    cpu_work_mode = (cpu_work_mode_t)__get_CPU_WORK_MODE();
 
     __DSB();
 
-    while (op_size > 0) {
-        __DCACHE_CIPA(op_addr);
-        op_addr += linesize;
-        op_size -= linesize;
+    if (cpu_work_mode == MACHINE_MODE) {
+        while (op_size > 0) {
+            __DCACHE_CIPA(op_addr);
+            op_addr += linesize;
+            op_size -= linesize;
+        }
+    } else if (cpu_work_mode == SUPERVISOR_MODE) {
+        while (op_size > 0) {
+            __DCACHE_CIVA(op_addr);
+            op_addr += linesize;
+            op_size -= linesize;
+        }
     }
 
+    __SYNC_IS();
     __DSB();
-    __ISB();
 #endif
 }
 
@@ -1033,7 +1141,99 @@ __STATIC_INLINE uint64_t csi_cache_get_miss_time(void)
 
 /*@} end of CSI_Core_CacheFunctions */
 
-/*@} end of CSI_core_DebugFunctions */
+
+/* ##########################  MMU functions  #################################### */
+/**
+  \ingroup  CSI_Core_FunctionInterface
+  \defgroup CSI_Core_MMUFunctions MMU Functions
+  \brief    Functions that configure MMU.
+  @{
+  */
+
+typedef enum {
+    PAGE_SIZE_4KB   = 0x1000,
+    PAGE_SIZE_2MB   = 0x200000,
+    PAGE_SIZE_1GB   = 0x40000000,
+} page_size_e;
+
+
+typedef enum {
+    MMU_MODE_39   = 0x8,
+    MMU_MODE_48   = 0x9,
+    MMU_MODE_57   = 0xa,
+    MMU_MODE_64   = 0xb,
+} mmu_mode_e;
+
+/**
+  \brief  enable mmu
+  \details
+  */
+__STATIC_INLINE void csi_mmu_enable(mmu_mode_e mode)
+{
+    __set_SATP(__get_SATP() | ((uint64_t)mode << 60));
+}
+
+/**
+  \brief  disable mmu
+  \details
+  */
+__STATIC_INLINE void csi_mmu_disable(void)
+{
+    __set_SATP(__get_SATP() & (~((uint64_t)0xf << 60)));
+}
+
+/**
+  \brief  flush all mmu tlb.
+  \details
+  */
+__STATIC_INLINE void csi_mmu_invalid_tlb_all(void)
+{
+    __ASM volatile("sfence.vma" : : : "memory");	
+}
+
+/**
+  \brief  flush mmu tlb by asid.
+  \details
+  */
+__STATIC_INLINE void csi_mmu_invalid_tlb_by_asid(unsigned long asid)
+{
+    __ASM volatile("sfence.vma zero, %0"
+                                    :
+                                    : "r"(asid)
+                                    : "memory");
+}
+
+/**
+  \brief  flush mmu tlb by page.
+  \details
+  */
+__STATIC_INLINE void csi_mmu_invalid_tlb_by_page(unsigned long asid, unsigned long addr)
+{
+    __ASM volatile("sfence.vma %0, %1"
+                                    :
+                                    : "r"(addr), "r"(asid)
+                                    : "memory");
+}
+
+/**
+  \brief  flush mmu tlb by range.
+  \details
+  */
+__STATIC_INLINE void csi_mmu_invalid_tlb_by_range(unsigned long asid, page_size_e page_size, unsigned long start_addr, unsigned long end_addr)
+{
+    start_addr &= ~(page_size - 1);
+    end_addr += page_size - 1;
+    end_addr &= ~(page_size - 1);
+
+    while(start_addr < end_addr) {
+        __ASM volatile("sfence.vma %0, %1"
+                                        :
+                                        : "r"(start_addr), "r"(asid)
+                                        : "memory");
+    }
+}
+
+/*@} end of CSI_Core_MMUFunctions */
 
 /* ##################################    IRQ Functions  ############################################ */
 
@@ -1044,9 +1244,13 @@ __STATIC_INLINE uint64_t csi_cache_get_miss_time(void)
 __STATIC_INLINE uint64_t csi_irq_save(void)
 {
     uint64_t result;
+#if defined(CONFIG_RISCV_SMODE) && CONFIG_RISCV_SMODE
+    result = __get_SSTATUS();
+#else
     result = __get_MSTATUS();
+#endif
     __disable_irq();
-    return (result);
+    return(result);
 }
 
 /**
@@ -1056,7 +1260,11 @@ __STATIC_INLINE uint64_t csi_irq_save(void)
  */
 __STATIC_INLINE void csi_irq_restore(uint64_t irq_state)
 {
+#if defined(CONFIG_RISCV_SMODE) && CONFIG_RISCV_SMODE
+    __set_SSTATUS(irq_state);
+#else
     __set_MSTATUS(irq_state);
+#endif
 }
 
 /*@} end of IRQ Functions */

@@ -744,7 +744,6 @@ int bl_send_sm_connect_req(struct bl_hw *bl_hw, struct cfg80211_connect_params *
         req->ssid.array[i] = sme->ssid[i];
     req->ssid.length = sme->ssid_len;
     req->flags = flags;
-    req->mode = sme->mode;
 #if 0 // useless
     if (WARN_ON(sme->ie_len > sizeof(req->ie_buf)))
         return -EINVAL;
@@ -868,10 +867,10 @@ static int _fill_country_code_ie(uint8_t *buf, uint8_t buf_len_max)
     return 8;
 }
 
-int bl_send_apm_start_req(struct bl_hw *bl_hw, struct apm_start_cfm *cfm, char *ssid, char *password, int channel, uint8_t vif_index, uint8_t hidden_ssid, uint16_t bcn_int, uint32_t mode)
+int bl_send_apm_start_req(struct bl_hw *bl_hw, struct apm_start_cfm *cfm, char *ssid, char *password, int channel, uint8_t vif_index, uint8_t hidden_ssid, uint16_t bcn_int)
 {
     struct apm_start_req *req;
-    uint8_t rate[] = {0x82,0x84,0x8b,0x96,0x0c,0x12,0x18,0x24,0x30,0x48,0x60,0x6c};
+    uint8_t rate[] = {0x82,0x84,0x8b,0x96,0x12,0x24,0x48,0x6c,0x0c,0x18,0x30,0x60};
 
 
     RWNX_DBG(RWNX_FN_ENTRY_STR);
@@ -882,7 +881,6 @@ int bl_send_apm_start_req(struct bl_hw *bl_hw, struct apm_start_cfm *cfm, char *
         return -ENOMEM;
     }
 
-    req->mode = mode;
     req->chan.band = NL80211_BAND_2GHZ;
     req->chan.freq = phy_channel_to_freq(req->chan.band, channel);
     req->chan.flags = 0;

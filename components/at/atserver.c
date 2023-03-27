@@ -155,7 +155,7 @@ static void channel_event(int event_id, void *priv)
     }
 }
 
-int atserver_init(utask_t *task, const char *name, uart_config_t *config)
+int atserver_init(utask_t *task, const char *name, void *config)
 {
     aos_assert(task);
 
@@ -809,14 +809,14 @@ int atserver_send(const char *command, ...)
 int atserver_set_uartbaud(int baud)
 {
     CHECK_RETURN_VAL(g_atserver.statue == RUNNING, -1);
-    uart_config_t config;
+    rvm_hal_uart_config_t config;
     if (g_atserver.dev == NULL) {
         return -1;
     }
     memset(&config, 0, sizeof(config));
-    uart_config_default(&config);
+    rvm_hal_uart_config_default(&config);
     config.baud_rate = baud;
-    if (uart_config(g_atserver.dev, &config) < 0) {
+    if (rvm_hal_uart_config(g_atserver.dev, &config) < 0) {
         return -1;
     }
     return 0;

@@ -49,7 +49,7 @@ int app_main()
     ret = ble_stack_event_register(&ble_cb);
 	...
 	/* BAS服务初始化 */
-    g_bas_handle = bas_init(&g_bas);
+    g_bas_handle = ble_prf_bas_init(&g_bas);
 	...
 
     while (1) {
@@ -59,7 +59,7 @@ int app_main()
         }
 
        	/* 模拟通过BAS服务更新电量数值至Host */
-        bas_level_update(g_bas_handle, batter_level++);
+        ble_prf_bas_level_update(g_bas_handle, batter_level++);
 		...
 
     }

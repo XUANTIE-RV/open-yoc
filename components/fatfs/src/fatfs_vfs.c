@@ -294,6 +294,21 @@ static int _fatfs_rename(file_t *fp, const char *oldpath, const char *newpath)
     return _fatfs_ret_to_err(ret);
 }
 
+static int _fatfs_truncate(file_t *fp, off_t len)
+{
+    FRESULT ret;
+    FIL *file;
+
+    file = (FIL*)(fp->f_arg);
+    if (!(len >= 0 && len < file->obj.objsize)) {
+        return -EINVAL;
+    }
+    file->fptr = len;
+    ret = f_truncate(file);
+
+    return _fatfs_ret_to_err(ret);
+}
+
 static aos_dir_t *_fatfs_opendir(file_t *fp, const char *path)
 {
     FRESULT ret;
@@ -305,7 +320,7 @@ static aos_dir_t *_fatfs_opendir(file_t *fp, const char *path)
         return NULL;
     }
 
-    aos_dirent_t *dirnet = aos_malloc(sizeof(aos_dirent_t) + 256);
+    aos_dirent_t *dirnet = aos_malloc(sizeof(aos_dirent_t) + FF_LFN_BUF + 1);
 
     if (dirnet == NULL) {
         aos_free(dir);
@@ -350,7 +365,8 @@ static aos_dirent_t *_fatfs_readdir(file_t *fp, aos_dir_t *dir)
     ret = f_readdir(dirp, &fno);
 
     if (ret == FR_OK && fno.fname[0] != 0) {
-        strncpy(dirent->d_name, fno.fname, 255);
+        strncpy(dirent->d_name, fno.fname, FF_LFN_BUF);
+        dirent->d_name[FF_LFN_BUF] = 0;
 
         if (fno.fattrib & AM_DIR) {
             dirent->d_type = DT_DIR;
@@ -497,6 +513,7 @@ static const fs_ops_t fatfs_ops = {
     .unlink     = &_fatfs_unlink,
     .remove     = &_fatfs_unlink,
     .rename     = &_fatfs_rename,
+    .truncate   = &_fatfs_truncate,
     .opendir    = &_fatfs_opendir,
     .readdir    = &_fatfs_readdir,
     .closedir   = &_fatfs_closedir,

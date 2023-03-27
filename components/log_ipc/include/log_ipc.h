@@ -45,17 +45,17 @@ typedef struct console_ipc {
 #define IPC_CMD_DEBUG_DATA_START_CPU2      0x28
 #define IPC_CMD_DEBUG_DATA_STOP_CPU2       0x29
 
-#if defined(CONFIG_USE_LOG_IPC) && CONFIG_USE_LOG_IPC
-void ipc_uart_csky_register(int idx, int (*read)(const uint8_t *buf, uint32_t size),
+#if defined(CONFIG_LOG_IPC_CP) && CONFIG_LOG_IPC_CP
+void log_ipc_uart_register(int idx, int (*read)(const uint8_t *buf, uint32_t size),
                                    int (*write)(const uint8_t *data, uint32_t size));
 
-int ipc_log_rx_read(const uint8_t * buffer, uint32_t size);
-int ipc_log_tx_write(const uint8_t * buffer, uint32_t size);
-void ipc_log_read_event(void);
+int log_ipc_rx_read(const uint8_t * buffer, uint32_t size);
+int log_ipc_tx_write(const uint8_t * buffer, uint32_t size);
+void log_ipc_read_event(void);
 
-int ipc_log_cp_init(int cpu_id);
+int log_ipc_cp_init(int cpu_id);
 #else
-int ipc_log_ap_init(uint8_t *cpu_id, int num);
+int log_ipc_ap_init(uint8_t *cpu_id, int num);
 int log_ipc_cmd_send(uint8_t cpu_id, uint16_t cmd, char *cmd_data, int cmd_len);
 #endif
 

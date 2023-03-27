@@ -483,6 +483,13 @@ struct bt_hci_write_local_name {
 #define BT_BREDR_SCAN_INQUIRY                   0x01
 #define BT_BREDR_SCAN_PAGE                      0x02
 
+#define BT_HCI_OP_WRITE_PAGE_SCAN_CONF          BT_OP(BT_OGF_BASEBAND, 0x001C)
+
+struct bt_hci_op_write_page_scan_conf {
+	u16_t      interval;
+	u16_t      window;
+} __packed;
+
 #define BT_HCI_OP_READ_CLASS_OF_DEVICE         BT_OP(BT_OGF_BASEBAND, 0x0023)
 struct bt_hci_cp_read_class_of_device {
 	u8_t      status;

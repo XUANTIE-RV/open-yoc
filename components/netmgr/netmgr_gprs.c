@@ -9,7 +9,7 @@
 
 #include <yoc/netmgr.h>
 #include <yoc/netmgr_service.h>
-#include <devices/hal/gprs_impl.h>
+#include <devices/impl/gprs_impl.h> // FIXME:
 #ifdef CONFIG_KV_SMART
 #include <aos/kv.h>
 #endif
@@ -22,8 +22,8 @@ static const char *TAG = "netmgr_gprs";
 
 static int netmgr_gprs_provision(netmgr_dev_t *node)
 {
-    aos_dev_t *dev = node->dev;
-    netdev_driver_t *drv = dev->drv;
+    rvm_dev_t *dev = node->dev;
+    netdev_driver_t *drv = (netdev_driver_t *)dev->drv;
 
     gprs_driver_t *gprs_drv = (gprs_driver_t *)drv->link_ops;
     netmgr_subscribe(EVENT_GPRS_LINK_UP);
@@ -46,13 +46,19 @@ static int netmgr_gprs_provision(netmgr_dev_t *node)
 
 static int netmgr_gprs_unprovision(netmgr_dev_t *node)
 {
+    rvm_dev_t *dev = node->dev;
+
+    netmgr_unsubscribe(EVENT_GPRS_LINK_DOWN);
+    netmgr_unsubscribe(EVENT_WIFI_LINK_UP);
+
+    rvm_hal_gprs_close(dev);
     return 0;
 }
 
 static int netmgr_gprs_reset(netmgr_dev_t *node)
 {
-    aos_dev_t *dev = node->dev;
-    netdev_driver_t *drv = dev->drv;
+    rvm_dev_t *dev = node->dev;
+    netdev_driver_t *drv = (netdev_driver_t *)dev->drv;
 
     gprs_driver_t *gprs_drv = (gprs_driver_t *)drv->link_ops;
 
@@ -66,18 +72,20 @@ static int netmgr_gprs_reset(netmgr_dev_t *node)
 
 static int netmgr_gprs_info(netmgr_dev_t *node)
 {
-    aos_dev_t  *dev = node->dev;
-    netdev_driver_t *drv = dev->drv;
+    rvm_dev_t  *dev = node->dev;
+    netdev_driver_t *drv = (netdev_driver_t *)dev->drv;
     gprs_driver_t *gprs_drv = (gprs_driver_t *)drv->link_ops;
     net_ops_t  *net_drv = drv->net_ops;
     ip_addr_t ipaddr;
+    ip_addr_t netmask;
+    ip_addr_t gw;
     int csq = 99;
     char ccid[21];
     int insert = -1;
     int ret;
 
     memset(&ipaddr, 0, sizeof(ipaddr));
-    net_drv->get_ipaddr(dev, &ipaddr, NULL, NULL);
+    net_drv->get_ipaddr(dev, &ipaddr, &netmask, &gw);
 
     gprs_drv->get_csq(dev, &csq);
 
@@ -102,33 +110,43 @@ static int netmgr_gprs_info(netmgr_dev_t *node)
 static int gprs_evt_link_down(struct netmgr_uservice *netmgr, rpc_t *rpc)
 {
     netmgr_set_gotip("gprs", 0);
+    netmgr_set_linkup("gprs", 0);
     event_publish(EVENT_NETMGR_NET_DISCON, NULL);
     return 0;
 }
+
+static int gprs_evt_link_up(struct netmgr_uservice *netmgr, rpc_t *rpc)
+{
+    netmgr_set_linkup("gprs", 1);
+    return netmgr_start_dhcp(netmgr, "gprs");
+}
+
 static netmgr_dev_t * netmgr_gprs_init(struct netmgr_uservice *netmgr)
 {
     netmgr_dev_t *node = NULL;
     int ival = 0;
 
-    // get gprs configuration
-#ifdef CONFIG_KV_SMART
-    ival = netmgr_kv_getint(KV_GPRS_EN);
-#else
+//     // get gprs configuration
+// #ifdef CONFIG_KV_SMART
+//     ival = netmgr_kv_getint(KV_GPRS_EN);
+// #else
     ival = 1;
-#endif
+// #endif
 
     if (ival == 1) {
         netmgr_reg_srv_func(EVENT_GPRS_LINK_DOWN, gprs_evt_link_down);
+        netmgr_reg_srv_func(EVENT_GPRS_LINK_UP, gprs_evt_link_up);
 
         node = (netmgr_dev_t *)aos_zalloc(sizeof(netmgr_dev_t));
 
         if (node) {
-            node->dev = device_open_id("gprs", 0);
+            node->dev = rvm_hal_device_open("gprs0");
             aos_assert(node->dev);
             node->provision = netmgr_gprs_provision;
             node->unprovision = netmgr_gprs_unprovision;
             node->info = netmgr_gprs_info;
             node->reset = netmgr_gprs_reset;
+            node->dhcp_en = 1;//netmgr_kv_getint(KV_DHCP_EN);
             strcpy(node->name, "gprs");
 
             slist_add_tail((slist_t *)node, &netmgr->dev_list);

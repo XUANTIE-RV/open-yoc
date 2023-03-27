@@ -10,7 +10,7 @@
 #include <ipc.h>
 #include "app_main.h"
 
-#define TAG "E907"
+#define TAG "AP"
 
 extern void cxx_system_init(void);
 

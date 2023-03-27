@@ -4,14 +4,18 @@
 
 使用之前请先在ubuntu上安装一些必要的库:
 ```bash
-sudo apt install libsnappy-dev libpixman-1-dev libdaxctl-dev libvdeplug-dev libnuma-dev libpmem-dev libaio-dev libgbm-dev libepoxy-dev
+sudo apt install libsnappy-dev libpixman-1-dev libdaxctl-dev libvdeplug-dev libnuma-dev libpmem-dev libaio-dev libgbm-dev libepoxy-dev libjpeg8-dev
 ```
+
+如果安装过程出错，可以尝试先使用`sudo apt update`，再行安装来解决。
 
 # 编译
 
 ```bash
 make clean;make
 ```
+
+首次编译，会自动下载QEMU并设置好运行路径；如果出现无法运行情况，请使用`sudo pip install yoctools -U`更新最新版本的yoctools再做尝试。
 
 # 运行
 

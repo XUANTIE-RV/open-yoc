@@ -17,7 +17,7 @@
 #define BT_HFP_AT_STOP_BTYE_DOT 0
 #define BT_HFP_AT_STOP_BTYE_CR  1
 
-#ifdef CONFIG_BT_HFP_HF
+#if (defined(CONFIG_BT_HFP_HF) && CONFIG_BT_HFP_HF)
 #include <net/buf.h>
 
 #include "at.h"

@@ -6,9 +6,8 @@
 #define YOC_INCLUDE_INIT_H
 
 #include <stdint.h>
-#include <devices/console_uart.h>
-#include <devices/apdu_uart.h>
 #include <yoc/lpm.h>
+#include <aos/console_uart.h>
 
 #ifdef __cplusplus
 extern "C" {

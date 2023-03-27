@@ -7,7 +7,7 @@
 
 int hal_gpio_out_demo(int port)
 {
-    int        cnt = 20;
+    int        cnt = 5;
     gpio_dev_t gpio_out;
     int        flag = 0;
 
@@ -18,6 +18,7 @@ int hal_gpio_out_demo(int port)
     gpio_out.priv   = NULL;
     hal_gpio_init(&gpio_out);
 
+    /* hal_gpio_output_low && hal_gpio_output_high */
     while ((cnt--) > 0) {
         if (flag) {
             hal_gpio_output_low(&gpio_out);
@@ -27,6 +28,16 @@ int hal_gpio_out_demo(int port)
         flag ^= 1;
         aos_msleep(1000);
     }
+
+#if !defined(CONFIG_CHIP_D1)
+    /* hal_gpio_output_toggle */
+    cnt = 5;
+    while ((cnt--) > 0) {
+        hal_gpio_output_toggle(&gpio_out);
+        aos_msleep(3000);
+    }
+#endif
+
     hal_gpio_finalize(&gpio_out);
 
     printf("hal_gpio_out_demo end\r\n");
@@ -34,16 +45,22 @@ int hal_gpio_out_demo(int port)
     return 0;
 }
 
+gpio_dev_t gpio_int;
+
 volatile static bool intr_flag = false;
 static void hal_gpio_int_fun(void *priv)
 {
+    uint32_t value[1] = {0xff};
+
     intr_flag = true;
+    hal_gpio_input_get(&gpio_int, value);
+    printf("gpio value is: %d\n", value[0]);
+
+    return;
 }
 
 int hal_gpio_int_demo(int port, int trigger_method)
 {
-    gpio_dev_t gpio_int;
-
     printf("hal_gpio_int_demo start\r\n");
 
     gpio_int.port   = port;

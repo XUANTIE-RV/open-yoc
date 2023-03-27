@@ -38,7 +38,7 @@ void scheduler_loop(struct k_poll_event *events)
         }
 #endif
         events[0].state = K_POLL_STATE_NOT_READY;
-#if defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE
+#if (defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE)
         events[1].state = K_POLL_STATE_NOT_READY;
         ev_count = 2;
 #else

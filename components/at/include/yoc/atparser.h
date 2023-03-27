@@ -16,8 +16,8 @@
 extern "C" {
 #endif
 
-#define BUF_MIN_SIZE (1024*2)
-#define BUF_MAX_SIZE (1024*2)
+#define BUF_MIN_SIZE (1024*4)
+#define BUF_MAX_SIZE (1024*4)
 #define BUF_STEP_SIZE (32)
 
 typedef struct oob_data {
@@ -30,7 +30,7 @@ typedef struct oob_data {
 typedef struct atparser_uservice atparser_uservice_t;
 typedef int (*oob_callback)(atparser_uservice_t *at, void *pive, oob_data_t *oob_data);
 
-atparser_uservice_t *atparser_init(utask_t *task, const char *name, uart_config_t *config);
+atparser_uservice_t *atparser_init(utask_t *task, const char *name, void *config);
 atparser_uservice_t *atparser_channel_init(utask_t *task, const char *name, void *config, at_channel_t *channel);
 int  atparser_oob_create(atparser_uservice_t *at, const char *prefix, oob_callback cb, void *context);
 int  atparser_oob_delete(atparser_uservice_t *at, const char *prefix);

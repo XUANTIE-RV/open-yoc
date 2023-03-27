@@ -35,7 +35,7 @@
 #include <k_task.h>
 #include <port.h>
 #endif
-#if defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE
+#if (defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE)
 void k_queue_init(struct k_queue *queue)
 {
     sys_slist_init(&queue->queue_list);
@@ -393,7 +393,7 @@ void irq_unlock(unsigned int key)
 
 void _SysFatalErrorHandler(unsigned int reason, const void *pEsf) {};
 
-#if defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE
+#if (defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE)
 static void _delay_work(struct k_work *work)
 {
     struct k_timer *timer = (struct k_timer *)work;

@@ -381,12 +381,14 @@ int bt_avrcp_send(struct net_buf *buf)
     session = get_connected_session();
 
     if (session == NULL) {
+        net_buf_unref(buf);
         BT_ERR("No connected session");
         return -EINVAL;
     }
 
     result = bt_l2cap_chan_send(&session->br_chan.chan, buf);
     if (result < 0) {
+        net_buf_unref(buf);
         BT_ERR("Error:L2CAP send fail - result = %d", result);
         return result;
     }

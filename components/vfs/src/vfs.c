@@ -9,6 +9,7 @@
 #include <assert.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <fcntl.h>
 #include <aos/errno.h>
 
 #include "vfs_types.h"
@@ -37,7 +38,7 @@ char g_current_working_directory[VFS_PATH_MAX];
 
 static int32_t write_stdout(const void *buf, uint32_t nbytes)
 {
-#ifdef ULOG_CONFIG_ASYNC
+#if defined(ULOG_CONFIG_ASYNC) && ULOG_CONFIG_ASYNC
     extern int uring_fifo_push_s(const void* buf, const uint16_t len);
     uring_fifo_push_s(buf, nbytes);
 #endif
@@ -177,9 +178,9 @@ static int32_t set_normal_redirect_fd(int32_t oldfd, int32_t newfd)
     }
 
     if (vfs_fd_is_open(newfd)) {
-       if (vfs_close_without_glock(newfd) != VFS_OK) {
-           goto end;
-       }
+        if (vfs_close_without_glock(newfd) != VFS_OK) {
+            goto end;
+        }
     }
 
     f = vfs_file_get2(newfd);
@@ -700,11 +701,6 @@ static int32_t vfs_truncate_inode(vfs_inode_t *node, vfs_file_t *f, int64_t size
 {
     int32_t ret = VFS_ERR_NOSYS;
 
-    if (vfs_lock(node->lock) != VFS_OK) {
-        VFS_ERROR("%s failed to lock inode %p!\n\r", __func__, node);
-        return VFS_ERR_LOCK;
-    }
-
     if (node->status != VFS_INODE_VALID) {
         vfs_unlock(node->lock);
         VFS_ERROR("%s node %p is invalid now!\n\r", __func__, node);
@@ -717,11 +713,6 @@ static int32_t vfs_truncate_inode(vfs_inode_t *node, vfs_file_t *f, int64_t size
         }
     }
 
-    if (vfs_unlock(node->lock) != VFS_OK) {
-        VFS_ERROR("%s failed to unlock inode %p!\n\r", __func__, node);
-        return VFS_ERR_LOCK;
-    }
-
     return ret;
 }
 
@@ -731,8 +722,6 @@ int32_t vfs_truncate(const char *path, int64_t size)
     vfs_file_t  *f;
     vfs_inode_t *node;
 
-    //TODO: support truncate later.
-    return VFS_ERR_NOSYS;
     if ((path == NULL) || (path[0] == '\0') || (size < 0)) {
         return VFS_ERR_INVAL;
     }
@@ -753,7 +742,13 @@ int32_t vfs_truncate(const char *path, int64_t size)
         return VFS_ERR_NOENT;
     }
 
-    ret = vfs_truncate_inode(node, f, size);
+    vfs_lock(node->lock);
+    ret = (node->ops.i_fops->open)(f, path, O_RDWR);
+    if (ret == 0) {
+        ret = vfs_truncate_inode(node, f, size);
+        node->ops.i_fops->close(f);
+    }
+    vfs_unlock(node->lock);
 
     if (vfs_lock(g_vfs_lock_ptr) != VFS_OK) {
         return VFS_ERR_LOCK;
@@ -762,12 +757,14 @@ int32_t vfs_truncate(const char *path, int64_t size)
     vfs_file_del(f);
     vfs_unlock(g_vfs_lock_ptr);
 
-return ret;
+    return ret;
 }
 
 int32_t vfs_ftruncate(int32_t fd, int64_t size)
 {
+    int rc;
     vfs_file_t  *f = NULL;
+    vfs_inode_t *node;
 
     if ((fd < 0) || (size < 0)) {
         return VFS_ERR_INVAL;
@@ -778,7 +775,12 @@ int32_t vfs_ftruncate(int32_t fd, int64_t size)
         return VFS_ERR_NOENT;
     }
 
-    return vfs_truncate_inode(f->node, f, size);
+    node = f->node;
+    vfs_lock(node->lock);
+    rc = vfs_truncate_inode(node, f, size);
+    vfs_unlock(node->lock);
+
+    return rc;
 }
 
 int32_t vfs_sync(int32_t fd)
@@ -894,7 +896,7 @@ int32_t vfs_stat(const char *path, vfs_stat_t *st)
             ret = (node->ops.i_fops->stat)(f, path, st);
         }
     }
-    #if 0
+#if 0
     else if (INODE_IS_CHAR(node) || INODE_IS_BLOCK(node)) {
         if ((node->ops.i_ops->stat) != NULL) {
             ret = (node->ops.i_ops->stat)(f, path, st);
@@ -907,7 +909,7 @@ int32_t vfs_stat(const char *path, vfs_stat_t *st)
             }
         }
     }
-    #endif
+#endif
     if (vfs_unlock(node->lock) != VFS_OK) {
         VFS_ERROR("%s failed to unlock inode %p!\n\r", __func__, node);
         ret = VFS_ERR_LOCK;
@@ -1872,7 +1874,7 @@ end:
 int vfs_chdir(const char *path)
 {
 #if (CURRENT_WORKING_DIRECTORY_ENABLE > 0)
-    if ((path == NULL) || (strlen(path) > VFS_PATH_MAX)){
+    if ((path == NULL) || (strlen(path) > VFS_PATH_MAX)) {
         return VFS_ERR_NAMETOOLONG;
     }
 
@@ -2121,8 +2123,7 @@ int32_t vfs_register_driver(const char *path, vfs_file_ops_t *ops, void *arg)
     }
 
     node = vfs_inode_open(path);
-    if(NULL != node)
-    {
+    if(NULL != node) {
         VFS_ERROR("%s failed to register, the path has exist %s, %d!\n\r", __func__, path, node->status);
         vfs_unlock(g_vfs_lock_ptr);
         return VFS_ERR_INVAL;
@@ -2176,8 +2177,7 @@ int32_t vfs_register_fs(const char *path, vfs_filesystem_ops_t* ops, void *arg)
     }
 
     node = vfs_inode_open(path);
-    if(NULL != node)
-    {
+    if(NULL != node) {
         VFS_ERROR("%s failed to register, the path has exist %s, %d!\n\r", __func__, path, node->status);
         vfs_unlock(g_vfs_lock_ptr);
         return VFS_ERR_INVAL;

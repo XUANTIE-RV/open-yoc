@@ -28,7 +28,7 @@ typedef struct {
     size_t size;                /*!< file size or partition size */
     size_t block_size;          /*!< the size for transmission(sector size) */
 
-    void *private;              /*!< user data */
+    void *priv;                 /*!< user data */
 } netio_t;
 
 struct netio_cls {
@@ -41,7 +41,7 @@ struct netio_cls {
     int (*remove)(netio_t *io);
     int (*seek)(netio_t *io, size_t offset, int whence);
 
-    void *private;
+    void *priv;
 };
 
 /**

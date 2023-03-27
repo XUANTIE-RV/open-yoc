@@ -8,7 +8,7 @@
 #include "yoc/adb_port.h"
 
 typedef struct {
-    aos_dev_t      *dev;
+    rvm_dev_t      *dev;
     channel_event_t cb;
     void           *priv;
 } aos_uart_t;
@@ -18,7 +18,7 @@ static int adb_flag = 0;
 
 #define ADB_UART_RINGBUF_SIZE 2048
 
-static void adb_uart_event(aos_dev_t *uart_hdl, int event_id, void *priv)
+static void adb_uart_event(rvm_dev_t *uart_hdl, int event_id, void *priv)
 {
     if (event_id == USART_EVENT_READ) {
         aos_uart_t *uart = (aos_uart_t *)&adb_uart;
@@ -36,14 +36,14 @@ static void *adb_uart_init(const char *name, void *config)
 
     memset(&adb_uart, 0, sizeof(aos_uart_t));
 
-    // uart_csky_register(idx);
+    // rvm_uart_drv_register(idx);
 
-    adb_uart.dev = device_find("uart", idx);
+    adb_uart.dev = rvm_hal_device_find("uart", idx);
     if (adb_uart.dev == NULL) {
         return NULL;
     }
-    uart_config(adb_uart.dev, config);
-    uart_set_buffer_size(adb_uart.dev, ADB_UART_RINGBUF_SIZE);
+    rvm_hal_uart_config(adb_uart.dev, config);
+    rvm_hal_uart_set_buffer_size(adb_uart.dev, ADB_UART_RINGBUF_SIZE);
 
     return &adb_uart;
 }
@@ -51,7 +51,7 @@ static void *adb_uart_init(const char *name, void *config)
 static void adb_uart_config(void *config)
 {
     if ((adb_uart.dev) && (config)) 
-        uart_config(adb_uart.dev, config);
+        rvm_hal_uart_config(adb_uart.dev, config);
 }
 
 static int adb_uart_set_event(void *hdl, channel_event_t evt_cb, void *priv)
@@ -66,7 +66,7 @@ static int adb_uart_set_event(void *hdl, channel_event_t evt_cb, void *priv)
         adb_flag = 0;
     }
 
-    uart_set_event(uart->dev, adb_uart_event, priv);
+    rvm_hal_uart_set_event(uart->dev, adb_uart_event, priv);
 
     return 0;
 }
@@ -74,7 +74,7 @@ static int adb_uart_set_event(void *hdl, channel_event_t evt_cb, void *priv)
 static int adb_uart_send(void *hdl, const char *data, int size)
 {
     aos_uart_t *uart = (aos_uart_t *)hdl;
-    return (uart_send(uart->dev, data, size));
+    return (rvm_hal_uart_send(uart->dev, data, size));
 }
 
 static int adb_uart_recv(void *hdl, const char *data, int size, int timeout)
@@ -87,7 +87,7 @@ static int adb_uart_recv(void *hdl, const char *data, int size, int timeout)
 
     uint32_t recv_len = 1;
 
-    recv_len = uart_recv(uart->dev, (void *)data, size, timeout);
+    recv_len = rvm_hal_uart_recv(uart->dev, (void *)data, size, timeout);
 
     return recv_len;
 }

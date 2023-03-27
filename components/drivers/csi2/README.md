@@ -10,7 +10,7 @@
 
 void board_yoc_init()
 {
-    uart_csky_register(0);
-    iic_csky_register(0);
+    rvm_uart_drv_register(0);
+    rvm_iic_drv_register(0);
 }
 ```

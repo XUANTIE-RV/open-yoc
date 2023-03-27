@@ -17,7 +17,7 @@
 
 #include <netif/ethernet.h>
 #include <devices/wifi.h>
-#include <devices/hal/wifi_impl.h>
+#include <devices/impl/wifi_impl.h>
 #include "wifi_mgmr_ext.h"
 #include <ulog/ulog.h>
 #include <aos/yloop.h>
@@ -25,7 +25,7 @@
 
 #include <bl60x_fw_api.h>
 #include <bl_efuse.h>
-
+#include <bl_wifi.h>
 #ifdef CONFIG_KV_SMART
 #include <aos/kv.h>
 #endif
@@ -57,9 +57,9 @@
 #define WIFI_AP_DATA_RATE_54Mbps  0x0c
 
 typedef struct {
-    aos_dev_t device;
+    rvm_dev_t device;
     uint8_t   mode;
-    void (*write_event)(aos_dev_t *dev, int event_id, void *priv);
+    void (*write_event)(rvm_dev_t *dev, int event_id, void *priv);
     void *priv;
 } wifi_dev_t;
 
@@ -98,19 +98,19 @@ static const struct wifi_ap_data_rate data_rate_list[] = {
 static void wifi_sta_stop(void);
 static void wifi_ap_stop(void);
 // advise: hal functions using global variable here may be deleted
-static wifi_lpm_mode_t       g_wifi_lpm_mode;
-static wifi_config_t         g_config;
+static rvm_hal_wifi_lpm_mode_t       g_wifi_lpm_mode;
+static rvm_hal_wifi_config_t         g_config;
 static int                   sta_task_state;
 static int                   wifi_crashed;
 static wifi_interface_t      sta_wifi_interface;
 static wifi_interface_t      ap_wifi_interface;
 static wifi_mgmr_ap_item_t  *ap_ary_p;
 static uint32_t              scan_cnt;
-static wifi_promiscuous_cb_t sinnfer_fn;
+static rvm_hal_wifi_promiscuous_cb_t sinnfer_fn;
 static uint8_t               mgmt_is_enable;
-static wifi_event_func      *g_evt_func;
-static wifi_mgnt_cb_t        mgmt_fn;
-static aos_dev_t            *wifi_evt_dev;
+static rvm_hal_wifi_event_func      *g_evt_func;
+static rvm_hal_wifi_mgnt_cb_t        mgmt_fn;
+static rvm_dev_t            *wifi_evt_dev;
 
 __attribute__((section(".wifi_ram"))) static cpu_stack_t wifi_stack[WIFI_STACK_SIZE];
 
@@ -206,13 +206,13 @@ int tg_wifi_ps_mode_exit(void)
     return 0;
 }
 
-static int bl606p_set_mac_addr(aos_dev_t *dev, const uint8_t *mac)
+static int bl606p_set_mac_addr(rvm_dev_t *dev, const uint8_t *mac)
 {
     /** write this mac address will write to efuse, forbidden this */
     return -1;
 }
 
-static int bl606p_get_mac_addr(aos_dev_t *dev, uint8_t *mac)
+static int bl606p_get_mac_addr(rvm_dev_t *dev, uint8_t *mac)
 {
     DRIVER_INVALID_RETURN_VAL;
 
@@ -221,12 +221,12 @@ static int bl606p_get_mac_addr(aos_dev_t *dev, uint8_t *mac)
     return ret;
 }
 
-static int bl606p_set_dns_server(aos_dev_t *dev, ip_addr_t ipaddr[], uint32_t num)
+static int bl606p_set_dns_server(rvm_dev_t *dev, ip_addr_t ipaddr[], uint32_t num)
 {
     return -1;
 }
 
-static int bl606p_get_dns_server(aos_dev_t *dev, ip_addr_t ipaddr[], uint32_t num)
+static int bl606p_get_dns_server(rvm_dev_t *dev, ip_addr_t ipaddr[], uint32_t num)
 {
     int n = MIN(num, 2);
 
@@ -238,37 +238,37 @@ static int bl606p_get_dns_server(aos_dev_t *dev, ip_addr_t ipaddr[], uint32_t nu
     return n;
 }
 
-static int bl606p_set_hostname(aos_dev_t *dev, const char *name)
+static int bl606p_set_hostname(rvm_dev_t *dev, const char *name)
 {
 
     return -1;
 }
 
-static const char *bl606p_get_hostname(aos_dev_t *dev)
+static const char *bl606p_get_hostname(rvm_dev_t *dev)
 {
     return NULL;
 }
 
-static int bl606p_start_dhcp(aos_dev_t *dev)
+static int bl606p_start_dhcp(rvm_dev_t *dev)
 {
     DRIVER_INVALID_RETURN_VAL;
 
     return 0;
 }
 
-static int bl606p_stop_dhcp(aos_dev_t *dev)
+static int bl606p_stop_dhcp(rvm_dev_t *dev)
 {
     DRIVER_INVALID_RETURN_VAL;
 
     return 0;
 }
 
-static int bl606p_set_ipaddr(aos_dev_t *dev, const ip_addr_t *ipaddr, const ip_addr_t *netmask, const ip_addr_t *gw)
+static int bl606p_set_ipaddr(rvm_dev_t *dev, const ip_addr_t *ipaddr, const ip_addr_t *netmask, const ip_addr_t *gw)
 {
     return -1;
 }
 
-static int bl606p_get_ipaddr(aos_dev_t *dev, ip_addr_t *ipaddr, ip_addr_t *netmask, ip_addr_t *gw)
+static int bl606p_get_ipaddr(rvm_dev_t *dev, ip_addr_t *ipaddr, ip_addr_t *netmask, ip_addr_t *gw)
 {
     DRIVER_INVALID_RETURN_VAL;
 
@@ -290,12 +290,12 @@ static int bl606p_get_ipaddr(aos_dev_t *dev, ip_addr_t *ipaddr, ip_addr_t *netma
     return 0;
 }
 
-static int bl606p_subscribe(aos_dev_t *dev, uint32_t event, event_callback_t cb, void *param)
+static int bl606p_subscribe(rvm_dev_t *dev, uint32_t event, event_callback_t cb, void *param)
 {
     return -1;
 }
 
-static int bl606p_ping_remote(aos_dev_t *dev, int type, char *remote_ip)
+static int bl606p_ping_remote(rvm_dev_t *dev, int type, char *remote_ip)
 {
     return -1;
 }
@@ -318,27 +318,27 @@ static net_ops_t bl606p_net_driver = {
 /**
     The wifi mode is controlled by the global variable 'wifi_mode'
 */
-static int bl606p_set_mode(aos_dev_t *dev, wifi_mode_t mode)
+static int bl606p_set_mode(rvm_dev_t *dev, rvm_hal_wifi_mode_t mode)
 {
     DRIVER_INVALID_RETURN_VAL;
 
     return 0;
 }
 
-static int bl606p_get_mode(aos_dev_t *dev, wifi_mode_t *mode)
+static int bl606p_get_mode(rvm_dev_t *dev, rvm_hal_wifi_mode_t *mode)
 {
     DRIVER_INVALID_RETURN_VAL;
 
     return 0;
 }
 
-static int bl606p_init(aos_dev_t *dev)
+static int bl606p_init(rvm_dev_t *dev)
 {
     // wifi_on();
     return 0;
 }
 
-static int bl606p_deinit(aos_dev_t *dev)
+static int bl606p_deinit(rvm_dev_t *dev)
 {
     DRIVER_INVALID_RETURN_VAL;
 
@@ -347,7 +347,7 @@ static int bl606p_deinit(aos_dev_t *dev)
     return -1;
 }
 
-static void wifi_ap_start(wifi_config_t *config)
+static void wifi_ap_start(rvm_hal_wifi_config_t *config)
 {
     uint8_t hidden_ssid = config->ap_config.hide_ssid ? 1 : 0;
     int     channel     = config->ap_config.channel;
@@ -377,7 +377,7 @@ static void wifi_sta_start_task(void *arg)
 {
     sta_task_state        = 1;
     sta_wifi_interface    = wifi_mgmr_sta_enable();
-    wifi_config_t *config = (wifi_config_t *)arg;
+    rvm_hal_wifi_config_t *config = (rvm_hal_wifi_config_t *)arg;
     wifi_mgmr_sta_autoconnect_enable();
 
     if (0 != config->ssid[0]) {
@@ -402,14 +402,14 @@ static void wifi_sta_stop(void)
     }
 }
 
-static int bl606p_start(aos_dev_t *dev, wifi_config_t *config)
+static int bl606p_start(rvm_dev_t *dev, rvm_hal_wifi_config_t *config)
 {
     DRIVER_INVALID_RETURN_VAL;
 
     if (config->mode == WIFI_MODE_STA) {
         wifi_sta_stop();
         wifi_ap_stop();
-        memcpy(&g_config, config, sizeof(wifi_config_t));
+        memcpy(&g_config, config, sizeof(rvm_hal_wifi_config_t));
         aos_task_t task_handle;
         aos_task_new_ext(&task_handle, "wifi_sta_start_task", wifi_sta_start_task, &g_config, 1024 * 6, 35);
     } else if (config->mode == WIFI_MODE_AP) {
@@ -423,7 +423,7 @@ static int bl606p_start(aos_dev_t *dev, wifi_config_t *config)
     return 0;
 }
 
-static int bl606p_stop(aos_dev_t *dev)
+static int bl606p_stop(rvm_dev_t *dev)
 {
     DRIVER_INVALID_RETURN_VAL;
     wifi_sta_stop();
@@ -431,7 +431,7 @@ static int bl606p_stop(aos_dev_t *dev)
     return 0;
 }
 
-static int bl606p_reset(aos_dev_t *dev)
+static int bl606p_reset(rvm_dev_t *dev)
 {
     DRIVER_INVALID_RETURN_VAL;
     wifi_sta_stop();
@@ -440,7 +440,7 @@ static int bl606p_reset(aos_dev_t *dev)
 }
 
 /** conf APIs */
-static int bl606p_set_lpm(aos_dev_t *dev, wifi_lpm_mode_t mode)
+static int bl606p_set_lpm(rvm_dev_t *dev, rvm_hal_wifi_lpm_mode_t mode)
 {
     DRIVER_INVALID_RETURN_VAL;
 
@@ -449,34 +449,34 @@ static int bl606p_set_lpm(aos_dev_t *dev, wifi_lpm_mode_t mode)
     return 0;
 }
 
-static int bl606p_get_lpm(aos_dev_t *dev, wifi_lpm_mode_t *mode)
+static int bl606p_get_lpm(rvm_dev_t *dev, rvm_hal_wifi_lpm_mode_t *mode)
 {
     *mode = g_wifi_lpm_mode;
     return 0;
 }
 
-static int bl606p_set_protocol(aos_dev_t *dev, uint8_t protocol_bitmap)
+static int bl606p_set_protocol(rvm_dev_t *dev, uint8_t protocol_bitmap)
 {
     DRIVER_INVALID_RETURN_VAL;
 
     return 0;
 }
 
-static int bl606p_get_protocol(aos_dev_t *dev, uint8_t *protocol_bitmap)
+static int bl606p_get_protocol(rvm_dev_t *dev, uint8_t *protocol_bitmap)
 {
     DRIVER_INVALID_RETURN_VAL;
 
     return 0;
 }
 
-static int bl606p_set_country(aos_dev_t *dev, wifi_country_t country)
+static int bl606p_set_country(rvm_dev_t *dev, rvm_hal_wifi_country_t country)
 {
     DRIVER_INVALID_RETURN_VAL;
 
     return -1;
 }
 
-static int bl606p_get_country(aos_dev_t *dev, wifi_country_t *country)
+static int bl606p_get_country(rvm_dev_t *dev, rvm_hal_wifi_country_t *country)
 {
     DRIVER_INVALID_RETURN_VAL;
 
@@ -486,28 +486,28 @@ static int bl606p_get_country(aos_dev_t *dev, wifi_country_t *country)
 /**
     When wifi is disconnected, judge if reconnect wifi
 */
-static int bl606p_set_auto_reconnect(aos_dev_t *dev, bool en)
+static int bl606p_set_auto_reconnect(rvm_dev_t *dev, bool en)
 {
     DRIVER_INVALID_RETURN_VAL;
 
     return -1;
 }
 
-static int bl606p_get_auto_reconnect(aos_dev_t *dev, bool *en)
+static int bl606p_get_auto_reconnect(rvm_dev_t *dev, bool *en)
 {
     DRIVER_INVALID_RETURN_VAL;
 
     return -1;
 }
 
-static int bl606p_power_on(aos_dev_t *dev)
+static int bl606p_power_on(rvm_dev_t *dev)
 {
     DRIVER_INVALID_RETURN_VAL;
 
     return 0;
 }
 
-static int bl606p_power_off(aos_dev_t *dev)
+static int bl606p_power_off(rvm_dev_t *dev)
 {
     return 0;
 }
@@ -516,7 +516,7 @@ static int bl606p_power_off(aos_dev_t *dev)
     TBD, scan with scan config
 */
 
-static int bl606p_start_scan(aos_dev_t *dev, wifi_scan_config_t *config, bool block)
+static int bl606p_start_scan(rvm_dev_t *dev, wifi_scan_config_t *config, bool block)
 {
     int ret = -1;
     LOGD(TAG, "%s\r\n", __func__);
@@ -532,7 +532,7 @@ static int bl606p_start_scan(aos_dev_t *dev, wifi_scan_config_t *config, bool bl
 
     wifi_mgmr_all_ap_scan(&ap_ary_p, &scan_cnt);
     if (scan_cnt != 0) {
-        wifi_ap_record_t *ap_records = aos_calloc(sizeof(wifi_ap_record_t), scan_cnt);
+        rvm_hal_wifi_ap_record_t *ap_records = aos_calloc(sizeof(rvm_hal_wifi_ap_record_t), scan_cnt);
 
         for (int i = 0; i < scan_cnt; i++) {
             memcpy(ap_records[i].ssid, ap_ary_p[i].ssid, ap_ary_p[i].ssid_len);
@@ -550,7 +550,7 @@ static int bl606p_start_scan(aos_dev_t *dev, wifi_scan_config_t *config, bool bl
     return ret;
 }
 
-static int bl606p_sta_get_link_status(aos_dev_t *dev, wifi_ap_record_t *ap_info)
+static int bl606p_sta_get_link_status(rvm_dev_t *dev, rvm_hal_wifi_ap_record_t *ap_info)
 {
     DRIVER_INVALID_RETURN_VAL;
 
@@ -577,7 +577,7 @@ static int bl606p_sta_get_link_status(aos_dev_t *dev, wifi_ap_record_t *ap_info)
     return 0;
 }
 
-static int bl606p_ap_get_sta_list(aos_dev_t *dev, wifi_sta_list_t *sta)
+static int bl606p_ap_get_sta_list(rvm_dev_t *dev, rvm_hal_wifi_sta_list_t *sta)
 {
     DRIVER_INVALID_RETURN_VAL;
 
@@ -653,7 +653,7 @@ static int bl606p_ap_get_sta_list(aos_dev_t *dev, wifi_sta_list_t *sta)
     return 0;
 }
 
-static int bl606p_start_mgnt_monitor(aos_dev_t *dev, wifi_mgnt_cb_t cb)
+static int bl606p_start_mgnt_monitor(rvm_dev_t *dev, rvm_hal_wifi_mgnt_cb_t cb)
 {
     DRIVER_INVALID_RETURN_VAL;
 
@@ -663,7 +663,7 @@ static int bl606p_start_mgnt_monitor(aos_dev_t *dev, wifi_mgnt_cb_t cb)
     return 0;
 }
 
-static int bl606p_stop_mgnt_monitor(aos_dev_t *dev)
+static int bl606p_stop_mgnt_monitor(rvm_dev_t *dev)
 {
     DRIVER_INVALID_RETURN_VAL;
 
@@ -673,7 +673,7 @@ static int bl606p_stop_mgnt_monitor(aos_dev_t *dev)
     return 0;
 }
 
-static int bl606p_start_monitor(aos_dev_t *dev, wifi_promiscuous_cb_t cb)
+static int bl606p_start_monitor(rvm_dev_t *dev, rvm_hal_wifi_promiscuous_cb_t cb)
 {
     DRIVER_INVALID_RETURN_VAL;
 
@@ -684,7 +684,7 @@ static int bl606p_start_monitor(aos_dev_t *dev, wifi_promiscuous_cb_t cb)
     return 0;
 }
 
-static int bl606p_stop_monitor(aos_dev_t *dev)
+static int bl606p_stop_monitor(rvm_dev_t *dev)
 {
     DRIVER_INVALID_RETURN_VAL;
 
@@ -696,7 +696,7 @@ static int bl606p_stop_monitor(aos_dev_t *dev)
     return 0;
 }
 
-static int bl606p_set_channel(aos_dev_t *dev, uint8_t primary, wifi_second_chan_t second)
+static int bl606p_set_channel(rvm_dev_t *dev, uint8_t primary, rvm_hal_wifi_second_chan_t second)
 {
     DRIVER_INVALID_RETURN_VAL;
 
@@ -704,7 +704,7 @@ static int bl606p_set_channel(aos_dev_t *dev, uint8_t primary, wifi_second_chan_
     return wifi_mgmr_channel_set(primary, 0);
 }
 
-static int bl606p_get_channel(aos_dev_t *dev, uint8_t *primary, wifi_second_chan_t *second)
+static int bl606p_get_channel(rvm_dev_t *dev, uint8_t *primary, rvm_hal_wifi_second_chan_t *second)
 {
     DRIVER_INVALID_RETURN_VAL;
 
@@ -718,7 +718,7 @@ static int bl606p_get_channel(aos_dev_t *dev, uint8_t *primary, wifi_second_chan
     }
 }
 
-static int bl606p_send_80211_raw_frame(aos_dev_t *dev, void *buffer, uint16_t len)
+static int bl606p_send_80211_raw_frame(rvm_dev_t *dev, void *buffer, uint16_t len)
 {
     DRIVER_INVALID_RETURN_VAL;
 
@@ -727,7 +727,7 @@ static int bl606p_send_80211_raw_frame(aos_dev_t *dev, void *buffer, uint16_t le
     return ret;
 }
 
-static int bl606p_install_event_cb(aos_dev_t *dev, wifi_event_func *evt_func)
+static int bl606p_install_event_cb(rvm_dev_t *dev, rvm_hal_wifi_event_func *evt_func)
 {
     DRIVER_INVALID_RETURN_VAL;
 
@@ -778,26 +778,26 @@ static wifi_driver_t bl606p_wifi_driver = {
     .set_smartcfg = NULL,
 };
 
-static aos_dev_t *bl606p_dev_init(driver_t *drv, void *config, int id)
+static rvm_dev_t *bl606p_dev_init(driver_t *drv, void *config, int id)
 {
-    aos_dev_t *dev = device_new(drv, sizeof(wifi_dev_t), id);
+    rvm_dev_t *dev = rvm_hal_device_new(drv, sizeof(wifi_dev_t), id);
 
     return dev;
 }
 
-static void bl606p_dev_uninit(aos_dev_t *dev)
+static void bl606p_dev_uninit(rvm_dev_t *dev)
 {
     aos_check_param(dev);
 
-    device_free(dev);
+    rvm_hal_device_free(dev);
 }
 
-static int bl606p_dev_open(aos_dev_t *dev)
+static int bl606p_dev_open(rvm_dev_t *dev)
 {
     return 0;
 }
 
-static int bl606p_dev_close(aos_dev_t *dev)
+static int bl606p_dev_close(rvm_dev_t *dev)
 {
     return 0;
 }
@@ -845,8 +845,8 @@ static void _sniffer_callback(void *env, uint8_t *pkt, int len)
         return;
     }
     ieee80211_frame_info_t     *info = (ieee80211_frame_info_t *)pkt;
-    wifi_promiscuous_pkt_t     *buf  = aos_malloc(sizeof(wifi_promiscuous_pkt_t) + len);
-    wifi_promiscuous_pkt_type_t type = WIFI_PKT_MISC;
+    rvm_hal_wifi_promiscuous_pkt_t     *buf  = aos_malloc(sizeof(rvm_hal_wifi_promiscuous_pkt_t) + len);
+    rvm_hal_wifi_promiscuous_pkt_type_t type = WIFI_PKT_MISC;
 
     // buf->rx_ctrl.rssi    = info->rssi;
     buf->rx_ctrl.sig_len = len - sizeof(ieee80211_frame_info_t);
@@ -889,6 +889,7 @@ static void event_cb_wifi_event(input_event_t *event, void *private_data)
             LOGD(TAG, "[APP] [EVT] Microwave Denoise is ON %lld\r\n", aos_now_ms());
         } break;
         case CODE_WIFI_ON_SCAN_DONE: {
+            wifi_mgmr_cli_scanlist();
             LOGD(TAG, "[APP] [EVT] SCAN Done %ld\r\n", aos_now_ms());
         } break;
         case CODE_WIFI_ON_SCAN_DONE_ONJOIN: {
@@ -967,7 +968,7 @@ void wifi_bl606p_register(void *config)
     tcpip_init(NULL, NULL);
 
     /* get mac from efuse */
-    ret = bl_efuse_get_mac(mac_addr);
+    ret = bl_efuse_read_mac_smart(1, mac_addr, 0);
 
     if (ret < 0) {
         wifi_get_debug_mac_address(mac_addr);
@@ -975,6 +976,7 @@ void wifi_bl606p_register(void *config)
 
     /* set mac addr to wifi mgr sys */
     wifi_mgmr_sta_mac_set(mac_addr);
+    bl_wifi_sta_mac_addr_set(mac_addr);
 
     _wifi_start_firmware_task();
 
@@ -985,5 +987,5 @@ void wifi_bl606p_register(void *config)
 
     wifi_mgmr_sniffer_register(NULL, _sniffer_callback);
 
-    driver_register(&bl606p_driver.drv, NULL, 0);
+    rvm_driver_register(&bl606p_driver.drv, NULL, 0);
 }

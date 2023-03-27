@@ -8,14 +8,10 @@
 #include "aos/ble.h"
 #include "app_main.h"
 #include "app_init.h"
-#include "pin_name.h"
 #include <yoc/hrs.h>
-#include <gpio.h>
-#include <pm.h>
 #include "pinmux.h"
 #include "drv/pmu.h"
 #include "drv/gpio.h"
-#include <gpio.h>
 #include "aos/kv.h"
 #ifdef AOS_COMP_CLI
 #include "aos/cli.h"

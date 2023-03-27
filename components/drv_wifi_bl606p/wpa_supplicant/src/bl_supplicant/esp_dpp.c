@@ -167,7 +167,7 @@ static void gas_query_req_tx(struct dpp_authentication *auth)
 static int esp_dpp_handle_config_obj(struct dpp_authentication *auth,
                                      struct dpp_config_obj *conf)
 {
-    wifi_config_t *wifi_cfg = &s_dpp_ctx.wifi_cfg;
+    rvm_hal_wifi_config_t *wifi_cfg = &s_dpp_ctx.wifi_cfg;
 
     if (conf->ssid_len) {
         os_memcpy(wifi_cfg->sta.ssid, conf->ssid, conf->ssid_len);

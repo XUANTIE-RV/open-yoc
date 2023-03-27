@@ -21,7 +21,7 @@
 /* mbedtls-base64 lib encodes data to null-terminated string */
 #define BASE64_ENCODE_SIZE(in_size) ((((((in_size) - 1) / 3) * 4) + 4) + 1)
 
-#if defined(CONFIG_SETTINGS_DYNAMIC_HANDLERS)
+#if (defined(CONFIG_SETTINGS_DYNAMIC_HANDLERS) && CONFIG_SETTINGS_DYNAMIC_HANDLERS)
 sys_slist_t settings_handlers;
 #endif /* CONFIG_SETTINGS_DYNAMIC_HANDLERS */
 
@@ -33,13 +33,13 @@ void settings_store_init(void);
 void settings_init(void)
 {
 	k_mutex_init(&settings_lock);
-#if defined(CONFIG_SETTINGS_DYNAMIC_HANDLERS)
+#if (defined(CONFIG_SETTINGS_DYNAMIC_HANDLERS) && CONFIG_SETTINGS_DYNAMIC_HANDLERS)
 	sys_slist_init(&settings_handlers);
 #endif /* CONFIG_SETTINGS_DYNAMIC_HANDLERS */
 	settings_store_init();
 }
 
-#if defined(CONFIG_SETTINGS_DYNAMIC_HANDLERS)
+#if (defined(CONFIG_SETTINGS_DYNAMIC_HANDLERS) && CONFIG_SETTINGS_DYNAMIC_HANDLERS)
 int settings_register(struct settings_handler *handler)
 {
 	int rc = 0;
@@ -172,7 +172,7 @@ struct settings_handler_static *settings_parse_and_lookup(const char *name,
 	}
 #endif
 
-#if defined(CONFIG_SETTINGS_DYNAMIC_HANDLERS)
+#if (defined(CONFIG_SETTINGS_DYNAMIC_HANDLERS) && CONFIG_SETTINGS_DYNAMIC_HANDLERS)
 	struct settings_handler *ch;
 
 	SYS_SLIST_FOR_EACH_CONTAINER(&settings_handlers, ch, node) {
@@ -263,7 +263,7 @@ int settings_commit_subtree(const char *subtree)
 	}
 #endif
 
-#if defined(CONFIG_SETTINGS_DYNAMIC_HANDLERS)
+#if (defined(CONFIG_SETTINGS_DYNAMIC_HANDLERS) && CONFIG_SETTINGS_DYNAMIC_HANDLERS)
 	struct settings_handler *ch;
 	SYS_SLIST_FOR_EACH_CONTAINER(&settings_handlers, ch, node) {
 		if (subtree && !settings_name_steq(ch->name, subtree, NULL)) {

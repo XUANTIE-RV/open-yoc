@@ -234,7 +234,7 @@ struct bt_l2cap_ecred_reconf_rsp {
 
 #define BT_L2CAP_SDU_HDR_LEN            2
 
-#if defined(CONFIG_BT_HCI_ACL_FLOW_CONTROL)
+#if (defined(CONFIG_BT_HCI_ACL_FLOW_CONTROL) && CONFIG_BT_HCI_ACL_FLOW_CONTROL)
 #define BT_L2CAP_RX_MTU CONFIG_BT_L2CAP_RX_MTU
 #else
 #define BT_L2CAP_RX_MTU (CONFIG_BT_RX_BUF_LEN - \
@@ -304,7 +304,7 @@ void bt_l2cap_chan_del(struct bt_l2cap_chan *chan);
 
 const char *bt_l2cap_chan_state_str(bt_l2cap_chan_state_t state);
 
-#if defined(CONFIG_BT_DEBUG_L2CAP)
+#if (defined(CONFIG_BT_DEBUG_L2CAP) && CONFIG_BT_DEBUG_L2CAP)
 void bt_l2cap_chan_set_state_debug(struct bt_l2cap_chan *chan,
 				   bt_l2cap_chan_state_t state,
 				   const char *func, int line);

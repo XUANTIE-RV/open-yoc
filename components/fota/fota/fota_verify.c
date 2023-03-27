@@ -67,6 +67,7 @@ __attribute__((weak)) unsigned long fota_data_address_get(void)
 
 extern int images_info_init(uint8_t *header_buffer, download_img_info_t *dl_img_info);
 
+#if CONFIG_FOTA_IMG_AUTHENTICITY_NOT_CHECK != 0
 static int __read_partition(const char *name, off_t offset, void *buffer, size_t size)
 {
     int ret;
@@ -79,6 +80,7 @@ static int __read_partition(const char *name, off_t offset, void *buffer, size_t
     }
     return ret;
 }
+#endif /* CONFIG_FOTA_IMG_AUTHENTICITY_NOT_CHECK */
 
 __attribute__((weak)) int fota_data_verify(void)
 {
@@ -92,13 +94,13 @@ __attribute__((weak)) int fota_data_verify(void)
     if (handle < 0) {
         return -1;
     }
-    partition_info_t *lp = hal_flash_get_info(handle);
+    partition_info_t *lp = partition_info_get(handle);
     aos_assert(lp);
     temp_buffer = aos_zalloc(sizeof(pack_header_v2_t));
     if (temp_buffer == NULL) {
         return -ENOMEM;
     }
-    ret = partition_read(handle, OTA_AB_IMG_INFO_OFFSET_GET(lp->sector_size), temp_buffer, sizeof(pack_header_v2_t));
+    ret = partition_read(handle, OTA_AB_IMG_INFO_OFFSET_GET(lp->erase_size), temp_buffer, sizeof(pack_header_v2_t));
     partition_close(handle);
     if (ret < 0) {
         return ret;
@@ -129,7 +131,7 @@ __attribute__((weak)) int fota_data_verify(void)
             ret = -1;
             goto errout;
         }
-        ctx = sha_init(dl_img_info->digest_type);
+        ctx = sha_init(dl_img_info->digest_type, lp);
         if (!ctx) {
             ret = -1;
             goto errout;
@@ -329,12 +331,12 @@ __attribute__((weak)) int fota_data_verify(void)
         LOGE(TAG, "flash open e.");
         return -1;
     }
-    partition_info = hal_flash_get_info(partition);
+    partition_info = partition_info_get(partition);
     if (partition_info == NULL) {
         ret = -EIO;
         goto out;
     }
-    fota_data_offset = partition_info->sector_size << 1;
+    fota_data_offset = partition_info->erase_size << 1;
     buffer = aos_malloc(BUF_SIZE);
     if (buffer == NULL) {
         ret = -ENOMEM;
@@ -373,14 +375,17 @@ __attribute__((weak)) int fota_data_verify(void)
         goto out;
     }
 #if CONFIG_FOTA_DATA_IN_RAM > 0
-    ret = hash_calc_start(digest_type, (const uint8_t *)(fota_data_offset + data_address_start), image_size, hash_out, &olen, 1);
+    ret = hash_calc_start(digest_type, (const uint8_t *)(fota_data_offset + data_address_start),
+                          image_size, hash_out, &olen, 1, NULL);
     if (ret != 0) {
         LOGE(TAG, "hash calc failed.");
         goto out;
     }
     memcpy(buffer, (void *)(hash_offset + data_address_start), hash_len);
 #else
-    ret = hash_calc_start(digest_type, (const uint8_t *)((long)(fota_data_offset + partition_info->base_addr + partition_info->start_addr)), image_size, hash_out, &olen, 0);
+    ret = hash_calc_start(digest_type,
+                          (const uint8_t *)((long)(fota_data_offset + partition_info->base_addr + partition_info->start_addr)),
+                          image_size, hash_out, &olen, 0, partition_info);
     if (ret != 0) {
         LOGE(TAG, "hash calc failed.");
         goto out;

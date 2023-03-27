@@ -555,8 +555,7 @@ ssize_t bt_gatt_attr_read_chrc(struct bt_conn *conn,
 			  ((struct bt_gatt_chrc[]) { \
 				  BT_GATT_CHRC_INIT(_uuid, 0U, _props), \
 				  						})), \
-	BT_GATT_ATTRIBUTE(_uuid, _perm, _read, _write, _value)
-
+	BT_GATT_ATTRIBUTE(_uuid, (unsigned char)_perm, _read, _write, _value)
 #if IS_ENABLED(CONFIG_BT_SETTINGS_CCC_LAZY_LOADING)
 	#define BT_GATT_CCC_MAX (CONFIG_BT_MAX_CONN)
 #else

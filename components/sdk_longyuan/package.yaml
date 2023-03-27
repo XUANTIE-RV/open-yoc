@@ -1,0 +1,191 @@
+
+## 第一部分： 基础信息
+name: sdk_longyuan                                        # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
+version: v7.7.0                                    # <必选项> 组件版本号
+description: the sdk for longyuan                  # <必选项> 建议至少20字以上
+type: common                                        # <必选项> 组件类型，为：solution, chip, board, common, sdk
+
+## 第二部分：依赖信息
+#           指定该组件依赖的组件及版本，版本支持条件比较，支持：>=v1.0, >v1.0, ==v1.0, <=v1.0, <v1.0, v1.0
+#           未指定条件时，默认为 ==，如 v1.0 与 ==v1.0
+# depends:                                 # <可选项> 该组件依赖其他的组件，合理的依赖才能保证组件能编译、使用
+#   - minilibc: v7.2.0
+#   - aos: >=v7.2.0
+depends:
+  - adb: v7.7.0
+  - aos: v7.7.0
+  - aoshal: v7.7.0
+  - bootab: v7.7.0
+  - button: v7.7.0
+  - cli: v7.7.0
+  - csi: v7.7.0
+  - debug: v7.7.0
+  - ers: v7.7.0
+  - fota: v7.7.0
+  - ipc: v7.7.0
+  - key_mgr: v7.7.0
+  - kv: v7.7.0
+  - libc_stub: v7.7.0
+  - log_ipc: v7.7.0
+  - minialsa: v7.7.0
+  - minilibc: v7.7.0
+  - netmgr: v7.7.0
+  - ntp: v7.7.0
+  - partition: v7.7.0
+  - posix: v7.7.0
+  - rhino: v7.7.0
+  - rhino_arch: v7.7.0
+  - rhino_pwrmgmt: v7.7.0
+  - sec_crypto: v7.7.0
+  - transport: v7.7.0
+  - ulog: v7.7.0
+  - uservice: v7.7.0
+  - vfs: v7.7.0
+  - wifi_provisioning: v7.7.0
+  - at: v7.7.0
+  - device: v7.7.0
+
+# 3rd
+  - zlib: v7.7.0
+  - websocket: v7.7.0
+  - httpclient: v7.7.0
+  - lwip: v7.7.0
+  - mbedtls: v7.7.0
+  - littlefs: v7.7.0
+  - cjson: v7.7.0
+  - sntp: v7.7.0
+  - breeze: v7.7.0
+  - duktape: v7.7.0
+  - smartliving: v7.7.0
+
+# UI core
+  - lvgl: v7.7.0
+  - iot_miniapp_sdk: v7.7.0
+
+# Voice
+  - cxvision: v7.7.0
+  - posto: v7.7.0
+  - voice_wrapper: v7.7.0
+  - voice_mind: v7.7.0
+  - alg_kws_mind: v7.7.0
+  - voice_lyeva: v7.7.0
+  - alg_kws_lyeva: v7.7.0
+  - alg_dispatch: v7.7.0
+  - alg_record: v7.7.0
+  - alg_pcm_input: v7.7.0
+  - aui_cloud_mind: v7.7.0
+  - record: v7.7.0
+  - clock_alarm: v7.7.0
+
+# Connectivity
+  - ble_host: v7.7.0
+  - ble_mesh: v7.7.0
+  - dut_service: v7.7.0
+  - gateway_mgmt: v7.7.0
+  - tsl_engine: v7.7.0
+  - ota_module: v7.7.0
+
+# Media base
+  - smart_audio: v7.7.0
+  - pvmp3dec: v7.7.0
+  - speexdsp: v7.7.0
+  - sonic: v7.7.0
+
+# Media pro
+  - av: v7.7.0
+  - amrnb: v7.7.0
+  - amrwb: v7.7.0
+  - flac: v7.7.0
+  - ogg: v7.7.0
+  - opus: v7.7.0
+  - speex: v7.7.0
+
+# Driver
+  - drv_wifi_rtl8723ds: v7.7.0
+  - drv_bt_rtl8723ds: v7.7.0
+  - drv_amplifier: v7.7.0
+  - drv_light: v7.7.0
+
+# BL606P
+  - chip_bl606p: v7.7.0
+  - bl606p_evb_e907: v7.7.0
+  - bl606p_evb_c906: v7.7.0
+  - bl606p_boot: v7.7.0
+  - drv_snd_bl606p: v7.7.0
+  - bl606p_bthost: v7.7.0
+  - bl606p_btprofile: v7.7.0
+  - bl606p_wifimgmr: v7.7.0
+  - bl606p_blimpls: v7.7.0
+  - bl606p_btcontroller: v7.7.0
+  - bl606p_firmware: v7.7.0
+  - bl606p_phyrf: v7.7.0
+  - bl606p_player: v7.7.0
+  - drv_wifi_bl606p: v7.7.0
+
+# D1 & F133
+  - chip_d1: v7.7.0
+  - d1_dockpro_evb: v7.7.0
+  - f133_evb: v7.7.0
+  - d1_boot_demo: v7.7.0
+
+# CV181X
+  - chip_cv181x: v7.7.0
+  - cv181xh_evb: v7.7.0
+  - cv181xh_boot: v7.7.0
+
+# SDK
+  - yoc_kernel: v7.7.0
+  - sdk_chip_bl606p_e907: v7.7.0
+  - sdk_chip_d1: v7.7.0
+  - sdk_chip_f133: v7.7.0
+  - sdk_chip_phy6220: v7.7.0
+  - sdk_chip_IoTGW_CB800: v7.7.0
+  - sdk_chip_cv181xh: v7.7.0
+
+# BLE Demos
+  - ble_advertising_demo: v7.7.0
+  - ble_bas_demo: v7.7.0
+  - ble_dis_demo: v7.7.0
+  - ble_hid_keyboard_demo: v7.7.0
+  - ble_hrs_demo: v7.7.0
+  - ble_hrs_lpm_demo: v7.7.0
+  - ble_ibeacon_demo: v7.7.0
+  - ble_ibeacon_apple_demo: v7.7.0
+  - ble_scanner_demo: v7.7.0
+  - ble_shell_demo: v7.7.0
+  - ble_uart_profile_client_demo: v7.7.0
+  - ble_uart_profile_server_demo: v7.7.0
+
+# BLE MESH Demos
+  - mesh_provisioner_demo: v7.7.0
+  - mesh_light_node_demo: v7.7.0
+  - mesh_shell: v7.7.0
+  - mesh_switch_node_demo: v7.7.0
+  - mesh_light_node_ext_adv_demo: v7.7.0
+  - mesh_switch_node_lpm_demo: v7.7.0
+  - mesh_body_sensor_demo: v7.7.0
+  - mesh_temperature_sensor_demo: v7.7.0
+
+# HAL Demos
+  - hal_uart_demo: v7.7.0
+  - aoshal_demo: v7.7.0
+  - display_drv_demo: v7.7.0
+
+# Solution
+  - ble_mesh_gateway_demo: v7.7.0
+  - smart_speaker_v2: v7.7.0
+  - smart_panel_lvgl: v7.7.0
+
+# Sub Module Demo
+  - fota_demo: v7.7.0
+  - wifi_ble_provisioning_demo: v7.7.0
+  - bt_audio_demo: v7.7.0
+  - gprs_demo: v7.7.0
+
+# UI demo
+  - iot_miniapp_daemon: v7.7.0
+  - iot_miniapp_benchmark: v7.7.0
+  - iot_miniapp_ui_demo: v7.7.0
+  - iot_miniapp_jsapi_demo: v7.7.0
+  - iot_miniapp_sdk: v7.7.0
+  - lvgl_demo: v7.7.0

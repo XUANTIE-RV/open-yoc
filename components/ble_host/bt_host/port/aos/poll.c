@@ -271,7 +271,7 @@ void k_poll_signal_raise(struct k_poll_signal *signal, int result)
     _handle_obj_poll_events(&signal->poll_events, K_POLL_STATE_SIGNALED);
 }
 
-#if defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE
+#if (defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE)
 void k_poll_signal_data_recv(struct k_poll_signal *signal, int result)
 {
     signal->result = result;

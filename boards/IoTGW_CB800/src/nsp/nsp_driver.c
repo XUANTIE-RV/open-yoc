@@ -6,7 +6,7 @@
 #include "ulog/ulog.h"
 
 //Use this definition if the input mode is QUASI
-//#define QUASI_MODE //Èç¹ûÊäÈëÄ£Ê½²ÉÓÃQUASI£¬ÇëÊ¹ÓÃ´Ë¶¨Òå
+//#define QUASI_MODE //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä£Ê½ï¿½ï¿½ï¿½ï¿½QUASIï¿½ï¿½ï¿½ï¿½Ê¹ï¿½Ã´Ë¶ï¿½ï¿½ï¿½
 //===========================================================
 //Systerm intial, please modify according to your MCU platform
 /*#define SCLK_PORT		BP0R
@@ -18,6 +18,9 @@
 #define SDA_PORT_BIT	BIT1
 #define SDA_PORT_D		BP0D
 #define SDA_PORT_M		BP0M*/
+
+#define NSP_CLK_PIN                       PB8
+#define NSP_SDA_PIN                       PB9
 
 UINT8 	u8HOST_FLAG=0; 
 UINT8 	u8RX_ERROR_COUNT=0;
@@ -39,7 +42,7 @@ extern void udelay(uint32_t us);
 //Systerm intial, please modify according to your MCU platform
 void GPIO1_SCLK_OUTPUT(void) 
 {
-//³]¸m¬°¿é¥X¼Ò¦¡  Set to output mode
+//ï¿½]ï¿½mï¿½ï¿½ï¿½ï¿½Xï¿½Ò¦ï¿½  Set to output mode
     if(!clk_handle) {
           drv_pinmux_config(NSP_CLK_PIN, PIN_FUNC_GPIO);
     clk_handle = csi_gpio_pin_initialize(NSP_CLK_PIN, NULL);
@@ -56,21 +59,21 @@ void GPIO1_SCLK_OUTPUT(void)
 //Systerm intial, please modify according to your MCU platform
 void GPIO1_SCLK_OUTPUT0(void) 
 {
-//³]¸m¬°¿é¥X§C¹q¥­ Set to output low level
+//ï¿½]ï¿½mï¿½ï¿½ï¿½ï¿½Xï¿½Cï¿½qï¿½ï¿½ Set to output low level
     csi_gpio_pin_write(clk_handle, 0);
 }
 
 //Systerm intial, please modify according to your MCU platform
 void GPIO1_SCLK_OUTPUT1(void) 
 {
-    //³]¸m¬°¿é¥X°ª¹q¥­ Set to output High level
+    //ï¿½]ï¿½mï¿½ï¿½ï¿½ï¿½Xï¿½ï¿½ï¿½qï¿½ï¿½ Set to output High level
     csi_gpio_pin_write(clk_handle, 1);
 }
 //----------------------------------
 //Systerm intial, please modify according to your MCU platform
 void GPIO2_SDA_OUTPUT(void) 
 {
-//³]¸m¬°¿é¥X¼Ò¦¡  Set to output mode
+//ï¿½]ï¿½mï¿½ï¿½ï¿½ï¿½Xï¿½Ò¦ï¿½  Set to output mode
     drv_pinmux_config(NSP_SDA_PIN, PIN_FUNC_GPIO);
     sda_handle = csi_gpio_pin_initialize(NSP_SDA_PIN, NULL);
     if ((sda_handle == NULL)) {
@@ -83,20 +86,20 @@ void GPIO2_SDA_OUTPUT(void)
 //Systerm intial, please modify according to your MCU platform
 void GPIO2_SDA_OUTPUT0(void) 
 {
-//³]¸m¬°¿é¥X§C¹q¥­ Set to output low level
+//ï¿½]ï¿½mï¿½ï¿½ï¿½ï¿½Xï¿½Cï¿½qï¿½ï¿½ Set to output low level
     csi_gpio_pin_write(sda_handle, 0);
 }
 //Systerm intial, please modify according to your MCU platform
 void GPIO2_SDA_OUTPUT1(void) 
 {
-//³]¸m¬°¿é¥X°ª¹q¥­ Set to output High level
+//ï¿½]ï¿½mï¿½ï¿½ï¿½ï¿½Xï¿½ï¿½ï¿½qï¿½ï¿½ Set to output High level
     csi_gpio_pin_write(sda_handle, 1);
 }
 //----------------------------------
 //Systerm intial, please modify according to your MCU platform
 void GPIO2_SDA_INPUT(void) 
 {
-//³]¸m¬°¿é¤J¼Ò¦¡  Set to input mode
+//ï¿½]ï¿½mï¿½ï¿½ï¿½ï¿½Jï¿½Ò¦ï¿½  Set to input mode
     if(!sda_handle) {
          drv_pinmux_config(NSP_SDA_PIN, PIN_FUNC_GPIO);
     sda_handle = csi_gpio_pin_initialize(NSP_SDA_PIN, NULL);
@@ -113,7 +116,7 @@ void GPIO2_SDA_INPUT(void)
 UINT8 GPIO2_SDA_INPUT_READ() 
 {
 	UINT8 u8Res = 0;
-//Åª¨ú¿é¤J¼Æ­È     Read input values
+//Åªï¿½ï¿½ï¿½ï¿½Jï¿½Æ­ï¿½     Read input values
     csi_gpio_pin_read(sda_handle, (bool *)&u8Res);
 	return (u8Res);
 }
@@ -121,35 +124,35 @@ UINT8 GPIO2_SDA_INPUT_READ()
 //Systerm intial, please modify according to your MCU platform, during which you can perform other operations on host
 void HOST_PIN_DURATION(void)
 {
-//³]¸m©µ¿ð®É¶¡ 100us;  Delay time 100 us
+//ï¿½]ï¿½mï¿½ï¿½ï¿½ï¿½É¶ï¿½ 100us;  Delay time 100 us
     udelay(100);
 }
 
 //Systerm intial, please modify according to your MCU platform, during which you can perform other operations on host
 void HOST_PIN_DURATION_SHORT(void)
 {
-//³]¸m©µ¿ð®É¶¡ 20us;  Delay time 20 us
+//ï¿½]ï¿½mï¿½ï¿½ï¿½ï¿½É¶ï¿½ 20us;  Delay time 20 us
     udelay(20);
 }
 
 //Systerm intial,0 please modify according to your MCU platform, during which you can perform other operations on host
 void HOST_CMD_INTERVAL_SHORT(void)
 {
-//³]¸m©µ¿ð®É¶¡ 60us;  Delay time 60 us
+//ï¿½]ï¿½mï¿½ï¿½ï¿½ï¿½É¶ï¿½ 60us;  Delay time 60 us
     udelay(60);
 }
 
 //Systerm intial, please modify according to your MCU platform, during which you can perform other operations on host
 void HOST_CMD_INTERVAL(void)
 {
-//³]¸m©µ¿ð®É¶¡ 300us;  Delay time 300 us
+//ï¿½]ï¿½mï¿½ï¿½ï¿½ï¿½É¶ï¿½ 300us;  Delay time 300 us
     udelay(300);
 }
 
 //Systerm intial, please modify according to your MCU platform, during which you can perform other operations on host
 void HOST_Delay500uS(void)
 {
-//³]¸m©µ¿ð®É¶¡ 500us;  Delay time 500 us
+//ï¿½]ï¿½mï¿½ï¿½ï¿½ï¿½É¶ï¿½ 500us;  Delay time 500 us
     udelay(500);
 }
 //===========================================================
@@ -1173,4 +1176,10 @@ void N_WAKUP(void)
 	HOST_Delay500uS();
 }
 
+void board_nsp_audio_play(uint8_t index, uint8_t vol)
+{
+    HOST_BUS_Init();
+    N_PLAY(index);
+    N_SET_VOL(vol);
+}
 

@@ -143,19 +143,24 @@ static int parser_read_kp(uint8_t *buf, uint32_t len, uint32_t *olen)
         return KM_ERR_TOO_LONG;
     }
 #else
-    mtb_partition_info_t part_info;
-    uint32_t             part_start, image_size;
+    partition_t partition;
+    partition_info_t *part_info;
+    uint32_t part_start, image_size;
 
     part_start = INVALID_ADDR;
     image_size = INVALID_ADDR;
-    if (!mtb_get_partition_info(MTB_IMAGE_NAME_OTP, &part_info)) {
-        part_start = part_info.start_addr;
-        image_size = part_info.img_size;
+    partition = partition_open(MTB_IMAGE_NAME_OTP);
+    part_info = partition_info_get(partition);
+    if (part_info) {
+        part_start = part_info->base_addr + part_info->start_addr;
+        image_size = part_info->length;
     } else {
         KM_LOGW("mtb cant f `otp`");
-        if (!mtb_get_partition_info(MTB_IMAGE_NAME_KP, &part_info)) {
-            part_start = part_info.start_addr;
-            image_size = part_info.img_size;
+        partition = partition_open(MTB_IMAGE_NAME_KP);
+        part_info = partition_info_get(partition);
+        if (part_info) {
+            part_start = part_info->base_addr + part_info->start_addr;
+            image_size = part_info->length;
             KM_LOGI("mtb find `kp` at 0x%x, image_size:0x%x", part_start, image_size);
         } else {
             KM_LOGW("mtb cant f `kp`");
@@ -167,11 +172,15 @@ static int parser_read_kp(uint8_t *buf, uint32_t len, uint32_t *olen)
     }
 
     if (image_size > len) {
-        KM_LOGE("flash read size too long, %d\n", image_size);
-        return KM_ERR_TOO_LONG;
+        KM_LOGW("flash read size too long, %d > %d, set to config buffer size.", image_size, len);
+        image_size = len;
+        if (image_size > sizeof(g_parser_buf)) {
+            KM_LOGE("flash read size too long, %d > %d", image_size, (int)sizeof(g_parser_buf));
+            return KM_ERR_TOO_LONG;
+        }
     }
 
-    if (get_data_from_addr(part_start, (uint8_t *)buf, image_size)) {
+    if (get_data_from_addr(part_start, (uint8_t *)buf, image_size, part_info)) {
         return KM_ERR;
     }
     if (olen) {
@@ -199,11 +208,16 @@ uint32_t parser_init(void)
         KM_LOGE("read kp err\n");
         return KM_ERR;
     }
-    memcpy(g_parser_buf, buf, kp_size);
+	memcpy(g_parser_buf, buf, kp_size);
 #endif
 
 #if defined(CONFIG_KEY_MGR_KP_PROTECT) && (CONFIG_KEY_MGR_KP_PROTECT > 0)
     sc_aes_t aes_hdl;
+#ifdef CONFIG_KEY_MGR_KP_IN_FLASH
+	uint32_t kp_buf_bak[CONFIG_KEY_MGR_KP_SIZE / 4];
+#else
+	uint32_t kp_buf_bak[KP_BUFFER_LEN];
+#endif
     uint32_t ret = sc_aes_init(&aes_hdl, 0);
     if (KP_OK != ret) {
         return ret;
@@ -214,20 +228,53 @@ uint32_t parser_init(void)
     ret = sc_aes_set_decrypt_key(&aes_hdl, (void *)g_km_protk, SC_AES_KEY_LEN_BITS_256);
 #endif
     if (KP_OK != ret) {
-        return ret;
+		goto protect_exit;
     }
+	/* Back up kp infomation */
+	memcpy(kp_buf_bak, g_parser_buf, kp_size);
     ret = sc_aes_ecb_decrypt(&aes_hdl, (void *)g_parser_buf, (void *)g_parser_buf, kp_size);
     if (KP_OK != ret) {
-        return ret;
+		goto protect_exit;
     }
-    sc_aes_uninit(&aes_hdl);
-#endif
+	/* First check */
+    if (parser_check((parser_t *)g_parser_buf) != KP_OK) {
+		KM_LOGE("kp check err, retry with key 128");
+		sc_aes_uninit(&aes_hdl);
+		ret = sc_aes_init(&aes_hdl, 0);
+		if (KP_OK != ret) {
+			return ret;
+		}
+		ret = sc_aes_set_decrypt_key(&aes_hdl, (void *)g_km_protk, SC_AES_KEY_LEN_BITS_128);
+		if (KP_OK != ret) {
+			goto protect_exit;
+		}
+		/* restore kp infomation */
+		memcpy(g_parser_buf, kp_buf_bak, kp_size);
+		ret = sc_aes_ecb_decrypt(&aes_hdl, (void *)g_parser_buf, (void *)g_parser_buf, kp_size);
+		if (KP_OK != ret) {
+			goto protect_exit;
+		}
+		/* Second check */
+		if (parser_check((parser_t *)g_parser_buf) != KP_OK) {
+			KM_LOGE("kp check err");
+			ret = KM_ERR;
+		} else {
+			ret = KM_OK;
+		}
+    } else {
+        ret = KM_OK;
+	}
+protect_exit:
+	sc_aes_uninit(&aes_hdl);
+    return ret;
+#else
     if (parser_check((parser_t *)g_parser_buf) != KP_OK) {
         KM_LOGE("kp check err");
         return KM_ERR;
     }
 
     return KM_OK;
+#endif
 }
 
 uint32_t parser_update_kp(uint8_t *kp_info, size_t size)
@@ -267,6 +314,20 @@ uint32_t parser_update_kp(uint8_t *kp_info, size_t size)
     }
 
     return KM_OK;
+}
+
+uint32_t parser_get_kp_raw_data(uint8_t *kp_in, uint32_t kp_in_size, uint8_t *key_out, uint32_t *key_out_size)
+{
+	uint32_t ret;
+
+	ret = parser_update_kp(kp_in, kp_in_size);
+	if (KM_OK != ret)
+		return ret;
+
+	memcpy(key_out, g_parser_buf, kp_in_size);
+	*key_out_size = kp_in_size;
+
+	return KM_OK;
 }
 
 uint32_t parser_get_key(km_key_type_e key_type, key_handle *key, uint32_t *key_size)

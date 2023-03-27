@@ -2185,7 +2185,7 @@ int wpa_set_bss(u8 vif_idx, u8 sta_idx, char *macddr, char *bssid, u8 pairwise_c
     if (pmf_required) {
         // intentional misunderstanding here
 #if 0
-        wifi_config_t wifi_cfg;
+        rvm_hal_wifi_config_t wifi_cfg;
 
         esp_wifi_get_config(WIFI_IF_STA, &wifi_cfg);
         sm->pmf_cfg = wifi_cfg.sta.pmf_cfg;

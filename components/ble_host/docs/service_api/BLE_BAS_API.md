@@ -40,12 +40,12 @@ BAS组件处理流程如下图所示：
 
 # 4. 接口定义
 
-### **bas_init**
+### **ble_prf_bas_init**
 
 - 函数原型
 
 ```c
-bas_handle_t bas_init(bas_t *bas)
+bas_handle_t ble_prf_bas_init(bas_t *bas)
 ```
 
 - 功能描述
@@ -76,12 +76,12 @@ bas_handle_t bas_init(bas_t *bas)
 
   无
 
-### **bas_level_update**
+### **ble_prf_bas_level_update**
 
 - 函数原型
 
 ```c
-int bas_level_update(bas_handle_t handle, uint8_t level)
+int ble_prf_bas_level_update(bas_handle_t handle, uint8_t level)
 ```
 
 - 功能描述

@@ -28,14 +28,14 @@
 #include "common/log.h"
 
 #include "hci_ecc.h"
-#ifdef CONFIG_BT_HCI_RAW
+#if (defined(CONFIG_BT_HCI_RAW) && CONFIG_BT_HCI_RAW)
 #include <bluetooth/hci_raw.h>
 #include "hci_raw_internal.h"
 #else
 #include "hci_core.h"
 #endif
 
-#if defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE
+#if (defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE)
 #else
 /*
 	NOTE: This is an advanced setting and should not be changed unless
@@ -55,7 +55,7 @@ static const u32_t debug_private_key[8] = {
 	0xa3c55f38, 0x3f49f6d4
 };
 
-#if defined(CONFIG_BT_USE_DEBUG_KEYS)
+#if (defined(CONFIG_BT_USE_DEBUG_KEYS) && CONFIG_BT_USE_DEBUG_KEYS)
 static const u8_t debug_public_key[64] = {
 	0xe6, 0x9d, 0x35, 0x0e, 0x48, 0x01, 0x03, 0xcc, 0xdb, 0xfd, 0xf4, 0xac,
 	0x11, 0x91, 0xf4, 0xef, 0xb9, 0xa5, 0xf9, 0xe9, 0xa7, 0x83, 0x2c, 0x5e,
@@ -76,7 +76,7 @@ enum {
 
 static ATOMIC_DEFINE(flags, NUM_FLAGS);
 
-#if defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE
+#if (defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE)
 static struct k_delayed_work ecc_work;
 #define HCI_ECC_PUB_KEY_DELAY_MS (1000)
 #else
@@ -118,7 +118,7 @@ static void send_cmd_status(u16_t opcode, u8_t status)
 
 static u8_t generate_keys(void)
 {
-#if !defined(CONFIG_BT_USE_DEBUG_KEYS)
+#if !(defined(CONFIG_BT_USE_DEBUG_KEYS) && CONFIG_BT_USE_DEBUG_KEYS)
 	do {
 		int rc;
 
@@ -228,7 +228,7 @@ static void emulate_le_generate_dhkey(void)
 	bt_recv(buf);
 }
 
-#if defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE
+#if (defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE)
 static void ecc_work_hander(struct k_work *work)
 {
 	if (atomic_test_bit(flags, PENDING_PUB_KEY)) {
@@ -298,7 +298,7 @@ static void le_gen_dhkey(struct net_buf *buf)
 	sys_memcpy_swap(ecc.pk, cmd->key, 32);
 	sys_memcpy_swap(&ecc.pk[32], &cmd->key[32], 32);
 
-#if defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE
+#if (defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE)
 #else
 	k_sem_give(&cmd_sem);
 #endif
@@ -309,7 +309,7 @@ send_status:
 	net_buf_unref(buf);
 	send_cmd_status(BT_HCI_OP_LE_GENERATE_DHKEY, status);
 
-#if defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE
+#if (defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE)
 	k_delayed_work_submit(&ecc_work, 0);
 #endif
 }
@@ -325,7 +325,7 @@ static void le_p256_pub_key(struct net_buf *buf)
 	} else if (atomic_test_and_set_bit(flags, PENDING_PUB_KEY)) {
 		status = BT_HCI_ERR_CMD_DISALLOWED;
 	} else {
-#if defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE
+#if (defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE)
 #else
 		k_sem_give(&cmd_sem);
 #endif
@@ -334,7 +334,7 @@ static void le_p256_pub_key(struct net_buf *buf)
 
 	send_cmd_status(BT_HCI_OP_LE_P256_PUBLIC_KEY, status);
 
-#if defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE
+#if (defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE)
 	if (status == BT_HCI_ERR_SUCCESS)
 	{
 		k_delayed_work_submit(&ecc_work, HCI_ECC_PUB_KEY_DELAY_MS);
@@ -374,7 +374,7 @@ int default_CSPRNG(u8_t *dst, unsigned int len)
 
 void bt_hci_ecc_init(void)
 {
-#if defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE
+#if (defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE)
     k_delayed_work_init(&ecc_work, ecc_work_hander);
 #else
     k_sem_init(&cmd_sem, 0, 1);

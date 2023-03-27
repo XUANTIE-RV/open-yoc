@@ -18,3 +18,5 @@ make flashall
 # 启动
 
 烧录完成之后按复位键，串口会有打印输出
+
+注：由于 sdk_chip_IoTGW_CB800 平台与 sdk_chip_d1 平台不支持设置 MAC 地址与蓝牙设备名称，所以与 sdk_chip_phy6220 平台不同，蓝牙协议栈初始化为：ble init 不支持设置蓝牙设备名称：ble name 命令。

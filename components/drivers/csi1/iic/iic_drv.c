@@ -6,15 +6,15 @@
 #include <aos/kernel.h>
 #include <drv/iic.h>
 
-#include "hal/iic_impl.h"
+#include "devices/impl/iic_impl.h"
 
 #define TAG "iic_drv"
 
 typedef struct {
-    aos_dev_t      device;
+    rvm_dev_t      device;
     iic_handle_t   handle;
     aos_event_t    event;
-    iic_config_t   config;
+    rvm_hal_iic_config_t   config;
 } iic_dev_t;
 
 #define EVT_TRANSFER_DONE   1
@@ -22,14 +22,14 @@ typedef struct {
 
 #define iic(dev) ((iic_dev_t *)dev)
 
-static aos_dev_t *iic_csky_init(driver_t *drv, void *config, int id)
+static rvm_dev_t *iic_csky_init(driver_t *drv, void *config, int id)
 {
-    iic_dev_t *iic = (iic_dev_t *)device_new(drv, sizeof(iic_dev_t), id);
+    iic_dev_t *iic = (iic_dev_t *)rvm_hal_device_new(drv, sizeof(iic_dev_t), id);
 
-    return (aos_dev_t *)iic;
+    return (rvm_dev_t *)iic;
 }
 
-#define iic_csky_uninit device_free
+#define iic_csky_uninit rvm_hal_device_free
 
 static void iic_event_cb_fun(int32_t idx, iic_event_e event)
 {
@@ -37,7 +37,7 @@ static void iic_event_cb_fun(int32_t idx, iic_event_e event)
     iic_dev_t *iic;
 
     if (iic_idx[idx] == NULL) {
-        iic_idx[idx] = (iic_dev_t *)device_find("iic", idx);
+        iic_idx[idx] = (iic_dev_t *)rvm_hal_device_find("iic", idx);
     }
 
     iic = iic_idx[idx];
@@ -54,7 +54,7 @@ static void iic_event_cb_fun(int32_t idx, iic_event_e event)
     }
 }
 
-static int iic_csky_open(aos_dev_t *dev)
+static int iic_csky_open(rvm_dev_t *dev)
 {
     iic_handle_t iic_handle = csi_iic_initialize(dev->id, iic_event_cb_fun);
 
@@ -67,14 +67,14 @@ static int iic_csky_open(aos_dev_t *dev)
     return 0;
 }
 
-static int iic_csky_close(aos_dev_t *dev)
+static int iic_csky_close(rvm_dev_t *dev)
 {
     csi_iic_uninitialize(iic(dev)->handle);
     aos_event_free(&iic(dev)->event);
     return 0;
 }
 
-static int iic_csky_config(aos_dev_t *dev, iic_config_t *config)
+static int iic_csky_config(rvm_dev_t *dev, rvm_hal_iic_config_t *config)
 {
     int32_t ret = csi_iic_config(iic(dev)->handle, config->mode, config->speed,
                                  config->addr_mode, config->slave_addr);
@@ -83,12 +83,12 @@ static int iic_csky_config(aos_dev_t *dev, iic_config_t *config)
         return -EIO;
     }
 
-    memcpy(&iic(dev)->config, config, sizeof(iic_config_t));
+    memcpy(&iic(dev)->config, config, sizeof(rvm_hal_iic_config_t));
 
     return 0;
 }
 
-static int iic_busy_stat(aos_dev_t *dev)
+static int iic_busy_stat(rvm_dev_t *dev)
 {
     iic_status_t stat = csi_iic_get_status(iic(dev)->handle);
 
@@ -101,7 +101,7 @@ static int iic_busy_stat(aos_dev_t *dev)
     return 0;
 }
 
-static int iic_csky_master_send(aos_dev_t *dev, uint16_t dev_addr, const void *data, uint32_t size, uint32_t timeout)
+static int iic_csky_master_send(rvm_dev_t *dev, uint16_t dev_addr, const void *data, uint32_t size, uint32_t timeout)
 {
     int ret;
     unsigned int flags = 0;
@@ -127,7 +127,7 @@ static int iic_csky_master_send(aos_dev_t *dev, uint16_t dev_addr, const void *d
     return -ETIMEDOUT;
 }
 
-static int iic_csky_master_recv(aos_dev_t *dev, uint16_t dev_addr, void *data, uint32_t size, uint32_t timeout)
+static int iic_csky_master_recv(rvm_dev_t *dev, uint16_t dev_addr, void *data, uint32_t size, uint32_t timeout)
 {
     int ret;
     unsigned int flags = 0;
@@ -153,7 +153,7 @@ static int iic_csky_master_recv(aos_dev_t *dev, uint16_t dev_addr, void *data, u
     return -ETIMEDOUT;
 }
 
-static int iic_csky_slave_send(aos_dev_t *dev, const void *data, uint32_t size, uint32_t timeout)
+static int iic_csky_slave_send(rvm_dev_t *dev, const void *data, uint32_t size, uint32_t timeout)
 {
     int ret;
     unsigned int flags = 0;
@@ -179,7 +179,7 @@ static int iic_csky_slave_send(aos_dev_t *dev, const void *data, uint32_t size, 
     return -ETIMEDOUT;
 }
 
-static int iic_csky_slave_recv(aos_dev_t *dev, void *data, uint32_t size, uint32_t timeout)
+static int iic_csky_slave_recv(rvm_dev_t *dev, void *data, uint32_t size, uint32_t timeout)
 {
     int ret;
     unsigned int flags = 0;
@@ -205,7 +205,7 @@ static int iic_csky_slave_recv(aos_dev_t *dev, void *data, uint32_t size, uint32
     return -ETIMEDOUT;
 }
 
-static int iic_csky_mem_write(aos_dev_t *dev, uint16_t dev_addr, uint16_t mem_addr, uint16_t mem_addr_size,
+static int iic_csky_mem_write(rvm_dev_t *dev, uint16_t dev_addr, uint16_t mem_addr, uint16_t mem_addr_size,
                                 const void *data, uint32_t size, uint32_t timeout)
 {
     int ret  = 0;
@@ -243,7 +243,7 @@ static int iic_csky_mem_write(aos_dev_t *dev, uint16_t dev_addr, uint16_t mem_ad
     return -ETIMEDOUT;
 }
 
-static int iic_csky_mem_read(aos_dev_t *dev, uint16_t dev_addr, uint16_t mem_addr, uint16_t mem_addr_size,
+static int iic_csky_mem_read(rvm_dev_t *dev, uint16_t dev_addr, uint16_t mem_addr, uint16_t mem_addr_size,
                                 void *data, uint32_t size, uint32_t timeout)
 {
     int ret;
@@ -302,7 +302,7 @@ static iic_driver_t iic_driver = {
     .mem_read        = iic_csky_mem_read
 };
 
-void iic_csky_register(int idx)
+void rvm_iic_drv_register(int idx)
 {
-    driver_register(&iic_driver.drv, NULL, idx);
+    rvm_driver_register(&iic_driver.drv, NULL, idx);
 }

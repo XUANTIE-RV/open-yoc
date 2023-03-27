@@ -68,10 +68,15 @@
  */
 __ALWAYS_STATIC_INLINE void __enable_irq(void)
 {
+#if defined(CONFIG_RISCV_SMODE) && CONFIG_RISCV_SMODE
+    __ASM volatile("csrs sstatus, 2");
+    __ASM volatile("li a0, 0x222");
+    __ASM volatile("csrs sie, a0");
+#else
     __ASM volatile("csrs mstatus, 8");
     __ASM volatile("li a0, 0x888");
     __ASM volatile("csrs mie, a0");
-
+#endif
 }
 
 /**
@@ -93,7 +98,11 @@ __ALWAYS_STATIC_INLINE void __enable_supervisor_irq(void)
  */
 __ALWAYS_STATIC_INLINE void __disable_irq(void)
 {
+#if defined(CONFIG_RISCV_SMODE) && CONFIG_RISCV_SMODE
+    __ASM volatile("csrc sstatus, 2");
+#else
     __ASM volatile("csrc mstatus, 8");
+#endif
 }
 
 /**
@@ -392,6 +401,20 @@ __ALWAYS_STATIC_INLINE uint64_t __get_MTVT(void)
     uint64_t result;
 
     __ASM volatile("csrr %0, mtvt" : "=r"(result));
+    return (result);
+}
+
+/**
+  \brief   Get MTIME
+  \details Returns the content of the MTIME Register.
+  \return               MTIME Register value
+  */
+__ALWAYS_STATIC_INLINE uint64_t __get_MTIME(void)
+{
+    uint64_t result;
+
+    __ASM volatile("rdtime %0" : "=r"(result));
+    //__ASM volatile("csrr %0, 0xc01" : "=r"(result));
     return (result);
 }
 
@@ -1126,6 +1149,51 @@ __STATIC_INLINE void __set_PMPADDRx(uint64_t idx, uint64_t pmpaddr)
 }
 
 /**
+  \brief   Get MCOUNTEREN
+  \details Returns the content of the MCOUNTEREN Register.
+  \return               MCOUNTEREN Register value
+ */
+__ALWAYS_STATIC_INLINE uint64_t __get_MCOUNTEREN(void)
+{
+    uint32_t result;
+
+    __ASM volatile("csrr %0, mcounteren" : "=r"(result));
+    return (result);
+}
+
+/**
+  \brief   Set MCOUNTEREN
+  \details Writes the given value to the MCOUNTEREN Register.
+  \param [in]    mcounteren  MCOUNTEREN Register value to set
+ */
+__ALWAYS_STATIC_INLINE void __set_MCOUNTEREN(uint32_t mcounteren)
+{
+    __ASM volatile("csrw mcounteren, %0" : : "r"(mcounteren));
+}
+
+/**
+  \brief   Get MCOUNTERWEN
+  \details Returns the content of the MCOUNTERWEN Register.
+  \return               MCOUNTERWEN Register value
+ */
+__ALWAYS_STATIC_INLINE uint64_t __get_MCOUNTERWEN(void)
+{
+    uint32_t result;
+
+    __ASM volatile("csrr %0, mcounterwen" : "=r"(result));
+    return (result);
+}
+
+/**
+  \brief   Set MCOUNTERWEN
+  \details Writes the given value to the MCOUNTERWEN Register.
+  \param [in]    mcounterwen  MCOUNTERWEN Register value to set
+ */
+__ALWAYS_STATIC_INLINE void __set_MCOUNTERWEN(uint32_t mcounterwen)
+{
+    __ASM volatile("csrw mcounterwen, %0" : : "r"(mcounterwen));
+}
+/**
   \brief   Set MEDELEG Register
   \details Writes the given value to the MEDELEG Register.
  */
@@ -1345,7 +1413,8 @@ __ALWAYS_STATIC_INLINE void __STOP(void)
  */
 __ALWAYS_STATIC_INLINE void __ISB(void)
 {
-    __ASM volatile("fence");
+    __ASM volatile("fence.i");
+    __ASM volatile("fence r, r");
 }
 
 
@@ -1356,7 +1425,18 @@ __ALWAYS_STATIC_INLINE void __ISB(void)
  */
 __ALWAYS_STATIC_INLINE void __DSB(void)
 {
-    __ASM volatile("fence");
+    __ASM volatile("fence iorw, iorw");
+    __ASM volatile("sync");
+}
+
+/**
+  \brief   Data Memory Barrier
+  \details Ensures the apparent order of the explicit memory operations before
+           and after the instruction, without ensuring their completion.
+ */
+__ALWAYS_STATIC_INLINE void __DMB(void)
+{
+    __ASM volatile("fence rw, rw");
 }
 
 /**
@@ -1522,17 +1602,6 @@ __ALWAYS_STATIC_INLINE void __DCACHE_CIPA(uint64_t addr)
 __ALWAYS_STATIC_INLINE void __DCACHE_CIVA(uint64_t addr)
 {
     __ASM volatile("dcache.civa %0" : : "r"(addr));
-}
-
-
-/**
-  \brief   Data Memory Barrier
-  \details Ensures the apparent order of the explicit memory operations before
-           and after the instruction, without ensuring their completion.
- */
-__ALWAYS_STATIC_INLINE void __DMB(void)
-{
-    __ASM volatile("fence");
 }
 
 /**

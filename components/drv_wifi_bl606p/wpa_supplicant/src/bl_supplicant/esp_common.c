@@ -155,13 +155,13 @@ static void esp_btm_rrm_task(void *pvParameters)
 
 static void esp_clear_bssid_flag(struct wpa_supplicant *wpa_s)
 {
-	wifi_config_t *config;
+	rvm_hal_wifi_config_t *config;
 
 	/* Reset only if btm is enabled */
 	if (esp_wifi_is_btm_enabled_internal(WIFI_IF_STA) == false)
 		return;
 
-	config = os_zalloc(sizeof(wifi_config_t));
+	config = os_zalloc(sizeof(rvm_hal_wifi_config_t));
 
 	if (!config) {
 		wpa_printf(MSG_ERROR, "failed to allocate memory");
@@ -281,7 +281,7 @@ int esp_wnm_send_bss_transition_mgmt_query(enum btm_query_reason query_reason,
 void wpa_supplicant_connect(struct wpa_supplicant *wpa_s,
 			    struct wpa_bss *bss, char *ssid)
 {
-	wifi_config_t *config = os_zalloc(sizeof(wifi_config_t));
+	rvm_hal_wifi_config_t *config = os_zalloc(sizeof(rvm_hal_wifi_config_t));
 
 	if (!config) {
 		wpa_printf(MSG_ERROR, "failed to allocate memory");

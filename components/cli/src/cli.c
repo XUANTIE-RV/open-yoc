@@ -78,6 +78,9 @@ int32_t cli_printf(const char *fmt, ...);
 static inline void cli_prefix_print(void)
 {
 #if CLI_IOBOX_ENABLE
+#ifndef PATH_MAX
+#define PATH_MAX    1024
+#endif
     char _buf[PATH_MAX] = {0};
     cli_printf("(%s:%s)"PROMPT, cli_task_get_console_name(),
                getcwd(_buf, sizeof(_buf)));

@@ -15,3 +15,8 @@ yoc_sdk/
 .gdbinit
 .sconsign.dblite
 script/
+mkflash.sh
+yoc.*
+gdbinit
+gdbinitflash
+cdkinitflash

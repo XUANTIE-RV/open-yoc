@@ -164,13 +164,13 @@ bt_stack_status_t bt_stack_dev_unpair(bt_dev_addr_t *peer_addr);
 bt_stack_status_t bt_stack_paired_dev_foreach(void (*func)(bt_dev_addr_t *addr, void *data), void *data);
 
 /// ClassicBT Functions
-#if defined(CONFIG_BT_BREDR) && CONFIG_BT_BREDR
+#if (defined(CONFIG_BT_BREDR) && CONFIG_BT_BREDR)
 #include <aos/classic/bt_stack.h>
-#if defined(CONFIG_BT_A2DP) && CONFIG_BT_A2DP
+#if (defined(CONFIG_BT_A2DP) && CONFIG_BT_A2DP)
 #include <aos/classic/bt_stack_a2dp.h>
 #include <aos/classic/bt_stack_avrcp.h>
 #endif
-#if defined(CONFIG_BT_HFP_HF) && CONFIG_BT_HFP_HF
+#if (defined(CONFIG_BT_HFP_HF) && CONFIG_BT_HFP_HF)
 #include <aos/classic/bt_stack_hfp_hf.h>
 #endif
 #endif

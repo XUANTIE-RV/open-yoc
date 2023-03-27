@@ -333,7 +333,7 @@ typedef struct HCI_H5_CB {
 
     uint8_t     cleanuping;
 
-    aos_dev_t   *hci_dev;
+    rvm_dev_t   *hci_dev;
 } tHCI_H5_CB;
 
 static tHCI_H5_CB rtk_h5;
@@ -1717,7 +1717,7 @@ static uint16_t h5_wake_up()
         }
 #endif
         //we adopt the hci_drv interface to send data
-        bytes_sent = hci_send(rtk_h5.hci_dev, data, data_len);
+        bytes_sent = rvm_hal_hci_send(rtk_h5.hci_dev, data, data_len);
 
         hci_skb_free(&skb);
     }
@@ -2286,7 +2286,7 @@ static int create_data_ready_cb_thread()
 }
 
 
-static void hci_event(hci_event_t event, uint32_t size, void *priv)
+static void hci_event(rvm_hal_hci_event_t event, uint32_t size, void *priv)
 {
     hci_h5_receive_msg(NULL , 0);
 }
@@ -2335,13 +2335,13 @@ static void hci_h5_int_init(packet_recv h5_callbacks)
 
     set_mp_mode();
 
-    rtk_h5.hci_dev = hci_open("hci");
+    rtk_h5.hci_dev = rvm_hal_hci_open("hci");
 
     aos_check(rtk_h5.hci_dev, EIO);
 
-    hci_set_event(rtk_h5.hci_dev, hci_event, NULL);
+    rvm_hal_hci_set_event(rtk_h5.hci_dev, hci_event, NULL);
 
-    hci_start(rtk_h5.hci_dev, h5_mp_send_cmd);
+    rvm_hal_hci_start(rtk_h5.hci_dev, h5_mp_send_cmd);
 }
 
 /*******************************************************************************
@@ -2395,7 +2395,7 @@ static void hci_h5_cleanup(void)
 static uint8_t data_buffer[4096] = {0};
 static uint32_t hci_h5_receive_msg(uint8_t *byte, uint16_t length)
 {
-    uint32_t read_len = hci_recv(rtk_h5.hci_dev, data_buffer, 4096);
+    uint32_t read_len = rvm_hal_hci_recv(rtk_h5.hci_dev, data_buffer, 4096);
 
     if (read_len > 0) {
 

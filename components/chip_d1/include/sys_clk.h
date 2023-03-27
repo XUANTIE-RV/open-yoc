@@ -74,10 +74,6 @@ typedef enum {
     BUS_MIPI_DSI_CLK         = 114U,
 } clk_module_t;
 
-void soc_clk_init(void);
-
-uint32_t soc_get_sys_freq(void);
-
 #ifdef __cplusplus
 }
 #endif

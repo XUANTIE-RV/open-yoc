@@ -10,11 +10,9 @@
 
 #include <alsa/pcm.h>
 #include <alsa/snd.h>
-//控制发送信号和控制声音大小
 #ifdef __cplusplus
 extern "C" {
 #endif
-
 
 /** Mixer simple element channel identifier */
 typedef enum _aos_mixer_selem_channel_id {
@@ -107,6 +105,10 @@ aos_mixer_elem_t *aos_mixer_last_elem(aos_mixer_t *mixer);
 aos_mixer_elem_t *aos_mixer_elem_next(aos_mixer_elem_t *elem);
 aos_mixer_elem_t *aos_mixer_elem_prev(aos_mixer_elem_t *elem); // not support
 int aos_mixer_attach(aos_mixer_t *mixer, const char *name);
+
+//db gain set
+int aos_mixer_selem_set_playback_db(aos_mixer_elem_t *elem, aos_mixer_selem_channel_id_t channel, int db);
+int aos_mixer_selem_set_playback_db_all(aos_mixer_elem_t *elem, int db);
 
 #ifdef __cplusplus
 }

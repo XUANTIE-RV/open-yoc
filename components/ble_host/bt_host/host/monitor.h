@@ -8,7 +8,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#if defined(CONFIG_BT_DEBUG_MONITOR)
+#if (defined(CONFIG_BT_DEBUG_MONITOR) && CONFIG_BT_DEBUG_MONITOR)
 
 #define BT_MONITOR_NEW_INDEX	0
 #define BT_MONITOR_DEL_INDEX	1
@@ -41,7 +41,7 @@
 
 #define BT_MONITOR_BASE_HDR_LEN  6
 
-#if defined(CONFIG_BT_BREDR)
+#if (defined(CONFIG_BT_BREDR) && CONFIG_BT_BREDR)
 #define BT_MONITOR_EXT_HDR_MAX 19
 #else
 #define BT_MONITOR_EXT_HDR_MAX 15

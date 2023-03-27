@@ -652,7 +652,7 @@ static int wps_finish(void)
 
     if (sm->wps->state == WPS_FINISHED) {
 #if 0
-        wifi_config_t *config = (wifi_config_t *)os_zalloc(sizeof(wifi_config_t));
+        rvm_hal_wifi_config_t *config = (rvm_hal_wifi_config_t *)os_zalloc(sizeof(rvm_hal_wifi_config_t));
 
         if (config == NULL) {
             wifi_event_sta_wps_fail_reason_t reason_code = WPS_FAIL_REASON_NORMAL;

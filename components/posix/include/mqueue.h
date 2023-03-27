@@ -11,12 +11,11 @@ extern "C" {
 
 #include <sys/types.h>
 #include <time.h>
-#include <aos/kernel.h>
 
 #define DEFAULT_MQUEUE_SIZE  10240
 #define DEFAULT_MAX_MSG_SIZE 1024
 
-typedef void *mqd_t;
+typedef int mqd_t;
 
 struct mq_attr {
     long mq_flags;    /* message queue flags */

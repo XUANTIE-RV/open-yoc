@@ -3,18 +3,17 @@
  */
 #include <errno.h>
 #include <string.h>
+#include <inttypes.h>
 #include "mtb.h"
 #include "mtb_internal.h"
 #include "mtb_log.h"
-#include "yoc/partition_flash.h"
+#include "yoc/partition_device.h"
 #include "yoc/partition.h"
 #include "verify.h"
 #include "verify_wrapper.h"
-#if (CONFIG_PARITION_NO_VERIFY == 0)
+#if (CONFIG_PARITION_NO_VERIFY == 0) && (defined(CONFIG_COMP_KEY_MGR) && CONFIG_COMP_KEY_MGR)
 #include <key_mgr.h>
 #endif
-
-#if !defined(CONFIG_MANTB_VERSION) || (CONFIG_MANTB_VERSION > 3)
 
 int mtbv4_partition_count(void)
 {
@@ -27,28 +26,36 @@ int mtbv4_partition_count(void)
 int mtbv4_init(void)
 {
     mtb_t *mtb;
-    partition_flash_info_t flash_info;
     mtb_partition_info_t part_info;
+    partition_device_info_t flash_info;
 
     mtb = mtb_get();
 
-    void *handle = partition_flash_open(0); // MTB must be in flash0
-    partition_flash_info_get(handle, &flash_info);
-    partition_flash_close(handle);
-
-    MTB_LOGD("imtb using:0x%lx, valid:0x%lx", mtb->using_addr, mtb->prim_addr);
+    MTB_LOGD("imtb using:0x%lx, valid offset:0x%lx", mtb->using_addr, mtb->prim_offset);
 
     if (mtbv4_get_partition_info(MTB_IMAGE_NAME_IMTB, &part_info)) {
         MTB_LOGE("mtb f `imtb` e");
         return -1;
     }
-    mtb->one_size = (part_info.end_addr - part_info.start_addr) >> 1;
-    if (mtb->prim_addr == part_info.start_addr) {
-        mtb->backup_addr = part_info.start_addr + mtb->one_size;
-    } else {
-        mtb->backup_addr = part_info.start_addr;
+    MTB_LOGD("part_info.storage_info.type:%d", part_info.storage_info.type);
+    MTB_LOGD("part_info.storage_info.id:%d", part_info.storage_info.id);
+    MTB_LOGD("part_info.storage_info.area:%d", part_info.storage_info.area);
+    void *handle = partition_device_find(&part_info.storage_info);
+    if (partition_device_info_get(handle, &flash_info)) {
+        MTB_LOGE("mtb get dev info e");
+        return -1;
     }
-    MTB_LOGD("imtb backup:0x%lx", mtb->backup_addr);
+    MTB_LOGD("part_info.end_addr:0x%"PRIX64, part_info.end_addr);
+    MTB_LOGD("part_info.start_addr:0x%"PRIX64, part_info.start_addr);
+    MTB_LOGD("flash_info.base_addr:0x%"PRIX64, flash_info.base_addr);
+    mtb->one_size = (part_info.end_addr - part_info.start_addr) >> 1;
+    if (mtb->prim_offset == part_info.start_addr - flash_info.base_addr) {
+        mtb->backup_offset = part_info.start_addr - flash_info.base_addr + mtb->one_size;
+    } else {
+        mtb->backup_offset = part_info.start_addr - flash_info.base_addr;
+    }
+    memcpy(&mtb->storage_info, &part_info.storage_info, sizeof(storage_info_t));
+    MTB_LOGD("imtb backup_offset:0x%lx", mtb->backup_offset);
     MTB_LOGD("imtb one-size:0x%x", mtb->one_size);
     MTB_LOGD("mtb init over");
     return 0;
@@ -56,11 +63,11 @@ int mtbv4_init(void)
 
 int mtbv4_get_partition_info(const char *name, mtb_partition_info_t *part_info)
 {
-    int flashid = 0;
     int i, count;
+    storage_info_t storage_info;
     imtb_head_v4_t *head;
     imtb_partition_info_v4_t *pp;
-    partition_flash_info_t flash_info;
+    partition_device_info_t flash_info;
 
     if (name && part_info) {
         head = (imtb_head_v4_t *)mtb_get()->using_addr;
@@ -68,36 +75,51 @@ int mtbv4_get_partition_info(const char *name, mtb_partition_info_t *part_info)
         count = head->partition_count;
         for (i = 0; i < count; i++) {
             if (strncmp(pp->name, name, MTB_IMAGE_NAME_SIZE) == 0) {
-#if CONFIG_MULTI_FLASH_SUPPORT
-                flashid = pp->partition_type.son_type;
-#endif
-                void *handle = partition_flash_open(flashid);
-                partition_flash_info_get(handle, &flash_info);
-                partition_flash_close(handle);
-
-                part_info->start_addr = flash_info.start_addr + pp->block_offset * 512;
-                part_info->end_addr = part_info->start_addr + pp->block_count * 512;
-                part_info->load_addr = pp->load_address;
+#if 0
                 memcpy(part_info->pub_key_name, pp->pub_key_name, PUBLIC_KEY_NAME_SIZE);
+#else
+                memcpy(&part_info->storage_info, &pp->storage_info, sizeof(storage_info_t));
+#endif
+                storage_info.id = 0;
+                storage_info.type = mtb_get_default_device_type();
+                storage_info.hot_plug = 0;
+#if CONFIG_PARTITION_SUPPORT_BLOCK_OR_MULTI_DEV
+                memcpy(&storage_info, &part_info->storage_info, sizeof(storage_info_t));
+#else
+                memcpy(&part_info->storage_info, &storage_info, sizeof(storage_info_t));
+#endif
+                if (!storage_info.hot_plug) {
+                    void *handle = partition_device_find(&storage_info);
+                    if (partition_device_info_get(handle, &flash_info)) {
+                        MTB_LOGE("get [%s]'s device[%d,%d,%d] info e!!", pp->name, storage_info.type, storage_info.id, storage_info.area);
+                        return -1;
+                    }
+                } else {
+                    flash_info.base_addr = 0;
+                }
+
+                part_info->start_addr = flash_info.base_addr + pp->block_offset * 512;
+                uint32_t blk_cnt = (uint32_t)pp->block_count_h << 16 | pp->block_count;
+                part_info->end_addr = part_info->start_addr + (uint64_t)blk_cnt * 512;
+                part_info->load_addr = pp->load_address;
                 memcpy(part_info->name, pp->name, MTB_IMAGE_NAME_SIZE);
-                part_info->part_type = pp->partition_type;
                 part_info->img_size = pp->img_size;
                 return 0;
             }
             pp ++;
         }
     }
-
+    MTB_LOGE("arg e.");
     return -EINVAL;
 }
 
 int mtbv4_get_partition_info_with_index(int index, mtb_partition_info_t *part_info)
 {
     int count;
-    int flashid = 0;
+    storage_info_t storage_info;
     imtb_head_v4_t *head;
     imtb_partition_info_v4_t *pp;
-    partition_flash_info_t flash_info;
+    partition_device_info_t flash_info;
 
     if (part_info) {
         head = (imtb_head_v4_t *)mtb_get()->using_addr;
@@ -105,24 +127,40 @@ int mtbv4_get_partition_info_with_index(int index, mtb_partition_info_t *part_in
         count = head->partition_count;
         if (index < count) {
             pp += index;
-#if CONFIG_MULTI_FLASH_SUPPORT
-            flashid = pp->partition_type.son_type;
-#endif
-            void *handle = partition_flash_open(flashid);
-            partition_flash_info_get(handle, &flash_info);
-            partition_flash_close(handle);
-
-            part_info->start_addr = flash_info.start_addr + pp->block_offset * 512;
-            part_info->end_addr = part_info->start_addr + pp->block_count * 512;
-            part_info->load_addr = pp->load_address;
+#if 0
             memcpy(part_info->pub_key_name, pp->pub_key_name, PUBLIC_KEY_NAME_SIZE);
+#else
+            memcpy(&part_info->storage_info, &pp->storage_info, sizeof(storage_info_t));
+#endif
+            storage_info.id = 0;
+            storage_info.type = mtb_get_default_device_type();
+            storage_info.hot_plug = 0;
+#if CONFIG_PARTITION_SUPPORT_BLOCK_OR_MULTI_DEV
+            memcpy(&storage_info, &part_info->storage_info, sizeof(storage_info_t));
+#else
+            memcpy(&part_info->storage_info, &storage_info, sizeof(storage_info_t));
+#endif
+            if (!storage_info.hot_plug) {
+                void *handle = partition_device_find(&storage_info);
+                if (partition_device_info_get(handle, &flash_info)) {
+                    MTB_LOGE("get [%s]'s device[%d,%d,%d] info e!!", pp->name, storage_info.type, storage_info.id, storage_info.area);
+                    return -1;
+                }
+            } else {
+                flash_info.base_addr = 0;
+            }
+
+            part_info->start_addr = flash_info.base_addr + pp->block_offset * 512;
+            uint32_t blk_cnt = (uint32_t)pp->block_count_h << 16 | pp->block_count;
+            // printf("%d, %d, %d, %s\r\n", pp->block_count_h, pp->block_count, blk_cnt, pp->name);
+            part_info->end_addr = part_info->start_addr + (uint64_t)blk_cnt * 512;
+            part_info->load_addr = pp->load_address;
             memcpy(part_info->name, pp->name, MTB_IMAGE_NAME_SIZE);
-            part_info->part_type = pp->partition_type;
             part_info->img_size = pp->img_size;
             return 0;
         }
     }
-
+    MTB_LOGE("arg e.");
     return -EINVAL;
 }
 
@@ -179,7 +217,7 @@ int mtbv4_image_verify(const char *name)
 #define PART_HEAD_SIZE (sizeof(partition_header_t))
 #define PART_TAIL_HEAD_SIZE (sizeof(partition_tail_head_t))
     int        offset, need_verify;
-    uint32_t   part_start, olen;
+    uint32_t   olen;
     int        digest_type, sig_type;
     uint8_t    buf[READ_MAX_SIZE + PART_HEAD_SIZE];
     uint8_t    old_sha[128];
@@ -194,18 +232,18 @@ int mtbv4_image_verify(const char *name)
     step = 1;
 #endif
 
-    partition_header_t *   p_head;
+    partition_header_t *p_head;
     partition_tail_head_t *p_tail_head;
-    mtb_partition_info_t part_info;
+    partition_info_t *part_info;
 
-    if (mtbv4_get_partition_info(name, &part_info)) {
+    partition_t part = partition_open(name);
+    part_info = partition_info_get(part);
+    if (!part_info) {
         return -1;
     }
 
-    part_start = part_info.start_addr + custom_offset;
-
     memset(buf, 0, sizeof(buf));
-    if (get_data_from_faddr(part_start, buf, sizeof(buf))) {
+    if (partition_read(part, custom_offset, buf, sizeof(buf))) {
         return -1;
     }
 #if 0
@@ -228,7 +266,7 @@ int mtbv4_image_verify(const char *name)
     }
     MTB_LOGD("--- %s", name);
     MTB_LOGD("offset:%d, need_verify:%d", offset, need_verify);
-    MTB_LOGD("part_start=0x%x", part_start);
+    MTB_LOGD("custom_offset=0x%x", custom_offset);
 
     if (check_is_need_verify(name) && need_verify == 0) {
         MTB_LOGE("need verify, but not signed.");
@@ -237,18 +275,18 @@ int mtbv4_image_verify(const char *name)
 
     if (need_verify == 1) {
         uint32_t img_content_size = p_head->size;
-        uint32_t img_content_addr = part_start + PART_HEAD_SIZE + offset;
+        uint32_t img_content_addr = part_info->base_addr + part_info->start_addr + PART_HEAD_SIZE + offset + custom_offset;
         uint32_t part_tail_addr   = img_content_addr + img_content_size;
 
         MTB_LOGD("p_head->size=0x%x", p_head->size);
         MTB_LOGD("part_tail_addr:0x%x", part_tail_addr);
 
-        if (part_start + img_content_size > part_info.end_addr) {
+        if (img_content_size > part_info->length) {
             MTB_LOGE("the image content size is overflow!");
             return -1;
         }
 
-        if (get_data_from_faddr(part_tail_addr, part_tail_buf, PART_TAIL_HEAD_SIZE)) {
+        if (partition_read(part, part_tail_addr - (part_info->base_addr + part_info->start_addr), part_tail_buf, PART_TAIL_HEAD_SIZE)) {
             return -1;
         }
         p_tail_head = (partition_tail_head_t *)part_tail_buf;
@@ -264,13 +302,14 @@ int mtbv4_image_verify(const char *name)
             sig_addr += hash_len;
             MTB_LOGD("start check hash");
 
-            hash_calc_start(digest_type, (const uint8_t *)((unsigned long)img_content_addr), img_content_size, sha, &olen, 0);
+            hash_calc_start(digest_type, (const uint8_t *)((unsigned long)img_content_addr),
+                            img_content_size, sha, &olen, 0, part_info);
             if (olen != hash_len) {
                 MTB_LOGE("sha len calc error:%d,%d", hash_len, olen);
                 return -1;
             }
 
-            if (get_data_from_faddr(hash_addr, old_sha, hash_len)) {
+            if (partition_read(part, hash_addr - (part_info->base_addr + part_info->start_addr), old_sha, hash_len)) {
                 return -1;
             }
 #if 0
@@ -284,18 +323,19 @@ int mtbv4_image_verify(const char *name)
                 MTB_LOGE("img hash verify fail [%s]", name);
                 return -1;
             }
-#if CONFIG_IMG_AUTHENTICITY_NOT_CHECK == 0
+#if CONFIG_IMG_AUTHENTICITY_NOT_CHECK == 0 && (defined(CONFIG_COMP_KEY_MGR) && CONFIG_COMP_KEY_MGR)
             key_handle key_addr;
             uint32_t key_size;
             uint8_t old_sig[256];
-            char *pub_key_name = part_info.pub_key_name;
+            // char *pub_key_name = part_info.pub_key_name;
+            char *pub_key_name = (char *)DEFAULT_PUBLIC_KEY_NAME_IN_OTP;
             int sig_len = get_length_with_signature_type(sig_type);
             if (km_get_pub_key_by_name(pub_key_name, &key_addr, &key_size) == KM_OK) {
                 MTB_LOGD("key_addr:0x%lx", (unsigned long)key_addr);
-                if (get_data_from_faddr(sig_addr, old_sig, sig_len)) {
+                if (partition_read(part, sig_addr - (part_info->base_addr + part_info->start_addr), old_sig, sig_len)) {
                     return -1;
                 }
-                MTB_LOGD("sig_addr:0x%x",sig_addr);
+                MTB_LOGD("sig_offset:0x%x",sig_addr);
 #if 0
                 printf("key---------------------------------------------------\n");
                 dump_data((uint8_t *)key_addr, key_size);
@@ -328,26 +368,16 @@ int mtbv4_image_verify(const char *name)
 }
 #endif /* CONFIG_PARITION_NO_VERIFY */
 
-#else
-
-int mtbv4_init(void)
+// 为了兼容老的只有一种eflash或者spiflash时使用
+int mtb_get_default_device_type(void)
 {
-    return 0;
-}
+    int device_type = 0;
 
-int mtbv4_verify(void)
-{
-    return 0;
-}
-
-int mtbv4_image_verify(const char *name)
-{
-    return 0;
-}
-
-int mtbv4_get_partition_info(const char *name, mtb_partition_info_t *part_info)
-{
-    return 0;
-}
-
+#if CONFIG_PARTITION_SUPPORT_EFLASH
+    device_type = MEM_DEVICE_TYPE_EFLASH;
+#elif CONFIG_PARTITION_SUPPORT_SPINORFLASH
+    device_type = MEM_DEVICE_TYPE_SPI_NOR_FLASH;
 #endif
+
+    return device_type;
+}

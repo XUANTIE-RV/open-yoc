@@ -12,6 +12,11 @@ misc/
 *.map
 out/
 yoc_sdk/
-.gdbinit
 .sconsign.dblite
 script/
+mkflash.sh
+gdbinitflash
+cdkinitflash
+gdbinit
+yoc.*
+mkflash.sh

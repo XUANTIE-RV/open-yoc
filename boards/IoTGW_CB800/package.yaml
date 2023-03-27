@@ -1,7 +1,7 @@
 
 ## 第一部分： 基础信息
 name: IoTGW_CB800                                    # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
-version: v7.6.0                                     # <必选项> 组件版本号
+version: v7.7.0                                     # <必选项> 组件版本号
 description: chip_w800 development board configure. # <必选项> 建议至少20字以上
 type: board                                         # <必选项> 组件类型，为：solution, chip, board, common
 
@@ -15,8 +15,7 @@ license: Apache license v2.0                        # <可选项> 源代码的�
 #   - minilibc: v7.2.0
 #   - aos: >=v7.2.0
 depends:
-  - drv_bt_hci_uart_h5: v7.6.0
-  
+  - drv_bt_hci_uart_h5: v7.7.0
 
 ## 第三部分：板级信息
 # hw_info:                                 # 对 solution、board、chip 三个字段的改进，统称为 hw_info 字段
@@ -103,12 +102,22 @@ build_config:
     -DTLS_CONFIG_CPU_XT804=1 -DGCC_COMPILE=1 -mhard-float -Wa,--gdwarf2 -fdata-sections -ffunction-sections
   include:
     - include
-
+  #prebuild_script: "script/pre_build.sh"
+  postbuild_script: "script/aft_build.sh"
 # source_file:                             # <可选项> 指定参与编译的源代码文件，支持通配符，采用相对路径
 #   - src/*.c                              # 例：组件 src 目录下所有的扩展名为 c 的源代码文件
 source_file:
   - "src/*.c"
   - "src/nsp/*.c"
+  - "src/adc/board_adc.c"
+  - "src/audio/board_audio.c"
+  - "src/bt/board_bt.c"
+  - "src/button/board_button.c"
+  - "src/gpio/board_gpio.c"
+  - "src/led/board_led.c"
+  - "src/pwm/board_pwm.c"
+  - "src/uart/board_uart.c"
+  - "src/wifi/board_wifi.c"
 
 ## 第五部分：配置信息
 def_config:                              # 组件的可配置项
@@ -116,6 +125,7 @@ def_config:                              # 组件的可配置项
 #   CONFIG_PARAM_NOT_CHECK: y
 #   CONFIG_CLI: y
     BOARD_W800: 1
+    CONFIG_SYSTICK_HZ: 1000
     __NO_BOARD_INIT: 1
     CONFIG_USING_TLS: 1
     MBEDTLS_AES_ALT: 1
@@ -132,7 +142,12 @@ def_config:                              # 组件的可配置项
     CONFIG_BT_TINYCRYPT_ECC: 1
     CONFIG_HAL_UART_DISABLED: 1
     CONFIG_GW_USE_YOC_BOOTLOADER: 1
+    CONFIG_XIP: 1
+    CONFIG_USERVICE_EVENT_TASK_STACK_SIZE: 4096
+    CONFIG_HAL_UART_RINGBUF_LEN: 8192
+    CONFIG_BT_HCI_ACL_FLOW_CONTROL: 1
     #STDIO_UART: 4
+    CONFIG_AOS_FLASH: y
 
 ## 第六部分：安装信息
 # install:
@@ -165,10 +180,3 @@ export:
       #- "bootimgs/fcds"
       #- "bootimgs/bt"
       #- "configs/config.yaml"
-  - dest: "<SOLUTION_PATH>/temp/script"
-    source:
-      - "configs/product"
-      - "configs/gdbinit"
-      - "script/flash.init"
-      - "script/aft_build.sh"
-      - "script/flash.sh"

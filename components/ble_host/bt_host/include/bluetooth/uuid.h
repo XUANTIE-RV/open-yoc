@@ -588,9 +588,8 @@ int bt_uuid_cmp(const struct bt_uuid *u1, const struct bt_uuid *u2);
  *  @return true if the data was valid and the UUID was successfully created.
  */
 bool bt_uuid_create(struct bt_uuid *uuid, const u8_t *data, u8_t data_len);
-#define CONFIG_BT_DEBUG
 
-#if defined(CONFIG_BT_DEBUG)
+#if (defined(CONFIG_BT_DEBUG) && CONFIG_BT_DEBUG)
 /** @brief Convert Bluetooth UUID to string.
  *
  *  Converts Bluetooth UUID to string.

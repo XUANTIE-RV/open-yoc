@@ -69,7 +69,7 @@ netmgr_hdl_t netmgr_get_handle(const char *name);
  * @param  [in] netmgr_hdl_t
  * @return NULL on error
  */
-aos_dev_t *netmgr_get_dev(netmgr_hdl_t);
+rvm_dev_t *netmgr_get_dev(netmgr_hdl_t);
 
 /**
  * @brief  net manage config for wifi device

@@ -1,6 +1,6 @@
 ## 第一部分： 基础信息
 name: httpclient_demo
-version: v7.6.0                                     # <必选项> 组件版本号
+version: v7.7.0
 description: httpclient_demo
 type: solution
 ## 第二部分：依赖信息
@@ -13,16 +13,18 @@ type: solution
 #   - minilibc: v7.2.0
 #   - aos: >=v7.2.0
 sdk_chip:
-  - sdk_chip_bl606p_e907: v7.6.2
-  - sdk_chip_d1: v7.6.0
-  - sdk_chip_ch2601: v7.6.0
+  - sdk_chip_bl606p_e907: v7.7.0
+  - sdk_chip_d1: v7.7.0
+  - sdk_chip_ch2601: v7.7.0
+  - sdk_chip_cv181xh: v7.7.0
+  - sdk_chip_f133: v7.7.0
 depends:
-  - sdk_chip_bl606p_e907: v7.6.2
-  - netmgr: v7.6.0
-  - mbedtls: v7.6.0
-  - httpclient: v7.6.0
-  - transport: v7.6.0
-  - ntp: v7.6.0
+  - sdk_chip_bl606p_e907: v7.7.0
+  - netmgr: v7.7.0
+  - mbedtls: v7.7.0
+  - httpclient: v7.7.0
+  - transport: v7.7.0
+  - ntp: v7.7.0
 
 ## 第三部分：板级信息
 hw_info:
@@ -70,6 +72,7 @@ source_file:
 #   CONFIG_CLI: y
 def_config:
   CONFIG_DEBUG: 1
+  CONFIG_BOARD_WIFI: 1
 
 keywords: ~
 tag: ""

@@ -60,7 +60,7 @@ typedef struct cmd_list {
 } cmd_list_t;
 
 static slist_t cmd_lists;
-static aos_dev_t *comm_handle = NULL;
+static rvm_dev_t *comm_handle = NULL;
 static char *cmd_name, *cmd_args, *cmd_args_cp;
 static uint16_t cmd_name_len, cmd_args_len;
 static char **arg_items;
@@ -144,7 +144,7 @@ static int ch_parse(char ch)
         case CMD_ARGS:
             if (cmd_args_len == MAX_CMD_ARGS_LEN) {
                 snprintf(err_msg, 128, MSG_ERR_TEMP, "command too long");
-                uart_send(comm_handle, err_msg, strlen(err_msg));
+                rvm_hal_uart_send(comm_handle, err_msg, strlen(err_msg), AOS_WAIT_FOREVER);
             } else {
                 cmd_args[cmd_args_len++] = ch;
             }
@@ -165,7 +165,7 @@ static int cli_parse(char *cmd_name, int cmd_type, char *args)
     // printf("cli parse %s %d %s\n", cmd_name, cmd_type, args);
 
     if (cmd_type == CMD_AT_2) {
-        uart_send(comm_handle, "OK\r\n", 4);
+        rvm_hal_uart_send(comm_handle, "OK\r\n", 4, AOS_WAIT_FOREVER);
     } else {
         cmd_list_t *node;
         int found = 0;
@@ -180,10 +180,10 @@ static int cli_parse(char *cmd_name, int cmd_type, char *args)
         if (found) {
             if (cmd_type == CMD_TEST) {
                 snprintf(reply_msg, 256, MSG_TEST_TEMP, cmd_name, node->help);
-                uart_send(comm_handle, reply_msg, strlen(reply_msg));
+                rvm_hal_uart_send(comm_handle, reply_msg, strlen(reply_msg), AOS_WAIT_FOREVER);
             } else {
                 if (exe_stat == EXE_RUNNING) {
-                    uart_send(comm_handle, MSG_STILL_RUN_TEMP, strlen(MSG_STILL_RUN_TEMP));                    
+                    rvm_hal_uart_send(comm_handle, MSG_STILL_RUN_TEMP, strlen(MSG_STILL_RUN_TEMP), AOS_WAIT_FOREVER);
                     return -1;
                 }
 
@@ -192,7 +192,7 @@ static int cli_parse(char *cmd_name, int cmd_type, char *args)
                 int count = strsplit(arg_items, MAX_CMD_ARG_NUM, cmd_args_cp, ",");
 
                 if (fct_run_test(node->cmd_id, cmd_type == CMD_QUERY, count, arg_items)) {
-                    uart_send(comm_handle, MSG_RUN_FAIL_TEMP, strlen(MSG_RUN_FAIL_TEMP));                    
+                    rvm_hal_uart_send(comm_handle, MSG_RUN_FAIL_TEMP, strlen(MSG_RUN_FAIL_TEMP), AOS_WAIT_FOREVER);
                     return -1;
                 }
 
@@ -201,7 +201,7 @@ static int cli_parse(char *cmd_name, int cmd_type, char *args)
             }
         } else {
             snprintf(reply_msg, 256, MSG_NOT_FOUND_TEMP);
-            uart_send(comm_handle, reply_msg, strlen(reply_msg));
+            rvm_hal_uart_send(comm_handle, reply_msg, strlen(reply_msg), AOS_WAIT_FOREVER);
         }
     }
 
@@ -215,7 +215,7 @@ static void tsk_fct_comm(void *arg)
 
     while (fct_running) {
         /* if received command from PC, process it */
-        if (uart_recv(comm_handle, &ch, 1, 100) > 0) {
+        if (rvm_hal_uart_recv(comm_handle, &ch, 1, 100) > 0) {
             int_fast8_t ret;
 
             while (1) {
@@ -227,7 +227,7 @@ static void tsk_fct_comm(void *arg)
                     }
                 }
 
-                int len = uart_recv(comm_handle, &ch, 1, 0);
+                int len = rvm_hal_uart_recv(comm_handle, &ch, 1, 0);
 
                 if (len <= 0)
                     break;
@@ -252,7 +252,7 @@ static void tsk_fct_comm(void *arg)
                     snprintf(reply_msg, 256, MSG_ERR_TEMP, result);
                 }
 
-                uart_send(comm_handle, reply_msg, strlen(reply_msg));
+                rvm_hal_uart_send(comm_handle, reply_msg, strlen(reply_msg), AOS_WAIT_FOREVER);
             } 
         }
     }
@@ -260,21 +260,22 @@ static void tsk_fct_comm(void *arg)
 }
 int fct_comm_init(int uart_id, uint32_t baud_rate)
 {
-    uart_config_t config;
+    rvm_hal_uart_config_t config;
     int ret;
     uint32_t flags = 0;
     
     if (comm_handle) {
         return -EBUSY;
     }
-
-    comm_handle = uart_open_id("uart", uart_id);
+    char buf_n[16];
+    snprintf(buf_n, sizeof(buf_n), "uart%d", uart_id);
+    comm_handle = rvm_hal_uart_open(buf_n);
     CHECK_RET_WITH_RET(comm_handle != NULL, -1);
-    uart_config_default(&config);
+    rvm_hal_uart_config_default(&config);
     config.baud_rate = baud_rate;
-    uart_config(comm_handle, &config);
-    uart_set_type(comm_handle, UART_TYPE_GENERAL);
-    // uart_set_event(&fct_handle, cli_uart_event, NULL);
+    rvm_hal_uart_config(comm_handle, &config);
+    rvm_hal_uart_set_type(comm_handle, UART_TYPE_ASYNC);
+    // rvm_hal_uart_set_event(&fct_handle, cli_uart_event, NULL);
 
     cmd_name = malloc(MAX_CMD_NAME_LEN + 1);
     cmd_args = malloc(MAX_CMD_ARGS_LEN + 1);
@@ -297,7 +298,7 @@ void fct_comm_deinit(void)
 
     fct_running=0;
     aos_event_get(&fct_comm_event, 0x1, AOS_EVENT_OR_CLEAR, &actl_flags, AOS_WAIT_FOREVER);
-    uart_close(comm_handle);
+    rvm_hal_uart_close(comm_handle);
     
     free(cmd_name);
     free(cmd_args);

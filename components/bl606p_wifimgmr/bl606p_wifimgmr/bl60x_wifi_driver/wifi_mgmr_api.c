@@ -360,11 +360,3 @@ int wifi_mgmr_api_set_country_code(char *country_code)
     return 0;
 }
 
-int wifi_mgmr_api_set_mode(uint8_t ap_or_sta, int mode)
-{
-    return wifi_mgmr_api_common_msg(
-        WIFI_MGMR_EVENT_FW_MODE_REQ,
-        (void*)ap_or_sta,
-        (void*)mode
-    ); 
-}

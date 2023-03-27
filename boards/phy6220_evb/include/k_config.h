@@ -40,7 +40,7 @@
 #define RHINO_CONFIG_TASK_SEM                1
 #define RHINO_CONFIG_EVENT_FLAG              1
 #ifndef CONFIG_KERNEL_TIMER
-#define RHINO_CONFIG_TIMER                   0
+#define RHINO_CONFIG_TIMER                   1
 #else
 #define RHINO_CONFIG_TIMER                   CONFIG_KERNEL_TIMER
 #endif

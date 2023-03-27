@@ -108,7 +108,7 @@ enum {
 
 struct bt_keys_link_key {
 	bt_addr_t		addr;
-	u8_t                    flags;
+	u8_t			flags;
 	u8_t			val[16];
 };
 

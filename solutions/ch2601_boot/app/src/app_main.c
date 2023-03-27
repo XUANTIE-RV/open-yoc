@@ -7,10 +7,11 @@
 #include <string.h>
 #include <stdio.h>
 #include <soc.h>
+#include <drv/tick.h>
 #include <boot.h>
 #include <boot_wrapper.h>
 #include <yoc/partition.h>
-#include <yoc/partition_flash.h>
+#include <yoc/partition_device.h>
 
 #define JUMP_TO_IMG_NAME "prim"
 
@@ -35,7 +36,10 @@ void boot_load_and_jump(void)
     printf("load&jump 0x%x,0x%x,%d\n", static_addr, load_addr, image_size);
     if (static_addr != load_addr) {
         printf("start copy..");
-        partition_flash_read(NULL, static_addr, (void *)load_addr, image_size);
+        if (partition_read(part, 0, (void *)load_addr, image_size)) {
+            printf("part read e");
+            goto fail;
+        }
         printf("all copy over..");
     } else {
         printf("xip...\n");
@@ -55,8 +59,15 @@ void boot_load_and_jump(void)
     }
     printf("j 0x%08x\n", (uint32_t)(*func));
 
+    csi_tick_uninit();
+
     (*func)();
     while(1) {;}
+
+fail:
+    printf("jump failed. reboot.\n");
+    mdelay(200);
+    boot_sys_reboot();
 }
 
 void boot_sys_reboot(void)

@@ -1,28 +1,30 @@
 /*
  * Copyright (C) 2019-2020 Alibaba Group Holding Limited
  */
+#include <soc.h>
+#include <board.h>
+#include <ulog/ulog.h>
+#include <drv/spiflash.h>
+#include <devices/impl/flash_impl.h>
 
-#include "hal/flash_impl.h"
-#include "drv/spiflash.h"
-#include "board.h"
-#include "soc.h"
+#define TAG "spiflash_drv"
 
 typedef struct {
-    aos_dev_t           device;
+    rvm_dev_t           device;
     csi_spiflash_t      handle;
     csi_spiflash_info_t info;
 } flash_dev_t;
 
-static aos_dev_t *yoc_spiflash_init(driver_t *drv,void *config, int id)
+static rvm_dev_t *yoc_spiflash_init(driver_t *drv,void *config, int id)
 {
-    flash_dev_t *dev = (flash_dev_t*)device_new(drv, sizeof(flash_dev_t), id);
+    flash_dev_t *dev = (flash_dev_t*)rvm_hal_device_new(drv, sizeof(flash_dev_t), id);
 
-    return (aos_dev_t*)dev;
+    return (rvm_dev_t*)dev;
 }
 
-#define yoc_spiflash_uninit device_free
+#define yoc_spiflash_uninit rvm_hal_device_free
 
-static int yoc_spiflash_lpm(aos_dev_t *dev, int state)
+static int yoc_spiflash_lpm(rvm_dev_t *dev, int state)
 {
     //flash_dev_t *flash = (flash_dev_t*)dev;
 
@@ -34,20 +36,26 @@ static int yoc_spiflash_lpm(aos_dev_t *dev, int state)
     return 0;
 }
 
-static int yoc_spiflash_open(aos_dev_t *dev)
+static int yoc_spiflash_open(rvm_dev_t *dev)
 {
     flash_dev_t *flash = (flash_dev_t*)dev;
     csi_error_t ret = csi_spiflash_qspi_init(&flash->handle, dev->id, NULL);
     if (ret != CSI_OK) {
+        LOGW(TAG, "csi qspi init error:%d, start to try spiflash", ret);
+        ret = csi_spiflash_spi_init(&flash->handle, dev->id, NULL);
+        if (ret != CSI_OK) {
+            LOGE(TAG, "csi spi init error:%d", ret);
+            return -1;
+        }
+    }
+    if (csi_spiflash_get_flash_info(&flash->handle, &flash->info)) {
+        LOGE(TAG, "csi get flash info error.");
         return -1;
     }
-
-    csi_spiflash_get_flash_info(&flash->handle, &flash->info);
-
     return 0;
 }
 
-static int yoc_spiflash_close(aos_dev_t *dev)
+static int yoc_spiflash_close(rvm_dev_t *dev)
 {
     //flash_dev_t *flash = (flash_dev_t*)dev;
 
@@ -56,36 +64,50 @@ static int yoc_spiflash_close(aos_dev_t *dev)
     return 0;
 }
 
-static int yoc_spiflash_read(aos_dev_t *dev, uint32_t addroff, void *buff, int32_t bytesize)
+static int yoc_spiflash_clock(rvm_dev_t *dev, bool enable)
+{
+    flash_dev_t *flash = (flash_dev_t*)dev;
+    if (enable) {
+        csi_clk_enable(&flash->handle.spi_qspi.spi.dev);
+    } else {
+        csi_clk_disable(&flash->handle.spi_qspi.spi.dev);
+    }
+    return 0;
+}
+
+static int yoc_spiflash_read(rvm_dev_t *dev, uint32_t addroff, void *buff, int32_t bytesize)
 {
     flash_dev_t *flash = (flash_dev_t*)dev;
     int ret;
+    // LOGD(TAG, "addroff:0x%x, bytesize:%d", addroff, bytesize);
     ret = csi_spiflash_read(&flash->handle, addroff, buff, bytesize);
     if (ret != bytesize) {
+        LOGE(TAG, "addroff:0x%x, bytesize:%d", addroff, bytesize);
         return -EIO;
     }
 
     return 0;
 }
 
-static int yoc_spiflash_program(aos_dev_t *dev, uint32_t dstaddr, const void *srcbuf, int32_t bytesize)
+static int yoc_spiflash_program(rvm_dev_t *dev, uint32_t dstaddr, const void *srcbuf, int32_t bytesize)
 {
     flash_dev_t *flash = (flash_dev_t*)dev;
-
+    // LOGD(TAG, "dstaddr:0x%x, bytesize:%d", dstaddr, bytesize);
     int ret = csi_spiflash_program(&flash->handle, dstaddr, srcbuf, bytesize);
     if (ret != bytesize) {
+        LOGE(TAG, "dstaddr:0x%x, bytesize:%d", dstaddr, bytesize);
         return -EIO;
     }
 
     return 0;
 }
 
-static int yoc_spiflash_erase(aos_dev_t *dev, int32_t addroff, int32_t blkcnt)
+static int yoc_spiflash_erase(rvm_dev_t *dev, int32_t addroff, int32_t blkcnt)
 {
     flash_dev_t *flash = (flash_dev_t*)dev;
     int ret = -EIO;
     int i;
-
+    // LOGD(TAG, "addroff:0x%x, blkcnt:%d", addroff, blkcnt);
     for (i = 0; i < blkcnt; i++) {
         ret = csi_spiflash_erase(&flash->handle, addroff + i * flash->info.sector_size, flash->info.sector_size);
         if (ret != 0) {
@@ -96,7 +118,7 @@ static int yoc_spiflash_erase(aos_dev_t *dev, int32_t addroff, int32_t blkcnt)
     return ret < 0 ? -EIO : 0;
 }
 
-static int yoc_spiflash_get_info(aos_dev_t *dev, flash_dev_info_t *info)
+static int yoc_spiflash_get_info(rvm_dev_t *dev, rvm_hal_flash_dev_info_t *info)
 {
     flash_dev_t *flash = (flash_dev_t*)dev;
     csi_spiflash_info_t flash_info;
@@ -106,21 +128,22 @@ static int yoc_spiflash_get_info(aos_dev_t *dev, flash_dev_info_t *info)
     }
 
     info->start_addr = flash_info.xip_addr;
-    info->block_size = flash_info.sector_size;
-    info->block_count = flash_info.flash_size / flash_info.sector_size;
+    info->sector_size = flash_info.sector_size;
+    info->sector_count = flash_info.flash_size / flash_info.sector_size;
 
     return 0;
 }
 
 static flash_driver_t flash_driver = {
     .drv = {
-        .name   = "eflash",
+        .name   = "flash",
         .type   = "flash",
         .init   = yoc_spiflash_init,
         .uninit = yoc_spiflash_uninit,
         .lpm    = yoc_spiflash_lpm,
         .open   = yoc_spiflash_open,
         .close  = yoc_spiflash_close,
+        .clk_en = yoc_spiflash_clock
     },
     .read       = yoc_spiflash_read,
     .program    = yoc_spiflash_program,
@@ -128,7 +151,7 @@ static flash_driver_t flash_driver = {
     .get_info   = yoc_spiflash_get_info,
 };
 
-void spiflash_csky_register(int idx)
+void rvm_spiflash_drv_register(int idx)
 {
-    driver_register(&flash_driver.drv, NULL, idx);
+    rvm_driver_register(&flash_driver.drv, NULL, idx);
 }

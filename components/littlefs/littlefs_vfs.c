@@ -53,10 +53,9 @@ static int32_t littlefs_block_write(const struct lfs_config *cfg, lfs_block_t bl
 
 static int32_t littlefs_block_erase(const struct lfs_config *cfg, lfs_block_t block)
 {
-    partition_info_t *part_info = hal_flash_get_info(lfs_hdl);
     uint32_t off_set = cfg->block_size * block;
 
-    return partition_erase(lfs_hdl, off_set, cfg->block_size / part_info->sector_size);
+    return partition_erase_size(lfs_hdl, off_set, cfg->block_size);
 }
 
 static int32_t littlefs_block_sync(const struct lfs_config *cfg)
@@ -737,15 +736,23 @@ int lfs_vfs_unmount(void)
 
 int32_t vfs_lfs_register(char *partition_desc)
 {
-    lfs_hdl = partition_open(partition_desc);
+    return vfs_lfs_register_with_path(partition_desc, (const char *)LFS_MOUNTPOINT);
+}
 
+int32_t vfs_lfs_register_with_path(char *partition_desc, const char *path)
+{
+    if (partition_desc == NULL || path == NULL) {
+        return -EINVAL;
+    }
+    lfs_mount_path = strdup(path);
+    if (lfs_mount_path == NULL) {
+        return -ENOMEM;
+    }
+    lfs_hdl = partition_open(partition_desc);
     aos_check(lfs_hdl > 0, EIO);
 
-    lfs_mount_path = (char *)aos_malloc(sizeof(LFS_MOUNTPOINT) + 1);
-    sprintf(lfs_mount_path, "%s", LFS_MOUNTPOINT);
-
     // block device configuration
-    partition_info_t *part_info = hal_flash_get_info(lfs_hdl);
+    partition_info_t *part_info = partition_info_get(lfs_hdl);
 #ifdef CONFIG_LFS_BLOCK_SIZE
     default_cfg.block_size     = LFS_BLOCK_SIZE;
 #else
@@ -799,9 +806,12 @@ int32_t vfs_lfs_register(char *partition_desc)
 
 int32_t vfs_lfs_unregister(void)
 {
+    int ret;
+
     lfs_vfs_unmount();
     partition_close(lfs_hdl);
-    vfs_unregister_fs(lfs_mount_path);
-    free(lfs_mount_path);
-    return 0;
+    ret = vfs_unregister_fs(lfs_mount_path);
+    if (lfs_mount_path)
+        free(lfs_mount_path);
+    return ret;
 }

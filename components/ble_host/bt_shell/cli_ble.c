@@ -152,7 +152,7 @@ static void device_find(ble_event_en event, void *event_data)
         ret = cli_bt_bt_data_parse(pattern, 31, scan_ad_callback, e);
 
         if (ret == 0) {
-#if defined(CONFIG_BT_EXT_ADV) && CONFIG_BT_EXT_ADV > 0
+#if (defined(CONFIG_BT_EXT_ADV) && CONFIG_BT_EXT_ADV)
             printf("[DEVICE]: %s, adv type %d, rssi %d, len %d, sid %d, Raw data:%s",
                    cli_bt_bt_dev_addr_to_string(&e->dev_addr), e->adv_type, e->rssi, e->adv_len, e->sid,
                    cli_bt_hex(e->adv_data, e->adv_len > 31 ? 31 : e->adv_len));
@@ -168,7 +168,7 @@ static void device_find(ble_event_en event, void *event_data)
             printf("\n");
         }
     } else {
-#if defined(CONFIG_BT_EXT_ADV) && CONFIG_BT_EXT_ADV > 0
+#if (defined(CONFIG_BT_EXT_ADV) && CONFIG_BT_EXT_ADV)
         printf("[DEVICE]: %s, adv type %d, rssi %d, len %d, sid %d, Raw data:%s",
                cli_bt_bt_dev_addr_to_string(&e->dev_addr), e->adv_type, e->rssi, e->adv_len, e->sid,
                cli_bt_hex(e->adv_data, e->adv_len > 31 ? 31 : e->adv_len));
@@ -199,7 +199,7 @@ static void conn_param_update(ble_event_en event, void *event_data)
 
     printf("LE conn param updated: int 0x%04x lat %d to %d\n", e->interval, e->latency, e->timeout);
 }
-#if defined(CONFIG_BT_SMP) && CONFIG_BT_SMP
+#if (defined(CONFIG_BT_SMP) && CONFIG_BT_SMP)
 
 static void smp_passkey_display(evt_data_smp_passkey_display_t *e)
 {
@@ -292,7 +292,7 @@ static int ble_stack_event_callback(ble_event_en event, void *event_data)
         case EVENT_GAP_CONN_PARAM_UPDATE:
             conn_param_update(event, event_data);
             break;
-#if defined(CONFIG_BT_SMP) && CONFIG_BT_SMP
+#if (defined(CONFIG_BT_SMP) && CONFIG_BT_SMP)
         case EVENT_SMP_PASSKEY_DISPLAY:
         case EVENT_SMP_PASSKEY_CONFIRM:
         case EVENT_SMP_PASSKEY_ENTER:
@@ -642,7 +642,7 @@ static void cmd_ble_stack_get_local_addr(char *wbuf, int wbuf_len, int argc, cha
     printf("Local Device Address: %s\n", cli_bt_bt_dev_addr_to_string(&addr));
 }
 
-#if defined(CONFIG_BT_CONN) && CONFIG_BT_CONN
+#if (defined(CONFIG_BT_CONN) && CONFIG_BT_CONN)
 
 static void cmd_ble_stack_connect(char *wbuf, int wbuf_len, int argc, char **argv)
 {
@@ -789,7 +789,7 @@ static void cmd_ble_stack_connect_info_get(char *wbuf, int wbuf_len, int argc, c
            local_str, remote_str);
 }
 
-#if defined(CONFIG_BT_SMP) && CONFIG_BT_SMP
+#if (defined(CONFIG_BT_SMP) && CONFIG_BT_SMP)
 static void cmd_ble_stack_security(char *wbuf, int wbuf_len, int argc, char **argv)
 {
     int err, sec;
@@ -1098,7 +1098,7 @@ enum {
     TEST_IDX_MAX,
 };
 
-#if defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE
+#if (defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE)
 GATT_SERVICE_STATIC_DEFINE(
     test_service, [TEST_IDX_SVC] = GATT_PRIMARY_SERVICE_DEFINE(TEST_SERVICE_UUID),
 
@@ -1407,7 +1407,7 @@ static int _test_servic_event_gatt_indicate_confirm(ble_event_en event, void *ev
     return 0;
 }
 
-#if defined(CONFIG_BT_GATT_CLIENT) && CONFIG_BT_GATT_CLIENT
+#if (defined(CONFIG_BT_GATT_CLIENT) && CONFIG_BT_GATT_CLIENT)
 
 #define GATT_WRITE_BUFF_SIZE 256
 static uint8_t gatt_write_buf[GATT_WRITE_BUFF_SIZE];
@@ -1561,7 +1561,7 @@ static int test_service_callback(ble_event_en event, void *event_data)
             _test_servic_event_gatt_indicate_confirm(event, event_data);
             break;
 
-#if defined(CONFIG_BT_GATT_CLIENT) && CONFIG_BT_GATT_CLIENT
+#if (defined(CONFIG_BT_GATT_CLIENT) && CONFIG_BT_GATT_CLIENT)
         case EVENT_GATT_DISCOVERY_SVC:
         case EVENT_GATT_DISCOVERY_INC_SVC:
         case EVENT_GATT_DISCOVERY_CHAR:
@@ -1600,7 +1600,7 @@ static void cmd_ble_stack_gatt_registe_service(char *wbuf, int wbuf_len, int arg
 {
     int ret = 0;
 
-#if defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE
+#if (defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE)
     ret = ble_stack_gatt_service_handle(&test_service);
 #else
     ret = ble_stack_gatt_registe_service(&test_service, test_attrs, BLE_ARRAY_NUM(test_attrs));
@@ -1700,7 +1700,7 @@ static void cmd_ble_stack_gatt_mtu_get(char *wbuf, int wbuf_len, int argc, char 
     }
 }
 
-#if defined(CONFIG_BT_GATT_CLIENT) && CONFIG_BT_GATT_CLIENT
+#if (defined(CONFIG_BT_GATT_CLIENT) && CONFIG_BT_GATT_CLIENT)
 
 static void cmd_ble_stack_gatt_mtu_exchange(char *wbuf, int wbuf_len, int argc, char **argv)
 {
@@ -2742,7 +2742,7 @@ static void cmd_gatt_transport_test(char *wbuf, int wbuf_len, int argc, char **a
 
 #endif /* CONFIG_BT_CONN */
 
-#if defined(CONFIG_BT_WHITELIST) && CONFIG_BT_WHITELIST
+#if (defined(CONFIG_BT_WHITELIST) && CONFIG_BT_WHITELIST)
 typedef struct {
     bt_dev_addr_t addr;
     uint8_t       set_flag;
@@ -3011,7 +3011,7 @@ static const struct cli_command ble_cmd_info[] = {
     { "scan_filter", "ble scan_filter <filter_policy: (0:any adv, 1:white list)>", cmd_ble_scan_filter },
     { "local_addr", "ble local_addr", cmd_ble_stack_get_local_addr },
 
-#if defined(CONFIG_BT_CONN) && CONFIG_BT_CONN
+#if (defined(CONFIG_BT_CONN) && CONFIG_BT_CONN)
     { "connect", "ble connect " HELP_ADDR_LE " <interval_min> <interval_max> <latency> <timeout>",
       cmd_ble_stack_connect },
     { "conn-params-check", "ble conn-params-check <min interval> <max interval> <latency> <timeout>",
@@ -3026,7 +3026,7 @@ static const struct cli_command ble_cmd_info[] = {
     { "conn-update", "ble conn-update <min interval> <max interval> <latency> <timeout>",
       cmd_ble_stack_connect_param_update },
 
-#if defined(CONFIG_BT_SMP) && CONFIG_BT_SMP
+#if (defined(CONFIG_BT_SMP) && CONFIG_BT_SMP)
     { "security", "ble security <security level(0: L0, 1:L1, 2:L2, 3:L3 4:L4 )>", cmd_ble_stack_security },
     { "auth-passkey", "ble auth-passkey <passkey>", cmd_ble_stack_smp_passkey_entry },
     { "auth-cancel", "ble auth-cancel", cmd_ble_stack_smp_cancel },
@@ -3042,7 +3042,7 @@ static const struct cli_command ble_cmd_info[] = {
     { "gatt-indicate", "ble gatt-indicate <conn_handle> <data>", cmd_ble_stack_gatt_indicate },
     { "gatt-get-mtu", "ble gatt-get-mtu <conn_handle>", cmd_ble_stack_gatt_mtu_get },
 
-#if defined(CONFIG_BT_GATT_CLIENT) && CONFIG_BT_GATT_CLIENT
+#if (defined(CONFIG_BT_GATT_CLIENT) && CONFIG_BT_GATT_CLIENT)
     { "gatt-exchange-mtu", "ble gatt-exchange-mtu", cmd_ble_stack_gatt_mtu_exchange },
     { "gatt-discover-primary", "ble gatt-discover-primary <UUID> [start handle] [end handle]",
       cmd_ble_stack_gatt_discovery },
@@ -3078,7 +3078,7 @@ static const struct cli_command ble_cmd_info[] = {
 
 #endif /* CONFIG_BT_CONN */
 
-#if defined(CONFIG_BT_WHITELIST) && CONFIG_BT_WHITELIST
+#if (defined(CONFIG_BT_WHITELIST) && CONFIG_BT_WHITELIST)
     { "wl-clear", "ble init", cmd_ble_stack_white_list_clear },
     { "wl-add", "ble wl-add " HELP_ADDR_LE, cmd_ble_stack_white_list_add },
     { "wl-remove", "ble wl-remove " HELP_ADDR_LE, cmd_ble_stack_white_list_remove },

@@ -1,0 +1,61 @@
+/*
+ * Copyright (C) 2019-2020 Alibaba Group Holding Limited
+ */
+
+#ifndef DEVICE_IIC_PAI_H
+#define DEVICE_IIC_PAI_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#include <devices/device.h>
+
+/*----- IIC Control Codes: Mode -----*/
+typedef enum {
+    MODE_MASTER,             ///< IIC Master
+    MODE_SLAVE               ///< IIC Slave
+} rvm_hal_iic_mode_t;
+
+/*----- IIC Control Codes: IIC Bus Speed -----*/
+typedef enum {
+    BUS_SPEED_STANDARD  = 0, ///< Standard Speed (100kHz)
+    BUS_SPEED_FAST      = 1, ///< Fast Speed     (400kHz)
+    BUS_SPEED_FAST_PLUS = 2, ///< Fast+ Speed    (  1MHz)
+    BUS_SPEED_HIGH      = 3  ///< High Speed     (3.4MHz)
+} rvm_hal_iic_speed_t;
+
+/*----- IIC Control Codes: IIC Address Mode -----*/
+typedef enum {
+    ADDR_7BIT        = 0,  ///< 7-bit address mode
+    ADDR_10BIT       = 1   ///< 10-bit address mode
+} rvm_hal_iic_address_mode_t;
+
+typedef struct {
+    rvm_hal_iic_mode_t          mode;
+    rvm_hal_iic_speed_t         speed;
+    rvm_hal_iic_address_mode_t  addr_mode;
+    int32_t                 slave_addr;
+} rvm_hal_iic_config_t;
+
+#define I2C_MEM_ADDR_SIZE_8BIT  0 /* i2c menory address size 8bit */
+#define I2C_MEM_ADDR_SIZE_16BIT 1 /* i2c menory address size 16bit */
+
+#define rvm_hal_iic_open(name) rvm_hal_device_open(name)
+#define rvm_hal_iic_close(dev) rvm_hal_device_close(dev)
+
+int rvm_hal_iic_config(rvm_dev_t *dev, rvm_hal_iic_config_t *config);
+int rvm_hal_iic_master_send(rvm_dev_t *dev, uint16_t dev_addr, const void *data, uint32_t size, uint32_t timeout);
+int rvm_hal_iic_master_recv(rvm_dev_t *dev, uint16_t dev_addr, void *data, uint32_t size, uint32_t timeout);
+int rvm_hal_iic_slave_send(rvm_dev_t *dev, const void *data, uint32_t size, uint32_t timeout);
+int rvm_hal_iic_slave_recv(rvm_dev_t *dev, void *data, uint32_t size, uint32_t timeout);
+int rvm_hal_iic_mem_write(rvm_dev_t *dev, uint16_t dev_addr, uint16_t mem_addr, uint16_t mem_addr_size, const void *data, uint32_t size, uint32_t timeout);
+int rvm_hal_iic_mem_read(rvm_dev_t *dev, uint16_t dev_addr, uint16_t mem_addr, uint16_t mem_addr_size, void *data, uint32_t size, uint32_t timeout);
+void rvm_hal_iic_config_default(rvm_hal_iic_config_t *config);
+
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif

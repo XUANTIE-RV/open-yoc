@@ -24,8 +24,8 @@
 #define LWIP_COMPAT_SOCKETS     2
 #define LWIP_NETIF_HOSTNAME     1
 #define ETHARP_TRUST_IP_MAC     0
-#define IP_REASSEMBLY           0
-#define IP_FRAG                 0
+#define IP_REASSEMBLY           1
+#define IP_FRAG                 1
 #define ARP_QUEUEING            0
 #define LWIP_NETIF_API          1
 
@@ -64,7 +64,7 @@
  * ATTENTION: this does not work when tcpip_input() is called from
  * interrupt context!
  */
-#define LWIP_TCPIP_CORE_LOCKING_INPUT   1
+#define LWIP_TCPIP_CORE_LOCKING_INPUT   0
 
 /* ---------- Memory options ---------- */
 /* MEM_ALIGNMENT: should be set to the alignment of the CPU for which
@@ -82,7 +82,7 @@ a lot of data that needs to be copied, this should be set high. */
 #define MEMP_NUM_PBUF           64
 /* MEMP_NUM_UDP_PCB: the number of UDP protocol control blocks. One
    per active UDP "connection". */
-#define MEMP_NUM_UDP_PCB        6
+#define MEMP_NUM_UDP_PCB        12
 /* MEMP_NUM_TCP_PCB: the number of simulatenously active TCP
    connections. */
 #define MEMP_NUM_TCP_PCB        32
@@ -287,7 +287,7 @@ a lot of data that needs to be copied, this should be set high. */
 #define TCPIP_THREAD_PRIO               (2)
 
 #define LWIP_COMPAT_MUTEX               0
-#define LWIP_TCPIP_CORE_LOCKING         1
+#define LWIP_TCPIP_CORE_LOCKING         0
 #define LWIP_SOCKET_SET_ERRNO           1
 #define SO_REUSE                        1
 #define LWIP_TCP_KEEPALIVE              1

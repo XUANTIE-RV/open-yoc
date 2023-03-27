@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2019-2020 Alibaba Group Holding Limited
  */
-#if defined(CONFIG_USE_LOG_IPC) && CONFIG_USE_LOG_IPC
+#if defined(CONFIG_LOG_IPC_CP) && CONFIG_LOG_IPC_CP
 #include <stdio.h>
 #include <aos/aos.h>
 #include "hal/uart_impl.h"
@@ -12,9 +12,9 @@
 #define EVENT_READ  0x00000F0F
 
 typedef struct {
-    aos_dev_t      device;
+    rvm_dev_t      device;
     aos_event_t    event_write_read;
-    void (*write_event)(aos_dev_t *dev, int event_id, void *priv);
+    void (*write_event)(rvm_dev_t *dev, int event_id, void *priv);
     void *priv;
     int type;
     int (*rx_read)(const uint8_t *buf, uint32_t size);
@@ -25,18 +25,18 @@ static ipc_uart_dev_t *g_ipc_uart_idx[1];
 #define ipc_uart(dev) ((ipc_uart_dev_t *)dev)
 
 
-static aos_dev_t *ipc_uart_csky_init(driver_t *drv, void *config, int id)
+static rvm_dev_t *ipc_uart_csky_init(driver_t *drv, void *config, int id)
 {
-    ipc_uart_dev_t *ipc_uart = (ipc_uart_dev_t *)device_new(drv, sizeof(ipc_uart_dev_t), id);
+    ipc_uart_dev_t *ipc_uart = (ipc_uart_dev_t *)rvm_hal_device_new(drv, sizeof(ipc_uart_dev_t), id);
 
     g_ipc_uart_idx[0] = ipc_uart(ipc_uart);
 
-    return (aos_dev_t *)ipc_uart;
+    return (rvm_dev_t *)ipc_uart;
 }
 
-#define ipc_uart_csky_uninit device_free
+#define ipc_uart_csky_uninit rvm_hal_device_free
 
-static int ipc_uart_csky_open(aos_dev_t *dev)
+static int ipc_uart_csky_open(rvm_dev_t *dev)
 {
     if (aos_event_new(&ipc_uart(dev)->event_write_read, 0) != 0) {
         return -1;
@@ -49,7 +49,7 @@ static int ipc_uart_csky_open(aos_dev_t *dev)
     return 0;
 }
 
-static int ipc_uart_csky_close(aos_dev_t *dev)
+static int ipc_uart_csky_close(rvm_dev_t *dev)
 {
     g_ipc_uart_idx[0] = NULL;
 
@@ -57,30 +57,30 @@ static int ipc_uart_csky_close(aos_dev_t *dev)
     return 0;
 }
 
-static int ipc_uart_csky_config(aos_dev_t *dev, uart_config_t *config)
+static int ipc_uart_csky_config(rvm_dev_t *dev, rvm_hal_uart_config_t *config)
 {
     return 0;
 }
 
-static int ipc_uart_csky_set_type(aos_dev_t *dev, int type)
+static int ipc_uart_csky_set_type(rvm_dev_t *dev, int type)
 {
     ipc_uart(dev)->type = type;
 
     return 0;
 }
 
-static int ipc_uart_csky_set_buffer_size(aos_dev_t *dev, uint32_t size)
+static int ipc_uart_csky_set_buffer_size(rvm_dev_t *dev, uint32_t size)
 {
     return 0;
 }
 
-static int ipc_uart_csky_send(aos_dev_t *dev, const void *data, uint32_t size)
+static int ipc_uart_csky_send(rvm_dev_t *dev, const void *data, uint32_t size)
 {
     ipc_uart(dev)->tx_write((const uint8_t *)data, size);
     return 0;
 }
 
-static int ipc_uart_csky_recv(aos_dev_t *dev, void *data, uint32_t size, unsigned int timeout_ms)
+static int ipc_uart_csky_recv(rvm_dev_t *dev, void *data, uint32_t size, unsigned int timeout_ms)
 {
     unsigned int actl_flags;
     int          ret = 0;
@@ -109,7 +109,7 @@ static int ipc_uart_csky_recv(aos_dev_t *dev, void *data, uint32_t size, unsigne
     return size - temp_count;
 }
 
-static void ipc_uart_csky_event(aos_dev_t *dev, void (*event)(aos_dev_t *dev, int event_id, void *priv),
+static void ipc_uart_csky_event(rvm_dev_t *dev, void (*event)(rvm_dev_t *dev, int event_id, void *priv),
                             void * priv)
 {
     ipc_uart(dev)->priv        = priv;
@@ -132,10 +132,10 @@ static uart_driver_t ipc_uart_driver = {
     .set_event       = ipc_uart_csky_event,
 };
 
-void ipc_uart_csky_register(int idx, int (*read)(const uint8_t *buf, uint32_t size),
+void log_ipc_uart_register(int idx, int (*read)(const uint8_t *buf, uint32_t size),
                             int (*write)(const uint8_t *data, uint32_t size))
 {
-    driver_register(&ipc_uart_driver.drv, NULL, idx);
+    rvm_driver_register(&ipc_uart_driver.drv, NULL, idx);
 
     ipc_uart_dev_t* ipc_uart = g_ipc_uart_idx[0];
 
@@ -143,12 +143,12 @@ void ipc_uart_csky_register(int idx, int (*read)(const uint8_t *buf, uint32_t si
     ipc_uart->rx_read = read;  
 }
 
-void ipc_log_read_event(void)
+void log_ipc_read_event(void)
 {
     ipc_uart_dev_t* ipc_uart = g_ipc_uart_idx[0];
 
     if (ipc_uart->write_event) {
-        ipc_uart->write_event((aos_dev_t *)ipc_uart, USART_EVENT_READ, ipc_uart->priv);
+        ipc_uart->write_event((rvm_dev_t *)ipc_uart, USART_EVENT_READ, ipc_uart->priv);
     }
     aos_event_set(&ipc_uart->event_write_read, EVENT_READ, AOS_EVENT_OR);
 }

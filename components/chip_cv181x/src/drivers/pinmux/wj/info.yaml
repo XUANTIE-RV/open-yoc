@@ -1,0 +1,32 @@
+name: PINMUX
+vendor: WJ
+license: Copyright (C) 2017-2019 Alibaba Group Holding Limited
+description: wj pinmux
+depends: NULL
+type: devices
+
+versions:
+    hobbit3_v1.0:
+        drv_path: hobbit3_v1.0
+    hobbit1_v1.0:
+        drv_path: hobbit1_v1.0
+    pangu_v1.0:
+        drv_path: pangu_v1.0
+    jupiter_bc_v1.0:
+        drv_path: jupiter_bc_v1.0
+    jupiter_lc_v1.0:
+        drv_path: jupiter_lc_v1.0
+    jupiter_bc_mpw_2_v1.0:
+        drv_path: jupiter_bc_mpw_2_v1.0
+    jupiter_lc_mpw_2_v1.0:
+        drv_path: jupiter_lc_mpw_2_v1.0
+    sparrow_v1.0:
+        drv_path: sparrow_v1.0
+    hobbit3_cetus:
+        drv_path: hobbit3_cetus/
+    light_v1.0:
+        drv_path: light_v1.0
+    light_aon_v1.0:
+        drv_path: light_aon_v1.0
+    smartl1.0:
+        drv_path: smartl1.0

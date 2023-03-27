@@ -38,7 +38,6 @@ int wifi_mgmr_api_idle(void);
 int wifi_mgmr_api_channel_set(int channel, int use_40Mhz);
 int wifi_mgmr_api_raw_send(uint8_t *pkt, int len);
 int wifi_mgmr_api_set_country_code(char *country_code);
-int wifi_mgmr_api_set_mode(uint8_t ap_or_sta, int mode);
 
 /*section for fw api*/
 int wifi_mgmr_api_fw_disconnect(void);

@@ -20,6 +20,9 @@ extern "C"
 #endif
 
 #ifndef CONFIG_OTA_PAYLOAD_MAX
+#ifndef CONFIG_BT_L2CAP_RX_MTU
+#define CONFIG_BT_L2CAP_RX_MTU 251
+#endif
 #define CONFIG_OTA_PAYLOAD_MAX (CONFIG_BT_L2CAP_RX_MTU - 3)
 #endif
 

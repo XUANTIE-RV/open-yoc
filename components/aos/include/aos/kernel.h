@@ -82,7 +82,11 @@ typedef unsigned int aos_task_key_t;
 typedef int32_t aos_status_t; /**< AOS返回值状态类型 */
 
 #define MS2TICK(ms) krhino_ms_to_ticks(ms)
-int32_t aos_irq_context(void);
+int aos_irq_context(void);
+
+int aos_is_sched_disable(void);
+
+int aos_is_irq_disable(void);
 
 /**
  * Reboot AliOS.

@@ -59,13 +59,14 @@ void rtc_debug(void)
     time_sys_now = time(NULL);
     time_rtc_now = mktime(&tm_now);
 
-    printf("\tUTC:%s %d\n", ctime(&time_sys_now), time_sys_now);
-    printf("\tRTC:%s %d\n", ctime(&time_rtc_now), time_rtc_now);
+    printf("\tUTC:%s %lld\n", asctime(gmtime(&time_sys_now)), (long long int)time_sys_now);
+    printf("\tRTC:%s %lld\n", asctime(gmtime(&time_rtc_now)), (long long int)time_rtc_now);
 }
+
 #ifdef CONFIG_CSI_V2
-void rtc_irq_handler(csi_rtc_t *rtc_handle, void *arg)
+static void rtc_irq_handler(csi_rtc_t *rtc_handle, void *arg)
 #else
-void rtc_irq_handler(int32_t idx, rtc_event_e event)
+static void rtc_irq_handler(int32_t idx, rtc_event_e event)
 #endif
 {
     //LOGD(TAG, "-----rtc_irqhandler: Time is up!-----");
@@ -75,7 +76,11 @@ void rtc_irq_handler(int32_t idx, rtc_event_e event)
 
 void rtc_init(void)
 {
-    int ret;
+    if (g_rtc_start) {
+        //LOGD(TAG, "rtc inited");
+        return;
+    }
+
 #ifdef CONFIG_CSI_V2
     int32_t state;
     state = csi_rtc_init(&g_rtc_handle, 0U);
@@ -85,10 +90,7 @@ void rtc_init(void)
         return;
     }
 
-    if (0 == g_rtc_start) {
-        g_rtc_start = 1;
-    }
-
+    g_rtc_start = 1;
 #else
 
     if (g_rtc_hd != NULL) {
@@ -98,7 +100,7 @@ void rtc_init(void)
     g_rtc_hd = csi_rtc_initialize(0, rtc_irq_handler);
 
     if (0 == g_rtc_start) {
-        ret = csi_rtc_start(g_rtc_hd);
+        int ret = csi_rtc_start(g_rtc_hd);
 
         if (0 != ret) {
             LOGE(TAG, "rtc start failed %d", ret);
@@ -124,12 +126,15 @@ void rtc_set_time(struct tm *tm_set)
     int32_t        state;
     csi_rtc_time_t rtc_time = {0};
 
-    rtc_time.tm_wday = tm_set->tm_wday;
+    rtc_time.tm_year = tm_set->tm_year;
+    rtc_time.tm_mon  = tm_set->tm_mon;
     rtc_time.tm_mday = tm_set->tm_mday;
     rtc_time.tm_hour = tm_set->tm_hour;
     rtc_time.tm_min  = tm_set->tm_min;
     rtc_time.tm_sec  = tm_set->tm_sec;
-    rtc_time.tm_year = tm_set->tm_year;
+    rtc_time.tm_wday = tm_set->tm_wday;
+    rtc_time.tm_yday = tm_set->tm_yday;
+
     state            = csi_rtc_set_time_no_wait(&g_rtc_handle, &rtc_time);
 
     if (state < 0) {
@@ -215,13 +220,15 @@ void rtc_set_alarm(struct tm *tm_set)
     int32_t        state;
     csi_rtc_time_t alarm_time = {0};
 
-    alarm_time.tm_wday = tm_set->tm_wday;
+    alarm_time.tm_year = tm_set->tm_year;
+    alarm_time.tm_mon  = tm_set->tm_mon;
     alarm_time.tm_mday = tm_set->tm_mday;
     alarm_time.tm_hour = tm_set->tm_hour;
     alarm_time.tm_min  = tm_set->tm_min;
     alarm_time.tm_sec  = tm_set->tm_sec;
-    alarm_time.tm_year = tm_set->tm_year;
-
+    alarm_time.tm_wday = tm_set->tm_wday;
+    alarm_time.tm_yday = tm_set->tm_yday;
+    
     state = csi_rtc_set_alarm(&g_rtc_handle, &alarm_time, rtc_irq_handler, NULL);
 
     if (state < 0) {

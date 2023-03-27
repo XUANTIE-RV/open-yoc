@@ -230,7 +230,7 @@ void ulog_init(void)
     if (!log_init) {
         log_init_mutex();
         on_filter_level_changes(ulog_session_size, LOG_NONE);
-#ifdef ULOG_CONFIG_ASYNC
+#if  defined(ULOG_CONFIG_ASYNC) && ULOG_CONFIG_ASYNC
         ulog_async_init();
 #endif
 #ifdef AOS_COMP_CLI

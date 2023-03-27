@@ -2,7 +2,7 @@
  * Copyright (C) 2019-2020 Alibaba Group Holding Limited
  */
 
-#ifdef CONFIG_BTSOOP
+#if (defined(CONFIG_BTSOOP) && CONFIG_BTSOOP)
 #include <stdio.h>
 #include <stdint.h>
 #include <sys/time.h>
@@ -10,7 +10,7 @@
 #include <aos/cli.h>
 #include <aos/ringbuffer.h>
 
-#ifdef CONFIG_BTSOOP_MBEDTLS_BASE64_FORMATE
+#if (defined(CONFIG_BTSOOP_MBEDTLS_BASE64_FORMATE) && CONFIG_BTSOOP_MBEDTLS_BASE64_FORMATE)
 #include <mbedtls/base64.h>
 #endif
 
@@ -240,7 +240,7 @@ int btsnoop_stop()
 
 static void btsnoop_print_hexstring(const uint8_t *data, uint32_t len)
 {
-#ifdef CONFIG_BTSOOP_MBEDTLS_BASE64_FORMATE
+#if (defined(CONFIG_BTSOOP_MBEDTLS_BASE64_FORMATE) && CONFIG_BTSOOP_MBEDTLS_BASE64_FORMATE)
     char *b64;
     size_t dlen, olen;
 

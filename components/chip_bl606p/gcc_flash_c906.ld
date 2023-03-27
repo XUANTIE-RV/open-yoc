@@ -10,8 +10,8 @@
  ******************************************************************************/
 MEMORY
 {
-    PSRAM(rx)       : ORIGIN = 0x54C00000, LENGTH = 4M
-    L2SRAM(!rx)     : ORIGIN = 0x3EF80000, LENGTH = 512K
+    PSRAM(rw)       : ORIGIN = 0x54C00000, LENGTH = 4M
+    L2SRAM(rw)     : ORIGIN = 0x3EF80000, LENGTH = 512K
 }
 
 __min_heap_size = 0x200;
@@ -41,22 +41,19 @@ SECTIONS
   KEEP(*vectors.o(*.vectors*))
   *(EXCLUDE_FILE (
       *IQRDRLSDREmbedded.o
-      *model_kws_8.o
-      *model_vad_8.o*
+      *model_*.o
       *rfft640_f32.o
       *tFeOpt_PFBA_Win320_1920_Delay960.o
       ) *.text)
    *(EXCLUDE_FILE (
       *IQRDRLSDREmbedded.o
-      *model_kws_8.o
-      *model_vad_8.o*
+      *model_*.o
       *rfft640_f32.o
       *tFeOpt_PFBA_Win320_1920_Delay960.o
       ) *.text*)
    *(EXCLUDE_FILE (
       *IQRDRLSDREmbedded.o
-      *model_kws_8.o
-      *model_vad_8.o*
+      *model_*.o
       *rfft640_f32.o
       *tFeOpt_PFBA_Win320_1920_Delay960.o
       ) *.text.*)
@@ -86,33 +83,27 @@ SECTIONS
   *(.rdata*)
   *(.rdata1)
   *(.rdata.*)
-  *(.rodata)
-  *(.rodata1)
   *(EXCLUDE_FILE (
       *IQRDRLSDREmbedded.o
-      *model_kws_8.o
-      *model_vad_8.o*
+      *model_*.o
       *rfft640_f32.o
       *tFeOpt_PFBA_Win320_1920_Delay960.o
       ) *.rodata)
    *(EXCLUDE_FILE (
       *IQRDRLSDREmbedded.o
-      *model_kws_8.o
-      *model_vad_8.o*
+      *model_*.o
       *rfft640_f32.o
       *tFeOpt_PFBA_Win320_1920_Delay960.o
       ) *.rodata.*)
    *(EXCLUDE_FILE (
       *IQRDRLSDREmbedded.o
-      *model_kws_8.o
-      *model_vad_8.o*
+      *model_*.o
       *rfft640_f32.o
       *tFeOpt_PFBA_Win320_1920_Delay960.o
       ) *.rodata.str1.4)
    *(EXCLUDE_FILE (
       *IQRDRLSDREmbedded.o
-      *model_kws_8.o
-      *model_vad_8.o*
+      *model_*.o
       *rfft640_f32.o
       *tFeOpt_PFBA_Win320_1920_Delay960.o
       ) *.srodata.*)
@@ -204,22 +195,19 @@ SECTIONS
 
   *(EXCLUDE_FILE (
       *IQRDRLSDREmbedded.o
-      *model_kws_8.o
-      *model_vad_8.o*
+      *model_*.o
       *rfft640_f32.o
       *tFeOpt_PFBA_Win320_1920_Delay960.o
       ) *.data)
    *(EXCLUDE_FILE (
       *IQRDRLSDREmbedded.o
-      *model_kws_8.o
-      *model_vad_8.o*
+      *model_*.o
       *rfft640_f32.o
       *tFeOpt_PFBA_Win320_1920_Delay960.o
       ) *.data*)
    *(EXCLUDE_FILE (
       *IQRDRLSDREmbedded.o
-      *model_kws_8.o
-      *model_vad_8.o*
+      *model_*.o
       *rfft640_f32.o
       *tFeOpt_PFBA_Win320_1920_Delay960.o
       ) *.data.*)
@@ -272,8 +260,7 @@ SECTIONS
 
      *(EXCLUDE_FILE (
       *IQRDRLSDREmbedded.o
-      *model_kws_8.o
-      *model_vad_8.o*
+      *model_*.o*
       *rfft640_f32.o
       *tFeOpt_PFBA_Win320_1920_Delay960.o
       ) *.text*)
@@ -299,15 +286,13 @@ SECTIONS
 
   *(EXCLUDE_FILE (
       *IQRDRLSDREmbedded.o
-      *model_kws_8.o
-      *model_vad_8.o*
+      *model_*.o*
       *rfft640_f32.o
       *tFeOpt_PFBA_Win320_1920_Delay960.o
       ) *.bss)
    *(EXCLUDE_FILE (
       *IQRDRLSDREmbedded.o
-      *model_kws_8.o
-      *model_vad_8.o*
+      *model_*.o*
       *rfft640_f32.o
       *tFeOpt_PFBA_Win320_1920_Delay960.o
       ) *.bss.*)

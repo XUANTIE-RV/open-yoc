@@ -1,0 +1,11 @@
+name: c906
+vendor: thead
+license: Copyright (C) 2017-2019 Alibaba Group Holding Limited
+description: thead c906 cpu
+type: core
+
+versions:
+    v1.0:
+        drv_path: ./
+        test_path: ''
+        rtl_path: xxxx

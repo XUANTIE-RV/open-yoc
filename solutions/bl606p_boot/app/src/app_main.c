@@ -11,14 +11,14 @@
 #include <boot.h>
 #include <boot_wrapper.h>
 #include <yoc/partition.h>
-#include <yoc/partition_flash.h>
+#include <yoc/partition_device.h>
 #if defined(CONFIG_OTA_AB) && (CONFIG_OTA_AB > 0)
 #include <bootab.h>
 #endif
 
 void boot_load_and_jump(void)
 {
-#define FLASH_XIP_BASE (0x58000000 - 0x11000)
+#define FLASH_XIP_BASE CONFIG_FLASH_XIP_BASE //(0x58000000 - 0x11000)
     const char *jump_to = "prim";
     unsigned long static_addr;
     unsigned long load_addr;
@@ -74,14 +74,31 @@ void boot_load_and_jump(void)
     flash_xip_base = (unsigned long)FLASH_XIP_BASE;
     if (static_addr != load_addr) {
         flash_xip_base = 0;
-        printf("start to copy data from 0x%lx to 0x%lx, size: %d\n", static_addr, load_addr, image_size);
-        void *handle = partition_flash_open(0);
-        if (partition_flash_read(handle, static_addr, (void *)(load_addr), image_size) < 0) {
+        // printf("start to copy data from 0x%lx to 0x%lx, size: %d\n", static_addr, load_addr, image_size);
+        // void *handle = partition_flash_open(0);
+        // if (partition_flash_read(handle, static_addr, (void *)(load_addr), image_size) < 0) {
+        //     goto fail;
+        // }
+        // partition_flash_close(handle);
+        // printf("all copy over..\n");
+    }
+    // split & decompress
+    printf("##start to decompress and copy.[%d ms]\n", csi_tick_get_ms());
+    part = partition_open(jump_to);
+    if (static_addr != load_addr) {
+        // copy e907.bin to ram
+        if (partition_split_and_copy(part, 0)) {
+            printf("decompress and copy e907 bin failed.\n");
             goto fail;
         }
-        partition_flash_close(handle);
-        printf("all copy over..\n");
     }
+    // copy c906.bin to ram
+    if (partition_split_and_copy(part, 1)) {
+        printf("decompress and copy c906 bin failed.\n");
+        goto fail;
+    }
+    partition_close(part);
+    printf("##decompress and copy ok.[%d ms]\n", csi_tick_get_ms());
 #ifdef CONFIG_CSI_V2
     soc_dcache_clean();
     soc_icache_invalid();
@@ -98,6 +115,7 @@ void boot_load_and_jump(void)
         func = (void (*)(void))(*(unsigned long *)(flash_xip_base + load_addr));
     }
     printf("j 0x%08lx\n", (unsigned long)(*func));
+    printf("##cur_ms:%d\n", csi_tick_get_ms());
 
     csi_tick_uninit();
 
@@ -122,27 +140,27 @@ static void trap_c_cb()
     boot_sys_reboot();
 }
 
-#if CONFIG_IMG_AUTHENTICITY_NOT_CHECK == 0
-bool check_is_need_verify(const char *name)
-{
-    static const char *g_need_verify_name[] = {
-        "prima",
-        "primb",
-        NULL
-    };
-    int i = 0;
-    while(1) {
-        if (g_need_verify_name[i] == NULL) {
-            break;
-        }
-        if (strcmp(g_need_verify_name[i], name) == 0) {
-            return true;
-        }
-        i++;
-    }
-    return false;
-}
-#endif
+// #if CONFIG_IMG_AUTHENTICITY_NOT_CHECK == 0
+// bool check_is_need_verify(const char *name)
+// {
+//     static const char *g_need_verify_name[] = {
+//         "prima",
+//         "primb",
+//         NULL
+//     };
+//     int i = 0;
+//     while(1) {
+//         if (g_need_verify_name[i] == NULL) {
+//             break;
+//         }
+//         if (strcmp(g_need_verify_name[i], name) == 0) {
+//             return true;
+//         }
+//         i++;
+//     }
+//     return false;
+// }
+// #endif
 
 int main(int argc, char *argv[0])
 {

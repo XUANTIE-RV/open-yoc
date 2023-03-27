@@ -56,7 +56,6 @@ typedef enum WIFI_MGMR_EVENT {
     WIFI_MGMR_EVENT_FW_IND_CONNECTED,
     WIFI_MGMR_EVENT_FW_DATA_RAW_SEND,
     WIFI_MGMR_EVENT_FW_CFG_REQ,
-    WIFI_MGMR_EVENT_FW_MODE_REQ,
 
     /*boundary between APP and Global handled EVENT*/
     WIFI_MGMR_EVENT_MAXFW_MINI_GLOBAL,
@@ -241,8 +240,6 @@ typedef struct wifi_mgmr_sta_basic_info {
 
 typedef struct wifi_mgmr {
     /*filed for PHY*/
-    int sta_mode;
-    int ap_mode;
     int channel;
     int inf_ap_enabled;
 

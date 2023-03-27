@@ -37,8 +37,11 @@
 #include <stdio.h>
 #include <string.h>
 #include "sd_disk.h"
+#include <fatfs_vfs.h>
 #include <aos/kernel.h>
 #include <aos/debug.h>
+#include <ulog/ulog.h>
+#include <yoc/partition.h>
 
 /*******************************************************************************
  * Definitons
@@ -52,10 +55,8 @@
  * Variables
  ******************************************************************************/
 
-/*! @brief Card descriptor */
-extern sd_card_t SDIO_SDCard;
-
-static aos_mutex_t mutex;
+static int g_sd_partition = -1;
+static char *TAG = "sddisk";
 
 /*******************************************************************************
  * Code
@@ -66,14 +67,19 @@ DRESULT sd_disk_write(uint8_t physicalDrive, const uint8_t *buffer, uint32_t sec
         return RES_PARERR;
     }
 
-    aos_mutex_lock(&mutex, AOS_WAIT_FOREVER);
-
-    if (kStatus_Success != SD_WriteBlocks(&SDIO_SDCard, buffer, sector, count)) {
-        aos_mutex_unlock(&mutex);
+    if (g_sd_partition < 0) {
+        return RES_PARERR;
+    }
+    partition_info_t *part_info = partition_info_get(g_sd_partition);
+    if (!part_info) {
+        LOGE(TAG, "get partition info e.");
+        return RES_PARERR;
+    }
+    int ret = partition_write(g_sd_partition, (off_t)sector * part_info->block_size, (void *)buffer, count * part_info->block_size);
+    if (ret) {
+        LOGE(TAG, "sd disk write error: %d, sector:%d, count:%d", ret, sector, count);
         return RES_ERROR;
     }
-
-    aos_mutex_unlock(&mutex);
 
     return RES_OK;
 }
@@ -84,14 +90,20 @@ DRESULT sd_disk_read(uint8_t physicalDrive, uint8_t *buffer, uint32_t sector, ui
         return RES_PARERR;
     }
 
-    aos_mutex_lock(&mutex, AOS_WAIT_FOREVER);
-
-    if (kStatus_Success != SD_ReadBlocks(&SDIO_SDCard, buffer, sector, count)) {
-        aos_mutex_unlock(&mutex);
-        return RES_ERROR;
+    if (g_sd_partition < 0) {
+        return RES_PARERR;
+    }
+    partition_info_t *part_info = partition_info_get(g_sd_partition);
+    if (!part_info) {
+        LOGE(TAG, "get partition info e.");
+        return RES_PARERR;
     }
 
-    aos_mutex_unlock(&mutex);
+    int ret = partition_read(g_sd_partition, (off_t)sector * part_info->block_size, buffer, count * part_info->block_size);
+    if (ret) {
+        LOGE(TAG, "sd disk read error: %d, sector:%d, count:%d", ret, sector, count);
+        return RES_ERROR;
+    }
 
     return RES_OK;
 }
@@ -100,14 +112,21 @@ DRESULT sd_disk_ioctl(uint8_t physicalDrive, uint8_t command, void *buffer)
 {
     DRESULT result = RES_OK;
 
+    // LOGD(TAG, "physicalDrive:%d, command:%d", physicalDrive, command);
     if (physicalDrive != SDDISK) {
         return RES_PARERR;
     }
-
+    if (g_sd_partition < 0) {
+        return RES_PARERR;
+    }
+    partition_info_t *part_info = partition_info_get(g_sd_partition);
+    if (!part_info) {
+        return RES_PARERR;
+    }
     switch (command) {
         case GET_SECTOR_COUNT:
             if (buffer) {
-                *(uint32_t *)buffer = SDIO_SDCard.block_count;
+                *(uint32_t *)buffer = part_info->length / part_info->block_size;
             } else {
                 result = RES_PARERR;
             }
@@ -116,7 +135,7 @@ DRESULT sd_disk_ioctl(uint8_t physicalDrive, uint8_t command, void *buffer)
 
         case GET_SECTOR_SIZE:
             if (buffer) {
-                *(uint32_t *)buffer = SDIO_SDCard.block_size;
+                *(uint32_t *)buffer = part_info->block_size;
             } else {
                 result = RES_PARERR;
             }
@@ -125,7 +144,7 @@ DRESULT sd_disk_ioctl(uint8_t physicalDrive, uint8_t command, void *buffer)
 
         case GET_BLOCK_SIZE:
             if (buffer) {
-                *(uint32_t *)buffer = SDIO_SDCard.csd.eraseSectorSize;
+                *(uint32_t *)buffer = part_info->erase_size / part_info->block_size;
             } else {
                 result = RES_PARERR;
             }
@@ -160,14 +179,12 @@ DSTATUS sd_disk_initialize(uint8_t physicalDrive)
         return STA_NOINIT;
     }
 
-    /* Save host information. */
-    memset(&SDIO_SDCard, 0, sizeof(SDIO_SDCard));
+    partition_t partition = partition_open(FATFS_PARTITION_NAME);
+    if (partition < 0) {
+        LOGE(TAG, "open %s failed.", (char *)FATFS_PARTITION_NAME);
+        return RES_PARERR;
+    }
+    g_sd_partition = partition;
 
-    int re = aos_mutex_new(&mutex);
-
-    aos_check(!re, ERR_MEM);
-
-    status_t ret = SD_Init(&SDIO_SDCard, NULL, 1);
-
-    return (ret == kStatus_Success) ? RES_OK : RES_NOTRDY;
+    return RES_OK;
 }

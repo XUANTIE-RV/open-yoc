@@ -40,7 +40,7 @@ static void cmd_ifconfig_eth(char *wbuf, int wbuf_len, int argc, char **argv)
 {
     int item_count = argc;
 
-    aos_dev_t *eth_dev = device_find("eth", 0);
+    rvm_dev_t *eth_dev = rvm_hal_device_find("eth", 0);
     if (eth_dev == NULL) {
         printf("eth not found\n");
         printf(USAGE_INFO);
@@ -73,7 +73,7 @@ static void cmd_ifconfig_eth(char *wbuf, int wbuf_len, int argc, char **argv)
 static void cmd_ifconfig_wifi(char *wbuf, int wbuf_len, int argc, char **argv)
 {
     int item_count = argc;
-    aos_dev_t *wifi_dev = device_find("wifi", 0);
+    rvm_dev_t *wifi_dev = rvm_hal_device_find("wifi", 0);
 
     if (wifi_dev != NULL) {
         netmgr_hdl_t hdl = netmgr_get_handle("wifi");
@@ -87,12 +87,12 @@ static void cmd_ifconfig_wifi(char *wbuf, int wbuf_len, int argc, char **argv)
                 ip_addr_t dns_svr[2];
                 if (item_count == 3) {
                     if (ipaddr_aton(argv[2], &dns_svr[0])) {
-                        hal_net_set_dns_server(wifi_dev, &dns_svr[0], 1);
+                        rvm_hal_net_set_dns_server(wifi_dev, &dns_svr[0], 1);
                         return;
                     }
                 } else if (item_count == 4) {
                     if (ipaddr_aton(argv[2], &dns_svr[0]) && ipaddr_aton(argv[3], &dns_svr[1])) {
-                        hal_net_set_dns_server(wifi_dev, &dns_svr[0], 2);
+                        rvm_hal_net_set_dns_server(wifi_dev, &dns_svr[0], 2);
                         return;
                     }
                 }
@@ -126,7 +126,7 @@ static void cmd_ifconfig_wifi(char *wbuf, int wbuf_len, int argc, char **argv)
 static void cmd_ifconfig_gprs(char *wbuf, int wbuf_len, int argc, char **argv)
 {
     int item_count = argc;
-    aos_dev_t *gprs_dev = device_find("gprs", 0);
+    rvm_dev_t *gprs_dev = rvm_hal_device_find("gprs", 0);
 
     if (gprs_dev != NULL) {
 
@@ -149,7 +149,7 @@ static void cmd_ifconfig_func(char *wbuf, int wbuf_len, int argc, char **argv)
 {
     int item_count = argc;
 
-    aos_dev_t *eth_dev = device_find("eth", 0);
+    rvm_dev_t *eth_dev = rvm_hal_device_find("eth", 0);
 
     if (eth_dev != NULL) {
 
@@ -176,7 +176,7 @@ static void cmd_ifconfig_func(char *wbuf, int wbuf_len, int argc, char **argv)
         }
     }
 
-    aos_dev_t *wifi_dev = device_find("wifi", 0);
+    rvm_dev_t *wifi_dev = rvm_hal_device_find("wifi", 0);
 
     if (wifi_dev != NULL) {
         netmgr_hdl_t hdl = netmgr_get_handle("wifi");
@@ -206,7 +206,7 @@ static void cmd_ifconfig_func(char *wbuf, int wbuf_len, int argc, char **argv)
         }
     }
 
-    aos_dev_t *gprs_dev = device_find("gprs", 0);
+    rvm_dev_t *gprs_dev = rvm_hal_device_find("gprs", 0);
 
     if (gprs_dev != NULL) {
 
@@ -223,7 +223,7 @@ static void cmd_ifconfig_func(char *wbuf, int wbuf_len, int argc, char **argv)
         }
     }
 
-    aos_dev_t *nbiot_dev = device_find("nbiot", 0);
+    rvm_dev_t *nbiot_dev = rvm_hal_device_find("nbiot", 0);
 
     if (nbiot_dev != NULL) {
 

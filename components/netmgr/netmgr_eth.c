@@ -11,7 +11,7 @@
 #include <aos/kv.h>
 #endif
 
-#include <devices/hal/ethernet_impl.h>
+#include <devices/ethernet.h>
 
 typedef struct {
     netmgr_hdl_t hdl;
@@ -20,24 +20,23 @@ typedef struct {
 
 static int netmgr_eth_provision(netmgr_dev_t *node)
 {
-    aos_dev_t *dev = node->dev;
-    netdev_driver_t *drv = dev->drv;
-    eth_driver_t *eth_drv = (eth_driver_t *)drv->link_ops;
+    rvm_dev_t *dev = node->dev;
+
     netmgr_subscribe(EVENT_ETH_LINK_UP);
     netmgr_subscribe(EVENT_ETH_LINK_DOWN);
     netmgr_subscribe(EVENT_ETH_EXCEPTION);
 
-    eth_drv->start(dev);
+    rvm_hal_eth_start(dev);
     return 0;
 }
 
 static int netmgr_eth_unprovision(netmgr_dev_t *node)
 {
-    aos_dev_t *dev = node->dev;
+    rvm_dev_t *dev = node->dev;
 
-    hal_net_set_link_down(dev);
+    rvm_hal_net_set_link_down(dev);
 
-    device_close(dev);
+    rvm_hal_device_close(dev);
     return 0;
 }
 
@@ -48,10 +47,35 @@ static int netmgr_eth_reset(netmgr_dev_t *node)
 
 static int netmgr_eth_info(netmgr_dev_t *node)
 {
-    aos_dev_t *dev = node->dev;
-    netdev_driver_t *drv = dev->drv;
-    eth_driver_t *eth_drv = (eth_driver_t *)drv->link_ops;
-    eth_drv->ifconfig(dev);
+    rvm_dev_t *dev = node->dev;
+    int ret, i;
+
+    unsigned char mac[6] = {0};
+    ip_addr_t ipaddr;
+    ip_addr_t netmask;
+    ip_addr_t gw;
+    ip_addr_t dns_svr[2];
+
+
+    /** ifconfig */
+    rvm_hal_net_get_ipaddr(dev, &ipaddr, &netmask, &gw);
+    rvm_hal_net_get_mac_addr(dev, mac);
+    ret = rvm_hal_net_get_dns_server(dev, dns_svr, 2);
+
+    printf("\neth0\tLink encap:eth  HWaddr ");
+    printf("%02x:%02x:%02x:%02x:%02x:%02x\n", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+    printf("    \tinet addr:%s\n", ipaddr_ntoa(&ipaddr));
+    printf("\tGWaddr:%s\n", ipaddr_ntoa(&gw));
+    printf("\tMask:%s\n", ipaddr_ntoa(&netmask));
+
+    if (ret <= 0) {
+        printf("\tDNS SERVER NONE\n");
+    }
+
+    for (i = 0; i < ret; i ++) {
+        printf("\tDNS SERVER %d: %s\n", i, ipaddr_ntoa(&dns_svr[i]));
+    }
+
     return 0;
 }
 
@@ -97,13 +121,7 @@ netmgr_dev_t * netmgr_eth_init(struct netmgr_uservice *netmgr)
 {
     netmgr_dev_t *node = NULL;
 
-    int ival = 0;
-    // get eth configuration
-#ifdef CONFIG_KV_SMART
-    ival = netmgr_kv_getint(KV_ETH_EN);
-#else
-    ival = 1;
-#endif
+    int ival = 1;
 
     if (ival == 1) {
         node = (netmgr_dev_t *)aos_zalloc(sizeof(netmgr_dev_t));
@@ -111,7 +129,7 @@ netmgr_dev_t * netmgr_eth_init(struct netmgr_uservice *netmgr)
         if (node) {
             //eth_setting_t *config = &node->config.eth_config;
             //init netif and register netif to lwip
-            node->dev = device_open_id("eth", 0);
+            node->dev = rvm_hal_device_open("eth0");
             aos_assert(node->dev);
             node->provision = netmgr_eth_provision;
             node->unprovision = netmgr_eth_unprovision;
@@ -119,7 +137,7 @@ netmgr_dev_t * netmgr_eth_init(struct netmgr_uservice *netmgr)
             node->reset = netmgr_eth_reset;
             strcpy(node->name, "eth");
 #ifdef CONFIG_KV_SMART
-            node->dhcp_en = netmgr_kv_getint(KV_DHCP_EN);
+            node->dhcp_en = 1;//netmgr_kv_getint(KV_DHCP_EN);
             char *str = netmgr_kv_get(KV_IP_ADDR);
             ip4addr_aton(str, (ip4_addr_t *)ip_2_ip4(&node->ipaddr));
             str = netmgr_kv_get(KV_IP_NETMASK);

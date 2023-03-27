@@ -49,7 +49,7 @@
 #include "pwrmgr.h"
 #include "error.h"
 #include "gpio.h"
-#include "uart.h"
+// #include "uart.h"
 #include "bus_dev.h"
 //#include "log.h"
 #include "jump_function.h"

@@ -17,7 +17,7 @@ typedef struct {
     dev_ringbuf_t  read_buffer;
 } uart_dev_t;
 
-static uart_dev_t g_uart_inst = {0};
+static uart_dev_t g_uart_inst = { 0 };
 
 static void usart_csky_event_cb_fun(int32_t uart_idx, usart_event_e event)
 {
@@ -75,8 +75,8 @@ int uart_csky_open(int uart_csi_id, int baud_rate)
     uart->handle = csi_usart_initialize(uart_csi_id, usart_csky_event_cb_fun);
 
     if (uart->handle) {
-        csi_usart_config(uart->handle, baud_rate, USART_MODE_ASYNCHRONOUS, USART_PARITY_NONE,
-                         USART_STOP_BITS_1, USART_DATA_BITS_8);
+        csi_usart_config(uart->handle, baud_rate, USART_MODE_ASYNCHRONOUS, USART_PARITY_NONE, USART_STOP_BITS_1,
+                         USART_DATA_BITS_8);
     }
 
     return uart->handle ? 0 : -1;
@@ -97,7 +97,7 @@ int uart_csky_send(const void *data, uint32_t size)
 
     int i;
     for (i = 0; i < size; i++) {
-        //dont depend interrupt
+        // dont depend interrupt
         csi_usart_putchar(uart->handle, *((uint8_t *)data + i));
     }
 

@@ -32,9 +32,7 @@ static void cmd_kvfs_func(char *wbuf, int wbuf_len, int argc, char **argv)
         } else if (strcmp(argv[1], "erase") == 0) {
             partition_t h = partition_open("kv");
             partition_info_t *info = partition_info_get(h);
-            int sec_cnt = info->length/info->sector_size;
-
-            partition_erase(h, 0, sec_cnt);
+            partition_erase_size(h, 0, info->length);
             partition_close(h);
         }
 

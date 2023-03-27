@@ -9,7 +9,6 @@
 #include "app_main.h"
 #include "app_init.h"
 #include <yoc/ibeacons.h>
-#include "pin_name.h"
 
 #define TAG  "DEMO"
 #define NAME "WeChat Beacon"

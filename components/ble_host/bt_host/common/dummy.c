@@ -11,7 +11,7 @@
 
 #include <ble_os.h>
 
-#if defined(CONFIG_BT_HCI_HOST)
+#if (defined(CONFIG_BT_HCI_HOST) && CONFIG_BT_HCI_HOST)
 /* The Bluetooth subsystem requires the Tx thread to execute at higher priority
  * than the Rx thread as the Tx thread needs to process the acknowledgements
  * before new Rx data is processed. This is a necessity to correctly detect
@@ -20,7 +20,7 @@
 BUILD_ASSERT(CONFIG_BT_HCI_TX_PRIO < CONFIG_BT_RX_PRIO);
 #endif
 
-#if defined(CONFIG_BT_CTLR)
+#if (defined(CONFIG_BT_CTLR) && CONFIG_BT_CTLR)
 /* The Bluetooth Controller's priority receive thread priority shall be higher
  * than the Bluetooth Host's Tx and the Controller's receive thread priority.
  * This is required in order to dispatch Number of Completed Packets event
@@ -33,8 +33,8 @@ BUILD_ASSERT(CONFIG_BT_CTLR_RX_PRIO < CONFIG_BT_HCI_TX_PRIO);
  * since it introduces ISR latency due to outputting log messages with
  * interrupts disabled.
  */
-#if !defined(CONFIG_TEST) && !defined(CONFIG_ARCH_POSIX) && \
-	defined(CONFIG_BT_LL_SW_SPLIT)
+#if !(defined(CONFIG_TEST) && CONFIG_TEST) && !(defined(CONFIG_ARCH_POSIX) && CONFIG_ARCH_POSIX) && \
+	(defined(CONFIG_BT_LL_SW_SPLIT) && CONFIG_BT_LL_SW_SPLIT)
 BUILD_ASSERT(!IS_ENABLED(CONFIG_LOG_IMMEDIATE), "Immediate logging not "
 	     "supported with the software Link Layer");
 #endif

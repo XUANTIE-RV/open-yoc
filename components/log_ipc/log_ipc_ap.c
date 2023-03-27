@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2019-2020 Alibaba Group Holding Limited
  */
-#if !defined(CONFIG_USE_LOG_IPC) || (CONFIG_USE_LOG_IPC == 0)
+#if !defined(CONFIG_LOG_IPC_CP) || (CONFIG_LOG_IPC_CP == 0)
 
 #include <stdint.h>
 #include <aos/aos.h>
@@ -80,7 +80,7 @@ static void console_ipc_process(ipc_t *ipc, message_t *m, void *priv)
 }
 
 //dbg IPC初始化
-int ipc_log_ap_init(uint8_t *cpu_id, int num)
+int log_ipc_ap_init(uint8_t *cpu_id, int num)
 {
     //CPU1 console的串口打印给CPU0
     g_log_ipc = calloc(sizeof(log_ipc_t), num);

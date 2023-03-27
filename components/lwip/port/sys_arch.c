@@ -532,7 +532,10 @@ u32_t sys_arch_mbox_fetch(sys_mbox_t *mb, void **msg, u32_t timeout)
             ret = SYS_ARCH_TIMEOUT;
         }
     } else {
-        while (aos_queue_recv(mb, AOS_WAIT_FOREVER, msg, &len) != 0);
+        ret = aos_queue_recv(mb, AOS_WAIT_FOREVER, msg, &len);
+        if(ret != 0) {
+            return ret;
+        }
 
         end_ms = sys_now();
         elapsed_ms = end_ms - begin_ms;

@@ -9,7 +9,7 @@ extern "C" {
 #endif
 #include <stdint.h>
 
-#define BOOT_VER    "boot3.0"
+#define BOOT_VER    "boot4.0"
 
 int boot_main(int argc, char **argv);
 

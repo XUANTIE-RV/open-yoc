@@ -517,7 +517,7 @@ uint32_t csi_kernel_get_tick_freq(void)
 
 uint32_t csi_kernel_get_systimer_freq(void)
 {
-    return soc_get_sys_freq(0);
+    return soc_get_sys_freq();
 }
 
 typedef struct tmr_arg {

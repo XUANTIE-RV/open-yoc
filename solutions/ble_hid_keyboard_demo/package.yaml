@@ -1,7 +1,7 @@
 
 ## 第一部分： 基础信息
 name: ble_hid_keyboard_demo
-version: v7.6.0                                     # <必选项> 组件版本号
+version: v7.7.0                                    # <必选项> 组件版本号
 description: YoC BLE HID KEYBOARD SDK               # <必选项> 建议至少20字以上
 type: solution                                      # <必选项> 组件类型，为：solution, chip, board, common, sdk
 
@@ -14,11 +14,13 @@ type: solution                                      # <必选项> 组件类型�
 #   - minilibc: v7.4.0
 #   - aos: v7.4.0
 sdk_chip:
-  - sdk_chip_phy6220: v7.6.0
-  #- sdk_chip_TG7121B: v7.6.y
+  - sdk_chip_phy6220: v7.7.0
+  - sdk_chip_IoTGW_CB800: v7.7.0
+  - sdk_chip_d1: v7.7.0
+  #- sdk_chip_TG7121B: v7.7.0
 depends:
-  - ble_host: v7.6.0
-  - sdk_chip_phy6220: v7.6.0
+  - ble_host: v7.7.0
+  - sdk_chip_phy6220: v7.7.0
 
 ## 第三部分：板级信息
 # hw_info:                                 # 对 solution、board、chip 三个字段的改进，统称为 hw_info 字段
@@ -95,25 +97,21 @@ source_file:
 #   CONFIG_CLI: y
 def_config:
 # Kernel Config
-  CONFIG_ARCH_INTERRUPTSTACK: 1024
-  CONFIG_INIT_TASK_STACK_SIZE: 1024
-  CONFIG_KERNEL_TIMER_STACK_SIZE: 1024
 
 # BLE HOST Config
   CONFIG_BT_PERIPHERAL: 1
-  CONFIG_BT_RX_STACK_SIZE: 2048
   CONFIG_BT_SMP: 1
   CONFIG_BT_KEYS_OVERWRITE_OLDEST: 1
   CONFIG_BT_PRF_BAS: 1
   CONFIG_BT_PRF_DIS: 1
   CONFIG_BT_PRF_HIDS: 1
-  CONFIG_BT_HOST_OPTIMIZE: 1
-  CONFIG_BT_USE_HCI_API: 0
-  CONFIG_BT_USE_MM: 1
 
 # chip config
   #CONFIG_PM_SLEEP: 1
   #CONFIG_HAL_UART_RINGBUF_LEN: 128
+
+# Board config
+  CONFIG_BOARD_BT: 1
 
 # Debug config
   #CONFIG_DEBUG: 1

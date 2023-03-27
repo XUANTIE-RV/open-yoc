@@ -39,6 +39,8 @@ typedef struct {
     uart_dev_t    *uart_dev;
     aos_mutex_t    tx_mutex;
     aos_mutex_t    rx_mutex;
+    aos_mutex_t    mutex;
+    uint16_t       init_cnt;
 #ifdef UART_MODE_DMA
     csi_dma_ch_t g_dma_ch_tx;
     csi_dma_ch_t g_dma_ch_rx;
@@ -126,37 +128,46 @@ int32_t hal_uart_init(uart_dev_t *uart)
         return -1;
     }
 
+    if (!aos_mutex_is_valid(&uart_list[uart->port].mutex)) {
+        aos_mutex_new(&uart_list[uart->port].mutex);
+    }
+
+    aos_mutex_lock(&uart_list[uart->port].mutex, AOS_WAIT_FOREVER);
+
+    if (uart_list[uart->port].init_cnt >  0) {
+        ret = 0;
+        goto success;
+    } else {
+        uart_list[uart->port].init_cnt =  0;
+    }
+
     /* init uart */
     ret = csi_uart_init(&uart_list[uart->port].handle, uart->port);
 
     if (ret < 0) {
-        return -1;
-    }
+        goto fail;
+    }   
 
 #ifndef UART_MODE_SYNC
-    ret = aos_event_new(&uart_list[uart->port].event_write_read, 0);
-
-    if (ret != 0U) {
-        return -1;
+    if (!aos_event_is_valid(&uart_list[uart->port].event_write_read)) {
+        aos_event_new(&uart_list[uart->port].event_write_read, 0);
     }
 
 #endif
-    
-    ret = aos_mutex_new(&uart_list[uart->port].tx_mutex);
-    if (ret != 0) {
-        return -1;
+
+    if (!aos_mutex_is_valid(&uart_list[uart->port].tx_mutex)) {
+        aos_mutex_new(&uart_list[uart->port].tx_mutex);
     }
 
-    ret = aos_mutex_new(&uart_list[uart->port].rx_mutex);
-    if (ret != 0) {
-        return -1;
+    if (!aos_mutex_is_valid(&uart_list[uart->port].rx_mutex)) {
+        aos_mutex_new(&uart_list[uart->port].rx_mutex);
     }
 
     /* set uart baudrate */
     ret = csi_uart_baud(&uart_list[uart->port].handle, uart->config.baud_rate);
 
     if (ret < 0) {
-        return -1;
+        goto fail;
     }
 
     switch (uart->config.parity)
@@ -181,14 +192,14 @@ int32_t hal_uart_init(uart_dev_t *uart)
     ret = csi_uart_format(&uart_list[uart->port].handle, uart->config.data_width, parity, uart->config.stop_bits);
 
     if (ret < 0) {
-        return -1;
+        goto fail;
     }
 
     /* set uart format */
     ret = csi_uart_flowctrl(&uart_list[uart->port].handle, uart->config.flow_control);
 
     if (ret < 0) {
-        return -1;
+        goto fail;
     }
 
 #ifndef UART_MODE_SYNC
@@ -196,13 +207,13 @@ int32_t hal_uart_init(uart_dev_t *uart)
     ret = csi_uart_attach_callback(&uart_list[uart->port].handle, uart_event_cb, NULL);
 
     if (ret < 0) {
-        return -1;
+        goto fail;
     }
 
     uart_list[uart->port].recv_buf = (char *)aos_malloc(HAL_UART_RINGBUF_LEN);
 
     if (uart_list[uart->port].recv_buf == NULL) {
-        return -1;
+        goto fail;
     }
 
     ringbuffer_create(&uart_list[uart->port].read_buffer, uart_list[uart->port].recv_buf, HAL_UART_RINGBUF_LEN);
@@ -213,14 +224,23 @@ int32_t hal_uart_init(uart_dev_t *uart)
     ret = csi_uart_link_dma(&uart_list[uart->port].handle, &uart_list[uart->port].g_dma_ch_tx, &uart_list[uart->port].g_dma_ch_rx);
 
     if (ret < 0) {
-        return -1;
+        goto fail;
     }
 
 #endif
     
     uart_list[uart->port].uart_dev = uart;
-    
-    return 0;
+
+success:
+    uart_list[uart->port].init_cnt++;
+    aos_mutex_unlock(&uart_list[uart->port].mutex);
+
+    return ret;
+
+fail:
+    aos_mutex_unlock(&uart_list[uart->port].mutex);
+
+    return ret;
 }
 
 int32_t hal_uart_send_poll(uart_dev_t *uart, const void *data, uint32_t size)
@@ -307,7 +327,6 @@ int32_t hal_uart_recv(uart_dev_t *uart, void *data, uint32_t expect_size, uint32
     if (ret < 0) {
         return -1;
     }
-    aos_mutex_unlock(&uart_list[uart->port].rx_mutex);
 
     ret = aos_event_get(&uart_list[uart->port].event_write_read, EVENT_READ, AOS_EVENT_OR_CLEAR, &actl_flags, timeout);
 
@@ -316,6 +335,8 @@ int32_t hal_uart_recv(uart_dev_t *uart, void *data, uint32_t expect_size, uint32
     }
 
 #endif
+
+    aos_mutex_unlock(&uart_list[uart->port].rx_mutex);
 
     return ret;
 }
@@ -408,17 +429,34 @@ int32_t hal_uart_finalize(uart_dev_t *uart)
         return 0;
     }
 
-    aos_mutex_free(&uart_list[uart->port].tx_mutex);
-    aos_mutex_free(&uart_list[uart->port].rx_mutex);
-#ifdef UART_MODE_DMA
-    csi_uart_link_dma(&uart_list[uart->port].handle, NULL, NULL);
-#endif
+    aos_mutex_lock(&uart_list[uart->port].mutex, AOS_WAIT_FOREVER);
+
+    uart_list[uart->port].init_cnt--;
+
+    if (uart_list[uart->port].init_cnt > 0) {
+        goto ignore_finalize;
+    }
+
 #ifndef UART_MODE_SYNC
     aos_event_free(&uart_list[uart->port].event_write_read);
     aos_freep(&uart_list[uart->port].recv_buf);
 #endif
+
+#ifdef UART_MODE_DMA
+    csi_uart_link_dma(&uart_list[uart->port].handle, NULL, NULL);
+#endif
+    aos_mutex_free(&uart_list[uart->port].tx_mutex);
+    aos_mutex_free(&uart_list[uart->port].rx_mutex);
+
     csi_uart_uninit(&uart_list[uart->port].handle);
     uart_list[uart->port].rx_cb = NULL;
+
+ignore_finalize:
+    aos_mutex_unlock(&uart_list[uart->port].mutex);
+
+    if (uart_list[uart->port].init_cnt == 0) {
+        aos_mutex_free(&uart_list[uart->port].mutex);
+    }
     return 0;
 }
 #endif

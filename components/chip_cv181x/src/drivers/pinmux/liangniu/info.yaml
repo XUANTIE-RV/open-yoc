@@ -1,0 +1,12 @@
+name: PINMUX
+vendor: LIANGNIU
+license: Copyright (C) 2017-2019 Alibaba Group Holding Limited
+description: liangniu pinmux
+depends: NULL
+type: devices
+
+versions:
+    ln8819_v1.0:
+        drv_path: ln8819_v1.0
+
+

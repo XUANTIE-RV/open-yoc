@@ -1219,7 +1219,7 @@ static int aos_task_list(void *task_array, uint32_t array_items)
 
 #ifdef CONFIG_BACKTRACE
     uint32_t task_free;
-    size_t irq_flags;
+    CPSR_ALLOC();
 #endif
 #ifdef CONFIG_STACK_GUARD
     int      stack_flags;
@@ -1246,7 +1246,7 @@ static int aos_task_list(void *task_array, uint32_t array_items)
     }
 
 #ifdef CONFIG_BACKTRACE
-    irq_flags = cpu_intrpt_save();
+    RHINO_CPU_INTRPT_DISABLE();
 
 #ifdef CONFIG_STACK_GUARD
     extern int stack_guard_save(void);
@@ -1267,7 +1267,7 @@ static int aos_task_list(void *task_array, uint32_t array_items)
     stack_guard_restore(stack_flags);
 #endif
 
-    cpu_intrpt_restore(irq_flags);
+    RHINO_CPU_INTRPT_ENABLE();
 
 #endif /* CONFIG_BACKTRACE */
 #endif /* RHINO_CONFIG_SYSTEM_STATS */
@@ -1285,7 +1285,7 @@ static uint32_t aos_task_get_stack_space(void *task_handle)
     kstat_t ret = krhino_task_stack_min_free(task_handle, &stack_free);
 
     if (ret == RHINO_SUCCESS) {
-        return (uint32_t)(4 * stack_free);
+        return (uint32_t)(sizeof(cpu_stack_t) * stack_free);
     } else {
         return 0;
     }
@@ -1345,7 +1345,7 @@ void aos_task_show_info(void)
         else if (task_array[i]->task_state == K_DELETED)   printf("deleted");
         else                                               printf("%-7d", task_array[i]->task_state);
 
-        uint32_t strack_size = task_array[i]->stack_size * 4;
+        uint32_t strack_size = task_array[i]->stack_size * sizeof(cpu_stack_t);
         uint32_t min_free = aos_task_get_stack_space(task_array[i]);
 #if (RHINO_CONFIG_SYS_STATS > 0)
         printf(" %p   %8d %8d   %2d%% %8"PRId64" %8.1f\n",
@@ -1430,9 +1430,19 @@ void aos_kernel_resume(int32_t ticks)
     core_sched();
 }
 
-int32_t aos_irq_context(void)
+int aos_irq_context(void)
 {
-    return g_intrpt_nested_level[cpu_cur_get()] > 0u || g_sched_lock[cpu_cur_get()] > 0u;
+    return g_intrpt_nested_level[cpu_cur_get()] > 0u;
+}
+
+int aos_is_sched_disable(void)
+{
+    return g_sched_lock[cpu_cur_get()] > 0u;
+}
+
+int aos_is_irq_disable(void)
+{
+    return !cpu_is_irq_enable();
 }
 
 void *aos_zalloc(size_t size)
@@ -1591,18 +1601,19 @@ void *aos_malloc_align(size_t alignment, size_t size)
 {
     void *ptr;
     void *align_ptr;
-    int uintptr_size;
-    size_t align_size;
+    size_t align_size = sizeof(void*);
 
-    /* sizeof pointer */
-    uintptr_size = sizeof(void *);
-    uintptr_size -= 1;
-
-    /* align the alignment size to uintptr size byte */
-    alignment = ((alignment + uintptr_size) & ~uintptr_size);
+    if (alignment > align_size) {
+        for (;;) {
+            align_size = align_size << 1;
+            if (align_size >= alignment)
+                break;
+        }
+    }
+    alignment = align_size;
 
     /* get total aligned size */
-    align_size = ((size + uintptr_size) & ~uintptr_size) + alignment;
+    align_size = size + (alignment << 1);
     /* allocate memory block from heap */
 #if (RHINO_CONFIG_MM_DEBUG > 0u)
     ptr = aos_malloc(align_size | AOS_UNSIGNED_INT_MSB);
@@ -1620,7 +1631,6 @@ void *aos_malloc_align(size_t alignment, size_t size)
 
         /* set the pointer before alignment pointer to the real pointer */
         *((unsigned long *)((unsigned long)align_ptr - sizeof(void *))) = (unsigned long)ptr;
-
         ptr = align_ptr;
     }
 
@@ -1629,13 +1639,10 @@ void *aos_malloc_align(size_t alignment, size_t size)
 
 void aos_free_align(void *ptr)
 {
-    void *real_ptr;
-
-    /* NULL check */
-    if (ptr == NULL)
-        return;
-    real_ptr = (void *)*(unsigned long *)((unsigned long)ptr - sizeof(void *));
-    aos_free(real_ptr);
+    if (ptr) {
+        void *real_ptr = (void *)*(unsigned long *)((unsigned long)ptr - sizeof(void *));
+        aos_free(real_ptr);
+    }
 }
 
 aos_status_t aos_task_ptcb_get(aos_task_t *task, void **ptcb)

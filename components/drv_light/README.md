@@ -14,10 +14,10 @@ uint16_t actual = 0x8000;
 //  temperature : 800 - 20000，色温
 uint16_t temperature = 10000;
 
-// IO 配置 : 管脚，管脚功能配置，PWM channel
+// PWM channel
 static pwm_port_func_t pwm_channel[] = {
-    {P31, FMUX_PWM0, 0},   //COLD
-    {P32, FMUX_PWM1, 1},  //WARM
+    {0},   //COLD
+    {1},  //WARM
 };
 
 static pwm_dev_t pmw_light[ARRAY_SIZE(pwm_channel)];

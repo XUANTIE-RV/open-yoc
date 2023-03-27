@@ -61,16 +61,16 @@ struct bt_conn_le {
 
 	struct bt_keys		*keys;
 
-#if defined(CONFIG_BT_USER_PHY_UPDATE)
+#if (defined(CONFIG_BT_USER_PHY_UPDATE) && CONFIG_BT_USER_PHY_UPDATE)
 	struct bt_conn_le_phy_info      phy;
 #endif
 
-#if defined(CONFIG_BT_USER_DATA_LEN_UPDATE)
+#if (defined(CONFIG_BT_USER_DATA_LEN_UPDATE) && CONFIG_BT_USER_DATA_LEN_UPDATE)
 	struct bt_conn_le_data_len_info data_len;
 #endif
 };
 
-#if defined(CONFIG_BT_BREDR)
+#if (defined(CONFIG_BT_BREDR) && CONFIG_BT_BREDR)
 /* For now reserve space for 2 pages of LMP remote features */
 #define LMP_MAX_PAGES 2
 
@@ -114,7 +114,7 @@ struct bt_conn {
 	/* Which local identity address this connection uses */
 	u8_t                    id;
 
-#if defined(CONFIG_BT_SMP) || defined(CONFIG_BT_BREDR)
+#if (defined(CONFIG_BT_SMP) && CONFIG_BT_SMP) || (defined(CONFIG_BT_BREDR) && CONFIG_BT_BREDR)
 	bt_security_t		sec_level;
 	bt_security_t		required_sec_level;
 	u8_t			encrypt;
@@ -142,7 +142,7 @@ struct bt_conn {
 
 	/* Queue for outgoing ACL data */
 	struct kfifo		tx_queue;
-#if defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE
+#if (defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE)
 	/* Queue for outgoing ACL data */
 	sys_slist_t		    tx_pending_queue;
 #endif
@@ -156,13 +156,13 @@ struct bt_conn {
 
 	union {
 		struct bt_conn_le	le;
-#if defined(CONFIG_BT_BREDR)
+#if (defined(CONFIG_BT_BREDR) && CONFIG_BT_BREDR)
 		struct bt_conn_br	br;
 		struct bt_conn_sco	sco;
 #endif
 	};
 
-#if defined(CONFIG_BT_REMOTE_VERSION)
+#if (defined(CONFIG_BT_REMOTE_VERSION) && CONFIG_BT_REMOTE_VERSION)
 	struct bt_conn_rv {
 		u8_t  version;
 		u16_t manufacturer;
@@ -248,7 +248,7 @@ void notify_le_phy_updated(struct bt_conn *conn);
 
 bool le_param_req(struct bt_conn *conn, struct bt_le_conn_param *param);
 
-#if defined(CONFIG_BT_SMP)
+#if (defined(CONFIG_BT_SMP) && CONFIG_BT_SMP)
 /* rand and ediv should be in BT order */
 int bt_conn_le_start_encryption(struct bt_conn *conn, u8_t rand[8],
 				u8_t ediv[2], const u8_t *ltk, size_t len);
@@ -257,13 +257,13 @@ int bt_conn_le_start_encryption(struct bt_conn *conn, u8_t rand[8],
 void bt_conn_identity_resolved(struct bt_conn *conn);
 #endif /* CONFIG_BT_SMP */
 
-#if defined(CONFIG_BT_SMP) || defined(CONFIG_BT_BREDR)
+#if (defined(CONFIG_BT_SMP) && CONFIG_BT_SMP) || (defined(CONFIG_BT_BREDR) && CONFIG_BT_BREDR)
 /* Notify higher layers that connection security changed */
 void bt_conn_security_changed(struct bt_conn *conn, enum bt_security_err err);
 #endif /* CONFIG_BT_SMP || CONFIG_BT_BREDR */
 
 /* Prepare a PDU to be sent over a connection */
-#if defined(CONFIG_NET_BUF_LOG)
+#if (defined(CONFIG_NET_BUF_LOG) && CONFIG_NET_BUF_LOG)
 struct net_buf *bt_conn_create_pdu_timeout_debug(struct net_buf_pool *pool,
 						 size_t reserve,
 						 k_timeout_t timeout,
@@ -284,7 +284,7 @@ struct net_buf *bt_conn_create_pdu_timeout(struct net_buf_pool *pool,
 #endif
 
 /* Prepare a PDU to be sent over a connection */
-#if defined(CONFIG_NET_BUF_LOG)
+#if (defined(CONFIG_NET_BUF_LOG) && CONFIG_NET_BUF_LOG)
 struct net_buf *bt_conn_create_frag_timeout_debug(size_t reserve,
 						  k_timeout_t timeout,
 						  const char *func, int line);
@@ -292,7 +292,7 @@ struct net_buf *bt_conn_create_frag_timeout_debug(size_t reserve,
 #define bt_conn_create_frag_timeout(_reserve, _timeout) \
 	bt_conn_create_frag_timeout_debug(_reserve, _timeout, \
 					  __func__, __LINE__)
-#if defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE
+#if (defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE)
 #define bt_conn_create_frag(_reserve) \
 	bt_conn_create_frag_timeout_debug(_reserve, 0, \
 					  __func__, __LINE__)
@@ -304,7 +304,7 @@ struct net_buf *bt_conn_create_frag_timeout_debug(size_t reserve,
 #else
 struct net_buf *bt_conn_create_frag_timeout(size_t reserve,
 					    k_timeout_t timeout);
-#if defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE
+#if (defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE)
 #define bt_conn_create_frag(_reserve) \
 	bt_conn_create_frag_timeout(_reserve, 0)
 #else

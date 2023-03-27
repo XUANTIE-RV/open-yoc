@@ -69,18 +69,18 @@ static status_t SDMMCHOST_CardDetectInit(SDMMCHOST_TYPE base, const sdmmchost_de
  ******************************************************************************/
 /*! @brief DMA descriptor table. */
 #if defined(__XCC__)
-static uint32_t s_sdifDmaTable[2][SDIF_DMA_TABLE_WORDS] __attribute__((section(".dsp_dram")));
+static uint32_t s_sdifDmaTable[4][SDIF_DMA_TABLE_WORDS] __attribute__((section(".dsp_dram")));
 #endif
 #if defined(__CSKY__)
-uint32_t s_sdifDmaTable[2][SDIF_DMA_TABLE_WORDS] __attribute__((aligned(64)));
+uint32_t s_sdifDmaTable[4][SDIF_DMA_TABLE_WORDS] __attribute__((aligned(64)));
 #endif
 #if defined(__riscv)
-uint32_t s_sdifDmaTable[2][SDIF_DMA_TABLE_WORDS] __attribute__((aligned(64)));
+uint32_t s_sdifDmaTable[4][SDIF_DMA_TABLE_WORDS] __attribute__((aligned(64)));
 #endif
 
-static volatile bool g_sdifTransferSuccessFlag[2] = {true, true};
+static volatile bool g_sdifTransferSuccessFlag[4] = {true, true, true, true};
 /*! @brief Card detect flag. */
-static volatile bool s_sdInsertedFlag[2] = {false, false};
+static volatile bool s_sdInsertedFlag[4] = {false, false, false, false};
 static sdmmchost_interrupt_t g_interrupt_func;
 
 static void SDMMCHOST_DetectCardInsertByHost(uint32_t sdif, void *user_data)
@@ -120,17 +120,16 @@ static void SDMMCHOST_transfer_completeCallback(uint32_t sdif, void *handle, sta
 void SDMMCHOST_RegisterInterrupt(sdmmchost_interrupt_t interrupt_func)
 {
     g_interrupt_func = interrupt_func;
-
 }
 
 void SDMMCHOST_Enable_Interrupt(int idx)
 {
-    SDIF_EnableInterrupt(csi_sdif_get_handle(idx), kSDIF_SDIOInterrupt);
+    csi_sdif_enable_sdio_interrupt(csi_sdif_get_handle(idx));
 }
 
 void SDMMCHOST_Disable_Interrupt(int idx)
 {
-    SDIF_DisableInterrupt(csi_sdif_get_handle(idx), kSDIF_SDIOInterrupt);
+    csi_sdif_disable_sdio_interrupt(csi_sdif_get_handle(idx));
 }
 
 static void SDMMCHOST_Interrupt(uint32_t idx, void *user_data)
@@ -144,9 +143,8 @@ static void SDMMCHOST_Interrupt(uint32_t idx, void *user_data)
 /* User defined transfer function. */
 static status_t SDMMCHOST_TransferFunction(SDMMCHOST_TYPE base, SDMMCHOST_TRANSFER *content)
 {
-    uint32_t sdif = SDIF_GetInstance(base);
+    uint32_t sdif = csi_sdif_get_idx(base);
     status_t error = kStatus_Success;
-
     sdif_dma_config_t dmaConfig;
 
     //memset(s_sdifDmaTable[sdif], 0, sizeof(s_sdifDmaTable[0]));
@@ -162,6 +160,7 @@ static status_t SDMMCHOST_TransferFunction(SDMMCHOST_TYPE base, SDMMCHOST_TRANSF
     }
 
 #ifdef DW_SDIO_NOSUPPORT_DMA
+    // FIXME:
     SDIF_TransferBlocking(base, NULL, content);
 #else
 
@@ -184,7 +183,7 @@ static status_t SDMMCHOST_TransferFunction(SDMMCHOST_TYPE base, SDMMCHOST_TRANSF
 
 static status_t SDMMCHOST_CardDetectInit(SDMMCHOST_TYPE base, const sdmmchost_detect_card_t *cd)
 {
-    uint32_t sdif = SDIF_GetInstance(base);
+    uint32_t sdif = csi_sdif_get_idx(base);
     sdmmchost_detect_card_type_t cdType = kSDMMCHOST_DetectCardByHostCD;
 
     if (cd != NULL) {
@@ -218,7 +217,7 @@ static status_t SDMMCHOST_CardDetectInit(SDMMCHOST_TYPE base, const sdmmchost_de
 
 static void SDMMCHOST_CardDetectDeinit(SDMMCHOST_TYPE base)
 {
-    uint32_t sdif = SDIF_GetInstance(base);
+    uint32_t sdif = csi_sdif_get_idx(base);
 
     SDMMCEVENT_Delete(sdif, kSDMMCEVENT_CardDetect);
     s_sdInsertedFlag[sdif] = false;
@@ -231,7 +230,7 @@ void SDMMCHOST_Delay(uint32_t milliseconds)
 
 status_t SDMMCHOST_WaitCardDetectStatus(SDMMCHOST_TYPE base, const sdmmchost_detect_card_t *cd, bool waitCardStatus)
 {
-    uint32_t sdif = SDIF_GetInstance(base);
+    uint32_t sdif = csi_sdif_get_idx(base);
 
     uint32_t timeout = SDMMCHOST_CARD_DETECT_TIMEOUT;
 
@@ -253,7 +252,7 @@ status_t SDMMCHOST_WaitCardDetectStatus(SDMMCHOST_TYPE base, const sdmmchost_det
 
 bool SDMMCHOST_IsCardPresent(SDMMCHOST_TYPE base)
 {
-    uint32_t sdif = SDIF_GetInstance(base);
+    uint32_t sdif = csi_sdif_get_idx(base);
 
     return s_sdInsertedFlag[sdif];
 }
@@ -294,7 +293,7 @@ void SDMMCHOST_PowerOnCard(SDMMCHOST_TYPE base, const sdmmchost_pwr_card_t *pwr)
 
 status_t SDMMCHOST_Init(SDMMCHOST_CONFIG *host, void *user_data)
 {
-    uint32_t sdif = SDIF_GetInstance(host->base);
+    uint32_t sdif = csi_sdif_get_idx(host->base);
 
     sdif_callback_t sdifCallback = {0};
     sdif_host_t *sdifHost = (sdif_host_t *)host;
@@ -325,7 +324,7 @@ status_t SDMMCHOST_Init(SDMMCHOST_CONFIG *host, void *user_data)
     sdifHost->transfer = SDMMCHOST_TransferFunction;
 
     /* Enable the card power here for mmc card case, because mmc card don't need card detect*/
-    SDIF_EnableCardPower(sdifHost->base, true);
+    csi_sdif_enable_card_power(sdifHost->base, true);
 
     SDMMCHOST_CardDetectInit(sdifHost->base, (sdmmchost_detect_card_t *)user_data);
 
@@ -341,7 +340,7 @@ void SDMMCHOST_Deinit(void *host)
 {
     sdif_host_t *sdifHost = (sdif_host_t *)host;
 #ifdef CONFIG_CSI_V2
-    uint32_t sdif = SDIF_GetInstance(sdifHost->base);
+    uint32_t sdif = csi_sdif_get_idx(sdifHost->base);
     csi_sdif_uninitialize(sdif, sdifHost->base);
 #else
     csi_sdif_uninitialize(sdifHost->base);

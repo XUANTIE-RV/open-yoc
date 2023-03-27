@@ -8,6 +8,7 @@
 extern "C" {
 #endif
 
+#include <yoc/partition.h>
 #include "update_mtb.h"
 
 #define UPDATE_CHECK_FAIL                  -1
@@ -39,17 +40,17 @@ enum misc_status_type_e {
 #define MISC_STATUS_MAGIC                    0x4774caac
 #define MISC_STATUS_MAGIC_TAIL               0xd88d3553
 
-int misc_file_check(void);
-int misc_reset(void);
-int misc_init(unsigned long misc_addr, uint32_t flash_size , uint32_t flash_section);
+int misc_file_check(partition_info_t *misc_info);
+int misc_reset(partition_info_t *misc_info);
+int misc_init(int partition_fd, partition_info_t *misc_info);
 unsigned long misc_next_imager(unsigned long fd);
 int misc_get_imager_info(unsigned long fd, img_info_t *img_f);
 int misc_update_path(unsigned long bm_addr, img_info_t *img_update, uint32_t type, unsigned long fd);
 
-int misc_get_update_fd(unsigned long *fd, uint32_t *status);
+int misc_get_update_fd(unsigned long *fd, uint32_t *status, partition_info_t *misc_info);
 int misc_set_update_fd(uint32_t type, unsigned long fd, uint32_t status);
 
-int misc_get_scn_img_info(unsigned long img_addr, scn_img_t *scn_img);
+int misc_get_scn_img_info(img_info_t *img_info, scn_img_t *scn_img);
 
 int misc_get_app_version(uint8_t *out, uint32_t *olen);
 #ifdef __cplusplus

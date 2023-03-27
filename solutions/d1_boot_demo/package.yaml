@@ -1,5 +1,5 @@
 name: d1_boot_demo
-version: v7.6.0                                     # <必选项> 组件版本号
+version: v7.7.0                                     # <必选项> 组件版本号
 description: BootLoader for D1
 
 type: solution
@@ -10,19 +10,20 @@ hw_info:
   ld_script: gcc_flash.ld
 
 depends:                                       # 该组件依赖其他的组件
-  - csi: v7.6.0
-  - chip_d1: v7.6.0
-  - boot: v7.6.0
-  - partition: v7.6.2
-  - sec_crypto: v7.6.0
-  - key_mgr: v7.6.0
-  - xz: v7.6.0
+  - csi: v7.7.0
+  - chip_d1: v7.7.0
+  - boot: v7.7.0
+  - partition: v7.7.0
+  - sec_crypto: v7.7.0
+  - key_mgr: v7.7.0
+  - xz: v7.7.0
 
 # 编译参数
 build_config:
   include:
     - app/include
     - board/include
+  libpath: ""
   cflag: >
         -c -g -Os -ffunction-sections -fdata-sections -Wall -fno-common -fno-asynchronous-unwind-tables
   asmflag: -c -g -ffunction-sections -fdata-sections -Wall
@@ -50,7 +51,6 @@ def_config:
   CONFIG_TB_KP: 1
   CONFIG_KP_BUFFER_LEN: 4096
   CONFIG_KEY_MGR_KP_PROTECT: 1
-  CONFIG_KEY_MGR_NO_PUB_PARTITION: y
   CONFIG_IMG_AUTHENTICITY_NOT_CHECK: 0
   # CONFIG_SHOW_KEY_IN_KP: y
   CONFIG_MANTB_VERSION: 4

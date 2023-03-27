@@ -18,7 +18,7 @@
 
 #include <netif/ethernet.h>
 #include <devices/wifi.h>
-#include <devices/hal/wifi_impl.h>
+#include <devices/impl/wifi_impl.h>
 #include <devices/rtl8723ds.h>
 
 #include "wifi_io.h"
@@ -50,9 +50,9 @@
 #endif
 
 typedef struct {
-    aos_dev_t   device;
+    rvm_dev_t   device;
     uint8_t mode;
-    void (*write_event)(aos_dev_t *dev, int event_id, void *priv);
+    void (*write_event)(rvm_dev_t *dev, int event_id, void *priv);
     void *priv;
 } wifi_dev_t;
 
@@ -61,20 +61,20 @@ typedef struct {
 //static const char *TAG = "RTL8723DS OPS";
 
 //advise: hal functions using global variable here may be deleted
-static wifi_lpm_mode_t       g_wifi_lpm_mode;
+static rvm_hal_wifi_lpm_mode_t       g_wifi_lpm_mode;
 static rtw_country_code_t    g_country;
-static wifi_promiscuous_cb_t g_monitor_cb;
-static wifi_mgnt_cb_t        g_monitor_mgnt_cb;
-static wifi_event_func *     g_evt_func;
-static wifi_config_t         g_config;
+static rvm_hal_wifi_promiscuous_cb_t g_monitor_cb;
+static rvm_hal_wifi_mgnt_cb_t        g_monitor_mgnt_cb;
+static rvm_hal_wifi_event_func *     g_evt_func;
+static rvm_hal_wifi_config_t         g_config;
 static rtl8723ds_gpio_pin    g_gpio_config;
 #ifdef CONFIG_CSI_V2
 csi_gpio_t  *                power_pin;
 #else
 static gpio_pin_handle_t     power_pin;
 #endif
-static aos_dev_t *               wifi_evt_dev;
-static wifi_ap_record_t *    ap_records;
+static rvm_dev_t *               wifi_evt_dev;
+static rvm_hal_wifi_ap_record_t *    g_ap_records;
 static int                   scan_count;
 extern rtw_mode_t            wifi_mode;
 static int                   wifi_disconnected_times;
@@ -92,7 +92,7 @@ static void rtl8723ds_wifi_handshake_done_hdl(char *buf, int buf_len, int flags,
 static void rtl8723ds_wifi_connected_hdl(char *buf, int buf_len, int flags, void *userdata);
 void        rtl8723ds_scan_report_hdl(char *buf, int buf_len, int flags, void *userdata);
 static void rtl8723ds_scan_done_hdl(char *buf, int buf_len, int flags, void *userdata);
-
+static void rtl8723ds_get_security_scan_done_hdl(char *buf, int buf_len, int flags, void *userdata);
 
 void rtl8723ds_set_invalid()
 {
@@ -116,7 +116,7 @@ void rtl8723ds_set_invalid()
 #define RTL8723DS_NET_DRIVER
 #ifdef RTL8723DS_NET_DRIVER
 
-int rtl8723ds_set_mac_addr(aos_dev_t *dev, const uint8_t *mac)
+int rtl8723ds_set_mac_addr(rvm_dev_t *dev, const uint8_t *mac)
 {
     /** write this mac address will write to efuse, forbidden this */
     return -1;
@@ -129,7 +129,7 @@ int rtl8723ds_set_mac_addr(aos_dev_t *dev, const uint8_t *mac)
 }
 
 
-int rtl8723ds_get_mac_addr(aos_dev_t *dev, uint8_t *mac)
+int rtl8723ds_get_mac_addr(rvm_dev_t *dev, uint8_t *mac)
 {
     DRIVER_INVALID_RETURN_VAL;
 
@@ -152,7 +152,7 @@ int rtl8723ds_get_mac_addr(aos_dev_t *dev, uint8_t *mac)
     return ret;
 }
 
-int rtl8723ds_set_dns_server(aos_dev_t *dev, ip_addr_t ipaddr[], uint32_t num)
+int rtl8723ds_set_dns_server(rvm_dev_t *dev, ip_addr_t ipaddr[], uint32_t num)
 {
     int n, i;
 
@@ -165,7 +165,7 @@ int rtl8723ds_set_dns_server(aos_dev_t *dev, ip_addr_t ipaddr[], uint32_t num)
     return n;
 }
 
-int rtl8723ds_get_dns_server(aos_dev_t *dev, ip_addr_t ipaddr[], uint32_t num)
+int rtl8723ds_get_dns_server(rvm_dev_t *dev, ip_addr_t ipaddr[], uint32_t num)
 {
     int n, i;
 
@@ -182,7 +182,7 @@ int rtl8723ds_get_dns_server(aos_dev_t *dev, ip_addr_t ipaddr[], uint32_t num)
     return n;
 }
 
-int rtl8723ds_set_hostname(aos_dev_t *dev, const char *name)
+int rtl8723ds_set_hostname(rvm_dev_t *dev, const char *name)
 {
 #if LWIP_NETIF_HOSTNAME
     struct netif *netif = &xnetif[0];
@@ -193,7 +193,7 @@ int rtl8723ds_set_hostname(aos_dev_t *dev, const char *name)
 #endif
 }
 
-const char *rtl8723ds_get_hostname(aos_dev_t *dev)
+const char *rtl8723ds_get_hostname(rvm_dev_t *dev)
 {
 #if LWIP_NETIF_HOSTNAME
     struct netif *netif = &xnetif[0];
@@ -210,7 +210,7 @@ void net_status_callback(struct netif *netif)
     }
 }
 
-static int rtl8723ds_start_dhcp(aos_dev_t *dev)
+static int rtl8723ds_start_dhcp(rvm_dev_t *dev)
 {
     DRIVER_INVALID_RETURN_VAL;
 
@@ -230,7 +230,7 @@ static int rtl8723ds_start_dhcp(aos_dev_t *dev)
     return netifapi_dhcp_start(netif);
 }
 
-static int rtl8723ds_stop_dhcp(aos_dev_t *dev)
+static int rtl8723ds_stop_dhcp(rvm_dev_t *dev)
 {
     DRIVER_INVALID_RETURN_VAL;
 
@@ -242,13 +242,13 @@ static int rtl8723ds_stop_dhcp(aos_dev_t *dev)
     return 0;
 }
 
-static int rtl8723ds_set_ipaddr(aos_dev_t *dev, const ip_addr_t *ipaddr, const ip_addr_t *netmask,
+static int rtl8723ds_set_ipaddr(rvm_dev_t *dev, const ip_addr_t *ipaddr, const ip_addr_t *netmask,
                                 const ip_addr_t *gw)
 {
     return -1;
 }
 
-static int rtl8723ds_get_ipaddr(aos_dev_t *dev, ip_addr_t *ipaddr, ip_addr_t *netmask, ip_addr_t *gw)
+static int rtl8723ds_get_ipaddr(rvm_dev_t *dev, ip_addr_t *ipaddr, ip_addr_t *netmask, ip_addr_t *gw)
 {
     DRIVER_INVALID_RETURN_VAL;
 
@@ -262,12 +262,12 @@ static int rtl8723ds_get_ipaddr(aos_dev_t *dev, ip_addr_t *ipaddr, ip_addr_t *ne
     return 0;
 }
 
-int rtl8723ds_subscribe(aos_dev_t *dev, uint32_t event, event_callback_t cb, void *param)
+int rtl8723ds_subscribe(rvm_dev_t *dev, uint32_t event, event_callback_t cb, void *param)
 {
     return -1;
 }
 
-int rtl8723ds_ping_remote(aos_dev_t *dev, int type, char *remote_ip)
+int rtl8723ds_ping_remote(rvm_dev_t *dev, int type, char *remote_ip)
 {
     return -1;
 }
@@ -295,8 +295,8 @@ static net_ops_t rtl8723ds_net_driver = {
 static void wifi_promisc_hdl(u8 *in_buf, unsigned int buf_len, void *userdata)
 {
     ieee80211_frame_info_t *    info = (ieee80211_frame_info_t *)userdata;
-    wifi_promiscuous_pkt_t *    buf  = aos_malloc(sizeof(wifi_promiscuous_pkt_t) + buf_len);
-    wifi_promiscuous_pkt_type_t type = WIFI_PKT_MISC;
+    rvm_hal_wifi_promiscuous_pkt_t *    buf  = aos_malloc(sizeof(rvm_hal_wifi_promiscuous_pkt_t) + buf_len);
+    rvm_hal_wifi_promiscuous_pkt_type_t type = WIFI_PKT_MISC;
 
     buf->rx_ctrl.rssi    = info->rssi;
     buf->rx_ctrl.sig_len = buf_len;
@@ -412,29 +412,29 @@ int rtl8723ds_get_security(char *ssid, rtw_security_t *security_type)
     static int scan_done;
     int        hit = 0;
     int        i   = 0;
-    int        scan_retry = 0;
 
     int scan_type = RTW_SCAN_COMMAMD << 4 | RTW_SCAN_TYPE_ACTIVE;
     int bss_type  = RTW_BSS_TYPE_ANY;
     u16 flags     = scan_type | (bss_type << 8);
     scan_done     = 0;
+    rvm_hal_wifi_ap_record_t *    ap_records;
 
-    ap_records = aos_zalloc(sizeof(wifi_ap_record_t) * MAX_AP_RECORD);
+    ap_records = aos_zalloc(sizeof(rvm_hal_wifi_ap_record_t) * MAX_AP_RECORD);
     scan_count = 0;
 
-    wifi_reg_event_handler(WIFI_EVENT_SCAN_RESULT_REPORT, rtl8723ds_scan_report_hdl, NULL);
-    wifi_reg_event_handler(WIFI_EVENT_SCAN_DONE, rtl8723ds_scan_done_hdl, &scan_done);
+    wifi_reg_event_handler(WIFI_EVENT_SCAN_RESULT_REPORT, rtl8723ds_scan_report_hdl, ap_records);
+    wifi_reg_event_handler(WIFI_EVENT_SCAN_DONE, rtl8723ds_get_security_scan_done_hdl, &scan_done);
     wext_set_scan(WLAN0_NAME, NULL, 0, flags);
 
-    while (scan_done == 0 && ++scan_retry < 10) {
-        aos_msleep(1000);
+    while (scan_done == 0) {
+        aos_msleep(100);
     }
 
-    wifi_unreg_event_handler(WIFI_EVENT_SCAN_DONE, rtl8723ds_scan_done_hdl);
+    wifi_unreg_event_handler(WIFI_EVENT_SCAN_DONE, rtl8723ds_get_security_scan_done_hdl);
     wifi_unreg_event_handler(WIFI_EVENT_SCAN_RESULT_REPORT, rtl8723ds_scan_report_hdl);
 
     for (i = 0; i < scan_count; i++) {
-        wifi_ap_record_t *ap_record = &ap_records[i];
+        rvm_hal_wifi_ap_record_t *ap_record = &ap_records[i];
         if (strcmp((char *)ap_record->ssid, ssid) == 0) {
             *security_type = ap_record->encryptmode;
 
@@ -491,7 +491,7 @@ void wifi_start_sta_task(void *arg)
     DRIVER_INVALID_RETURN;
 
     int            ret    = 0;
-    wifi_config_t *config = (wifi_config_t *)arg;
+    rvm_hal_wifi_config_t *config = (rvm_hal_wifi_config_t *)arg;
 
     rtw_security_t   security_type;
     char            *password;
@@ -650,7 +650,7 @@ exit:
 /*
     return---- 0:succese, -1: fail
 */
-int wifi_start_softap(wifi_config_t *config)
+int wifi_start_softap(rvm_hal_wifi_config_t *config)
 {
     DRIVER_INVALID_RETURN_VAL;
 
@@ -756,7 +756,7 @@ int wifi_start_softap(wifi_config_t *config)
 /**
     The wifi mode is controlled by the global variable 'wifi_mode'
 */
-static int rtl8723ds_set_mode(aos_dev_t *dev, wifi_mode_t mode)
+static int rtl8723ds_set_mode(rvm_dev_t *dev, rvm_hal_wifi_mode_t mode)
 {
     DRIVER_INVALID_RETURN_VAL;
 
@@ -798,7 +798,7 @@ static int rtl8723ds_set_mode(aos_dev_t *dev, wifi_mode_t mode)
     return 0;
 }
 
-static int rtl8723ds_get_mode(aos_dev_t *dev, wifi_mode_t *mode)
+static int rtl8723ds_get_mode(rvm_dev_t *dev, rvm_hal_wifi_mode_t *mode)
 {
     DRIVER_INVALID_RETURN_VAL;
 
@@ -827,7 +827,7 @@ static int rtl8723ds_get_mode(aos_dev_t *dev, wifi_mode_t *mode)
     return 0;
 }
 
-static int rtl8723ds_install_event_cb(aos_dev_t *dev, wifi_event_func *evt_func)
+static int rtl8723ds_install_event_cb(rvm_dev_t *dev, rvm_hal_wifi_event_func *evt_func)
 {
     DRIVER_INVALID_RETURN_VAL;
 
@@ -837,13 +837,13 @@ static int rtl8723ds_install_event_cb(aos_dev_t *dev, wifi_event_func *evt_func)
     return -1;
 }
 
-static int rtl8723ds_init(aos_dev_t *dev)
+static int rtl8723ds_init(rvm_dev_t *dev)
 {
     //wifi_on();
     return 0;
 }
 
-int rtl8723ds_deinit(aos_dev_t *dev)
+int rtl8723ds_deinit(rvm_dev_t *dev)
 {
     DRIVER_INVALID_RETURN_VAL;
 
@@ -862,7 +862,7 @@ int rtl8723ds_deinit(aos_dev_t *dev)
     return wifi_off();
 }
 
-int rtl8723ds_start(aos_dev_t *dev, wifi_config_t *config)
+int rtl8723ds_start(rvm_dev_t *dev, rvm_hal_wifi_config_t *config)
 {
     DRIVER_INVALID_RETURN_VAL;
 
@@ -871,7 +871,7 @@ int rtl8723ds_start(aos_dev_t *dev, wifi_config_t *config)
             LOGD(TAG, "ERROR: STA Task Already starting!\n");
             return -1;
         }
-        memcpy(&g_config, config, sizeof(wifi_config_t));
+        memcpy(&g_config, config, sizeof(rvm_hal_wifi_config_t));
         aos_task_t task_handle;
         sta_task_running        = 1;
         aos_task_new_ext(&task_handle, "wifi_start_sta_task", wifi_start_sta_task, &g_config, 1024 * 10, 35);
@@ -895,7 +895,7 @@ int rtl8723ds_start(aos_dev_t *dev, wifi_config_t *config)
     return 0;
 }
 
-int rtl8723ds_stop(aos_dev_t *dev)
+int rtl8723ds_stop(rvm_dev_t *dev)
 {
     DRIVER_INVALID_RETURN_VAL;
 
@@ -911,7 +911,7 @@ int rtl8723ds_stop(aos_dev_t *dev)
     return wifi_off();
 }
 
-int rtl8723ds_reset(aos_dev_t *dev)
+int rtl8723ds_reset(rvm_dev_t *dev)
 {
     DRIVER_INVALID_RETURN_VAL;
 
@@ -932,7 +932,7 @@ int rtl8723ds_reset(aos_dev_t *dev)
 }
 
 /** conf APIs */
-int rtl8723ds_set_lpm(aos_dev_t *dev, wifi_lpm_mode_t mode)
+int rtl8723ds_set_lpm(rvm_dev_t *dev, rvm_hal_wifi_lpm_mode_t mode)
 {
     DRIVER_INVALID_RETURN_VAL;
 
@@ -963,13 +963,13 @@ int rtl8723ds_set_lpm(aos_dev_t *dev, wifi_lpm_mode_t mode)
     return 0;
 }
 
-int rtl8723ds_get_lpm(aos_dev_t *dev, wifi_lpm_mode_t *mode)
+int rtl8723ds_get_lpm(rvm_dev_t *dev, rvm_hal_wifi_lpm_mode_t *mode)
 {
     *mode = g_wifi_lpm_mode;
     return 0;
 }
 
-int rtl8723ds_set_protocol(aos_dev_t *dev, uint8_t protocol_bitmap)
+int rtl8723ds_set_protocol(rvm_dev_t *dev, uint8_t protocol_bitmap)
 {
     DRIVER_INVALID_RETURN_VAL;
 
@@ -987,7 +987,7 @@ int rtl8723ds_set_protocol(aos_dev_t *dev, uint8_t protocol_bitmap)
     return 0;
 }
 
-int rtl8723ds_get_protocol(aos_dev_t *dev, uint8_t *protocol_bitmap)
+int rtl8723ds_get_protocol(rvm_dev_t *dev, uint8_t *protocol_bitmap)
 {
     DRIVER_INVALID_RETURN_VAL;
 
@@ -1011,7 +1011,7 @@ int rtl8723ds_get_protocol(aos_dev_t *dev, uint8_t *protocol_bitmap)
     return 0;
 }
 
-int rtl8723ds_set_country(aos_dev_t *dev, wifi_country_t country)
+int rtl8723ds_set_country(rvm_dev_t *dev, rvm_hal_wifi_country_t country)
 {
     DRIVER_INVALID_RETURN_VAL;
 
@@ -1042,7 +1042,7 @@ int rtl8723ds_set_country(aos_dev_t *dev, wifi_country_t country)
     return wifi_set_country(rtw_country_code);
 }
 
-int rtl8723ds_get_country(aos_dev_t *dev, wifi_country_t *country)
+int rtl8723ds_get_country(rvm_dev_t *dev, rvm_hal_wifi_country_t *country)
 {
     DRIVER_INVALID_RETURN_VAL;
 
@@ -1073,7 +1073,7 @@ int rtl8723ds_get_country(aos_dev_t *dev, wifi_country_t *country)
 /**
     When wifi is disconnected, judge if reconnect wifi
 */
-int rtl8723ds_set_auto_reconnect(aos_dev_t *dev, bool en)
+int rtl8723ds_set_auto_reconnect(rvm_dev_t *dev, bool en)
 {
     DRIVER_INVALID_RETURN_VAL;
 
@@ -1089,7 +1089,7 @@ int rtl8723ds_set_auto_reconnect(aos_dev_t *dev, bool en)
 #endif
 }
 
-int rtl8723ds_get_auto_reconnect(aos_dev_t *dev, bool *en)
+int rtl8723ds_get_auto_reconnect(rvm_dev_t *dev, bool *en)
 {
     DRIVER_INVALID_RETURN_VAL;
 
@@ -1107,14 +1107,14 @@ int rtl8723ds_get_auto_reconnect(aos_dev_t *dev, bool *en)
 #endif
 }
 
-int rtl8723ds_power_on(aos_dev_t *dev)
+int rtl8723ds_power_on(rvm_dev_t *dev)
 {
     DRIVER_INVALID_RETURN_VAL;
 
     return wifi_rf_on();
 }
 
-int rtl8723ds_power_off(aos_dev_t *dev)
+int rtl8723ds_power_off(rvm_dev_t *dev)
 {
     return wifi_rf_off();
 }
@@ -1126,7 +1126,16 @@ static void rtl8723ds_scan_done_hdl(char *buf, int buf_len, int flags, void *use
     int *scan_done = (int *)userdata;
 
     if (g_evt_func && wifi_evt_dev)
-        g_evt_func->scan_compeleted(wifi_evt_dev, scan_count, ap_records);
+        g_evt_func->scan_compeleted(wifi_evt_dev, scan_count, g_ap_records);
+    *scan_done     = 1;
+}
+
+static void rtl8723ds_get_security_scan_done_hdl(char *buf, int buf_len, int flags, void *userdata)
+{
+
+    LOGD(TAG, "scan done!\n");
+    int *scan_done = (int *)userdata;
+
     *scan_done     = 1;
 }
 
@@ -1138,6 +1147,7 @@ void rtl8723ds_scan_report_hdl(char *buf, int buf_len, int flags, void *userdata
     int i = 0;
     //int j = 0;
     //int insert_pos = 0;
+    rvm_hal_wifi_ap_record_t *    ap_records = userdata;
     rtw_scan_result_t *record = *(rtw_scan_result_t **)buf;
 #if 0
     LOGD(TAG, "SSID=%s BSSID=%02x:%02x:%02x:%02x:%02x:%02x\n",
@@ -1152,7 +1162,7 @@ void rtl8723ds_scan_report_hdl(char *buf, int buf_len, int flags, void *userdata
 
     /** filtering out already exist record */
     for (i = 0; i < scan_count; i++) {
-        wifi_ap_record_t *ap_record = &ap_records[i];
+        rvm_hal_wifi_ap_record_t *ap_record = &ap_records[i];
         if (memcmp(ap_record->bssid, record->BSSID.octet, 6) == 0) {
             if (record->signal_strength > ap_record->rssi) {
                 ap_record->rssi = record->signal_strength;
@@ -1165,7 +1175,7 @@ void rtl8723ds_scan_report_hdl(char *buf, int buf_len, int flags, void *userdata
         LOGE(TAG, "Too many AP!\n");
         return;
     }
-    wifi_ap_record_t *ap_record = &ap_records[scan_count++];
+    rvm_hal_wifi_ap_record_t *ap_record = &ap_records[scan_count++];
     memcpy(ap_record->ssid, record->SSID.val, record->SSID.len);
     memcpy(ap_record->bssid, record->BSSID.octet, 6);
     ap_record->channel = record->channel;
@@ -1244,10 +1254,10 @@ static int rtl8723ds_block_scan()
     u16 flags     = scan_type | (bss_type << 8);
     scan_done     = 0;
 
-    ap_records = aos_zalloc(sizeof(wifi_ap_record_t) * MAX_AP_RECORD);
+    g_ap_records = aos_zalloc(sizeof(rvm_hal_wifi_ap_record_t) * MAX_AP_RECORD);
     scan_count = 0;
 
-    wifi_reg_event_handler(WIFI_EVENT_SCAN_RESULT_REPORT, rtl8723ds_scan_report_hdl, NULL);
+    wifi_reg_event_handler(WIFI_EVENT_SCAN_RESULT_REPORT, rtl8723ds_scan_report_hdl, g_ap_records);
     wifi_reg_event_handler(WIFI_EVENT_SCAN_DONE, rtl8723ds_scan_done_hdl, &scan_done);
     ret = wext_set_scan(WLAN0_NAME, NULL, 0, flags);
 
@@ -1260,7 +1270,7 @@ static int rtl8723ds_block_scan()
     //LOGD(TAG, "scan count=(All=%d, not duplicate=%d)\n", ret, scan_count);
 
     scan_running = 0;
-    aos_free(ap_records);
+    aos_free(g_ap_records);
 
     return ret;
     //#endif
@@ -1269,7 +1279,7 @@ static int rtl8723ds_block_scan()
 /**
     TBD, scan with scan config
 */
-int rtl8723ds_start_scan(aos_dev_t *dev, wifi_scan_config_t *config, bool block)
+static int rtl8723ds_start_scan(rvm_dev_t *dev, wifi_scan_config_t *config, bool block)
 {
     int ret = 0;
     DRIVER_INVALID_RETURN_VAL;
@@ -1293,7 +1303,7 @@ int rtl8723ds_start_scan(aos_dev_t *dev, wifi_scan_config_t *config, bool block)
     return ret;
 }
 
-int rtl8723ds_sta_get_link_status(aos_dev_t *dev, wifi_ap_record_t *ap_info)
+static int rtl8723ds_sta_get_link_status(rvm_dev_t *dev, rvm_hal_wifi_ap_record_t *ap_info)
 {
     DRIVER_INVALID_RETURN_VAL;
 
@@ -1323,7 +1333,7 @@ int rtl8723ds_sta_get_link_status(aos_dev_t *dev, wifi_ap_record_t *ap_info)
     return 0;
 }
 
-int rtl8723ds_ap_get_sta_list(aos_dev_t *dev, wifi_sta_list_t *sta)
+int rtl8723ds_ap_get_sta_list(rvm_dev_t *dev, rvm_hal_wifi_sta_list_t *sta)
 {
     DRIVER_INVALID_RETURN_VAL;
 
@@ -1375,7 +1385,7 @@ static int frame_handler(const unsigned char* frame_buf, unsigned int frame_len)
     return 0;
 }
 
-int rtl8723ds_start_mgnt_monitor(aos_dev_t *dev, wifi_mgnt_cb_t cb)
+int rtl8723ds_start_mgnt_monitor(rvm_dev_t *dev, rvm_hal_wifi_mgnt_cb_t cb)
 {
     DRIVER_INVALID_RETURN_VAL;
 
@@ -1395,7 +1405,7 @@ int rtl8723ds_start_mgnt_monitor(aos_dev_t *dev, wifi_mgnt_cb_t cb)
     return 0;
 }
 
-int rtl8723ds_stop_mgnt_monitor(aos_dev_t *dev)
+int rtl8723ds_stop_mgnt_monitor(rvm_dev_t *dev)
 {
     DRIVER_INVALID_RETURN_VAL;
 
@@ -1404,7 +1414,7 @@ int rtl8723ds_stop_mgnt_monitor(aos_dev_t *dev)
     return 0;
 }
 
-int rtl8723ds_start_monitor(aos_dev_t *dev, wifi_promiscuous_cb_t cb)
+int rtl8723ds_start_monitor(rvm_dev_t *dev, rvm_hal_wifi_promiscuous_cb_t cb)
 {
     DRIVER_INVALID_RETURN_VAL;
 
@@ -1425,7 +1435,7 @@ int rtl8723ds_start_monitor(aos_dev_t *dev, wifi_promiscuous_cb_t cb)
     return 0;
 }
 
-int rtl8723ds_stop_monitor(aos_dev_t *dev)
+int rtl8723ds_stop_monitor(rvm_dev_t *dev)
 {
     DRIVER_INVALID_RETURN_VAL;
 
@@ -1434,14 +1444,14 @@ int rtl8723ds_stop_monitor(aos_dev_t *dev)
     return 0;
 }
 
-int rtl8723ds_set_channel(aos_dev_t *dev, uint8_t primary, wifi_second_chan_t second)
+int rtl8723ds_set_channel(rvm_dev_t *dev, uint8_t primary, rvm_hal_wifi_second_chan_t second)
 {
     DRIVER_INVALID_RETURN_VAL;
 
     return wifi_set_channel(primary);
 }
 
-int rtl8723ds_get_channel(aos_dev_t *dev, uint8_t *primary, wifi_second_chan_t *second)
+int rtl8723ds_get_channel(rvm_dev_t *dev, uint8_t *primary, rvm_hal_wifi_second_chan_t *second)
 {
     DRIVER_INVALID_RETURN_VAL;
 
@@ -1454,7 +1464,7 @@ int rtl8723ds_get_channel(aos_dev_t *dev, uint8_t *primary, wifi_second_chan_t *
     }
 }
 
-static int rtl8723ds_send_80211_raw_frame(aos_dev_t *dev, void *buffer, uint16_t len)
+static int rtl8723ds_send_80211_raw_frame(rvm_dev_t *dev, void *buffer, uint16_t len)
 {
     DRIVER_INVALID_RETURN_VAL;
 
@@ -1509,26 +1519,26 @@ static wifi_driver_t rtl8723ds_wifi_driver = {
 
 #define RTL8723DS_DRIVER
 #ifdef RTL8723DS_DRIVER
-static aos_dev_t *rtl8723ds_dev_init(driver_t *drv, void *config, int id)
+static rvm_dev_t *rtl8723ds_dev_init(driver_t *drv, void *config, int id)
 {
-    aos_dev_t *dev = device_new(drv, sizeof(wifi_dev_t), id);
+    rvm_dev_t *dev = rvm_hal_device_new(drv, sizeof(wifi_dev_t), id);
 
     return dev;
 }
 
-static void rtl8723ds_dev_uninit(aos_dev_t *dev)
+static void rtl8723ds_dev_uninit(rvm_dev_t *dev)
 {
     aos_check_param(dev);
 
-    device_free(dev);
+    rvm_hal_device_free(dev);
 }
 
-static int rtl8723ds_dev_open(aos_dev_t *dev)
+static int rtl8723ds_dev_open(rvm_dev_t *dev)
 {
     return 0;
 }
 
-static int rtl8723ds_dev_close(aos_dev_t *dev)
+static int rtl8723ds_dev_close(rvm_dev_t *dev)
 {
     return 0;
 }
@@ -1575,30 +1585,19 @@ void wifi_rtl8723ds_register(rtl8723ds_gpio_pin *config)
     }
 
 #ifdef CONFIG_CSI_V2
-    extern csi_gpio_t chip_gpio_handler;
     if (config->power != 0xFFFFFFFF) {
         LOGD(TAG, "pull up WLAN power\n");
         csi_pin_set_mux(g_gpio_config.power, PIN_FUNC_GPIO);
-#if defined(CONFIG_CHIP_D1)
-        (void)chip_gpio_handler;
         csi_gpio_pin_t power_pin;
         csi_gpio_pin_init(&power_pin, g_gpio_config.power);
         csi_gpio_pin_mode(&power_pin, GPIO_MODE_PULLNONE);
         csi_gpio_pin_dir(&power_pin, GPIO_DIRECTION_OUTPUT);
         csi_gpio_pin_write(&power_pin, GPIO_PIN_HIGH);
-        aos_msleep(50);
-#else
-        uint32_t pin_mask = csi_pin_get_gpio_channel(g_gpio_config.power);
-        csi_gpio_mode(&chip_gpio_handler, pin_mask, GPIO_MODE_PUSH_PULL);
-        csi_gpio_dir(&chip_gpio_handler, pin_mask, GPIO_DIRECTION_OUTPUT);
-        csi_gpio_write(&chip_gpio_handler, pin_mask, 1);
         aos_msleep(200);
-#endif
     }
     if (config->wl_en != 0xFFFFFFFF) {
         LOGD(TAG, "Init WLAN enable\n");
         csi_pin_set_mux(g_gpio_config.wl_en, PIN_FUNC_GPIO);
-#if defined(CONFIG_CHIP_D1)
         csi_gpio_pin_t wl_en_pin;
         csi_gpio_pin_init(&wl_en_pin, g_gpio_config.wl_en);
         csi_gpio_pin_mode(&wl_en_pin, GPIO_MODE_PULLNONE);
@@ -1607,15 +1606,6 @@ void wifi_rtl8723ds_register(rtl8723ds_gpio_pin *config)
         aos_msleep(50);
         csi_gpio_pin_write(&wl_en_pin, GPIO_PIN_HIGH);
         aos_msleep(50);
-#else
-        uint32_t pin_mask = csi_pin_get_gpio_channel(g_gpio_config.wl_en);
-        csi_gpio_mode(&chip_gpio_handler, pin_mask, GPIO_MODE_PUSH_PULL);
-        csi_gpio_dir(&chip_gpio_handler, pin_mask, GPIO_DIRECTION_OUTPUT);
-        csi_gpio_write(&chip_gpio_handler, pin_mask, 0);
-        aos_msleep(50);
-        csi_gpio_write(&chip_gpio_handler, pin_mask, 1);
-        aos_msleep(50);
-#endif
     }
 #else
     gpio_pin_handle_t wl_en_pin;
@@ -1646,13 +1636,13 @@ void wifi_rtl8723ds_register(rtl8723ds_gpio_pin *config)
 #endif    
 
     extern SDIO_BUS_OPS rtw_sdio_bus_ops;
-    rtw_sdio_bus_ops.bus_probe(0);
+    rtw_sdio_bus_ops.bus_probe(config->sdio_idx);
 
     LwIP_Init();
 
     wifi_manager_init();
 
-    driver_register(&rtl8723ds_driver.drv, NULL, 0);
+    rvm_driver_register(&rtl8723ds_driver.drv, NULL, 0);
 }
 
 void rtl8723ds_wifi_test()

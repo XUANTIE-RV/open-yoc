@@ -6,12 +6,13 @@ YoC是一个基于AliOS Things的基础软件平台。它为开发人员提供�
 
 ## 架构
 
-<img src="https://github.com/T-head-Semi/open-yoc/blob/v7.6.0/components/yocopen/yoc.png?raw=true">
+<img src="https://github.com/T-head-Semi/open-yoc/blob/v7.7.0/components/yoc/resources/yoc.png?raw=true">
 
-- 内核：YoC内核通过OSAL标准接口可以支持主流的RTOS内核，主要设计内核系统中对象的实现，包括信号量、互斥体、队列、WorkQueue、软时钟以及任务调度和内存管理。其通过CSI标准接口适配底层硬件能力，芯片移植相关集中在CSI适配。
-- 面向领域子系统：面向领域子系统的YoC提供的专用组件组成，通过虚拟组件方式进行管理。涉及覆盖连接领域、蓝牙领域、穿戴领域、智能语音领域、GUI图形领域以及多媒体视频视觉领域。
-- 应用框架：YoC 提供多种应用领域中软件框架，进一步简化应用方案的开发难度。
-- IoT应用：面向不同领域的IoT应用，YoC提供了不同场景下的解决方案和Demo，为开发者提供参考。
+- 内核与驱动： RVM CSI 层定义了 片上系统外设的统一接口，芯片对接完成RVM CSI接口，就可以支持 YoC 的软件系统。OSAL/POSIX接口提供了内核统一接口，集成了AliOS Things、FreeRTOS以及RT-Thread内核。RVM HAL为上层各类组件提供了统一的硬件抽象接口。
+- 基础组件： 包含了设备管理框架、低功耗管理、高级安全可信计算（TEE）、网络协议、蓝牙协议栈、虚拟文件系统、网络管理器等。核心服务层采用独立模块化设计，用户可以根据应用需求，自由组装。
+- 领域子系统： YoC 提供多种应用领域中软件框架，进一步简化应用方案的开发难度。目前YoC 平台中提供了智能语音框架、视觉 AI 框架、图形应用框架。
+
+YoC 平台定义了芯片的统一接口，提供应用最基础的核心服务，提供了大量独立的应用组件，软件架构清晰、系统模块化并且可裁剪性非常好。针对芯片移植需求，只需要根据芯片驱动接口层（CSI）的定义，即可以将YoC 移植到该芯片上。针对资源受限的微控制器（MCU）系统，也可以裁剪出只需要几 KB 的 FLASH，几 KB的内存消耗的系统。对于资源丰富的物联网设备，YoC 提供可定制的核心服务，支持 OSAL API/POSIX API， 以及丰富的独立组件，提供更加面向领域的业务框架。
 
 ## 开发板
 
@@ -65,7 +66,7 @@ BL606P-DVK专为用于评估音视频应用诞生，适用于智能面板、智�
 试用示例之前请先使用以下命令进行下载:
 
 ```bash
-git clone git@github.com:T-head-Semi/open-yoc.git -b v7.6.0
+git clone git@github.com:T-head-Semi/open-yoc.git -b v7.7.0
 ```
 
 或者从GITEE下载：
@@ -73,30 +74,41 @@ git clone git@github.com:T-head-Semi/open-yoc.git -b v7.6.0
 mkdir yocworkspace
 cd yocworkspace
 yoc init
-yoc install yocopen -b v7.6.0
+yoc install yoc -b v7.7.0
 ```
 
 然后到`solutions`目录下，所有的示例都在那里，用户可以根据每个示例下的`README.md`文件进行操作。
 通用示例如下：
-| 名称 | 说明 |
-| --- | --- |
-| helloworld | 最小系统Helloworld例程，其完成了AliOS Things的内核移植，最后在一个任务是实现周期性打印hello world的字符串 | 
-| cli_demo | 串口命令行输入示例。串口命令行一般包括调试命令， 测试命令，获取系统信息命令，控制LOG信息打印等，其允许用户可以根据自己的需要增加命令，从而达到快速开发测试的命令。在本示例里主要集成了以下CLI命令，通过help命令可以List出所有支持的CLI命令。 |
-| kv_demo | 最小KV文件系统功能的操作例程。KV文件系统是基于Flash的一种Key-Value 数据存储系统，该系统采用极小的代码及内存开销（最小资源 rom：3K bytes，ram：100bytes），在小规模的Flash上实现数据的存储管理能力，支持断电保护、磨损均衡、坏块处理等功能。KV文件系统存储系统支持只读模式与读写模式共存，只读模式可以用于工厂生产数据，读写模式可用于运行时的数据存存储。 |
-| fota_demo | FOTA升级的DEMO。FOTA的云服务在OCC，包括固件的管理，许可证的管理，设备的管理等。 |
-| wifi_demo | 一个简单的WiFi连接示例。 |
-| httpclient_demo | 一个简单的httpclient组件使用示例。httpclient是一个开源的http客户端，支持HTTP和HTTPS的访问。 |
-| xplayer_demo | 一个xplayer播放器框架命令行使用示例。 |
-| aoshal_demo | aoshal组件下驱动的使用示例。 |
-| codec_demo | csi codec 测试demo, 只测试minialsa所需相关csi codec api。 |
-| ipc_demo | 是核间通信ipc在AP侧的demo，主要实现了AP侧作为ipc的服务端、客户端、输出和ipc的cli的功能。 |
-| arm_dummy_demo | 一个简单的helloword demo，运行在QEMU环境。支持ARM的CPU。|
-| csky_dummy_demo | 一个简单的helloword demo，运行在QEMU环境。支持CSKY的CPU。 |
-| riscv_dummy_demo | 一个简单的helloword demo，运行在QEMU环境。支持RISC-V的CPU。 |
+| **分类** | **示例名称** | **说明** |
+| --- | --- | --- |
+| QEMU | riscv_dummy_demo | 运行在QEMU环境的helloword例程，支持RISC-V/CSKY/ARM的CPU。点击[QEMU-Linux快速使用指南](https://occ.t-head.cn/community/course/detail?id=586128575195774976)了解QEMU。 |
+|  | csky_dummy_demo |  |
+|  | arm_dummy_demo |  |
+| 最小系统 | helloworld | 最小系统Helloworld例程，例程将创建一个任务实现周期性hello world日志输出。 |
+| bootloader例程 | ch2601_boot | 基于CH2601平台的bootloader实例，完成下一级镜像的验签、跳转到下一级镜像和升级等功能。SDK中提供了其他已支持芯片平台的bootloader适配例程，可通过实例名字选择。比如：bl606p_boot -  BL606P平台、d1_boot_demo - D1平台、cv181xh_boot - CV181xH平台 |
+| CLI命令行 | cli_demo | 串口命令行输入示例。串口命令行一般包括调试命令， 测试命令，获取系统信息命令，控制LOG信息打印等，用户也可以根据需要增加调测指令。 |
+| 键值对 | kv_demo | KV文件系统是基于Flash的一种Key-Value 数据存储系统，支持断电保护、磨损均衡、坏块处理等功能。用户可通过CLI指令测试KV功能。 |
+| 固件升级 | fota_demo | FOTA升级的DEMO。FOTA的云服务在OCC，包括固件的管理，许可证的管理，设备的管理等。 |
+| 媒体播放 | xplayer_demo | 媒体播放器示例，用户可通过CLI指令测试播放器功能。 |
+|  | codec_demo | Codec裸驱示例，用户可通过CLI指令测试Codec功能。 |
+| 设备驱动 | devices_demo | devices_demo是devices组件下rvm_hal接口的使用示例。 |
+| USB协议栈 | usb_demo | usb_demo展示了USB协议栈接口的使用方法。 |
+|  | gprs_demo |  移远EC200A USB 4G模组适配实例，可参考实现RNDIS和USB Serial两类USB Class。 |
+| 核间通信 | ipc_demo | 核间通信IPC在AP核的示例，主要实现了AP侧作为服务端日志和CLI指令代理功能。 |
+|  | bl606p_c906_ipc_demo | 核间通信IPC在CP核的示例，主要实现了CP侧作为客户端日志和CLI指令功能。 |
+| 图形引擎 | lvgl_demo | 基于LVGL开源图形库的示例程序，适配了官方提供的Stress/Widgets/Benchmark/Music四个示例程序。用户可修改代码选择不同示例程序运行。 |
+| 网络连接 | wifi_demo | WiFi驱动示例，用户可通过CLI指令测试Scan、Station模式、AP模式等功能，已适配RTL8723 / BL606P / W800 等平台。 |
+|  | httpclient_demo | httpclient组件使用示例，用户可通过CLI指令测试HTTP和HTTPS的访问以及HTTP Get功能。 |
+|  | wifi_ble_provisioning_demo | 基于蓝牙协议栈实现蓝牙辅助配网功能的简单示例程序。 |
+|  | bt_audio_demo | 基于蓝牙协议栈实现蓝牙音频播放功能的示例程序。 |
+|  | ble_shell_demo | 蓝牙协议栈Shell测试程序，solution里带ble前缀的示例都是蓝牙BLE的开发例程，可以根据名字选择相应例程了解。比如：ble_hrs_demo - 展示HRS Profile功能、ble_hid_keyboard_demo - 展示HID设备基本功能、ble_scanner_demo - 中心设备开发实例、ble_uart_profile_client_demo - UART透传服务Client实例、ble_uart_profile_server_demo - UART透传服务Server实例  |
+|  | mesh_shell | 蓝牙Mesh协议栈Shell测试程序，solution里带mesh前缀的示例都是蓝牙Mesh协议栈的开发例程，可以根据名字选择相应例程了解。比如：mesh_provisioner_demo - 蓝牙Mesh配网器实例、mesh_light_node_demo - Mesh智能灯设备实例、mesh_switch_node_demo - Mesh智能开关设备实例、mesh_switch_node_lpm_demo - Mesh低功耗设备实例、mesh_temperature_sensor_demo - Mesh低功耗设备实例、mesh_body_sensor_demo - Mesh低功耗设备实例 |
 
 ## 参考资料
 
 - 平头哥开源社区: https://occ.t-head.cn/
+
+- 平头哥开源社区文档中心：[文档中心](https://occ.t-head.cn/document-index?spm=a2cl5.14290816.0.0.d3efMKzXMKzXtJ)
 
 - YoC使用手册yocbook: [yocbook](https://yoc.docs.t-head.cn/yocbook/Chapter1-YoC%E6%A6%82%E8%BF%B0/)
 
@@ -106,6 +118,21 @@ YoC系统完全开源，代码版本遵循Apache License 2.0开源许可协议�
 
 ## Release Note
 
+### 2023.3.11
+#### 新增特性
+1. 设备驱动框架新增显示设备、块设备的支持
+2. 支持CherryUSB协议栈
+3. 支持eMMC存储及引导
+4. 支持EXT4文件系统
+5. 支持固件压缩打包功能
+6. 支持基于IoT小程序的JS图形应用开发
+7. 新增智慧面板解决方案，支持LVGL图形应用开发
+#### 新增芯片
+1. 支持晶视CV181x芯片
+#### 其他更新
+1. LVGL版本更新至v8.3.1
+2. 接入移远EC200A USB 4G模组
+
 ### 2022.10.20
 1. QEMU平台支持更多的RISC-V CPU， 具体请参考`riscv_dummy_demo`
 2. 增加FOTA对AB分区升级的支持，具体可参考`fota_demo`
@@ -114,6 +141,6 @@ YoC系统完全开源，代码版本遵循Apache License 2.0开源许可协议�
 #### 开发工具
 |开发工具|版本|说明|
 | --- | --- | --- |
-|[CDK](https://occ.t-head.cn/community/download?id=575997419775328256)|>=V2.16.2|集成开发环境IDE|
-|[yoctools](https://yoc.docs.t-head.cn/yocbook/Chapter2-%E5%BF%AB%E9%80%9F%E4%B8%8A%E6%89%8B%E6%8C%87%E5%BC%95/YocTools.html)|>=2.0.42|Linux下命令行构建编译工具|
+|[CDK](https://occ.t-head.cn/community/download?id=575997419775328256)|>=V2.18.2|集成开发环境IDE|
+|[yoctools](https://yoc.docs.t-head.cn/yocbook/Chapter2-%E5%BF%AB%E9%80%9F%E4%B8%8A%E6%89%8B%E6%8C%87%E5%BC%95/YocTools.html)|>=2.0.52|Linux下命令行构建编译工具|
 |[玄铁工具链](https://occ.t-head.cn/community/download?id=4090445921563774976)|V2.6.1|riscv编译所需工具链，可通过yoc命令安装(yoc toolchain --riscv -f)；也可以自行下载安装，并在系统变量中设置对应的路径信息|

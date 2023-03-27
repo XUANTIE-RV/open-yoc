@@ -81,22 +81,22 @@ int wifi_getip(ip_addr_t *ipaddr)
     ip_addr_t netmask;
     ip_addr_t gw;
 
-    aos_dev_t *dev = device_open_id("wifi", 0);//netmgr_get_dev(app_netmgr_hdl);
+    rvm_dev_t *dev = rvm_hal_device_open("wifi0");//netmgr_get_dev(app_netmgr_hdl);
 
     if (dev) {
-        ret = hal_net_get_ipaddr(dev, ipaddr, &netmask, &gw);
+        ret = rvm_hal_net_get_ipaddr(dev, ipaddr, &netmask, &gw);
     }
     return ret;
 }
 
-int wifi_scan(wifi_event_func *evt_cb)
+int wifi_scan(rvm_hal_wifi_event_func *evt_cb)
 {
 	int ret = -1;
-    aos_dev_t *dev = device_open_id("wifi", 0);//netmgr_get_dev(app_netmgr_hdl);
+    rvm_dev_t *dev = rvm_hal_device_open("wifi0");//netmgr_get_dev(app_netmgr_hdl);
 	LOGD(TAG, "wifi dev %x", dev);
     if (dev) {
-		hal_wifi_install_event_cb(dev, evt_cb);
-		ret = hal_wifi_start_scan(dev, NULL, 1);
+		rvm_hal_wifi_install_event_cb(dev, evt_cb);
+		ret = rvm_hal_wifi_start_scan(dev, NULL, 1);
     }
     return ret;
 }
@@ -120,10 +120,10 @@ void wgip_handler(char *cmd, int type, char *data)
 }
 #define SCAN_RESULTS_BUF_LEN  1024
 static char g_scan_results[1024];
-static void scan_compeleted(aos_dev_t *dev, uint16_t number, wifi_ap_record_t *ap_records)
+static void scan_compeleted(rvm_dev_t *dev, uint16_t number, rvm_hal_wifi_ap_record_t *ap_records)
 {
 	int pos = 0;
-    wifi_ap_record_t wifiApRecord;
+    rvm_hal_wifi_ap_record_t wifiApRecord;
 	
     // sort with rssi
     for (int j = 0; j < number; ++j) {
@@ -160,7 +160,7 @@ static void scan_compeleted(aos_dev_t *dev, uint16_t number, wifi_ap_record_t *a
 		g_scan_results[pos - 2] = '\0';
 	}
 }
-static wifi_event_func wifi_event = {
+static rvm_hal_wifi_event_func wifi_event = {
     NULL,
     NULL,
     scan_compeleted,
@@ -611,11 +611,11 @@ void dns_handler(char *cmd, int type, char *data)
 	}
 }
 
-static aos_dev_t *get_wifi_dev()
+static rvm_dev_t *get_wifi_dev()
 {
-    static aos_dev_t *wifi_dev = NULL;
+    static rvm_dev_t *wifi_dev = NULL;
     if (wifi_dev == NULL) {
-        wifi_dev = device_open_id("wifi", 0);
+        wifi_dev = rvm_hal_device_open("wifi0");
     }
 
     return wifi_dev;
@@ -627,13 +627,13 @@ void link_info_handler(char *cmd, int type, char *data)
     ip_addr_t netmask;
     ip_addr_t gw;
 
-	aos_dev_t *wifi_dev = get_wifi_dev();
+	rvm_dev_t *wifi_dev = get_wifi_dev();
     if (wifi_dev == NULL) {
         return;
     }
 
 	/** ifconfig */
-    hal_net_get_ipaddr(wifi_dev, &ipaddr, &netmask, &gw);
+    rvm_hal_net_get_ipaddr(wifi_dev, &ipaddr, &netmask, &gw);
 	if (type == EXECUTE_CMD) {
 		atserver_send("\r\n%s:ip:%s\r\n\r\n", cmd + 2, ipaddr_ntoa(&ipaddr));
 		atserver_send("\r\n%s:gateway:%s\r\n\r\n", cmd + 2, ipaddr_ntoa(&gw));
@@ -647,15 +647,15 @@ void link_info_handler(char *cmd, int type, char *data)
 
 void link_status_handler(char *cmd, int type, char *data)
 {
-	wifi_ap_record_t ap_info = {0};
+	rvm_hal_wifi_ap_record_t ap_info = {0};
 
-	aos_dev_t *wifi_dev = get_wifi_dev();
+	rvm_dev_t *wifi_dev = get_wifi_dev();
     if (wifi_dev == NULL) {
         return;
     }
 
 	/** iw dev wlan0 link */
-    hal_wifi_sta_get_link_status(wifi_dev, &ap_info);
+    rvm_hal_wifi_sta_get_link_status(wifi_dev, &ap_info);
 	if (type == EXECUTE_CMD) {
 		AT_BACK_RET_OK_INT(cmd, ap_info.link_status);
 	} else {
@@ -666,15 +666,15 @@ void link_status_handler(char *cmd, int type, char *data)
 
 void wifi_info_handler(char *cmd, int type, char *data)
 {
-	wifi_ap_record_t ap_info = {0};
+	rvm_hal_wifi_ap_record_t ap_info = {0};
 
-	aos_dev_t *wifi_dev = get_wifi_dev();
+	rvm_dev_t *wifi_dev = get_wifi_dev();
     if (wifi_dev == NULL) {
         return;
     }
 
 	/** iw dev wlan0 link */
-    hal_wifi_sta_get_link_status(wifi_dev, &ap_info);
+    rvm_hal_wifi_sta_get_link_status(wifi_dev, &ap_info);
 	if (type == EXECUTE_CMD) {
 		atserver_send("\r\n%s:bssid:%02x:%02x:%02x:%02x:%02x:%02x\r\n\r\n", cmd + 2, 
 				ap_info.bssid[0], ap_info.bssid[1], ap_info.bssid[2], 

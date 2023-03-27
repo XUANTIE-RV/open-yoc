@@ -555,7 +555,7 @@ static bool
 wps_parse_scan_result(struct wps_scan_ie *scan)
 {
     struct wps_sm *sm = gWpsSm;
-    wifi_mode_t op_mode = 0;
+    rvm_hal_wifi_mode_t op_mode = 0;
 #ifdef WPS_DEBUG
     char tmp[32];
 
@@ -968,7 +968,7 @@ int wps_finish(void)
     }
 
     if (sm->wps->state == WPS_FINISHED) {
-        wifi_config_t *config = (wifi_config_t *)os_zalloc(sizeof(wifi_config_t));
+        rvm_hal_wifi_config_t *config = (rvm_hal_wifi_config_t *)os_zalloc(sizeof(rvm_hal_wifi_config_t));
 
         if (config == NULL) {
             wifi_event_sta_wps_fail_reason_t reason_code = WPS_FAIL_REASON_NORMAL;
@@ -1774,7 +1774,7 @@ void
 wifi_wps_scan_done(void *arg, STATUS status)
 {
     struct wps_sm *sm = gWpsSm;
-    wifi_config_t wifi_config;
+    rvm_hal_wifi_config_t wifi_config;
 
     if (wps_get_type() == WPS_TYPE_DISABLE) {
         return;
@@ -1988,7 +1988,7 @@ int wps_post_block(uint32_t sig, void *arg)
 int wps_check_wifi_mode(void)
 {
     bool sniffer = false;
-    wifi_mode_t mode;
+    rvm_hal_wifi_mode_t mode;
     int ret;
 
     ret = esp_wifi_get_mode(&mode);
@@ -2177,7 +2177,7 @@ int esp_wifi_wps_start(int timeout_ms)
 bool
 wifi_set_wps_cb(wps_st_cb_t cb)
 {
-    wifi_mode_t mode;
+    rvm_hal_wifi_mode_t mode;
 
     esp_wifi_get_mode(&mode);
     if (mode == WIFI_MODE_AP || mode == WIFI_MODE_NULL) {

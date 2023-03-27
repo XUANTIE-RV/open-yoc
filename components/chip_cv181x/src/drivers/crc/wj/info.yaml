@@ -1,0 +1,10 @@
+name: CRC
+vendor: WJ
+license: Copyright (C) 2017-2019 Alibaba Group Holding Limited
+description: wj crc drivers
+depends: NULL
+type: devices
+
+versions:
+    v1.0:
+        drv_path: v1.0

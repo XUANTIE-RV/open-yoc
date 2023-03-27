@@ -19,7 +19,7 @@
 
 #include "../controller/include/ll.h"
 
-#if defined(CONFIG_BT_CTLR_DTM)
+#if (defined(CONFIG_BT_CTLR_DTM) && CONFIG_BT_CTLR_DTM)
 #include "../controller/ll_sw/ll_test.h"
 
 int cmd_test_tx(int argc, char *argv[])
@@ -85,7 +85,7 @@ int cmd_test_end(int argc, char *argv[])
 }
 #endif /* CONFIG_BT_CTLR_DTM */
 
-#if defined(CONFIG_BT_CTLR_ADV_EXT)
+#if (defined(CONFIG_BT_CTLR_ADV_EXT) && CONFIG_BT_CTLR_ADV_EXT)
 #define ADV_INTERVAL 0x000020
 #define ADV_TYPE 0x05 /* Adv. Ext. */
 #define OWN_ADDR_TYPE 1

@@ -34,13 +34,12 @@ hci驱动组件。ble host组件通过hci接口同ble芯片的LL层进行通信�
 
 | API | 说明 |
 | --- | --- |
-| hci_open | hci设备打开接口 |
-| hci_open_id | hci设备打开接口，使用id参数 |
-| hci_close | hci设备关闭接口 |
-| hci_set_event | hci设置事件回调接口 |
-| hci_send | hci数据发送接口 |
-| hci_recv | hci数据接收接口 |
-| hci_start | hci设备启动接口 |
+| rvm_hal_hci_open | hci设备打开接口 |
+| rvm_hal_hci_close | hci设备关闭接口 |
+| rvm_hal_hci_set_event | hci设置事件回调接口 |
+| rvm_hal_hci_send | hci数据发送接口 |
+| rvm_hal_hci_recv | hci数据接收接口 |
+| rvm_hal_hci_start | hci设备启动接口 |
 
 <a name="Ed3HB"></a>
 # 4. 示例说明
@@ -48,14 +47,14 @@ hci驱动组件。ble host组件通过hci接口同ble芯片的LL层进行通信�
 ## 4.1 驱动注册接口
 每个hci驱动组件需要实现一套自己的注册接口，作为该组件的注册入口。<br />hci驱动组件需要实现hci_driver_t中定义的api回调函数。
 ```c
-static aos_dev_t *h5_hal_init(driver_t *drv, void *g_uart_config, int id)
+static rvm_dev_t *h5_hal_init(driver_t *drv, void *g_uart_config, int id)
 {
-    hci_driver_t *h5_dev = (hci_driver_t *)device_new(drv, sizeof(hci_driver_t), id);
+    hci_driver_t *h5_dev = (hci_driver_t *)rvm_hal_device_new(drv, sizeof(hci_driver_t), id);
 
-    return (aos_dev_t *)h5_dev;
+    return (rvm_dev_t *)h5_dev;
 }
 
-#define h5_hal_uninit device_free
+#define h5_hal_uninit rvm_hal_device_free
 
 static hci_driver_t h5_driver = {
     .drv = {
@@ -81,7 +80,7 @@ void bt_rtl8723ds_register(rtl8723ds_bt_config *config)
 {
     g_bt_dis_pin = config->bt_dis_pin;
     g_uart_id = config->uart_id;
-    driver_register(&h5_driver.drv, NULL, 0);
+    rvm_driver_register(&h5_driver.drv, NULL, 0);
 }
 ```
 solution在使用该驱动前，应当调用该注册接口，使用方式如下
@@ -100,38 +99,38 @@ solution在使用该驱动前，应当调用该注册接口，使用方式如下
 <br />**注意点:**<br />1、.drv.name名字需要固定为"hci"， ble host会根据该名字打开hci驱动。<br />2、REALTEK RTL8723DS芯片的hci接口，使用的是3线uart方式，采用h5的协议，支持软件流控。<br />需要实现.drv.start接口。如果使用4线uart，带硬件流控方式，则不需要对接该接口。<br />关于h4，h5协议的介绍，参考蓝牙协议文档《Bluetooth Core Specification》4.2 以上版本，Vol 4. Host Controller Interface章节。<br />3、调用bt_rtl8723ds_register接口，solution中需要根据使用的是H5协议，还是H4协议，调用hci_h5_driver_init或者hci_h4_driver_init接口。<br />开发者也可以将该接口封装到register接口中。
 <a name="k4xlt"></a>
 
-## 4.2 hci_open
+## 4.2 rvm_hal_hci_open
 在hci open接口实现中，hci驱动组件需要初始化hci依赖的外设，并进行相应的配置。
 ```c
-static int h5_hal_open(aos_dev_t *dev)
+static int h5_hal_open(rvm_dev_t *dev)
 {
     ...
     uart_opne;
-    uart_config;
+    rvm_hal_uart_config;
     ...
     return 0;
 }
 ```
-ble_host将按照如下的方式使用hci_open
+ble_host将按照如下的方式使用rvm_hal_hci_open
 ```c
-hci_open("hci");
+rvm_hal_hci_open("hci");
 ```
 <a name="rO18q"></a>
-## 4.3 hci_start接口
+## 4.3 rvm_hal_hci_start接口
 在初始化的时候会调用，hci驱动组件可以做一些硬件初始化。<br />send_cmd为HCI CMD回调函数。hci驱动组件可以使用该接口，发送自定义的HCI命令。
 ```c
-static int h5_start(aos_dev_t *dev, hci_driver_send_cmd_t send_cmd)
+static int h5_start(rvm_dev_t *dev, hci_driver_send_cmd_t send_cmd)
 {
     hw_config_start(send_cmd);
     return 0;
 }
 ```
-ble_host调用hci_open后，随后就会调用hci_start接口。
+ble_host调用rvm_hal_hci_open后，随后就会调用rvm_hal_hci_start接口。
 <a name="gd10x"></a>
-## 4.4  hci_set_event接口
+## 4.4  rvm_hal_hci_set_event接口
 hci回调事件注册接口，hci驱动组件需要记录下设置的回调函数和参数
 ```c
-static int h5_set_event(aos_dev_t *dev, hci_event_cb_t event, void *priv)
+static int h5_set_event(rvm_dev_t *dev, hci_event_cb_t event, void *priv)
 {
     g_event = event;
     g_priv = priv;
@@ -140,30 +139,30 @@ static int h5_set_event(aos_dev_t *dev, hci_event_cb_t event, void *priv)
 }
 ```
 <a name="s10Nd"></a>
-## 4.5 hci_send接口
+## 4.5 rvm_hal_hci_send接口
 hci数据发送接口，hci驱动组件需要实现将hci数据发送给SoC LL底层的功能。
 ```c
-static int h5_send_data(aos_dev_t *dev, uint8_t *data, uint32_t size)
+static int h5_send_data(rvm_dev_t *dev, uint8_t *data, uint32_t size)
 {
-    uart_send;
+    rvm_hal_uart_send;
 }
 ```
 ble_host组件在需要送hci命令或者数据的时候会调用该接口。
 <a name="ycvpO"></a>
-## 4.6 hci_recv接口
-hci数据接收接口，hci驱动组件，在接收到来自SoC LL的事件或者数据后，需要缓存该数据，在ble_host调用hci_recv接口后，返回对应的数据内容。
+## 4.6 rvm_hal_hci_recv接口
+hci数据接收接口，hci驱动组件，在接收到来自SoC LL的事件或者数据后，需要缓存该数据，在ble_host调用rvm_hal_hci_recv接口后，返回对应的数据内容。
 ```c
-static int h5_recv_data(aos_dev_t *dev, uint8_t *data, uint32_t size)
+static int h5_recv_data(rvm_dev_t *dev, uint8_t *data, uint32_t size)
 {
-    uart_recv;
+    rvm_hal_uart_recv;
 }
 ```
 <a name="qJ4be"></a>
 # 5. hci初始化/数据发送说明
-             ![image.png](https://intranetproxy.alipay.com/skylark/lark/0/2020/png/172330/1601217453038-cfbd0b63-ed11-44f6-9dce-1d52ea8c0cd0.png#align=left&display=inline&height=314&margin=%5Bobject%20Object%5D&name=image.png&originHeight=508&originWidth=813&size=25160&status=done&style=none&width=503)<br />在ble host组件初始化的时候，会依次调用hci_open,hci_start,hci_set_event接口完成hci驱动的初始化。<br />在hci驱动初始化完成后，ble host根据协议流程，会发送hci命令，实现协议栈的初始化。
+             ![image.png](https://intranetproxy.alipay.com/skylark/lark/0/2020/png/172330/1601217453038-cfbd0b63-ed11-44f6-9dce-1d52ea8c0cd0.png#align=left&display=inline&height=314&margin=%5Bobject%20Object%5D&name=image.png&originHeight=508&originWidth=813&size=25160&status=done&style=none&width=503)<br />在ble host组件初始化的时候，会依次调用rvm_hal_hci_open,rvm_hal_rvm_hal_hci_start,rvm_hal_hci_set_event接口完成hci驱动的初始化。<br />在hci驱动初始化完成后，ble host根据协议流程，会发送hci命令，实现协议栈的初始化。
 <a name="MnwrY"></a>
 # 6. hci数据接收说明
-       ![image.png](https://intranetproxy.alipay.com/skylark/lark/0/2020/png/172330/1601217376807-42f33efa-4d26-4b23-b9cc-179f1f877536.png#align=left&display=inline&height=278&margin=%5Bobject%20Object%5D&name=image.png&originHeight=403&originWidth=794&size=21588&status=done&style=none&width=548)<br />hci数据接收过程相对复杂一些。hci驱动组件在初始化的时候，需要记录hci_set_event接口这是的回调函数hci_event_callback。<br />当ll有数据上报的时候，hci驱动组件，需要缓存来自ll的数据或者事件，通过hci_event_callback回调，通知ble host有数据上报。ble host组件会根据上报的类型，调用hci_recv接口，获取hci数据，并进行处理。
+       ![image.png](https://intranetproxy.alipay.com/skylark/lark/0/2020/png/172330/1601217376807-42f33efa-4d26-4b23-b9cc-179f1f877536.png#align=left&display=inline&height=278&margin=%5Bobject%20Object%5D&name=image.png&originHeight=403&originWidth=794&size=21588&status=done&style=none&width=548)<br />hci数据接收过程相对复杂一些。hci驱动组件在初始化的时候，需要记录rvm_hal_hci_set_event接口这是的回调函数hci_event_callback。<br />当ll有数据上报的时候，hci驱动组件，需要缓存来自ll的数据或者事件，通过hci_event_callback回调，通知ble host有数据上报。ble host组件会根据上报的类型，调用rvm_hal_hci_recv接口，获取hci数据，并进行处理。
 <a name="BeDmU"></a>
 # 7. hci驱动组件测试验证
 HCI组件对接完成后，可以运行一个简单广播示例来确认是否已经对接成功。<br />示例代码如下

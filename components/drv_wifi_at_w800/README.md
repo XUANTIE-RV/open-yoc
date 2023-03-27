@@ -25,26 +25,26 @@ W800芯片是一款串口转无线模芯片，内部自带固件，用户操作�
 
 ```c
 typedef struct net_ops {
-    int (*get_mac_addr)(aos_dev_t *dev, uint8_t *mac);
-    int (*set_mac_addr)(aos_dev_t *dev, const uint8_t *mac);
+    int (*get_mac_addr)(rvm_dev_t *dev, uint8_t *mac);
+    int (*set_mac_addr)(rvm_dev_t *dev, const uint8_t *mac);
 
-    int (*get_dns_server)(aos_dev_t *dev, ip_addr_t ipaddr[], uint32_t num);
-    int (*set_dns_server)(aos_dev_t *dev, ip_addr_t ipaddr[], uint32_t num);
+    int (*get_dns_server)(rvm_dev_t *dev, ip_addr_t ipaddr[], uint32_t num);
+    int (*set_dns_server)(rvm_dev_t *dev, ip_addr_t ipaddr[], uint32_t num);
 
-    int (*set_hostname)(aos_dev_t *dev, const char *name);
-    const char* (*get_hostname)(aos_dev_t *dev);
+    int (*set_hostname)(rvm_dev_t *dev, const char *name);
+    const char* (*get_hostname)(rvm_dev_t *dev);
 
-    int (*set_link_up)(aos_dev_t *dev);
-    int (*set_link_down)(aos_dev_t *dev);
+    int (*set_link_up)(rvm_dev_t *dev);
+    int (*set_link_down)(rvm_dev_t *dev);
 
-    int (*start_dhcp)(aos_dev_t *dev);
-    int (*stop_dhcp)(aos_dev_t *dev);
-    int (*set_ipaddr)(aos_dev_t *dev, const ip_addr_t *ipaddr, const ip_addr_t *netmask, const ip_addr_t *gw);
-    int (*get_ipaddr)(aos_dev_t *dev, ip_addr_t *ipaddr, ip_addr_t *netmask, ip_addr_t *gw);
-    int (*ping)(aos_dev_t *dev, int type, char *remote_ip);
+    int (*start_dhcp)(rvm_dev_t *dev);
+    int (*stop_dhcp)(rvm_dev_t *dev);
+    int (*set_ipaddr)(rvm_dev_t *dev, const ip_addr_t *ipaddr, const ip_addr_t *netmask, const ip_addr_t *gw);
+    int (*get_ipaddr)(rvm_dev_t *dev, ip_addr_t *ipaddr, ip_addr_t *netmask, ip_addr_t *gw);
+    int (*ping)(rvm_dev_t *dev, int type, char *remote_ip);
 
-    int (*subscribe)(aos_dev_t *dev, uint32_t event, event_callback_t cb, void *param);
-    int (*unsubscribe)(aos_dev_t *dev, uint32_t event, event_callback_t cb, void *param);
+    int (*subscribe)(rvm_dev_t *dev, uint32_t event, event_callback_t cb, void *param);
+    int (*unsubscribe)(rvm_dev_t *dev, uint32_t event, event_callback_t cb, void *param);
 } net_ops_t;
 ```
 

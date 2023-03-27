@@ -415,15 +415,21 @@ bt_stack_status_t bt_prf_avrcp_tg_send_rn_rsp(bt_prf_avrcp_rn_event_ids_t event_
 bt_stack_status_t bt_prf_avrcp_tg_notify_vol_changed(uint8_t volume)
 {
     bt_prf_avrcp_rn_param_t p;
+    bt_stack_status_t ret;
 
     if (volume > BT_AVRCP_MAX_VOLUME) {
         return -EINVAL;
     }
 
-    avrcp_audio_output->vol(volume);
     avrcp_vol = volume;
     p.volume  = volume;
 
-    return bt_prf_avrcp_tg_send_rn_rsp(BT_PRF_AVRCP_NOTIFICATION_VOLUME_CHANGE, BT_AVRCP_RESPONSE_CHANGED_STABLE, &p);
+    ret = bt_prf_avrcp_tg_send_rn_rsp(BT_PRF_AVRCP_NOTIFICATION_VOLUME_CHANGE, BT_AVRCP_RESPONSE_CHANGED_STABLE, &p);
+
+    if (ret == 0) {
+        avrcp_audio_output->vol(volume);
+    }
+
+    return ret;
 }
 #endif

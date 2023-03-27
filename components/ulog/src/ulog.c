@@ -140,7 +140,7 @@ static char* log_col_def(const unsigned char level)
 #define log_col_def(x) ""
 #endif
 
-#ifdef ULOG_CONFIG_ASYNC
+#if defined(ULOG_CONFIG_ASYNC) && ULOG_CONFIG_ASYNC
 static uint8_t get_lowest_level(const ulog_session_type_t start);
 #endif
 
@@ -157,7 +157,7 @@ int ulog(const unsigned char s, const char *mod, const char *f, const unsigned l
             } else {
                 rpt_mod = mod;
             }
-#ifdef ULOG_CONFIG_ASYNC
+#if defined(ULOG_CONFIG_ASYNC) && ULOG_CONFIG_ASYNC
             uint8_t facility = FACILITY_NORMAL_LOG;
             if(strlen(rpt_mod)==0 || 0==strncmp("MQTT",rpt_mod, 4)) {
                 facility = FACILITY_NORMAL_LOG_NO_POP_CLOUD;
@@ -258,7 +258,7 @@ void on_filter_level_changes(const ulog_session_type_t session, const uint8_t le
     }
 }
 
-#ifdef ULOG_CONFIG_ASYNC
+#if defined(ULOG_CONFIG_ASYNC) && ULOG_CONFIG_ASYNC
 static uint8_t get_lowest_level(const ulog_session_type_t start)
 {
     uint8_t i = start+1;
@@ -282,7 +282,7 @@ void on_filter_change(const ulog_session_type_t session, const char level)
 
 void ulog_flush()
 {
-#ifdef ULOG_CONFIG_ASYNC
+#if defined(ULOG_CONFIG_ASYNC) && ULOG_CONFIG_ASYNC
     ulog_async_flush();
 #endif
 }

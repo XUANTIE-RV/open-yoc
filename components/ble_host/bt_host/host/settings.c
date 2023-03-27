@@ -19,7 +19,7 @@
 #include "hci_core.h"
 #include "settings.h"
 
-#if defined(CONFIG_BT_SETTINGS_USE_PRINTK)
+#if (defined(CONFIG_BT_SETTINGS_USE_PRINTK) && CONFIG_BT_SETTINGS_USE_PRINTK)
 void bt_settings_encode_key(char *path, size_t path_size, const char *subsys,
 			    const bt_addr_le_t *addr, const char *key)
 {
@@ -159,7 +159,7 @@ static int set(const char *name, size_t len_rd, settings_read_cb read_cb,
 		return 0;
 	}
 
-#if defined(CONFIG_BT_DEVICE_NAME_DYNAMIC)
+#if (defined(CONFIG_BT_DEVICE_NAME_DYNAMIC) && CONFIG_BT_DEVICE_NAME_DYNAMIC)
 	if (!strncmp(name, "name", len)) {
 		len = read_cb(cb_arg, &bt_dev.name, sizeof(bt_dev.name) - 1);
 		if (len < 0) {
@@ -174,7 +174,7 @@ static int set(const char *name, size_t len_rd, settings_read_cb read_cb,
 	}
 #endif
 
-#if defined(CONFIG_BT_PRIVACY)
+#if (defined(CONFIG_BT_PRIVACY) && CONFIG_BT_PRIVACY)
 	if (!strncmp(name, "irk", len)) {
 		len = read_cb(cb_arg, bt_dev.irk, sizeof(bt_dev.irk));
 		if (len < sizeof(bt_dev.irk[0])) {
@@ -214,7 +214,7 @@ static void save_id(struct k_work *work)
 		BT_ERR("Failed to save ID (err %d)", err);
 	}
 
-#if defined(CONFIG_BT_PRIVACY)
+#if (defined(CONFIG_BT_PRIVACY) && CONFIG_BT_PRIVACY)
 	err = settings_save_one("bt/irk", bt_dev.irk, ID_DATA_LEN(bt_dev.irk));
 	if (err) {
 		BT_ERR("Failed to save IRK (err %d)", err);
@@ -234,7 +234,7 @@ static int commit(void)
 {
 	BT_DBG("");
 
-#if defined(CONFIG_BT_DEVICE_NAME_DYNAMIC)
+#if (defined(CONFIG_BT_DEVICE_NAME_DYNAMIC) && CONFIG_BT_DEVICE_NAME_DYNAMIC)
 	if (bt_dev.name[0] == '\0') {
 		bt_set_name(CONFIG_BT_DEVICE_NAME);
 	}

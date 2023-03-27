@@ -49,7 +49,7 @@ static inline bool bt_hci_evt_is_prio(u8_t evt)
 	switch (evt) {
 	case BT_HCI_EVT_CMD_COMPLETE:
 	case BT_HCI_EVT_CMD_STATUS:
-#if defined(CONFIG_BT_CONN)
+#if (defined(CONFIG_BT_CONN) && CONFIG_BT_CONN)
 	case BT_HCI_EVT_NUM_COMPLETED_PACKETS:
 #endif
 		return true;

@@ -90,7 +90,7 @@ int activation_get_report_msg(char* report_msg, int len)
     const char *cloud   = g_activation_info.cloud;
     const char *os      = g_activation_info.os;
     const char *type    = g_activation_info.type;
-    aos_dev_t *wifi_dev = device_find("wifi", 0);
+    rvm_dev_t *wifi_dev = rvm_hal_device_find("wifi", 0);
 
     if (wifi_dev == NULL) {
         LOGE(TAG, "wifi is not find");
@@ -191,7 +191,7 @@ int activation_get_report_msg(char* report_msg, int len)
         }
     }
 
-    if(0 == hal_wifi_get_mac_addr(wifi_dev, mac)) {
+    if(0 == rvm_hal_wifi_get_mac_addr(wifi_dev, mac)) {
         snprintf(mac_format, sizeof(mac_format), "%02x-%02x-%02x-%02x-%02x-%02x",
               mac[0] & 0xff,
               mac[1] & 0xff,

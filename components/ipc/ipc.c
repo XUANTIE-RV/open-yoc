@@ -37,12 +37,13 @@ static int ipc_channel_send(ipc_t *ipc, phy_data_t *msg, int timeout_ms)
 {
     unsigned int flag;
 
-    //printf("ipc ch snd (%d)(%02x)\r\n", msg->command, msg->flag);
     aos_event_get(&ipc->evt, IPC_WRITE_EVENT, AOS_EVENT_OR_CLEAR, &flag, timeout_ms);
     aos_mutex_lock(&ipc->ch_mutex, AOS_WAIT_FOREVER);
     msg->seq = ipc->seq ++;
     int ret = channel_put_message(ipc->ch, msg, sizeof(phy_data_t), timeout_ms);
     aos_mutex_unlock(&ipc->ch_mutex);
+
+    //printf("ipc send msg:%d %d %d %d %llx %d\r\n", msg->seq, msg->service_id, msg->flag, msg->command, msg->data, msg->len);
 
     return ret;
 }
@@ -58,7 +59,12 @@ static int ipc_channel_recv(ipc_t *ipc, phy_data_t *msg, int timeout_ms)
     aos_mutex_unlock(&ipc->ch_mutex);
 
     if ((ipc->seq_bake + 1) != msg->seq) {
-        LOGI(TAG, "ipc lost(%s) cur:%d", aos_task_get_name(&ipc->thread), ipc->seq_bake);
+        if (ipc->seq_bake == msg->seq) {
+            LOGW(TAG, "ipc repeated(%s) cur:%u", aos_task_get_name(&ipc->thread), ipc->seq_bake);
+            return -1;
+        }
+        LOGI(TAG, "ipc lost(%s) cur:%d recv_msg:%d %d %d %d %llx %d", 
+            aos_task_get_name(&ipc->thread), ipc->seq_bake, msg->seq, msg->service_id, msg->flag, msg->command, msg->data, msg->len);
     } else {
         ipc->seq_bake ++;
     }
@@ -73,6 +79,10 @@ static int phy_recv(ipc_t *ipc, phy_data_t *msg, int ms)
 
     while (1) {
         ret = ipc_channel_recv(ipc, &m, ms);
+
+        if (ret < 0) {
+            continue;
+        }
 
 #ifdef CONFIG_IPC_PROBE_ENABLE
         if (m.flag & MESSAGE_PROBE) {
@@ -341,8 +351,8 @@ static void ipc_probe_entry(void *arg) {
     if (0 == aos_event_get(&ipc->evt, IPC_WRITE_EVENT, AOS_EVENT_OR_CLEAR, &flag, timeout_ms)) {
       // recover the writable value
       aos_event_set(&ipc->evt, IPC_WRITE_EVENT, AOS_EVENT_OR);
-      ipc->probe_status = 0;
       ipc->seq = 2;
+      ipc->probe_status = 0;
       aos_event_set(&ipc->probe_freeze_evt, IPC_PROBE_EVENT, AOS_EVENT_OR);
       break;
     }
@@ -437,6 +447,28 @@ int ipc_message_ack(ipc_t *ipc, message_t *msg, int timeout_ms)
     if (ser == NULL) {
         return -1;
     }
+
+#ifdef CONFIG_IPC_PROBE_ENABLE
+    if (ipc->probe_status) {
+        unsigned int flag;
+        long long freeze_t0 = 0;
+        if ((timeout_ms != AOS_WAIT_FOREVER) && (timeout_ms != AOS_NO_WAIT)) {
+            freeze_t0 = aos_now_ms();
+        }
+        if (0 != aos_event_get(&ipc->probe_freeze_evt, IPC_PROBE_EVENT,
+            AOS_EVENT_OR, &flag, timeout_ms)) {
+            return -1;
+        }
+        if (freeze_t0 > 0) {
+            int diff = (int)(aos_now_ms() - freeze_t0);
+            if (diff > timeout_ms) {
+                return -1;
+            }
+            timeout_ms -= diff;
+        }
+    }
+#endif
+
     transfer_send(ser, msg, timeout_ms);
     if (msg->resp_data) {
         aos_free((char *)msg->resp_data);
@@ -536,7 +568,7 @@ ipc_t *ipc_get(int cpu_id)
         ipc->probe_status = 1;
         ret = aos_event_new(&ipc->probe_freeze_evt, 0);
         aos_check(!ret, ENOME);
-        ret = aos_task_new_ext(&ipc->probe_thread, "ipc_probe", ipc_probe_entry, ipc, 1024, 32);
+        ret = aos_task_new_ext(&ipc->probe_thread, "ipc_probe", ipc_probe_entry, ipc, 3072, 32);
         aos_check(!ret, ENOME);
 #endif
         return ipc;

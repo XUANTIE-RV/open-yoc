@@ -1,0 +1,18 @@
+{
+  "version": "0.0.1",
+  "PackageList": [
+    {
+      "id": "8080251822789980",
+      "Name": "桌面",
+      "Category": "HOME",
+      "Path": "resources/presetpkgs/8080251822789980.amr"
+    },
+    {
+      "id": "8001641807316750",
+      "Name": "软键盘",
+      "Category": "IM_PANEL",
+      "Path": "resources/presetpkgs/8001641807316750.amr"
+    }
+  ]
+}
+

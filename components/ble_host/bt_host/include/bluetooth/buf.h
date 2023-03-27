@@ -39,7 +39,7 @@ enum bt_buf_type {
 /** Minimum amount of user data size for buffers passed to the stack. */
 #define BT_BUF_USER_DATA_MIN 4 // __DEPRECATED_MACRO
 
-#if defined(CONFIG_BT_HCI_RAW)
+#if (defined(CONFIG_BT_HCI_RAW) && CONFIG_BT_HCI_RAW)
 #define BT_BUF_RESERVE MAX(CONFIG_BT_HCI_RESERVE, CONFIG_BT_HCI_RAW_RESERVE)
 #else
 #define BT_BUF_RESERVE CONFIG_BT_HCI_RESERVE

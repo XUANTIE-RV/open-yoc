@@ -70,7 +70,7 @@ static u8_t selected_id = BT_ID_DEFAULT;
 #define min(a, b)  (((a) < (b)) ? (a) : (b))
 #endif
 
-#if defined(CONFIG_BT_CONN)
+#if (defined(CONFIG_BT_CONN) && CONFIG_BT_CONN)
 struct bt_conn *default_conn;
 int16_t g_bt_conn_handle = -1;
 int16_t g_security_level = 0;
@@ -91,13 +91,13 @@ wl_addr wl_list[MAX_WL_SZIE]= {0};
 static int16_t g_pairing_handle = -1;
 #endif /* CONFIG_BT_CONN */
 
-#if defined(CONFIG_BT_EXT_ADV)
+#if (defined(CONFIG_BT_EXT_ADV) && CONFIG_BT_EXT_ADV)
 uint8_t selected_adv;
 struct bt_le_ext_adv *adv_sets[CONFIG_BT_EXT_ADV_MAX_ADV_SET];
 #endif /* CONFIG_BT_EXT_ADV */
 
 static void device_find(ble_event_en event, void *event_data);
-#if defined(CONFIG_BT_SMP)
+#if (defined(CONFIG_BT_SMP) && CONFIG_BT_SMP)
 static void smp_event(ble_event_en event, void *event_data);
 #endif
 static void conn_param_req(ble_event_en event, void *event_data);
@@ -106,12 +106,12 @@ struct bt_le_oob oob_local;
 
 #define L2CAP_DYM_CHANNEL_NUM 2
 
-#if defined(CONFIG_BT_L2CAP_DYNAMIC_CHANNEL)
+#if (defined(CONFIG_BT_L2CAP_DYNAMIC_CHANNEL) && CONFIG_BT_L2CAP_DYNAMIC_CHANNEL)
 NET_BUF_POOL_DEFINE(data_tx_pool, L2CAP_DYM_CHANNEL_NUM, DATA_MTU, BT_BUF_USER_DATA_MIN, NULL);
 NET_BUF_POOL_DEFINE(data_rx_pool, L2CAP_DYM_CHANNEL_NUM, DATA_MTU, BT_BUF_USER_DATA_MIN, NULL);
 #endif
 
-#if defined(CONFIG_BT_BREDR)
+#if (defined(CONFIG_BT_BREDR) && CONFIG_BT_BREDR)
 NET_BUF_POOL_DEFINE(data_bredr_pool, 1, DATA_BREDR_MTU, BT_BUF_USER_DATA_MIN,
                     NULL);
 
@@ -120,7 +120,7 @@ NET_BUF_POOL_DEFINE(sdp_client_pool, CONFIG_BT_MAX_CONN,
                     SDP_CLIENT_USER_BUF_LEN, BT_BUF_USER_DATA_MIN, NULL);
 #endif /* CONFIG_BT_BREDR */
 
-#if defined(CONFIG_BT_RFCOMM)
+#if (defined(CONFIG_BT_RFCOMM) && CONFIG_BT_RFCOMM)
 
 static struct bt_sdp_attribute spp_attrs[] = {
     BT_SDP_NEW_SERVICE,
@@ -383,7 +383,7 @@ static int event_callback(ble_event_en event, void *event_data)
     case EVENT_GAP_CONN_PARAM_UPDATE:
         conn_param_update(event, event_data);
         break;
-#if defined(CONFIG_BT_SMP) || defined(CONFIG_BT_BREDR)
+#if (defined(CONFIG_BT_SMP) && CONFIG_BT_SMP) || (defined(CONFIG_BT_BREDR) && CONFIG_BT_BREDR)
 
     case EVENT_SMP_PASSKEY_DISPLAY:
     case EVENT_SMP_PASSKEY_CONFIRM:
@@ -407,8 +407,8 @@ static ble_event_cb_t ble_cb = {
     .callback = event_callback,
 };
 
-#if defined(CONFIG_BT_EXT_ADV)
-#if defined(CONFIG_BT_BROADCASTER)
+#if (defined(CONFIG_BT_EXT_ADV) && CONFIG_BT_EXT_ADV)
+#if (defined(CONFIG_BT_BROADCASTER) && CONFIG_BT_BROADCASTER)
 static void adv_sent(struct bt_le_ext_adv *adv,
 		     struct bt_le_ext_adv_sent_info *info)
 {
@@ -428,7 +428,7 @@ static void adv_scanned(struct bt_le_ext_adv *adv,
 }
 #endif /* CONFIG_BT_BROADCASTER */
 
-#if defined(CONFIG_BT_PERIPHERAL)
+#if (defined(CONFIG_BT_PERIPHERAL) && CONFIG_BT_PERIPHERAL)
 static void adv_connected(struct bt_le_ext_adv *adv,
 			  struct bt_le_ext_adv_connected_info *info)
 {
@@ -442,12 +442,12 @@ static void adv_connected(struct bt_le_ext_adv *adv,
 #endif /* CONFIG_BT_PERIPHERAL */
 #endif /* CONFIG_BT_EXT_ADV */
 
-#if defined(CONFIG_BT_EXT_ADV)
-#if defined(CONFIG_BT_BROADCASTER)
+#if (defined(CONFIG_BT_EXT_ADV) && CONFIG_BT_EXT_ADV)
+#if (defined(CONFIG_BT_BROADCASTER) && CONFIG_BT_BROADCASTER)
 static struct bt_le_ext_adv_cb adv_callbacks = {
 	.sent = adv_sent,
 	.scanned = adv_scanned,
-#if defined(CONFIG_BT_PERIPHERAL)
+#if (defined(CONFIG_BT_PERIPHERAL) && CONFIG_BT_PERIPHERAL)
 	.connected = adv_connected,
 #endif /* CONFIG_BT_PERIPHERAL */
 };
@@ -464,7 +464,7 @@ void conn_addr_str(struct bt_conn *conn, char *addr, size_t len)
 	}
 
 	switch (info.type) {
-#if defined(CONFIG_BT_BREDR)
+#if (defined(CONFIG_BT_BREDR) && CONFIG_BT_BREDR)
 	case BT_CONN_TYPE_BR:
 		bt_addr_to_str(info.br.dst, addr, len);
 		break;
@@ -475,7 +475,7 @@ void conn_addr_str(struct bt_conn *conn, char *addr, size_t len)
 	}
 }
 
-#if defined(CONFIG_BT_PER_ADV_SYNC)
+#if (defined(CONFIG_BT_PER_ADV_SYNC) && CONFIG_BT_PER_ADV_SYNC)
 struct bt_le_per_adv_sync *per_adv_syncs[CONFIG_BT_PER_ADV_SYNC_MAX];
 
 static const char *phy2str(uint8_t phy)
@@ -601,12 +601,12 @@ static int cmd_init(int argc, char *argv[])
     dev_addr_t addr;
     init_param_t init = {NULL, NULL, 1};
 
-#if defined(CONFIG_BT_L2CAP_DYNAMIC_CHANNEL)
+#if (defined(CONFIG_BT_L2CAP_DYNAMIC_CHANNEL) && CONFIG_BT_L2CAP_DYNAMIC_CHANNEL)
     NET_BUF_POOL_INIT(data_tx_pool);
     NET_BUF_POOL_INIT(data_rx_pool);
 #endif
 
-#if defined(CONFIG_BT_BREDR)
+#if (defined(CONFIG_BT_BREDR) && CONFIG_BT_BREDR)
     NET_BUF_POOL_INIT(data_bredr_pool);
     NET_BUF_POOL_INIT(sdp_client_pool);
 #endif /* CONFIG_BT_BREDR */
@@ -644,7 +644,7 @@ static int cmd_init(int argc, char *argv[])
     return 0;
 }
 
-#if defined(CONFIG_BT_HCI) || defined(CONFIG_BT_L2CAP_DYNAMIC_CHANNEL)
+#if (defined(CONFIG_BT_HCI) && CONFIG_BT_HCI) || (defined(CONFIG_BT_L2CAP_DYNAMIC_CHANNEL) && CONFIG_BT_L2CAP_DYNAMIC_CHANNEL)
 void hexdump(const u8_t *data, size_t len)
 {
     int n = 0;
@@ -673,9 +673,9 @@ void hexdump(const u8_t *data, size_t len)
 }
 #endif /* CONFIG_BT_HCI || CONFIG_BT_L2CAP_DYNAMIC_CHANNEL */
 
-#if defined(CONFIG_BT_HCI)
+#if (defined(CONFIG_BT_HCI) && CONFIG_BT_HCI)
 
-#if defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE
+#if (defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE)
 static int cmd_hci_cmd_send_cb(u16_t opcode, u8_t status, struct net_buf *buf, void *args)
 {
 	struct {
@@ -723,7 +723,7 @@ static int cmd_hci_cmd(int argc, char *argv[])
         }
     }
 
-#if defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE
+#if (defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE)
 
 	struct {
 		struct k_sem *sync;
@@ -854,7 +854,7 @@ static int cmd_dle_enable(int argc, char *argv[])
         return -1;
     }
 
-#if defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE
+#if (defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE)
     struct bt_conn *conn = bt_conn_lookup_index(g_bt_conn_handle);
     if (conn)
     {
@@ -1070,7 +1070,7 @@ static void device_find(ble_event_en event, void *event_data)
         ret = parse_ad(e->adv_data, e->adv_len, scan_ad_callback, event_data);
 
         if (ret < ad_num) {
-#if defined(CONFIG_BT_EXT_ADV) && CONFIG_BT_EXT_ADV > 0
+#if (defined(CONFIG_BT_EXT_ADV) && CONFIG_BT_EXT_ADV)
             printf("[DEVICE]: %s, adv type %d, rssi %d, len %d, sid %d, Raw data:%s", addr_str, e->adv_type,  e->rssi, e->adv_len, e->sid, bt_hex(e->adv_data, e->adv_len > 31 ? 31 : e->adv_len));
 #else
             printf("[DEVICE]: %s, adv type %d, rssi %d, len %d, Raw data:%s", addr_str, e->adv_type,  e->rssi, e->adv_len, bt_hex(e->adv_data, e->adv_len > 31 ? 31 : e->adv_len));
@@ -1083,7 +1083,7 @@ static void device_find(ble_event_en event, void *event_data)
             printf("\n");
         }
     } else {
-#if defined(CONFIG_BT_EXT_ADV) && CONFIG_BT_EXT_ADV > 0
+#if (defined(CONFIG_BT_EXT_ADV) && CONFIG_BT_EXT_ADV)
             printf("[DEVICE]: %s, adv type %d, rssi %d, len %d, sid %d, Raw data:%s", addr_str, e->adv_type,  e->rssi, e->adv_len, e->sid, bt_hex(e->adv_data, e->adv_len > 31 ? 31 : e->adv_len));
 #else
             printf("[DEVICE]: %s, adv type %d, rssi %d, len %d, Raw data:%s", addr_str, e->adv_type,  e->rssi, e->adv_len, bt_hex(e->adv_data, e->adv_len > 31 ? 31 : e->adv_len));
@@ -1323,7 +1323,7 @@ fail:
     return -EINVAL;
 }
 
-#if defined(CONFIG_BT_EXT_ADV)
+#if (defined(CONFIG_BT_EXT_ADV) && CONFIG_BT_EXT_ADV)
 static bool adv_param_parse(size_t argc, char *argv[],
 			   struct bt_le_adv_param *param)
 {
@@ -1694,7 +1694,7 @@ static int cmd_adv_info(int argc, char *argv[])
 	return 0;
 }
 
-#if defined(CONFIG_BT_PERIPHERAL)
+#if (defined(CONFIG_BT_PERIPHERAL) && CONFIG_BT_PERIPHERAL)
 
 #define KEY_STR_LEN 33
 
@@ -1735,7 +1735,7 @@ static int cmd_adv_oob(int argc, char *argv[])
 }
 #endif /* CONFIG_BT_PERIPHERAL */
 
-#if defined(CONFIG_BT_PER_ADV)
+#if (defined(CONFIG_BT_PER_ADV) && CONFIG_BT_PER_ADV)
 static int cmd_per_adv(int argc, char *argv[])
 {
 	struct bt_le_ext_adv *adv = adv_sets[selected_adv];
@@ -1853,7 +1853,7 @@ static int cmd_per_adv_data(int argc, char *argv[])
 
 
 
-#if defined(CONFIG_BT_PER_ADV_SYNC)
+#if (defined(CONFIG_BT_PER_ADV_SYNC) && CONFIG_BT_PER_ADV_SYNC)
 
 static int cmd_per_adv_sync_create(int argc, char *argv[])
 {
@@ -2090,7 +2090,7 @@ static int cmd_per_adv_sync_transfer(int argc, char *argv[])
 }
 #endif /* CONFIG_BT_PER_ADV_SYNC */
 
-#if defined(CONFIG_BT_CONN)
+#if (defined(CONFIG_BT_CONN) && CONFIG_BT_CONN)
 static int cmd_connect_le(int argc, char *argv[])
 {
     int err;
@@ -2238,7 +2238,7 @@ static int cmd_select(int argc, char *argv[])
         return 0;
     }
 
-#if defined(CONFIG_BT_BREDR)
+#if (defined(CONFIG_BT_BREDR) && CONFIG_BT_BREDR)
     conn = bt_conn_lookup_addr_br(&addr.a);
 
     if (conn) {
@@ -2253,7 +2253,9 @@ static int cmd_select(int argc, char *argv[])
         return 0;
     }
 
+#if (defined(CONFIG_BT_BREDR) && CONFIG_BT_BREDR)
 set_conn:
+#endif
     bt_conn_unref(conn);
     default_conn = conn;
 
@@ -2329,7 +2331,7 @@ static int cmd_clear(int argc, char *argv[])
     }
 
     if (argc < 3) {
-#if defined(CONFIG_BT_BREDR)
+#if (defined(CONFIG_BT_BREDR) && CONFIG_BT_BREDR)
         addr.type = BT_ADDR_LE_PUBLIC;
         err = str2bt_addr(argv[1], &addr);
 #else
@@ -2358,7 +2360,7 @@ static int cmd_clear(int argc, char *argv[])
 }
 #endif /* CONFIG_BT_CONN */
 
-#if defined(CONFIG_BT_SMP) || defined(CONFIG_BT_BREDR)
+#if (defined(CONFIG_BT_SMP) && CONFIG_BT_SMP) || (defined(CONFIG_BT_BREDR) && CONFIG_BT_BREDR)
 static int cmd_security(int argc, char *argv[])
 {
     int err, sec;
@@ -2546,7 +2548,7 @@ static int cmd_auth_pairing_confirm(int argc, char *argv[])
     return 0;
 }
 
-#if defined(CONFIG_BT_FIXED_PASSKEY)
+#if (defined(CONFIG_BT_FIXED_PASSKEY) && CONFIG_BT_FIXED_PASSKEY)
 static int cmd_fixed_passkey(int argc, char *argv[])
 {
     unsigned int passkey;
@@ -2600,7 +2602,7 @@ static int cmd_auth_passkey(int argc, char *argv[])
 }
 #endif /* CONFIG_BT_SMP) || CONFIG_BT_BREDR */
 
-#if defined(CONFIG_BT_L2CAP_DYNAMIC_CHANNEL)
+#if (defined(CONFIG_BT_L2CAP_DYNAMIC_CHANNEL) && CONFIG_BT_L2CAP_DYNAMIC_CHANNEL)
 static u32_t l2cap_rate;
 
 static int l2cap_recv_metrics(struct bt_l2cap_chan *chan, struct net_buf *buf)
@@ -2971,7 +2973,7 @@ static int cmd_l2cap_metrics(int argc, char *argv[])
 }
 #endif
 
-#if defined(CONFIG_BT_BREDR)
+#if (defined(CONFIG_BT_BREDR) && CONFIG_BT_BREDR)
 static int l2cap_bredr_recv(struct bt_l2cap_chan *chan, struct net_buf *buf)
 {
     printf("Incoming data channel %p len %u\n", chan, buf->len);
@@ -3054,7 +3056,7 @@ static int cmd_bredr_l2cap_register(int argc, char *argv[])
     return 0;
 }
 
-#if defined(CONFIG_BT_RFCOMM)
+#if (defined(CONFIG_BT_RFCOMM) && CONFIG_BT_RFCOMM)
 static void rfcomm_bredr_recv(struct bt_rfcomm_dlc *dlci, struct net_buf *buf)
 {
     printf("Incoming data dlc %p len %u\n", dlci, buf->len);
@@ -3679,7 +3681,7 @@ static int  flash_opt_mac(int argc, char *argv[])
 }
 #endif
 
-#if defined(CONFIG_BT_WHITELIST)
+#if (defined(CONFIG_BT_WHITELIST) && CONFIG_BT_WHITELIST)
 
 static int get_wl_size()
 {
@@ -3917,7 +3919,7 @@ static int cmd_wl_show(int argc, char *argv[])
 #define HELP_NONE "[none]"
 #define HELP_ADDR_LE "<address: XX:XX:XX:XX:XX:XX> <type: (public|random)>"
 
-#if defined(CONFIG_BT_EXT_ADV)
+#if (defined(CONFIG_BT_EXT_ADV) && CONFIG_BT_EXT_ADV)
 #define EXT_ADV_SCAN_OPT " [coded] [no-1m]"
 #define EXT_ADV_PARAM "<type: conn-scan conn-nscan, nconn-scan nconn-nscan> " \
 		      "[ext-adv] [no-2m] [coded] "                            \
@@ -3926,13 +3928,13 @@ static int cmd_wl_show(int argc, char *argv[])
 		      "[disable-37] [disable-38] [disable-39]"
 #else
 #define EXT_ADV_SCAN_OPT ""
-#endif /* defined(CONFIG_BT_EXT_ADV) */
+#endif /* (defined(CONFIG_BT_EXT_ADV) && CONFIG_BT_EXT_ADV) */
 
 static const struct shell_cmd bt_commands[] = {	
     { "pub-addr", cmd_pub_addr, "XX:XX:XX:XX:XX:XX"},
     { "init", cmd_init, HELP_ADDR_LE },
     //{ "mac", flash_opt_mac, "<val:read/write> exp:write 11:22:33:44:55:66" },
-#if defined(CONFIG_BT_HCI)
+#if (defined(CONFIG_BT_HCI) && CONFIG_BT_HCI)
     { "hci-cmd", cmd_hci_cmd, "<ogf> <ocf> [data]" },
 #endif
     { "phy-rate-set", cmd_phy_rate_set, "<tx rate:1M:0x01/2M:0x02/Coded: 0x04> <rx rate:1M:0x01/2M:0x02/Coded: 0x04>"},
@@ -3958,7 +3960,7 @@ static const struct shell_cmd bt_commands[] = {
         "adv", cmd_advertise,
         "<type: stop, conn, nconn> <ad(len|adtype|addata ...): 0xxxxxxxx> <sd(len|adtype|addata ...): 0xxxxxxxx>"
     },
-    #if defined(CONFIG_BT_EXT_ADV)
+    #if (defined(CONFIG_BT_EXT_ADV) && CONFIG_BT_EXT_ADV)
 	{
 	    "adv-create",cmd_adv_create, EXT_ADV_PARAM
 	},
@@ -3978,16 +3980,16 @@ static const struct shell_cmd bt_commands[] = {
 	{ "adv-select", cmd_adv_select, "[adv]"},
 	{ "adv-info", cmd_adv_info, HELP_NONE},
 
-#if defined(CONFIG_BT_PERIPHERAL)
+#if (defined(CONFIG_BT_PERIPHERAL) && CONFIG_BT_PERIPHERAL)
 	{ "adv-oob",cmd_adv_oob, HELP_NONE},
 #endif /* CONFIG_BT_PERIPHERAL */
 #endif
-#if defined(CONFIG_BT_PER_ADV)
+#if (defined(CONFIG_BT_PER_ADV) && CONFIG_BT_PER_ADV)
 	{ "per-adv",cmd_per_adv,"<type: off, on>"},
 	{ "per-adv-param",cmd_per_adv_param,"[<interval-min> [<interval-max> [tx_power]]]"},
 	{ "per-adv-data",cmd_per_adv_data,"<data>"},
 #endif /* CONFIG_BT_PER_ADV */
-#if defined(CONFIG_BT_PER_ADV_SYNC)
+#if (defined(CONFIG_BT_PER_ADV_SYNC) && CONFIG_BT_PER_ADV_SYNC)
 	{
 	  "per-adv-sync-create",cmd_per_adv_sync_create,
                   "<address: XX:XX:XX:XX:XX:XX> <type: (public|random)>  <sid> [skip <count>] [timeout <ms>] [aoa] \
@@ -3995,14 +3997,14 @@ static const struct shell_cmd bt_commands[] = {
 
 	},
 	{"per-adv-sync-delete", cmd_per_adv_sync_delete,"[<index>]"},
-#endif /* defined(CONFIG_BT_PER_ADV_SYNC) */
+#endif /* (defined(CONFIG_BT_PER_ADV_SYNC) && CONFIG_BT_PER_ADV_SYNC) */
 
-#if defined(CONFIG_BT_CONN)
-#if defined(CONFIG_BT_PER_ADV_SYNC)
+#if (defined(CONFIG_BT_CONN) && CONFIG_BT_CONN)
+#if (defined(CONFIG_BT_PER_ADV_SYNC) && CONFIG_BT_PER_ADV_SYNC)
     {"past-subscribe",cmd_past_subscribe,"[conn] [skip <count>] [timeout <ms>] [aoa] [aod_1us] [aod_2us] [cte_only]"},
 	{"past-unsubscribe", cmd_past_unsubscribe,"[conn]"},
 	{"per-adv-sync-transfer",cmd_per_adv_sync_transfer,"[<index>]"},
-#endif /* defined(CONFIG_BT_PER_ADV_SYNC) */
+#endif /* (defined(CONFIG_BT_PER_ADV_SYNC) && CONFIG_BT_PER_ADV_SYNC) */
     {
         "connect", cmd_connect_le, HELP_ADDR_LE\
         " <interval_min> <interval_max>"\
@@ -4015,7 +4017,7 @@ static const struct shell_cmd bt_commands[] = {
     { "conn-update", cmd_conn_update, "<min> <max> <latency> <timeout>" },
     { "oob", cmd_oob , HELP_NONE},
     { "clear", cmd_clear,"<dst:all,address> <type: (public|random>"},
-#if defined(CONFIG_BT_SMP) || defined(CONFIG_BT_BREDR)
+#if (defined(CONFIG_BT_SMP) && CONFIG_BT_SMP) || (defined(CONFIG_BT_BREDR) && CONFIG_BT_BREDR)
     { "security", cmd_security, "<security level: 0, 1, 2, 3>" },
     {
         "io-capability", cmd_iocap_set,
@@ -4025,12 +4027,12 @@ static const struct shell_cmd bt_commands[] = {
     { "auth-passkey", cmd_auth_passkey, "<passkey>" },
     { "auth-passkey-confirm", cmd_auth_passkey_confirm, HELP_NONE },
     { "auth-pairing-confirm", cmd_auth_pairing_confirm, HELP_NONE },
-#if defined(CONFIG_BT_FIXED_PASSKEY)
+#if (defined(CONFIG_BT_FIXED_PASSKEY) && CONFIG_BT_FIXED_PASSKEY)
     { "fixed-passkey", cmd_fixed_passkey, "[passkey]" },
 #endif
 
 #endif /* CONFIG_BT_SMP || CONFIG_BT_BREDR) */
-#if defined(CONFIG_BT_GATT_CLIENT)
+#if (defined(CONFIG_BT_GATT_CLIENT) && CONFIG_BT_GATT_CLIENT)
     { "gatt-exchange-mtu", cmd_gatt_exchange_mtu, HELP_NONE },
     {
         "gatt-discover-primary", cmd_gatt_discover,
@@ -4081,7 +4083,7 @@ static const struct shell_cmd bt_commands[] = {
         "register pre-predefined test2 service"
     },
 #endif
-#ifdef CONFIG_BT_SHELL_TRANSPORT_TEST
+#if (defined(CONFIG_BT_SHELL_TRANSPORT_TEST) && CONFIG_BT_SHELL_TRANSPORT_TEST)
     {
         "gatt-transport-test-config", cmd_gatt_transport_test,
         "<type 0:server 1 client> <mode 0:loop 1:single> <server tx mode 0:notify 1:indicate> <server rx handle> <client tx mode 0:write 1:write_withoutresponse> "\
@@ -4092,14 +4094,14 @@ static const struct shell_cmd bt_commands[] = {
         "<op 0:stop 1:start 2:show result 3:reset>"
     },
 #endif
-#if defined(CONFIG_BT_L2CAP_DYNAMIC_CHANNEL)
+#if (defined(CONFIG_BT_L2CAP_DYNAMIC_CHANNEL) && CONFIG_BT_L2CAP_DYNAMIC_CHANNEL)
     { "l2cap-register", cmd_l2cap_register, "<psm> [sec_level]" },
     { "l2cap-connect", cmd_l2cap_connect, "<psm> [sec_level] " },
     { "l2cap-disconnect", cmd_l2cap_disconnect, "<psm>" },
     { "l2cap-send", cmd_l2cap_send, "<psm> <number of packets>" },
     { "l2cap-metrics", cmd_l2cap_metrics, "<value on, off>" },
 #endif
-#if defined(CONFIG_BT_BREDR)
+#if (defined(CONFIG_BT_BREDR) && CONFIG_BT_BREDR)
     { "br-iscan", cmd_bredr_discoverable, "<value: on, off>" },
     { "br-pscan", cmd_bredr_connectable, "value: on, off" },
     { "br-connect", cmd_connect_bredr, "<address>" },
@@ -4113,7 +4115,7 @@ static const struct shell_cmd bt_commands[] = {
     { "br-l2cap-disconnect", cmd_br_l2cap_disconnect, "<dcid>" },
     { "br-oob", cmd_bredr_oob, "br-oob" },
     { "br-sdp-find", cmd_bredr_sdp_find_record, "<HFPAG>" },
-#if defined(CONFIG_BT_RFCOMM)
+#if (defined(CONFIG_BT_RFCOMM) && CONFIG_BT_RFCOMM)
     { "br-rfcomm-register", cmd_bredr_rfcomm_register, HELP_NONE},
     { "br-rfcomm-connect", cmd_rfcomm_connect, "<channel>" },
     { "br-rfcomm-send", cmd_rfcomm_send, "<number of packets>"},
@@ -4121,16 +4123,16 @@ static const struct shell_cmd bt_commands[] = {
 #endif /* CONFIG_BT_RFCOMM */
 #endif /* CONFIG_BT_BREDR */
 #endif /* CONFIG_BT_CONN */
-#if defined(CONFIG_BT_CTLR_ADV_EXT)
+#if (defined(CONFIG_BT_CTLR_ADV_EXT) && CONFIG_BT_CTLR_ADV_EXT)
     { "advx", cmd_advx, "<on off> [coded] [anon] [txp]" },
     { "scanx", cmd_scanx, "<on passive off> [coded]" },
 #endif /* CONFIG_BT_CTLR_ADV_EXT */
-#if defined(CONFIG_BT_CTLR_DTM)
+#if (defined(CONFIG_BT_CTLR_DTM) && CONFIG_BT_CTLR_DTM)
     { "test_tx", cmd_test_tx, "<chan> <len> <type> <phy>" },
     { "test_rx", cmd_test_rx, "<chan> <phy> <mod_idx>" },
     { "test_end", cmd_test_end, HELP_NONE},
 #endif /* CONFIG_BT_CTLR_ADV_EXT */
-#if defined(CONFIG_BT_WHITELIST)
+#if (defined(CONFIG_BT_WHITELIST) && CONFIG_BT_WHITELIST)
     { "wl-size", cmd_wl_size, HELP_NONE},
     { "wl-add", cmd_wl_add, HELP_ADDR_LE},
     { "wl-remove", cmd_wl_remove, HELP_ADDR_LE},

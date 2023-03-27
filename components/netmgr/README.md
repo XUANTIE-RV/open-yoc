@@ -257,7 +257,7 @@ yoc install  netmgr
 
 ### netmgr_get_dev
 
-`aos_dev_t *netmgr_get_dev(netmgr_hdl_t);`
+`rvm_dev_t *netmgr_get_dev(netmgr_hdl_t);`
 
 - 功能描述:
   - 通过网络网络句柄获取设备。
@@ -423,7 +423,7 @@ void wifi_rtl8723ds_register(rtl8723ds_gpio_pin *config)
 
     wifi_manager_init();
     // 注册rtl8723ds驱动，调用注册的rtl8723ds_dev_init函数
-    driver_register(&rtl8723ds_driver.drv, NULL, 0);
+    rvm_driver_register(&rtl8723ds_driver.drv, NULL, 0);
 }
 ```
 
@@ -471,6 +471,7 @@ void main()
     rtl8723ds_gpio_pin pin = { 
         .wl_en = PIN_WI_EN,
         .power = PIN_POWER_EN,
+        .sdio_idx = 0,
     };  
 
     wifi_rtl8723ds_register(&pin);// 根据rtl8723ds网卡相应的管脚注册无线网卡驱动

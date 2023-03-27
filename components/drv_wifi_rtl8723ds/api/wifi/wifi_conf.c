@@ -1310,24 +1310,27 @@ int wifi_on(rtw_mode_t mode)
 		devnum = 2;
 
 	// set wifi mib
+	device_mutex_lock(RT_DEV_LOCK_WLAN);
 	wifi_set_mib();
 	LOGD(TAG, "Initializing WIFI ...");
 	for(idx=0;idx<devnum;idx++){
 		ret = rltk_wlan_init(idx, mode);
-		if(ret <0)
-			return ret;
-	}
-	for(idx=0;idx<devnum;idx++){
-		device_mutex_lock(RT_DEV_LOCK_WLAN);
-		ret = rltk_wlan_start(idx);
-		if(ret == 0) _wifi_is_on = 1;
-		device_mutex_unlock(RT_DEV_LOCK_WLAN);
-		if(ret <0){
-			LOGE(TAG, "ERROR: Start WIFI Failed!");
-			rltk_wlan_deinit();
+		if(ret <0) {
+			device_mutex_unlock(RT_DEV_LOCK_WLAN);
 			return ret;
 		}
 	}
+	for(idx=0;idx<devnum;idx++){
+		ret = rltk_wlan_start(idx);
+		if(ret == 0) _wifi_is_on = 1;
+		if(ret <0){
+			LOGE(TAG, "ERROR: Start WIFI Failed!");
+			rltk_wlan_deinit();
+			device_mutex_unlock(RT_DEV_LOCK_WLAN);
+			return ret;
+		}
+	}
+	device_mutex_unlock(RT_DEV_LOCK_WLAN);
 
 	while(1) {
 		if(rltk_wlan_running(devnum-1)) {

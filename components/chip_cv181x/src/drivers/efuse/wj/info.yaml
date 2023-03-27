@@ -1,0 +1,13 @@
+name: EFUSE
+vendor: WJ
+license: Copyright (C) 2017-2019 Alibaba Group Holding Limited
+description: WJ efuse
+type: devices
+
+versions:
+    jupiter_v1.0:
+        drv_path: jupiter_v1.0
+    cetus:
+        drv_path: cetus
+    pangu:
+        drv_path: pangu

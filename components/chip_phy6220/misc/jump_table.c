@@ -52,7 +52,7 @@
 #include "pwrmgr.h"
 #include "gpio.h"
 #include "timer.h"
-#include "uart.h"
+// #include "uart.h"
 //#include "log.h"
 
 /*******************************************************************************

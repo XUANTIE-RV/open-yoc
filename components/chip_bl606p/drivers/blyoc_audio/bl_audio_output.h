@@ -3,6 +3,7 @@
 
 #include "bl_audio.h"
 #include <blyoc_ringbuffer/blyoc_ringbuffer.h>
+#include <bl_os_hal.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -40,6 +41,9 @@ struct _auo_ch {
     uint32_t                  ch_idx;            ///< Codec output channel idx
     auo_cb_t                  callback;
     void                      *arg;
+    aos_task_t   task;                          /* for isr handle */
+    uint8_t      task_exit;                     /* for stop task flag;0-runding,1-stoped */
+    aos_event_t  event;                         /* for task event stop or isr notify */
     blyoc_ringbuf_t             *ringbuffer;
     uint8_t                   *buffer;         ///< The csi_ringbuf used to save audio data
     uint32_t                  buffer_size;                ///< Output buffer size

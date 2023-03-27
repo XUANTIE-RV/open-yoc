@@ -2,31 +2,31 @@
  * Copyright (C) 2019-2020 Alibaba Group Holding Limited
  */
 
-#include "hal/flash_impl.h"
+#include "devices/impl/flash_impl.h"
 #include "drv/eflash.h"
 
 typedef struct {
-    aos_dev_t           device;
+    rvm_dev_t           device;
     eflash_handle_t handle;
     eflash_info_t  *info;
 } flash_dev_t;
 
-static aos_dev_t *yoc_eflash_init(driver_t *drv,void *config, int id)
+static rvm_dev_t *yoc_eflash_init(driver_t *drv,void *config, int id)
 {
-    flash_dev_t *dev = (flash_dev_t*)device_new(drv, sizeof(flash_dev_t), id);
+    flash_dev_t *dev = (flash_dev_t*)rvm_hal_device_new(drv, sizeof(flash_dev_t), id);
 
-    return (aos_dev_t*)dev;
+    return (rvm_dev_t*)dev;
 }
 
-#define yoc_eflash_uninit device_free
+#define yoc_eflash_uninit rvm_hal_device_free
 
-static int yoc_eflash_lpm(aos_dev_t *dev, int state)
+static int yoc_eflash_lpm(rvm_dev_t *dev, int state)
 {
 
     return 0;
 }
 
-static int yoc_eflash_open(aos_dev_t *dev)
+static int yoc_eflash_open(rvm_dev_t *dev)
 {
     flash_dev_t *flash = (flash_dev_t*)dev;
 
@@ -42,7 +42,7 @@ static int yoc_eflash_open(aos_dev_t *dev)
     return 0;
 }
 
-static int yoc_eflash_close(aos_dev_t *dev)
+static int yoc_eflash_close(rvm_dev_t *dev)
 {
     flash_dev_t *flash = (flash_dev_t*)dev;
 
@@ -51,7 +51,7 @@ static int yoc_eflash_close(aos_dev_t *dev)
     return 0;
 }
 
-static int yoc_eflash_read(aos_dev_t *dev, uint32_t addroff, void *buff, int32_t bytesize)
+static int yoc_eflash_read(rvm_dev_t *dev, uint32_t addroff, void *buff, int32_t bytesize)
 {
     flash_dev_t *flash = (flash_dev_t*)dev;
     int ret;
@@ -61,7 +61,7 @@ static int yoc_eflash_read(aos_dev_t *dev, uint32_t addroff, void *buff, int32_t
     return ret < 0 ? -EIO : 0;
 }
 
-static int yoc_eflash_program(aos_dev_t *dev, uint32_t dstaddr, const void *srcbuf, int32_t bytesize)
+static int yoc_eflash_program(rvm_dev_t *dev, uint32_t dstaddr, const void *srcbuf, int32_t bytesize)
 {
     flash_dev_t *flash = (flash_dev_t*)dev;
 
@@ -178,7 +178,7 @@ fail:
     return ret < 0 ? -EIO : 0;
 }
 
-static int yoc_eflash_erase(aos_dev_t *dev, int32_t addroff, int32_t blkcnt)
+static int yoc_eflash_erase(rvm_dev_t *dev, int32_t addroff, int32_t blkcnt)
 {
     flash_dev_t *flash = (flash_dev_t*)dev;
     int ret = -EIO;
@@ -194,13 +194,13 @@ static int yoc_eflash_erase(aos_dev_t *dev, int32_t addroff, int32_t blkcnt)
     return ret < 0 ? -EIO : 0;
 }
 
-static int yoc_eflash_get_info(aos_dev_t *dev, flash_dev_info_t *info)
+static int yoc_eflash_get_info(rvm_dev_t *dev, rvm_hal_flash_dev_info_t *info)
 {
     flash_dev_t *flash = (flash_dev_t*)dev;
 
     info->start_addr = flash->info->start;
-    info->block_size = flash->info->sector_size;
-    info->block_count = (flash->info->end - flash->info->start + 1) / flash->info->sector_size;
+    info->sector_size = flash->info->sector_size;
+    info->sector_count = (flash->info->end - flash->info->start + 1) / flash->info->sector_size;
 
     return 0;
 }
@@ -221,7 +221,7 @@ static flash_driver_t flash_driver = {
     .get_info   = yoc_eflash_get_info,
 };
 
-void flash_csky_register(int idx)
+void rvm_eflash_drv_register(int idx)
 {
-    driver_register(&flash_driver.drv, NULL, idx);
+    rvm_driver_register(&flash_driver.drv, NULL, idx);
 }

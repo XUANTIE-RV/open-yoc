@@ -2,8 +2,8 @@
 #include <string.h>
 #include <aos/kernel.h>
 #include <cli_console.h>
+#include <aos/console_uart.h>
 #include <aos/hal/uart.h>
-#include <devices/console_uart.h>
 
 int32_t g_cli_direct_read = 0;
 
@@ -29,16 +29,15 @@ static device_console uart_console = {
 
 int uart_console_write(const void *buf, size_t len, void *privata_data)
 {
-    uart_dev_t uart_stdio;
-
     if (buf == NULL) {
         return 0;
     }
 
-    memset(&uart_stdio, 0, sizeof(uart_stdio));
-    uart_stdio.port = console_get_uart();
+    if (!console_get_uart()) {
+        return 0;
+    }
 
-    hal_uart_send(&uart_stdio, (void *)buf, len, AOS_WAIT_FOREVER);
+    hal_uart_send(console_get_uart(), (void *)buf, len, AOS_WAIT_FOREVER);
 
     return len;
 }
@@ -46,8 +45,6 @@ int uart_console_write(const void *buf, size_t len, void *privata_data)
 int uart_console_read(void *buf, size_t len, void *privata_data)
 {
     int ret = -1;
-
-    uart_dev_t uart_stdio;
     char *inbuf = (char *)buf;
 
     unsigned int recv_size = 0;
@@ -56,11 +53,13 @@ int uart_console_read(void *buf, size_t len, void *privata_data)
     if (buf == NULL) {
         return 0;
     }
-    memset(&uart_stdio, 0, sizeof(uart_dev_t));
-    uart_stdio.port = console_get_uart();
+
+    if (!console_get_uart()) {
+        return 0;
+    }
 
     if ( g_cli_direct_read == 0 ) {
-        ret = hal_uart_recv_II(&uart_stdio, inbuf, 1, &recv_size, HAL_WAIT_FOREVER);
+        ret = hal_uart_recv_II(console_get_uart(), inbuf, 1, &recv_size, HAL_WAIT_FOREVER);
         if ((ret == 0) && (recv_size == 1)) {
             return recv_size;
         } else {

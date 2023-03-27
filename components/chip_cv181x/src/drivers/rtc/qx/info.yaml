@@ -1,0 +1,12 @@
+name: RTC
+vendor: QX
+license: Copyright (C) 2017-2019 Alibaba Group Holding Limited
+description: QX rtc
+type: devices
+
+versions:
+    v1.0:
+        drv_path: v1.0
+        drv_common: alg
+        test_path: test/v1.0
+        rtl_path: xxxx

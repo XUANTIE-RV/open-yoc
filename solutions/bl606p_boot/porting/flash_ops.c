@@ -1,75 +1,103 @@
 /*
  * Copyright (C) 2019-2020 Alibaba Group Holding Limited
  */
+#include <inttypes.h>
 #include <drv/spiflash.h>
-#include <yoc/partition_flash.h>
+#include <yoc/partition.h>
+#include <yoc/partition_device.h>
 
 static csi_spiflash_t spiflash_hd;
 static csi_spiflash_info_t spiflash_info;
 
-static int _boot_flash_info_get(void *handle, partition_flash_info_t *info)
+static void *_boot_flash_find(int device_id)
 {
-    if (info != NULL) {
-        csi_error_t ret = csi_spiflash_get_flash_info(&spiflash_hd, &spiflash_info);
+    csi_error_t ret = csi_spiflash_spi_init(&spiflash_hd, device_id, NULL);
+    if (ret != 0) {
+        printf("csi flash init failed.\n");
+        return NULL;
+    }
+    return &spiflash_hd;
+}
+
+static int _boot_flash_info_get(void *handle, partition_device_info_t *info)
+{
+    if (handle && info != NULL) {
+        csi_error_t ret = csi_spiflash_get_flash_info(handle, &spiflash_info);
         if (ret != CSI_OK) {
             printf("csi_spiflash_get_flash_info failed,ret:%d\n", ret);
             return -1;
         }
-        info->start_addr = spiflash_info.xip_addr;
+        info->base_addr = spiflash_info.xip_addr;
         info->sector_size = spiflash_info.sector_size;
-        info->sector_count = spiflash_info.flash_size / spiflash_info.sector_size;
-        // printf("info->start_addr:0x%x\n", info->start_addr);
-        // printf("info->sector_size:0x%x\n", info->sector_size);
-        // printf("info->sector_count:0x%x\n", info->sector_count);
+        info->block_size = 0;
+        info->device_size = spiflash_info.flash_size;
+        info->erase_size = spiflash_info.sector_size;
+        static int iprintflag = 0;
+        if (!iprintflag) {
+            printf("%s, %d\n", __func__, __LINE__);
+            printf("info->base_addr:0x%"PRIX64"\n", info->base_addr);
+            printf("info->sector_size:0x%x\n", info->sector_size);
+            printf("info->block_size:0x%x\n", info->block_size);
+            printf("info->device_size:0x%llx\n", info->device_size);
+            printf("info->erase_size:0x%x\n", info->erase_size);
+            iprintflag = 1;
+        }
         return 0;
     }
     return -1;
 }
 
-static int _boot_flash_read(void *handle, unsigned long addr, void *data, size_t data_len)
+static int _boot_flash_read(void *handle, off_t offset, void *data, size_t data_len)
 {
-    // printf("%s, %d, 0x%x\n", __func__, __LINE__, addr);
-    int ret = csi_spiflash_read(&spiflash_hd, addr - spiflash_info.xip_addr, data, data_len);
-    // printf("%s, %d, 0x%x, ret:%d\n", __func__, __LINE__, addr, ret);
+    // printf("%s, %d, 0x%x\n", __func__, __LINE__, offset);
+    int ret = csi_spiflash_read(handle, offset, data, data_len);
+    // printf("%s, %d, 0x%x, ret:%d\n", __func__, __LINE__, offset, ret);
     if (ret < 0) {
         return -1;
     }
     return 0;
 }
 
-static int _boot_flash_write(void *handle, unsigned long addr, void *data, size_t data_len)
+static int _boot_flash_write(void *handle, off_t offset, void *data, size_t data_len)
 {
-    int ret = csi_spiflash_program(&spiflash_hd, addr - spiflash_info.xip_addr, data, data_len);
+    // printf("%s, %d, 0x%x\n", __func__, __LINE__, offset);
+    int ret = csi_spiflash_program(handle, offset, data, data_len);
+    // printf("%s, %d, 0x%x, ret:%d\n", __func__, __LINE__, offset, ret);
     if ( ret < 0) {
         return -1;
     }
     return 0; 
 }
 
-static int _boot_flash_erase(void *handle, unsigned long addr, size_t len)
+static int _boot_flash_erase(void *handle, off_t offset, size_t len)
 {
-    if (csi_spiflash_erase(&spiflash_hd, addr - spiflash_info.xip_addr, len)) {
+    // printf("%s, %d, 0x%x\n", __func__, __LINE__, offset);
+    int ret = csi_spiflash_erase(handle, offset, len);
+    // printf("%s, %d, 0x%x, ret:%d\n", __func__, __LINE__, offset, ret);
+    if (ret < 0) {
         return -1;
     }
 
     return 0;
 }
 
+static partition_device_ops_t boot_flash_ops = {
+    .storage_info.id      = 0,
+    .storage_info.type    = MEM_DEVICE_TYPE_SPI_NOR_FLASH,
+    .find           = _boot_flash_find,
+    .info_get       = _boot_flash_info_get,
+    .read           = _boot_flash_read,
+    .write          = _boot_flash_write,
+    .erase          = _boot_flash_erase
+};
+
+int partition_flash_register(void)
+{
+    return partition_device_register(&boot_flash_ops);
+}
+
 int boot_flash_init(void)
 {
-    partition_flash_ops_t flash_ops = {
-        .open = NULL,
-        .close = NULL,
-        .info_get = _boot_flash_info_get,
-        .read = _boot_flash_read,
-        .write = _boot_flash_write,
-        .erase = _boot_flash_erase
-    };
-    csi_error_t ret = csi_spiflash_spi_init(&spiflash_hd, 0, NULL);
-    if (ret != 0) {
-        printf("csi flash init failed.\n");
-        return -1;
-    }
-    partition_flash_register(&flash_ops);
-    return 0;
+    int ret = partition_flash_register();
+    return ret;
 }

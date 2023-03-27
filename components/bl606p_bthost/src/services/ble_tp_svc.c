@@ -12,9 +12,9 @@ NOTES
 #include <errno.h>
 #include <stdbool.h>
 #include <stdlib.h>
-#include <FreeRTOS.h>
-#include <task.h>
-#include <blog.h>
+//#include <FreeRTOS.h>
+//#include <task.h>
+//#include <blog.h>
 
 #include "bluetooth.h"
 #include "conn.h"
@@ -32,7 +32,7 @@ static void ble_tp_disconnected(struct bt_conn *conn, u8_t reason);
 
 struct bt_conn *ble_tp_conn;
 struct bt_gatt_exchange_params exchg_mtu;
-TaskHandle_t ble_tp_task_h;
+//TaskHandle_t ble_tp_task_h;
 
 int tx_mtu_size = 20;
 u8_t tp_start = 0;
@@ -140,7 +140,7 @@ static int ble_tp_recv_wr(struct bt_conn *conn, const struct bt_gatt_attr *attr,
                                         const void *buf, u16_t len, u16_t offset, u8_t flags)
 {
     BT_INFO("recv data len=%d, offset=%d, flag=%d", len, offset, flags);
-
+    BT_INFO("recv data %s",bt_hex((uint8_t*)buf,len));
     if (flags & BT_GATT_WRITE_FLAG_PREPARE)
     {
         //Don't use prepare write data, execute write will upload data again.
@@ -223,11 +223,12 @@ NAME
 static void ble_tp_not_ccc_changed(const struct bt_gatt_attr *attr, u16_t value)
 {
     BT_INFO("ccc:value=[%d]",value);
-    
+
     if(tp_start)
     {
         if(value == BT_GATT_CCC_NOTIFY)
         {
+            #if 0
             if(xTaskCreate(ble_tp_notify_task, (char*)"bletp", 256, NULL, TP_PRIO, &ble_tp_task_h) == pdPASS)
             {
                 created_tp_task = 1;
@@ -238,25 +239,30 @@ static void ble_tp_not_ccc_changed(const struct bt_gatt_attr *attr, u16_t value)
                 created_tp_task = 0;
                 BT_WARN("Create throughput tx task fail.");
             }
+            #endif
         }
         else
         {
+            #if 0
             if(created_tp_task)
             {
                 BT_WARN("Delete throughput tx task.");
                 vTaskDelete(ble_tp_task_h);
                 created_tp_task = 0;
             }
+            #endif
         }
     }
     else
     {
+        #if 0
         if(created_tp_task)
         {
             BT_WARN("Delete throughput tx task.");
             vTaskDelete(ble_tp_task_h);
             created_tp_task = 0;
         }
+        #endif
     }
 }
 

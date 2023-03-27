@@ -56,7 +56,18 @@ static int online_music_start(const char *url, uint64_t seek_time, int resume)
 static int online_music_pause(void)
 {
     ctrl_online_music.status = SMTAUDIO_STATE_PAUSE;
+
+    int vol_bak = aui_player_vol_get(SMTAUDIO_ONLINE_MUSIC);
+
+    aui_player_vol_set(SMTAUDIO_TYPE_ALL, vol_bak / 3 * 2);
+    aos_msleep(50);
+    aui_player_vol_set(SMTAUDIO_TYPE_ALL, vol_bak / 3);
+    aos_msleep(50);
+    aui_player_vol_set(SMTAUDIO_TYPE_ALL, 0);
+    aos_msleep(100);
     int ret = aui_player_pause(SMTAUDIO_ONLINE_MUSIC);
+    aui_player_vol_set(SMTAUDIO_TYPE_ALL, vol_bak);
+
     if (ctrl_online_music.callback) {
         ctrl_online_music.callback(SMTAUDIO_ONLINE_MUSIC, SMTAUDIO_PLAYER_EVENT_PAUSE);
     }

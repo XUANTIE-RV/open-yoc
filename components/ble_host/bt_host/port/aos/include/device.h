@@ -65,7 +65,7 @@ struct device {
 struct device_config {
     char    *name;
     int (*init)(struct device *device);
-#ifdef CONFIG_DEVICE_POWER_MANAGEMENT
+#if (defined(CONFIG_DEVICE_POWER_MANAGEMENT) && CONFIG_DEVICE_POWER_MANAGEMENT)
     int (*device_pm_control)(struct device *device, u32_t command,
                              void *context);
 #endif
@@ -257,7 +257,7 @@ DEVICE_DEFINE(dev_name, drv_name, init_fn, \
 
 struct device;
 
-#ifdef CONFIG_DEVICE_POWER_MANAGEMENT
+#if (defined(CONFIG_DEVICE_POWER_MANAGEMENT) && CONFIG_DEVICE_POWER_MANAGEMENT)
 /**
  * @brief Device Power Management APIs
  * @defgroup device_power_management_api Device Power Management APIs
@@ -354,7 +354,7 @@ void device_busy_set(struct device *busy_dev);
  */
 void device_busy_clear(struct device *busy_dev);
 
-#ifdef CONFIG_DEVICE_POWER_MANAGEMENT
+#if (defined(CONFIG_DEVICE_POWER_MANAGEMENT) && CONFIG_DEVICE_POWER_MANAGEMENT)
 /*
  * Device PM functions
  */

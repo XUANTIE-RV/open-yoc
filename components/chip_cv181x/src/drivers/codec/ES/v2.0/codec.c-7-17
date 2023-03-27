@@ -1,0 +1,943 @@
+/*
+ * Copyright (C) 2017-2020 Alibaba Group Holding Limited
+ */
+
+#include <stdio.h>
+#include <string.h>
+#include <sys_clk.h>
+#include <drv/multi_i2s.h>
+#include <drv/irq.h>
+#include <drv/codec.h>
+#include <wj_multi_i2s_ll.h>
+#include <drv/iic.h>
+#include <drv/pin.h>
+#include "es7210.h"
+#include "es8156.h"
+#include "es_port.h"
+
+extern uint16_t i2s_tx_hs_num[];
+extern uint16_t i2s_rx_hs_num[];
+
+static drv_multi_i2s_t i2s_codec_output;
+static drv_multi_i2s_ch_t output_i2s_ch0;
+static drv_multi_i2s_ch_t output_i2s_ch1;
+static drv_multi_i2s_ch_t output_i2s_ch2;
+static drv_multi_i2s_ch_t output_i2s_ch3;
+
+static drv_multi_i2s_t i2s_codec_input;
+static drv_multi_i2s_ch_t input_i2s_ch0;
+static drv_multi_i2s_ch_t input_i2s_ch1;
+static drv_multi_i2s_ch_t input_i2s_ch2;
+static drv_multi_i2s_ch_t input_i2s_ch3;
+
+static es7210_dev_t es7210_dev0;
+static es7210_dev_t es7210_dev1;
+static es8156_dev_t es8156_dev;
+
+#define INPUT_I2S_IDX       3U
+//#define OUTPUT_I2S_IDX      3U
+#define OUTPUT_I2S_IDX      0U
+
+#define ES7210_I2S_IDX                3
+#define ES7210_I2S_SCLK               PA28
+#define ES7210_I2S_WSCLK              PA27
+#define ES7210_I2S_DIN0               PA29
+#define ES7210_I2S_DIN1               PA30
+#define ES7210_I2S_DIN2               PA25
+#define ES7210_I2S_DIN3               PA26
+
+#define ES7210_I2S_SCLK_FUNC          PA28_I2S_IN_SCLK
+#define ES7210_I2S_WSCLK_FUNC         PA27_I2S_IN_WSCLK
+#define ES7210_I2S_DIN0_FUNC          PA29_I2S_IN_DIN0
+#define ES7210_I2S_DIN1_FUNC          PA30_I2S_IN_DIN1
+#define ES7210_I2S_DIN2_FUNC          PA25_I2S_IN_DIN2
+#define ES7210_I2S_DIN3_FUNC          PA26_I2S_IN_DIN3
+
+#define ES8156_I2S_IDX                0
+#define ES8156_I2S_SCLK               PA10
+#define ES8156_I2S_WSCLK              PA9
+#define ES8156_I2S_SDA                PA11
+
+#define ES8156_I2S_SCLK_FUNC          PA10_I2S0_SCLK
+#define ES8156_I2S_WSCLK_FUNC         PA9_I2S0_WSCLK
+#define ES8156_I2S_SDA_FUNC           PA11_I2S0_SDA
+
+static void es_output_codec_irq(drv_multi_i2s_ch_t *ch, drv_multi_i2s_event_t event, void *arg)
+{
+    csi_codec_t *codec_cb = (csi_codec_t *) arg;
+
+    if (event == MULTI_I2S_EVENT_SEND_COMPLETE) {
+        if (codec_cb->output_chs->callback) {
+            codec_cb->output_chs->callback(codec_cb->output_chs, CODEC_EVENT_PERIOD_WRITE_COMPLETE, codec_cb->output_chs->arg);
+        }
+    } else if (event == MULTI_I2S_EVENT_ERROR) {
+        if (codec_cb->output_chs->callback) {
+            codec_cb->output_chs->callback(codec_cb->output_chs, CODEC_EVENT_ERROR, codec_cb->output_chs->arg);
+        }
+    } else if (event == MULTI_I2S_EVENT_TX_BUFFER_EMPTY) {
+        if (codec_cb->output_chs->callback) {
+            codec_cb->output_chs->callback(codec_cb->output_chs, CODEC_EVENT_WRITE_BUFFER_EMPTY, codec_cb->output_chs->arg);
+        }
+    }
+}
+
+static void es_input_codec_irq(drv_multi_i2s_ch_t *ch, drv_multi_i2s_event_t event, void *arg)
+{
+    csi_codec_t *codec_cb = (csi_codec_t *) arg;
+    csi_codec_input_t *current_ch_hander = NULL;
+    current_ch_hander = codec_cb->input_chs;
+
+    while (ch->ch_idx != current_ch_hander->ch_idx) {
+        current_ch_hander = current_ch_hander->next;
+    }
+
+    if (event == MULTI_I2S_EVENT_RECEIVE_COMPLETE) {
+        if (current_ch_hander->callback) {
+            current_ch_hander->callback(current_ch_hander, CODEC_EVENT_PERIOD_READ_COMPLETE, current_ch_hander->arg);
+        }
+    } else if (event == MULTI_I2S_EVENT_ERROR) {
+        if (current_ch_hander->callback) {
+            current_ch_hander->callback(current_ch_hander, CODEC_EVENT_ERROR, current_ch_hander->arg);
+        }
+    } else if (event == MULTI_I2S_EVENT_RX_BUFFER_FULL) {
+        if (current_ch_hander->callback) {
+            current_ch_hander->callback(current_ch_hander, CODEC_EVENT_READ_BUFFER_FULL, current_ch_hander->arg);
+        }
+    }
+
+
+}
+
+/**
+  \brief  Init the codec according to the specified
+  \param[in]   codec codec handle to operate.
+  \param[in]   idx   codec interface idx
+  \return      error code
+*/
+csi_error_t csi_codec_init(csi_codec_t *codec, uint32_t idx)
+{
+    CSI_PARAM_CHK(codec, CSI_ERROR);
+    csi_error_t ret = CSI_OK;
+
+    csi_pin_set_mux(ES7210_I2S_WSCLK, ES7210_I2S_WSCLK_FUNC);
+    csi_pin_set_mux(ES7210_I2S_SCLK, ES7210_I2S_SCLK_FUNC);
+    csi_pin_set_mux(ES7210_I2S_DIN0, ES7210_I2S_DIN0_FUNC);
+    csi_pin_set_mux(ES7210_I2S_DIN1, ES7210_I2S_DIN1_FUNC);
+    csi_pin_set_mux(ES7210_I2S_DIN2, ES7210_I2S_DIN2_FUNC);
+    csi_pin_set_mux(ES7210_I2S_DIN3, ES7210_I2S_DIN3_FUNC);
+
+    csi_pin_set_mux(ES8156_I2S_WSCLK, ES8156_I2S_WSCLK_FUNC);
+    csi_pin_set_mux(ES8156_I2S_SCLK, ES8156_I2S_SCLK_FUNC);
+    csi_pin_set_mux(ES8156_I2S_SDA, ES8156_I2S_SDA_FUNC);
+
+    es_port_iic_init();
+
+    drv_multi_i2s_format_t mulit_i2s_format;
+    ret = drv_mulit_i2s_init(&i2s_codec_output, OUTPUT_I2S_IDX);    ///< init output i2s
+    //ret = drv_mulit_i2s_init(&i2s_codec_output, INPUT_I2S_IDX);    ///< init output i2s
+    mulit_i2s_format.mode = MULTI_I2S_MODE_MASTER;
+    mulit_i2s_format.protocol = MULTI_I2S_PROTOCOL_I2S;
+    mulit_i2s_format.width = MULTI_I2S_SAMPLE_WIDTH_32BIT;
+    mulit_i2s_format.rate = MULTI_I2S_SAMPLE_RATE_48000;
+    mulit_i2s_format.sclk_nfs = MULTI_I2S_SCLK_64FS;
+    mulit_i2s_format.mclk_nfs = MULTI_I2S_MCLK_256FS;
+    mulit_i2s_format.polarity = MULTI_I2S_LEFT_POLARITY_LOW;
+    drv_mulit_i2s_format(&i2s_codec_output, &mulit_i2s_format);
+
+    ret = drv_mulit_i2s_init(&i2s_codec_input, INPUT_I2S_IDX);   ///< init input i2s
+    mulit_i2s_format.mode = MULTI_I2S_MODE_MASTER;
+    mulit_i2s_format.protocol = MULTI_I2S_PROTOCOL_I2S;
+    mulit_i2s_format.width = MULTI_I2S_SAMPLE_WIDTH_32BIT;
+    mulit_i2s_format.rate = MULTI_I2S_SAMPLE_RATE_48000;
+    mulit_i2s_format.sclk_nfs = MULTI_I2S_SCLK_64FS;
+    mulit_i2s_format.mclk_nfs = MULTI_I2S_MCLK_256FS;
+    mulit_i2s_format.polarity = MULTI_I2S_LEFT_POLARITY_LOW;
+    drv_mulit_i2s_format(&i2s_codec_input, &mulit_i2s_format);
+
+    return ret;
+}
+
+/**
+  \brief       codec uninit
+  \param[in]   codec codec handle to operate.
+  \return      none
+*/
+void csi_codec_uninit(csi_codec_t *codec)
+{
+    CSI_PARAM_CHK_NORETVAL(codec);
+
+    if (codec->output_chs != NULL) {
+        drv_mulit_i2s_enable(&i2s_codec_output, false);
+        drv_mulit_i2s_uninit(&i2s_codec_output);
+    }
+
+    if (codec->input_chs != NULL) {
+        drv_mulit_i2s_enable(&i2s_codec_input, false);
+        drv_mulit_i2s_uninit(&i2s_codec_input);
+    }
+
+    return;
+}
+
+/**
+  \brief  Open a codec output channel
+  \param[in]   codec codec handle to operate.
+  \param[in]   ch codec output channel handle.
+  \param[in]   ch_idx codec output channel idx.
+  \return      error code
+*/
+csi_error_t csi_codec_output_open(csi_codec_t *codec, csi_codec_output_t *ch, uint32_t ch_idx)
+{
+    CSI_PARAM_CHK(codec, CSI_ERROR);
+    CSI_PARAM_CHK(ch, CSI_ERROR);
+    csi_error_t ret = CSI_OK;
+    codec->output_chs = ch;
+    ch->ch_idx = ch_idx;
+    ch->state.error = 0U;
+    ch->state.readable = 0U;
+    ch->state.writeable = 0U;
+    ch->callback = NULL;
+    ch->codec = codec;
+#if 1 //new add
+    csi_codec_output_t *next_hander = NULL;
+
+    if (codec->output_chs == NULL) {
+        codec->output_chs = ch;
+    } else {
+        next_hander = codec->output_chs;
+
+        while (next_hander->next != NULL) {
+            next_hander = next_hander->next;
+        }
+
+        next_hander->next = ch;
+    }
+
+        switch (ch_idx) {
+        case 0:
+            ch->priv = &output_i2s_ch0;
+            ret = drv_mulit_i2s_ch_alloc(&i2s_codec_output, &output_i2s_ch0, 0);
+            break;
+
+        case 1:
+            ch->priv = &output_i2s_ch1;
+            ret = drv_mulit_i2s_ch_alloc(&i2s_codec_output, &output_i2s_ch1, 1);
+            break;
+
+        case 2:
+            ch->priv = &output_i2s_ch2;
+            ret = drv_mulit_i2s_ch_alloc(&i2s_codec_output, &output_i2s_ch2, 2);
+            break;
+
+        case 3:
+            ch->priv = &output_i2s_ch3;
+            ret = drv_mulit_i2s_ch_alloc(&i2s_codec_output, &output_i2s_ch3, 3);
+            break;
+
+        default:
+            break;
+	}
+#endif
+#if 0 //old
+    ch->priv = &output_i2s_ch0;
+    ret = drv_mulit_i2s_ch_alloc(&i2s_codec_output, &output_i2s_ch0, 0);
+#endif
+    return ret;
+}
+
+/**
+  \brief  Config codec output channel
+  \param[in]   ch codec output channel handle.
+  \param[in]   config codec channel prarm.
+  \return      error code
+*/
+uint8_t buf[77];
+csi_error_t csi_codec_output_config(csi_codec_output_t *ch, csi_codec_output_config_t *config)
+{
+    CSI_PARAM_CHK(ch, CSI_ERROR);
+    CSI_PARAM_CHK(config, CSI_ERROR);
+    csi_error_t ret =  CSI_OK;
+
+    es8156_config_t es8156_config;
+    es8156_config.data_len      = ES8156_32BIT_LENGTH;
+    es8156_config.i2s_mode      = ES8156_I2S_MODE_SLAVE;
+    es8156_config.i2s_protocol  = ES8156_NORMAL_I2S;
+    es8156_config.i2s_sclk_freq = ES8156_I2S_SCLK_64FS;
+    es8156_config.mclk_freq     = ES8156_MCLK_256FS;
+    es8156_config.i2s_rate      = ES8156_I2S_SAMPLE_RATE_48000;
+
+    es8156_dev.es8156_iic_read = es_port_iic_read;
+    es8156_dev.es8156_iic_write = es_port_iic_write;
+    es8156_dev.es8156_addr = 0x9U;
+
+    es8156_init(&es8156_dev, &es8156_config);
+    es8156_read_all_register(&es8156_dev,buf);
+
+    ch->ring_buf->buffer = config->buffer;
+    ch->ring_buf->size = config->buffer_size;
+    ch->period = config->period;
+    ch->sound_channel_num = config->sound_channel_num;
+
+    if (i2s_codec_output.dev.reg_base == 0U) {
+        ret = CSI_ERROR;
+    } else {
+        drv_multi_i2s_format_t multi_i2s_format;
+        multi_i2s_format.mode = MULTI_I2S_MODE_MASTER;
+        multi_i2s_format.protocol = MULTI_I2S_PROTOCOL_I2S;
+        multi_i2s_format.width = (drv_multi_i2s_sample_width_t)config->bit_width;
+        multi_i2s_format.rate = (drv_multi_i2s_sample_rate_t)config->sample_rate;
+        multi_i2s_format.polarity = MULTI_I2S_LEFT_POLARITY_LOW;
+        multi_i2s_format.sclk_nfs = MULTI_I2S_SCLK_64FS;
+        multi_i2s_format.mclk_nfs = MULTI_I2S_MCLK_256FS;
+        drv_mulit_i2s_format(&i2s_codec_output, &multi_i2s_format);
+
+        drv_mulit_i2s_ch_tx_set_buffer(ch->priv, ch->ring_buf);
+        drv_mulit_i2s_ch_tx_buffer_reset(ch->priv);
+        ret = drv_mulit_i2s_ch_tx_set_period(ch->priv, ch->period);
+    }
+
+    return ret;
+}
+
+/**
+  \brief       Attach the callback handler to codec output
+  \param[in]   ch codec output channel handle.
+  \param[in]   cb    callback function
+  \param[in]   arg   user can define it by himself as callback's param
+  \return      error code
+*/
+csi_error_t csi_codec_output_attach_callback(csi_codec_output_t *ch, void *callback, void *arg)
+{
+    CSI_PARAM_CHK(ch, CSI_ERROR);
+    csi_error_t ret = CSI_OK;
+    ch->callback = callback;
+    ch->arg = arg;
+    drv_mulit_i2s_ch_attach_callback(ch->priv, es_output_codec_irq, (void *)ch->codec);
+    return ret;
+}
+
+/**
+  \brief       detach the callback handler
+  \param[in]   ch codec output channel handle.
+  \return      none
+*/
+void csi_codec_output_detach_callback(csi_codec_output_t *ch)
+{
+    CSI_PARAM_CHK_NORETVAL(ch);
+    ch->callback = NULL;
+    ch->arg = NULL;
+    drv_mulit_i2s_ch_detach_callback(ch->priv);
+}
+
+/**
+  \brief  Close a CODEC output channel
+  \param[in]   ch codec output channel handle.
+  \return      error code
+*/
+void csi_codec_output_close(csi_codec_output_t *ch)
+{
+    CSI_PARAM_CHK_NORETVAL(ch);
+    ch->state.writeable = 0U;
+    ch->state.readable  = 0U;
+    ch->state.error     = 0U;
+    drv_mulit_i2s_ch_free(&i2s_codec_output, ch->priv);
+}
+
+/**
+  \brief       link DMA channel to codec output channel
+  \param[in]   ch codec output channel handle.
+  \param[in]   dma dma channel info.
+  \return      error code
+*/
+csi_error_t csi_codec_output_link_dma(csi_codec_output_t *ch, csi_dma_ch_t *dma)
+{
+    CSI_PARAM_CHK(ch, CSI_ERROR);
+    csi_error_t ret = CSI_OK;
+    ch->dma = dma;
+    ret = drv_mulit_i2s_ch_tx_link_dma(ch->priv, dma);
+    return ret;
+}
+
+/**
+  \brief       write an amount of data to cache in blocking mode.
+  \param[in]   ch    the codec output channel
+  \param[in]   data  send data.
+  \param[in]   size  receive data size.
+  \return      The num of data witch is send successful
+*/
+uint32_t csi_codec_output_write(csi_codec_output_t *ch, const void *data, uint32_t size)
+{
+    return drv_mulit_i2s_ch_send_async(ch->priv, data, size);
+}
+
+/**
+  \brief Write data to the cache.
+  \With asynchronous sending,
+  \the data is first written to the cache and then output through the codec interface.
+  \This function does not block, and the return value is the number
+  \of data that was successfully written to the cache.
+  \param[in]   ch    the codec output channel
+  \param[in]   data  send data.
+  \param[in]   size  receive data size.
+  \return      The data size that write to cache
+*/
+uint32_t csi_codec_output_write_async(csi_codec_output_t *ch, const void *data, uint32_t size)
+{
+    return drv_mulit_i2s_ch_send_async(ch->priv, data, size);
+}
+
+/**
+  \brief       Start sending data from the cache
+  \param[in]   ch codec output channel handle.
+  \return      error code
+*/
+csi_error_t csi_codec_output_start(csi_codec_output_t *ch)
+{
+    CSI_PARAM_CHK(ch, CSI_ERROR);
+    csi_error_t ret;
+    ch->state.writeable = 1U;
+    ret = drv_mulit_i2s_ch_send_start(ch->priv);
+    drv_mulit_i2s_enable(&i2s_codec_output, true);
+    return ret;
+}
+
+/**
+  \brief       Stop sending data from the cache
+  \param[in]   ch codec output channel handle.
+  \return      error code
+*/
+void csi_codec_output_stop(csi_codec_output_t *ch)
+{
+    CSI_PARAM_CHK_NORETVAL(ch);
+    ch->state.writeable = 0U;
+    drv_mulit_i2s_ch_send_stop(ch->priv);
+    drv_mulit_i2s_enable(&i2s_codec_output, false);
+}
+
+/**
+  \brief       Pause sending data from the cache
+  \param[in]   ch codec output channel handle.
+  \return      error code
+*/
+csi_error_t csi_codec_output_pause(csi_codec_output_t *ch)
+{
+    CSI_PARAM_CHK(ch, CSI_ERROR);
+    ch->state.writeable = 0U;
+    return drv_mulit_i2s_ch_send_pause(ch->priv);
+}
+
+/**
+  \brief       Resume sending data from the cache
+  \param[in]   ch codec output channel handle.
+  \return      error code
+*/
+csi_error_t csi_codec_output_resume(csi_codec_output_t *ch)
+{
+    CSI_PARAM_CHK(ch, CSI_ERROR);
+    ch->state.writeable = 1U;
+    return drv_mulit_i2s_ch_send_resume(ch->priv);
+}
+
+/**
+  \brief  Get cache free space
+  \param[in]   ch codec output channel handle.
+  \return buffer free space (bytes)
+*/
+uint32_t csi_codec_output_buffer_avail(csi_codec_output_t *ch)
+{
+    CSI_PARAM_CHK(ch, CSI_ERROR);
+    return ringbuffer_avail(ch->ring_buf);
+}
+
+/**
+  \brief       Get buffer data num
+  \param[in]   ch    Codec output channel handle
+  \return      Buffer free space (bytes)
+*/
+uint32_t csi_codec_output_buffer_remain(csi_codec_output_t *ch)
+{
+    CSI_PARAM_CHK(ch, CSI_ERROR);
+    return ringbuffer_len(ch->ring_buf);
+}
+
+/**
+  \brief  Reset the buf, discard all data in the cache
+  \param[in]   ch codec output channel handle.
+  \return      error code
+*/
+csi_error_t csi_codec_output_buffer_reset(csi_codec_output_t *ch)
+{
+    CSI_PARAM_CHK(ch, CSI_ERROR);
+    csi_error_t ret = CSI_ERROR;
+    ringbuffer_reset(ch->ring_buf);
+
+    if (ch->ring_buf->buffer != NULL) {
+        memset(ch->ring_buf->buffer, 0, ch->ring_buf->size);
+    }
+
+    if ((ch->ring_buf->read == 0U) && (ch->ring_buf->write == 0U)) {
+        ret = CSI_OK;
+    }
+
+    return ret;
+}
+
+/**
+  \brief       mute codec ouput channel
+  \param[in]   ch codec output channel handle.
+  \param[in]   en true codec mute.
+  \return      error code
+*/
+csi_error_t csi_codec_output_mute(csi_codec_output_t *ch, bool enable)
+{
+    CSI_PARAM_CHK(ch, CSI_ERROR);
+    csi_error_t ret = CSI_OK;
+    es8156_set_software_mute(&es8156_dev, true);
+    return ret;
+}
+
+/**
+  \brief       Set codec ouput channel digital gain.
+  \param[in]   ch codec output channel handle.
+  \param[in]   val gain val.
+  \return      error code
+*/
+csi_error_t csi_codec_output_digital_gain(csi_codec_output_t *ch, uint32_t val)
+{
+    CSI_PARAM_CHK(ch, CSI_ERROR);
+    csi_error_t ret = CSI_UNSUPPORTED;
+    return ret;
+}
+
+/**
+  \brief       Set codec ouput channel analog gain.
+  \param[in]   ch codec output channel handle.
+  \param[in]   val gain val.
+  \return      error code
+*/
+csi_error_t csi_codec_output_analog_gain(csi_codec_output_t *ch, uint32_t val)
+{
+    CSI_PARAM_CHK(ch, CSI_ERROR);
+    csi_error_t ret = CSI_OK;
+
+    /*
+      range0 ~ 0xff, step:0.75DB
+      0（-95.5DB）... 0xbf(0DB) ... 0xff(32DB)
+    */
+    if (val > 0xff) {
+        val = 0xff;
+    }
+
+    ret = es8156_set_volume(&es8156_dev, val);
+
+    return ret;
+}
+
+/**
+  \brief       Set codec ouput channel mix gain.
+  \param[in]   ch codec output channel handle.
+  \param[in]   val gain val.
+  \return      error code
+*/
+csi_error_t csi_codec_output_mix_gain(csi_codec_output_t *ch, uint32_t val)
+{
+    CSI_PARAM_CHK(ch, CSI_ERROR);
+    csi_error_t ret = CSI_UNSUPPORTED;
+    return ret;
+}
+
+/**
+  \brief       Get codec output channel state.
+  \param[in]   ch codec output channel handle.
+  \param[out]  state channel state.
+  \return      channel state
+*/
+csi_error_t csi_codec_output_get_state(csi_codec_output_t *ch, csi_state_t *state)
+{
+    CSI_PARAM_CHK(ch, CSI_ERROR);
+    CSI_PARAM_CHK(state, CSI_ERROR);
+    csi_error_t ret = CSI_OK;
+    memcpy(state, &(ch->state), sizeof(csi_state_t));
+    return ret;
+}
+
+/**
+  \brief  Open a CODEC input channel
+  \param[in]   codec codec handle to operate.
+  \param[in]   ch codec input channel handle.
+  \param[in]   ch_idx codec input channel idx.
+  \return      error code
+*/
+csi_error_t csi_codec_input_open(csi_codec_t *codec, csi_codec_input_t *ch, uint32_t ch_idx)
+{
+    CSI_PARAM_CHK(ch, CSI_ERROR);
+    CSI_PARAM_CHK(codec, CSI_ERROR);
+    csi_error_t ret = CSI_OK;
+    ch->state.error = 0U;
+    ch->state.readable = 0U;
+    ch->state.writeable = 0U;
+    ch->callback = NULL;
+    ch->ch_idx = ch_idx;
+    ch->codec = codec;
+
+    csi_codec_input_t *next_hander = NULL;
+
+    if (codec->input_chs == NULL) {
+        codec->input_chs = ch;
+    } else {
+        next_hander = codec->input_chs;
+
+        while (next_hander->next != NULL) {
+            next_hander = next_hander->next;
+        }
+
+        next_hander->next = ch;
+    }
+
+    switch (ch_idx) {
+        case 0:
+            ch->priv = &input_i2s_ch0;
+            drv_mulit_i2s_ch_alloc(&i2s_codec_input, &input_i2s_ch0, 0);
+            break;
+
+        case 1:
+            ch->priv = &input_i2s_ch1;
+            drv_mulit_i2s_ch_alloc(&i2s_codec_input, &input_i2s_ch1, 1);
+            break;
+
+        case 2:
+            ch->priv = &input_i2s_ch2;
+            drv_mulit_i2s_ch_alloc(&i2s_codec_input, &input_i2s_ch2, 2);
+            break;
+
+        case 3:
+            ch->priv = &input_i2s_ch3;
+            drv_mulit_i2s_ch_alloc(&i2s_codec_input, &input_i2s_ch3, 3);
+            break;
+
+        default:
+            break;
+    }
+
+    return ret;
+}
+
+/**
+  \brief  Config codec input channel
+  \param[in]   ch codec input channel handle.
+  \param[in]   config codec channel prarm.
+  \return      error code
+*/
+csi_error_t csi_codec_input_config(csi_codec_input_t *ch, csi_codec_input_config_t *config)
+{
+    CSI_PARAM_CHK(ch, CSI_ERROR);
+    CSI_PARAM_CHK(config, CSI_ERROR);
+    csi_error_t ret =  CSI_OK;
+    es7210_config_t es7210_config;
+
+    ch->ring_buf->buffer = config->buffer;
+    ch->ring_buf->size = config->buffer_size;
+    ch->period = config->period;
+    ch->sound_channel_num = config->sound_channel_num;
+
+    es7210_config.data_len  = ES7210_32BIT_LENGTH;
+    es7210_config.mode      = ES7210_MODE_SLAVE;
+    es7210_config.protocol  = ES7210_I2S;
+    es7210_config.sclk_freq = ES7210_SCLK_64FS;
+    es7210_config.mclk_freq = ES7210_MCLK_256FS;
+
+    es7210_dev0.es7210_iic_read = es_port_iic_read;
+    es7210_dev0.es7210_iic_write = es_port_iic_write;
+    es7210_dev0.es7210_addr = 0x40U;
+
+    es7210_init(&es7210_dev0, &es7210_config);
+
+    es7210_dev1.es7210_iic_read = es_port_iic_read;
+    es7210_dev1.es7210_iic_write = es_port_iic_write;
+    es7210_dev1.es7210_addr = 0x41U;
+    es7210_init(&es7210_dev1, &es7210_config);
+
+    if (i2s_codec_input.dev.reg_base == 0U) {
+        ret = CSI_ERROR;
+    } else {
+        drv_multi_i2s_format_t multi_i2s_format;
+        multi_i2s_format.mode = MULTI_I2S_MODE_MASTER;
+        multi_i2s_format.protocol = MULTI_I2S_PROTOCOL_I2S;
+        multi_i2s_format.width = (drv_multi_i2s_sample_width_t)config->bit_width;
+        multi_i2s_format.rate = (drv_multi_i2s_sample_rate_t)config->sample_rate;
+        multi_i2s_format.polarity = MULTI_I2S_LEFT_POLARITY_LOW;
+        multi_i2s_format.sclk_nfs = MULTI_I2S_SCLK_64FS;
+        multi_i2s_format.mclk_nfs = MULTI_I2S_MCLK_256FS;
+        drv_mulit_i2s_format(&i2s_codec_input, &multi_i2s_format);
+
+        drv_mulit_i2s_ch_rx_set_buffer(ch->priv, ch->ring_buf);
+        drv_mulit_i2s_ch_rx_buffer_reset(ch->priv);
+        ret = drv_mulit_i2s_ch_rx_set_period(ch->priv, ch->period);
+    }
+
+    return ret;
+}
+
+/**
+  \brief       Attach the callback handler to codec output
+  \param[in]   ch codec input channel handle.
+  \param[in]   cb    callback function
+  \param[in]   arg   user can define it by himself as callback's param
+  \return      error code
+*/
+csi_error_t csi_codec_input_attach_callback(csi_codec_input_t *ch, void *callback, void *arg)
+{
+    CSI_PARAM_CHK(ch, CSI_ERROR);
+    csi_error_t ret = CSI_OK;
+    ch->callback = callback;
+    ch->arg = arg;
+    drv_mulit_i2s_ch_attach_callback(ch->priv, es_input_codec_irq, (void *)ch->codec);
+    return ret;
+}
+
+/**
+  \brief       detach the callback handler
+  \param[in]   ch codec input channel handle.
+  \return      none
+*/
+void csi_codec_input_detach_callback(csi_codec_input_t *ch)
+{
+    CSI_PARAM_CHK_NORETVAL(ch);
+    ch->callback = NULL;
+    ch->arg = NULL;
+    drv_mulit_i2s_ch_detach_callback(ch->priv);
+}
+
+/**
+  \brief  Close a CODEC input channel
+  \param[in]   ch codec input channel handle..
+  \return      error code
+*/
+void csi_codec_input_close(csi_codec_input_t *ch)
+{
+    CSI_PARAM_CHK_NORETVAL(ch);
+    ch->state.writeable = 0U;
+    ch->state.readable  = 0U;
+    ch->state.error     = 0U;
+    drv_mulit_i2s_ch_free(&i2s_codec_input, ch->priv);
+}
+
+/**
+  \brief       link DMA channel to codec input channel
+  \param[in]   ch codec input channel handle.
+  \param[in]   dma dma channel info.
+  \return      error code
+*/
+csi_error_t csi_codec_input_link_dma(csi_codec_input_t *ch, csi_dma_ch_t *dma)
+{
+    CSI_PARAM_CHK(ch, CSI_ERROR);
+    csi_error_t ret = CSI_OK;
+    ch->dma = dma;
+    ret = drv_mulit_i2s_ch_rx_link_dma(ch->priv, dma);
+    return ret;
+}
+
+/**
+  \brief  read an amount of data in blocking mode.
+  \param[in]   ch codec input channel handle.
+  \param[in]   data  save receive data.
+  \param[in]   size  receive data size.
+  \return      The size of data receive successfully
+*/
+uint32_t csi_codec_input_read(csi_codec_input_t *ch, void *data, uint32_t size)
+{
+    return drv_mulit_i2s_ch_receive_async(ch->priv, data, size);
+}
+
+/**
+  \brief Read data from the cache.
+  \Using asynchronous receive.
+  \This function read data from the cache, returns the number of successful reads,
+  \and returns 0 if there is no data in the cache.
+  \param[in]   ch codec input channel handle.
+  \param[in]   data  the buf save receive data.
+  \param[in]   size  receive data size.
+  \return      The size of data read successfully
+*/
+uint32_t csi_codec_input_read_async(csi_codec_input_t *ch, void *data, uint32_t size)
+{
+    return drv_mulit_i2s_ch_receive_async(ch->priv, data, size);
+}
+
+/**
+  \brief       Start receive data, writes the recording data to the cache
+  \param[in]   ch codec input channel handle.
+  \return      error code
+*/
+csi_error_t csi_codec_input_start(csi_codec_input_t *ch)
+{
+    CSI_PARAM_CHK(ch, CSI_ERROR);
+    csi_error_t ret;
+    ch->state.readable = 1U;
+    ret = drv_mulit_i2s_ch_receive_start(ch->priv);
+
+    if (ch->ch_idx == 0U) {
+        ///< only ch0 can enable mulit i2s
+        drv_mulit_i2s_enable(&i2s_codec_input, true);
+    }
+
+    return ret;
+}
+
+/**
+  \brief       Stop receive data.
+  \param[in]   ch codec input channel handle.
+  \return      error code
+*/
+void csi_codec_input_stop(csi_codec_input_t *ch)
+{
+    CSI_PARAM_CHK_NORETVAL(ch);
+    ch->state.readable = 0U;
+    drv_mulit_i2s_ch_receive_stop(ch->priv);
+    drv_mulit_i2s_enable(&i2s_codec_input, false);
+}
+
+/**
+  \brief       Get buffer free space
+  \param[in]   ch    Codec input channel handle
+  \return      Buffer free space (bytes)
+*/
+uint32_t csi_codec_input_buffer_avail(csi_codec_input_t *ch)
+{
+    CSI_PARAM_CHK(ch, CSI_ERROR);
+    return ringbuffer_avail(ch->ring_buf);
+}
+
+/**
+  \brief       Get buffer data num
+  \param[in]   ch    Codec input channel handle
+  \return      Buffer free space (bytes)
+*/
+uint32_t csi_codec_input_buffer_remain(csi_codec_input_t *ch)
+{
+    CSI_PARAM_CHK(ch, CSI_ERROR);
+    return ringbuffer_len(ch->ring_buf);
+}
+
+/**
+  \brief  Reset the buf, discard all data in the cache
+  \param[in]   ch codec input channel handle.
+  \return      error code
+*/
+csi_error_t csi_codec_input_buffer_reset(csi_codec_input_t *ch)
+{
+    CSI_PARAM_CHK(ch, CSI_ERROR);
+    csi_error_t ret = CSI_ERROR;
+    ringbuffer_reset(ch->ring_buf);
+
+    if (ch->ring_buf->buffer != NULL) {
+        memset(ch->ring_buf->buffer, 0, ch->ring_buf->size);
+    }
+
+    if ((ch->ring_buf->read == 0U) && (ch->ring_buf->write == 0U)) {
+        ret = CSI_OK;
+    }
+
+    return ret;
+}
+
+/**
+  \brief       mute codec input channel
+  \param[in]   ch codec input channel handle.
+  \param[in]   en true codec mute.
+  \return      error code
+*/
+csi_error_t csi_codec_input_mute(csi_codec_input_t *ch, bool en)
+{
+    CSI_PARAM_CHK(ch, CSI_ERROR);
+    csi_error_t ret = CSI_OK;
+
+    if (ch->ch_idx <= 2) {
+        es7210_mic1_set_mute(&es7210_dev0, en);
+        es7210_mic2_set_mute(&es7210_dev0, en);
+    } else {
+        es7210_mic1_set_mute(&es7210_dev1, en);
+        es7210_mic2_set_mute(&es7210_dev1, en);
+    }
+
+    return ret;
+}
+
+/**
+  \brief       Set codec input channel digital gain.
+  \param[in]   ch codec input channel handle.
+  \param[in]   val gain val.
+  \return      error code
+*/
+csi_error_t csi_codec_input_digital_gain(csi_codec_input_t *ch, uint32_t val)
+{
+    CSI_PARAM_CHK(ch, CSI_ERROR);
+    csi_error_t ret = CSI_UNSUPPORTED;
+    return ret;
+}
+
+/**
+  \brief       Set codec input channel analog gain.
+  \param[in]   ch codec input channel handle.
+  \param[in]   val gain val.
+  \return      error code
+*/
+csi_error_t csi_codec_input_analog_gain(csi_codec_input_t *ch, uint32_t val)
+{
+    CSI_PARAM_CHK(ch, CSI_ERROR);
+    csi_error_t ret = CSI_OK;
+
+    /*
+      range0 ~ 14, step:3DB
+      0（-95.5DBDB）... 0xBF(0DB) ... 0xff(32DB)
+    */
+    if (val > 0xff) {
+        val = 0xff;
+    }
+
+    if (ch->ch_idx <= 2) {
+        ret = es7210_adc1_set_gain(&es7210_dev0, val);
+        ret = es7210_adc2_set_gain(&es7210_dev0, val);
+        ret = es7210_adc3_set_gain(&es7210_dev0, val);
+        ret = es7210_adc4_set_gain(&es7210_dev0, val);
+    } else {
+        ret = es7210_adc1_set_gain(&es7210_dev1, val);
+        ret = es7210_adc2_set_gain(&es7210_dev1, val);
+        ret = es7210_adc3_set_gain(&es7210_dev1, val);
+        ret = es7210_adc4_set_gain(&es7210_dev1, val);
+    }
+
+    return ret;
+}
+
+/**
+  \brief       Set codec input channel mix gain.
+  \param[in]   ch codec input channel handle.
+  \param[in]   val gain val.
+  \return      error code
+*/
+csi_error_t csi_codec_input_mix_gain(csi_codec_input_t *ch, uint32_t val)
+{
+    CSI_PARAM_CHK(ch, CSI_ERROR);
+    csi_error_t ret = CSI_UNSUPPORTED;
+    return ret;
+}
+
+/**
+  \brief       Get codec input channel state.
+  \param[in]   ch codec input channel handle.
+  \param[out]  state channel state.
+  \return      channel state
+*/
+csi_error_t csi_codec_input_get_state(csi_codec_input_t *ch, csi_state_t *state)
+{
+    CSI_PARAM_CHK(ch, CSI_ERROR);
+    CSI_PARAM_CHK(state, CSI_ERROR);
+    csi_error_t ret = CSI_OK;
+    memcpy(state, &(ch->state), sizeof(csi_state_t));
+    return ret;
+}
+
+
+
+

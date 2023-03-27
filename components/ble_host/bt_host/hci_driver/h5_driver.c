@@ -44,7 +44,7 @@
 #define H5_VDRSPEC_PKT          0x0E
 #define H5_LINK_CTL_PKT         0x0F
 
-#ifdef CONFIG_BTSOOP
+#if (defined(CONFIG_BTSOOP) && CONFIG_BTSOOP)
 extern int btsnoop_write(uint8_t type, const uint8_t *data, uint32_t len, bool is_income);
 #endif
 
@@ -65,13 +65,13 @@ static int h5_send(struct net_buf *buf)
             h5_ctx->h5_send_sync_cmd(opcode, NULL, buf->len);
             break;
         }
-#ifdef CONFIG_BTSOOP
+#if (defined(CONFIG_BTSOOP) && CONFIG_BTSOOP)
         btsnoop_write(HCI_COMMAND_PKT, buf->data, buf->len, 0);
 #endif
         h5_ctx->h5_send_cmd(HCI_COMMAND_PKT, buf->data, buf->len);
         break;
     case BT_BUF_ACL_OUT:
-#ifdef CONFIG_BTSOOP
+#if (defined(CONFIG_BTSOOP) && CONFIG_BTSOOP)
         btsnoop_write(HCI_ACLDATA_PKT, buf->data, buf->len, 0);
 #endif
         h5_ctx->h5_send_acl_data(HCI_ACLDATA_PKT, buf->data, buf->len);
@@ -121,7 +121,7 @@ int hci_h5_event_recv(uint8_t *data, uint16_t data_len)
         sub_event = *pdata++;
 
         if (sub_event == BT_HCI_EVT_LE_ADVERTISING_REPORT
-#if defined(CONFIG_BT_EXT_ADV)
+#if (defined(CONFIG_BT_EXT_ADV) && CONFIG_BT_EXT_ADV)
             || sub_event == BT_HCI_EVT_LE_EXT_ADVERTISING_REPORT
 #endif
         ) {
@@ -129,7 +129,7 @@ int hci_h5_event_recv(uint8_t *data, uint16_t data_len)
         }
     }
 
-#if !defined(CONFIG_BT_RECV_IS_RX_THREAD)
+#if !(defined(CONFIG_BT_RECV_IS_RX_THREAD) && CONFIG_BT_RECV_IS_RX_THREAD)
     k_timeout_t timeout = discardable? 0 : K_FOREVER;
     buf = bt_buf_get_evt(hdr.evt, discardable, timeout);
 #else
@@ -188,7 +188,7 @@ int hci_h5_acl_recv(uint8_t *data, uint16_t data_len)
         goto err;
     }
 
-#if !defined(CONFIG_BT_RECV_IS_RX_THREAD)
+#if !(defined(CONFIG_BT_RECV_IS_RX_THREAD) && CONFIG_BT_RECV_IS_RX_THREAD)
     buf = bt_buf_get_rx(BT_BUF_ACL_IN, K_FOREVER);
 #else
     buf = bt_buf_get_rx(BT_BUF_ACL_IN, 0);
@@ -210,7 +210,7 @@ err:
 
 static void packet_recv_cb(hci_data_type_t type, uint8_t *data, uint32_t len)
 {
-#ifdef CONFIG_BTSOOP
+#if (defined(CONFIG_BTSOOP) && CONFIG_BTSOOP)
     extern int btsnoop_write(uint8_t type, const uint8_t *data, uint32_t len, bool is_income);
     btsnoop_write(type, data, len, 1);
 #endif

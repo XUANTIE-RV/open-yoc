@@ -1,0 +1,35 @@
+
+language: c
+compiler: gcc
+sudo: required
+dist: trusty
+
+install:
+    - uname -a
+    - sudo rm /var/lib/apt/lists/* -vfr
+    - sudo apt-get update -qq
+    - sudo apt-get install -qq cmake
+    - wget http://www.freddiechopin.info/en/download/category/11-bleeding-edge-toolchain?download=139%3Ableeding-edge-toolchain-151225-64-bit-linux -O /tmp/gcc-arm-none-eabi-5_3-151225-linux-x64.tar.xz
+    - tar -xf /tmp/gcc-arm-none-eabi-5_3-151225-linux-x64.tar.xz -C /tmp/
+    - export SAVED_PATH=$PATH
+
+script:
+    - gcc --version
+    - make generic
+    - cd build_generic && make -j`nproc`
+    - cd ..
+    - export PATH=/tmp/gcc-arm-none-eabi-5_3-151225/bin:$SAVED_PATH
+    - arm-none-eabi-gcc --version
+    - make cortex-m4
+    - cd build_cortex-m4 && make -j`nproc`
+    - cd ..
+    - make cortex-m3
+    - cd build_cortex-m3 && make -j`nproc`
+    - cd ..
+    - make cortex-m0
+    - cd build_cortex-m0 && make -j`nproc`
+    - cd ..
+
+notifications:
+    on_success: change
+    on_failure: always

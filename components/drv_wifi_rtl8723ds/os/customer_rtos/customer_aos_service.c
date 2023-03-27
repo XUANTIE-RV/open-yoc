@@ -253,58 +253,27 @@ static u32 _aos_down_sema(_sema *sema, u32 timeout)
 
 static void _aos_mutex_init(_mutex *pmutex)
 {
-#if DBG_OS_API
-    printf("[AOS]%s\n", __FUNCTION__);
-#endif
-    _aos_init_sema(pmutex, 1);
+    aos_mutex_new(pmutex);
 }
 
 static void _aos_mutex_free(_mutex *pmutex)
 {
-#if DBG_OS_API
-    printf("[AOS]%s\n", __FUNCTION__);
-#endif
-
-    if (*pmutex != NULL) {
-        _aos_free_sema(pmutex);
-    }
-
-    *pmutex = NULL;
+    aos_mutex_free(pmutex);
 }
 
 static void _aos_mutex_get(_lock *plock)
 {
-#if DBG_OS_API
-    printf("[AOS]%s\n", __FUNCTION__);
-#endif
-    int ret = _aos_down_sema(plock, -1);
-
-    if (ret != _SUCCESS) {
-        printf("_aos_mutex_get get failed\n");
-    }
+    aos_mutex_lock(plock, AOS_WAIT_FOREVER);
 }
 
 static int _aos_mutex_get_timeout(_lock *plock, u32 timeout_ms)
 {
-#if DBG_OS_API
-    printf("[AOS]%s\n", __FUNCTION__);
-#endif
-    int ret = _aos_down_sema(plock, timeout_ms);
-
-    if (ret != _SUCCESS) {
-        printf("_aos_mutex_get_timeout get failed\n");
-        return _FAIL;
-    }
-
-    return _SUCCESS;
+    return aos_mutex_lock(plock, timeout_ms);
 }
 
 static void _aos_mutex_put(_lock *plock)
 {
-#if DBG_OS_API
-    printf("[AOS]%s\n", __FUNCTION__);
-#endif
-    _aos_up_sema(plock);
+    aos_mutex_unlock(plock);
 }
 
 static void _aos_enter_critical(_lock *plock, _irqL *pirqL)
@@ -345,9 +314,9 @@ static int _aos_enter_critical_mutex(_mutex *pmutex, _irqL *pirqL)
 #if DBG_OS_API
     printf("[AOS]%s\n", __FUNCTION__);
 #endif
-    int ret = _aos_down_sema(pmutex, 60 * 1000);
+    int ret = aos_mutex_lock(pmutex, 60 * 1000);
 
-    if (ret != _SUCCESS) {
+    if (ret != 0) {
         printf("Mutex3 get failed\n");
         return _FAIL;
     }
@@ -360,7 +329,7 @@ static void _aos_exit_critical_mutex(_mutex *pmutex, _irqL *pirqL)
 #if DBG_OS_API
     printf("[AOS]%s\n", __FUNCTION__);
 #endif
-    _aos_up_sema(pmutex);
+    aos_mutex_unlock(pmutex);
 }
 
 /** refer to aos_port.c from bluetooth */
@@ -822,9 +791,9 @@ static int _aos_create_task(struct task_struct *ptask, const char *name,
     int ret = 0;
 
     if(strcmp("xmit_thread", name) == 0) {
-        stack_size *= 10;
+        stack_size *= 16;
     } else if (strcmp("cmd_thread", name) == 0) {
-        stack_size *= 8;
+        stack_size *= 16;
     } else {
         stack_size *= 8;
     }

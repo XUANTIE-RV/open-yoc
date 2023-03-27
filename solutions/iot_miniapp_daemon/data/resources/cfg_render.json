@@ -1,0 +1,18 @@
+{
+	"debugger": {
+		"enable": true,
+		"render_continuously": true
+	},
+	"linksdk": {
+		"one_device_one_secret": false,
+		"one_type_one_secret_pre_registration": false,
+		"one_type_one_secret_no_pre_registration": false
+	},
+	"filemanager": {
+		"max_cache_size": 4194304,
+		"big_file_size": 524288
+	},
+	"imageloader": {
+		"image_cache_size": 4194304
+	}
+}

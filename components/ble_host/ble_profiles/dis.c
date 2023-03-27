@@ -52,7 +52,7 @@ typedef struct _dis_t {
 
 dis_t g_dis = { 0 };
 
-#if defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE
+#if (defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE)
 GATT_SERVICE_STATIC_DEFINE(dis_service, [DIS_IDX_SVC] = GATT_PRIMARY_SERVICE_DEFINE(UUID_DIS),
                            [DIS_IDX_MANU_NUM_CHAR]  = GATT_CHAR_DEFINE(UUID_DIS_MANUFACTURER_NAME, GATT_CHRC_PROP_READ),
                            [DIS_IDX_MANU_NUM_VAL]   = GATT_CHAR_VAL_DEFINE(UUID_DIS_MANUFACTURER_NAME, GATT_PERM_READ),
@@ -245,7 +245,7 @@ dis_handle_t ble_prf_dis_init(dis_info_t *info)
         goto err;
     }
 
-#if defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE
+#if (defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE)
     ret = ble_stack_gatt_service_handle(&dis_service);
 #else
     ret = ble_stack_gatt_registe_service(&dis_service, dis_attrs, DIS_IDX_MAX);

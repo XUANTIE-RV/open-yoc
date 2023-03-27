@@ -1,6 +1,6 @@
 ## 第一部分： 基础信息
 name: sdk_chip_IoTGW_CB800
-version: v7.6.0                                     # <必选项> 组件版本号
+version: v7.7.0
 description: chip sdk for w800
 type: sdk
 tag: 核心模块
@@ -9,18 +9,20 @@ license: Apache license v2.0
 #           指定该组件依赖的组件及版本，版本支持条件比较，支持：>=v1.0, >v1.0, ==v1.0, <=v1.0, <v1.0, v1.0
 #           未指定条件时，默认为 ==，如 v1.0 与 ==v1.0
 # depends:                                 # <可选项> 该组件依赖其他的组件，合理的依赖才能保证组件能编译、使用
-#   - minilibc: v7.6.0
+#   - minilibc: v7.2.0
 #   - aos: >=v7.2.0
 depends:
-  - yoc_kernel: v7.6.0
-  - chip_w800: v7.6.0
-  - drivers: v7.6.0
-  - drv_bt_w800: v7.6.0
-  - drv_wifi_w800: v7.6.0
-  - minilibc: v7.6.0
-  - IoTGW_CB800: v7.6.0
-  - lwip: v7.6.0
-  - dut_service: v7.6.0
+  - yoc_kernel: v7.7.0
+  - chip_w800: v7.7.0
+  - drivers: v7.7.0
+  - drv_bt_w800: v7.7.0
+  - drv_wifi_w800: v7.7.0
+  - minilibc: v7.7.0
+  - IoTGW_CB800: v7.7.0
+  - lwip: v7.7.0
+  - dut_service: v7.7.0
+  - sec_crypto: v7.7.0
+  - key_mgr: v7.7.0
 
 yoc_version: ""
 keywords: ~

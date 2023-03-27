@@ -11,8 +11,41 @@
 #define REG_NAME_WIDTH 8
 extern volatile uint32_t g_crash_steps;
 
-typedef context_t PANIC_CONTEXT;
-
+typedef struct {
+    long X1;
+    long X2;
+    long X3;
+    long X4;
+    long X5;
+    long X6;
+    long X7;
+    long X8;
+    long X9;
+    long X10;
+    long X11;
+    long X12;
+    long X13;
+    long X14;
+    long X15;
+    long X16;
+    long X17;
+    long X18;
+    long X19;
+    long X20;
+    long X21;
+    long X22;
+    long X23;
+    long X24;
+    long X25;
+    long X26;
+    long X27;
+    long X28;
+    long X29;
+    long X30;
+    long X31;
+    long PC;
+    long MSTATUS;
+} fault_context_t;
 
 typedef struct
 {
@@ -38,7 +71,7 @@ static char *k_ll2str(intptr_t num, char *str)
 
 void panicGetCtx(void *context, char **pPC, char **pLR, int **pSP)
 {
-    PANIC_CONTEXT *rv_context = (PANIC_CONTEXT *)context;
+    fault_context_t *rv_context = (fault_context_t *)context;
 
     *pSP = (int  *)rv_context->X2;
     *pPC = (char *)rv_context->PC;
@@ -51,7 +84,7 @@ void panicShowRegs(void *context, int (*print_func)(const char *fmt, ...))
     long       *regs = (long *)context;
     char       s_panic_regs[REG_NAME_WIDTH + 14 + 8];
     FAULT_REGS stFregs;
-    /* PANIC_CONTEXT */
+    /* fault_context_t */
     char s_panic_ctx[] = "X1(ra)  "
                          "X2(sp)  "
                          "X3(gp)  "
@@ -98,7 +131,7 @@ void panicShowRegs(void *context, int (*print_func)(const char *fmt, ...))
 
     print_func("========== Regs info  ==========\r\n");
 
-    /* show PANIC_CONTEXT */
+    /* show fault_context_t */
     for (x = 0; x < sizeof(s_panic_ctx) / REG_NAME_WIDTH; x++) {
         memcpy(&s_panic_regs[0], &s_panic_ctx[x * REG_NAME_WIDTH],
                REG_NAME_WIDTH);

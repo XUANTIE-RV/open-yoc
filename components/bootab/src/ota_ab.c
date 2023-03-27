@@ -22,7 +22,8 @@ const char* otaab_get_next_ab(void)
 
 void otaab_start(void)
 {
-    BABLOGD("===>otaab start.current slot is %s.", bootab_get_current_ab());
+    const char *ab = bootab_get_current_ab();
+    BABLOGD("===>otaab start.current slot is %s.", ab ? ab : "NULL");
 }
 
 int otaab_upgrade_slice(const char *image_name, const char *file_name, uint32_t offset,
@@ -45,7 +46,7 @@ int otaab_upgrade_end(const char *img_version)
     const char *ab = bootab_get_current_ab();
 
     BABLOGI("otaab upgrade end.[%s]", img_version ? img_version : "NULL");
-    if (strcmp(ab, "a") == 0) {
+    if (ab && strcmp(ab, "a") == 0) {
         next_ab = "b";
     }
     BABLOGI("start to clear&set slot[%s]", next_ab);
@@ -74,7 +75,7 @@ void otaab_finish(int ab_fallback)
 
     BABLOGI("[otaab_finish] I am startup ok.");
 
-    if (strcmp(ab, "a") == 0) {
+    if (ab && strcmp(ab, "a") == 0) {
         another = "b";
     }
     // 清理另一个slot的ab相关的FLAG

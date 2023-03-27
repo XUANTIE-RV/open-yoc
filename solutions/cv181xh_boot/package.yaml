@@ -1,0 +1,89 @@
+## 第一部分： 基础信息
+name: cv181xh_boot                                   # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
+version: v7.7.0                                    # <必选项> 组件版本号
+description: bootloader for cv181x                  # <必选项> 建议至少20字以上
+type: solution                                      # <必选项> 组件类型，为：solution, chip, board, common, sdk
+
+hw_info:
+  cpu_id: cpu0
+  chip_name: chip_cv181x
+  ld_script: gcc_flash.ld
+
+depends:                                       # 该组件依赖其他的组件
+  - csi: v7.7.0
+  - chip_cv181x: v7.7.0
+  - boot: v7.7.0
+  - partition: v7.7.0
+  - sec_crypto: v7.7.0
+  - key_mgr: v7.7.0
+  - bootab: v7.7.0
+  - xz: v7.7.0
+  - drv_sdmmc: v7.7.0
+  - lz4: v7.7.0
+
+# 编译参数
+build_config:
+  include:
+    - app/include
+    - board/include
+  cflag: >
+        -c -g -Os -ffunction-sections -fdata-sections -Wall -fno-common -fno-asynchronous-unwind-tables
+  asmflag: -c -g -ffunction-sections -fdata-sections -Wall
+  ldflag: -Wl,--gc-sections -lstdc++ -lsupc++ -lm -lc -lgcc -lnosys -nostartfiles --specs=nosys.specs -Wl,-Map="boot.map" -fno-asynchronous-unwind-tables 
+  cxxflag: >
+        -D_GLIBCXX_HAS_GTHREADS
+        -std=gnu++11 -fno-common -fno-exceptions -ffunction-sections -fdata-sections -fomit-frame-pointer -fpermissive -g -Os
+        -fno-asynchronous-unwind-tables -fexceptions
+
+# 源文件
+source_file:
+  - app/src/*.c
+  - porting/*.c
+  - board/src/*.c
+
+def_config:
+  CONFIG_DEBUG: 3
+  SHOW_PART_INFO_EN: 0
+  CONFIG_NEWLIB_STUB: 1
+  CONFIG_NO_OTA_UPGRADE: 0
+  CONFIG_OTA_NO_DIFF: 1
+  CONFIG_PARITION_NO_VERIFY: 0
+  CONFIG_NOT_SUPORRT_SASC: 1
+  CONFIG_TB_KP: 1
+  CONFIG_KP_BUFFER_LEN: 4096
+  CONFIG_KEY_MGR_KP_PROTECT: 1
+  CONFIG_IMG_AUTHENTICITY_NOT_CHECK: 0
+  # CONFIG_SHOW_KEY_IN_KP: y
+  CONFIG_MANTB_VERSION: 4
+  CONFIG_ARCH_INTERRUPTSTACK: 4096
+  CONFIG_ARCH_MAINSTACK: 16384
+  CONFIG_SYSTEM_SECURE: 1
+  #sec_crypto
+  CONFIG_SEC_CRYPTO_AES_SW: 1
+  CONFIG_SEC_CRYPTO_SHA_SW: 1
+  CONFIG_SEC_CRYPTO_RSA_SW: 1
+  # CONFIG_SEC_CRYPTO_RNG_SW: 1
+
+  CONFIG_MLIBC_PATH: stdio2
+  CONFIG_SYSTICK_HZ: 100
+  # CONFIG_WDT_TIMEOUT: 10000
+  CONFIG_MAX_PARTITION_NUM: 16
+
+  USE_4K_ERASE_SECTION: 1
+
+  CONFIG_PARTITION_SUPPORT_USB: 1
+  CONFIG_PARTITION_SUPPORT_EMMC: 1
+  CONFIG_PARTITION_SUPPORT_SD: 1
+  CONFIG_PARTITION_SUPPORT_SPINORFLASH: 1
+  CONFIG_NOT_USE_HC_ERASE_UNIT_SIZE: y
+
+  # SDIF
+  CONFIG_EMMC_SDIF: 2
+  CONFIG_SDIO_SDIF: 0
+  CONFIG_SD_SDIF: 1
+
+  PARTITION_SPLIT_DEBUG: 1
+  CONFIG_LZ4_BUFFER_ADDR: 0x82F00000
+
+  CONFIG_CVI_LIB_SUB_PATH: "boot"
+  

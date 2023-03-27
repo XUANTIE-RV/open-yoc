@@ -13,10 +13,10 @@ RTL8723块是一款低功耗WIFI+蓝牙二合一WIFI模块，SDIO接口，基本
 ```c
 typedef struct hci_driver {
     driver_t drv;
-    int (*set_event)(aos_dev_t *dev, hci_event_cb_t event, void *priv);
-    int (*start)(aos_dev_t *dev, hci_driver_send_cmd_t send_cmd);
-    int (*send)(aos_dev_t *dev, uint8_t *data, uint32_t size);
-    int (*recv)(aos_dev_t *dev, uint8_t *data, uint32_t size);
+    int (*set_event)(rvm_dev_t *dev, hci_event_cb_t event, void *priv);
+    int (*start)(rvm_dev_t *dev, hci_driver_send_cmd_t send_cmd);
+    int (*send)(rvm_dev_t *dev, uint8_t *data, uint32_t size);
+    int (*recv)(rvm_dev_t *dev, uint8_t *data, uint32_t size);
 } hci_driver_t;
 ```
 

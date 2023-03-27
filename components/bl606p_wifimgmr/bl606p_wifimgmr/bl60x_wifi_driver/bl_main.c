@@ -171,7 +171,6 @@ int bl_main_connect(const uint8_t* ssid, int ssid_len, const uint8_t *psk, int p
     sme.key_len = psk_len;
     sme.pmk = pmk;
     sme.pmk_len = pmk_len;
-    sme.mode = wifi_hw.sta_mode;
 
     if (mac){
         sme.bssid = mac;
@@ -326,7 +325,7 @@ int bl_main_apm_start(char *ssid, char *password, int channel, uint8_t vif_index
 
     memset(&start_ap_cfm, 0, sizeof(start_ap_cfm));
     bl_os_printf("[WF] APM_START_REQ Sending with vif_index %u\r\n", vif_index);
-    error = bl_send_apm_start_req(&wifi_hw, &start_ap_cfm, ssid, password, channel, vif_index, hidden_ssid, bcn_int, wifi_hw.ap_mode);
+    error = bl_send_apm_start_req(&wifi_hw, &start_ap_cfm, ssid, password, channel, vif_index, hidden_ssid, bcn_int);
     bl_os_printf("[WF] APM_START_REQ Done\r\n");
     bl_os_printf("[WF] status is %02X\r\n", start_ap_cfm.status);
     bl_os_printf("[WF] vif_idx is %02X\r\n", start_ap_cfm.vif_idx);
@@ -441,17 +440,6 @@ int bl_main_cfg_task_req(uint32_t ops, uint32_t task, uint32_t element, uint32_t
     return bl_send_cfg_task_req(&wifi_hw, ops, task, element, type, arg1, arg2);
 }
 
-int bl_main_set_mode(uint8_t ap_or_sta, uint32_t mode)
-{
-    /* Set parameters to firmware */
-    if (ap_or_sta) {
-        wifi_hw.ap_mode = mode;
-    } else {
-        wifi_hw.sta_mode = mode;
-    }
-    return 0;
-}
-
 int bl_main_scan(struct netif *netif, uint16_t *fixed_channels, uint16_t channel_num, struct mac_addr *bssid, struct mac_ssid *ssid)
 {
     if (0 == channel_num) {
@@ -476,7 +464,6 @@ static int cfg80211_init(struct bl_hw *bl_hw)
     INIT_LIST_HEAD(&bl_hw->vifs);
 
     bl_hw->mod_params = &bl_mod_params;
-    bl_hw->sta_mode = bl_hw->ap_mode = WIFI_MODE_802_11B | WIFI_MODE_802_11G | WIFI_MODE_802_11N_2_4;
 
     ret = bl_platform_on(bl_hw);
     if (ret) {

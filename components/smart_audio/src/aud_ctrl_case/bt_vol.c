@@ -1,5 +1,5 @@
 #include <stdint.h>
-#include <output/ao.h>
+#include <av/output/ao.h>
 
 #include <aos/kernel.h>
 #include <ulog/ulog.h>

@@ -72,6 +72,36 @@ make SDK=sdk_chip_ch2601
 make flashall SDK=sdk_chip_ch2601
 ```
 
+#### cv181平台
+
+1. 编译
+
+```bash
+make clean
+make SDK=sdk_chip_cv181xh
+```
+
+2. 烧写
+
+```bash
+make flashall SDK=sdk_chip_cv181xh
+```
+
+#### f133平台
+
+1. 编译
+
+```bash
+make clean
+make SDK=sdk_chip_f133
+```
+
+2. 烧写
+
+```bash
+make flashall SDK=sdk_chip_f133
+```
+
 ### 调试
 
 ```bash

@@ -80,3 +80,7 @@ solutions_cb5654/*/*.mk
 solutions_cb5654/*/*.txt
 solutions_cb5654/Makefile
 .components.db
+
+mkflash.sh
+gdbinitflash
+cdkinitflash

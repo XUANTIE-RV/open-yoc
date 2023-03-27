@@ -1,0 +1,14 @@
+name: TICK
+vendor: ''
+license: Copyright (C) 2017-2019 Alibaba Group Holding Limited
+description: tick timer
+type: devices
+
+versions:
+    coretim:
+        drv_path: ./coretim
+    csitimer:
+        drv_path: ./csitimer
+    mtime:
+        drv_path: ./mtime
+

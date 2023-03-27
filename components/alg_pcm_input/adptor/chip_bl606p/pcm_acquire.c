@@ -4,12 +4,15 @@
 #include <ulog/ulog.h>
 #include <alsa/pcm.h>
 
+#include "yoc/pcm_input_port.h"
+
 #include "../../pcm_input_internal.h"
 
 #define TAG "AACQ"
 
 /* Debug: If equal to 1,pcm simulation mode, at startup time at ignore alsa capture data */
 extern int g_pcminput_ignore_alsa;
+extern  aos_pcm_sframes_t aos_pcm_avail(aos_pcm_t *pcm);
 
 static aos_pcm_t *pcmC0_ = NULL;
 static aos_pcm_t *capture_init(const char *devname, unsigned int sample_rate /*16000*/, int chn_num,
@@ -79,22 +82,6 @@ static aos_pcm_t *capture_init(const char *devname, unsigned int sample_rate /*1
     return pcm;
 }
 
-static int bl606p_voice_pcm_acquire_init(int bit_format, int sample_rate, int frame_ms, int chn_num)
-{
-    /* Single frame single channel sample count */
-    aos_pcm_uframes_t peroid_size = frame_ms * (sample_rate / 1000);
-
-    pcmC0_ = capture_init("pcmC0", sample_rate, chn_num, bit_format, peroid_size);
-
-    if (pcmC0_ == NULL) {
-        return -1;
-    }
-
-    ssize_t capture_byte = aos_pcm_frames_to_bytes(pcmC0_, peroid_size);
-
-    return (int)capture_byte;
-}
-
 /**
  * @brief  capture audio data from alsa
  *
@@ -105,29 +92,36 @@ static int bl606p_voice_pcm_acquire_init(int bit_format, int sample_rate, int fr
 static int bl606p_voice_pcm_acquire(void *data, int len)
 {
     int rlen = 0;
+    int ret = 0;
 
     if (pcmC0_ == NULL) {
         return 0;
     }
 
-    int ret = aos_pcm_wait(pcmC0_, AOS_WAIT_FOREVER);
+#if 0
+    ret = aos_pcm_wait(pcmC0_, AOS_WAIT_FOREVER);
+#else
+    while (aos_pcm_avail(pcmC0_) < aos_pcm_bytes_to_frames(pcmC0_, len)) {
+        ret = aos_pcm_wait(pcmC0_, AOS_WAIT_FOREVER);//
+    }
+#endif
 
     if (ret < 0) {
-        LOGD(TAG, "pcm reset");
-        rlen = 0;
-        int i = 0;
-        for (i = 0; i < 64; i++) {
-            if (rlen >= 0) {
-                rlen += aos_pcm_readn(pcmC0_, (void **)data, aos_pcm_bytes_to_frames(pcmC0_, len));
-            } else {
-                break;
-            }
+        // aos_pcm_recover(g_pcm, ret, 1);
+        static long long last_time = 0;
+
+        long long now = aos_now_ms();
+        if (now - last_time > 3000) {
+            LOGW(TAG, "pcm read XRUN\r\n");
+            last_time = now;
         }
-        LOGD(TAG, "pcm reset done, resetlen=%d loop=%d", aos_pcm_frames_to_bytes(pcmC0_, rlen), i);
         return 0;
     }
 
-    rlen = aos_pcm_readn(pcmC0_, (void **)data, aos_pcm_bytes_to_frames(pcmC0_, len));
+    if (aos_pcm_avail(pcmC0_) != aos_pcm_bytes_to_frames(pcmC0_, len)) {
+        //user_log("aos_pcm_avail:%d for acquire:%d\r\n", aos_pcm_avail(pcmC0_), aos_pcm_bytes_to_frames(pcmC0_, len));
+    }
+    rlen = aos_pcm_readn(pcmC0_, (void**)data, aos_pcm_bytes_to_frames(pcmC0_, len));
     rlen = aos_pcm_frames_to_bytes(pcmC0_, rlen);
 
     /* pcm push hook, overwrite capture data */
@@ -144,7 +138,35 @@ static int bl606p_voice_pcm_acquire(void *data, int len)
     return rlen;
 }
 
-pcm_acquire_ops_t g_pcm_acquire_ops = {
-    .init    = bl606p_voice_pcm_acquire_init,
-    .acquire = bl606p_voice_pcm_acquire,
+static int bl606p_voice_pcm_acquire_init(int bit_format, int sample_rate, int frame_ms, int chn_num)
+{
+    static int init_flag = 0;
+    if (init_flag) {
+        return 0;
+    }
+
+    /* Single frame single channel sample count */
+    aos_pcm_uframes_t peroid_size = frame_ms * (sample_rate / 1000);
+
+    pcmC0_ = capture_init("pcmC0", sample_rate, chn_num, bit_format, peroid_size);
+
+    if (pcmC0_ == NULL) {
+        return -1;
+    }
+
+    ssize_t capture_byte = aos_pcm_frames_to_bytes(pcmC0_, peroid_size);
+
+    init_flag = 1;
+
+    return (int)capture_byte;
+}
+
+pcm_input_ops_t g_pcm_acquire_ops = {
+    .init        = bl606p_voice_pcm_acquire_init,
+    .pcm_acquire = bl606p_voice_pcm_acquire,
 };
+
+void pcm_input_register()
+{
+    pcm_acquire_register(&g_pcm_acquire_ops);
+}

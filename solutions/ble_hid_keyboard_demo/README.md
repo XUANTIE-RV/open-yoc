@@ -66,31 +66,31 @@ int main(void)
     ble_stack_iocapability_set(IO_CAP_IN_NONE | IO_CAP_OUT_NONE); 
 
     /* Battery Service初始化 */
-    g_bas_handle = bas_init(); 
+    g_bas_handle = ble_prf_bas_init(); 
 	......
         
     /* Device Information Service初始化 */
-    g_dis_handle = dis_init(&dis_info); 
+    g_dis_handle = ble_prf_dis_init(&dis_info); 
 	......
         
     /* HID Service初始化，设置位Report Protocol模式 */
-    g_hids_handle = hids_init(HIDS_REPORT_PROTOCOL_MODE); 
+    g_hids_handle = ble_prf_hids_init(HIDS_REPORT_PROTOCOL_MODE); 
     ......
 
     /* 设置Report Map */
-    s_flag = set_data_map(report_map, sizeof(report_map), REPORT_MAP);
+    s_flag = ble_prf_hids_set_data_map(report_map, sizeof(report_map), REPORT_MAP);
     ......
 
     /* 设置Input Report的数据Buffer地址 */
-    s_flag = set_data_map((uint8_t *)(&send_data), sizeof(send_data), REPORT_INPUT);
+    s_flag = ble_prf_hids_set_data_map((uint8_t *)(&send_data), sizeof(send_data), REPORT_INPUT);
     ......
 
     /* 设置Output Report的数据Buffer地址 */
-    s_flag = set_data_map(report_output_data, sizeof(report_output_data), REPORT_OUTPUT);
+    s_flag = ble_prf_hids_set_data_map(report_output_data, sizeof(report_output_data), REPORT_OUTPUT);
     ......
 
 	/* 注册Output Report的事件回调函数 */
-    s_flag = init_hids_call_func(HIDS_IDX_REPORT_OUTPUT_VAL, (void *)event_output_write);
+    s_flag = ble_prf_hids_regist(HIDS_IDX_REPORT_OUTPUT_VAL, (void *)event_output_write);
     ......
 
     /* 开始广播 */
@@ -128,10 +128,10 @@ void board_yoc_init(void)
     mm_init();
 
     /* uart设备注册至设备管理模块 */
-    uart_csky_register(0); 
+    rvm_uart_drv_register(0); 
 
     /* Flash设备注册至设备管理模块 */
-    spiflash_csky_register(0); 
+    rvm_spiflash_drv_register(0); 
 
     /* 分区管理模块初始化 */
     ret = partition_init();
@@ -346,7 +346,7 @@ static void event_output_write(ble_event_en event, void *event_data)
 HIDS组件提供了发送按键信息的接口，应用程序只需要实现按键驱动和键值的获取，再调用如下HIDS组件的接口函数将按键信息发送至Host端。
 
 ```c
-int hids_key_send(hids_handle_t handle, uint8_t *key_code, uint16_t us_len)
+int ble_prf_hids_key_send(hids_handle_t handle, uint8_t *key_code, uint16_t us_len)
 ```
 
 处理流程如图所示：
@@ -360,7 +360,7 @@ int hids_key_send(hids_handle_t handle, uint8_t *key_code, uint16_t us_len)
 蓝牙协议栈中提供了BAS服务，应用程序只需要实现电池电量值的采集。当电量发生变化时或者需要周期上报时，可调用如下BAS服务的API实现电量更新上报。
 
 ```c
-int bas_level_update(bas_handle_t handle, uint8_t level)
+int ble_prf_bas_level_update(bas_handle_t handle, uint8_t level)
 ```
 
 处理流程如图所示：

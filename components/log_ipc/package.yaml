@@ -1,7 +1,7 @@
 
 ## 第一部分： 基础信息
 name: log_ipc                                       # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
-version: v7.6.0                                     # <必选项> 组件版本号
+version: v7.7.0                                    # <必选项> 组件版本号
 description: log_ipc                                # <必选项> 建议至少20字以上
 type: common                                        # <必选项> 组件类型，为：solution, chip, board, common
 
@@ -42,9 +42,9 @@ build_config:
 # source_file:                             # <可选项> 指定参与编译的源代码文件，支持通配符，采用相对路径
 #   - src/*.c                              # 例：组件 src 目录下所有的扩展名为 c 的源代码文件
 source_file:
-  - "log_ipc_cp.c ? <CONFIG_USE_LOG_IPC>"
-  # - "drv_uart_ipc.c   ? <CONFIG_USE_LOG_IPC>"
-  - "hal_uart_ipc.c   ? <CONFIG_USE_LOG_IPC>"
+  - "log_ipc_cp.c ? <CONFIG_LOG_IPC_CP>"
+  # - "drv_uart_ipc.c   ? <CONFIG_LOG_IPC_CP>"
+  - "hal_uart_ipc.c   ? <CONFIG_LOG_IPC_CP>"
   - "log_ipc_ap.c"
 
 ## 第五部分：配置信息
@@ -52,6 +52,8 @@ source_file:
 #   CONFIG_DEBUG: y
 #   CONFIG_PARAM_NOT_CHECK: y
 #   CONFIG_CLI: y
+def_config:
+  CONFIG_COMP_LOG_IPC: 1
 
 ## 第六部分：安装信息
 # install:

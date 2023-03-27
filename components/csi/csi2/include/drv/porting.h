@@ -28,6 +28,12 @@ typedef enum {
     BOOTREASON_OTHER    = 0xFF
 } boot_reason_t;
 
+/*
+  \brief       Soc get boot reason
+  \return      boot reason, \ref boot_reason_t
+*/
+boot_reason_t soc_get_boot_reason(void);
+
 /**
   \brief       Soc get device frequence.
   \param[in]   idx      Device index
@@ -36,6 +42,7 @@ typedef enum {
 uint32_t soc_get_apb_freq(uint32_t idx);
 uint32_t soc_get_ahb_freq(uint32_t idx);
 uint32_t soc_get_cpu_freq(uint32_t idx);
+
 uint32_t soc_get_uart_freq(uint32_t idx);
 uint32_t soc_get_spi_freq(uint32_t idx);
 uint32_t soc_get_iic_freq(uint32_t idx);
@@ -48,9 +55,12 @@ uint32_t soc_get_timer_freq(uint32_t idx);
 uint32_t soc_get_rtc_freq(uint32_t idx);
 uint32_t soc_get_wdt_freq(uint32_t idx);
 uint32_t soc_get_sdio_freq(uint32_t idx);
+uint32_t soc_get_emmc_freq(uint32_t idx);
+uint32_t soc_get_usb_freq(uint32_t idx);
+uint32_t soc_get_ref_clk_freq(uint32_t idx);
 uint32_t soc_get_coretim_freq(void);
 uint32_t soc_get_cur_cpu_freq(void);
-boot_reason_t soc_get_boot_reason(void);
+uint32_t soc_get_sys_freq(void);
 
 /**
   \brief       Soc get device frequence.
@@ -58,6 +68,12 @@ boot_reason_t soc_get_boot_reason(void);
   \return      none
 */
 void soc_set_sys_freq(uint32_t freq);
+
+/*
+  \brief       Soc init clock unit
+  \return      none
+*/
+void soc_clk_init(void);
 
 /*
   \brief       Soc enable device clock

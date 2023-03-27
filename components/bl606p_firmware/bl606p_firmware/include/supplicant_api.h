@@ -116,7 +116,7 @@ typedef enum {
     WIFI_AUTH_WPA2_WPA3_PSK,    /**< authenticate mode : WPA2_WPA3_PSK */
     WIFI_AUTH_WAPI_PSK,         /**< authenticate mode : WAPI_PSK */
     WIFI_AUTH_MAX
-} wifi_auth_mode_t;
+} rvm_hal_wifi_auth_mode_t;
 
 struct wifi_ssid {
     int len;
@@ -162,7 +162,7 @@ typedef struct {
     uint8_t vif_idx;
     uint8_t mac[ETH_ALEN];
     struct wifi_ssid ssid;
-    wifi_auth_mode_t auth_mode;
+    rvm_hal_wifi_auth_mode_t auth_mode;
     wifi_cipher_type_t pairwise_cipher;
     char passphrase[64];
 } wifi_ap_parm_t;

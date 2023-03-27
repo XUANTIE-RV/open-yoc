@@ -6,12 +6,16 @@
 #include <aos/bt.h>
 #include <bluetooth/audio_output.h>
 
-#ifdef CONFIG_AV_AO_ALSA
-#include <output/ao.h>
-#include <avutil/sf.h>
+#if (defined(CONFIG_AV_AO_ALSA) && CONFIG_AV_AO_ALSA)
+#include <av/output/ao.h>
+#include <av/avutil/sf.h>
 #define BT_DBG_ENABLED  IS_ENABLED(CONFIG_BT_DEBUG_A2DP)
 #define LOG_MODULE_NAME bt_a2dp
 #include "common/log.h"
+
+#ifndef CONFIG_RESAMPLE_RATE
+#define CONFIG_RESAMPLE_RATE 48000
+#endif
 
 static ao_cls_t *ao;
 static sf_t sf;
@@ -44,7 +48,7 @@ static int audio_output_open(void)
     ao_cnf.vol_en    = 1;
     /** set initial volume */
     ao_cnf.vol_index = 127;
-    ao_cnf.resample_rate = 48000;
+    ao_cnf.resample_rate = CONFIG_RESAMPLE_RATE;
     ao = ao_open(sf, &ao_cnf);
 
     return 0;

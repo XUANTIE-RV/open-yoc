@@ -8,12 +8,12 @@
 
 #include <drv/gpio.h>
 #include <pinmux.h>
-#include <devices/hal/led_impl.h>
+#include <devices/impl/led_impl.h>
 
 #define LED_GPIO_SET(h, v, f) do { if (h) csi_gpio_pin_write((h), ((v) ^ (f)));}while(0)
 
 typedef struct led_dev {
-    aos_dev_t             device;
+    rvm_dev_t             device;
     gpio_pin_handle_t led_r_pin_handle;
     gpio_pin_handle_t led_g_pin_handle;
     gpio_pin_handle_t led_b_pin_handle;
@@ -27,24 +27,24 @@ typedef struct led_dev {
 
 static void yoc_led_delay_action(void *timer, void *args);
 
-static aos_dev_t *yoc_led_rgb_init(driver_t *drv, void *config, int id)
+static rvm_dev_t *yoc_led_rgb_init(driver_t *drv, void *config, int id)
 {
-    led_dev_t *dev     = (led_dev_t *)device_new(drv, sizeof(led_dev_t), id);
+    led_dev_t *dev     = (led_dev_t *)rvm_hal_device_new(drv, sizeof(led_dev_t), id);
 
     if (dev)
         dev->device.config = config;
 
-    return (aos_dev_t *)dev;
+    return (rvm_dev_t *)dev;
 }
 
-#define yoc_led_rgb_uninit device_free
+#define yoc_led_rgb_uninit rvm_hal_device_free
 
-static int yoc_led_rgb_lpm(aos_dev_t *dev, int state)
+static int yoc_led_rgb_lpm(rvm_dev_t *dev, int state)
 {
     return 0;
 }
 
-static void yoc_led_timer_trigger(aos_dev_t *dev)
+static void yoc_led_timer_trigger(rvm_dev_t *dev)
 {
     led_dev_t *led = (led_dev_t *)dev;
     int        delay_time;
@@ -82,10 +82,10 @@ static void yoc_led_delay_action(void *timer, void *args)
     }
 
     led->ctrl_req = 0;
-    yoc_led_timer_trigger((aos_dev_t *)led);
+    yoc_led_timer_trigger((rvm_dev_t *)led);
 }
 
-static int yoc_led_rgb_config(aos_dev_t *dev, uint32_t r_pin, uint32_t g_pin, uint32_t b_pin)
+static int yoc_led_rgb_config(rvm_dev_t *dev, uint32_t r_pin, uint32_t g_pin, uint32_t b_pin)
 {
     led_dev_t *       led        = (led_dev_t *)dev;
     led_pin_config_t *led_config = (led_pin_config_t *)led->device.config;
@@ -124,7 +124,7 @@ static int yoc_led_rgb_config(aos_dev_t *dev, uint32_t r_pin, uint32_t g_pin, ui
     return 0;
 }
 
-static int yoc_led_rgb_open(aos_dev_t *dev)
+static int yoc_led_rgb_open(rvm_dev_t *dev)
 {
     led_dev_t *       led        = (led_dev_t *)dev;
     led_pin_config_t *led_config = (led_pin_config_t *)led->device.config;
@@ -134,7 +134,7 @@ static int yoc_led_rgb_open(aos_dev_t *dev)
     return 0;
 }
 
-static int yoc_led_rgb_close(aos_dev_t *dev)
+static int yoc_led_rgb_close(rvm_dev_t *dev)
 {
     led_dev_t *       led        = (led_dev_t *)dev;
     led_pin_config_t *led_config = (led_pin_config_t *)led->device.config;
@@ -158,7 +158,7 @@ static int yoc_led_rgb_close(aos_dev_t *dev)
     return 0;
 }
 
-static int yoc_led_rgb_control(aos_dev_t *dev, int color, int on_time, int off_time)
+static int yoc_led_rgb_control(rvm_dev_t *dev, int color, int on_time, int off_time)
 {
     led_dev_t *       led        = (led_dev_t *)dev;
     led_pin_config_t *led_config = (led_pin_config_t *)led->device.config;
@@ -211,5 +211,5 @@ static led_driver_t led_driver = {
 
 void led_rgb_register(led_pin_config_t *config, int idx)
 {
-    driver_register(&led_driver.drv, (void *)config, idx);
+    rvm_driver_register(&led_driver.drv, (void *)config, idx);
 }

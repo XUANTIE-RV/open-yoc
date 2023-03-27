@@ -15,6 +15,14 @@
 
 #define TAG "clock_alarm"
 
+#ifndef EVENT_CLOCK_ALARM
+#define EVENT_CLOCK_ALARM  (EVENT_USER + 0x3001)
+#endif
+
+#ifndef EVENT_CLOCK_TIMEOUT
+#define EVENT_CLOCK_TIMEOUT (EVENT_USER + 0x3002)
+#endif
+
 static clock_alarm_ctx_t g_clock_alarm_array[CLOCK_ALARM_NUM];
 static uint8_t g_clock_alarm_status = 0;
 static uint8_t g_clock_alarm_init = 0;
@@ -144,7 +152,7 @@ static time_t convert_to_absolute_time(clock_alarm_config_t *cfg_time)
     tm_now->tm_hour = cfg_time->hour;
     tm_now->tm_min = cfg_time->min;
     tm_now->tm_sec = cfg_time->sec;
-    absolute_time = mktime(tm_now) - TIME_ZONE * 3600;
+    absolute_time = mktime(tm_now);
 
     if (absolute_time <= rtc_get_time()) {
         if (cfg_time->period == CLOCK_ALARM_ONCE) {
@@ -260,7 +268,7 @@ static void update_clock_timer_info(time_t time_rtc_now)
 #else
     int delta = g_clock_alarm_array[idx].time - time_rtc_now;
     if (delta < 90) {
-        int arg_mini_id = min_id;
+        long arg_mini_id = min_id;
         void *arg = (void *)arg_mini_id;
         //save status in order to not enter lpm vad
         set_clock_alarm_status(2);
@@ -279,15 +287,16 @@ static void update_clock_timer_info(time_t time_rtc_now)
 static void clock_timer_callback(void *arg)
 {
     time_t time_rtc_now = rtc_get_time();
-    uint8_t clock_id = (uint8_t)((int)arg);
+    uint8_t clock_id = (uint8_t)((long)arg);
 
     if (abs(time_rtc_now - g_clock_alarm_array[clock_id - 1].time) < 3) {
         LOGD(TAG,"clock alarm happen id: %d", clock_id);
-        update_clock_alarm(clock_id - 1);
-
         if (g_clock_alarm_cb) {
             g_clock_alarm_cb(clock_id);
         }
+
+        // update_clock_alarm ���� callback ֮�󣬽�� callback �� clock_alarm_get �ò��� clock_id ����
+        update_clock_alarm(clock_id - 1);
     }
 
     for (int i = 0; i < CLOCK_ALARM_NUM; i++) {

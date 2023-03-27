@@ -8,8 +8,8 @@
 
 #if 1
 #include <stdio.h>
-#include <ulog/ulog.h>
 #include <aos/kernel.h>
+#include <ulog/ulog.h>
 
 #include "ble_lib_api.h"
 #include "bluetooth.h"
@@ -112,11 +112,22 @@ static int pcm_close(void)
     return ret;
 }
 
+static int pcm_ioctl(int cmd , void *arg)
+{   
+    float speed = *(float *)arg;
+    size_t size = sizeof(speed);
+
+    BT_HAL_DBG("speed set %f\r\n", speed);
+    
+    return ao_control(ao, cmd, &speed, &size);
+}
+
 A2DP_PCM_PRCOESS pcm_callback = {
     .write = pcm_write,
     .start = pcm_start,
     .stop = pcm_stop,
     .open = pcm_open,
+    .ioctl = pcm_ioctl,
     .close = pcm_close,
 };
 #endif
@@ -277,10 +288,6 @@ static void t_bt_disconnected(struct bt_conn *conn, u8_t reason)
 
     BT_HAL_DBG("%s, disconnected: %s (reason %u) \n", __func__, addr, reason);
 
-    if(conn->br.link_key){
-        bt_keys_link_key_store(conn->br.link_key);
-    }
-
     if (t_bt_def_conn == conn)
     {
         t_bt_def_conn = NULL;
@@ -338,7 +345,7 @@ bt_stack_status_t bt_stack_init(void)
 {
     BT_HAL_DBG("%s\n", __func__);
 
-    btble_controller_init(configMAX_PRIORITIES - 1);
+    btble_controller_init(/*configMAX_PRIORITIES - 1*/1);
     hci_driver_init();
     bt_enable(t_bt_enable_cb);
 
@@ -529,6 +536,7 @@ bt_stack_status_t bt_stack_dev_unpair(bt_dev_addr_t  *peer_addr)
     BT_HAL_DBG("%s\n", __func__);
 
     int err = -1;
+    bt_addr_le_t addr = { 0 };
 
     if (!t_bt_def_conn){
         BT_HAL_DBG("Not connected.\n");
@@ -544,7 +552,11 @@ bt_stack_status_t bt_stack_dev_unpair(bt_dev_addr_t  *peer_addr)
         err =  BT_STACK_STATUS_EIO;
     }
 
-    return err;
+    addr.type = peer_addr->type;
+    
+    memcpy(addr.a.val,peer_addr->val,BT_STACK_BD_ADDR_LEN);
+
+    return bt_unpair(0,&addr);
 }
 
 /**

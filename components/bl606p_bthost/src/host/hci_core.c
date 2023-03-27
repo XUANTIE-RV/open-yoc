@@ -2459,6 +2459,11 @@ static void conn_complete(struct net_buf *buf)
 
 	if (evt->status) {
 		conn->err = evt->status;
+		if(conn->err==BT_HCI_ERR_AUTH_FAIL){
+			if(conn->type == BT_CONN_TYPE_BR){
+				bt_keys_link_key_clear_addr(&conn->br.dst);
+			}
+		}
 		bt_conn_set_state(conn, BT_CONN_DISCONNECTED);
 		bt_conn_unref(conn);
 		return;
@@ -2581,9 +2586,11 @@ static void link_key_notify(struct net_buf *buf)
 		break;
 	}
 
+	#if defined(BFLB_BT_LINK_KEYS_STORE)
 	if(conn->br.link_key){
 		bt_keys_link_key_store(conn->br.link_key);
 	}
+	#endif
 
 	bt_conn_unref(conn);
 }
@@ -5833,6 +5840,10 @@ static int bt_init(void)
 	}
 
 	bt_finalize_init();
+	#if defined(BFLB_BT_LINK_KEYS_STORE)
+	extern int bt_keys_init(void);
+	bt_keys_init();
+	#endif
 	return 0;
 }
 

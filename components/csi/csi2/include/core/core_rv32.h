@@ -1148,7 +1148,6 @@ __STATIC_INLINE void csi_dcache_invalid_range (uint32_t *addr, int32_t dsize)
     }
 
     __DSB();
-    __ISB();
 #endif
 }
 
@@ -1176,7 +1175,6 @@ __STATIC_INLINE void csi_dcache_clean_range (uint32_t *addr, int32_t dsize)
     }
 
     __DSB();
-    __ISB();
 #endif
 
 }
@@ -1204,7 +1202,6 @@ __STATIC_INLINE void csi_dcache_clean_invalid_range (uint32_t *addr, int32_t dsi
     }
 
     __DSB();
-    __ISB();
 #endif
 }
 

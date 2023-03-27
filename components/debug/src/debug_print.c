@@ -6,6 +6,7 @@
 #include <sys/types.h>
 #include "debug/dbg.h"
 #include "debug_api.h"
+#include <aos/types.h>
 
 #define LONGFLAG       0x00000001
 #define LONGLONGFLAG   0x00000002

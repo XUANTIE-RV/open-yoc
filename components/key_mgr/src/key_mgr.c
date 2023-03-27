@@ -36,7 +36,7 @@ uint32_t km_init(void)
             return ret;
         }
 #endif
-#ifndef CONFIG_KEY_MGR_NO_PUB_PARTITION
+#ifdef CONFIG_KEY_MGR_HAVE_PUB_PARTITION
         ret = km_pub_key_init();
         if (ret) {
             return ret;
@@ -61,6 +61,14 @@ void km_uninit(void)
 uint32_t km_update_kp(uint8_t *kp_info, size_t size)
 {
     return parser_update_kp(kp_info, size);
+}
+
+/**
+  \brief       Get KP raw data .
+*/
+uint32_t km_get_kp_raw_data(uint8_t *kp_in, uint32_t kp_in_size, uint8_t *key_out, uint32_t *key_out_size)
+{
+	return parser_get_kp_raw_data(kp_in, kp_in_size, key_out, key_out_size);
 }
 
 /**
@@ -94,7 +102,7 @@ __attribute__((weak)) uint32_t km_get_key(km_key_type_e key_type, key_handle *ke
 */
 __attribute__((weak)) uint32_t km_get_pub_key_by_name(const char *name, key_handle *key, uint32_t *key_size)
 {
-#ifndef CONFIG_KEY_MGR_NO_PUB_PARTITION
+#ifdef CONFIG_KEY_MGR_HAVE_PUB_PARTITION
     return g_km_init ? km_get_pub_key_with_name(name, key, key_size) : KM_ERR;
 #else
     return km_get_key(KEY_ID_PUBK_TB, key, key_size);

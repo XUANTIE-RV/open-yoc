@@ -26,7 +26,7 @@ static void dns_server_entry(void *arg);
 #define MAP_AP 15
 #define SSID_LIST_SIZE_MAX (2048)
 
-static wifi_ap_record_t g_ap_records[MAP_AP];
+static rvm_hal_wifi_ap_record_t g_ap_records[MAP_AP];
 static int g_ap_number;
 
 const char *ok_html =
@@ -36,7 +36,7 @@ static uint8_t is_dns_server_run = 0;
 static uint8_t is_prov_runing = 0;
 
 struct ap_prov_context {
-    aos_dev_t *dev;
+    rvm_dev_t *dev;
     int prov_enable;
     char ap_ssid[33];
     wifi_prov_cb calllback_fn;
@@ -660,8 +660,8 @@ static void prov_thread(void *arg)
     struct ap_prov_context *context = (struct ap_prov_context *)arg;
 
     while(1) {
-        wifi_sta_list_t sta_list = {0};
-        hal_wifi_ap_get_sta_list(context->dev, &sta_list);
+        rvm_hal_wifi_sta_list_t sta_list = {0};
+        rvm_hal_wifi_ap_get_sta_list(context->dev, &sta_list);
         if (sta_list.num) {
             for (i = 0; i < sta_list.num; i++) {
                 LOGD(TAG, "STA[%d]=%02x:%02x:%02x:%02x:%02x:%02x\n",
@@ -678,7 +678,7 @@ static void prov_thread(void *arg)
         aos_msleep(1000);
     }
 
-    hal_net_get_ipaddr(context->dev, &context->ip, &netmask, &gw);
+    rvm_hal_net_get_ipaddr(context->dev, &context->ip, &netmask, &gw);
 
     http_server(context);
 
@@ -710,10 +710,10 @@ static void prov_thread_start(struct ap_prov_context *context)
     }
 }
 
-void scan_compeleted(aos_dev_t *dev, uint16_t number, wifi_ap_record_t *ap_records)
+void scan_compeleted(rvm_dev_t *dev, uint16_t number, rvm_hal_wifi_ap_record_t *ap_records)
 {
     // sort with rssi
-    wifi_ap_record_t wifiApRecord;
+    rvm_hal_wifi_ap_record_t wifiApRecord;
     for (int j = 0; j < number; ++j) {
         for (int i = j + 1; i < number; ++i) {
             if (ap_records[i].rssi > ap_records[j].rssi) {
@@ -739,7 +739,7 @@ void scan_compeleted(aos_dev_t *dev, uint16_t number, wifi_ap_record_t *ap_recor
             }
 
             if (j == g_ap_number) {
-                memcpy(&g_ap_records[g_ap_number], &ap_records[i], sizeof(wifi_ap_record_t));
+                memcpy(&g_ap_records[g_ap_number], &ap_records[i], sizeof(rvm_hal_wifi_ap_record_t));
                 LOGD(TAG, "ssid: %s, rssi, %d", g_ap_records[g_ap_number].ssid, g_ap_records[g_ap_number].rssi);
                 g_ap_number++;
             }
@@ -747,7 +747,7 @@ void scan_compeleted(aos_dev_t *dev, uint16_t number, wifi_ap_record_t *ap_recor
     }
 }
 
-static wifi_event_func wifi_event = {
+static rvm_hal_wifi_event_func wifi_event = {
     NULL,
     NULL,
     scan_compeleted,
@@ -760,33 +760,33 @@ static wifi_event_func wifi_event = {
 static int ap_prov_start(wifi_prov_cb cb)
 {
     uint8_t mac[6] = {0};
-    wifi_config_t config;
+    rvm_hal_wifi_config_t config;
 
     struct ap_prov_context *context = &g_softap_prov_ctx;
 
-    context->dev = device_open_id("wifi", 0);
+    context->dev = rvm_hal_device_open("wifi0");
     context->calllback_fn = cb;
     context->prov_enable = 1;
 
     LOGI(TAG, "Scan Start");
     memset(&config, 0, sizeof(config));
     config.mode = WIFI_MODE_STA;
-    hal_wifi_start(context->dev, &config);
-    hal_wifi_install_event_cb(context->dev, &wifi_event);
+    rvm_hal_wifi_start(context->dev, &config);
+    rvm_hal_wifi_install_event_cb(context->dev, &wifi_event);
     aos_msleep(2000);
-    hal_wifi_get_mac_addr(context->dev, mac);
+    rvm_hal_wifi_get_mac_addr(context->dev, mac);
 
-    hal_wifi_start_scan(context->dev, NULL, 1);
-    hal_wifi_stop(context->dev);
+    rvm_hal_wifi_start_scan(context->dev, NULL, 1);
+    rvm_hal_wifi_stop(context->dev);
 
-    device_close(context->dev);
+    rvm_hal_device_close(context->dev);
     aos_msleep(1000);
 
-    context->dev = device_open_id("wifi", 0);
+    context->dev = rvm_hal_device_open("wifi0");
 
     LOGI(TAG, "Start AP");
 
-    memset(&config, 0, sizeof(wifi_config_t));
+    memset(&config, 0, sizeof(rvm_hal_wifi_config_t));
 
 #define snprintf_nowarn(...) (snprintf(__VA_ARGS__) < 0 ? abort() : (void)0)
     snprintf_nowarn(config.ssid, sizeof(config.ssid), "%s[%02x:%02x:%02x:%02x:%02x:%02x]",
@@ -794,7 +794,7 @@ static int ap_prov_start(wifi_prov_cb cb)
     config.ssid[sizeof(config.ssid) - 1] = 0;
     config.mode = WIFI_MODE_AP;
 
-    hal_wifi_start(context->dev, &config);
+    rvm_hal_wifi_start(context->dev, &config);
 
     prov_thread_start(context);
 
@@ -810,9 +810,9 @@ static void ap_prov_stop()
         LOGD(TAG, "wait ap_prov_stop");
     }
 
-    hal_wifi_stop(g_softap_prov_ctx.dev); // close AP when prov finished
-    hal_wifi_install_event_cb(g_softap_prov_ctx.dev, NULL);
-    device_close(g_softap_prov_ctx.dev);
+    rvm_hal_wifi_stop(g_softap_prov_ctx.dev); // close AP when prov finished
+    rvm_hal_wifi_install_event_cb(g_softap_prov_ctx.dev, NULL);
+    rvm_hal_device_close(g_softap_prov_ctx.dev);
 }
 
 static wifi_prov_t softap_prov = {

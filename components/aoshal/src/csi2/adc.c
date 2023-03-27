@@ -104,10 +104,10 @@ static int32_t adc_value_buffer_get(adc_dev_t *adc, uint32_t *output, size_t num
         return -1;
     }
 
+    aos_mutex_lock(&g_adc_mutex, AOS_WAIT_FOREVER);
+
     ret = csi_adc_channel_enable(&hal_adc.dev, adc->port, true);
     adc_check(ret, "csi_adc_channel_enable error");
-
-    aos_mutex_lock(&g_adc_mutex, AOS_WAIT_FOREVER);
 
     ret = csi_adc_freq_div(&hal_adc.dev, 128);
 

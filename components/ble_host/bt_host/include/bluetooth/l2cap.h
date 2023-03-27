@@ -101,7 +101,7 @@ struct bt_l2cap_chan {
 	struct k_delayed_work		rtx_work;
 	ATOMIC_DEFINE(status, BT_L2CAP_NUM_STATUS);
 
-#if defined(CONFIG_BT_L2CAP_DYNAMIC_CHANNEL)
+#if (defined(CONFIG_BT_L2CAP_DYNAMIC_CHANNEL) && CONFIG_BT_L2CAP_DYNAMIC_CHANNEL)
 	bt_l2cap_chan_state_t		state;
 	/** Remote PSM to be connected */
 	u16_t				psm;

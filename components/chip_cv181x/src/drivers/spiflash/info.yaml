@@ -1,0 +1,14 @@
+name: SPIFLASH
+vendor: WJ
+license: Copyright (C) 2017-2019 Alibaba Group Holding Limited
+description: spiflash
+type: devices
+
+versions:
+    v1.0:
+        drv_path: v1.0
+        test_path: test/v1.0
+        rtl_path: xxxx
+        depends: None
+    v2.0:
+        drv_path: v2.0

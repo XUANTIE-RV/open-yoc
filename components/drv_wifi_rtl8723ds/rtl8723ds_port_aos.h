@@ -223,7 +223,7 @@ void hal_wifi_register_module(hal_wifi_module_t *m);
  *
  * @return  0 on success, otherwise failure.
  */
-int hal_wifi_init(void);
+int rvm_hal_wifi_init(void);
 
 /**
  * Get the MAC address of the specified wifi instance.
@@ -233,7 +233,7 @@ int hal_wifi_init(void);
  *
  * @return  0 on success, otherwise failure.
  */
-int hal_wifi_get_mac_addr(hal_wifi_module_t *m, uint8_t *mac);
+int rvm_hal_wifi_get_mac_addr(hal_wifi_module_t *m, uint8_t *mac);
 
 /**
  * Set the MAC address of the specified wifi instance.
@@ -243,7 +243,7 @@ int hal_wifi_get_mac_addr(hal_wifi_module_t *m, uint8_t *mac);
  *
  * @return  0 on success, otherwise failure.
  */
-int hal_wifi_set_mac_addr(hal_wifi_module_t *m, const uint8_t *mac);
+int rvm_hal_wifi_set_mac_addr(hal_wifi_module_t *m, const uint8_t *mac);
 
 /**
  * Start the wifi instance.
@@ -253,7 +253,7 @@ int hal_wifi_set_mac_addr(hal_wifi_module_t *m, const uint8_t *mac);
  *
  * @return      0 on success, otherwise failure.
  */
-int hal_wifi_start(hal_wifi_module_t *m, hal_wifi_init_type_t *init_para);
+int rvm_hal_wifi_start(hal_wifi_module_t *m, hal_wifi_init_type_t *init_para);
 
 /**
  * Start the wifi instance in anvanced way (more config specified).
@@ -292,7 +292,7 @@ int hal_wifi_get_link_stat(hal_wifi_module_t *m, hal_wifi_link_stat_t *out_stat)
  *
  * @param[in]  m  the wifi instance, NULL if default.
  */
-void hal_wifi_start_scan(hal_wifi_module_t *m);
+void rvm_hal_wifi_start_scan(hal_wifi_module_t *m);
 
 /**
  * Start the scanning of the specified wifi instance in advanced way.
@@ -308,7 +308,7 @@ void hal_wifi_start_scan_adv(hal_wifi_module_t *m);
  *
  * @return     0 on success, otherwise failure.
  */
-int hal_wifi_power_off(hal_wifi_module_t *m);
+int rvm_hal_wifi_power_off(hal_wifi_module_t *m);
 
 /**
  * Power on the wifi instance.
@@ -317,7 +317,7 @@ int hal_wifi_power_off(hal_wifi_module_t *m);
  *
  * @return     0 on success, otherwise failure.
  */
-int hal_wifi_power_on(hal_wifi_module_t *m);
+int rvm_hal_wifi_power_on(hal_wifi_module_t *m);
 
 /**
  * Suspend the wifi instance.
@@ -353,7 +353,7 @@ int hal_wifi_suspend_soft_ap(hal_wifi_module_t *m);
  *
  * @return     0 on success, otherwise failure.
  */
-int hal_wifi_set_channel(hal_wifi_module_t *m, int ch);
+int rvm_hal_wifi_set_channel(hal_wifi_module_t *m, int ch);
 
 /**
  * Get the channel of the wifi instance.
@@ -362,7 +362,7 @@ int hal_wifi_set_channel(hal_wifi_module_t *m, int ch);
  *
  * @return     -1 on failure, otherwise current channel number.
  */
-int hal_wifi_get_channel(hal_wifi_module_t *m);
+int rvm_hal_wifi_get_channel(hal_wifi_module_t *m);
 
 /**
  * Get the channel list of the wifi instance.

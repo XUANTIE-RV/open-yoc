@@ -24,17 +24,16 @@
 #include "netif/etharp.h"
 #include <netif/ethernet.h>
 #include <devices/wifi.h>
-#include <devices/hal/wifi_impl.h>
+#include <devices/impl/wifi_impl.h>
 
-#include "pin.h"
 #include "drv/gpio.h"
 
 #include "w800_devops.h"
 
 typedef struct {
-    aos_dev_t   device;
+    rvm_dev_t   device;
     uint8_t mode;
-    void (*write_event)(aos_dev_t *dev, int event_id, void *priv);
+    void (*write_event)(rvm_dev_t *dev, int event_id, void *priv);
     void *priv;
 } wifi_dev_t;
 
@@ -43,11 +42,11 @@ typedef struct {
 static uint8_t g_wifi_auto_reconnect = 0;
 static int g_is_wifi_user_disconnect = 0;
 static gpio_pin_handle_t    *smartcfg_pin = NULL;
-static wifi_lpm_mode_t       g_wifi_lpm_mode = WIFI_LPM_NONE;
-static wifi_promiscuous_cb_t g_monitor_cb;
-static wifi_mgnt_cb_t        g_monitor_mgnt_cb;
-static wifi_event_func *     g_evt_func;
-static aos_dev_t *           wifi_evt_dev;
+static rvm_hal_wifi_lpm_mode_t       g_wifi_lpm_mode = WIFI_LPM_NONE;
+static rvm_hal_wifi_promiscuous_cb_t g_monitor_cb;
+static rvm_hal_wifi_mgnt_cb_t        g_monitor_mgnt_cb;
+static rvm_hal_wifi_event_func *     g_evt_func;
+static rvm_dev_t *           wifi_evt_dev;
 
 struct netif w800_netif[2];
 static uint8_t g_wifi_got_ip = 0;
@@ -446,7 +445,7 @@ static void wm_wlan_scan_callback(void)
     uint16_t number = 0;
     u8 *buf2;
     int i;
-    wifi_ap_record_t *ap_records;
+    rvm_hal_wifi_ap_record_t *ap_records;
 
     if (g_wifi_scan_sem)
         tls_os_sem_release(g_wifi_scan_sem);
@@ -472,7 +471,7 @@ static void wm_wlan_scan_callback(void)
             struct tls_scan_bss_t *scan_res = (struct tls_scan_bss_t *)buf;
             struct tls_bss_info_t *bss_info = (struct tls_bss_info_t *)scan_res->bss;
 
-            buf2 = malloc(scan_res->count * sizeof(wifi_ap_record_t));
+            buf2 = malloc(scan_res->count * sizeof(rvm_hal_wifi_ap_record_t));
             if (!buf2)
             {
                 LOGE(TAG, "scan malloc failed...");
@@ -480,9 +479,9 @@ static void wm_wlan_scan_callback(void)
                 return;
             }
 
-            memset(buf2, 0, scan_res->count * sizeof(wifi_ap_record_t));
+            memset(buf2, 0, scan_res->count * sizeof(rvm_hal_wifi_ap_record_t));
 
-            ap_records = (wifi_ap_record_t *)buf2;
+            ap_records = (rvm_hal_wifi_ap_record_t *)buf2;
 
             for (i = 0; i < scan_res->count; i ++)
             {
@@ -573,7 +572,7 @@ static void wm_wlan_scan_callback(void)
 
             free(buf);
 
-            g_evt_func->scan_compeleted(wifi_evt_dev, number, (wifi_ap_record_t *)buf2);
+            g_evt_func->scan_compeleted(wifi_evt_dev, number, (rvm_hal_wifi_ap_record_t *)buf2);
 
             free(buf2);
         }
@@ -583,10 +582,10 @@ static void wm_wlan_scan_callback(void)
 static void wm_wlan_data_recv_callback(u8 *data, u32 data_len)
 {
     struct ieee80211_hdr *hdr;
-    wifi_promiscuous_pkt_type_t type = WIFI_PKT_MISC;
-    wifi_promiscuous_pkt_t *buf;
+    rvm_hal_wifi_promiscuous_pkt_type_t type = WIFI_PKT_MISC;
+    rvm_hal_wifi_promiscuous_pkt_t *buf;
 
-    buf = malloc(sizeof(wifi_promiscuous_pkt_t) + data_len);
+    buf = malloc(sizeof(rvm_hal_wifi_promiscuous_pkt_t) + data_len);
     if (!buf)
         return;
 
@@ -599,7 +598,7 @@ static void wm_wlan_data_recv_callback(u8 *data, u32 data_len)
     else if (ieee80211_is_data(hdr->frame_control))
         type = WIFI_PKT_DATA;
 
-    memset(buf, 0, sizeof(wifi_promiscuous_pkt_t) + data_len);
+    memset(buf, 0, sizeof(rvm_hal_wifi_promiscuous_pkt_t) + data_len);
     buf->rx_ctrl.rssi = -30; //-(char)(0x100 - ext->rssi);
     buf->rx_ctrl.sig_len = data_len;
     memcpy(buf->payload, data, data_len);
@@ -614,10 +613,10 @@ static void wm_wlan_mgmt_recv_callback(u8 *data, u32 data_len, struct tls_wifi_e
 {
 #define CRC_LEN (4)
     struct ieee80211_hdr *hdr;
-    wifi_promiscuous_pkt_type_t type = WIFI_PKT_MISC;
-    wifi_promiscuous_pkt_t *buf;
+    rvm_hal_wifi_promiscuous_pkt_type_t type = WIFI_PKT_MISC;
+    rvm_hal_wifi_promiscuous_pkt_t *buf;
 
-    buf = malloc(sizeof(wifi_promiscuous_pkt_t) + data_len + CRC_LEN);
+    buf = malloc(sizeof(rvm_hal_wifi_promiscuous_pkt_t) + data_len + CRC_LEN);
     if (!buf)
         return;
 
@@ -630,7 +629,7 @@ static void wm_wlan_mgmt_recv_callback(u8 *data, u32 data_len, struct tls_wifi_e
     else if (ieee80211_is_data(hdr->frame_control))
         type = WIFI_PKT_DATA;
 
-    memset(buf, 0, sizeof(wifi_promiscuous_pkt_t) + data_len + CRC_LEN);
+    memset(buf, 0, sizeof(rvm_hal_wifi_promiscuous_pkt_t) + data_len + CRC_LEN);
     buf->rx_ctrl.rssi = -30; //-(char)(0x100 - ext->rssi);
     buf->rx_ctrl.sig_len = data_len + CRC_LEN;
     memcpy(buf->payload, data, data_len + CRC_LEN);
@@ -641,7 +640,7 @@ static void wm_wlan_mgmt_recv_callback(u8 *data, u32 data_len, struct tls_wifi_e
     free(buf);
 }
 
-static int w800_set_mac_addr(aos_dev_t *dev, const uint8_t *mac)
+static int w800_set_mac_addr(rvm_dev_t *dev, const uint8_t *mac)
 {
     wpa_supplicant_set_mac((u8 *)mac);
     tls_set_mac_addr((u8 *)mac);
@@ -649,14 +648,14 @@ static int w800_set_mac_addr(aos_dev_t *dev, const uint8_t *mac)
     return WIFI_ERR_OK;
 }
 
-static int w800_get_mac_addr(aos_dev_t *dev, uint8_t *mac)
+static int w800_get_mac_addr(rvm_dev_t *dev, uint8_t *mac)
 {
     memcpy(mac, wpa_supplicant_get_mac(), 6);
 
     return WIFI_ERR_OK;
 }
 
-static int w800_set_dns_server(aos_dev_t *dev, ip_addr_t ipaddr[], uint32_t num)
+static int w800_set_dns_server(rvm_dev_t *dev, ip_addr_t ipaddr[], uint32_t num)
 {
     int n, i;
 
@@ -669,7 +668,7 @@ static int w800_set_dns_server(aos_dev_t *dev, ip_addr_t ipaddr[], uint32_t num)
     return n;
 }
 
-static int w800_get_dns_server(aos_dev_t *dev, ip_addr_t ipaddr[], uint32_t num)
+static int w800_get_dns_server(rvm_dev_t *dev, ip_addr_t ipaddr[], uint32_t num)
 {
     int n, i;
 
@@ -686,7 +685,7 @@ static int w800_get_dns_server(aos_dev_t *dev, ip_addr_t ipaddr[], uint32_t num)
     return n;
 }
 
-static int w800_set_hostname(aos_dev_t *dev, const char *name)
+static int w800_set_hostname(rvm_dev_t *dev, const char *name)
 {
 #if LWIP_NETIF_HOSTNAME
     struct netif *netif = &w800_netif[0];
@@ -697,7 +696,7 @@ static int w800_set_hostname(aos_dev_t *dev, const char *name)
 #endif
 }
 
-static const char *w800_get_hostname(aos_dev_t *dev)
+static const char *w800_get_hostname(rvm_dev_t *dev)
 {
 #if LWIP_NETIF_HOSTNAME
     struct netif *netif = &w800_netif[0];
@@ -707,19 +706,19 @@ static const char *w800_get_hostname(aos_dev_t *dev)
 #endif
 }
 
-static int w800_set_link_up(aos_dev_t *dev)
+static int w800_set_link_up(rvm_dev_t *dev)
 {
     //netif_set_link_up(&w800_netif[0]);
     return 0;
 }
 
-static int w800_set_link_down(aos_dev_t *dev)
+static int w800_set_link_down(rvm_dev_t *dev)
 {
     //netif_set_link_down(&w800_netif[0]);
     return 0;
 }
 
-static int w800_start_dhcp(aos_dev_t *dev)
+static int w800_start_dhcp(rvm_dev_t *dev)
 {
     struct netif *netif = &w800_netif[0];
     aos_check_return_einval(netif);
@@ -735,7 +734,7 @@ static int w800_start_dhcp(aos_dev_t *dev)
     return netifapi_dhcp_start(netif);
 }
 
-static int w800_stop_dhcp(aos_dev_t *dev)
+static int w800_stop_dhcp(rvm_dev_t *dev)
 {
     struct netif *netif = &w800_netif[0];
     aos_check_return_einval(netif);
@@ -745,7 +744,7 @@ static int w800_stop_dhcp(aos_dev_t *dev)
     return 0;
 }
 
-static int w800_set_ipaddr(aos_dev_t *dev, const ip_addr_t *ipaddr, const ip_addr_t *netmask,
+static int w800_set_ipaddr(rvm_dev_t *dev, const ip_addr_t *ipaddr, const ip_addr_t *netmask,
                            const ip_addr_t *gw)
 {
     struct netif *netif = &w800_netif[0];
@@ -761,7 +760,7 @@ static int w800_set_ipaddr(aos_dev_t *dev, const ip_addr_t *ipaddr, const ip_add
     return 0;
 }
 
-static int w800_get_ipaddr(aos_dev_t *dev, ip_addr_t *ipaddr, ip_addr_t *netmask, ip_addr_t *gw)
+static int w800_get_ipaddr(rvm_dev_t *dev, ip_addr_t *ipaddr, ip_addr_t *netmask, ip_addr_t *gw)
 {
     struct netif *netif = &w800_netif[0];
     aos_check_return_einval(netif && ipaddr && netmask && gw);
@@ -773,17 +772,17 @@ static int w800_get_ipaddr(aos_dev_t *dev, ip_addr_t *ipaddr, ip_addr_t *netmask
     return 0;
 }
 
-static int w800_ping_remote(aos_dev_t *dev, int type, char *remote_ip)
+static int w800_ping_remote(rvm_dev_t *dev, int type, char *remote_ip)
 {
     return -1;
 }
 
-static int w800_subscribe(aos_dev_t *dev, uint32_t event, event_callback_t cb, void *param)
+static int w800_subscribe(rvm_dev_t *dev, uint32_t event, event_callback_t cb, void *param)
 {
     return -1;
 }
 
-static int w800_unsubscribe(aos_dev_t *dev, uint32_t event, event_callback_t cb, void *param)
+static int w800_unsubscribe(rvm_dev_t *dev, uint32_t event, event_callback_t cb, void *param)
 {
     return -1;
 }
@@ -811,7 +810,7 @@ static net_ops_t w800_net_driver = {
     .unsubscribe    = w800_unsubscribe,
 };
 
-static int w800_init(aos_dev_t *dev)
+static int w800_init(rvm_dev_t *dev)
 {
     static uint8_t wifi_inited = 0;
     uint8_t enable = 0;
@@ -867,7 +866,7 @@ static int w800_init(aos_dev_t *dev)
     return WIFI_ERR_OK;
 }
 
-static int w800_deinit(aos_dev_t *dev)
+static int w800_deinit(rvm_dev_t *dev)
 {
     tls_wifi_disconnect();
     tls_wifi_softap_destroy();
@@ -875,7 +874,7 @@ static int w800_deinit(aos_dev_t *dev)
     return WIFI_ERR_OK;
 }
 
-static int w800_reset(aos_dev_t *dev)
+static int w800_reset(rvm_dev_t *dev)
 {
     tls_wifi_disconnect();
     tls_wifi_softap_destroy();
@@ -883,7 +882,7 @@ static int w800_reset(aos_dev_t *dev)
     return WIFI_ERR_OK;
 }
 
-static int w800_set_mode(aos_dev_t *dev, wifi_mode_t mode)
+static int w800_set_mode(rvm_dev_t *dev, rvm_hal_wifi_mode_t mode)
 {
     u8 wmode = IEEE80211_MODE_INFRA;
     if (mode == WIFI_MODE_STA)
@@ -902,7 +901,7 @@ static int w800_set_mode(aos_dev_t *dev, wifi_mode_t mode)
     return WIFI_ERR_OK;
 }
 
-static int w800_get_mode(aos_dev_t *dev, wifi_mode_t *mode)
+static int w800_get_mode(rvm_dev_t *dev, rvm_hal_wifi_mode_t *mode)
 {
     u8 wmode = IEEE80211_MODE_INFRA;
 
@@ -920,7 +919,7 @@ static int w800_get_mode(aos_dev_t *dev, wifi_mode_t *mode)
     return WIFI_ERR_OK;
 }
 
-static int w800_install_event_cb(aos_dev_t *dev, wifi_event_func *evt_func)
+static int w800_install_event_cb(rvm_dev_t *dev, rvm_hal_wifi_event_func *evt_func)
 {
     g_evt_func   = evt_func;
     wifi_evt_dev = dev;
@@ -928,7 +927,7 @@ static int w800_install_event_cb(aos_dev_t *dev, wifi_event_func *evt_func)
     return WIFI_ERR_OK;
 }
 
-static int w800_set_protocol(aos_dev_t *dev, uint8_t protocol_bitmap)
+static int w800_set_protocol(rvm_dev_t *dev, uint8_t protocol_bitmap)
 {
     struct tls_param_bgr bgr;
 
@@ -950,7 +949,7 @@ static int w800_set_protocol(aos_dev_t *dev, uint8_t protocol_bitmap)
     return WIFI_ERR_OK;
 }
 
-static int w800_get_protocol(aos_dev_t *dev, uint8_t *protocol_bitmap)
+static int w800_get_protocol(rvm_dev_t *dev, uint8_t *protocol_bitmap)
 {
     struct tls_param_bgr bgr;
 
@@ -973,7 +972,7 @@ static int w800_get_protocol(aos_dev_t *dev, uint8_t *protocol_bitmap)
     return WIFI_ERR_OK;
 }
 
-static int w800_set_country(aos_dev_t *dev, wifi_country_t country)
+static int w800_set_country(rvm_dev_t *dev, rvm_hal_wifi_country_t country)
 {
     u8 region = (u8)country;
 
@@ -982,7 +981,7 @@ static int w800_set_country(aos_dev_t *dev, wifi_country_t country)
     return WIFI_ERR_OK;
 }
 
-static int w800_get_country(aos_dev_t *dev, wifi_country_t *country)
+static int w800_get_country(rvm_dev_t *dev, rvm_hal_wifi_country_t *country)
 {
     u8 region = WIFI_COUNTRY_CN;
 
@@ -993,7 +992,7 @@ static int w800_get_country(aos_dev_t *dev, wifi_country_t *country)
     return WIFI_ERR_OK;
 }
 
-static int w800_set_auto_reconnect(aos_dev_t *dev, bool en)
+static int w800_set_auto_reconnect(rvm_dev_t *dev, bool en)
 {
 #if 0
     u8 mode;
@@ -1015,7 +1014,7 @@ static int w800_set_auto_reconnect(aos_dev_t *dev, bool en)
     return WIFI_ERR_OK;
 }
 
-static int w800_get_auto_reconnect(aos_dev_t *dev, bool *en)
+static int w800_get_auto_reconnect(rvm_dev_t *dev, bool *en)
 {
 #if 0
     u8 mode;
@@ -1033,7 +1032,7 @@ static int w800_get_auto_reconnect(aos_dev_t *dev, bool *en)
     return WIFI_ERR_OK;
 }
 
-static int w800_set_lpm(aos_dev_t *dev, wifi_lpm_mode_t mode)
+static int w800_set_lpm(rvm_dev_t *dev, rvm_hal_wifi_lpm_mode_t mode)
 {
     tls_wifi_set_psflag(mode != WIFI_LPM_NONE ? TRUE : FALSE, FALSE);
 
@@ -1042,25 +1041,25 @@ static int w800_set_lpm(aos_dev_t *dev, wifi_lpm_mode_t mode)
     return WIFI_ERR_OK;
 }
 
-static int w800_get_lpm(aos_dev_t *dev, wifi_lpm_mode_t *mode)
+static int w800_get_lpm(rvm_dev_t *dev, rvm_hal_wifi_lpm_mode_t *mode)
 {
     *mode = g_wifi_lpm_mode;
     return WIFI_ERR_OK;
 }
 
-static int w800_power_on(aos_dev_t *dev)
+static int w800_power_on(rvm_dev_t *dev)
 {
     tls_wl_if_ps(1);
     return WIFI_ERR_OK;
 }
 
-static int w800_power_off(aos_dev_t *dev)
+static int w800_power_off(rvm_dev_t *dev)
 {
     tls_wl_if_ps(0);
     return WIFI_ERR_OK;
 }
 
-static int w800_start_scan(aos_dev_t *dev, wifi_scan_config_t *config, bool block)
+static int w800_start_scan(rvm_dev_t *dev, wifi_scan_config_t *config, bool block)
 {
     int ret;
 
@@ -1121,7 +1120,7 @@ static int w800_start_scan(aos_dev_t *dev, wifi_scan_config_t *config, bool bloc
     return WIFI_ERR_OK;
 }
 
-static int w800_start_sta(wifi_config_t *config)
+static int w800_start_sta(rvm_hal_wifi_config_t *config)
 {
     int ret;
     u8 channel_en;
@@ -1168,7 +1167,7 @@ static int w800_start_sta(wifi_config_t *config)
     return ret;
 }
 
-static int w800_start_softap(wifi_config_t *config)
+static int w800_start_softap(rvm_hal_wifi_config_t *config)
 {
     int ret;
     struct tls_softap_info_t *apinfo;
@@ -1251,7 +1250,7 @@ static int w800_start_softap(wifi_config_t *config)
     return ret;
 }
 
-static int w800_start(aos_dev_t *dev, wifi_config_t *config)
+static int w800_start(rvm_dev_t *dev, rvm_hal_wifi_config_t *config)
 {
     int ret;
     u8 wireless_protocol;
@@ -1303,7 +1302,7 @@ static int w800_start(aos_dev_t *dev, wifi_config_t *config)
     return WIFI_ERR_OK;
 }
 
-static int w800_stop(aos_dev_t *dev)
+static int w800_stop(rvm_dev_t *dev)
 {
     u8 wmode = IEEE80211_MODE_INFRA;
 
@@ -1328,7 +1327,7 @@ static int w800_stop(aos_dev_t *dev)
     return WIFI_ERR_OK;
 }
 
-static int w800_sta_get_link_status(aos_dev_t *dev, wifi_ap_record_t *ap_info)
+static int w800_sta_get_link_status(rvm_dev_t *dev, rvm_hal_wifi_ap_record_t *ap_info)
 {
     struct tls_curr_bss_t currbss;
 
@@ -1396,7 +1395,7 @@ static int w800_sta_get_link_status(aos_dev_t *dev, wifi_ap_record_t *ap_info)
     return WIFI_ERR_OK;
 }
 
-static int w800_ap_get_sta_list(aos_dev_t *dev, wifi_sta_list_t *sta)
+static int w800_ap_get_sta_list(rvm_dev_t *dev, rvm_hal_wifi_sta_list_t *sta)
 {
     tls_wifi_get_authed_sta_info((u32 *)&sta->num, (u8 *)&sta->sta[0], sizeof(sta->sta));
 
@@ -1410,7 +1409,7 @@ static void wm_wlan_mgmt_ext_recv_callback(u8* data, u32 data_len, struct tls_wi
     }
 }
 
-int w800_start_mgnt_monitor(aos_dev_t *dev, wifi_mgnt_cb_t cb)
+int w800_start_mgnt_monitor(rvm_dev_t *dev, rvm_hal_wifi_mgnt_cb_t cb)
 {
     g_monitor_mgnt_cb = cb;
 
@@ -1419,12 +1418,12 @@ int w800_start_mgnt_monitor(aos_dev_t *dev, wifi_mgnt_cb_t cb)
     return 0;
 }
 
-int w800_stop_mgnt_monitor(aos_dev_t *dev)
+int w800_stop_mgnt_monitor(rvm_dev_t *dev)
 {
     return 0;
 }
 
-static int w800_start_monitor(aos_dev_t *dev, wifi_promiscuous_cb_t cb)
+static int w800_start_monitor(rvm_dev_t *dev, rvm_hal_wifi_promiscuous_cb_t cb)
 {
     if (!cb)
         return WIFI_ERR_ARG;
@@ -1444,7 +1443,7 @@ static int w800_start_monitor(aos_dev_t *dev, wifi_promiscuous_cb_t cb)
     return WIFI_ERR_OK;
 }
 
-static int w800_stop_monitor(aos_dev_t *dev)
+static int w800_stop_monitor(rvm_dev_t *dev)
 {
     tls_wifi_set_listen_mode(0);
     tls_wl_plcp_stop();
@@ -1457,7 +1456,7 @@ static int w800_stop_monitor(aos_dev_t *dev)
     return WIFI_ERR_OK;
 }
 
-static int w800_send_80211_raw_frame(aos_dev_t *dev, void *buffer, uint16_t len)
+static int w800_send_80211_raw_frame(rvm_dev_t *dev, void *buffer, uint16_t len)
 {
     struct tls_wifi_tx_rate_t tx;
 
@@ -1471,7 +1470,7 @@ static int w800_send_80211_raw_frame(aos_dev_t *dev, void *buffer, uint16_t len)
     return WIFI_ERR_OK;
 }
 
-static int w800_set_channel(aos_dev_t *dev, uint8_t primary, wifi_second_chan_t second)
+static int w800_set_channel(rvm_dev_t *dev, uint8_t primary, rvm_hal_wifi_second_chan_t second)
 {
     if ((primary < 1) || (primary > 14)) {
         return WIFI_ERR_ARG;
@@ -1482,13 +1481,13 @@ static int w800_set_channel(aos_dev_t *dev, uint8_t primary, wifi_second_chan_t 
     return WIFI_ERR_OK;
 }
 
-static int w800_get_channel(aos_dev_t *dev, uint8_t *primary, wifi_second_chan_t *second)
+static int w800_get_channel(rvm_dev_t *dev, uint8_t *primary, rvm_hal_wifi_second_chan_t *second)
 {
     *primary = hed_rf_current_channel;
     return WIFI_ERR_OK;
 }
 
-static int w800_set_smartcfg(aos_dev_t *dev, int enable)
+static int w800_set_smartcfg(rvm_dev_t *dev, int enable)
 {
     tls_wifi_set_oneshot_flag(enable);
 
@@ -1533,26 +1532,26 @@ static wifi_driver_t w800_wifi_driver = {
     .set_smartcfg         = w800_set_smartcfg,
 };
 
-static aos_dev_t *w800_dev_init(driver_t *drv, void *config, int id)
+static rvm_dev_t *w800_dev_init(driver_t *drv, void *config, int id)
 {
-    aos_dev_t *dev = device_new(drv, sizeof(wifi_dev_t), id);
+    rvm_dev_t *dev = rvm_hal_device_new(drv, sizeof(wifi_dev_t), id);
 
     return dev;
 }
 
-static void w800_dev_uninit(aos_dev_t *dev)
+static void w800_dev_uninit(rvm_dev_t *dev)
 {
     aos_check_param(dev);
 
-    device_free(dev);
+    rvm_hal_device_free(dev);
 }
 
-static int w800_dev_open(aos_dev_t *dev)
+static int w800_dev_open(rvm_dev_t *dev)
 {
     return 0;
 }
 
-static int w800_dev_close(aos_dev_t *dev)
+static int w800_dev_close(rvm_dev_t *dev)
 {
     return 0;
 }
@@ -1609,6 +1608,6 @@ void wifi_w800_register(w800_wifi_param_t *config)
 
     w800_lwip_init();
 
-    driver_register(&w800_driver.drv, NULL, 0);
+    rvm_driver_register(&w800_driver.drv, NULL, 0);
 }
 

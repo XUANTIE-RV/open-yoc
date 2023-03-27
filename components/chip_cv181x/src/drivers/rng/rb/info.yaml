@@ -1,0 +1,12 @@
+name: RNG
+vendor: rambus
+license: Copyright (C) 2017-2019 Alibaba Group Holding Limited
+description: rambus rng
+type: devices
+
+versions:
+    v1.0:
+        drv_path: v2.4
+        test_path: test/v2.4
+        rtl_path: xxxx
+        depends: None

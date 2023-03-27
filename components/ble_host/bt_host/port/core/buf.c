@@ -17,7 +17,7 @@
 #include <misc/util.h>
 #include "common/log.h"
 
-#if defined(CONFIG_NET_BUF_LOG)
+#if (defined(CONFIG_NET_BUF_LOG) && CONFIG_NET_BUF_LOG)
 #define SYS_LOG_DOMAIN "net/buf"
 #define SYS_LOG_LEVEL CONFIG_SYS_LOG_NET_BUF_LEVEL
 #include <common/log.h>
@@ -201,7 +201,7 @@ static u8_t *fixed_data_alloc(struct net_buf *buf, size_t *size,
 
 	*size = MIN(fixed->data_size, *size);
 
-#ifdef CONFIG_BT_USE_MM
+#if (defined(CONFIG_BT_USE_MM) && CONFIG_BT_USE_MM)
 	u32_t *ref_count;
 	unsigned int key;
 	key = irq_lock();
@@ -221,7 +221,7 @@ static u8_t *fixed_data_alloc(struct net_buf *buf, size_t *size,
 static void fixed_data_unref(struct net_buf *buf, u8_t *data)
 {
 	/* Nothing needed for fixed-size data pools */
-#ifdef CONFIG_BT_USE_MM
+#if (defined(CONFIG_BT_USE_MM) && CONFIG_BT_USE_MM)
 	u32_t *ref_count;
 
 	ref_count = (u32_t *)(data - sizeof(*ref_count));
@@ -307,7 +307,7 @@ static void data_unref(struct net_buf *buf, u8_t *data)
 	pool->alloc->cb->unref(buf, data);
 }
 
-#if defined(CONFIG_NET_BUF_LOG)
+#if (defined(CONFIG_NET_BUF_LOG) && CONFIG_NET_BUF_LOG)
 struct net_buf *net_buf_alloc_len_debug(struct net_buf_pool *pool, size_t size,
 					k_timeout_t timeout, const char *func,
 					int line)
@@ -357,12 +357,12 @@ struct net_buf *net_buf_alloc_len(struct net_buf_pool *pool, size_t size,
 
 	irq_unlock(key);
 
-#if defined(CONFIG_NET_BUF_LOG) && SYS_LOG_LEVEL >= SYS_LOG_LEVEL_WARNING
+#if (defined(CONFIG_NET_BUF_LOG) && CONFIG_NET_BUF_LOG) && SYS_LOG_LEVEL >= SYS_LOG_LEVEL_WARNING
 	if (timeout == K_FOREVER) {
 		u32_t ref = k_uptime_get_32();
 		buf = k_lifo_get(&pool->free, K_NO_WAIT);
 		while (!buf) {
-#if defined(CONFIG_NET_BUF_POOL_USAGE)
+#if (defined(CONFIG_NET_BUF_POOL_USAGE) && CONFIG_NET_BUF_POOL_USAGE)
 			NET_BUF_WARN("%s():%d: Pool %s low on buffers.",
 				     func, line, pool->name);
 #else
@@ -370,7 +370,7 @@ struct net_buf *net_buf_alloc_len(struct net_buf_pool *pool, size_t size,
 				     func, line, pool);
 #endif
 			buf = k_lifo_get(&pool->free, WARN_ALLOC_INTERVAL);
-#if defined(CONFIG_NET_BUF_POOL_USAGE)
+#if (defined(CONFIG_NET_BUF_POOL_USAGE) && CONFIG_NET_BUF_POOL_USAGE)
 			NET_BUF_WARN("%s():%d: Pool %s blocked for %u secs",
 				     func, line, pool->name,
 				     (k_uptime_get_32() - ref) / MSEC_PER_SEC);
@@ -420,7 +420,7 @@ success:
 	buf->size  = size;
 	net_buf_reset(buf);
 
-#if defined(CONFIG_NET_BUF_POOL_USAGE)
+#if (defined(CONFIG_NET_BUF_POOL_USAGE) && CONFIG_NET_BUF_POOL_USAGE)
 	pool->avail_count--;
 	__ASSERT_NO_MSG(pool->avail_count >= 0);
 #endif
@@ -428,7 +428,7 @@ success:
 	return buf;
 }
 
-#if defined(CONFIG_NET_BUF_LOG)
+#if (defined(CONFIG_NET_BUF_LOG) && CONFIG_NET_BUF_LOG)
 struct net_buf *net_buf_alloc_fixed_debug(struct net_buf_pool *pool,
 					  k_timeout_t timeout, const char *func,
 					  int line)
@@ -448,7 +448,7 @@ struct net_buf *net_buf_alloc_fixed(struct net_buf_pool *pool,
 }
 #endif
 
-#if defined(CONFIG_NET_BUF_LOG)
+#if (defined(CONFIG_NET_BUF_LOG) && CONFIG_NET_BUF_LOG)
 struct net_buf *net_buf_alloc_with_data_debug(struct net_buf_pool *pool,
 					      void *data, size_t size,
 					      k_timeout_t timeout,
@@ -461,7 +461,7 @@ struct net_buf *net_buf_alloc_with_data(struct net_buf_pool *pool,
 {
 	struct net_buf *buf;
 
-#if defined(CONFIG_NET_BUF_LOG)
+#if (defined(CONFIG_NET_BUF_LOG) && CONFIG_NET_BUF_LOG)
 	buf = net_buf_alloc_len_debug(pool, 0, timeout, func, line);
 #else
 	buf = net_buf_alloc_len(pool, 0, timeout);
@@ -476,7 +476,7 @@ struct net_buf *net_buf_alloc_with_data(struct net_buf_pool *pool,
 	return buf;
 }
 
-#if defined(CONFIG_NET_BUF_LOG)
+#if (defined(CONFIG_NET_BUF_LOG) && CONFIG_NET_BUF_LOG)
 struct net_buf *net_buf_get_debug(struct kfifo *fifo, k_timeout_t timeout,
 				  const char *func, int line)
 #else
@@ -605,7 +605,7 @@ void net_buf_put(struct kfifo *fifo, struct net_buf *buf)
 
 }
 
-#if defined(CONFIG_NET_BUF_LOG)
+#if (defined(CONFIG_NET_BUF_LOG) && CONFIG_NET_BUF_LOG)
 void net_buf_unref_debug(struct net_buf *buf, const char *func, int line)
 #else
 void net_buf_unref(struct net_buf *buf)
@@ -640,7 +640,7 @@ void net_buf_unref(struct net_buf *buf)
 
 		pool = net_buf_pool_get(buf->pool_id);
 
-#if defined(CONFIG_NET_BUF_POOL_USAGE)
+#if (defined(CONFIG_NET_BUF_POOL_USAGE) && CONFIG_NET_BUF_POOL_USAGE)
 		pool->avail_count++;
 		__ASSERT_NO_MSG(pool->avail_count <= pool->buf_count);
 #endif
@@ -769,7 +769,7 @@ struct net_buf *net_buf_frag_add_with_flags(struct net_buf *head, struct net_buf
 }
 
 
-#if defined(CONFIG_NET_BUF_LOG)
+#if (defined(CONFIG_NET_BUF_LOG) && CONFIG_NET_BUF_LOG)
 struct net_buf *net_buf_frag_del_debug(struct net_buf *parent,
 				       struct net_buf *frag,
 				       const char *func, int line)
@@ -791,7 +791,7 @@ struct net_buf *net_buf_frag_del(struct net_buf *parent, struct net_buf *frag)
 
 	frag->frags = NULL;
 
-#if defined(CONFIG_NET_BUF_LOG)
+#if (defined(CONFIG_NET_BUF_LOG) && CONFIG_NET_BUF_LOG)
 	net_buf_unref_debug(frag, func, line);
 #else
 	net_buf_unref(frag);
@@ -800,7 +800,7 @@ struct net_buf *net_buf_frag_del(struct net_buf *parent, struct net_buf *frag)
 	return next_frag;
 }
 
-#if defined(CONFIG_NET_BUF_LOG)
+#if (defined(CONFIG_NET_BUF_LOG) && CONFIG_NET_BUF_LOG)
 void net_buf_frag_del_all_debug(struct net_buf *parent,
 				       const char *func, int line)
 #else
@@ -820,7 +820,7 @@ void net_buf_frag_del_all(struct net_buf *parent)
 		next_frag = frag->frags;
 		frag->frags = NULL;
 
-	#if defined(CONFIG_NET_BUF_LOG)
+	#if (defined(CONFIG_NET_BUF_LOG) && CONFIG_NET_BUF_LOG)
 		net_buf_unref_debug(frag, func, line);
 	#else
 		net_buf_unref(frag);
@@ -902,7 +902,7 @@ size_t net_buf_append_bytes(struct net_buf *buf, size_t len,
 	return 0;
 }
 
-#if defined(CONFIG_NET_BUF_SIMPLE_LOG)
+#if (defined(CONFIG_NET_BUF_SIMPLE_LOG) && CONFIG_NET_BUF_SIMPLE_LOG)
 #define NET_BUF_SIMPLE_DBG(fmt, ...) NET_BUF_DBG(fmt, ##__VA_ARGS__)
 #define NET_BUF_SIMPLE_ERR(fmt, ...) NET_BUF_ERR(fmt, ##__VA_ARGS__)
 #define NET_BUF_SIMPLE_WARN(fmt, ...) NET_BUF_WARN(fmt, ##__VA_ARGS__)

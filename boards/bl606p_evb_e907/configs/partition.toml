@@ -18,7 +18,7 @@ header = 1
 security = 1
 
 [[pt_entry]]
-type = 3
+type = 0
 name = "yocboot"
 device = 0
 address0 = 0x10000
@@ -70,7 +70,7 @@ header = 0
 security = 0
 
 [[pt_entry]]
-type = 0
+type = 3
 name = "FW"
 device = 0
 address0 = 0x03B000

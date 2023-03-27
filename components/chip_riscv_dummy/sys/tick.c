@@ -22,6 +22,9 @@
 static csi_dev_t tick_dev;
 
 static volatile uint32_t csi_tick = 0U;
+static volatile uint32_t last_time_ms = 0U;
+static volatile uint64_t last_time_us = 0U;
+static volatile uint64_t timer_init_value = 0U;
 
 void csi_tick_increase(void)
 {
@@ -52,12 +55,20 @@ static void tick_irq_handler(csi_timer_t *timer_handle, void *arg)
 
 csi_error_t csi_tick_init(void)
 {
+    CLINT_Type *clint = (CLINT_Type *)CORET_BASE;
+
     csi_tick = 0U;
     tick_dev.irq_num = (uint8_t)CORET_IRQn;
-
+    timer_init_value = csi_clint_get_value();
     csi_plic_set_prio(PLIC_BASE, CORET_IRQn, 31U);
-
     csi_irq_attach((uint32_t)tick_dev.irq_num, &tick_irq_handler, &tick_dev);
+#if defined(CONFIG_RISCV_SMODE) && CONFIG_RISCV_SMODE
+    clint->STIMECMPH0 = 0;
+    clint->STIMECMPL0 = 0;
+#else
+    clint->MTIMECMPH0 = 0;
+    clint->MTIMECMPL0 = 0;
+#endif
     csi_clint_config(CORET_BASE, (soc_get_coretim_freq() / CONFIG_SYSTICK_HZ), CORET_IRQn);
     csi_irq_enable((uint32_t)tick_dev.irq_num);
 
@@ -68,7 +79,8 @@ uint32_t csi_tick_get_ms(void)
 {
     uint32_t time;
 
-    time = (uint32_t)(csi_clint_get_value() * 1000U / (uint64_t)soc_get_coretim_freq());
+    time = (uint32_t)((csi_clint_get_value() - timer_init_value) * 1000U / (uint64_t)soc_get_coretim_freq());
+    last_time_ms = time;
     return time;
 }
 
@@ -76,7 +88,8 @@ uint64_t csi_tick_get_us(void)
 {
     uint64_t time;
 
-    time = csi_clint_get_value() * 1000U * 1000U / (uint64_t)soc_get_coretim_freq();
+    time = (csi_clint_get_value() - timer_init_value) * 1000U * 1000U / (uint64_t)soc_get_coretim_freq();
+    last_time_us = time;
     return time;
 }
 
@@ -136,8 +149,10 @@ static void tick_irq_handler(void *arg)
 csi_error_t csi_tick_init(void)
 {
     tick_dev.irq_num = CORET_IRQn;
+    timer_init_value = ((uint64_t)csi_coret_get_valueh() << 32U) | csi_coret_get_value();
     csi_vic_set_prio(CORET_IRQn, 31U);
     csi_irq_attach(tick_dev.irq_num, &tick_irq_handler, &tick_dev);
+    CORET->MTIMECMP = 0;
     csi_coret_config((soc_get_coretim_freq() / CONFIG_SYSTICK_HZ), CORET_IRQn);
     csi_irq_enable(tick_dev.irq_num);
     return CSI_OK;
@@ -146,14 +161,16 @@ csi_error_t csi_tick_init(void)
 uint32_t csi_tick_get_ms(void)
 {
     uint32_t time;
-    time = ((((uint64_t)csi_coret_get_valueh() << 32U) | csi_coret_get_value())) / (soc_get_coretim_freq() / 1000U);
+    time = ((((uint64_t)csi_coret_get_valueh() << 32U) | csi_coret_get_value()) - timer_init_value) / (soc_get_coretim_freq() / 1000U);
+    last_time_ms = time;
     return time;
 }
 
 uint64_t csi_tick_get_us(void)
 {
     uint64_t time;
-    time = ((((uint64_t)csi_coret_get_valueh() << 32U) | csi_coret_get_value())) / (soc_get_coretim_freq() / 1000000U);
+    time = ((((uint64_t)csi_coret_get_valueh() << 32U) | csi_coret_get_value()) - timer_init_value) / (soc_get_coretim_freq() / 1000000U);
+    last_time_us = time;
     return time;
 }
 

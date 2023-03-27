@@ -18,8 +18,6 @@ aos_task_t task_feedwdg;
 
 static wdg_dev_t watchdog;
 
-static int32_t g_testtime = 5; //S
-
 /* task entry */
 static void task_feedwdg_entry(void *arg)
 {
@@ -28,9 +26,8 @@ static void task_feedwdg_entry(void *arg)
      * watchdog timeout, otherwise it will trigger by mistake.
      */
     while (1) {
-        if((g_testtime--) > 0){
-            printf("feed the watchdog!\r\n");
-        }
+        printf("feed the watchdog!\r\n");
+
         hal_wdg_reload(&watchdog);
 
         aos_msleep(1000);

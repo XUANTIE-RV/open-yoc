@@ -65,6 +65,68 @@ void bl_os_printf(const char *__fmt, ...);
 #define printf(...)
 #endif
 
+#ifdef CONFIG_KERNEL_NONE
+#include <stdlib.h>
+typedef int aos_status_t;
+typedef void* aos_task_t;
+typedef void* aos_mutex_t;
+typedef void* aos_sem_t;
+typedef void* aos_queue_t;
+typedef void* aos_timer_t;
+typedef void* aos_work_t;
+typedef void* aos_event_t;
+#define aos_malloc malloc
+#define aos_free free
+#define aos_calloc calloc
+
+#define AOS_EVENT_AND              0x02u
+#define AOS_EVENT_AND_CLEAR        0x03u
+#define AOS_EVENT_OR               0x00u
+#define AOS_EVENT_OR_CLEAR         0x01u
+
+static inline int aos_task_new_ext(aos_task_t *task, const char *name, void (*fn)(void *), void *arg, int stack_size, int prio) {return 0;}
+static inline aos_status_t aos_task_delete(aos_task_t *task) {return 0;}
+static inline aos_task_t aos_task_self() {return 0;}
+static inline void aos_task_exit(int code) {}
+static inline int aos_task_sem_new(aos_task_t *task, aos_sem_t *sem, const char *name, int count) {return 0;}
+static inline void aos_task_sem_signal(aos_task_t *task) {}
+static inline int aos_task_sem_wait(unsigned int timeout) {return 0;}
+static inline void aos_msleep(int ms) {}
+static inline aos_status_t aos_queue_create(aos_queue_t *queue, size_t size, size_t max_msg, uint32_t options) {return 0;}
+static inline void aos_queue_free(aos_queue_t *queue) {}
+static inline int aos_queue_send(aos_queue_t *queue, void *msg, size_t size) {return 0;}
+static inline int aos_queue_recv(aos_queue_t *queue, unsigned int ms, void *msg, size_t *size) {return 0;}
+static inline int aos_timer_is_valid(aos_timer_t *timer) {return 0;}
+static inline int aos_timer_stop(aos_timer_t *timer) {return 0;}
+static inline void aos_timer_free(aos_timer_t *timer) {}
+static inline int aos_timer_new_ext(aos_timer_t *timer, void (*fn)(void *, void *), void *arg, int ms, int repeat, unsigned char auto_run) {return 0;}
+static inline int aos_timer_change_once(aos_timer_t *timer, int ms) {return 0;}
+static inline int aos_timer_start(aos_timer_t *timer) {return 0;}
+static inline int aos_timer_change(aos_timer_t *timer, int ms) {return 0;}
+static inline long long aos_now_ms(void) {return 0;}
+static inline long long aos_sys_tick_get(void) {return 0;}
+static inline int aos_mutex_new(aos_mutex_t *mutex) {return 0;}
+static inline void aos_mutex_free(aos_mutex_t *mutex) {}
+static inline int aos_mutex_lock(aos_mutex_t *mutex, unsigned int timeout) {return 0;}
+static inline int aos_mutex_unlock(aos_mutex_t *mutex) {return 0;}
+static inline int aos_sem_new(aos_sem_t *sem, int count) {return 0;}
+static inline void aos_sem_free(aos_sem_t *sem) {}
+static inline int aos_sem_wait(aos_sem_t *sem, unsigned int timeout) {return 0;}
+static inline void aos_sem_signal(aos_sem_t *sem) {}
+static inline int aos_event_new(aos_event_t *event, unsigned int flags) {return 0;}
+static inline void aos_event_free(aos_event_t *event) {}
+static inline int aos_event_get(aos_event_t *event, unsigned int flags, unsigned char opt, unsigned int *actl_flags, unsigned int timeout) {return 0;}
+static inline int aos_event_set(aos_event_t *event, unsigned int flags, unsigned char opt) {return 0;}
+static inline int aos_event_is_valid(aos_event_t *event) {return 0;}
+static inline int aos_post_event(uint16_t type, uint16_t code, unsigned long value) {return 0;}
+static inline int aos_kernel_intrpt_enter(void) {return 0;}
+static inline int aos_kernel_intrpt_exit(void) {return 0;}
+static inline uint64_t aos_kernel_tick2ms(uint32_t ticks) {return 0;}
+#else
+#include <aos/kernel.h>
+#include <aos/yloop.h>
+#endif /* CONFIG_KERNEL_NONE */
+
 void bl_os_puts(const char *s);
 
 void bl_os_assert_func(const char *file, int line, const char *func, const char *expr);

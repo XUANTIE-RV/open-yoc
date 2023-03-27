@@ -35,7 +35,7 @@ static inline void _bt_dev_addr_bt_le_addr_to(const bt_dev_addr_t *dev_addr, bt_
     memcpy(le_addr->a.val, dev_addr->val, BT_STACK_BD_ADDR_LEN);
 }
 
-#if defined(CONFIG_BT_BREDR) && CONFIG_BT_BREDR
+#if (defined(CONFIG_BT_BREDR) && CONFIG_BT_BREDR)
 struct bt_stack_t {
     slist_t callback_list;
 } bt_stack = { 0 };
@@ -187,9 +187,7 @@ bt_stack_status_t bt_stack_set_eir(uint8_t fec_required, bt_eir_data_t *eir_data
  */
 bt_stack_status_t bt_stack_update_eir(bt_eir_data_t *eir_data)
 {
-    if (NULL == eir_data) {
-        return -BT_STACK_STATUS_EINVAL;
-    }
+    aos_check_return_val(eir_data, -BT_STACK_STATUS_EINVAL);
 
     return bt_br_update_eir((struct bt_data *)eir_data);
 }
@@ -213,14 +211,12 @@ bt_stack_status_t bt_stack_set_cod(bt_stack_cod_t cod)
  */
 bt_stack_status_t bt_stack_get_cod(bt_stack_cod_t *cod)
 {
+    aos_check_return_val(cod, -BT_STACK_STATUS_EINVAL);
+
     int   ret;
     u16_t service_clase;
     u8_t  major_class;
     u8_t  minor_class;
-
-    if (NULL == cod) {
-        return -BT_STACK_STATUS_EINVAL;
-    }
 
     ret = bt_br_get_cod(&service_clase, &major_class, &minor_class);
     if (ret) {
@@ -243,6 +239,8 @@ bt_stack_status_t bt_stack_get_cod(bt_stack_cod_t *cod)
  */
 bt_stack_status_t bt_stack_pin_entry(bt_dev_addr_t *peer_addr, const char *pin)
 {
+    aos_check_return_val(peer_addr && pin, -BT_STACK_STATUS_EINVAL);
+
     int             ret;
     struct bt_conn *conn;
     bt_addr_t       addr;
@@ -271,6 +269,8 @@ bt_stack_status_t bt_stack_pin_entry(bt_dev_addr_t *peer_addr, const char *pin)
  */
 bt_stack_status_t bt_stack_passkey_entry(bt_dev_addr_t *peer_addr, uint32_t passkey)
 {
+    aos_check_return_val(peer_addr, -BT_STACK_STATUS_EINVAL);
+
     int             ret;
     struct bt_conn *conn;
     bt_addr_t       addr;
@@ -298,6 +298,8 @@ bt_stack_status_t bt_stack_passkey_entry(bt_dev_addr_t *peer_addr, uint32_t pass
  */
 bt_stack_status_t bt_stack_passkey_confirm(bt_dev_addr_t *peer_addr)
 {
+    aos_check_return_val(peer_addr, -BT_STACK_STATUS_EINVAL);
+
     int             ret;
     struct bt_conn *conn;
     bt_addr_t       addr;
@@ -324,6 +326,8 @@ bt_stack_status_t bt_stack_passkey_confirm(bt_dev_addr_t *peer_addr)
  */
 bt_stack_status_t bt_stack_pairing_cancel(bt_dev_addr_t *peer_addr)
 {
+    aos_check_return_val(peer_addr, -BT_STACK_STATUS_EINVAL);
+
     int             ret;
     struct bt_conn *conn;
     bt_addr_t       addr;
@@ -346,7 +350,7 @@ bt_stack_status_t bt_stack_pairing_cancel(bt_dev_addr_t *peer_addr)
 
 static void auth_passkey_display(struct bt_conn *conn, unsigned int passkey)
 {
-#if defined(CONFIG_BT_BREDR) && CONFIG_BT_BREDR
+#if (defined(CONFIG_BT_BREDR) && CONFIG_BT_BREDR)
     if (conn->type == BT_CONN_TYPE_BR) {
         br_auth_passkey_display(conn, passkey);
     } else
@@ -359,7 +363,7 @@ static void auth_passkey_display(struct bt_conn *conn, unsigned int passkey)
 
 static void auth_passkey_entry(struct bt_conn *conn)
 {
-#if defined(CONFIG_BT_BREDR) && CONFIG_BT_BREDR
+#if (defined(CONFIG_BT_BREDR) && CONFIG_BT_BREDR)
     if (conn->type == BT_CONN_TYPE_BR) {
         br_auth_passkey_entry(conn);
     } else
@@ -372,7 +376,7 @@ static void auth_passkey_entry(struct bt_conn *conn)
 
 static void auth_passkey_confirm(struct bt_conn *conn, unsigned int passkey)
 {
-#if defined(CONFIG_BT_BREDR) && CONFIG_BT_BREDR
+#if (defined(CONFIG_BT_BREDR) && CONFIG_BT_BREDR)
     if (conn->type == BT_CONN_TYPE_BR) {
         br_auth_passkey_confirm(conn, passkey);
     } else
@@ -385,7 +389,7 @@ static void auth_passkey_confirm(struct bt_conn *conn, unsigned int passkey)
 
 static void auth_cancel(struct bt_conn *conn)
 {
-#if defined(CONFIG_BT_BREDR) && CONFIG_BT_BREDR
+#if (defined(CONFIG_BT_BREDR) && CONFIG_BT_BREDR)
     if (conn->type == BT_CONN_TYPE_BR) {
         br_auth_cancel(conn);
     } else
@@ -398,7 +402,7 @@ static void auth_cancel(struct bt_conn *conn)
 
 static void auth_pairing_confirm(struct bt_conn *conn)
 {
-#if defined(CONFIG_BT_BREDR) && CONFIG_BT_BREDR
+#if (defined(CONFIG_BT_BREDR) && CONFIG_BT_BREDR)
     if (conn->type == BT_CONN_TYPE_BR) {
         br_auth_pairing_confirm(conn);
     } else
@@ -411,7 +415,7 @@ static void auth_pairing_confirm(struct bt_conn *conn)
 
 static void auth_pairing_complete(struct bt_conn *conn, bool bonded)
 {
-#if defined(CONFIG_BT_BREDR) && CONFIG_BT_BREDR
+#if (defined(CONFIG_BT_BREDR) && CONFIG_BT_BREDR)
     if (conn->type == BT_CONN_TYPE_BR) {
         br_auth_pairing_complete(conn, bonded);
     } else
@@ -424,7 +428,7 @@ static void auth_pairing_complete(struct bt_conn *conn, bool bonded)
 
 static void auth_pairing_failed(struct bt_conn *conn, enum bt_security_err reason)
 {
-#if defined(CONFIG_BT_BREDR) && CONFIG_BT_BREDR
+#if (defined(CONFIG_BT_BREDR) && CONFIG_BT_BREDR)
     if (conn->type == BT_CONN_TYPE_BR) {
         br_auth_pairing_failed(conn, reason);
     } else
@@ -436,7 +440,7 @@ static void auth_pairing_failed(struct bt_conn *conn, enum bt_security_err reaso
 }
 
 static const struct bt_conn_auth_cb auth_callbacks_display_only = {
-#if defined(CONFIG_BT_SMP_APP_PAIRING_ACCEPT)
+#if (defined(CONFIG_BT_SMP_APP_PAIRING_ACCEPT) && CONFIG_BT_SMP_APP_PAIRING_ACCEPT)
     .bt_security_err = NULL,
 #endif
     .passkey_display  = auth_passkey_display,
@@ -445,7 +449,7 @@ static const struct bt_conn_auth_cb auth_callbacks_display_only = {
     .oob_data_request = NULL,
     .cancel           = auth_cancel,
     .pairing_confirm  = auth_pairing_confirm,
-#if defined(CONFIG_BT_BREDR) && CONFIG_BT_BREDR
+#if (defined(CONFIG_BT_BREDR) && CONFIG_BT_BREDR)
     .pincode_entry = NULL,
 #endif
     .pairing_complete = auth_pairing_complete,
@@ -453,7 +457,7 @@ static const struct bt_conn_auth_cb auth_callbacks_display_only = {
 };
 
 static const struct bt_conn_auth_cb auth_callbacks_display_yesno = {
-#if defined(CONFIG_BT_SMP_APP_PAIRING_ACCEPT)
+#if (defined(CONFIG_BT_SMP_APP_PAIRING_ACCEPT) && CONFIG_BT_SMP_APP_PAIRING_ACCEPT)
     .bt_security_err = NULL,
 #endif
     .passkey_display  = auth_passkey_display,
@@ -462,7 +466,7 @@ static const struct bt_conn_auth_cb auth_callbacks_display_yesno = {
     .oob_data_request = NULL,
     .cancel           = auth_cancel,
     .pairing_confirm  = auth_pairing_confirm,
-#if defined(CONFIG_BT_BREDR) && CONFIG_BT_BREDR
+#if (defined(CONFIG_BT_BREDR) && CONFIG_BT_BREDR)
     .pincode_entry = NULL,
 #endif
     .pairing_complete = auth_pairing_complete,
@@ -470,7 +474,7 @@ static const struct bt_conn_auth_cb auth_callbacks_display_yesno = {
 };
 
 static const struct bt_conn_auth_cb auth_callbacks_keyboard_only = {
-#if defined(CONFIG_BT_SMP_APP_PAIRING_ACCEPT)
+#if (defined(CONFIG_BT_SMP_APP_PAIRING_ACCEPT) && CONFIG_BT_SMP_APP_PAIRING_ACCEPT)
     .bt_security_err = NULL,
 #endif
     .passkey_display  = NULL,
@@ -479,7 +483,7 @@ static const struct bt_conn_auth_cb auth_callbacks_keyboard_only = {
     .oob_data_request = NULL,
     .cancel           = auth_cancel,
     .pairing_confirm  = auth_pairing_confirm,
-#if defined(CONFIG_BT_BREDR) && CONFIG_BT_BREDR
+#if (defined(CONFIG_BT_BREDR) && CONFIG_BT_BREDR)
     .pincode_entry = br_auth_pin_entry,
 #endif
     .pairing_complete = auth_pairing_complete,
@@ -487,7 +491,7 @@ static const struct bt_conn_auth_cb auth_callbacks_keyboard_only = {
 };
 
 static const struct bt_conn_auth_cb auth_callbacks_none = {
-#if defined(CONFIG_BT_SMP_APP_PAIRING_ACCEPT)
+#if (defined(CONFIG_BT_SMP_APP_PAIRING_ACCEPT) && CONFIG_BT_SMP_APP_PAIRING_ACCEPT)
     .bt_security_err = NULL,
 #endif
     .passkey_display  = NULL,
@@ -496,7 +500,7 @@ static const struct bt_conn_auth_cb auth_callbacks_none = {
     .oob_data_request = NULL,
     .cancel           = auth_cancel,
     .pairing_confirm  = NULL,
-#if defined(CONFIG_BT_BREDR) && CONFIG_BT_BREDR
+#if (defined(CONFIG_BT_BREDR) && CONFIG_BT_BREDR)
     .pincode_entry = NULL,
 #endif
     .pairing_complete = auth_pairing_complete,
@@ -504,7 +508,7 @@ static const struct bt_conn_auth_cb auth_callbacks_none = {
 };
 
 static const struct bt_conn_auth_cb auth_callbacks_keyboard_display = {
-#if defined(CONFIG_BT_SMP_APP_PAIRING_ACCEPT)
+#if (defined(CONFIG_BT_SMP_APP_PAIRING_ACCEPT) && CONFIG_BT_SMP_APP_PAIRING_ACCEPT)
     .bt_security_err = NULL,
 #endif
     .passkey_display  = auth_passkey_display,
@@ -513,7 +517,7 @@ static const struct bt_conn_auth_cb auth_callbacks_keyboard_display = {
     .oob_data_request = NULL,
     .cancel           = auth_cancel,
     .pairing_confirm  = auth_pairing_confirm,
-#if defined(CONFIG_BT_BREDR) && CONFIG_BT_BREDR
+#if (defined(CONFIG_BT_BREDR) && CONFIG_BT_BREDR)
     .pincode_entry = NULL,
 #endif
     .pairing_complete = auth_pairing_complete,
@@ -549,6 +553,8 @@ bt_stack_status_t bt_stack_init(void)
  */
 bt_stack_status_t bt_stack_set_name(const char *name)
 {
+    aos_check_return_val(name, -BT_STACK_STATUS_EINVAL);
+
     return bt_set_name(name);
 }
 

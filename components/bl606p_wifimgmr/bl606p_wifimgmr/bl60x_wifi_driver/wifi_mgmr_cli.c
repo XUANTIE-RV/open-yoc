@@ -296,67 +296,6 @@ static void wifi_capcode_cmd(char *buf, int len, int argc, char **argv)
     }
 }
 
-static void wifi_mode_cmd(char *buf, int len, int argc, char **argv)
-{
-    (void)buf;
-    (void)len;
-    char ap_or_sta;
-    int mode = 0, i;
-    struct {
-        char* mode_str;
-        int mode;
-    } mode_map[] = {
-        {"b",   WIFI_MODE_802_11B},
-        {"bg",  WIFI_MODE_802_11B | WIFI_MODE_802_11G},
-        {"bgn", WIFI_MODE_802_11B | WIFI_MODE_802_11G | WIFI_MODE_802_11N_2_4},
-    };
-
-    if (3 != argc && 2 != argc) {
-        bl_os_printf("Usage: %s [ap/sta] [mode]\r\n", argv[0]);
-        return;
-    }
-
-    if (0 == strcmp(argv[1], "sta")) {
-        ap_or_sta = 0;
-    } else if (0 == strcmp(argv[1], "ap")) {
-        ap_or_sta = 1;
-    } else {
-        bl_os_printf("Usage: %s [ap/sta] [mode]\r\n", argv[0]);
-        return;
-    }
-
-    /* get WiFi mode */
-    if (2 == argc) {
-        mode = wifi_mgmr_get_mode(ap_or_sta);
-        for (i = 0; i < 3; i++)
-        {
-            if (mode_map[i].mode == mode) {
-                break;
-            }
-        }
-        if (i < 3) {
-            bl_os_printf("WiFi %s mode %s is being used\r\n", argv[1], mode_map[i].mode_str);
-        }
-
-        return;
-    }
-
-    /* set WiFi mode */
-    for (i = 0; i < 3; i++)
-    {
-        if (0 == strcmp(mode_map[i].mode_str, argv[2])) {
-            break;
-        }
-    }
-    if (i == 3) {
-        bl_os_printf("Wrong WiFi mode %s\r\n", argv[2]);
-        return;
-    }
-
-    wifi_mgmr_set_mode(ap_or_sta, mode_map[i].mode);
-    bl_os_printf("Setting WiFi %s mode to %s\r\n", argv[1], argv[2]);
-}
-
 static void wifi_bcnint_set(char *buf, int len, int argc, char **argv)
 {
     uint16_t bcnint = 0;
@@ -1119,7 +1058,6 @@ const static struct cli_command cmds_user[] STATIC_CLI_CMD_ATTRIBUTE = {
         { "rf_dump", "rf dump", cmd_rf_dump},
         { "wifi_ap_bcnint_set", "wifi ap bcnin set", wifi_bcnint_set},
         { "wifi_capcode", "wifi capcode", wifi_capcode_cmd},
-        { "wifi_mode", "wifi mode config", wifi_mode_cmd},
         { "wifi_scan", "wifi scan", wifi_scan_cmd},
         { "wifi_scan_filter", "wifi scan", wifi_scan_filter_cmd},
         { "wifi_mon", "wifi monitor", wifi_mon_cmd},

@@ -10,7 +10,7 @@
 #define FLASH_TEST_PAR 0
 
 const hal_logic_partition_t hal_partitions[1] = {
-#if (CONFIG_CHIP_CH2601)
+#if defined(CONFIG_CHIP_CH2601)
     [FLASH_TEST_PAR] =
     {
         .partition_owner      = HAL_FLASH_SPI,
@@ -19,7 +19,7 @@ const hal_logic_partition_t hal_partitions[1] = {
         .partition_length     = 0x2000,
         .partition_options = PAR_OPT_READ_EN | PAR_OPT_WRITE_EN,
     },
-#elif (CONFIG_CHIP_BL606P_E907)
+#elif defined(CONFIG_CHIP_BL606P_E907)
     [FLASH_TEST_PAR] =
     {
         .partition_owner      = HAL_FLASH_SPI,
@@ -28,7 +28,7 @@ const hal_logic_partition_t hal_partitions[1] = {
         .partition_length     = 0x2000,
         .partition_options = PAR_OPT_READ_EN | PAR_OPT_WRITE_EN,
     },
-#elif (CONFIG_CHIP_D1)
+#elif defined(CONFIG_CHIP_D1)
     [FLASH_TEST_PAR] =
     {
         .partition_owner      = HAL_FLASH_SPI,
@@ -83,7 +83,7 @@ int hal_flash_demo(void)
         return -1;
     }
 
-    printf("flash demo successfully !");
+    printf("flash demo successfully !\n");
   
     return 0;
 }

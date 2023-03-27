@@ -4,6 +4,7 @@
 #include <ulog/ulog.h>
 #include <alsa/pcm.h>
 
+#include "yoc/pcm_input_port.h"
 #include "../../pcm_input_internal.h"
 
 #define TAG "AACQ"
@@ -14,12 +15,12 @@ extern int g_pcminput_ignore_alsa;
 static aos_pcm_t *pcmC0_ = NULL;
 static aos_pcm_t *pcmC1_ = NULL;
 
-static int d1_voice_pcm_acquire(void *data, int len);
+static int        d1_voice_pcm_acquire(void *data, int len);
 static aos_pcm_t *capture_init(const char *devname, unsigned int sample_rate /*16000*/, int chn_num,
                                int bit_format /*16bit*/, aos_pcm_uframes_t peroid_size)
 {
     aos_pcm_hw_params_t *params;
-    aos_pcm_t           *pcm = NULL;
+    aos_pcm_t *          pcm = NULL;
 
     int err = 0;
 
@@ -84,8 +85,15 @@ static aos_pcm_t *capture_init(const char *devname, unsigned int sample_rate /*1
 
 static int d1_voice_pcm_acquire_init(int bit_format, int sample_rate, int frame_ms, int chn_num)
 {
+    static int init_flag = 0;
+
+    if (init_flag) {
+        return 0;
+    }
+
     ssize_t  capture_byte = 0;
     int16_t *capture_buf  = NULL;
+    //int      err          = 0;
 
     /* Single frame single channel sample count */
     aos_pcm_uframes_t peroid_size = frame_ms * (sample_rate / 1000);
@@ -131,6 +139,8 @@ static int d1_voice_pcm_acquire_init(int bit_format, int sample_rate, int frame_
     if (capture_buf) {
         free(capture_buf);
     }
+
+    init_flag = 1;
 
     return (int)capture_byte;
 }
@@ -228,7 +238,11 @@ static int d1_voice_pcm_acquire(void *data, int len)
             int16_t *pref = (int16_t *)dataref;
 
             for (int i = 0; i < rlen / 2; i += 3) {
+#if defined(CONFIG_BOARD_F133_EVB) && CONFIG_BOARD_F133_EVB
+                pmic[2] = pref[2];
+#else
                 pmic[2] = pref[0];
+#endif
                 pmic += 3;
                 pref += 3;
             }
@@ -240,7 +254,12 @@ static int d1_voice_pcm_acquire(void *data, int len)
     return rlen;
 }
 
-pcm_acquire_ops_t g_pcm_acquire_ops = {
-    .init = d1_voice_pcm_acquire_init,
-    .acquire = d1_voice_pcm_acquire,
+pcm_input_ops_t g_pcm_acquire_ops = {
+    .init        = d1_voice_pcm_acquire_init,
+    .pcm_acquire = d1_voice_pcm_acquire,
 };
+
+void pcm_input_register()
+{
+    pcm_acquire_register(&g_pcm_acquire_ops);
+}

@@ -5,8 +5,8 @@
 #include <aos/debug.h>
 #include <ulog/ulog.h>
 
-#include <media.h>
-#include <avutil/named_straightfifo.h>
+#include <av/media.h>
+#include <av/avutil/named_straightfifo.h>
 #include <yoc/aui_cloud.h>
 
 #include "nui_things.h"

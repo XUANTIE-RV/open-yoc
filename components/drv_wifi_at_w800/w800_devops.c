@@ -9,7 +9,7 @@
 #include <aos/aos.h>
 #include <sal.h>
 #include <devices/wifi.h>
-#include <devices/hal/wifi_impl.h>
+#include <devices/impl/wifi_impl.h>
 
 #include "w800.h"
 #include "w800_api.h"
@@ -39,12 +39,12 @@ struct wifi_connect_req_params {
 };
 
 typedef struct {
-    aos_dev_t   device;
+    rvm_dev_t   device;
     uint8_t mode;
 
     struct wifi_connect_req_params conn_params;
 
-    void (*write_event)(aos_dev_t *dev, int event_id, void *priv);
+    void (*write_event)(rvm_dev_t *dev, int event_id, void *priv);
     void *priv;
 } wifi_dev_t;
 
@@ -81,16 +81,16 @@ static w800_wifi_param_t       w800_param;
 /*****************************************
 * common driver interface
 ******************************************/
-static aos_dev_t *w800_dev_init(driver_t *drv, void *config, int id)
+static rvm_dev_t *w800_dev_init(driver_t *drv, void *config, int id)
 {
-    aos_dev_t *dev = device_new(drv, sizeof(wifi_dev_t), id);
+    rvm_dev_t *dev = rvm_hal_device_new(drv, sizeof(wifi_dev_t), id);
 
     return dev;
 }
 
-#define w800_dev_uninit device_free
+#define w800_dev_uninit rvm_hal_device_free
 
-static int w800_dev_open(aos_dev_t *dev)
+static int w800_dev_open(rvm_dev_t *dev)
 {
     // power on device
     sal_module_register(&w800_sal_driver);
@@ -100,7 +100,7 @@ static int w800_dev_open(aos_dev_t *dev)
     return 0;
 }
 
-static int w800_dev_close(aos_dev_t *dev)
+static int w800_dev_close(rvm_dev_t *dev)
 {
     //power off device
     sal_deinit();
@@ -112,30 +112,30 @@ static int w800_dev_close(aos_dev_t *dev)
 /*****************************************
 * common netif driver interface
 ******************************************/
-static int w800_set_mac_addr(aos_dev_t *dev, const uint8_t *mac)
+static int w800_set_mac_addr(rvm_dev_t *dev, const uint8_t *mac)
 {
     return 0;
 }
 
 #if 0
-static int w800_start_dhcp(aos_dev_t *dev)
+static int w800_start_dhcp(rvm_dev_t *dev)
 {
     return 0;
 }
 
-static int w800_stop_dhcp(aos_dev_t *dev)
+static int w800_stop_dhcp(rvm_dev_t *dev)
 {
     return 0;
 }
 #endif
 
-static int w800_set_ipaddr(aos_dev_t *dev, const ip_addr_t *ipaddr, const ip_addr_t *netmask,
+static int w800_set_ipaddr(rvm_dev_t *dev, const ip_addr_t *ipaddr, const ip_addr_t *netmask,
                            const ip_addr_t *gw)
 {
     return 0;
 }
 
-static int w800_get_ipaddr(aos_dev_t *dev, ip_addr_t *ipaddr, ip_addr_t *netmask_addr, ip_addr_t *gw_addr)
+static int w800_get_ipaddr(rvm_dev_t *dev, ip_addr_t *ipaddr, ip_addr_t *netmask_addr, ip_addr_t *gw_addr)
 {
     int  ret;
     char ip[16], gw[16], mask[16];
@@ -149,23 +149,23 @@ static int w800_get_ipaddr(aos_dev_t *dev, ip_addr_t *ipaddr, ip_addr_t *netmask
     return ret;
 }
 
-static int w800_get_mac_addr(aos_dev_t *dev, uint8_t *mac)
+static int w800_get_mac_addr(rvm_dev_t *dev, uint8_t *mac)
 {
     return w800_get_mac(dev, mac);
 }
 
 
-int w800_set_dns_server(aos_dev_t *dev, ip_addr_t ipaddr[], uint32_t num)
+int w800_set_dns_server(rvm_dev_t *dev, ip_addr_t ipaddr[], uint32_t num)
 {
     return -1;
 }
 
-int w800_get_dns_server(aos_dev_t *dev, ip_addr_t ipaddr[], uint32_t num)
+int w800_get_dns_server(rvm_dev_t *dev, ip_addr_t ipaddr[], uint32_t num)
 {
     return -1;
 }
 
-static int w800_subscribe(aos_dev_t *dev, uint32_t event, event_callback_t cb, void *param)
+static int w800_subscribe(rvm_dev_t *dev, uint32_t event, event_callback_t cb, void *param)
 {
     if (cb) {
         event_subscribe(event, cb, param);
@@ -177,7 +177,7 @@ static int w800_subscribe(aos_dev_t *dev, uint32_t event, event_callback_t cb, v
 /*****************************************
 * wifi driver interface
 ******************************************/
-int w800_set_mode(aos_dev_t *dev, wifi_mode_t mode)
+int w800_set_mode(rvm_dev_t *dev, rvm_hal_wifi_mode_t mode)
 {
     if (w800_set_wifi_mode(mode)) {
         LOGD(TAG, "set mode");
@@ -197,7 +197,7 @@ int w800_set_mode(aos_dev_t *dev, wifi_mode_t mode)
     return 0;
 }
 
-int w800_get_mode(aos_dev_t *dev, wifi_mode_t *mode)
+int w800_get_mode(rvm_dev_t *dev, rvm_hal_wifi_mode_t *mode)
 {
     if (mode == NULL) {
         return -EINVAL;
@@ -207,29 +207,29 @@ int w800_get_mode(aos_dev_t *dev, wifi_mode_t *mode)
     return 0;
 }
 
-int w800_init(aos_dev_t *dev)
+int w800_init(rvm_dev_t *dev)
 {
     return 0;
 }
 
-int w800_deinit(aos_dev_t *dev)
+int w800_deinit(rvm_dev_t *dev)
 {
     return 0;
 }
 
-int w800_start(aos_dev_t *dev, wifi_config_t * config)
+int w800_start(rvm_dev_t *dev, rvm_hal_wifi_config_t * config)
 {
     // w800_set_mode(dev, config->mode);
     return w800_ap_connect((const char *)config->ssid, (const char *)config->password);
 
 }
 
-int w800_stop(aos_dev_t *dev)
+int w800_stop(rvm_dev_t *dev)
 {
     return 0;
 }
 
-int w800_reset(aos_dev_t *dev)
+int w800_reset(rvm_dev_t *dev)
 {
     int ret;
 
@@ -242,12 +242,12 @@ int w800_reset(aos_dev_t *dev)
     return 0;
 }
 
-int w800_disconnect_ap(aos_dev_t *dev)
+int w800_disconnect_ap(rvm_dev_t *dev)
 {
     return w800_ap_disconnect();
 }
 
-int w800_ping_remote(aos_dev_t *dev, int type, char *remote_ip)
+int w800_ping_remote(rvm_dev_t *dev, int type, char *remote_ip)
 {
     int retry = 0;
     int i;
@@ -263,7 +263,7 @@ int w800_ping_remote(aos_dev_t *dev, int type, char *remote_ip)
     return 0;
 }
 
-int w800_get_ap_info(wifi_ap_record_t *ap_info)
+int w800_get_ap_info(rvm_hal_wifi_ap_record_t *ap_info)
 {
     char ssid[32];
     int bssid[6];
@@ -290,7 +290,7 @@ int w800_get_ap_info(wifi_ap_record_t *ap_info)
 }
 
 
-int w800_drv_get_link_status(aos_dev_t *dev, wifi_ap_record_t *ap_info)
+int w800_drv_get_link_status(rvm_dev_t *dev, rvm_hal_wifi_ap_record_t *ap_info)
 {
     int status;
 
@@ -320,18 +320,18 @@ int w800_drv_get_link_status(aos_dev_t *dev, wifi_ap_record_t *ap_info)
     return 0;
 }
 
-int w800_get_link_info(aos_dev_t *dev, char ip[16], char gw[16], char mask[16])
+int w800_get_link_info(rvm_dev_t *dev, char ip[16], char gw[16], char mask[16])
 {
     return w800_link_info(ip, gw, mask);
 }
 
-int w800_smartconfig(aos_dev_t *dev, int enable)
+int w800_smartconfig(rvm_dev_t *dev, int enable)
 {
 
     return -1;
 }
 
-int w800_if_config(aos_dev_t *dev, uint32_t baud, uint8_t flow_control)
+int w800_if_config(rvm_dev_t *dev, uint32_t baud, uint8_t flow_control)
 {
     return w800_uart_config(baud, flow_control);
 }
@@ -658,7 +658,7 @@ void wifi_w800_register(utask_t *task, w800_wifi_param_t *param)
     }
 
     //run w800_dev_init to create wifi_dev_t and bind this driver
-    ret = driver_register(&w800_driver.drv, NULL, 0);
+    ret = rvm_driver_register(&w800_driver.drv, NULL, 0);
 
     if (ret < 0) {
         LOGE(TAG, "device register error");

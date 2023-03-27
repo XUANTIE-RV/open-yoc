@@ -1,10 +1,10 @@
 /*
  * Copyright (C) 2015-2020 Alibaba Group Holding Limited
  */
-
-#include "board.h"
-#include <aos/kernel.h>
 #include <stdio.h>
+#include <board.h>
+#include <aos/kernel.h>
+#include <aos/cli.h>
 #include <ulog/ulog.h>
 #include <drv/lradc.h>
 
@@ -17,7 +17,7 @@ static void lradc_irq_callback(uint32_t irq_status, uint32_t data)
 {
     // Here, we only catpure key button's up IRQ to confirm user press key one times
     if (irq_status & LRADC_ADC0_UPPEND) {
-        printf("user key is pressed one times\n");
+        aos_cli_printf("user key is pressed one times\n");
     }
 }
 

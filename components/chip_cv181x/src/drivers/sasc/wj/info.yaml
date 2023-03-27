@@ -1,0 +1,10 @@
+name: SASC
+vendor: WJ
+license: Copyright (C) 2017-2019 Alibaba Group Holding Limited
+description: WJ SASC
+type: devices
+
+versions:
+    v1.0:
+        drv_path: v4.0
+        rtl_path: xxxx

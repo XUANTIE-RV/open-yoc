@@ -30,6 +30,13 @@ extern "C" {
  */
 void board_init(void);
 
+/**
+ * @brief  init the board flash for default: pin mux, etc.
+ * re-implement if need.
+ * @return
+ */
+void board_flash_init(void);
+
 #ifdef __cplusplus
 }
 #endif

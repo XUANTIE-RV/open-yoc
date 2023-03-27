@@ -236,6 +236,15 @@ int32_t hal_gpio_disable_irq(gpio_dev_t *gpio)
         return -1;
     }
 
+    csi_error_t    ret = CSI_OK;
+    
+    ret = csi_gpio_pin_irq_enable(&gpio_pin_dev[gpio->port],0);
+
+    if (ret != CSI_OK) {
+        LOGE(TAG, "csi_gpio_pin_irq_enable error");
+        return -1;
+    }
+
     return 0;
 }
 

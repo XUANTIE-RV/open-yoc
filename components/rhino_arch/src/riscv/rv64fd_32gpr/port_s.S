@@ -15,6 +15,7 @@
 
 .global cpu_intrpt_save
 .global cpu_intrpt_restore
+.global cpu_is_irq_enable
 .global cpu_task_switch
 .global cpu_intrpt_switch
 .global cpu_first_task_start
@@ -60,6 +61,10 @@ cpu_intrpt_restore:
     csrw mstatus, a0
     ret
 
+cpu_is_irq_enable:
+    csrr a0, mstatus
+    andi a0, a0, RISCV_MSTATUS_MIE
+    ret
 
 /******************************************************************************
 @ Functions:

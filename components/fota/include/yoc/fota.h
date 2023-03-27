@@ -120,7 +120,7 @@ struct fota {
     fota_config_t config;           /*!< fota config */
     fota_info_t info;               /*!< fota information */
     aos_timer_t restart_timer;      /*!< the timer to norify to restart */
-    void *private;                  /*!< user data context */
+    void *priv;                     /*!< user data context */
 };
 
 /**

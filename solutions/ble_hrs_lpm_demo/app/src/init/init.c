@@ -7,10 +7,8 @@
 #include <aos/kv.h>
 #include <yoc/yoc.h>
 #include <yoc/partition.h>
-#include <devices/devicelist.h>
-#include <board_config.h>
+#include <board.h>
 
-#include "pin_name.h"
 #include "app_init.h"
 
 const char *TAG = "INIT";
@@ -47,6 +45,10 @@ void board_yoc_init()
     int ret;
 
     board_init();
+
+#if defined(CONFIG_BOARD_BT) && CONFIG_BOARD_BT
+    board_bt_init();
+#endif
 
     console_init(CONSOLE_UART_IDX, 115200, 128);
 

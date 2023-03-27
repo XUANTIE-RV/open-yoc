@@ -3,7 +3,7 @@
  */
 #include "verify_wrapper.h"
 #include "crc32.h"
-#include <yoc/partition_flash.h>
+#include <yoc/partition_device.h>
 #include "yoc/partition.h"
 #include <errno.h>
 #include <stdlib.h>
@@ -65,7 +65,9 @@ int get_length_with_signature_type(signature_sch_e type)
     return 0;
 }
 
-static int copy_data(void *dst, void *src, size_t size, int from_mem)
+#if defined(CONFIG_COMP_SEC_CRYPTO) && CONFIG_COMP_SEC_CRYPTO
+
+static int copy_data(void *dst, void *src, size_t size, int from_mem, partition_info_t *part_info)
 {
     int ret = 0;
 
@@ -75,13 +77,11 @@ static int copy_data(void *dst, void *src, size_t size, int from_mem)
     }
 
 #ifdef CONFIG_NON_ADDRESS_FLASH
-    int flashid = 0;
-#if CONFIG_MULTI_FLASH_SUPPORT
-    flashid = get_flashid_by_abs_addr((unsigned long)src);
-#endif
-    void *handle = partition_flash_open(flashid);
-    ret = partition_flash_read(handle, (unsigned long)src, dst, size);
-    partition_flash_close(handle);
+    if (part_info == NULL) {
+        return -EINVAL;
+    }
+    void *handle = partition_device_find(&part_info->storage_info);
+    ret = partition_device_read(handle, (unsigned long)src - part_info->base_addr, dst, size);
 #else
     memcpy(dst, src, size);
 #endif /* CONFIG_NON_ADDRESS_FLASH */
@@ -89,7 +89,7 @@ static int copy_data(void *dst, void *src, size_t size, int from_mem)
     return ret;
 }
 
-sha_context_t* sha_init(digest_sch_e ds)
+sha_context_t* sha_init(digest_sch_e ds, partition_info_t *part_info)
 {
     sha_context_t *sha_ctx = NULL;
 #if defined(CONFIG_KERNEL_NONE)
@@ -105,6 +105,7 @@ sha_context_t* sha_init(digest_sch_e ds)
     memset(sha_ctx, 0, sizeof(sha_context_t));
     sc_sha_init(&sha_ctx->sc_sha, 0);
     sha_ctx->ds_type = ds;
+    sha_ctx->priv = part_info;
 
     return sha_ctx;
 }
@@ -144,7 +145,9 @@ int sha_update(sha_context_t *ctx, const void *input, uint32_t ilen, int from_me
     }
 #else
     if (image_size > sizeof(temp_buffer)) {
-        copy_data(temp_buffer, p_addr, sizeof(temp_buffer), from_mem);
+        if (copy_data(temp_buffer, p_addr, sizeof(temp_buffer), from_mem, ctx->priv)) {
+            return -1;
+        }
 
         ret = sc_sha_update(&ctx->sc_sha, &ctx->sc_ctx, temp_buffer, sizeof(temp_buffer));
         if (ret != SC_OK) {
@@ -154,7 +157,9 @@ int sha_update(sha_context_t *ctx, const void *input, uint32_t ilen, int from_me
         image_size -= sizeof(temp_buffer);
 
         while (image_size > sizeof(temp_buffer)) {
-            copy_data(temp_buffer, p_addr, sizeof(temp_buffer), from_mem);
+            if (copy_data(temp_buffer, p_addr, sizeof(temp_buffer), from_mem, ctx->priv)) {
+                return -1;
+            }
             ret = sc_sha_update(&ctx->sc_sha, &ctx->sc_ctx, temp_buffer, sizeof(temp_buffer));
             if (ret != SC_OK) {
                 return -1;
@@ -162,13 +167,17 @@ int sha_update(sha_context_t *ctx, const void *input, uint32_t ilen, int from_me
             p_addr += sizeof(temp_buffer);
             image_size -= sizeof(temp_buffer);
         }
-        copy_data(temp_buffer, p_addr, image_size, from_mem);
+        if (copy_data(temp_buffer, p_addr, image_size, from_mem, ctx->priv)) {
+            return -1;
+        }
         ret = sc_sha_update(&ctx->sc_sha, &ctx->sc_ctx, temp_buffer, image_size);
         if (ret != SC_OK) {
             return -1;
         }
     } else {
-        copy_data(temp_buffer, p_addr, image_size, from_mem);
+        if (copy_data(temp_buffer, p_addr, image_size, from_mem, ctx->priv)) {
+            return -1;
+        }
         ret = sc_sha_update(&ctx->sc_sha, &ctx->sc_ctx, temp_buffer, image_size);
         if (ret != SC_OK) {
             return -1;
@@ -202,7 +211,8 @@ int sha_deinit(sha_context_t *ctx)
 }
 
 __attribute__((weak)) int hash_calc_start(digest_sch_e ds, const unsigned char *input, int ilen,
-                                            unsigned char *output, uint32_t *olen, int from_mem)
+                                          unsigned char *output, uint32_t *olen, int from_mem,
+                                          partition_info_t *part_info)
 {
 #ifndef DEBUG_WITH_MBEDTLS
     int ret;
@@ -213,7 +223,7 @@ __attribute__((weak)) int hash_calc_start(digest_sch_e ds, const unsigned char *
         return -EINVAL;
     }
 
-    ctx = sha_init(ds);
+    ctx = sha_init(ds, part_info);
     if (ctx) {
         ret = sha_start(ctx);
         if (ret != 0) {
@@ -264,60 +274,76 @@ __attribute__((weak)) int hash_calc_start(digest_sch_e ds, const unsigned char *
         mbedtls_sha1_init(&ctx);
         mbedtls_sha1_starts(&ctx);
         if (image_size > sizeof(temp_buffer)) {
-            copy_data(temp_buffer, p_addr, sizeof(temp_buffer), from_mem);
+            if (copy_data(temp_buffer, p_addr, sizeof(temp_buffer), from_mem, part_info)) {
+                return -1;
+            }
 
             mbedtls_sha1_update(&ctx, temp_buffer, sizeof(temp_buffer));
             p_addr += sizeof(temp_buffer);
             image_size -= sizeof(temp_buffer);
 
             while (image_size > sizeof(temp_buffer)) {
-                copy_data(temp_buffer, p_addr, sizeof(temp_buffer), from_mem);
+                if (copy_data(temp_buffer, p_addr, sizeof(temp_buffer), from_mem, part_info)) {
+                    return -1;
+                }
 
                 mbedtls_sha1_update(&ctx, temp_buffer, sizeof(temp_buffer));
                 p_addr += sizeof(temp_buffer);
                 image_size -= sizeof(temp_buffer);
             }
 
-            copy_data(temp_buffer, p_addr, image_size, from_mem);
+            if (copy_data(temp_buffer, p_addr, image_size, from_mem, part_info)) {
+                return -1;
+            }
             mbedtls_sha1_update(&ctx, temp_buffer, image_size);
         } else {
-            copy_data(temp_buffer, p_addr, image_size, from_mem);
+            if (copy_data(temp_buffer, p_addr, image_size, from_mem, part_info)) {
+                return -1;
+            }
             mbedtls_sha1_update(&ctx, temp_buffer, image_size);
         }
         mbedtls_sha1_finish(&ctx, output);
         mbedtls_sha1_free(&ctx);
         *olen = 20;
     }
-    // else if (ds == DIGEST_HASH_SHA256) {
-    //     mbedtls_sha256_context ctx;
+    else if (ds == DIGEST_HASH_SHA256) {
+        mbedtls_sha256_context ctx;
 
-    //     mbedtls_sha256_init(&ctx);
-    //     mbedtls_sha256_starts(&ctx, 0);
-    //     if (image_size > sizeof(temp_buffer)) {
-    //         copy_data(temp_buffer, p_addr, sizeof(temp_buffer), from_mem);
+        mbedtls_sha256_init(&ctx);
+        mbedtls_sha256_starts(&ctx, 0);
+        if (image_size > sizeof(temp_buffer)) {
+            if (copy_data(temp_buffer, p_addr, sizeof(temp_buffer), from_mem, part_info)) {
+                return -1;
+            }
 
-    //         mbedtls_sha256_update(&ctx, temp_buffer, sizeof(temp_buffer));
-    //         p_addr += sizeof(temp_buffer);
-    //         image_size -= sizeof(temp_buffer);
+            mbedtls_sha256_update(&ctx, temp_buffer, sizeof(temp_buffer));
+            p_addr += sizeof(temp_buffer);
+            image_size -= sizeof(temp_buffer);
 
-    //         while (image_size > sizeof(temp_buffer)) {
-    //             copy_data(temp_buffer, p_addr, sizeof(temp_buffer), from_mem);
+            while (image_size > sizeof(temp_buffer)) {
+                if (copy_data(temp_buffer, p_addr, sizeof(temp_buffer), from_mem, part_info)) {
+                    return -1;
+                }
 
-    //             mbedtls_sha256_update(&ctx, temp_buffer, sizeof(temp_buffer));
-    //             p_addr += sizeof(temp_buffer);
-    //             image_size -= sizeof(temp_buffer);
-    //         }
+                mbedtls_sha256_update(&ctx, temp_buffer, sizeof(temp_buffer));
+                p_addr += sizeof(temp_buffer);
+                image_size -= sizeof(temp_buffer);
+            }
 
-    //         copy_data(temp_buffer, p_addr, image_size, from_mem);
-    //         mbedtls_sha256_update(&ctx, temp_buffer, image_size);
-    //     } else {
-    //         copy_data(temp_buffer, p_addr, image_size, from_mem);
-    //         mbedtls_sha256_update(&ctx, temp_buffer, image_size);
-    //     }
-    //     mbedtls_sha256_finish(&ctx, output);
-    //     mbedtls_sha256_free(&ctx);
-    //     *olen = 32;
-    // }
+            if (copy_data(temp_buffer, p_addr, image_size, from_mem, part_info)) {
+                return -1;
+            }
+            mbedtls_sha256_update(&ctx, temp_buffer, image_size);
+        } else {
+            if (copy_data(temp_buffer, p_addr, image_size, from_mem, part_info)) {
+                return -1;
+            }
+            mbedtls_sha256_update(&ctx, temp_buffer, image_size);
+        }
+        mbedtls_sha256_finish(&ctx, output);
+        mbedtls_sha256_free(&ctx);
+        *olen = 32;
+    }
     else {
         MTB_LOGE("digest type e[%d]", ds);
         return -1;
@@ -438,6 +464,8 @@ __attribute__((weak)) int signature_verify_start(digest_sch_e ds, signature_sch_
 }
 
 #endif /* CONFIG_PARITION_NO_VERIFY */
+
+#endif /* CONFIG_COMP_SEC_CRYPTO */
 
 __attribute__((weak)) int crc32_calc_start(const uint8_t *input, uint32_t ilen, uint32_t *output)
 {

@@ -8,7 +8,7 @@
 #include <devices/netdrv.h>
 #include <yoc/netmgr.h>
 #include <yoc/netmgr_service.h>
-#include <devices/hal/nbiot_impl.h>
+#include <devices/impl/nbiot_impl.h>    // FIXME:
 #ifdef CONFIG_KV_SMART
 #include <aos/kv.h>
 #endif
@@ -20,16 +20,16 @@ int netmgr_nbiot_provision(netmgr_dev_t *node)
     netmgr_subscribe(EVENT_NBIOT_LINK_UP);
     netmgr_subscribe(EVENT_NBIOT_LINK_DOWN);
 
-    return hal_nbiot_start(node->dev);
+    return rvm_hal_nbiot_start(node->dev);
 
 }
 
 int netmgr_nbiot_unprovision(netmgr_dev_t *node)
 {
-    aos_dev_t *dev = node->dev;
+    rvm_dev_t *dev = node->dev;
 
-    hal_net_set_link_down(dev);
-    device_close(dev);
+    rvm_hal_net_set_link_down(dev);
+    rvm_hal_device_close(dev);
 
     return 0;
 
@@ -38,13 +38,13 @@ int netmgr_nbiot_unprovision(netmgr_dev_t *node)
 
 int netmgr_nbiot_info(netmgr_dev_t *node)
 {
-    aos_dev_t  *dev = node->dev;
-    netdev_driver_t *drv = dev->drv;
+    rvm_dev_t  *dev = node->dev;
+    netdev_driver_t *drv = (netdev_driver_t *)dev->drv;
     nbiot_driver_t *nbiot_drv = (nbiot_driver_t *)drv->link_ops;
     net_ops_t  *net_drv = drv->net_ops;
     ip_addr_t ipaddr;
     int csq = 99;
-    nbiot_iccid_t ccid;
+    rvm_hal_nbiot_iccid_t ccid;
     int insert = -1;
     int ret;
 
@@ -79,8 +79,8 @@ int netmgr_nbiot_service(struct netmgr_uservice *netmgr, rpc_t *rpc)
 
     case EVENT_NBIOT_LINK_UP: {
         netmgr_dev_t *node = netmgr_find_dev(&netmgr->dev_list, "nbiot");
-        aos_dev_t *dev = node->dev;
-        netdev_driver_t *drv = dev->drv;
+        rvm_dev_t *dev = node->dev;
+        netdev_driver_t *drv = (netdev_driver_t *)dev->drv;
         nbiot_driver_t *nbiot_drv = (nbiot_driver_t *)drv->link_ops;
 
         if (nbiot_drv->start_nbiot)
@@ -102,8 +102,8 @@ int netmgr_nbiot_service(struct netmgr_uservice *netmgr, rpc_t *rpc)
 
 static int netmgr_nbiot_reset(netmgr_dev_t *node)
 {
-    aos_dev_t *dev = node->dev;
-    netdev_driver_t *drv = dev->drv;
+    rvm_dev_t *dev = node->dev;
+    netdev_driver_t *drv = (netdev_driver_t *)dev->drv;
 
     nbiot_driver_t *eth_drv = (nbiot_driver_t *)drv->link_ops;
 
@@ -130,7 +130,7 @@ static netmgr_dev_t * netmgr_nbiot_init(struct netmgr_uservice *netmgr)
         node = (netmgr_dev_t *)aos_zalloc(sizeof(netmgr_dev_t));
 
         if (node) {
-            node->dev = device_open_id("nbiot", 0);
+            node->dev = rvm_hal_device_open("nbiot0");
             aos_assert(node->dev);
             node->provision = netmgr_nbiot_provision;
             node->unprovision = netmgr_nbiot_unprovision;

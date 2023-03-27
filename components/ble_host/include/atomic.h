@@ -36,7 +36,7 @@ typedef atomic_t atomic_val_t;
  * @param new_value New value to store.
  * @return 1 if @a new_value is written, 0 otherwise.
  */
-#ifdef CONFIG_ATOMIC_OPERATIONS_BUILTIN
+#if (defined(CONFIG_ATOMIC_OPERATIONS_BUILTIN) && CONFIG_ATOMIC_OPERATIONS_BUILTIN)
 static inline int atomic_cas(atomic_t *target, atomic_val_t old_value,
 			  atomic_val_t new_value)
 {
@@ -60,7 +60,7 @@ extern int atomic_cas(atomic_t *target, atomic_val_t old_value,
  *
  * @return Previous value of @a target.
  */
-#ifdef CONFIG_ATOMIC_OPERATIONS_BUILTIN
+#if (defined(CONFIG_ATOMIC_OPERATIONS_BUILTIN) && CONFIG_ATOMIC_OPERATIONS_BUILTIN)
 static inline atomic_val_t atomic_add(atomic_t *target, atomic_val_t value)
 {
 	return __atomic_fetch_add(target, value, __ATOMIC_SEQ_CST);
@@ -80,7 +80,7 @@ extern atomic_val_t atomic_add(atomic_t *target, atomic_val_t value);
  *
  * @return Previous value of @a target.
  */
-#ifdef CONFIG_ATOMIC_OPERATIONS_BUILTIN
+#if (defined(CONFIG_ATOMIC_OPERATIONS_BUILTIN) && CONFIG_ATOMIC_OPERATIONS_BUILTIN)
 static inline atomic_val_t atomic_sub(atomic_t *target, atomic_val_t value)
 {
 	return __atomic_fetch_sub(target, value, __ATOMIC_SEQ_CST);
@@ -99,7 +99,7 @@ extern atomic_val_t atomic_sub(atomic_t *target, atomic_val_t value);
  *
  * @return Previous value of @a target.
  */
-#ifdef CONFIG_ATOMIC_OPERATIONS_BUILTIN
+#if (defined(CONFIG_ATOMIC_OPERATIONS_BUILTIN) && CONFIG_ATOMIC_OPERATIONS_BUILTIN)
 static inline atomic_val_t atomic_inc(atomic_t *target)
 {
 	return atomic_add(target, 1);
@@ -118,7 +118,7 @@ extern atomic_val_t atomic_inc(atomic_t *target);
  *
  * @return Previous value of @a target.
  */
-#ifdef CONFIG_ATOMIC_OPERATIONS_BUILTIN
+#if (defined(CONFIG_ATOMIC_OPERATIONS_BUILTIN) && CONFIG_ATOMIC_OPERATIONS_BUILTIN)
 static inline atomic_val_t atomic_dec(atomic_t *target)
 {
 	return atomic_sub(target, 1);
@@ -137,7 +137,7 @@ extern atomic_val_t atomic_dec(atomic_t *target);
  *
  * @return Value of @a target.
  */
-#ifdef CONFIG_ATOMIC_OPERATIONS_BUILTIN
+#if (defined(CONFIG_ATOMIC_OPERATIONS_BUILTIN) && CONFIG_ATOMIC_OPERATIONS_BUILTIN)
 static inline atomic_val_t atomic_get(const atomic_t *target)
 {
 	return __atomic_load_n(target, __ATOMIC_SEQ_CST);
@@ -158,7 +158,7 @@ extern atomic_val_t atomic_get(const atomic_t *target);
  *
  * @return Previous value of @a target.
  */
-#ifdef CONFIG_ATOMIC_OPERATIONS_BUILTIN
+#if (defined(CONFIG_ATOMIC_OPERATIONS_BUILTIN) && CONFIG_ATOMIC_OPERATIONS_BUILTIN)
 static inline atomic_val_t atomic_set(atomic_t *target, atomic_val_t value)
 {
 	/* This builtin, as described by Intel, is not a traditional
@@ -182,7 +182,7 @@ extern atomic_val_t atomic_set(atomic_t *target, atomic_val_t value);
  *
  * @return Previous value of @a target.
  */
-#ifdef CONFIG_ATOMIC_OPERATIONS_BUILTIN
+#if (defined(CONFIG_ATOMIC_OPERATIONS_BUILTIN) && CONFIG_ATOMIC_OPERATIONS_BUILTIN)
 static inline atomic_val_t atomic_clear(atomic_t *target)
 {
 	return atomic_set(target, 0);
@@ -203,7 +203,7 @@ extern atomic_val_t atomic_clear(atomic_t *target);
  *
  * @return Previous value of @a target.
  */
-#ifdef CONFIG_ATOMIC_OPERATIONS_BUILTIN
+#if (defined(CONFIG_ATOMIC_OPERATIONS_BUILTIN) && CONFIG_ATOMIC_OPERATIONS_BUILTIN)
 static inline atomic_val_t atomic_or(atomic_t *target, atomic_val_t value)
 {
 	return __atomic_fetch_or(target, value, __ATOMIC_SEQ_CST);
@@ -224,7 +224,7 @@ extern atomic_val_t atomic_or(atomic_t *target, atomic_val_t value);
  *
  * @return Previous value of @a target.
  */
-#ifdef CONFIG_ATOMIC_OPERATIONS_BUILTIN
+#if (defined(CONFIG_ATOMIC_OPERATIONS_BUILTIN) && CONFIG_ATOMIC_OPERATIONS_BUILTIN)
 static inline atomic_val_t atomic_xor(atomic_t *target, atomic_val_t value)
 {
 	return __atomic_fetch_xor(target, value, __ATOMIC_SEQ_CST);
@@ -245,7 +245,7 @@ extern atomic_val_t atomic_xor(atomic_t *target, atomic_val_t value);
  *
  * @return Previous value of @a target.
  */
-#ifdef CONFIG_ATOMIC_OPERATIONS_BUILTIN
+#if (defined(CONFIG_ATOMIC_OPERATIONS_BUILTIN) && CONFIG_ATOMIC_OPERATIONS_BUILTIN)
 static inline atomic_val_t atomic_and(atomic_t *target, atomic_val_t value)
 {
 	return __atomic_fetch_and(target, value, __ATOMIC_SEQ_CST);
@@ -266,7 +266,7 @@ extern atomic_val_t atomic_and(atomic_t *target, atomic_val_t value);
  *
  * @return Previous value of @a target.
  */
-#ifdef CONFIG_ATOMIC_OPERATIONS_BUILTIN
+#if (defined(CONFIG_ATOMIC_OPERATIONS_BUILTIN) && CONFIG_ATOMIC_OPERATIONS_BUILTIN)
 static inline atomic_val_t atomic_nand(atomic_t *target, atomic_val_t value)
 {
 	return __atomic_fetch_nand(target, value, __ATOMIC_SEQ_CST);

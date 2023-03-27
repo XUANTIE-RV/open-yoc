@@ -188,7 +188,7 @@ static void le_param_update_cb(struct bt_conn *conn, u16_t interval, u16_t laten
     ble_stack_event_callback(EVENT_GAP_CONN_PARAM_UPDATE, &event_data, sizeof(event_data));
 }
 
-#ifdef CONFIG_BT_SMP
+#if (defined(CONFIG_BT_SMP) && CONFIG_BT_SMP)
 static void security_changed_cb(struct bt_conn *conn, bt_security_t level, enum bt_security_err err)
 {
     evt_data_gap_security_change_t event_data;
@@ -217,7 +217,7 @@ static void scan_cb(const struct bt_le_scan_recv_info *info, struct net_buf_simp
     memcpy(&event_data.dev_addr, info->addr, sizeof(dev_addr_t));
     event_data.adv_type = info->adv_type;
 
-#if defined(CONFIG_BT_EXT_ADV)
+#if (defined(CONFIG_BT_EXT_ADV) && CONFIG_BT_EXT_ADV)
     event_data.sid           = info->sid;
     event_data.rssi          = info->rssi;
     event_data.tx_power      = info->tx_power;
@@ -367,7 +367,7 @@ static struct bt_conn_cb conn_callbacks = {
     .disconnected     = disconnected,
     .le_param_req     = le_param_req_cb,
     .le_param_updated = le_param_update_cb,
-#ifdef CONFIG_BT_SMP
+#if (defined(CONFIG_BT_SMP) && CONFIG_BT_SMP)
     .identity_resolved = identity_address_resolved,
     .security_changed  = security_changed_cb,
 #endif
@@ -519,7 +519,7 @@ int ble_stack_adv_start(adv_param_t *param)
         return -BT_STACK_STATUS_EINVAL;
     }
 
-#if defined(CONFIG_BT_EXT_ADV)
+#if (defined(CONFIG_BT_EXT_ADV) && CONFIG_BT_EXT_ADV)
     if (param->phy_select > (ADV_PHY_1M | ADV_PHY_2M | ADV_PHY_CODED)) {
         return -BT_STACK_STATUS_EINVAL;
     }
@@ -621,7 +621,7 @@ int ble_stack_scan_start(const scan_param_t *param)
     p.interval = param->interval;
     p.window   = param->window;
 
-#if defined(CONFIG_BT_EXT_ADV)
+#if (defined(CONFIG_BT_EXT_ADV) && CONFIG_BT_EXT_ADV)
     if (param->phy_select > (SCAN_PHY_1M | SCAN_PHY_2M | SCAN_PHY_CODED)) {
         return -BT_STACK_STATUS_EINVAL;
     }
@@ -1325,7 +1325,7 @@ int ble_stack_connect(dev_addr_t *peer_addr, conn_param_t *param, uint8_t auto_c
         return -BT_STACK_STATUS_EINVAL;
     }
 
-#if !defined(CONFIG_BT_WHITELIST)
+#if !(defined(CONFIG_BT_WHITELIST) && CONFIG_BT_WHITELIST)
 
     if (auto_connect) {
         return -BT_STACK_STATUS_EINVAL;
@@ -1343,7 +1343,7 @@ int ble_stack_connect(dev_addr_t *peer_addr, conn_param_t *param, uint8_t auto_c
         conn_param = *(struct bt_le_conn_param *)param;
 
         if (auto_connect) {
-#if !defined(CONFIG_BT_WHITELIST)
+#if !(defined(CONFIG_BT_WHITELIST) && CONFIG_BT_WHITELIST)
             ret = bt_le_set_auto_conn(&peer, &conn_param);
 
             if (ret) {
@@ -1362,7 +1362,7 @@ int ble_stack_connect(dev_addr_t *peer_addr, conn_param_t *param, uint8_t auto_c
             }
         }
     } else if (!auto_connect) {
-#if !defined(CONFIG_BT_WHITELIST)
+#if !(defined(CONFIG_BT_WHITELIST) && CONFIG_BT_WHITELIST)
         ret = bt_le_set_auto_conn(&peer, NULL);
 
         if (ret) {
@@ -1484,7 +1484,7 @@ int ble_stack_pref_phy_set(int16_t conn_handle, pref_phy_en pref_tx_phy, pref_ph
         return ret;
     }
 
-#if defined(CONFIG_BT_USER_PHY_UPDATE)
+#if (defined(CONFIG_BT_USER_PHY_UPDATE) && CONFIG_BT_USER_PHY_UPDATE)
     struct bt_conn_le_phy_param param = { 0 };
     param.pref_tx_phy                 = pref_tx_phy;
     param.pref_rx_phy                 = pref_rx_phy;
@@ -1606,7 +1606,7 @@ int ble_stack_enc_key_size_get(int16_t conn_handle)
     struct bt_conn *conn = bt_conn_lookup_index(conn_handle);
 
     if (conn) {
-#if defined(CONFIG_BT_SMP)
+#if (defined(CONFIG_BT_SMP) && CONFIG_BT_SMP)
         ret = bt_conn_enc_key_size(conn);
 #else
         ret = 0;
@@ -1619,7 +1619,7 @@ int ble_stack_enc_key_size_get(int16_t conn_handle)
 
 int ble_stack_setting_load()
 {
-#ifdef CONFIG_BT_SETTINGS
+#if (defined(CONFIG_BT_SETTINGS) && CONFIG_BT_SETTINGS)
     return settings_load();
 #else
     return 0;

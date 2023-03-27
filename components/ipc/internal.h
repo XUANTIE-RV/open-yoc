@@ -39,7 +39,11 @@ static int aos_sem_wait(aos_sem_t *sem, int timeout_ms)
 
 #define PHY_ACK (0X80)
 
+#ifdef CONFIG_SHM_ALIGN_CACHE
+#define SHM_ALIGN_CACHE CONFIG_SHM_ALIGN_CACHE
+#else
 #define SHM_ALIGN_CACHE (16)
+#endif
 
 #define SHM_ALIGN(addr, align) ((void *)(((uint32_t)(addr) + align - 1U) & (~(uint32_t)(align - 1U))))
 #define SHM_ALIGN_SIZE(size, align) (((uint32_t)(size) + align - 1U) & (~(align - 1U)))

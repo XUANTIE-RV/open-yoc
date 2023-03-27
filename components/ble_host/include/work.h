@@ -54,7 +54,7 @@ struct k_delayed_work {
 #else
 
 struct k_work_q {
-#if defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE
+#if (defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE)
     struct k_sem sem;
 #endif
     struct kfifo fifo;

@@ -250,9 +250,7 @@ struct bl_hw {
     int vif_index_ap;
 
     /*custom added id*/
-    int sta_mode;
     int sta_idx;
-    int ap_mode;
     int ap_bcmc_idx;
 #ifdef CFG_BL_STATISTIC
     struct bl_stats       stats;

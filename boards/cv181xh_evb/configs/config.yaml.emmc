@@ -1,0 +1,43 @@
+mtb_version: 4
+chip: cv181x
+
+diff:
+  fota_version: 0
+  ram_buf: 50           #DEC     KB   ( max ram need)
+  flash_buf: 16         #DEC     KB   ( buffer size)
+  flash_sector: 4096    #DEC     byte ( flash sector)
+  diff_mode: 010        #BIN
+  double_control: 1
+
+storages:
+  - name: emmc_boot1        # eflash/spinor/spinand/emmc_boot1/emmc_boot2/emmc_user/emmc_rpmb/sd/usb
+    base_address: 0         # 存储基地址，比如FLASH的基地址
+    run_base_address: 0x80000000 # base address of Storage
+    block: 512              # Bytes
+    size: 4194304           # Total Bytes
+  - name: emmc_boot2        # eflash/spinor/spinand/emmc_boot1/emmc_boot2/emmc_user/emmc_rpmb/sd/usb
+    base_address: 0         # 存储基地址，比如FLASH的基地址
+    run_base_address: 0x8000C000 # base address of Storage
+    block: 512              # Bytes
+    size: 4194304           # Total Bytes
+  - name: emmc_user         # eflash/spinor/spinand/emmc_boot1/emmc_boot2/emmc_user/emmc_rpmb/sd/usb
+    base_address: 0         # 存储基地址，比如FLASH的基地址
+    run_base_address: 0x80040000 # base address of Storage
+    block: 512              # Bytes
+    size: 536870912         # Total Bytes
+
+# must erase_size(512 * 1024) align
+partitions:
+  - { name: boot0,  address: 0x0000000, size: 0x080000, index: 0, file: boot0.emmc }
+  - { name: test1,  address: 0x0080000, size: 0x080000, index: 0 } # for test
+  - { name: boot,   address: 0x0000000, size: 0x080000, index: 1, file: boot }
+  - { name: test2,  address: 0x0080000, size: 0x080000, index: 1 } # for test
+  - { name: imtb,   address: 0x0000000, size: 0x100000, index: 2 }               # imtb must be in use area, two erase_size
+  - { name: envab,  address: 0x0100000, size: 0x180000, index: 2 }               # for ab switch, size must be 2*erase_size+1024B at least
+  - { name: prima,  address: 0x0280000, size: 0x800000, index: 2, file: prim, load_addr: 0x80040000, verify: true, update: AB }
+  - { name: primb,  address: 0x0A80000, size: 0x800000, index: 2, load_addr: 0x80040000, verify: true }
+  - { name: ext4,   address: 0x1280000, size: 0x500000, index: 2 }
+  - { name: kv,     address: 0x1780000, size: 0x200000, index: 2 }
+  - { name: afrot,  address: 0x1980000, size: 0x080000, index: 2 }
+  - { name: kp,     address: 0x1A00000, size: 0x080000, index: 2 }
+  - { name: test3,  address: 0x1A80000, size: 0x100000, index: 2 } # for test

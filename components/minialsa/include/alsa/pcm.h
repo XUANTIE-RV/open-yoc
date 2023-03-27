@@ -4,7 +4,7 @@
 
 #include <stdio.h>
 #include <unistd.h>
-#include <devices/driver.h>
+#include <devices/device.h>
 
 #ifndef __AOS_PCM__
 #define __AOS_PCM__
@@ -150,7 +150,7 @@ typedef struct _aos_pcm_drv {
 } aos_pcm_drv_t;
 
 typedef struct aos_pcm_dev {
-    aos_dev_t device;
+    rvm_dev_t device;
     aos_pcm_t pcm;
 } aos_pcm_dev_t;
 

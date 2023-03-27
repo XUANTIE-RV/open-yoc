@@ -58,14 +58,14 @@ struct bt_keys {
 	u16_t                   keys;
 	struct bt_ltk           ltk;
 	struct bt_irk           irk;
-#if defined(CONFIG_BT_SIGNING)
+#if (defined(CONFIG_BT_SIGNING) && CONFIG_BT_SIGNING)
 	struct bt_csrk          local_csrk;
 	struct bt_csrk          remote_csrk;
 #endif /* BT_SIGNING */
-#if !defined(CONFIG_BT_SMP_SC_PAIR_ONLY)
+#if !(defined(CONFIG_BT_SMP_SC_PAIR_ONLY) && CONFIG_BT_SMP_SC_PAIR_ONLY)
 	struct bt_ltk           slave_ltk;
 #endif /* CONFIG_BT_SMP_SC_PAIR_ONLY */
-#if (defined(CONFIG_BT_KEYS_OVERWRITE_OLDEST))
+#if ((defined(CONFIG_BT_KEYS_OVERWRITE_OLDEST) && CONFIG_BT_KEYS_OVERWRITE_OLDEST))
 	u32_t                   aging_counter;
 #endif /* CONFIG_BT_KEYS_OVERWRITE_OLDEST */
 };
@@ -85,7 +85,7 @@ struct bt_keys *bt_keys_find_addr(u8_t id, const bt_addr_le_t *addr);
 void bt_keys_add_type(struct bt_keys *keys, int type);
 void bt_keys_clear(struct bt_keys *keys);
 
-#if defined(CONFIG_BT_SETTINGS) && CONFIG_BT_SETTINGS
+#if (defined(CONFIG_BT_SETTINGS) && CONFIG_BT_SETTINGS)
 int bt_keys_store(struct bt_keys *keys);
 #else
 static inline int bt_keys_store(struct bt_keys *keys)

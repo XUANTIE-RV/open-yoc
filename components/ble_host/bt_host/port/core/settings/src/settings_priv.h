@@ -58,7 +58,7 @@ struct settings_line_dup_check_arg {
 	int is_dup;
 };
 
-#ifdef CONFIG_SETTINGS_ENCODE_LEN
+#if (defined(CONFIG_SETTINGS_ENCODE_LEN) && CONFIG_SETTINGS_ENCODE_LEN)
 /* in storage line contex */
 struct line_entry_ctx {
 	void *stor_ctx;

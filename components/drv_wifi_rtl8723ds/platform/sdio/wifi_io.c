@@ -19,6 +19,8 @@
 #ifndef CONFIG_CHIP_D1
 #include <sdmmc_host.h>
 #include <sdmmc_spec.h>
+#include <sdio.h>
+#include <soc.h>
 #else
 #include "sdio.h"
 #include "sdmmc.h"
@@ -41,6 +43,9 @@
 #define dbg_host printf
 
 #ifndef CONFIG_CHIP_D1
+void SDMMCHOST_Disable_Interrupt(int idx);
+void SDMMCHOST_RegisterInterrupt(sdmmchost_interrupt_t interrupt_func);
+void SDMMCHOST_Enable_Interrupt(int idx);
 static sdio_card_t SDIO_Card;
 #else
 static struct mmc_card * SDIO_Card;
@@ -116,9 +121,14 @@ static int SDIO_DeInitialize_Cards(struct mmc_card *card)
 }
 #endif
 
+#ifndef CONFIG_CHIP_D1
+void rtl8723ds_irq_callback(int idx, void *user_data)
+#else
 void rtl8723ds_irq_callback(void *prim)
+#endif
 {
 #ifndef CONFIG_CHIP_D1
+    g_idx = idx;
     SDMMCHOST_Disable_Interrupt(g_idx);
 #endif
     aos_event_set(&g_wifi_irq_event, 1, AOS_EVENT_OR);
@@ -203,7 +213,7 @@ int __sdio_claim_irq(struct rtl_sdio_func *func, void(*handler)(struct rtl_sdio_
 
     aos_task_t task_handle;
     sdio_thread_running = 1;
-    if (0 != aos_task_new_ext(&task_handle, "sdio_irq", sdio_irq_thread, NULL, 1024 * 6, AOS_DEFAULT_APP_PRI + 5)) {
+    if (0 != aos_task_new_ext(&task_handle, "sdio_irq", sdio_irq_thread, NULL, 1024 * 18, AOS_DEFAULT_APP_PRI + 5)) {
         LOGE("SDIO", "Create sdio_irq_thread task failed.");
     }
 
@@ -245,7 +255,7 @@ int __sdio_card_reset()
     SDIO_PowerOFF(SDIO_Card);
     SDIO_PowerON(SDIO_Card);
 #else
-    SDIO_CardReset(SDIO_Card);
+    SDIO_CardReset(&SDIO_Card);
 #endif
     return 0;
 }
@@ -256,17 +266,7 @@ int __sdio_bus_probe(int idx)
 #ifndef CONFIG_CHIP_D1
     memset(&SDIO_Card, 0, sizeof(SDIO_Card));
     SDIO_Card.usrParam.cd = NULL;
-#ifdef CONFIG_CSI_V2 
-    if(idx == 0)
-        SDIO_Card.host.base  = (sdif_handle_t)DW_SDIO0_BASE;
-    else if(idx == 1)
-        SDIO_Card.host.base  = (sdif_handle_t)DW_SDIO1_BASE;
-#else
-    if(idx == 0)
-        SDIO_Card.host.base  = (sdif_handle_t)CSKY_SDIO0_BASE;
-    else if(idx == 1)
-        SDIO_Card.host.base  = (sdif_handle_t)CSKY_SDIO1_BASE;
-#endif
+    SDIO_Card.host.base = csi_sdif_get_handle(idx);
 
     int ret = 0;
     if (kStatus_Success != (ret= SDIO_Init(&SDIO_Card))) {
@@ -278,8 +278,8 @@ int __sdio_bus_probe(int idx)
         aos_msleep(100); /** wait card reset */
     }
 
-    // set force to 512
-    if (sdio_set_block_size(SDIO_Card, FN1, 512) != 0) {
+    //set force to 512
+    if (SDIO_SetBlockSize(&SDIO_Card, kSDIO_FunctionNum1, 512) != kStatus_Success) {
         LOGE(TAG, "SDIO_SetBlockSize 512 error");
         rtl8723ds_set_invalid();
         return  1;
@@ -359,7 +359,89 @@ void __sdio_release_host(struct rtl_sdio_func *func)
     return;
 }
 
+#ifndef CONFIG_CHIP_D1
+static int32_t sdio_io_rw_extended_block(struct rtl_sdio_func *func,
+        int32_t               rw,
+        uint32_t              addr,
+        int32_t               op_code,
+        uint8_t              *buf,
+        uint32_t              len)
+{
+    uint32_t flags = SDIO_EXTEND_CMD_BLOCK_MODE_MASK;
+    uint32_t block_size;
 
+    if (func->num == 1) {
+        block_size = SDIO_Card.ioFBR[0].ioBlockSize;
+//        SDIO_SelectIO(&SDIO_Card, kSDIO_FunctionNum1);
+    } else {
+        block_size = SDIO_Card.io0block_size;
+//        SDIO_SelectIO(&SDIO_Card, kSDIO_FunctionNum0);
+    }
+
+    if (op_code == 1) {
+        flags |= SDIO_EXTEND_CMD_OP_CODE_MASK;
+    }
+
+    status_t ret;
+
+    if (rw == 0) {
+        ret = SDIO_IO_Read_Extended(&SDIO_Card, func->num, addr, buf, len / block_size, flags);
+#if DEBUG_SDIO
+        printf("[Bytes addr=%x len=%d][R]\n", addr, len);
+        print_buf(buf, len);
+#endif
+    } else {
+
+#if DEBUG_SDIO
+        printf("[Bytes addr=%x len=%d][W]\n", addr,  len);
+        print_buf(buf, len);
+#endif
+        ret = SDIO_IO_Write_Extended(&SDIO_Card, func->num, addr, buf, len / block_size, flags);
+    }
+
+    if (ret != kStatus_Success) {
+        LOGE(TAG, "sdio_io_rw_extended_block error rw=%d,ret=%d", rw, ret);
+        return 1;
+    }
+
+    return 0;
+}
+
+static int32_t sdio_io_rw_extended_byte(struct rtl_sdio_func *func,
+                                        int32_t               rw,
+                                        uint32_t              addr,
+                                        int32_t               op_code,
+                                        uint8_t              *buf,
+                                        uint32_t              len)
+{
+    uint32_t flags = 0;//SDIO_EXTEND_CMD_BLOCK_MODE_MASK;
+
+    // if (func->num == 1) {
+    //     SDIO_SelectIO(&SDIO_Card, kSDIO_FunctionNum1);
+    // } else {
+    //     SDIO_SelectIO(&SDIO_Card, kSDIO_FunctionNum0);
+    // }
+
+    if (op_code == 1) {
+        flags |= SDIO_EXTEND_CMD_OP_CODE_MASK;
+    }
+
+    status_t ret;
+
+    if (rw == 0) {
+        ret = SDIO_IO_Read_Extended(&SDIO_Card, func->num, addr, buf, len, flags);
+    } else {
+        ret = SDIO_IO_Write_Extended(&SDIO_Card, func->num, addr, buf, len, flags);
+    }
+
+    if (ret != kStatus_Success) {
+        LOGE(TAG, "sdio_io_rw_extended_byte error rw=%d,ret=%d", rw, ret);
+        return 1;
+    }
+
+    return 0;
+}
+#endif
 
 static int __sdio_enable_func(struct rtl_sdio_func *func)
 {
@@ -380,11 +462,20 @@ static int __sdio_enable_func(struct rtl_sdio_func *func)
     return 0;
 }
 
-
 int __sdio_disable_func(struct rtl_sdio_func *func)
 {
     LOGD(TAG, "Disable SDIO Func ");
+#ifdef CONFIG_CHIP_D1
     sdio_disable_func(SDIO_Card, 1);
+#else
+    if (func->num == 1) {
+        SDIO_SelectIO(&SDIO_Card, kSDIO_FunctionNum1);
+    } else {
+        SDIO_SelectIO(&SDIO_Card, kSDIO_FunctionNum0);
+    }
+
+    SDIO_EnableIO(&SDIO_Card, func->num, 0);
+#endif
     return 0;
 }
 

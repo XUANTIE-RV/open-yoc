@@ -7,7 +7,7 @@
 #include <yoc/partition.h>
 #include <aos/kv.h>
 #include <drv/uart.h>
-#include <devices/console_uart.h>
+#include <aos/console_uart.h>
 #ifdef AOS_COMP_DEBUG
 #include <debug/dbg.h>
 #endif

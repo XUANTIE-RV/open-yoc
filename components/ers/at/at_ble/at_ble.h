@@ -122,7 +122,7 @@ typedef struct _tx_power {
 #define AT_BACK_RET_INT_HEAD(cmd, val)        atserver_send("\r\n%s:%d", cmd + 2, val)
 
 at_server_handler *at_ble_init();
-void at_ble_uartmode_recv(aos_dev_t *dev);
+void at_ble_uartmode_recv(rvm_dev_t *dev);
 int at_ble_event_register(const at_ble_cb cb_conf);
 
 #endif

@@ -34,6 +34,15 @@ uint32_t parser_init(void);
 uint32_t parser_update_kp(uint8_t *kp_info, size_t size);
 
 /**
+  \brief       Get KP raw data .
+  \param[in]   kp_in  A pointer to the kp information buffer
+  \param[in]   kp_in_size  The size of kp information
+  \param[out]   key_out  A pointer to the kp raw data buffer
+  \param[out]   key_size A pointer to the size of kp raw data
+*/
+uint32_t parser_get_kp_raw_data(uint8_t *kp_in, uint32_t kp_in_size, uint8_t *key_out, uint32_t *key_out_size);
+
+/**
   \brief       TEE get key from kp
   \param[in]   key_type  key type,see \ref key_type_e
   \param[out]  key     Pointer to key

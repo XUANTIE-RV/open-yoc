@@ -1,0 +1,10 @@
+node_modules/
+.temp/
+.falcon_/
+dist/
+*.swp
+*.swo
+
+package-lock.json
+.DS_Store
+*.amr

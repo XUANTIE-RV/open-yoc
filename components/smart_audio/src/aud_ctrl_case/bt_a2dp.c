@@ -20,6 +20,7 @@ static aos_mutex_t   s_a2dp_mutex;
 static aos_timer_t   s_a2dp_inquire_timer;
 static int           g_a2dp_connect_state        = BT_PRF_A2DP_CONNECTION_STATE_DISCONNECTED_NORMAL;
 static unsigned char cur_bt_addr[BT_BD_ADDR_LEN] = {0};
+static uint8_t       s_vol;
 
 static void                  avrcp_play_status_inquire_timer_start(void);
 static void                  avrcp_play_status_inquire_timer_stop(void);
@@ -55,6 +56,7 @@ static smtaudio_ops_node_t ctrl_bt_a2dp = {
     .vol_down = bt_a2dp_vol_down,
 };
 
+#if 0
 static uint8_t _bt_get_lable(void)
 {
     static uint8_t lable = 0;
@@ -64,6 +66,8 @@ static uint8_t _bt_get_lable(void)
 
     return lable;
 }
+#endif
+
 static void _bt_gap_cb(bt_stack_cb_event_t event, bt_stack_cb_param_t *param)
 {
     switch (event) {
@@ -281,8 +285,8 @@ static void _bt_app_avrcp_ct_cb(bt_prf_avrcp_ct_cb_event_t event, bt_prf_avrcp_c
     case BT_PRF_AVRCP_CT_PASSTHROUGH_RSP_EVT: {
         yoc_app_avrcp_cmd_type_t cmd;
 
-        LOGD(TAG, "AVRC passthrough rsp: key_code 0x%x, key_state %d", rc->psth_rsp.operation_state,
-             rc->psth_rsp.operation_id);
+        LOGD(TAG, "AVRC passthrough rsp: key_code 0x%x, key_state %d", rc->psth_rsp.operation_id,
+             rc->psth_rsp.operation_state);
         switch (rc->psth_rsp.operation_state) {
         case BT_PRF_AVRCP_OP_ID_PLAY:
             cmd = YOC_APP_BT_AVRCP_CMD_PLAY;
@@ -370,48 +374,71 @@ static void _bt_app_avrcp_ct_cb(bt_prf_avrcp_ct_cb_event_t event, bt_prf_avrcp_c
         break;
     }
 }
-#if 0
-static void _bt_app_avrcp_tg_cb(yoc_avrc_tg_cb_event_t event, yoc_avrc_tg_cb_param_t *param)
+
+static void _bt_app_avrcp_tg_cb(bt_prf_avrcp_tg_cb_event_t event, bt_prf_avrcp_tg_cb_param_t *param)
 {
-    yoc_avrc_tg_cb_param_t *rc = (yoc_avrc_tg_cb_param_t *)(param);
+    uint8_t *bt_addr;
 
-    LOGD(TAG, "%s evt %d", __func__, event);
     switch (event) {
-    case YOC_AVRC_TG_REGISTER_NOTIFICATION_EVT: {
-        if (rc->reg_ntf.event_id == YOC_AVRC_RN_VOLUME_CHANGE) {
-            yoc_avrc_rn_param_t param;
+        case BT_PRF_AVRCP_TG_CONNECTION_STATE_EVT:
+            bt_addr = param->conn_stat.peer_addr.val;
+            LOGD(TAG, "AVRCP_TG_CONNECTION_STATE_EVT state: %d, mac %02x:%02x:%02x:%02x:%02x:%02x", param->conn_stat.connected,
+                 bt_addr[5], bt_addr[4], bt_addr[3], bt_addr[2], bt_addr[1], bt_addr[0]);
+            break;
+        case BT_PRF_AVRCP_TG_PASSTHROUGH_CMD_EVT:
+            LOGD(TAG, "AVRCP_TG_PASSTHROUGH_RSP_EV operation_id: %d, operation_state %d", param->psth_cmd.operation_id,
+                 param->psth_cmd.operation_state);
 
-            param.volume = 0x7f;
-            yoc_avrc_tg_send_rn_rsp(YOC_AVRC_RN_VOLUME_CHANGE, YOC_AVRC_RN_RSP_INTERIM, &param);
+            break;
+        case BT_PRF_AVRCP_TG_REGISTER_NOTIFICATION_EVT:
+            LOGD(TAG, "AVRCP_TG_CHANGE_NOTIFY_EVT event_id: %d", param->reg_ntf.event_id);
+            bt_prf_avrcp_rn_param_t p;
+            p.volume = s_vol;
+            bt_prf_avrcp_tg_send_rn_rsp(param->reg_ntf.event_id, BT_AVRCP_RESPONSE_INTERIM, &p);
+            break;
+        case BT_PRF_AVRCP_TG_SET_ABSOLUTE_VOLUME_CMD_EVT: {
+            LOGD(TAG, "AVRCP_TG_SET_ABSOLUTE_VOLUME_RSP_EVT volume: %d", param->set_abs_vol.volume);
+            yoc_app_bt_param_t vol;
+
+            vol.a2dp_vol.volume = param->set_abs_vol.volume;
+            bt_callback(YOC_APP_BT_A2DP_VOLUME_CHANGE, &vol);
+            if (g_bt_cb) {
+                g_bt_cb(YOC_APP_BT_A2DP_VOLUME_CHANGE, &vol);
+            }
+            break;
         }
-    } break;
-    case YOC_AVRC_TG_SET_ABSOLUTE_VOLUME_CMD_EVT: {
-        LOGD(TAG, "volume: %d", rc->set_abs_vol.volume);
-        yoc_app_bt_param_t param;
-        param.a2dp_vol.volume = rc->set_abs_vol.volume;
-        bt_callback(YOC_APP_BT_A2DP_VOLUME_CHANGE, &param);
-        if (g_bt_cb) {
-            g_bt_cb(YOC_APP_BT_A2DP_VOLUME_CHANGE, &param);
-        }
-    } break;
-    default:;
+        case BT_PRF_AVRCP_TG_REMOTE_FEATURES_EVT:
+            break;
+        default:
+            break;
     }
 }
-#endif
+
 static void _bt_app_a2d_data_cb(const uint8_t *data, uint32_t len)
 {
     static uint32_t s_pkt_cnt = 0;
 
-    if (++s_pkt_cnt % 100 == 0) {
+    if (++s_pkt_cnt % 500 == 0) {
         LOGD(TAG, "Audio packet count %u", s_pkt_cnt);
     }
 }
 
 int yoc_app_bt_gap_set_scan_mode(int enable)
 {
-    bt_stack_set_connectable(enable);
-    bt_stack_set_discoverable(enable);
-    LOGD(TAG, "set scan mode:%d", enable);
+    bt_stack_status_t ret = 0;
+
+    if (enable) {
+        ret = bt_stack_set_connectable(enable);
+        LOGD(TAG, "bt_stack_set_connectable ret : %d", ret);
+        ret = bt_stack_set_discoverable(enable);
+        LOGD(TAG, "bt_stack_set_discoverable ret : %d", ret);
+    } else {
+        ret = bt_stack_set_discoverable(enable);
+        LOGD(TAG, "bt_stack_set_discoverable ret : %d", ret);
+        ret = bt_stack_set_connectable(enable);
+        LOGD(TAG, "bt_stack_set_connectable ret : %d", ret);
+    }
+
     return 0;
 }
 
@@ -473,10 +500,13 @@ int yoc_app_bt_avrcp_send_passthrouth_cmd(yoc_app_avrcp_cmd_type_t cmd_type)
 
 int yoc_app_bt_avrcp_change_vol(uint8_t vol)
 {
+#if (defined(CONFIG_BT_AVRCP_VOL_CONTROL) && CONFIG_BT_AVRCP_VOL_CONTROL)
+    return bt_prf_avrcp_tg_notify_vol_changed(vol);
+#else
     bt_prf_avrcp_rn_param_t param;
     param.volume = vol;
-
     return bt_prf_avrcp_tg_send_rn_rsp(BT_PRF_AVRCP_NOTIFICATION_VOLUME_CHANGE, BT_AVRCP_RESPONSE_CHANGED_STABLE, &param);
+#endif
 }
 
 void yoc_app_bt_avrcp_get_play_status(void)
@@ -486,14 +516,23 @@ void yoc_app_bt_avrcp_get_play_status(void)
 
 int yoc_app_bt_a2dp_connect(uint8_t remote_addr[])
 {
-    return bt_prf_a2dp_sink_connect((bt_dev_addr_t *)remote_addr);
+    bt_dev_addr_t addr;
+
+    addr.type = 0;
+    memcpy(addr.val, remote_addr, BT_BD_ADDR_LEN);
+
+    return bt_prf_a2dp_sink_connect(&addr);
 }
 
 int yoc_app_bt_a2dp_disconnect(void)
 {
     int ret;
+    bt_dev_addr_t addr;
 
-    ret = bt_prf_a2dp_sink_disconnect((bt_dev_addr_t *)cur_bt_addr);
+    addr.type = 0;
+    memcpy(addr.val, cur_bt_addr, BT_BD_ADDR_LEN);
+
+    ret = bt_prf_a2dp_sink_disconnect(&addr);
     memset((void *)cur_bt_addr, 0, BT_BD_ADDR_LEN); // 清除连接的MAC地址
     return ret;
 }
@@ -531,14 +570,29 @@ int yoc_app_bt_a2dp_register_cb(yoc_app_bt_callback_t callback)
 static int bt_audio_state_app = BT_PRF_AVRCP_PLAYBACK_STOPPED;
 void bt_audio_state_check(void)
 {
+    static int duplicate_count = 0;
     if((ctrl_bt_a2dp.status == SMTAUDIO_STATE_PLAYING) && ((bt_audio_state_app == BT_PRF_AVRCP_PLAYBACK_STOPPED) || (bt_audio_state_app == BT_PRF_AVRCP_PLAYBACK_PAUSED))) {
-        //设备端处于播放状态, app处于非播放状态
-        ctrl_bt_a2dp.status = SMTAUDIO_STATE_STOP;
-        LOGD(TAG, "change a2dp status: %d", ctrl_bt_a2dp.status);
+        duplicate_count++;
+        if(duplicate_count >= 2) {
+            //设备端处于播放状态, app处于非播放状态
+            LOGD(TAG, "a2dp status diff, device:%d app:%d", ctrl_bt_a2dp.status, bt_audio_state_app);
+            ctrl_bt_a2dp.status = SMTAUDIO_STATE_STOP;
+            LOGD(TAG, "change a2dp status: %d", ctrl_bt_a2dp.status);
+            duplicate_count = 0;
+        }
+        
     } else if((bt_audio_state_app == BT_PRF_AVRCP_PLAYBACK_PLAYING) && ((ctrl_bt_a2dp.status == SMTAUDIO_STATE_STOP) || (ctrl_bt_a2dp.status == SMTAUDIO_STATE_PAUSE))) {
-        //设备端处于非播放状态, app处于播放状态
-        ctrl_bt_a2dp.status = SMTAUDIO_STATE_PLAYING;
-        LOGD(TAG, "change a2dp status: %d", ctrl_bt_a2dp.status);
+        duplicate_count++;
+        if(duplicate_count >= 2) {
+            //设备端处于非播放状态, app处于播放状态   以设备端状态为准，暂停app端
+            // ctrl_bt_a2dp.status = SMTAUDIO_STATE_PLAYING;
+            // LOGD(TAG, "change a2dp status: %d", ctrl_bt_a2dp.status);
+            LOGD(TAG, "a2dp status diff, device:%d app:%d", ctrl_bt_a2dp.status, bt_audio_state_app);
+            yoc_app_bt_avrcp_send_passthrouth_cmd(YOC_APP_BT_AVRCP_CMD_PAUSE);
+            duplicate_count = 0;
+        }
+    } else {
+        duplicate_count = 0;
     }
 }
 static void bt_callback(yoc_app_bt_event_t event, yoc_app_bt_param_t *param)
@@ -588,8 +642,12 @@ static void bt_callback(yoc_app_bt_event_t event, yoc_app_bt_param_t *param)
     case YOC_APP_BT_A2DP_PLAY_STATUS_STOPPED:
         LOGD(TAG, "YOC_APP_BT_A2DP_PLAY_STATUS_STOPPED");
         a2dp_audio_status = AUI_PLAYER_STOP;
-        if (ctrl_bt_a2dp.callback) {
+        if(ctrl_bt_a2dp.status != SMTAUDIO_STATE_PLAYING) {
+            LOGD(TAG, "YOC_APP_BT_A2DP_PLAY_STATUS_STOPPED");
             ctrl_bt_a2dp.callback(SMTAUDIO_BT_A2DP, SMTAUDIO_PLAYER_EVENT_STOP);
+        } else {
+            LOGD(TAG, "YOC_APP_BT_A2DP_PLAY_STATUS_STOPPED, stop by remote");
+            ctrl_bt_a2dp.callback(SMTAUDIO_BT_A2DP, SMTAUDIO_PLAYER_EVENT_PAUSE_BY_REMOTE);
         }
         break;
     case YOC_APP_BT_A2DP_PLAY_STATUS_PLAYING:
@@ -607,13 +665,29 @@ static void bt_callback(yoc_app_bt_event_t event, yoc_app_bt_param_t *param)
         }
         break;
     case YOC_APP_BT_AVRCP_STATUS_PAUSEED:
-        LOGD(TAG, "YOC_APP_BT_AVRCP_STATUS_PAUSEED");
+        if(ctrl_bt_a2dp.status == SMTAUDIO_STATE_PLAYING) {
+            if (ctrl_bt_a2dp.callback) {
+                if(ctrl_bt_a2dp.status != SMTAUDIO_STATE_PLAYING) {
+                    LOGD(TAG, "YOC_APP_BT_AVRCP_STATUS_PAUSEED");
+                    ctrl_bt_a2dp.callback(SMTAUDIO_BT_A2DP, SMTAUDIO_PLAYER_EVENT_PAUSE);
+                } else {
+                    LOGD(TAG, "YOC_APP_BT_AVRCP_STATUS_PAUSEED, pause by remote");
+                    ctrl_bt_a2dp.callback(SMTAUDIO_BT_A2DP, SMTAUDIO_PLAYER_EVENT_PAUSE_BY_REMOTE);
+                }
+            }
+        }
         break;
     case YOC_APP_BT_AVRCP_STATUS_STOPPED:
         LOGD(TAG, "YOC_APP_BT_AVRCP_STATUS_STOPPED");
+        if (ctrl_bt_a2dp.callback) {
+            ctrl_bt_a2dp.callback(SMTAUDIO_BT_A2DP, SMTAUDIO_PLAYER_EVENT_STOP);
+        }
         break;
     case YOC_APP_BT_AVRCP_STATUS_PLAYING:
         LOGD(TAG, "YOC_APP_BT_AVRCP_STATUS_PLAYING");
+        if (ctrl_bt_a2dp.callback) {
+            ctrl_bt_a2dp.callback(SMTAUDIO_BT_A2DP, SMTAUDIO_PLAYER_EVENT_START);
+        }
         break;
     case YOC_APP_BT_AVRCP_GET_PLAY_STATUS:
         LOGD(TAG, "AVRC PLAY STATUS total_len:%d ms  cur:%d ms  play_status:%d",
@@ -635,6 +709,7 @@ static void bt_callback(yoc_app_bt_event_t event, yoc_app_bt_param_t *param)
         smtaudio_ops_node_t *audio_default_ops;
         extern smtaudio_ops_node_t *get_default_audio_ops(void);
         audio_default_ops = get_default_audio_ops();
+        s_vol = param->a2dp_vol.volume;
         if (audio_default_ops) {
             audio_default_ops->vol_set(param->a2dp_vol.volume * 100 / 127);
         }
@@ -661,6 +736,9 @@ static void avrcp_play_status_inquire_timer_stop(void)
     aos_timer_stop(&s_a2dp_inquire_timer);
 }
 
+static bt_stack_cb_t _bt_callback = {
+    .callback = _bt_gap_cb
+};
 int yoc_app_bt_init()
 {
     static int bt_init_flag;
@@ -671,9 +749,11 @@ int yoc_app_bt_init()
     bt_init_flag = 1;
     bt_stack_init();
 
-    bt_stack_cb_t callback;
-    callback.callback = _bt_gap_cb;
-    bt_stack_register_callback(&callback);
+#ifndef CONFIG_CHIP_BL606P
+    ble_stack_setting_load();
+#endif
+
+    bt_stack_register_callback(&_bt_callback);
     return 0;
 }
 
@@ -692,6 +772,15 @@ static int yoc_app_bt_a2dp_init()
     /* initialize AVRCP controller */
     bt_prf_avrcp_ct_init();
     bt_prf_avrcp_ct_register_callback(_bt_app_avrcp_ct_cb);
+
+#if (defined(CONFIG_BT_AVRCP_VOL_CONTROL) && CONFIG_BT_AVRCP_VOL_CONTROL)
+    /** avrcp target init */
+    bt_prf_avrcp_tg_init();
+    bt_prf_avrcp_tg_register_callback(_bt_app_avrcp_tg_cb);
+
+    /** avrcp target set local register notification capability */
+    bt_prf_avrcp_tg_set_rn_evt_cap((1 << BT_PRF_AVRCP_NOTIFICATION_VOLUME_CHANGE));
+#endif
 
     aos_mutex_new(&s_a2dp_mutex);
     aos_timer_new_ext(&s_a2dp_inquire_timer, avrcp_play_status_inquire_timer_entry, NULL,
@@ -745,32 +834,23 @@ static int bt_a2dp_resume(void)
 
 static int bt_a2dp_vol_set(int vol)
 {
-    /*同时设置本地音音量*/
-    smtaudio_ops_node_t *audio_default_ops;
+    s_vol = vol * 127 / 100;
 
-    extern smtaudio_ops_node_t *get_default_audio_ops(void);
-    audio_default_ops = get_default_audio_ops();
-    if (audio_default_ops) {
-        audio_default_ops->vol_set(vol);
-    }
-
-    return yoc_app_bt_avrcp_change_vol(vol * 127 / 100);
+    return yoc_app_bt_avrcp_change_vol(s_vol);
 }
 
 static int bt_a2dp_vol_up(int vol)
 {
     int ret;
-    /*调整 bt music 音量*/
-    ret = yoc_app_bt_avrcp_send_passthrouth_cmd(YOC_APP_BT_AVRCP_CMD_VOL_UP);
+    int cur_vol = aui_player_vol_get(SMTAUDIO_LOCAL_PLAY);
 
-    /*同时提高本地音音量*/
-    smtaudio_ops_node_t *audio_default_ops;
+    s_vol = (cur_vol + vol) * 127 / 100;
 
-    extern smtaudio_ops_node_t *get_default_audio_ops(void);
-    audio_default_ops = get_default_audio_ops();
-    if (audio_default_ops) {
-        audio_default_ops->vol_up(vol);
+    if (s_vol > 127) {
+        s_vol = 127;
     }
+    /*调整 bt music 音量*/
+    ret = yoc_app_bt_avrcp_change_vol(s_vol);
 
     return ret;
 }
@@ -778,17 +858,15 @@ static int bt_a2dp_vol_up(int vol)
 static int bt_a2dp_vol_down(int vol)
 {
     int ret;
-    /*调整 bt music 音量*/
-    ret = yoc_app_bt_avrcp_send_passthrouth_cmd(YOC_APP_BT_AVRCP_CMD_VOL_DOWN);
+    int cur_vol = aui_player_vol_get(SMTAUDIO_LOCAL_PLAY);
+    s_vol = (cur_vol - vol) * 127 / 100;
 
-    /*同时提高本地音音量*/
-    smtaudio_ops_node_t *audio_default_ops;
-
-    extern smtaudio_ops_node_t *get_default_audio_ops(void);
-    audio_default_ops = get_default_audio_ops();
-    if (audio_default_ops) {
-        audio_default_ops->vol_down(vol);
+    if (s_vol < 0) {
+        s_vol = 0;
     }
+
+    /*调整 bt music 音量*/
+    ret = yoc_app_bt_avrcp_change_vol(s_vol);
 
     return ret;
 }

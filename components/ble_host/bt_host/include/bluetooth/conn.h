@@ -268,14 +268,14 @@ struct bt_conn_le_info {
 	u16_t latency; /** Connection slave latency */
 	u16_t timeout; /** Connection supervision timeout */
 
-#if defined(CONFIG_BT_USER_PHY_UPDATE)
+#if (defined(CONFIG_BT_USER_PHY_UPDATE) && CONFIG_BT_USER_PHY_UPDATE)
 	const struct bt_conn_le_phy_info      *phy;
-#endif /* defined(CONFIG_BT_USER_PHY_UPDATE) */
+#endif /* (defined(CONFIG_BT_USER_PHY_UPDATE) && CONFIG_BT_USER_PHY_UPDATE) */
 
-#if defined(CONFIG_BT_USER_DATA_LEN_UPDATE)
+#if (defined(CONFIG_BT_USER_DATA_LEN_UPDATE) && CONFIG_BT_USER_DATA_LEN_UPDATE)
 	/* Connection maximum single fragment parameters */
 	const struct bt_conn_le_data_len_info *data_len;
-#endif /* defined(CONFIG_BT_USER_DATA_LEN_UPDATE) */
+#endif /* (defined(CONFIG_BT_USER_DATA_LEN_UPDATE) && CONFIG_BT_USER_DATA_LEN_UPDATE) */
 };
 
 /** BR/EDR Connection Info Structure */
@@ -834,7 +834,7 @@ struct bt_conn_cb {
 	 */
 	void (*le_param_updated)(struct bt_conn *conn, u16_t interval,
 				 u16_t latency, u16_t timeout);
-#if defined(CONFIG_BT_SMP)
+#if (defined(CONFIG_BT_SMP) && CONFIG_BT_SMP)
 	/** @brief Remote Identity Address has been resolved.
 	 *
 	 *  This callback notifies the application that a remote
@@ -848,7 +848,7 @@ struct bt_conn_cb {
 				  const bt_addr_le_t *rpa,
 				  const bt_addr_le_t *identity);
 #endif /* CONFIG_BT_SMP */
-#if defined(CONFIG_BT_SMP) || defined(CONFIG_BT_BREDR)
+#if (defined(CONFIG_BT_SMP) && CONFIG_BT_SMP) || (defined(CONFIG_BT_BREDR) && CONFIG_BT_BREDR)
 	/** @brief The security level of a connection has changed.
 	 *
 	 *  This callback notifies the application that the security level
@@ -860,9 +860,9 @@ struct bt_conn_cb {
 	 */
 	void (*security_changed)(struct bt_conn *conn, bt_security_t level,
 				 enum bt_security_err err);
-#endif /* defined(CONFIG_BT_SMP) || defined(CONFIG_BT_BREDR) */
+#endif /* (defined(CONFIG_BT_SMP) && CONFIG_BT_SMP) || (defined(CONFIG_BT_BREDR) && CONFIG_BT_BREDR) */
 
-#if defined(CONFIG_BT_REMOTE_INFO)
+#if (defined(CONFIG_BT_REMOTE_INFO) && CONFIG_BT_REMOTE_INFO)
 	/** @brief Remote information procedures has completed.
 	 *
 	 *  This callback notifies the application that the remote information
@@ -873,9 +873,9 @@ struct bt_conn_cb {
 	 */
 	void (*remote_info_available)(struct bt_conn *conn,
 				      struct bt_conn_remote_info *remote_info);
-#endif /* defined(CONFIG_BT_REMOTE_INFO) */
+#endif /* (defined(CONFIG_BT_REMOTE_INFO) && CONFIG_BT_REMOTE_INFO) */
 
-#if defined(CONFIG_BT_USER_PHY_UPDATE)
+#if (defined(CONFIG_BT_USER_PHY_UPDATE) && CONFIG_BT_USER_PHY_UPDATE)
 	/** @brief The PHY of the connection has changed.
 	 *
 	 *  This callback notifies the application that the PHY of the
@@ -886,9 +886,9 @@ struct bt_conn_cb {
 	 */
 	void (*le_phy_updated)(struct bt_conn *conn,
 			       struct bt_conn_le_phy_info *param);
-#endif /* defined(CONFIG_BT_USER_PHY_UPDATE) */
+#endif /* (defined(CONFIG_BT_USER_PHY_UPDATE) && CONFIG_BT_USER_PHY_UPDATE) */
 
-#if defined(CONFIG_BT_USER_DATA_LEN_UPDATE)
+#if (defined(CONFIG_BT_USER_DATA_LEN_UPDATE) && CONFIG_BT_USER_DATA_LEN_UPDATE)
 	/** @brief The data length parameters of the connection has changed.
 	 *
 	 *  This callback notifies the application that the maximum Link Layer
@@ -899,7 +899,7 @@ struct bt_conn_cb {
 	 */
 	void (*le_data_len_updated)(struct bt_conn *conn,
 				    struct bt_conn_le_data_len_info *info);
-#endif /* defined(CONFIG_BT_USER_PHY_UPDATE) */
+#endif /* (defined(CONFIG_BT_USER_PHY_UPDATE) && CONFIG_BT_USER_PHY_UPDATE) */
 
 	struct bt_conn_cb *_next;
 };
@@ -1068,7 +1068,7 @@ struct bt_conn_oob_info {
 	};
 };
 
-#if defined(CONFIG_BT_SMP_APP_PAIRING_ACCEPT)
+#if (defined(CONFIG_BT_SMP_APP_PAIRING_ACCEPT) && CONFIG_BT_SMP_APP_PAIRING_ACCEPT)
 /** @brief Pairing request and pairing response info structure.
  *
  *  This structure is the same for both smp_pairing_req and smp_pairing_rsp
@@ -1102,7 +1102,7 @@ struct bt_conn_pairing_feat {
 
 /** Authenticated pairing callback structure */
 struct bt_conn_auth_cb {
-#if defined(CONFIG_BT_SMP_APP_PAIRING_ACCEPT)
+#if (defined(CONFIG_BT_SMP_APP_PAIRING_ACCEPT) && CONFIG_BT_SMP_APP_PAIRING_ACCEPT)
 	/** @brief Query to proceed incoming pairing or not.
 	 *
 	 *  On any incoming pairing req/rsp this callback will be called for
@@ -1250,7 +1250,7 @@ struct bt_conn_auth_cb {
 	 */
 	void (*pairing_confirm)(struct bt_conn *conn);
 
-#if defined(CONFIG_BT_BREDR)
+#if (defined(CONFIG_BT_BREDR) && CONFIG_BT_BREDR)
 	/** @brief Request the user to enter a passkey.
 	 *
 	 *  This callback will be called for a BR/EDR (Bluetooth Classic)

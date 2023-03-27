@@ -3,9 +3,10 @@
 #include "conn_internal.h"
 #include "gatt.h"
 #include "hci_core.h"
-#include "FreeRTOS.h"
-#include "task.h"
-#include "cli.h"
+//#include "FreeRTOS.h"
+//#include "task.h"
+#include "../../../cli/include/aos/cli.h"
+
 #include "bl_port.h"
 #include "ble_cli_cmds.h"
 #include "ble_lib_api.h"
@@ -104,7 +105,7 @@ static void blecli_set_tx_pwr(char *pcWriteBuffer, int xWriteBufferLen, int argc
 static void blecli_hog_srv_notify(char *pcWriteBuffer, int xWriteBufferLen, int argc, char **argv);
 #endif
 
-const struct cli_command btStackCmdSet[] STATIC_CLI_CMD_ATTRIBUTE = {
+const struct cli_command btStackCmdSet[] = {
 #if 1
     /*1.The cmd string to type, 2.Cmd description, 3.The function to run, 4.Number of parameters*/
 
@@ -1725,5 +1726,12 @@ int ble_cli_register(void)
     // However, calling aos_cli_register_command(s) here is OK but is of no effect as cmds_user are included in cmds list.
     // XXX NOTE: Calling this *empty* function is necessary to make cmds_user in this file to be kept in the final link.
     //aos_cli_register_commands(btStackCmdSet, sizeof(btStackCmdSet)/sizeof(btStackCmdSet[0]));
+
+    extern void ble_tp_init();
+    ble_tp_init();
+
+    for(int i=0;i<(sizeof(btStackCmdSet)/sizeof(struct cli_command));i++)
+        aos_cli_register_command(&btStackCmdSet[i]);
+
     return 0;
 }

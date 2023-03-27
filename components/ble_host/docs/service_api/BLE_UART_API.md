@@ -43,9 +43,9 @@ BLE UART Server组件与BLE UART Client组件交互处理流程如下图所示�
 
 - 连接成功建立后，Client端完成Primary Service以及该服务包含的各个特征属性的发现，并使能Server端TX属性的Notify
 
-- Server端应用程序调用uart_server_send发送数据到Client端，Client端应用程序通过uart_rx_data_cb回调函数接收数据
+- Server端应用程序调用ble_prf_uart_server_send发送数据到Client端，Client端应用程序通过uart_rx_data_cb回调函数接收数据
 
-- Client端应用程序调用uart_client_send发送数据到Server端，Server端应用程序通过uart_rx_data_cb回调函数接收数据
+- Client端应用程序调用ble_prf_uart_client_send发送数据到Server端，Server端应用程序通过uart_rx_data_cb回调函数接收数据
 
   
 
@@ -55,12 +55,12 @@ BLE UART Server组件与BLE UART Client组件交互处理流程如下图所示�
 
 ## 4.1 BLE UART Server API
 
-### 4.1.1 uart_server_init
+### 4.1.1 ble_prf_uart_server_init
 
 - 函数原型
 
 ```c
-uart_handle_t uart_server_init(ble_uart_server_t *service)
+uart_handle_t ble_prf_uart_server_init(ble_uart_server_t *service)
 ```
 
 - 功能描述
@@ -164,12 +164,12 @@ int (*uart_rx_data_cb)(const uint8_t *, int)
 | CCC_VALUE_NOTIFY   = 1   | 使能Notify   |
 | CCC_VALUE_INDICATE = 2   | 使能Indicate |
 
-### 4.1.2 uart_server_send
+### 4.1.2 ble_prf_uart_server_send
 
 - 函数原型
 
 ```c
-int uart_server_send(uart_handle_t handle,const char *data,int length,bt_uart_send_cb *cb)
+int ble_prf_uart_server_send(uart_handle_t handle,const char *data,int length,bt_uart_send_cb *cb)
 ```
 
 - 功能描述
@@ -256,12 +256,12 @@ int uart_server_send(uart_handle_t handle,const char *data,int length,bt_uart_se
   
     无
 
-### 4.1.3 uart_server_disconn
+### 4.1.3 ble_prf_uart_server_disconn
 
 - 函数原型
 
 ```c
-int uart_server_disconn(uart_handle_t handle)
+int ble_prf_uart_server_disconn(uart_handle_t handle)
 ```
 
 - 功能描述
@@ -285,12 +285,12 @@ int uart_server_disconn(uart_handle_t handle)
 
   无
 
-### 4.1.4 uart_server_adv_control
+### 4.1.4 ble_prf_uart_server_adv_control
 
 - 函数原型
 
 ```c
-int uart_server_adv_control(uint8_t adv_on, adv_param_t *adv_param)
+int ble_prf_uart_server_adv_control(uint8_t adv_on, adv_param_t *adv_param)
 ```
 
 - 功能描述
@@ -315,11 +315,11 @@ int uart_server_adv_control(uint8_t adv_on, adv_param_t *adv_param)
 
   无
 
-### 4.1.5 uart_server_conn_param_update
+### 4.1.5 ble_prf_uart_server_conn_param_update
 - 函数原型
 
 ```c
-int uart_server_conn_param_update(uart_handle_t handle, conn_param_t *param)
+int ble_prf_uart_server_conn_param_update(uart_handle_t handle, conn_param_t *param)
 ```
 
 - 功能描述
@@ -347,12 +347,12 @@ int uart_server_conn_param_update(uart_handle_t handle, conn_param_t *param)
 
 ## 4.2 BLE UART Client API
 
-### 4.2.1 uart_client_init
+### 4.2.1 ble_prf_uart_client_init
 
 - 函数原型
 
 ```c
-uart_handle_t uart_client_init(ble_uart_client_t *service)
+uart_handle_t ble_prf_uart_client_init(ble_uart_client_t *service)
 ```
 
 - 功能描述
@@ -391,11 +391,11 @@ uart_handle_t uart_client_init(ble_uart_client_t *service)
 | uint8_t auto_conn_mac_size  | 自动连接匹配设备地址数量                            |
 | dev_addr_t *auto_conn_mac   | 自动连接匹配设备地址，参见dev_addr_t（结构体）定义  |
 
-### 4.2.2 uart_client_scan_start
+### 4.2.2 ble_prf_uart_client_scan_start
 - 函数原型
 
 ```c
-int uart_client_scan_start()
+int ble_prf_uart_client_scan_start()
 ```
 
 - 功能描述
@@ -417,12 +417,12 @@ int uart_client_scan_start()
 
   无
   
-### 4.2.3 found_dev_get
+### 4.2.3 ble_prf_found_dev_get
 
 - 函数原型
   
   ```c
-  dev_addr_t *found_dev_get()
+  dev_addr_t *ble_prf_found_dev_get()
   ```
   
 - 功能描述
@@ -443,12 +443,12 @@ int uart_client_scan_start()
   
     每调用一次该接口，返回一个最近扫描到的设备
     
-    ### 4.2.4 uart_client_conn
+    ### 4.2.4 ble_prf_uart_client_conn
     
 - 函数原型
   
     ```c
-    int uart_client_conn(dev_addr_t *conn_mac, conn_param_t *conn_param)
+    int ble_prf_uart_client_conn(dev_addr_t *conn_mac, conn_param_t *conn_param)
     ```
     
 - 功能描述
@@ -472,12 +472,12 @@ int uart_client_scan_start()
 - 注意事项
   
   执行成功不代表连接成功，连接成功后通过ble_event_cb回调函数，上报EVENT_GAP_CONN_CHANGE事件
-### 4.2.4 uart_client_disconn
+### 4.2.4 ble_prf_uart_client_disconn
 
 - 函数原型
   
     ```c
-    int uart_client_disconn(uart_handle_t handle)
+    int ble_prf_uart_client_disconn(uart_handle_t handle)
     ```
     
 - 功能描述
@@ -501,12 +501,12 @@ int uart_client_scan_start()
   
   执行成功不代表断开成功，断开成功后通过ble_event_cb回调函数，上报EVENT_GAP_CONN_CHANGE事件
   
-### 4.2.5 uart_client_send
+### 4.2.5 ble_prf_uart_client_send
 
 - 函数原型
   
   ```c
-  int uart_client_send(uart_handle_t handle,const char *data,int length,bt_uart_send_cb *cb)
+  int ble_prf_uart_client_send(uart_handle_t handle,const char *data,int length,bt_uart_send_cb *cb)
   ```
   
 - 功能描述
@@ -533,11 +533,11 @@ int uart_client_scan_start()
   
     无
     
-### 4.2.6 uart_client_conn_param_update
+### 4.2.6 ble_prf_uart_client_conn_param_update
 - 函数原型
   
     ```c
-    int uart_client_conn_param_update(uart_handle_t handle, conn_param_t *param)
+    int ble_prf_uart_client_conn_param_update(uart_handle_t handle, conn_param_t *param)
     ```
     
 - 功能描述

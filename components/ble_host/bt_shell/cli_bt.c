@@ -279,7 +279,7 @@ const char *cli_bt_bt_dev_addr_to_string(bt_dev_addr_t *addr)
     return str;
 }
 
-#if defined(CONFIG_BT_BREDR) && CONFIG_BT_BREDR
+#if (defined(CONFIG_BT_BREDR) && CONFIG_BT_BREDR)
 static void _bt_stack_event_cb(bt_stack_cb_event_t event, bt_stack_cb_param_t *param)
 {
     switch (event) {
@@ -437,7 +437,7 @@ static void cmd_bt_stack_init(char *wbuf, int wbuf_len, int argc, char **argv)
 {
     int ret;
 
-#if defined(CONFIG_BT_BREDR) && CONFIG_BT_BREDR
+#if (defined(CONFIG_BT_BREDR) && CONFIG_BT_BREDR)
     static bt_stack_cb_t bt_stack_cb = {
         .callback = _bt_stack_event_cb,
     };
@@ -564,7 +564,7 @@ static void cmd_bt_stack_paired_dev_foreach(char *wbuf, int wbuf_len, int argc, 
     bt_stack_paired_dev_foreach(paried_devcie, NULL);
 }
 
-#if defined(CONFIG_BT_BREDR) && CONFIG_BT_BREDR
+#if (defined(CONFIG_BT_BREDR) && CONFIG_BT_BREDR)
 static void cmd_bt_stack_set_connectable(char *wbuf, int wbuf_len, int argc, char **argv)
 {
     int ret;
@@ -880,7 +880,7 @@ static void cmd_bt_stack_pairing_cancel(char *wbuf, int wbuf_len, int argc, char
     CLI_BT_PRINTF_I("passkey cancel succcess\n");
 }
 
-#if defined(CONFIG_BT_A2DP) && CONFIG_BT_A2DP
+#if (defined(CONFIG_BT_A2DP) && CONFIG_BT_A2DP)
 static void cmd_avrcp_func(char *wbuf, int wbuf_len, int argc, char **argv)
 {
     bt_stack_status_t       err = 0;
@@ -962,7 +962,7 @@ static void cmd_avrcp_func(char *wbuf, int wbuf_len, int argc, char **argv)
         if (p.volume < 0 || p.volume > 127) {
             goto help_info;
         }
-#if defined(CONFIG_BT_AVRCP_VOL_CONTROL) && CONFIG_BT_AVRCP_VOL_CONTROL
+#if (defined(CONFIG_BT_AVRCP_VOL_CONTROL) && CONFIG_BT_AVRCP_VOL_CONTROL)
         err = bt_prf_avrcp_tg_notify_vol_changed(p.volume);
 #else
         err = bt_prf_avrcp_tg_send_rn_rsp(BT_PRF_AVRCP_NOTIFICATION_VOLUME_CHANGE, BT_AVRCP_RESPONSE_CHANGED_STABLE,
@@ -1024,7 +1024,7 @@ static void cmd_a2dp_func(char *wbuf, int wbuf_len, int argc, char **argv)
 }
 #endif /* CONFIG_BT_A2DP */
 
-#if defined(CONFIG_BT_HFP_HF) && CONFIG_BT_HFP_HF
+#if (defined(CONFIG_BT_HFP_HF) && CONFIG_BT_HFP_HF)
 static void _hfp_handle(bt_prf_hfp_hf_cb_event_t event, bt_prf_hfp_hf_cb_param_t *param)
 {
     switch (event) {
@@ -1168,7 +1168,7 @@ static const struct cli_command bt_cmd_info[]
         { "set-io", CMD_SET_IO_HELP_INFO, cmd_bt_stack_set_io_capability },
         { "unpair-dev", CMD_UNPAIR_HELP_INFO, cmd_bt_stack_dev_unpair },
         { "bonded-dev", "bt bonded-dev", cmd_bt_stack_paired_dev_foreach },
-#if defined(CONFIG_BT_BREDR) && CONFIG_BT_BREDR
+#if (defined(CONFIG_BT_BREDR) && CONFIG_BT_BREDR)
         { "set-connectable", "bt set-connectable <enable:(0, 1)>", cmd_bt_stack_set_connectable },
         { "set-discoverable", "bt set-discoverable <enable:(0, 1)>", cmd_bt_stack_set_discoverable },
         { "set-eir", CMD_SET_EIR_HELP_INFO, cmd_bt_stack_set_eir },
@@ -1180,11 +1180,11 @@ static const struct cli_command bt_cmd_info[]
           cmd_bt_stack_passky_entry },
         { "passkey-confirm", "bt passkey-confirm <peer address:(XX:XX:XX:XX:XX:XX)>", cmd_bt_stack_passkey_confirm },
         { "pairing-cancel", "bt pairing-cancel <peer address:(XX:XX:XX:XX:XX:XX)>", cmd_bt_stack_pairing_cancel },
-#if defined(CONFIG_BT_A2DP) && CONFIG_BT_A2DP
+#if (defined(CONFIG_BT_A2DP) && CONFIG_BT_A2DP)
         { "avrcp", CMD_AVRCP_HELP_INFO, cmd_avrcp_func },
         { "a2dp", CMD_A2DP_HELP_INFO, cmd_a2dp_func },
 #endif
-#if defined(CONFIG_BT_HFP_HF) && CONFIG_BT_HFP_HF
+#if (defined(CONFIG_BT_HFP_HF) && CONFIG_BT_HFP_HF)
         { "hfp", CMD_HFP_HELP_INFO, cmd_hfp_func },
 #endif
 #endif

@@ -5,7 +5,7 @@
 #include <devices/uart.h>
 #include <csi_core.h>
 
-extern aos_dev_t *g_console_handle;
+extern rvm_dev_t *g_console_handle;
 extern void os_critical_enter();
 extern void os_critical_exit();
 
@@ -30,12 +30,12 @@ static int __stdio_outs(const char *s,size_t len) {
                     }
                 }
                 if (idx < len) {
-                    uart_send(g_console_handle, ptr, idx);
-                    uart_send(g_console_handle, "\r\n", 2);
+                    rvm_hal_uart_send(g_console_handle, ptr, idx);
+                    rvm_hal_uart_send(g_console_handle, "\r\n", 2);
                     len -= idx + 1;
                     ptr += idx + 1;
                 } else {
-                    uart_send(g_console_handle, ptr, idx);
+                    rvm_hal_uart_send(g_console_handle, ptr, idx);
                     break;
                 }
             }

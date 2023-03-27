@@ -1,7 +1,7 @@
 
 ## 第一部分： 基础信息
 name: chip_ch2601                                   # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
-version: v7.6.0                                     # <必选项> 组件版本号
+version: v7.7.0                                    # <必选项> 组件版本号
 description: ch2601 chip CSI driver SDK.            # <必选项> 建议至少20字以上
 type: chip                                          # <必选项> 组件类型，为：solution, chip, board, common, sdk
 tag: 核心模块                                       # <可选项> 组件分类，缺省值： ''
@@ -64,6 +64,7 @@ hw_info:
   vendor_name: thead
   cpu_name: e906
   ld_script: gcc_flash.ld
+  # ld_script: gcc_flash_heap_bigger.ld
   toolchain_prefix: riscv64-unknown-elf
   flash_program: ch2601_flash.elf
 

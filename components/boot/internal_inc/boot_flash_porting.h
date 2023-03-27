@@ -6,24 +6,18 @@
 
 #include <stdint.h>
 #include <stddef.h>
+#include <yoc/partition_device.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-typedef struct {
-    unsigned long    start_addr;
-    uint32_t    sector_size;
-    uint32_t    sector_count;
-} boot_flash_info_t;
+typedef partition_device_info_t boot_device_info_t;
 
-int boot_flash_info_get(int flashid, boot_flash_info_t *info);
-
-int boot_flash_read(unsigned long addr, void *data, size_t data_len);
-
-int boot_flash_write(unsigned long addr, void *data, size_t data_len);
-
-int boot_flash_erase(unsigned long addr, size_t len);
+int boot_device_info_get(storage_info_t *storage_info, boot_device_info_t *info);
+int boot_device_read(storage_info_t *storage_info, uint32_t offset, void *data, size_t data_len);
+int boot_device_write(storage_info_t *storage_info, uint32_t offset, void *data, size_t data_len);
+int boot_device_erase(storage_info_t *storage_info, uint32_t offset, size_t len);
 
 #ifdef __cplusplus
 }

@@ -111,7 +111,7 @@ typedef struct netmgr_dev_s {
     int (*info)(struct netmgr_dev_s *node);
     int (*reset)(struct netmgr_dev_s *node);
 
-    aos_dev_t *dev;
+    rvm_dev_t *dev;
 
     /* status */
     int is_gotip;

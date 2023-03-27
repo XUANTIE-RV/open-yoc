@@ -263,13 +263,16 @@ int bt_gattc_conn_create(int id, u16_t srvc_uuid)
 
     //add relay to ensure the scan has been disabled
     aos_msleep(10);
-    conn = bt_conn_create_le(&peer, &conn_param);
 
-    if (conn == NULL) {
+    struct bt_conn_le_create_param param = BT_CONN_LE_CREATE_PARAM_INIT(
+    BT_CONN_LE_OPT_NONE, BT_GAP_SCAN_FAST_INTERVAL, BT_GAP_SCAN_FAST_INTERVAL);
+
+	if (bt_conn_le_create(&peer, &param, &conn_param,
+			      &conn)) {
         extern int bt_mesh_scan_enable(void);
         bt_mesh_scan_enable();
         return -EIO;
-    } else {
+	} else {
         bt_conn_unref(conn);
     }
 

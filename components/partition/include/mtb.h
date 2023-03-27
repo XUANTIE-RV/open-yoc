@@ -130,13 +130,13 @@ typedef struct {
 } scn_key_info_t;
 
 typedef struct {
-    uint8_t extend_type : 4;    //扩展标志, 标记分区镜像是否需要验签
+    uint8_t extend_type : 4;    //扩展标志
     uint8_t first_type  : 4;    //type表述
 } scn_father_type_t;
 
 typedef struct {
     scn_father_type_t father_type;  //父类型
-    uint8_t son_type;               //描述段子类型, reuse flash id for support multi flash
+    uint8_t son_type;               //描述段子类型
 } scn_type_t;
 
 typedef struct {
@@ -170,7 +170,36 @@ extern const scn_type_t g_scn_img_type[];
 extern const scn_type_t g_scn_key_type[];
 extern const scn_type_t g_scn_part_type[];
 
-// imtb v4
+///////////////////////////////////////////////////////////// imtb v4
+
+typedef enum {
+    MEM_DEVICE_TYPE_EFLASH = 0,
+    MEM_DEVICE_TYPE_SPI_NOR_FLASH,
+    MEM_DEVICE_TYPE_SPI_NAND_FLASH,
+    MEM_DEVICE_TYPE_SD,
+    MEM_DEVICE_TYPE_EMMC,
+    MEM_DEVICE_TYPE_USB,
+    MEM_DEVICE_TYPE_EFUSE,
+
+    MEM_DEVICE_TYPE_MAX
+} storage_device_type_e;
+
+typedef enum {
+    MEM_EMMC_DEVICE_AREA_USER = 0,
+    MEM_EMMC_DEVICE_AREA_BOOT1 = 1,
+    MEM_EMMC_DEVICE_AREA_BOOT2 = 2,
+    MEM_EMMC_DEVICE_AREA_RPMB  = 3,
+    MEM_EMMC_DEVICE_AREA_COUNT
+} emmc_device_area_e;
+
+typedef struct {
+    uint32_t id      : 8;
+    uint32_t type    : 8;   // storage_device_type_e
+    uint32_t area    : 4;   // such as emmc area.
+    uint32_t hot_plug: 1;
+    uint32_t rsv     : 11;
+} storage_info_t;
+
 typedef struct {
     uint32_t magic;
     uint16_t version;
@@ -184,8 +213,9 @@ typedef struct {
 
 typedef struct {
     char name[MTB_IMAGE_NAME_SIZE];
-    char pub_key_name[PUBLIC_KEY_NAME_SIZE];
-    scn_type_t  partition_type;
+    storage_info_t storage_info;
+    uint32_t    preload_size;
+    uint16_t    block_count_h;
     uint16_t    block_count;
     uint32_t    block_offset;
     uint32_t    load_address;
@@ -194,12 +224,12 @@ typedef struct {
 
 typedef struct {
     char name[MTB_IMAGE_NAME_SIZE];
-    char pub_key_name[PUBLIC_KEY_NAME_SIZE];
-    uint32_t start_addr;
-    uint32_t end_addr;
+    storage_info_t storage_info;
+    uint32_t preload_size;
+    uint64_t start_addr;    // absolute address
+    uint64_t end_addr;
     uint32_t load_addr;
     uint32_t img_size;
-    scn_type_t part_type;
 } mtb_partition_info_t;
 
 typedef struct {
@@ -230,33 +260,27 @@ typedef struct {
 } partition_tail_t;
 
 typedef struct {
-    unsigned long using_addr;    // 当前使用的imtb地址(RAM、FLASH)
-    unsigned long prim_addr;     // 当前使用的imtb地址(FLASH)
-    unsigned long backup_addr;   // 备份的imtb地址(FLASH)
-    uint32_t one_size;           // 一份imtb表(或者bmtb+imtb)占用的分区size
-    uint32_t i_offset: 16;       // imtb表的偏移地址，当存在bmtb时才有值，否则为0
-    uint32_t version: 8;         // imtb表的版本号
-    uint32_t cur_piece: 1;       // 当前使用的主imtb表还是备份imtb表，0：主表，1：备份表
+    unsigned long using_addr;       // 当前使用的imtb地址(RAM地址或者FLASH偏移地址)
+    unsigned long prim_offset;      // 当前使用的imtb地址(FLASH偏移地址)
+    unsigned long backup_offset;    // 备份的imtb地址(FLASH偏移地址)
+    uint32_t one_size;              // 一份imtb表(或者bmtb+imtb)占用的分区size
+    uint32_t i_offset: 16;          // imtb表的偏移地址，当存在bmtb时才有值，否则为0
+    uint32_t version: 8;            // imtb表的版本号
+    uint32_t cur_piece: 1;          // 当前使用的主imtb表还是备份imtb表，0：主表，1：备份表
     uint32_t rsv: 7;
+    storage_info_t storage_info;    // mtb所在分区的设备存储信息
 } mtb_t;
 
-#ifndef CONFIG_MULTI_FLASH_SUPPORT
-#define CONFIG_MULTI_FLASH_SUPPORT 0
-#endif
-
-typedef struct {
-    char image_name[MTB_IMAGE_NAME_SIZE];
-    uint64_t part_addr;
-    uint64_t part_size;
-#if !defined(CONFIG_MANTB_VERSION) || (CONFIG_MANTB_VERSION > 3)
-    uint64_t load_addr;
-    uint32_t image_size;
-#endif
-#if CONFIG_MULTI_FLASH_SUPPORT
-    scn_type_t type;        // Parameter reuse
-    uint16_t rsv;
-#endif
-} sys_partition_info_t;
+// typedef struct {
+//     char image_name[MTB_IMAGE_NAME_SIZE];
+//     uint64_t part_addr;
+//     uint64_t part_size;
+//     uint64_t load_addr;
+//     uint32_t image_size;
+// #ifdef CONFIG_PARTITION_SUPPORT_BLOCK_OR_MULTI_DEV
+//     storage_info_t storage_info;
+// #endif
+// } sys_partition_info_t;
 
 typedef struct {
     uint8_t img_name[MTB_IMAGE_NAME_SIZE];
@@ -265,8 +289,36 @@ typedef struct {
     uint32_t img_size;
     uint32_t img_part_size;
     uint8_t img_type;
+    storage_info_t storage_info;
 } img_info_t;
 
+typedef enum {
+    CAR_NULL = 0,
+    CAR_XZ,
+    CAR_LZMA,
+    CAR_LZ4,
+    CAR_LZOL
+} car_e; /* Compression Alogrithm Routine */
+
+typedef struct {
+#define PACK_LIST_MAGIC 0x544C4B50
+    uint32_t        magic;          // "PKLT"  0x544C4B50
+    uint16_t        compress_type;  // see enumerate car_e
+    uint16_t        head_version;   // 1
+    uint32_t        origin_size;    // image origin size
+    uint32_t        compressed_size;// image compressed size
+    uint32_t        next_offset;    // offset of the next packed image first byte position
+    uint32_t        run_address_h;  // the high 32bit of the image run address
+    uint32_t        run_address_l;  // the low 32bit of the image run address
+    uint32_t        reverse;        // reverse
+} pack_compress_t;
+
+/* The image header data struct. */
+typedef struct {
+    const partition_header_t partition_header;
+    uint32_t                 reverse; // reverse
+    pack_compress_t          pack_info;
+} pack_compress_list_t;
 
 /**
  * Init the manifest table
@@ -281,15 +333,6 @@ int mtb_init(void);
  * @return  NULL: On failed, otherwise is mtb_t handle
  */
 mtb_t *mtb_get(void);
-
-/**
- * Get manifest table prim or backup address in flash
- *
- * @param[in]  is_prim         Indicate prim or backup, 0: backup addr, 1: prim addr
- *
- * @return  address in flash
- */
-uint32_t mtb_get_addr(uint8_t is_prim);
 
 /**
  * Get bmtb size
@@ -352,7 +395,7 @@ int mtb_get_img_info(const char *name, img_info_t *img_info);
 /**
  *  when mtb version < 4
  */
-int get_section_buf(uint32_t addr, uint32_t img_len, scn_type_t *scn_type, uint32_t *scn_size);
+int get_section_buf(uint32_t addr, uint32_t img_len, scn_type_t *scn_type, uint32_t *scn_size, img_info_t *img_info);
 
 /**
  *  when mtb version < 4
@@ -379,6 +422,13 @@ int get_sys_partition(uint8_t *out, uint32_t *out_len);
  * @return  0: On success， otherwise is error
  */
 int get_app_version(uint8_t *out, uint32_t *out_len);
+
+/**
+ * Get the default device type, for compatible
+ *
+ * @return  device type, \ref storage_device_type_e
+ */
+int mtb_get_default_device_type(void);
 
 
 //// for tee

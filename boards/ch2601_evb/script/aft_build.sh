@@ -59,12 +59,9 @@ echo $MK_CHIP_PATH
 echo $MK_GENERATED_PATH
 
 if [ -d data ]; then
-    LFS_SIZE=0
-    if [ -n "$EXE_EXT" ]; then
-        LFS_SIZE=$(cat $MK_BOARD_PATH/configs/config.yaml | grep lfs | sed 's/[[:space:]\"]//g' | awk -F 'size:' '{print $2}' | awk -F '}' '{print $1}')
-    else
-        LFS_SIZE=$(cat $MK_BOARD_PATH/configs/config.yaml | grep lfs | sed 's/[[:space:]\"]//g' | awk -F 'size:|}' '{print $2}' | xargs printf "%d\n")
-    fi
+    LFS_SIZE=$(cat $MK_BOARD_PATH/configs/config.yaml | grep lfs | sed 's/[[:space:]\"]//g' | awk -F 'size:' '{print $2}' | awk -F '}' '{print strtonum($1)}')
+
+    echo "$PRODUCT lfs ${MK_GENERATED_PATH}/data/lfs -c data -b 4096 -s ${LFS_SIZE}"
 	$PRODUCT lfs ${MK_GENERATED_PATH}/data/lfs -c data -b 4096 -s ${LFS_SIZE}
 	cp -arf ${MK_GENERATED_PATH}/data/lfs  ${MK_GENERATED_PATH}/littlefs.bin
 fi
@@ -81,9 +78,7 @@ if [ ! -f gdbinitflash ]; then
     cp -arf $MK_BOARD_PATH/script/gdbinitflash $BASE_PWD
 fi
 
-if [ ! -f cdkinitflash ]; then
-    cp -arf $MK_BOARD_PATH/script/cdkinitflash $BASE_PWD
-fi
+cp -arf $MK_BOARD_PATH/script/cdkinitflash $BASE_PWD
 
 if [ ! -f gdbinit ]; then
     cp -arf $MK_BOARD_PATH/script/gdbinit $BASE_PWD

@@ -34,6 +34,9 @@ int main()
     board_yoc_init();
 
     LOGI(TAG, "Mesh Switch node demo %s", aos_get_app_version());
+
+    app_set_led_state(LED_OFF);
+
     /* Mesh Models and Device parameter setting, include models event callback regiter */
     ret = mesh_dev_init();
 

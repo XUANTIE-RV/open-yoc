@@ -15,8 +15,8 @@ static snd_bl606p_config_t *g_audio_gain_config = NULL;
 
 #define TAG "snd"
 
-#define pcm_uninit device_free
-#define mixer_uninit device_free
+#define pcm_uninit rvm_hal_device_free
+#define mixer_uninit rvm_hal_device_free
 
 #define pcm_dev(dev) &(((aos_pcm_dev_t *)dev)->pcm)
 #define pcm_ops(dev) &(((aos_pcm_drv_t *)((((aos_pcm_dev_t *)dev)->device.drv)))->ops)
@@ -85,7 +85,7 @@ static void playback_free(playback_t *playback)
     }
 }
 
-static int pcmp_lpm(aos_dev_t *dev, int state)
+static int pcmp_lpm(rvm_dev_t *dev, int state)
 {
     aos_pcm_t *pcm = pcm_dev(dev);
     playback_t *playback = (playback_t *)pcm->hdl;
@@ -99,7 +99,7 @@ static int pcmp_lpm(aos_dev_t *dev, int state)
     return 0;
 }
 
-static int pcmp_open(aos_dev_t *dev)
+static int pcmp_open(rvm_dev_t *dev)
 {
     aos_pcm_t *pcm = pcm_dev(dev);
     playback_t *playback = aos_zalloc(sizeof(playback_t));
@@ -111,7 +111,7 @@ static int pcmp_open(aos_dev_t *dev)
     return 0;
 }
 
-static int pcmp_close(aos_dev_t *dev)
+static int pcmp_close(rvm_dev_t *dev)
 {
     aos_pcm_t *pcm = pcm_dev(dev);
     playback_t *playback = (playback_t *)pcm->hdl;
@@ -195,18 +195,9 @@ static int pcmp_param_set(aos_pcm_t *pcm, aos_pcm_hw_params_t *params)
         memcpy(&mixp0.hdl, codec, sizeof(csi_codec_output_t));
     }
 
-    // if (mixp0.l == -31 || mixp0.r == -31) {
-    //     csi_codec_output_mute(codec, 1);
-    // } else {
-    //     csi_codec_output_mute(codec, 0);
-
-    //     // csi_codec_output_analog_gain(codec, mixp0.l);
-
-    // }
-    if (g_audio_gain_config) {
-        extern int auo_analog_gain(void *context, float val);
-        auo_analog_gain(NULL, (float)g_audio_gain_config->audio_out_gain_list[0]);
-    }
+    //snd_set_gain will init mixp0.l
+    extern int auo_analog_gain(void *context, float val);
+    auo_analog_gain(NULL, (float)mixp0.l);
     // csi_codec_output_buffer_reset(codec);
 
     csi_dma_ch_t *dma_hdl = aos_zalloc_check(sizeof(csi_dma_ch_t));
@@ -268,22 +259,20 @@ static int pcm_pause(aos_pcm_t *pcm, int enable)
 /* left_gain/right_gain [-31, 0] 1dB step*/
 static int snd_set_gain(aos_mixer_elem_t *elem, int l, int r)
 {
+    //l r is dB value, Convert to csi api
     if (mixp0.hdl.callback != NULL) {
+        printf(">>> snd_set_gain %d %d dB\r\n", l, r);
+        //csi_codec_output_t *p = &mixp0.hdl;
+        //csi_codec_output_analog_gain(p, output_db2idx(l));
+        extern int auo_analog_gain(void *context, float val);
+        auo_analog_gain(NULL, (float)l);
 
-        // csi_codec_output_t *p = &mixp0.hdl;
-
-        // if (l == -31 || r == -31) {
-        //     csi_codec_output_mute(p, 1);
-        // } else {
-        //     csi_codec_output_mute(p, 0);
-        //     csi_codec_output_analog_gain(p, l);
-        // }
-        mixp0.l = l;
-        mixp0.r = r;
     } else {
-        mixp0.l = l;
-        mixp0.r = r;
+        printf(">>> snd_set_gain default %d %d dB\r\n", l, r);
     }
+
+    mixp0.l = l;
+    mixp0.r = r;
 
     return 0;
 }
@@ -304,15 +293,15 @@ static sm_elem_ops_t elem_codec1_ops = {
     .volume_to_dB = snd_volume_to_dB,
 };
 
-static aos_dev_t *pcm_init(driver_t *drv, void *config, int id)
+static rvm_dev_t *pcm_init(driver_t *drv, void *config, int id)
 {
-    aos_pcm_dev_t *pcm_dev = (aos_pcm_dev_t *)device_new(drv, sizeof(aos_pcm_dev_t), id);
+    aos_pcm_dev_t *pcm_dev = (aos_pcm_dev_t *)rvm_hal_device_new(drv, sizeof(aos_pcm_dev_t), id);
     aos_pcm_drv_t *pcm_drv = (aos_pcm_drv_t *)drv;
 
     memset(&pcm_dev->pcm, 0x00, sizeof(aos_pcm_t));
     pcm_dev->pcm.ops = &(pcm_drv->ops);
 
-    return (aos_dev_t *)(pcm_dev);
+    return (rvm_dev_t *)(pcm_dev);
 }
 
 static void capture_free(capture_t *capture)
@@ -328,7 +317,7 @@ static void capture_free(capture_t *capture)
     }
 }
 
-static int pcmc_lpm(aos_dev_t *dev, int state)
+static int pcmc_lpm(rvm_dev_t *dev, int state)
 {
     aos_pcm_t *pcm = pcm_dev(dev);
     capture_t *capture = (capture_t *)pcm->hdl;
@@ -342,7 +331,7 @@ static int pcmc_lpm(aos_dev_t *dev, int state)
     return 0;
 }
 
-static int pcmc_open(aos_dev_t *dev)
+static int pcmc_open(rvm_dev_t *dev)
 {
     aos_pcm_t *pcm = pcm_dev(dev);
     capture_t *capture = aos_zalloc(sizeof(capture_t));
@@ -354,7 +343,7 @@ static int pcmc_open(aos_dev_t *dev)
     return 0;
 }
 
-static int pcmc_close(aos_dev_t *dev)
+static int pcmc_close(rvm_dev_t *dev)
 {
     aos_pcm_t *pcm = pcm_dev(dev);
     capture_t *capture = (capture_t *)pcm->hdl;
@@ -496,24 +485,24 @@ static aos_pcm_drv_t aos_pcm_drv[] = {
 
 static int aos_pcm_register(void)
 {
-    driver_register(&aos_pcm_drv[0].drv, NULL, 0);
-    driver_register(&aos_pcm_drv[1].drv, NULL, 0);
-    // driver_register(&aos_pcm_drv[1].drv, NULL, 2);
-    // driver_register(&aos_pcm_drv[1].drv, NULL, 1);
+    rvm_driver_register(&aos_pcm_drv[0].drv, NULL, 0);
+    rvm_driver_register(&aos_pcm_drv[1].drv, NULL, 0);
+    // rvm_driver_register(&aos_pcm_drv[1].drv, NULL, 2);
+    // rvm_driver_register(&aos_pcm_drv[1].drv, NULL, 1);
 
     return 0;
 }
 
 static int aos_pcm_unregister(void)
 {
-    driver_unregister("pcmP0");
+    rvm_driver_unregister("pcmP0");
 
     return 0;
 }
 
-static aos_dev_t *card_init(driver_t *drv, void *config, int id)
+static rvm_dev_t *card_init(driver_t *drv, void *config, int id)
 {
-    card_dev_t *card = (card_dev_t *)device_new(drv, sizeof(card_dev_t), id);
+    card_dev_t *card = (card_dev_t *)rvm_hal_device_new(drv, sizeof(card_dev_t), id);
     snd_card_drv_t *card_drv = (snd_card_drv_t *)drv;
     aos_mixer_elem_t *elem;
 
@@ -524,36 +513,36 @@ static aos_dev_t *card_init(driver_t *drv, void *config, int id)
     }
 
     //FIXME:  must sleep 500ms at least before PA ON, otherwise baoyin happens
-    aos_msleep(500);
+    //aos_msleep(500);
     aos_pcm_register();
     slist_init(&card_drv->mixer_head);
 
     snd_elem_new(&elem, "codec0", &elem_codec1_ops);
     slist_add(&elem->next, &card_drv->mixer_head);
 
-    return (aos_dev_t *)card;
+    return (rvm_dev_t *)card;
 }
 
-static void card_uninit(aos_dev_t *dev)
+static void card_uninit(rvm_dev_t *dev)
 {
     csi_codec_uninit(&codec_a);
     aos_pcm_unregister();
-    device_free(dev);
+    rvm_hal_device_free(dev);
 }
 
-static int card_open(aos_dev_t *dev)
+static int card_open(rvm_dev_t *dev)
 {
 
     return 0;
 }
 
-static int card_close(aos_dev_t *dev)
+static int card_close(rvm_dev_t *dev)
 {
 
     return 0;
 }
 
-static int card_lpm(aos_dev_t *dev, int state)
+static int card_lpm(rvm_dev_t *dev, int state)
 {
 
     return 0;
@@ -582,5 +571,5 @@ void snd_card_bl606p_register(void *config)
             return;
         }
     }
-    driver_register(&snd_card_drv.drv, NULL, 0);
+    rvm_driver_register(&snd_card_drv.drv, NULL, 0);
 }

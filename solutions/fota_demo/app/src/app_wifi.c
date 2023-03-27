@@ -61,15 +61,9 @@ void app_network_init(void)
 #ifdef CONFIG_WIFI_XR829
     wifi_xr829_register(NULL);
 #elif defined(CONFIG_WIFI_DRIVER_RTL8723)
-    /* init wifi driver and network */
-    rtl8723ds_gpio_pin pin = {
-        .wl_en = WLAN_ENABLE_PIN,
-        .power = WLAN_POWER_PIN,
-    };
-    wifi_rtl8723ds_register(&pin);
+    board_wifi_init();
 #elif defined(CONFIG_WIFI_DRIVER_BL606P)
-    aos_loop_init();
-    wifi_bl606p_register(NULL);
+    board_wifi_init();
 #elif defined(CONFIG_WIFI_DRIVER_W800)
     w800_wifi_param_t w800_param;
     /* init wifi driver and network */

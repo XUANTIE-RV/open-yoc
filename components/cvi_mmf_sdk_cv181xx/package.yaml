@@ -1,0 +1,65 @@
+##
+name: cvi_mmf_sdk_cv181xx
+version: v7.7.0
+description: Cvitek cvi_mmf_sdk_cv181xx library.
+type: common
+keywords:
+  - base
+license: Copyright (C) Cvitek Co., Ltd. 2019-2020. All rights reserved.
+build_config:
+  include:
+    - include
+    - include/cvi_miniz/include/
+    - include/cvi_json_c/include/
+    - include/cviai/include/core/utils
+    - include/cviai/include/core/core
+    - include/cviai/include/core/face
+    - include/cviai/include/core/object
+    - include/cviai/include/core
+    - include/cviai/include/
+    - include/cvi_middleware/include/panel
+    - include/cvi_middleware/include/isp/mars
+    - include/cvi_middleware/include/isp
+    - include/cvi_middleware/include/
+    - include/cvi_tpu/include/bmkernel/bm1822
+    - include/cvi_tpu/include/bmkernel
+    - include/cvi_tpu/include/runtime
+    - include/cvi_tpu/include/cvikernel/mars
+    - include/cvi_tpu/include/cvikernel
+    - include/cvi_tpu/include/cvimath
+    - include/cvi_tpu/include/
+    - include/cvi_miniz/include
+    - include/cvi_json_c/include
+    - include/cviai/include
+    - include/cvi_osdrv/include
+    - include/cvi_middleware/include
+    - include/cvi_tpu/include
+    - include/cvi_osdrv/include/common/kapi
+    - include/cvi_osdrv/include/chip/<CVI_SOC_NAME>/uapi
+    - include/cvi_osdrv/include/common/uapi
+  libs:
+    - cvi_miniz
+    - cvi_json_c
+    - cviai
+    - cvi_osdrv
+#    - cvi_mw_audio
+    - cvi_mw_venc
+    - cvi_mw_isp_daemon
+    - cvi_mw_sys
+    - cvi_mw_isp_bin
+    - cvi_mw_isp_com_raw_replay
+    - cvi_mw_isp
+    - cvi_mw_isp_af
+    - cvi_mw_vpu
+    - cvi_mw_isp_ae
+    - cvi_mw_bin
+    - cvi_mw_isp_awb
+    - cvi_mw_isp_algo
+    - cvi_mw_mipi_tx
+    - cvi_mw_vdec
+    - cvi_math
+    - cvi_kernel
+    - cvi_runtime
+  libpath:
+    - lib
+

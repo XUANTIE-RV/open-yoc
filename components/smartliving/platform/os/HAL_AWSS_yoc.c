@@ -26,11 +26,11 @@
 
 awss_recv_80211_frame_cb_t g_ieee80211_handler;
 
-static aos_dev_t *get_wifi_dev()
+static rvm_dev_t *get_wifi_dev()
 {
-    static aos_dev_t *wifi_dev = NULL;
+    static rvm_dev_t *wifi_dev = NULL;
     if (wifi_dev == NULL) {
-        wifi_dev = device_open_id("wifi", 0);
+        wifi_dev = rvm_hal_device_open("wifi0");
     }
 
     return wifi_dev;
@@ -42,17 +42,17 @@ static void get_mac(uint8_t mac[6])
 
     if (s_mac[0] == 0 && s_mac[1] == 0 && s_mac[2] == 0 && 
         s_mac[3] == 0 && s_mac[4] == 0 && s_mac[5] == 0) {
-        aos_dev_t *wifi_dev = get_wifi_dev();
+        rvm_dev_t *wifi_dev = get_wifi_dev();
         if (wifi_dev == NULL) {
             return;
         }
-        hal_wifi_get_mac_addr(wifi_dev, s_mac);
+        rvm_hal_wifi_get_mac_addr(wifi_dev, s_mac);
     }
 
     memcpy(mac, s_mac, 6);
 }
 
-static void monitor_data_handler(wifi_promiscuous_pkt_t *buf, wifi_promiscuous_pkt_type_t type)
+static void monitor_data_handler(rvm_hal_wifi_promiscuous_pkt_t *buf, rvm_hal_wifi_promiscuous_pkt_type_t type)
 {
     if (!buf) {
         return;
@@ -68,7 +68,7 @@ static void monitor_data_handler(wifi_promiscuous_pkt_t *buf, wifi_promiscuous_p
 
 void HAL_Awss_Open_Monitor(_IN_ awss_recv_80211_frame_cb_t cb)
 {
-    aos_dev_t *wifi_dev = get_wifi_dev();
+    rvm_dev_t *wifi_dev = get_wifi_dev();
     if (wifi_dev == NULL) {
         return;
     }
@@ -78,18 +78,18 @@ void HAL_Awss_Open_Monitor(_IN_ awss_recv_80211_frame_cb_t cb)
 #endif
     g_ieee80211_handler = cb;
 
-    hal_wifi_start_monitor(wifi_dev, monitor_data_handler);
+    rvm_hal_wifi_start_monitor(wifi_dev, monitor_data_handler);
     HAL_Awss_Switch_Channel(6, 0, NULL);
 }
 
 void HAL_Awss_Close_Monitor(void)
 {
-    aos_dev_t *wifi_dev = get_wifi_dev();
+    rvm_dev_t *wifi_dev = get_wifi_dev();
     if (wifi_dev == NULL) {
         return;
     }
 
-    hal_wifi_stop_monitor(wifi_dev);
+    rvm_hal_wifi_stop_monitor(wifi_dev);
 }
 
 int HAL_Awss_Get_Channelscan_Interval_Ms(void)
@@ -104,27 +104,27 @@ int HAL_Awss_Get_Timeout_Interval_Ms(void)
 
 void HAL_Awss_Switch_Channel(char primary_channel, char secondary_channel, uint8_t bssid[ETH_ALEN])
 {
-    aos_dev_t *wifi_dev = get_wifi_dev();
+    rvm_dev_t *wifi_dev = get_wifi_dev();
     if (wifi_dev == NULL) {
         return;
     }
 
-    hal_wifi_set_channel(wifi_dev, (int)primary_channel, WIFI_SECOND_CHAN_NONE);
+    rvm_hal_wifi_set_channel(wifi_dev, (int)primary_channel, WIFI_SECOND_CHAN_NONE);
 }
 
 int HAL_Awss_Open_Ap(const char *ssid, const char *passwd, int beacon_interval, int hide)
 {
-    wifi_config_t config;
+    rvm_hal_wifi_config_t config;
 
-    aos_dev_t *wifi_dev = get_wifi_dev();
+    rvm_dev_t *wifi_dev = get_wifi_dev();
     if (wifi_dev == NULL) {
         return -1;
     }
 
-    hal_wifi_stop(wifi_dev);
-    device_close(wifi_dev);
+    rvm_hal_wifi_stop(wifi_dev);
+    rvm_hal_device_close(wifi_dev);
     
-    memset(&config, 0, sizeof(wifi_config_t));
+    memset(&config, 0, sizeof(rvm_hal_wifi_config_t));
 
     if (ssid != NULL) {
         strncpy(config.ssid, ssid, HAL_MAX_SSID_LEN);
@@ -138,19 +138,19 @@ int HAL_Awss_Open_Ap(const char *ssid, const char *passwd, int beacon_interval, 
     config.ap_config.beacon_interval = beacon_interval;
     config.ap_config.hide_ssid = hide;
     
-    return hal_wifi_start(wifi_dev, &config);
+    return rvm_hal_wifi_start(wifi_dev, &config);
 }
 
 int HAL_Awss_Close_Ap()
 {
-    aos_dev_t *wifi_dev = get_wifi_dev();
+    rvm_dev_t *wifi_dev = get_wifi_dev();
     if (wifi_dev == NULL) {
         return -1;
     }
 
-    hal_wifi_stop(wifi_dev);
+    rvm_hal_wifi_stop(wifi_dev);
 
-    return device_close(wifi_dev);
+    return rvm_hal_device_close(wifi_dev);
 }
 
 int HAL_Awss_Connect_Ap(
@@ -176,13 +176,13 @@ uint32_t HAL_Wifi_Get_IP(char ip_str[NETWORK_ADDR_LEN], const char *ifname)
     ip_addr_t gw;
     uint8_t octet[4] = { 0, 0, 0, 0 };
 
-    aos_dev_t *wifi_dev = get_wifi_dev();
+    rvm_dev_t *wifi_dev = get_wifi_dev();
     if (wifi_dev == NULL) {
         return 0;
     }
 
     /** ifconfig */
-    hal_net_get_ipaddr(wifi_dev, &ipaddr, &netmask, &gw);
+    rvm_hal_net_get_ipaddr(wifi_dev, &ipaddr, &netmask, &gw);
 
     for (int i = 0; i < 4; i++) {
         octet[i] = (ipaddr.addr >> ((3 - i) * 8)) & 0xFF;
@@ -226,13 +226,13 @@ int HAL_Wifi_Get_Ap_Info(char ssid[HAL_MAX_SSID_LEN],char passwd[HAL_MAX_PASSWD_
 int HAL_Wifi_Send_80211_Raw_Frame(_IN_ enum HAL_Awss_Frame_Type type,
                                   _IN_ uint8_t *buffer, _IN_ int len)
 {
-    aos_dev_t *wifi_dev = get_wifi_dev();
+    rvm_dev_t *wifi_dev = get_wifi_dev();
     if (wifi_dev == NULL)
     {
         return -1;
     }
 
-    return hal_wifi_send_80211_raw_frame(wifi_dev, buffer, len);
+    return rvm_hal_wifi_send_80211_raw_frame(wifi_dev, buffer, len);
 }
 
 static awss_wifi_mgmt_frame_cb_t monitor_cb = NULL;
@@ -249,7 +249,7 @@ int HAL_Wifi_Enable_Mgmt_Frame_Filter(
     _IN_OPT_ uint8_t vendor_oui[3],
     _IN_ awss_wifi_mgmt_frame_cb_t callback)
 {
-    aos_dev_t *wifi_dev = get_wifi_dev();
+    rvm_dev_t *wifi_dev = get_wifi_dev();
     if (wifi_dev == NULL)
     {
         return -1;
@@ -259,11 +259,11 @@ int HAL_Wifi_Enable_Mgmt_Frame_Filter(
 
     if (callback != NULL)
     {
-        hal_wifi_start_mgnt_monitor(wifi_dev, mgnt_rx_cb);
+        rvm_hal_wifi_start_mgnt_monitor(wifi_dev, mgnt_rx_cb);
     }
     else
     {
-        hal_wifi_start_mgnt_monitor(wifi_dev, NULL);
+        rvm_hal_wifi_start_mgnt_monitor(wifi_dev, NULL);
     }
 
     return 0;

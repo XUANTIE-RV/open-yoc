@@ -49,29 +49,6 @@ struct ap_connect_adv {
 
 typedef struct ap_connect_adv ap_connect_adv_t;
 
-struct bl_rx_info {
-    int8_t rssi;
-};
-typedef struct bl_rx_info bl_rx_info_t;
-
-/// WiFi Mode
-typedef enum {
-    /// 802.ll b
-    WIFI_MODE_802_11B     = 0x01,
-    /// 802.11 a
-    WIFI_MODE_802_11A     = 0x02,
-    /// 802.11 g
-    WIFI_MODE_802_11G     = 0x04,
-    /// 802.11n at 2.4GHz
-    WIFI_MODE_802_11N_2_4 = 0x08,
-    /// 802.11n at 5GHz
-    WIFI_MODE_802_11N_5   = 0x10,
-    /// 802.11ac at 5GHz
-    WIFI_MODE_802_11AC_5  = 0x20,
-    /// Reserved for future use
-    WIFI_MODE_RESERVED    = 0x40,
-} WiFi_Mode_t;
-
 typedef enum {
     WM_WIFI_CIPHER_NONE = 0,
     WM_WIFI_CIPHER_WEP,
@@ -205,8 +182,6 @@ int wifi_mgmr_init(void);
 void wifi_mgmr_start(void);
 void wifi_mgmr_start_background(wifi_conf_t *conf);
 void wifi_mgmr_get_wifi_channel_conf(wifi_conf_t *wifi_chan_conf);
-int wifi_mgmr_set_mode(uint8_t ap_or_sta, int mode);
-int wifi_mgmr_get_mode(uint8_t ap_or_sta);
 
 wifi_interface_t wifi_mgmr_sta_enable(void);
 int wifi_mgmr_sta_disable(wifi_interface_t *interface);

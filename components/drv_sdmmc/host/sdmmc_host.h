@@ -34,8 +34,7 @@
 #ifndef _FSL_SDMMC_HOST_H
 #define _FSL_SDMMC_HOST_H
 
-#include "drv/sdif.h"
-#include <dw_mmc.h>
+#include <drv/sdif.h>
 
 #define FSL_FEATURE_SOC_SDIF_COUNT	2
 
@@ -107,11 +106,11 @@ typedef struct {
 
 /* function pointer define */
 #define GET_SDMMCHOST_CAPABILITY(base, capability) (csi_sdif_get_capabilities(base, capability))
-#define GET_SDMMCHOST_STATUS(base) (SDIF_GetControllerStatus(base))
+#define GET_SDMMCHOST_STATUS(base) (csi_sdif_get_controller_status(base))
 #define SDMMCHOST_SET_CARD_CLOCK(base, sourceClock_HZ, busClock_HZ) (csi_sdif_set_clock(base, busClock_HZ))
 #define SDMMCHOST_SET_CARD_BUS_WIDTH(base, busWidth) (csi_sdif_bus_width(base, busWidth))
-#define SDMMCHOST_SEND_CARD_ACTIVE(base, timeout) (SDIF_SendCardActive(base, timeout))
-#define SDMMCHOST_ENABLE_CARD_CLOCK(base, enable) (SDIF_EnableCardClock(base, enable))
+#define SDMMCHOST_SEND_CARD_ACTIVE(base, timeout) (csi_sdif_send_card_active(base, timeout))
+#define SDMMCHOST_ENABLE_CARD_CLOCK(base, enable) (csi_sdif_enable_card_clock(base, enable))
 
 #define SDMMCHOST_CARD_DETECT_STATUS()
 #define SDMMCHOST_CARD_DETECT_INIT()
@@ -123,8 +122,8 @@ typedef struct {
 #define SDMMCHOST_CARD_INSERT_CD_LEVEL (0U)
 
 /* sd card detect through host CD */
-#define SDMMCHOST_CARD_DETECT_INSERT_ENABLE(base) (SDIF_EnableInterrupt(base, kSDIF_CardDetect))
-#define SDMMCHOST_CARD_DETECT_INSERT_STATUS(base, data3) (SDIF_DetectCardInsert(base, data3))
+#define SDMMCHOST_CARD_DETECT_INSERT_ENABLE(base) (csi_sdif_enable_card_detect_interrupt(base))
+#define SDMMCHOST_CARD_DETECT_INSERT_STATUS(base, data3) (csi_sdif_detect_card_insert(base, data3))
 
 #define SDMMCHOST_SWITCH_VOLTAGE180V(base, enable18v)
 #define SDMMCHOST_EXECUTE_STANDARD_TUNING_ENABLE(base, flag)

@@ -14,7 +14,7 @@
 #include <misc/byteorder.h>
 #include <misc/util.h>
 
-#ifdef CONFIG_BT_BREDR
+#if (defined(CONFIG_BT_BREDR) && CONFIG_BT_BREDR)
 #include <bluetooth/hci.h>
 #include <bluetooth/bluetooth.h>
 #include <bluetooth/conn.h>
@@ -821,6 +821,8 @@ static void l2cap_br_conf_rsp(struct bt_l2cap_br *l2cap, u8_t ident,
 
 	BT_DBG("scid 0x%04x flags 0x%02x result 0x%02x len %u", scid, flags,
 	       result, opt_len);
+		   
+	(void)flags;
 
 	chan = bt_l2cap_br_lookup_rx_cid(conn, scid);
 	if (!chan) {
@@ -1119,6 +1121,8 @@ static void l2cap_br_disconn_req(struct bt_l2cap_br *l2cap, u8_t ident,
 	scid = sys_le16_to_cpu(req->scid);
 
 	BT_DBG("scid 0x%04x dcid 0x%04x", dcid, scid);
+	
+	(void)dcid;
 
 	chan = l2cap_br_remove_tx_cid(conn, scid);
 	if (!chan) {
@@ -1220,6 +1224,8 @@ static void l2cap_br_disconn_rsp(struct bt_l2cap_br *l2cap, u8_t ident,
 	scid = sys_le16_to_cpu(rsp->scid);
 
 	BT_DBG("dcid 0x%04x scid 0x%04x", dcid, scid);
+	
+	(void)scid;
 
 	chan = l2cap_br_remove_tx_cid(conn, dcid);
 	if (!chan) {
@@ -1354,6 +1360,8 @@ static void l2cap_br_conn_rsp(struct bt_l2cap_br *l2cap, u8_t ident,
 
 	BT_DBG("dcid 0x%04x scid 0x%04x result %u status %u", dcid, scid,
 	       result, status);
+		   
+	(void)status;
 
 	chan = bt_l2cap_br_lookup_rx_cid(conn, scid);
 	if (!chan) {

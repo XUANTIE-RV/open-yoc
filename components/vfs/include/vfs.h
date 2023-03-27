@@ -134,6 +134,7 @@ struct fs_ops {
     long          (*pathconf)(file_t *fp, const char *path, int name);
     long          (*fpathconf)(file_t *fp, int name);
     int           (*utime)(file_t *fp, const char *path, const struct aos_utimbuf *times);
+    int           (*truncate)(file_t *fp, off_t len);
 };
 
 /**

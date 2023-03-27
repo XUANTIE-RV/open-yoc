@@ -13,13 +13,18 @@
 #include <cxvision/cxvision.h>
 
 #include "pcm_input_internal.h"
+#include "yoc/pcm_input.h"
 
 #define TAG "data_input"
+
+extern "C" {
+void pcm_input_register();
+}
 
 // cxvision message
 using DataInputMessageT = thead::voice::proto::DataInputMsg;
 // pub/sub message
-using RecordMessageT    = posto::Message<thead::voice::proto::RecordMsg>;
+using RecordMessageT = posto::Message<thead::voice::proto::RecordMsg>;
 
 namespace cpt
 {
@@ -28,7 +33,7 @@ class DataInput : public cx::PluginBase
 {
 public:
     DataInput();
-    static void data_input(void *arg);
+    static void pcm_data_cb(void *data, unsigned int len, void *arg);
 
     bool Init(const std::map<std::string, std::string> &props) override;
     bool DeInit() override;
@@ -38,13 +43,11 @@ public:
     }
 
 private:
-    void config(const std::map<std::string, std::string> &props);
-
-    aos_task_t task_;
+    void                                            config(const std::map<std::string, std::string> &props);
     std::shared_ptr<posto::Participant>             participant_;
     std::shared_ptr<posto::Reader<RecordMessageT> > reader_;
 
-    bool start_record_;
+    int record_chn_count_; /* 0:不录制 3:录制3路 5:录制5路 */
 
     int chn_num;
     int interleaved;
@@ -52,71 +55,47 @@ private:
     int sample_rate;
     int frame_ms;
     int peroid_size; /* Single frame single channel sample count */
+    int capture_byte;
 };
 
 DataInput::DataInput()
 {
-    task_         = NULL;
-    participant_  = NULL;
-    reader_       = NULL;
-    start_record_ = false;
-    chn_num       = 0;
-    interleaved   = 0;
-    format        = 0; 
-    sample_rate   = 0;
-    frame_ms      = 0;
-    peroid_size   = 0;
+    participant_      = NULL;
+    reader_           = NULL;
+    record_chn_count_ = 0;
+    chn_num           = 0;
+    interleaved       = 0;
+    format            = 0;
+    sample_rate       = 0;
+    frame_ms          = 0;
+    peroid_size       = 0;
 }
 
-extern "C"
+void DataInput::pcm_data_cb(void *data, unsigned int len, void *arg)
 {
-    int voice_pcm_acquire(void *data, int len);
-    int voice_pcm_acquire_init(int bit_format, int sample_rate, int frame_ms, int chn_num);
-}
+    DataInput *self        = static_cast<DataInput *>(arg);
+    auto       oMemory     = cx::MemoryHelper::Malloc(self->capture_byte);
+    int16_t *  capture_buf = (int16_t *)oMemory->data();
+    memcpy(capture_buf, data, len);
 
-void DataInput::data_input(void *arg)
-{
+    /* send the message included mic data and params to algrithm process */
+    auto oMeta = std::make_shared<DataInputMessageT>();
 
-    DataInput *self         = static_cast<DataInput *>(arg);
-    int        capture_byte = 0;
+    oMeta->set_chn_num(self->chn_num);
+    oMeta->set_format(self->format);
+    oMeta->set_sample_rate(self->sample_rate);
+    oMeta->set_frame(self->peroid_size);
 
-    voice_pcm_acquire_register(&g_pcm_acquire_ops);
+    auto output = std::make_shared<cx::Buffer>();
+    output->AddMemory(oMemory);
+    output->SetMetadata("alsa_param", oMeta);
 
-    capture_byte = voice_pcm_acquire_init(self->format, self->sample_rate, self->frame_ms, self->chn_num);
+    self->Send(0, output);
 
-    LOGD(TAG, "Go to the algorithm process");
-
-    /* capture main loop */
-    while (1) {
-        /* malloc and get mic data from audio, send to algrithm process */
-        auto     oMemory      = cx::MemoryHelper::Malloc(capture_byte);
-        int16_t *capture_buf  = (int16_t *)oMemory->data();
-
-        int rlen = voice_pcm_acquire(capture_buf, capture_byte);
-
-        if (rlen <= 0) {
-            continue;
-        }
-
-        /* send the message included mic data and params to algrithm process */
-        auto oMeta = std::make_shared<DataInputMessageT>();
-        oMeta->set_chn_num(self->chn_num);
-        oMeta->set_format(self->format);
-        oMeta->set_sample_rate(self->sample_rate);
-        oMeta->set_frame(self->peroid_size);
-
-        auto output = std::make_shared<cx::Buffer>();
-        output->AddMemory(oMemory);
-        output->SetMetadata("alsa_param", oMeta);
-
-        self->Send(0, output);
-
-        if (self->start_record_ == true) {
-            self->Send(1, output);
-        }
+    if (self->record_chn_count_ == 3) {
+        //发送到record_process#0节点
+        self->Send(1, output);
     }
-
-    aos_task_exit(0);
 }
 
 void DataInput::config(const std::map<std::string, std::string> &props)
@@ -137,21 +116,17 @@ void DataInput::config(const std::map<std::string, std::string> &props)
 
     this->peroid_size = this->frame_ms * (this->sample_rate / 1000);
 
-    LOGI(TAG,
-         "chn_num %d, frame_ms %d, rate %d, bits %d, interleaved %d",
-         this->chn_num,
-         this->frame_ms,
-         this->sample_rate,
-         this->format,
-         this->interleaved);
+    LOGI(TAG, "chn_num %d, frame_ms %d, rate %d, bits %d, interleaved %d", this->chn_num, this->frame_ms,
+         this->sample_rate, this->format, this->interleaved);
 }
 
 bool DataInput::Init(const std::map<std::string, std::string> &props)
 {
+    int err;
     // param config
     config(props);
 
-    start_record_ = false;
+    record_chn_count_ = 0;
 
     participant_ = posto::Domain::CreateParticipant("cmd_consumer");
 
@@ -160,11 +135,11 @@ bool DataInput::Init(const std::map<std::string, std::string> &props)
               // LOGD(TAG, "Message got, cmd_id: %d\n", msg->body().cmd_id());
               switch (msg->body().cmd()) {
                   case thead::voice::proto::START:
-                      start_record_ = true;
+                      record_chn_count_ = msg->body().record_chn_count();
                       break;
 
                   case thead::voice::proto::STOP:
-                      start_record_ = false;
+                      record_chn_count_ = 0;
                       break;
 
                   default:
@@ -172,12 +147,31 @@ bool DataInput::Init(const std::map<std::string, std::string> &props)
               }
           });
 
-    aos_task_new_ext(&task_, "PcmInput", &data_input, this, 1024 * 8, AOS_DEFAULT_APP_PRI - 4);
+    pcm_input_register();
+
+    this->capture_byte = pcm_input_init(this->format, this->sample_rate, this->frame_ms, this->chn_num);
+    if (this->capture_byte < 0) {
+        LOGE(TAG, "Capture init failed %d\n", this->capture_byte);
+        return false;
+    }
+
+    err = pcm_input_cb_register(pcm_data_cb, (void *)this);
+    if (err) {
+        LOGE(TAG, "Pcm cb register failed %d\n", err);
+        return false;
+    }
+
     return true;
 }
 
 bool DataInput::DeInit()
 {
+    int err = 0;
+    err     = pcm_input_cb_unregister(pcm_data_cb);
+    if (err) {
+        LOGE(TAG, "Pcm cb unregister failed %d\n", err);
+        return false;
+    }
     return true;
 }
 

@@ -89,7 +89,7 @@ static kv_t g_kv;
 
 static int kv_partition_erase(kv_t *kv, int pos, int size)
 {
-    return partition_erase(kv->handle, pos, 1);
+    return partition_erase_size(kv->handle, pos, size);
 }
 
 static int kv_partition_write(kv_t *kv, int pos, void *data, int size)
@@ -111,14 +111,14 @@ static flash_ops_t partition_ops = {
 static int kv_flash_erase(kv_t *kv, int pos, int size)
 {
     int ret;
-    aos_dev_t *dev = (aos_dev_t *)((long)kv->handle);
-    flash_dev_info_t flash_info;
+    rvm_dev_t *dev = (rvm_dev_t *)((long)kv->handle);
+    rvm_hal_flash_dev_info_t flash_info;
 
-    flash_get_info(dev, &flash_info);
+    rvm_hal_flash_get_info(dev, &flash_info);
 
     int offset = pos + (long)kv->mem - flash_info.start_addr;
 
-    ret = flash_erase(dev, offset, 1);
+    ret = rvm_hal_flash_erase(dev, offset, 1);
 
     return ret;
 }
@@ -126,13 +126,13 @@ static int kv_flash_erase(kv_t *kv, int pos, int size)
 static int kv_flash_write(kv_t *kv, int pos, void *data, int size)
 {
     int ret;
-    aos_dev_t *dev = (aos_dev_t *)((long)kv->handle);
-    flash_dev_info_t flash_info;
+    rvm_dev_t *dev = (rvm_dev_t *)((long)kv->handle);
+    rvm_hal_flash_dev_info_t flash_info;
 
-    flash_get_info(dev, &flash_info);
+    rvm_hal_flash_get_info(dev, &flash_info);
 
     int offset = pos + (long)kv->mem - flash_info.start_addr;
-    ret = flash_program(dev, offset, data, size);
+    ret = rvm_hal_flash_program(dev, offset, data, size);
 
     return ret;
 }
@@ -140,13 +140,13 @@ static int kv_flash_write(kv_t *kv, int pos, void *data, int size)
 static int kv_flash_read(kv_t *kv, int pos, void *data, int size)
 {
     int ret;
-    aos_dev_t *dev = (aos_dev_t *)((long)kv->handle);
-    flash_dev_info_t flash_info;
+    rvm_dev_t *dev = (rvm_dev_t *)((long)kv->handle);
+    rvm_hal_flash_dev_info_t flash_info;
 
-    flash_get_info(dev, &flash_info);
+    rvm_hal_flash_get_info(dev, &flash_info);
 
     int offset = pos + (long)kv->mem - flash_info.start_addr;
-    ret = flash_read(dev, offset, data, size);
+    ret = rvm_hal_flash_read(dev, offset, data, size);
     return ret;
 }
 
@@ -163,12 +163,13 @@ int kv2x_init(kv_t *kv, const char *partition)
     kv->ops    = &partition_ops;
 
     if (kv->handle >= 0) {
-        partition_info_t *lp = hal_flash_get_info(kv->handle);
+        partition_info_t *lp = partition_info_get(kv->handle);
         aos_assert(lp);
+        aos_assert(lp->erase_size);
 
         uint8_t *mem        = (uint8_t *)((unsigned long)(lp->start_addr + lp->base_addr));
-        int      block_size = lp->sector_size;
-        int      block_num  = lp->length / lp->sector_size;
+        int      block_size = lp->erase_size;
+        int      block_num  = lp->length / lp->erase_size;
 
         return kv_init(kv, mem, block_num, block_size);
     }
@@ -179,16 +180,16 @@ int kv2x_init(kv_t *kv, const char *partition)
 int kv2x_flash_init(kv_t *kv, const char *flashname, int start, int num)
 {
     memset(kv, 0, sizeof(kv_t));
-    kv->handle = (long)flash_open(flashname);
+    kv->handle = (long)rvm_hal_flash_open(flashname);
     kv->ops    = &flash_ops;
 
     if (kv->handle >= 0) {
-        flash_dev_info_t flash_info;
+        rvm_hal_flash_dev_info_t flash_info;
 
-        flash_get_info((aos_dev_t *)((long)kv->handle), &flash_info);
+        rvm_hal_flash_get_info((rvm_dev_t *)((long)kv->handle), &flash_info);
 
         uint8_t *mem        = (uint8_t *)((long)start);
-        int      block_size = flash_info.block_size;
+        int      block_size = flash_info.sector_size;
         int      block_num  = num;
 
         kv_init(kv, mem, block_num, block_size);

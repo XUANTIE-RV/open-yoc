@@ -9,6 +9,10 @@
 #error "CONFIG_BT is not defined!!!"
 #endif
 
+#ifndef __SIZEOF_POINTER__
+#define __SIZEOF_POINTER__ (sizeof(void*))
+#endif
+
 #ifdef CONFIG_BT
 
 #ifndef CONFIG_NET_BUF_USER_DATA_SIZE
@@ -120,7 +124,14 @@
 #ifndef CONFIG_BT_PAGE_TIMEOUT
 /* This option sets the page timeout value. Value is selected as
           (N * 0.625) ms, 0x0001~0xffff */
-#define CONFIG_BT_PAGE_TIMEOUT 0x2000
+#define CONFIG_BT_PAGE_TIMEOUT 0x6000
+#endif
+
+#ifndef CONFIG_BT_CONN_WINDOW
+#define CONFIG_BT_CONN_WINDOW       0x0012
+#endif
+#ifndef CONFIG_BT_CONN_INTERVAL
+#define CONFIG_BT_CONN_INTERVAL     0x0800
 #endif
 
 #endif //#if defined(CONFIG_BT_BREDR) && CONFIG_BT_BREDR
@@ -238,7 +249,7 @@
 
 /* Size of discardable event buffers. */
 #ifndef CONFIG_BT_DISCARDABLE_BUF_SIZE
-#if defined(CONFIG_BT_BREDR) || defined(CONFIG_BT_EXT_ADV)
+#if (defined(CONFIG_BT_BREDR) && CONFIG_BT_BREDR) || (defined(CONFIG_BT_EXT_ADV) && CONFIG_BT_EXT_ADV)
 #define CONFIG_BT_DISCARDABLE_BUF_SIZE 257
 #else
 #define CONFIG_BT_DISCARDABLE_BUF_SIZE 45
@@ -252,7 +263,7 @@
 
 /* GATT dynamic database support. */
 #ifndef CONFIG_BT_GATT_DYNAMIC_DB
-#define CONFIG_BT_GATT_DYNAMIC_DB
+#define CONFIG_BT_GATT_DYNAMIC_DB 1
 #endif
 
 /* Maximum data size for each HCI RX buffer. This size includes
@@ -272,12 +283,21 @@
 
 /* Stack size needed for executing bt_send with specified driver */
 #ifndef CONFIG_BT_HCI_TX_STACK_SIZE
-#define CONFIG_BT_HCI_TX_STACK_SIZE 2048
+#define CONFIG_BT_HCI_TX_STACK_SIZE (512*__SIZEOF_POINTER__)
 #endif
 
 /* Stack size needed for executing bt_send with specified driver */
 #ifndef CONFIG_BT_HCI_TX_PRIO
 #define CONFIG_BT_HCI_TX_PRIO 7
+#endif
+
+/* Stack size needed for Ecc */
+#ifndef CONFIG_BT_HCI_ECC_STACK_SIZE
+#define CONFIG_BT_HCI_ECC_STACK_SIZE (512*__SIZEOF_POINTER__)
+#endif
+
+#ifndef CONFIG_BLUETOOTH_WORK_QUEUE_STACK_SIZE
+#define CONFIG_BLUETOOTH_WORK_QUEUE_STACK_SIZE (1024*__SIZEOF_POINTER__)
 #endif
 
 /* Headroom that the driver needs for sending and receiving buffers. */
@@ -296,7 +316,7 @@
           require extra stack space, this value can be increased to
           accommodate for that. */
 #ifndef CONFIG_BT_RX_STACK_SIZE
-#define CONFIG_BT_RX_STACK_SIZE 2048
+#define CONFIG_BT_RX_STACK_SIZE (512 * __SIZEOF_POINTER__)
 #endif
 
 #ifndef CONFIG_BT_RX_PRIO

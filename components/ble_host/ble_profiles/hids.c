@@ -85,7 +85,7 @@ typedef struct _register_hids_event_ {
 } register_hids_event;
 register_hids_event hids_event_arr[HIDS_IDX_MAX] = { 0 };
 
-#if defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE
+#if (defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE)
 GATT_SERVICE_STATIC_DEFINE(
     hids_service, GATT_PRIMARY_SERVICE_DEFINE(UUID_HIDS),
     /* REPORT MAP */
@@ -373,7 +373,7 @@ hids_handle_t ble_prf_hids_init(uint8_t mode)
         return NULL;
     }
 
-#if defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE
+#if (defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE)
     ret = ble_stack_gatt_service_handle(&hids_service);
 #else
     ret = ble_stack_gatt_registe_service(&hids_service, hids_attrs, BLE_ARRAY_NUM(hids_attrs));

@@ -43,6 +43,25 @@ enum _generic_status {
     kStatus_NoTransferInProgress = MAKE_STATUS(kStatusGroup_Generic, 6),
 };
 
+/*! @brief SDIF status */
+enum _sdif_status {
+    kStatus_SDIF_DescriptorBufferLenError = MAKE_STATUS(kStatusGroup_SDIF, 0U), /*!< Set DMA descriptor failed */
+    kStatus_SDIF_InvalidArgument = MAKE_STATUS(kStatusGroup_SDIF, 1U),          /*!< invalid argument status */
+    kStatus_SDIF_SyncCmdTimeout = MAKE_STATUS(kStatusGroup_SDIF, 2U), /*!< sync command to CIU timeout status */
+    kStatus_SDIF_SendCmdFail = MAKE_STATUS(kStatusGroup_SDIF, 3U),    /*!< send command to card fail */
+    kStatus_SDIF_SendCmdErrorBufferFull =
+        MAKE_STATUS(kStatusGroup_SDIF, 4U), /*!< send command to card fail, due to command buffer full
+                                     user need to resend this command */
+    kStatus_SDIF_DMATransferFailWithFBE =
+        MAKE_STATUS(kStatusGroup_SDIF, 5U), /*!< DMA transfer data fail with fatal bus error ,
+                                     to do with this error :issue a hard reset/controller reset*/
+    kStatus_SDIF_DMATransferDescriptorUnavailable =
+        MAKE_STATUS(kStatusGroup_SDIF, 6U),                             /*!< DMA descriptor unavailable */
+    kStatus_SDIF_DataTransferFail = MAKE_STATUS(kStatusGroup_SDIF, 6U), /*!< transfer data fail */
+    kStatus_SDIF_ResponseError = MAKE_STATUS(kStatusGroup_SDIF, 7U),    /*!< response error */
+    kStatus_SDIF_DMAAddrNotAlign = MAKE_STATUS(kStatusGroup_SDIF, 8U),  /*!< DMA address not align */
+};
+
 /*! @brief Type used for all status and error return values. */
 typedef int32_t status_t;
 
@@ -329,6 +348,76 @@ sdif_handle_t csi_sdif_get_handle(uint32_t idx);
   \return       SDIF index
 */
 uint32_t csi_sdif_get_idx(sdif_handle_t handle);
+
+/**
+  \brief       SDIF return the controller status
+  \param[in]   handle  SDIF handle to operate.
+ */
+uint32_t csi_sdif_get_controller_status(sdif_handle_t handle);
+
+/**
+ \brief SDIF send initialize 80 clocks for SD card after initial
+ \param[in]  handle  SDIF handle to operate.
+ \param[in]  timeout  millisecond
+ */
+bool csi_sdif_send_card_active(sdif_handle_t handle, uint32_t timeout);
+
+/**
+ \brief SDIF module enable/disable card clock.
+ \param[in]  handle  SDIF handle to operate.
+ \param[in]  enable  enable:true, disable:false
+ */
+void csi_sdif_enable_card_clock(sdif_handle_t handle, bool enable);
+
+/**
+ \brief SDIF enable interrupt
+ \param[in]  handle  SDIF handle to operate.
+ \param[in]  mask interrupt mask
+ */
+void csi_sdif_enable_interrupt(sdif_handle_t handle, uint32_t mask);
+
+/**
+ \brief SDIF disable interrupt
+ \param[in]  handle  SDIF handle to operate.
+ \param[in]  mask interrupt mask
+ */
+void csi_sdif_disable_interrupt(sdif_handle_t handle, uint32_t mask);
+
+/**
+ \brief SDIF enable card detect interrupt
+ \param[in]  handle  SDIF handle to operate.
+ */
+void csi_sdif_enable_card_detect_interrupt(sdif_handle_t handle);
+
+/**
+ \brief SDIF enable sdio interrupt
+ \param[in]  handle  SDIF handle to operate.
+ */
+void csi_sdif_enable_sdio_interrupt(sdif_handle_t handle);
+
+/**
+ \brief SDIF disable sdio interrupt
+ \param[in]  handle  SDIF handle to operate.
+ */
+void csi_sdif_disable_sdio_interrupt(sdif_handle_t handle);
+
+/**
+ \brief SDIF module detect card insert status function.
+ \param[in]  handle  SDIF handle to operate.
+ \param[in]  data3 indicate use data3 as card insert detect pin
+ \return 1 card is inserted
+ *       0 card is removed
+ */
+uint32_t csi_sdif_detect_card_insert(sdif_handle_t handle, bool data3);
+
+/**
+ \brief enable/disable the card power.
+ * once turn power on, software should wait for regulator/switch
+ * ramp-up time before trying to initialize card.
+ \param[in]  handle  SDIF handle to operate.
+ \param[in]  enable  enable:true, disable:false
+ */
+void csi_sdif_enable_card_power(sdif_handle_t handle, bool enable);
 
 #ifdef __cplusplus
 }

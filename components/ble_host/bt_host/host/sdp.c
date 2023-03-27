@@ -13,7 +13,7 @@
 #include <misc/byteorder.h>
 #include <misc/__assert.h>
 
-#if defined(CONFIG_BT_BREDR)
+#if (defined(CONFIG_BT_BREDR) && CONFIG_BT_BREDR)
 #include <bluetooth/sdp.h>
 
 #define BT_DBG_ENABLED IS_ENABLED(CONFIG_BT_DEBUG_SDP)
@@ -156,6 +156,8 @@ static void bt_sdp_connected(struct bt_l2cap_chan *chan)
 						   chan);
 
 	BT_DBG("chan %p cid 0x%04x", ch, ch->tx.cid);
+	
+	(void)ch;
 }
 
 /** @brief Callback for SDP disconnection

@@ -49,13 +49,13 @@ int aos_pcm_open(aos_pcm_t **pcm_ret, const char *name, aos_pcm_stream_t stream,
     aos_pcm_t *pcm;
     card_dev_t *card;
 
-    aos_card_attach("card0", &card); // Do not put it behind of " (aos_pcm_dev_t *)device_open(name)"
+    aos_card_attach("card0", &card); // Do not put it behind of " (aos_pcm_dev_t *)rvm_hal_device_open(name)"
     if (card == NULL) {
         *pcm_ret = NULL;
         return -1;
     }
 
-    aos_pcm_dev_t *dev = (aos_pcm_dev_t *)device_open(name);
+    aos_pcm_dev_t *dev = (aos_pcm_dev_t *)rvm_hal_device_open(name);
 
     if(dev == NULL) {
         *pcm_ret = NULL;
@@ -84,9 +84,9 @@ int aos_pcm_close(aos_pcm_t *pcm)
 
     //LOGE(TAG, "pcm close");
     //FIXME: close pcm-device first
-    aos_dev_t *dev = (aos_dev_t *)(((intptr_t)(pcm)) + sizeof(aos_pcm_t) - sizeof(aos_pcm_dev_t));
+    rvm_dev_t *dev = (rvm_dev_t *)(((intptr_t)(pcm)) + sizeof(aos_pcm_t) - sizeof(aos_pcm_dev_t));
 
-    device_close(dev);
+    rvm_hal_device_close(dev);
     aos_mutex_free(&pcm->mutex);
     aos_event_free(&pcm->evt);
 
@@ -280,8 +280,10 @@ aos_pcm_sframes_t aos_pcm_writei(aos_pcm_t *pcm, const void *buffer, aos_pcm_ufr
     }
 
     PCM_UNLOCK(pcm);
-
-    return ret;
+    if (ret < 0) {
+        return ret;
+    }
+    return aos_pcm_bytes_to_frames(pcm, ret);
 }
 
 static void pcm_access(aos_pcm_t *pcm, void *buffer, int bytes)
@@ -314,6 +316,18 @@ static void pcm_access(aos_pcm_t *pcm, void *buffer, int bytes)
     aos_free(c);
 }
 
+aos_pcm_sframes_t aos_pcm_avail(aos_pcm_t *pcm)
+{
+    aos_check_return_einval(pcm && pcm->stream == AOS_PCM_STREAM_CAPTURE && \
+                            pcm->hw_params->access == AOS_PCM_ACCESS_RW_NONINTERLEAVED);
+
+    PCM_LOCK(pcm);
+    int bytes = pcm->ops->hw_get_remain_size(pcm);
+    PCM_UNLOCK(pcm);
+
+    return (aos_pcm_bytes_to_frames(pcm, bytes));
+}
+
 aos_pcm_sframes_t aos_pcm_readi(aos_pcm_t *pcm, void *buffer, aos_pcm_uframes_t size)
 {
     aos_check_return_einval(pcm && pcm->stream == AOS_PCM_STREAM_CAPTURE && \
@@ -322,6 +336,11 @@ aos_pcm_sframes_t aos_pcm_readi(aos_pcm_t *pcm, void *buffer, aos_pcm_uframes_t 
     PCM_LOCK(pcm);
     int bytes = pcm->ops->read(pcm, buffer, aos_pcm_frames_to_bytes(pcm, size));
     PCM_UNLOCK(pcm);
+
+    if (bytes <= 0) {
+        return 0;
+    }
+
 
     pcm_access(pcm, buffer, bytes);
 
@@ -476,11 +495,11 @@ int aos_pcm_recover(aos_pcm_t *pcm, int err, int silent)
             }
         }
         PCM_LOCK(pcm);
-        aos_dev_t *dev = (aos_dev_t *)(((intptr_t)(pcm)) + sizeof(aos_pcm_t) - sizeof(aos_pcm_dev_t));
+        rvm_dev_t *dev = (rvm_dev_t *)(((intptr_t)(pcm)) + sizeof(aos_pcm_t) - sizeof(aos_pcm_dev_t));
 
-        device_close(dev);
+        rvm_hal_device_close(dev);
         aos_event_set(&pcm->evt, 0, AOS_EVENT_AND);
-        device_open(pcm->pcm_name);
+        rvm_hal_device_open(pcm->pcm_name);
         pcm->ops->hw_params_set(pcm, pcm->hw_params);
         PCM_UNLOCK(pcm);
 

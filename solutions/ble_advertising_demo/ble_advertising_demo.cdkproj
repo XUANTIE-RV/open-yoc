@@ -111,11 +111,11 @@
         </BeforeCompile>
         <BeforeMake>
           <RunUserProg>yes</RunUserProg>
-          <UserProgName>"$(ProjectPath)cdk/script/before_build.sh"</UserProgName>
+          <UserProgName>"$(ProjectPath)script/before_build.sh"</UserProgName>
         </BeforeMake>
         <AfterMake>
           <RunUserProg>yes</RunUserProg>
-          <UserProgName>"$(ProjectPath)temp/script/aft_build.sh"</UserProgName>
+          <UserProgName>"$(ProjectPath)script/after_build.sh"</UserProgName>
         </AfterMake>
         <Tools/>
       </User>
@@ -217,7 +217,7 @@
         </ConfigOpenOCD>
       </Debug>
       <Flash>
-        <InitFile>$(ProjectPath)/temp/script/flash.init</InitFile>
+        <InitFile>$(ProjectPath)cdkinitflash</InitFile>
         <Erase>Erase Sectors</Erase>
         <Algorithms Path=""/>
         <Program>yes</Program>

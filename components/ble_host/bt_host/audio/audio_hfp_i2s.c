@@ -6,9 +6,9 @@
 #include <aos/bt.h>
 #include <aos/ringbuffer.h>
 
-#if defined(CONFIG_BT_HFP_AUDIO_I2S) && (CONFIG_BT_HFP_AUDIO_I2S)
+#if (defined(CONFIG_BT_HFP_AUDIO_I2S) && CONFIG_BT_HFP_AUDIO_I2S)
 #include <drv/i2s.h>
-#include <output/ao.h>
+#include <av/output/ao.h>
 #include <alsa/pcm.h>
 #include <aos/classic/bt_stack_hfp_hf.h>
 #include <speex/speex_resampler.h>
@@ -22,6 +22,10 @@
 #define I2S_PERIOD_SIZE    (640 * 2)
 
 #define NUM_POINTS 1024
+
+#ifndef CONFIG_RESAMPLE_RATE
+#define CONFIG_RESAMPLE_RATE 48000
+#endif
 
 typedef struct {
     ao_cls_t *ao;
@@ -72,7 +76,7 @@ static void start_pcm_send(void)
 
     ao_cnf.vol_en        = 1;
     ao_cnf.vol_index     = 50;
-    ao_cnf.resample_rate = 48000;
+    ao_cnf.resample_rate = CONFIG_RESAMPLE_RATE;
     hfp_snd->ao_sf       = sf;
     hfp_snd->ao_cnf      = ao_cnf;
 

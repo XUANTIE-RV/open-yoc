@@ -30,22 +30,69 @@ extern "C" {
 #define CONFIG_IMG_AUTHENTICITY_NOT_CHECK 0
 #endif
 
+#ifndef CONFIG_PARTITION_SUPPORT_EFLASH
+#define CONFIG_PARTITION_SUPPORT_EFLASH 0
+#endif
+
+#ifndef CONFIG_PARTITION_SUPPORT_SPINORFLASH
+#define CONFIG_PARTITION_SUPPORT_SPINORFLASH 1
+#endif
+
+#ifndef CONFIG_PARTITION_SUPPORT_SPINANDFLASH
+#define CONFIG_PARTITION_SUPPORT_SPINANDFLASH 0
+#endif
+
+#ifndef CONFIG_PARTITION_SUPPORT_EMMC
+#define CONFIG_PARTITION_SUPPORT_EMMC 0
+#endif
+
+#ifndef CONFIG_PARTITION_SUPPORT_SD
+#define CONFIG_PARTITION_SUPPORT_SD 0
+#endif
+
+#ifndef CONFIG_PARTITION_SUPPORT_USB
+#define CONFIG_PARTITION_SUPPORT_USB 0
+#endif
+
+// Please define as 1 when use multi devices in config.yaml
+#ifndef CONFIG_PARTITION_SUPPORT_BLOCK_OR_MULTI_DEV
+#define CONFIG_PARTITION_SUPPORT_BLOCK_OR_MULTI_DEV 0
+#endif
+
+#if CONFIG_PARTITION_SUPPORT_EMMC || CONFIG_PARTITION_SUPPORT_SD || CONFIG_PARTITION_SUPPORT_USB
+#undef CONFIG_PARTITION_SUPPORT_BLOCK_OR_MULTI_DEV
+#define CONFIG_PARTITION_SUPPORT_BLOCK_OR_MULTI_DEV 1
+#endif
+
+typedef struct {
+    char image_name[MTB_IMAGE_NAME_SIZE];
+    uint64_t part_addr;
+    uint64_t part_size;
+    uint64_t load_addr;
+    uint32_t image_size;
+#if CONFIG_PARTITION_SUPPORT_BLOCK_OR_MULTI_DEV
+    storage_info_t storage_info;
+#endif
+} sys_partition_info_t;
+/////////////////////////////////////////////////////
+
 typedef int partition_t;
 
 typedef struct {
     char     description[MTB_IMAGE_NAME_SIZE];  // 分区名字
-    uint32_t base_addr;                         // Flash基地址
-    uint32_t start_addr;                        // 分区的偏移地址（不是绝对地址）
-    uint32_t length;                            // 分区大小
+    uint64_t base_addr;                         // 分区所在Flash的基地址
+    uint64_t start_addr;                        // 分区的偏移地址（不是绝对地址）
+    uint64_t length;                            // 分区大小
     uint32_t sector_size;                       // Flash sector大小
-    uint8_t  idx;
-
-    void    *flash_dev;
-
+    uint32_t block_size;                        // bock大小
+    uint32_t erase_size;                        // 最小擦除单元大小
+    void    *flash_dev;                         // partition device handle
     uint32_t load_addr;                         // 加载地址，一般指在RAM中的运行地址
     uint32_t image_size;                        // 镜像实际大小
-    scn_type_t type;
-    uint16_t rsv;
+    storage_info_t storage_info;
+#if CONFIG_PARTITION_SUPPORT_EMMC
+    uint32_t boot_area_size;                    // for emmc boot area
+#endif
 } partition_info_t;
 
 /**
@@ -75,25 +122,22 @@ partition_t partition_open(const char *name);
 void partition_close(partition_t partition);
 
 /**
- * Get the information of the specified flash area
+ * Get the information of the specified partition
  *
- * @param[in]  in_partition     The target flash logical partition
- * @param[in]  partition        The buffer to store partition info
+ * @param[in]  partition    The partition handle
  *
  * @return  0: On success， otherwise is error
  */
 partition_info_t *partition_info_get(partition_t partition);
 
+// Will be deprecated
 #define hal_flash_get_info(partition) partition_info_get(partition)
 
 /**
  * Read data from an area on a Flash to data buffer in RAM
  *
  * @param[in]  partition       The target flash logical partition which should be read
- * @param[in]  off_set         Point to the start address that the data is read, and
- *                             point to the last unread address after this function is
- *                             returned, so you can call this function serval times without
- *                             update this start address.
+ * @param[in]  off_set         Offset address relative to the partition start address
  * @param[in]  data            Point to the data buffer that stores the data read from flash
  * @param[in]  size            The length of the buffer
  *
@@ -105,10 +149,7 @@ int partition_read(partition_t partition, off_t off_set, void *data, size_t size
  * Write data to an area on a flash logical partition without erase
  *
  * @param[in]  partition       The target flash logical partition which should be read which should be written
- * @param[in]  off_set         Point to the start address that the data is written to, and
- *                             point to the last unwritten address after this function is
- *                             returned, so you can call this function serval times without
- *                             update this start address.
+ * @param[in]  off_set         Offset address relative to the partition start address
  * @param[in]  data            point to the data buffer that will be written to flash
  * @param[in]  size            The length of the buffer
  *
@@ -125,12 +166,29 @@ int partition_write(partition_t partition, off_t off_set, void *data, size_t siz
  *        will be lost.
  *
  * @param[in]  partition     The target flash logical partition which should be erased
- * @param[in]  off_set       Offset address of the erased flash area
- * @param[in]  block_count   block_count  of the erased flash area
+ * @param[in]  off_set       Offset address relative to the partition start address
+ * @param[in]  sector_count  sector_count of the erased flash area
  *
  * @return  0 : On success, <0 If an error occurred with any step
  */
-int partition_erase(partition_t partition, off_t off_set, uint32_t block_count);
+int partition_erase(partition_t partition, off_t off_set, uint32_t sector_count);
+
+/**
+ * Erase an area on a Flash logical partition
+ *
+ * @note  Erase on an address will erase all data on a sector that the
+ *        address is belonged to, this function does not save data that
+ *        beyond the address area but in the affected sector, the data
+ *        will be lost.
+ *
+ * @param[in]  partition     The target flash logical partition which should be erased
+ * @param[in]  off_set       Offset address relative to the partition start address
+ * @param[in]  size          The erase size, must be erase_size align
+ *                           It will erase more sector when the size is not erase_size align. 
+ *
+ * @return  0 : On success, <0 If an error occurred with any step
+ */
+int partition_erase_size(partition_t partition, off_t off_set, size_t size);
 
 /**
  * Verify partition data
@@ -168,15 +226,26 @@ int partition_get_digest(partition_t partition, uint8_t *out_hash, uint32_t *out
  */
 int partition_set_region_safe(partition_t partition);
 
-#if CONFIG_MULTI_FLASH_SUPPORT
 /**
- * Get flash id by absolute address
+ * Get the information from a combine image partition
  *
- * @param[in]  address   absolute address
- * @return  < 0: If an error occurred with any step, otherwise is the flash id
+ * @param[in]  partition     The partition handle
+ * @param[in]  index         The index of the combined images
+ * @param[out]  offset       The image offset in the partition
+ * @param[out]  olen         The image length
+ * @param[out]  run_address  The image run address
+ * @return  0 : On success, <0 If an error occurred with any step
  */
-int get_flashid_by_abs_addr(unsigned long address);
-#endif
+int partition_split_and_get(partition_t partition, int index, unsigned long *offset, size_t *olen, unsigned long *run_address);
+
+/**
+ * Split the combined partition data, then decompress and copy to the run address
+ *
+ * @param[in]  partition     The partition handle
+ * @param[in]  index         The index of the combined images
+ * @return  0 : On success, <0 If an error occurred with any step
+ */
+int partition_split_and_copy(partition_t partition, int index);
 
 #ifdef __cplusplus
 }

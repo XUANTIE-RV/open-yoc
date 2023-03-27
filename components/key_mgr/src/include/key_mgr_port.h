@@ -10,9 +10,10 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <yoc/partition.h>
 
 #define MIN(x, y) ((x) < (y) ? (x) : (y))
 
-int get_data_from_addr(unsigned long addr, uint8_t *data, size_t data_len);
+int get_data_from_addr(unsigned long addr, uint8_t *data, size_t data_len, partition_info_t *part_info);
 
 #endif

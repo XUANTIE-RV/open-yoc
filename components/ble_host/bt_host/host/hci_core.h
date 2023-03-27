@@ -8,7 +8,7 @@
 #ifndef __HCI_CORE_H
 #define __HCI_CORE_H 
 
-#if defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE
+#if (defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE)
 #include "fsm.h"
 #endif
 
@@ -16,7 +16,7 @@
 #define LE_CONN_LATENCY		0x0000
 #define LE_CONN_TIMEOUT		0x002a
 
-#if defined(CONFIG_BT_BREDR)
+#if (defined(CONFIG_BT_BREDR) && CONFIG_BT_BREDR)
 #define LMP_FEAT_PAGES_COUNT	3
 #else
 #define LMP_FEAT_PAGES_COUNT	1
@@ -29,7 +29,7 @@
 enum {
 	BT_EVENT_CMD_TX,
 	BT_EVENT_CONN_TX_QUEUE,
-#if defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE
+#if (defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE)
 	BT_EVENT_RX_QUEUE,
 	BT_EVENT_RX,
 #endif
@@ -57,12 +57,12 @@ enum {
 	BT_DEV_ID_PENDING,
 	BT_DEV_STORE_ID,
 
-#if defined(CONFIG_BT_BREDR)
+#if (defined(CONFIG_BT_BREDR) && CONFIG_BT_BREDR)
 	BT_DEV_ISCAN,
 	BT_DEV_PSCAN,
 	BT_DEV_INQUIRY,
 #endif /* CONFIG_BT_BREDR */
-#if defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE
+#if (defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE)
 	BT_ST_INIT_DONE,
 #endif
 	/* Total number of flags - must be at the end of the enum */
@@ -114,7 +114,7 @@ enum {
 	/* Advertiser has been temporarily disabled. */
 	BT_ADV_PAUSED,
 
-#if defined(CONFIG_BT_EXT_ADV)
+#if (defined(CONFIG_BT_EXT_ADV) && CONFIG_BT_EXT_ADV)
 	/* Periodic Advertising has been enabled in the controller. */
 	BT_PER_ADV_ENABLED,
 	/* Periodic Advertising parameters has been set in the controller. */
@@ -134,7 +134,7 @@ struct bt_le_ext_adv {
 	/* Current local Random Address */
 	bt_addr_le_t		random_addr;
 
-#if defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE
+#if (defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE)
 	/* Current local Random Address pending to be set in the controller*/
 	bt_addr_le_t		pending_random_addr;
 #endif
@@ -144,16 +144,16 @@ struct bt_le_ext_adv {
 
 	ATOMIC_DEFINE(flags, BT_ADV_NUM_FLAGS);
 
-#if defined(CONFIG_BT_EXT_ADV)
+#if (defined(CONFIG_BT_EXT_ADV) && CONFIG_BT_EXT_ADV)
 	const struct bt_le_ext_adv_cb *cb;
 
 	/* TX Power in use by the controller */
 	s8_t                    tx_power;
-#endif /* defined(CONFIG_BT_EXT_ADV) */
+#endif /* (defined(CONFIG_BT_EXT_ADV) && CONFIG_BT_EXT_ADV) */
 };
 
-#if defined(CONFIG_BT_EXT_ADV)
-#if defined(CONFIG_BT_PER_ADV_SYNC)
+#if (defined(CONFIG_BT_EXT_ADV) && CONFIG_BT_EXT_ADV)
+#if (defined(CONFIG_BT_PER_ADV_SYNC) && CONFIG_BT_PER_ADV_SYNC)
 
 enum {
 	/** Periodic Advertising Sync has been created in the host. */
@@ -202,18 +202,18 @@ struct bt_dev_le {
 	/* LE states */
 	u64_t			states;
 
-#if defined(CONFIG_BT_CONN)
+#if (defined(CONFIG_BT_CONN) && CONFIG_BT_CONN)
 	/* Controller buffer information */
 	u16_t			mtu_init;
 	u16_t			mtu;
-#if defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE
+#if (defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE)
 	atomic_t        pkts;
 #else
 	struct k_sem		pkts;
 #endif
 #endif /* CONFIG_BT_CONN */
 
-#if defined(CONFIG_BT_SMP)
+#if (defined(CONFIG_BT_SMP) && CONFIG_BT_SMP)
 	/* Size of the the controller resolving list */
 	u8_t                    rl_size;
 	/* Number of entries in the resolving list. rl_entries > rl_size
@@ -223,7 +223,7 @@ struct bt_dev_le {
 #endif /* CONFIG_BT_SMP */
 };
 
-#if defined(CONFIG_BT_BREDR)
+#if (defined(CONFIG_BT_BREDR) && CONFIG_BT_BREDR)
 struct bt_dev_br {
 	/* Max controller's acceptable ACL packet length */
 	u16_t         mtu;
@@ -248,7 +248,7 @@ struct bt_dev {
 
 	struct bt_conn_le_create_param create_param;
 
-#if !defined(CONFIG_BT_EXT_ADV)
+#if !(defined(CONFIG_BT_EXT_ADV) && CONFIG_BT_EXT_ADV)
 	/* Legacy advertiser */
 	struct bt_le_ext_adv    adv;
 #else
@@ -257,7 +257,7 @@ struct bt_dev {
 #endif
 	/* Current local Random Address */
 	bt_addr_le_t            random_addr;
-#if defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE
+#if (defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE)
 	/* Current local Random Address pending to be set in the controller*/
 	bt_addr_le_t            pending_random_addr;
 #endif
@@ -276,7 +276,7 @@ struct bt_dev {
 	/* Supported commands */
 	u8_t			supported_commands[64];
 
-#if defined(CONFIG_BT_HCI_VS_EXT)
+#if (defined(CONFIG_BT_HCI_VS_EXT) && CONFIG_BT_HCI_VS_EXT)
 	/* Vendor HCI support */
 	u8_t                    vs_features[BT_DEV_VS_FEAT_MAX];
 	u8_t                    vs_commands[BT_DEV_VS_CMDS_MAX];
@@ -289,14 +289,14 @@ struct bt_dev {
 	/* LE controller specific features */
 	struct bt_dev_le	le;
 
-#if defined(CONFIG_BT_BREDR)
+#if (defined(CONFIG_BT_BREDR) && CONFIG_BT_BREDR)
 	/* BR/EDR controller specific features */
 	struct bt_dev_br	br;
 #endif
 
 #if !(defined(CONFIG_BT_USE_HCI_API) && CONFIG_BT_USE_HCI_API)
 
-#if defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE
+#if (defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE)
 	atomic_t            ncmd;
 	struct k_delayed_work cmd_sent_work;
 	bt_fsm_handle_t     fsm;
@@ -307,7 +307,7 @@ struct bt_dev {
 	/* Last sent HCI command */
 	struct net_buf		*sent_cmd;
 #endif
-#if !defined(CONFIG_BT_RECV_IS_RX_THREAD)
+#if !(defined(CONFIG_BT_RECV_IS_RX_THREAD) && CONFIG_BT_RECV_IS_RX_THREAD)
 	/* Queue for incoming HCI events & ACL data */
 	struct kfifo		rx_queue;
 #endif
@@ -315,7 +315,7 @@ struct bt_dev {
 #if !(defined(CONFIG_BT_USE_HCI_API) && CONFIG_BT_USE_HCI_API)
 	/* Queue for outgoing HCI commands */
 	struct kfifo		cmd_tx_queue;
-#if defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE
+#if (defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE)
 	struct kfifo		cmd_tx_pending_queue;
 #endif
 #endif
@@ -323,7 +323,7 @@ struct bt_dev {
 	/* Registered HCI driver */
 	const struct bt_hci_driver *drv;
 
-#if defined(CONFIG_BT_PRIVACY)
+#if (defined(CONFIG_BT_PRIVACY) && CONFIG_BT_PRIVACY)
 	/* Local Identity Resolving Key */
 	u8_t			irk[CONFIG_BT_ID_MAX][16];
 
@@ -332,7 +332,7 @@ struct bt_dev {
 #endif
 
 	/* Local Name */
-#if defined(CONFIG_BT_DEVICE_NAME_DYNAMIC)
+#if (defined(CONFIG_BT_DEVICE_NAME_DYNAMIC) && CONFIG_BT_DEVICE_NAME_DYNAMIC)
 	/* if name_update_force is set, update adv/eir name force */
 	u8_t            name_update_force;
 	char			name[CONFIG_BT_DEVICE_NAME_MAX + 1];
@@ -340,7 +340,7 @@ struct bt_dev {
 };
 
 extern struct bt_dev bt_dev;
-#if defined(CONFIG_BT_SMP) || defined(CONFIG_BT_BREDR)
+#if (defined(CONFIG_BT_SMP) && CONFIG_BT_SMP) || (defined(CONFIG_BT_BREDR) && CONFIG_BT_BREDR)
 extern const struct bt_conn_auth_cb *bt_auth;
 #endif /* CONFIG_BT_SMP || CONFIG_BT_BREDR */
 
@@ -381,7 +381,7 @@ int hci_driver_init();
 
 int hci_h5_driver_init();
 
-#if defined(CONFIG_BT_USE_HCI_API) && CONFIG_BT_USE_HCI_API
+#if (defined(CONFIG_BT_USE_HCI_API) && CONFIG_BT_USE_HCI_API)
 
 struct event_handler {
 	u8_t event;
@@ -397,7 +397,7 @@ struct event_handler {
 }
 #endif
 
-#if defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE
+#if (defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE)
 
 typedef int (*bt_hci_cmd_func_t)(u16_t opcode, u8_t status, struct net_buf *rsp, void *args);
 

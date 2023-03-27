@@ -5,33 +5,50 @@
 #include <stdio.h>
 #include <aos/kernel.h>
 #include <drv/iic.h>
-
-#include "hal/iic_impl.h"
+#include <drv/clk.h>
+#include <devices/impl/iic_impl.h>
 
 #define TAG "iic_drv"
 
 typedef struct {
-    aos_dev_t      device;
+    rvm_dev_t      device;
     csi_iic_t      handle;
     aos_event_t    event;
-    iic_config_t   config;
+    rvm_hal_iic_config_t   config;
 } iic_dev_t;
 
-#define EVT_TRANSFER_DONE   1
-#define EVT_BUS_ERROR       (1 << 1)
+#define EVT_SEND_DONE       1
+#define EVT_RECV_DONE       1
 
 #define iic(dev) ((iic_dev_t *)dev)
 
-static aos_dev_t *iic_csky_init(driver_t *drv, void *config, int id)
+static void iic_csky_event_cb_fun(csi_iic_t *iic_handler, csi_iic_event_t event, void *arg)
 {
-    iic_dev_t *iic = (iic_dev_t *)device_new(drv, sizeof(iic_dev_t), id);
+    rvm_dev_t *dev = (rvm_dev_t *)arg;
 
-    return (aos_dev_t *)iic;
+    if (event == IIC_EVENT_SEND_COMPLETE) {
+        if (aos_event_is_valid(&iic(dev)->event)) {
+            aos_event_set(&iic(dev)->event, EVT_SEND_DONE, AOS_EVENT_OR);
+        }
+    } else if (event == IIC_EVENT_RECEIVE_COMPLETE) {
+        if (aos_event_is_valid(&iic(dev)->event)) {
+            aos_event_set(&iic(dev)->event, EVT_RECV_DONE, AOS_EVENT_OR);
+        }
+    } else {
+        printf("i2c err event %d\n", event);
+    }
 }
 
-#define iic_csky_uninit device_free
+static rvm_dev_t *iic_csky_init(driver_t *drv, void *config, int id)
+{
+    iic_dev_t *iic = (iic_dev_t *)rvm_hal_device_new(drv, sizeof(iic_dev_t), id);
 
-static int iic_csky_open(aos_dev_t *dev)
+    return (rvm_dev_t *)iic;
+}
+
+#define iic_csky_uninit rvm_hal_device_free
+
+static int iic_csky_open(rvm_dev_t *dev)
 {
     csi_error_t ret = csi_iic_init(&iic(dev)->handle, dev->id);
 
@@ -43,14 +60,25 @@ static int iic_csky_open(aos_dev_t *dev)
     return 0;
 }
 
-static int iic_csky_close(aos_dev_t *dev)
+static int iic_csky_close(rvm_dev_t *dev)
 {
     csi_iic_uninit(&iic(dev)->handle);
+    csi_iic_detach_callback(&iic(dev)->handle);
     aos_event_free(&iic(dev)->event);
     return 0;
 }
 
-static int iic_csky_config(aos_dev_t *dev, iic_config_t *config)
+static int iic_csky_clock(rvm_dev_t *dev, bool enable)
+{
+    if (enable) {
+        csi_clk_enable(&iic(dev)->handle.dev);
+    } else {
+        csi_clk_disable(&iic(dev)->handle.dev);
+    }
+    return 0;
+}
+
+static int iic_csky_config(rvm_dev_t *dev, rvm_hal_iic_config_t *config)
 {
     csi_error_t ret = csi_iic_mode(&iic(dev)->handle, config->mode);
     if (ret != CSI_OK) {
@@ -78,31 +106,19 @@ static int iic_csky_config(aos_dev_t *dev, iic_config_t *config)
         }
     }
 
-    memcpy(&iic(dev)->config, config, sizeof(iic_config_t));
-
-    return 0;
-}
-
-static int iic_busy_stat(aos_dev_t *dev)
-{
-    csi_state_t state;
-    csi_iic_get_state(&iic(dev)->handle, &state);
-
-    if (state.readable != 0) {
-        LOGE(TAG, "iic(%d) read busy", dev->id);
-        return -EBUSY;
+    ret = csi_iic_attach_callback(&iic(dev)->handle, iic_csky_event_cb_fun, dev);
+    if (ret != CSI_OK) {
+        return -EIO;
     }
 
+    memcpy(&iic(dev)->config, config, sizeof(rvm_hal_iic_config_t));
+
     return 0;
 }
 
-static int iic_csky_master_send(aos_dev_t *dev, uint16_t dev_addr, const void *data, uint32_t size, uint32_t timeout)
+static int iic_csky_master_send(rvm_dev_t *dev, uint16_t dev_addr, const void *data, uint32_t size, uint32_t timeout)
 {
     unsigned int flags = 0;
-
-    if (iic_busy_stat(dev) < 0) {
-        return -1;
-    }
 
     csi_error_t ret = csi_iic_master_send_async(&iic(dev)->handle, dev_addr, data, size);
     if (ret < 0) {
@@ -110,25 +126,21 @@ static int iic_csky_master_send(aos_dev_t *dev, uint16_t dev_addr, const void *d
         return -1;
     }
 
-    aos_event_get(&iic(dev)->event, EVT_TRANSFER_DONE | EVT_BUS_ERROR, AOS_EVENT_OR_CLEAR, &flags, timeout);
+    aos_event_get(&iic(dev)->event, EVT_SEND_DONE, AOS_EVENT_OR_CLEAR, &flags, timeout);
 
-    if (flags & EVT_BUS_ERROR) {
-        return -1;
-    } else if (flags & EVT_TRANSFER_DONE) {
+    if (flags & EVT_SEND_DONE) {
         return 0;
+    } else {
+        return -1;
     }
 
     return -ETIMEDOUT;
 }
 
-static int iic_csky_master_recv(aos_dev_t *dev, uint16_t dev_addr, void *data, uint32_t size, uint32_t timeout)
+static int iic_csky_master_recv(rvm_dev_t *dev, uint16_t dev_addr, void *data, uint32_t size, uint32_t timeout)
 {
     int ret;
     unsigned int flags = 0;
-
-    if (iic_busy_stat(dev) < 0) {
-        return -1;
-    }
 
     ret = csi_iic_master_receive_async(&iic(dev)->handle, dev_addr, data, size);
 
@@ -136,25 +148,21 @@ static int iic_csky_master_recv(aos_dev_t *dev, uint16_t dev_addr, void *data, u
         LOGE(TAG, "iic recv fail");
     }
 
-    aos_event_get(&iic(dev)->event, EVT_TRANSFER_DONE | EVT_BUS_ERROR, AOS_EVENT_OR_CLEAR, &flags, timeout);
+    aos_event_get(&iic(dev)->event, EVT_RECV_DONE, AOS_EVENT_OR_CLEAR, &flags, timeout);
 
-    if (flags & EVT_BUS_ERROR) {
-        return -1;
-    } else if (flags & EVT_TRANSFER_DONE) {
+    if (flags & EVT_RECV_DONE) {
         return 0;
+    } else {
+        return -1;
     }
 
     return -ETIMEDOUT;
 }
 
-static int iic_csky_slave_send(aos_dev_t *dev, const void *data, uint32_t size, uint32_t timeout)
+static int iic_csky_slave_send(rvm_dev_t *dev, const void *data, uint32_t size, uint32_t timeout)
 {
     int ret;
     unsigned int flags = 0;
-
-    if (iic_busy_stat(dev) < 0) {
-        return -1;
-    }
 
     ret = csi_iic_slave_send_async(&iic(dev)->handle, data, size);
 
@@ -162,25 +170,21 @@ static int iic_csky_slave_send(aos_dev_t *dev, const void *data, uint32_t size, 
         LOGE(TAG, "iic slave send fail");
     }
 
-    aos_event_get(&iic(dev)->event, EVT_TRANSFER_DONE | EVT_BUS_ERROR, AOS_EVENT_OR_CLEAR, &flags, timeout);
+    aos_event_get(&iic(dev)->event, EVT_SEND_DONE, AOS_EVENT_OR_CLEAR, &flags, timeout);
 
-    if (flags & EVT_BUS_ERROR) {
-        return -1;
-    } else if (flags & EVT_TRANSFER_DONE) {
+    if (flags & EVT_SEND_DONE) {
         return 0;
+    } else {
+        return -1;
     }
 
     return -ETIMEDOUT;
 }
 
-static int iic_csky_slave_recv(aos_dev_t *dev, void *data, uint32_t size, uint32_t timeout)
+static int iic_csky_slave_recv(rvm_dev_t *dev, void *data, uint32_t size, uint32_t timeout)
 {
     int ret;
     unsigned int flags = 0;
-
-    if (iic_busy_stat(dev) < 0) {
-        return -1;
-    }
 
     ret = csi_iic_slave_receive_async(&iic(dev)->handle, data, size);
 
@@ -188,18 +192,18 @@ static int iic_csky_slave_recv(aos_dev_t *dev, void *data, uint32_t size, uint32
         LOGE(TAG, "iic slave recv fail");
     }
 
-    aos_event_get(&iic(dev)->event, EVT_TRANSFER_DONE | EVT_BUS_ERROR, AOS_EVENT_OR_CLEAR, &flags, timeout);
+    aos_event_get(&iic(dev)->event, EVT_RECV_DONE, AOS_EVENT_OR_CLEAR, &flags, timeout);
 
-    if (flags & EVT_BUS_ERROR) {
-        return -1;
-    } else if (flags & EVT_TRANSFER_DONE) {
+    if (flags & EVT_RECV_DONE) {
         return 0;
+    } else {
+        return -1;
     }
 
     return -ETIMEDOUT;
 }
 
-static int iic_csky_mem_write(aos_dev_t *dev, uint16_t dev_addr, uint16_t mem_addr, uint16_t mem_addr_size,
+static int iic_csky_mem_write(rvm_dev_t *dev, uint16_t dev_addr, uint16_t mem_addr, uint16_t mem_addr_size,
                                 const void *data, uint32_t size, uint32_t timeout)
 {
     int32_t ret_len = csi_iic_mem_send(&iic(dev)->handle, dev_addr, mem_addr, mem_addr_size, data, size, timeout);
@@ -210,7 +214,7 @@ static int iic_csky_mem_write(aos_dev_t *dev, uint16_t dev_addr, uint16_t mem_ad
     return 0;
 }
 
-static int iic_csky_mem_read(aos_dev_t *dev, uint16_t dev_addr, uint16_t mem_addr, uint16_t mem_addr_size,
+static int iic_csky_mem_read(rvm_dev_t *dev, uint16_t dev_addr, uint16_t mem_addr, uint16_t mem_addr_size,
                                 void *data, uint32_t size, uint32_t timeout)
 {
     int32_t ret_len = csi_iic_mem_receive(&iic(dev)->handle, dev_addr, mem_addr, mem_addr_size, data, size, timeout);
@@ -228,6 +232,7 @@ static iic_driver_t iic_driver = {
         .uninit = iic_csky_uninit,
         .open   = iic_csky_open,
         .close  = iic_csky_close,
+        .clk_en = iic_csky_clock
     },
     .config          = iic_csky_config,
     .master_send     = iic_csky_master_send,
@@ -238,7 +243,7 @@ static iic_driver_t iic_driver = {
     .mem_read        = iic_csky_mem_read
 };
 
-void iic_csky_register(int idx)
+void rvm_iic_drv_register(int idx)
 {
-    driver_register(&iic_driver.drv, NULL, idx);
+    rvm_driver_register(&iic_driver.drv, NULL, idx);
 }

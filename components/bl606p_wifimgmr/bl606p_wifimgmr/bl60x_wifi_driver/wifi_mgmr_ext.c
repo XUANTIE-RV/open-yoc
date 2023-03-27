@@ -198,26 +198,6 @@ wifi_interface_t wifi_mgmr_sta_enable(void)
     return &(wifiMgmr.wlan_sta);
 }
 
-int wifi_mgmr_set_mode(uint8_t ap_or_sta, int mode)
-{
-    if (wifi_mgmr_api_set_mode(ap_or_sta, mode)) {
-        return -1;
-    }
-
-    if (ap_or_sta) {
-        wifiMgmr.ap_mode = mode;
-    }
-    else {
-        wifiMgmr.sta_mode = mode;
-    }
-    return 0;
-}
-
-int wifi_mgmr_get_mode(uint8_t ap_or_sta)
-{
-    return (ap_or_sta) ? wifiMgmr.ap_mode : wifiMgmr.sta_mode;
-}
-
 int wifi_mgmr_sta_disable(wifi_interface_t *interface)
 {
     wifi_mgmr_api_idle();
@@ -931,7 +911,7 @@ int wifi_mgmr_set_wifi_active_time(uint32_t ms)
     }
 
 void td_set_tim_time(uint8_t vif_index, uint32_t us);
-    td_set_tim_time(0, ms * 1000);
+    td_set_tim_time(wifiMgmr.wlan_sta.vif_index, ms * 1000);
 
     return 0;
 }

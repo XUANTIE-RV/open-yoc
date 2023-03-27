@@ -5,6 +5,7 @@
 #include "update.h"
 #include <stdlib.h>
 #include <string.h>
+#include <inttypes.h>
 #include <yoc/partition.h>
 #include "update_misc_man.h"
 #include "update_log.h"
@@ -20,7 +21,7 @@
  * Functions
  ****************************************************************************/
 
-static int update_process(void)
+static int update_process(partition_info_t *misc_info)
 {
     unsigned long fd, fd2;
     int ret = 0 ;
@@ -28,11 +29,7 @@ static int update_process(void)
     img_info_t img_f;
     unsigned long mantb = INVALID_ADDR;
 
-#if (CONFIG_MANTB_VERSION < 4)
-    mantb = mtb_get_addr(0); //primary mtb maybe modifying
-#endif
-
-    ret = misc_get_update_fd(&fd, &status);
+    ret = misc_get_update_fd(&fd, &status, misc_info);
     if (ret < 0) {
         UPD_LOGE("e continue fd:0x%lx", fd);
         return ret;
@@ -54,12 +51,12 @@ static int update_process(void)
             partition = partition_open((const char *)img_f.img_name);
             part_info = partition_info_get(partition);
             partition_close(partition);
-            if (part_info->length % part_info->sector_size) {
-                UPD_LOGE("[%s] partition length:0x%x is not align with sector:0x%x", (const char *)img_f.img_name, part_info->length, part_info->sector_size);
+            if (part_info->length % part_info->erase_size) {
+                UPD_LOGE("[%s] partition length:0x%"PRIX64" is not align with erase_size:0x%x", (const char *)img_f.img_name, part_info->length, part_info->erase_size);
                 return UPDATE_CHECK_FAIL;
             }
             if (img_f.img_size > part_info->length) {
-                UPD_LOGE("[%s] image size too large:0x%x, 0x%x", (const char *)img_f.img_name, img_f.img_size, part_info->length);
+                UPD_LOGE("[%s] image size too large:0x%x, 0x%"PRIX64, (const char *)img_f.img_name, img_f.img_size, part_info->length);
                 return UPDATE_CHECK_FAIL;
             }
         } else {
@@ -103,12 +100,12 @@ static int update_process(void)
     return 0;
 }
 
-int update_path(void)
+int update_path(partition_info_t *misc_info)
 {
     int update_flag = 0;
 
     UPD_LOGI("start to upgrade");
-    update_flag = update_process();
+    update_flag = update_process(misc_info);
     if (!update_flag) {
         UPD_LOGI("suc update ^_^");
     } else {
@@ -118,16 +115,12 @@ int update_path(void)
         }
     }
 
-    return misc_reset();
+    return misc_reset(misc_info);
 }
 
 int update_init(void)
 {
     int ret;
-    uint32_t img_sector;
-    uint32_t misc_start;
-    uint32_t misc_size;
-    uint32_t end_img_misc_addr;
     partition_t partition;
     partition_info_t *part_info;
 
@@ -138,30 +131,20 @@ int update_init(void)
         return -1;
     }
 
-    img_sector = part_info->sector_size;
-#ifdef CONFIG_IMG_SECTOR_SIZE
-    img_sector = CONFIG_IMG_SECTOR_SIZE;
-#endif
     if (part_info != NULL) {
-        misc_start = part_info->start_addr + part_info->base_addr;
-        misc_size = part_info->length;
-        end_img_misc_addr = misc_start + misc_size;
-        UPD_LOGD("misc_start addr:0x%x, end_img_misc_addr:0x%x", misc_start, end_img_misc_addr);
-        UPD_LOGD("sector_size:0x%x", part_info->sector_size);
-        (void)img_sector;
-        (void)end_img_misc_addr;
-        ret = misc_init(misc_start, misc_size, part_info->sector_size);
+        ret = misc_init(partition, part_info);
         if (ret != 0) {
             UPD_LOGE("misc init e.");
             return ret;
         }
-        ret = misc_file_check();
+        ret = misc_file_check(part_info);
         UPD_LOGD("misc check ret:%d", ret);
         if (ret != -1) {
             UPD_LOGD("update mode");
-            if (update_path()) {
+            if (update_path(part_info)) {
                 UPD_LOGE("e update");
             }
+            UPD_LOGD("update ok. goto reboot.");
             boot_sys_reboot();
         } else {
             UPD_LOGW("e misc file");

@@ -17,7 +17,7 @@
 #include <bluetooth/hci.h>
 #include <bluetooth/bluetooth.h>
 #include <bluetooth/l2cap.h>
-#ifdef CONFIG_BT_AVDTP
+#if (defined(CONFIG_BT_AVDTP) && CONFIG_BT_AVDTP)
 #define BT_DBG_ENABLED IS_ENABLED(CONFIG_BT_DEBUG_AVDTP)
 #define LOG_MODULE_NAME bt_avdtp
 #include "common/log.h"
@@ -58,7 +58,7 @@ static void avdtp_reconfig_resp(struct bt_avdtp *session, struct net_buf *buf, u
 static void avdtp_start_suspend_resp(struct bt_avdtp *session, struct net_buf *buf, u8_t tid, u8_t signal_id);
 static void avdtp_open_close_resp(struct bt_avdtp *session, struct net_buf *buf, u8_t tid, u8_t signal_id);
 static void avdtp_abord_resp(struct bt_avdtp *session, struct net_buf *buf, u8_t tid, u8_t signal_id);
-#ifdef CONFIG_BT_AVDTP_DELAY_REPORT
+#if (defined(CONFIG_BT_AVDTP_DELAY_REPORT) && CONFIG_BT_AVDTP_DELAY_REPORT)
 static void avdtp_delayreport_resp(struct bt_avdtp *session, struct net_buf *buf, u8_t tid, u8_t signal_id);
 #endif
 
@@ -122,7 +122,7 @@ static const struct {
         BT_AVDTP_GET_ALL_CAPABILITIES,
         avdtp_get_cap_resp,
     },
-#ifdef CONFIG_BT_AVDTP_DELAY_REPORT
+#if (defined(CONFIG_BT_AVDTP_DELAY_REPORT) && CONFIG_BT_AVDTP_DELAY_REPORT)
     {
         BT_AVDTP_DELAYREPORT,
         avdtp_delayreport_resp,
@@ -276,6 +276,7 @@ static int avdtp_send(struct bt_avdtp *session, struct net_buf *buf, struct bt_a
 
     result = bt_l2cap_chan_send(&session->br_chan.chan, buf);
     if (result < 0) {
+        net_buf_unref(buf);
         BT_ERR("L2CAP send fail - result = %d", result);
         return result;
     }
@@ -860,7 +861,7 @@ static void avdtp_abord_resp(struct bt_avdtp *session, struct net_buf *buf, u8_t
     return;
 }
 
-#ifdef CONFIG_BT_AVDTP_DELAY_REPORT
+#if (defined(CONFIG_BT_AVDTP_DELAY_REPORT) && CONFIG_BT_AVDTP_DELAY_REPORT)
 /** AVDTP Delay repoty signal cmd response */
 static void avdtp_delayreport_resp(struct bt_avdtp *session, struct net_buf *buf, u8_t tid, u8_t signal_id)
 {

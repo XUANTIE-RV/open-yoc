@@ -451,7 +451,7 @@ bt_stack_status_t bt_prf_avrcp_disconnect(bt_dev_addr_t *peer_addr);
 bt_stack_status_t bt_prf_avrcp_tg_send_rn_rsp(bt_prf_avrcp_rn_event_ids_t event_id, bt_prf_avrcp_ctype_response_t rsp,
                                               bt_prf_avrcp_rn_param_t *param);
 
-#if defined(CONFIG_BT_AVRCP_VOL_CONTROL) && CONFIG_BT_AVRCP_VOL_CONTROL
+#if (defined(CONFIG_BT_AVRCP_VOL_CONTROL) && CONFIG_BT_AVRCP_VOL_CONTROL)
 /**
  * @brief           Send RegisterNotification Response of BT_PRF_AVRCP_NOTIFICATION_VOLUME_CHANGE to remote AVRCP
  *                  controller.

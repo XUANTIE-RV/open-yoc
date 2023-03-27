@@ -48,11 +48,11 @@ typedef struct {
         char partition_name[IMG_NAME_MAX_LEN + 4];
         uint32_t img_offset;
         uint32_t img_size;
-        int partition_handle;
-        uint32_t partition_abs_addr;
-        uint32_t partition_size;
         uint32_t write_size;
         uint32_t read_size;
+        int partition_handle;
+        uint32_t partition_size;
+        unsigned long partition_abs_addr;
     } img_info[IMG_MAX_COUNT];
 } download_img_info_t;
 

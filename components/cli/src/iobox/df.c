@@ -7,7 +7,7 @@
 #include <aos/cli.h>
 #include <stdbool.h>
 #include <fcntl.h>
-#include <aos/vfs.h>
+#include <vfs.h>
 #include <path_helper.h>
 
 extern int32_t vfs_get_node_name(const char *path, char names[][64], uint32_t* size);

@@ -23,7 +23,11 @@ typedef enum {
     MIC_CTRL_STOP_PCM,       /* 停止音频数据传输 */
     MIC_CTRL_START_SESSION,  /* 强制进入对话模式(P2T) */
     MIC_CTRL_VOICE_MUTE,     /* 进入闭(开)麦模式 */
-    MIC_CTRL_NOTIFY_PLAYER_STATUS /* 通知算法播放状态，用于唤醒提示音的处理(若算法支持) */
+    MIC_CTRL_NOTIFY_PLAYER_STATUS, /* 通知算法播放状态，用于唤醒提示音的处理(若算法支持) */
+    MIC_CTRL_WAKEUP_LEVEL,    /* 配置唤醒等级 参数为0~100 */
+    MIC_CTRL_START_DOA,       /* 启动声源定位(Direction Of Arrival波达方向), 通过MIC_EVENT_SESSION_DOA 传出定位信息 */
+    MIC_CTRL_ENABLE_LINEAR_AEC_DATA, /* 使能线性AEC数据的输出 */
+    MIC_CTRL_ENABLE_ASR,     /* 本地ASR的使能控制 */
 } mic_ctrl_cmd_t;
 
 typedef enum {
@@ -32,12 +36,25 @@ typedef enum {
     MIC_EVENT_SESSION_START, /* 开始对话 */
     MIC_EVENT_SESSION_STOP,  /* 停止对话 */
     MIC_EVENT_KWS_DATA,      /* 唤醒词数据 */
+    MIC_EVENT_SESSION_WWV,   /* 云端返回结果调用 aui_mic_send_wakeup_check通知服务，服务通过该事件再返回给应用 */
+    MIC_EVENT_SESSION_DOA,   /* 接收声源定位信息 */
+    MIC_EVENT_LOCAL_ASR,     /* 接收到离线ASR识别结果 */
+    MIC_EVENT_VAD_BEGIN,     /* 语音起点 */
+    MIC_EVENT_VAD_END,      /* 语音尾点 */
 } mic_event_id_t;
 
+typedef enum {
+    MIC_WAKEUP_TYPE_NONE = 0,
+    MIC_WAKEUP_TYPE_KEY  = 1,
+    MIC_WAKEUP_TYPE_CMD  = 2,
+    MIC_WAKEUP_TYPE_P2T  = 3,
+} mic_wakeup_type_t;
 
 typedef struct mic_kws{
+    mic_wakeup_type_t type;
     int id;
     int score;
+    int doa;
     char word[32];
 } mic_kws_t;
 
@@ -46,10 +63,6 @@ typedef struct mic_pcm_vad_data {
     int len;
     char data[0];
 } mic_pcm_vad_data_t;
-
-#define KWS_ID_WWV_MASK     0x10000
-#define KWS_ID_P2T_MASK     0x20000
-#define KWS_ID_MASK         0x0FFFF
 
 /**
  * 麦克风事件回调
@@ -85,9 +98,9 @@ int aui_mic_stop(void);
 int aui_mic_control(mic_ctrl_cmd_t cmd, ...);
 
 /**
- * 发送唤醒事件，用于二次唤醒确认后进入唤醒流程
+ * 二次确认完成后，调用该接口通知麦克风服务
  */
-void aui_mic_send_wakeup_event(void);
+void aui_mic_send_wakeup_check(int checked);
 
 /**
  * 麦克风设备注册

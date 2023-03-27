@@ -270,7 +270,7 @@ struct bt_att_req {
 	bt_att_destroy_t destroy;
 	struct net_buf_simple_state state;
 	struct net_buf *buf;
-#if defined(CONFIG_BT_SMP)
+#if (defined(CONFIG_BT_SMP) && CONFIG_BT_SMP)
 	bool retrying;
 #endif /* CONFIG_BT_SMP */
 	void *user_data;

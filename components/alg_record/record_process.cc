@@ -124,12 +124,15 @@ bool RecordProc::DeInit()
 
 bool RecordProc::Process(const std::vector<cx::BufferPtr> &data_vec)
 {
-    auto ptr0 = data_vec.at(0); // pcm data
-
     /*
      * usb 和 ws 只支持 3路和5路两种数据保存方式
      */
+
+    /*
+     * 3路数据保存
+     */
     if (record_get_chncnt() == 3) {
+        auto ptr0 = data_vec.at(0); // pcm data
         if (ptr0) {
             auto iMemory0 = ptr0->GetMemory(0);
             auto iMeta0   = ptr0->GetMetadata<DataInputMessageT>("alsa_param");
@@ -165,16 +168,9 @@ bool RecordProc::Process(const std::vector<cx::BufferPtr> &data_vec)
     }
 
     /*
-     * 5路数据保存
+     * 5/6路数据保存
      */
-    if (record_get_chncnt() == 5) {
-
-        int rec_copy_index = 1;
-        if (record_get_chncnt() == 5) {
-            /* usb模式只有一组数据 */
-            rec_copy_index = 0;
-        }
-
+    if (record_get_chncnt() == 5 || record_get_chncnt() == 6) {
         auto ptr1 = data_vec.at(1); // ssp data
         // ssp data
         if (ptr1) {
@@ -202,11 +198,11 @@ bool RecordProc::Process(const std::vector<cx::BufferPtr> &data_vec)
 
                     int read_len = ringbuffer_read(&ssp_rb_, (uint8_t *)pcm_record_data, pcm_record_len);
                     if (read_len != 0) {
-                        rec_copy_data(rec_copy_index, (uint8_t *)pcm_record_data, pcm_record_len);
+                        rec_copy_data(0, (uint8_t *)pcm_record_data, pcm_record_len);
                     }
                 }
             } else {
-                rec_copy_data(rec_copy_index, (uint8_t *)pcm_record_data, pcm_record_len);
+                rec_copy_data(0, (uint8_t *)pcm_record_data, pcm_record_len);
             }
         }
     }
@@ -240,27 +236,21 @@ void record_msg_publish(int start)
     auto msg = std::make_shared<RecordMessageT>();
     if (start) {
         msg->body().set_cmd(thead::voice::proto::START);
+        msg->body().set_record_chn_count(record_get_chncnt());
     } else {
         msg->body().set_cmd(thead::voice::proto::STOP);
+        msg->body().set_record_chn_count(0);
     }
     g_record_writer->Write(msg);
 }
 
-static int g_grpcnt = 0;
 static int g_chncnt = 0;
 
-void record_set_grpcnt(int grpcnt)
-{
-    g_grpcnt = grpcnt;
-}
 void record_set_chncnt(int chncnt)
 {
     g_chncnt = chncnt;
 }
-int record_get_grpcnt()
-{
-    return g_grpcnt;
-}
+
 int record_get_chncnt()
 {
     return g_chncnt;

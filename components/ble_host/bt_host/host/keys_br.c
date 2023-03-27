@@ -25,15 +25,15 @@
 #include "keys.h"
 #include "settings.h"
 
-#if defined(CONFIG_BT_BREDR) && CONFIG_BT_BREDR
+#if (defined(CONFIG_BT_BREDR) && CONFIG_BT_BREDR)
 
 struct bt_keys_link_key keys_br_pool[CONFIG_BT_MAX_PAIRED];
 
-#if defined(CONFIG_BT_KEYS_OVERWRITE_OLDEST) && CONFIG_BT_KEYS_OVERWRITE_OLDEST
+#if (defined(CONFIG_BT_KEYS_OVERWRITE_OLDEST) && CONFIG_BT_KEYS_OVERWRITE_OLDEST)
 static u32_t old_key_index;
 #endif /* CONFIG_BT_KEYS_OVERWRITE_OLDEST */
 
-#if defined(CONFIG_BT_KEYS_OVERWRITE_OLDEST) && CONFIG_BT_KEYS_OVERWRITE_OLDEST
+#if (defined(CONFIG_BT_KEYS_OVERWRITE_OLDEST) && CONFIG_BT_KEYS_OVERWRITE_OLDEST)
 static struct bt_keys_link_key *bt_keys_overwrite(const bt_addr_t *bd_addr)
 {
 	bt_addr_le_t addr;
@@ -87,7 +87,7 @@ struct bt_keys_link_key *bt_keys_get_link_key(const bt_addr_t *addr)
 		return key;
 	}
 
-#if defined(CONFIG_BT_KEYS_OVERWRITE_OLDEST) && CONFIG_BT_KEYS_OVERWRITE_OLDEST
+#if (defined(CONFIG_BT_KEYS_OVERWRITE_OLDEST) && CONFIG_BT_KEYS_OVERWRITE_OLDEST)
 		return bt_keys_overwrite(addr);
 #endif
 
@@ -128,7 +128,7 @@ void bt_keys_link_key_clear_addr(const bt_addr_t *addr)
 	}
 }
 
-#if defined(CONFIG_BT_SETTINGS) && CONFIG_BT_SETTINGS
+#if (defined(CONFIG_BT_SETTINGS) && CONFIG_BT_SETTINGS)
 int bt_br_keys_store(struct bt_keys_link_key *link_key)
 {
 	char key[BT_SETTINGS_KEY_MAX];
@@ -200,6 +200,6 @@ int bt_br_key_settings_init()
     return 0;
 }
 
-#endif /* defined(CONFIG_BT_SETTINGS) && CONFIG_BT_SETTINGS */
+#endif /* (defined(CONFIG_BT_SETTINGS) && CONFIG_BT_SETTINGS) */
 
-#endif /* defined(CONFIG_BT_BREDR) && CONFIG_BT_BREDR */
+#endif /* (defined(CONFIG_BT_BREDR) && CONFIG_BT_BREDR) */

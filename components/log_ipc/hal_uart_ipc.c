@@ -104,7 +104,7 @@ int32_t hal_uart_finalize(uart_dev_t *uart)
 }
 
 
-void ipc_uart_csky_register(int id, int (*read)(const uint8_t *buf, uint32_t size),
+void log_ipc_uart_register(int id, int (*read)(const uint8_t *buf, uint32_t size),
                             int (*write)(const uint8_t *data, uint32_t size))
 {
     ipc_uart_dev_t *ipc_uart = &g_ipc_uart_idx[0];
@@ -114,7 +114,7 @@ void ipc_uart_csky_register(int id, int (*read)(const uint8_t *buf, uint32_t siz
 }
 
 
-void ipc_log_read_event(void)
+void log_ipc_read_event(void)
 {
     ipc_uart_dev_t *ipc_uart = &g_ipc_uart_idx[0];
 

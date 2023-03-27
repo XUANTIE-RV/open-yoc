@@ -14,7 +14,7 @@
 #include <misc/printk.h>
 #include <misc/util.h>
 
-#ifdef CONFIG_BT_HFP_HF
+#if (defined(CONFIG_BT_HFP_HF) && CONFIG_BT_HFP_HF)
 #if CONFIG_BT_HFP_AUDIO_I2S
 #include <bluetooth/audio_hfp.h>
 #endif

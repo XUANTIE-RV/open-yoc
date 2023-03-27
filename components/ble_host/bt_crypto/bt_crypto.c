@@ -25,7 +25,7 @@
 #define BT_DBG_ENABLED 0
 #include "common/log.h"
 
-#if defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE
+#if (defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE)
 #include <../bt_host/host/fsm.h>
 #include <host/hci_core.h>
 #endif
@@ -39,7 +39,7 @@
 
 static struct tc_hmac_prng_struct prng;
 
-#if defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE
+#if (defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE)
 
 static u8_t reseed[32] = {0};
 static int hci_cmd_le_reseed_random(u8_t random_len, u8_t first);

@@ -102,7 +102,7 @@ int w800_enable_muti_sockets(uint8_t enable);
  * @param[out]   mac    mac address of w800
  * @return      Zero on success, -1 on failed
  */
-int w800_get_mac(aos_dev_t *dev, uint8_t *mac);
+int w800_get_mac(rvm_dev_t *dev, uint8_t *mac);
 
 /**
  * This function will get w800 wifi status

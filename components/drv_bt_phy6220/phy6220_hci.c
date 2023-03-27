@@ -16,7 +16,7 @@
 #include <aos/ble.h>
 #include <devices/hci.h>
 #include <k_api.h>
-#include <devices/hal/hci_impl.h>
+#include <devices/impl/hci_impl.h>
 #include "rom_sym_def.h"
 
 #include <devices/device.h>
@@ -223,7 +223,7 @@ uint16 g_llCteSampleQ[LL_CTE_MAX_SUPP_LEN * LL_CTE_SUPP_LEN_UNIT];
 extern volatile sysclk_t       g_system_clk;
 
 typedef struct {
-    aos_dev_t           device;
+    rvm_dev_t           device;
 } hci_dev_t;
 
 static hci_dev_t *hci_dev = NULL;
@@ -1265,7 +1265,7 @@ void ll_patch_init()
 
 }
 
-static int phy6220_hci_send(aos_dev_t *dev, uint8_t *data, uint32_t size)
+static int phy6220_hci_send(rvm_dev_t *dev, uint8_t *data, uint32_t size)
 {
     uint16_t connHandle, param;
     uint8_t  pbFlag;
@@ -1307,11 +1307,11 @@ static int phy6220_hci_send(aos_dev_t *dev, uint8_t *data, uint32_t size)
     }
 }
 
-static aos_dev_t *phy6220_hci_init(driver_t *drv, void *config, int id)
+static rvm_dev_t *phy6220_hci_init(driver_t *drv, void *config, int id)
 {
-    hci_dev = (hci_dev_t *)device_new(drv, sizeof(hci_dev_t), id);
+    hci_dev = (hci_dev_t *)rvm_hal_device_new(drv, sizeof(hci_dev_t), id);
 
-    return (aos_dev_t *)hci_dev;
+    return (rvm_dev_t *)hci_dev;
 }
 
 #if defined(CONFIG_BT_EXT_ADV) && CONFIG_BT_EXT_ADV
@@ -1350,9 +1350,9 @@ static void initLlPeriodAdvtiser(void)
 }
 #endif
 
-#define phy6220_hci_uninit device_free
+#define phy6220_hci_uninit rvm_hal_device_free
 
-static int phy6220_hci_open(aos_dev_t *dev)
+static int phy6220_hci_open(rvm_dev_t *dev)
 {
     osal_mem_set_heap((osalMemHdr_t *)largeHeap, LARGE_HEAP_SIZE);
 
@@ -1386,19 +1386,19 @@ static int phy6220_hci_open(aos_dev_t *dev)
     return 0;
 }
 
-static int phy6220_hci_close(aos_dev_t *dev)
+static int phy6220_hci_close(rvm_dev_t *dev)
 {
     return 0;
 }
 
-static int phy6220_set_event(aos_dev_t *dev, hci_event_cb_t event, void *priv)
+static int phy6220_set_event(rvm_dev_t *dev, hci_event_cb_t event, void *priv)
 {
     hci_cb = event;
     hci_arg = priv;
     return 0;
 }
 
-static int phy6220_recv(aos_dev_t *dev, uint8_t *data, uint32_t size)
+static int phy6220_recv(rvm_dev_t *dev, uint8_t *data, uint32_t size)
 {
     osal_event_hdr_t *pMsg;
     uint32_t data_len = 0;
@@ -1460,7 +1460,7 @@ static hci_driver_t phy6220_driver = {
 
 int hci_driver_phy6220_register(int idx)
 {
-    driver_register(&phy6220_driver.drv, NULL, idx);
+    rvm_driver_register(&phy6220_driver.drv, NULL, idx);
     return 0;
 }
 

@@ -47,7 +47,6 @@ int bl_main_raw_send(uint8_t *pkt , int len);
 int bl_main_set_country_code(char *country_code);
 int bl_main_get_channel_nums();
 int bl_main_beacon_interval_set(uint16_t beacon_int);
-int bl_main_set_mode(uint8_t ap_or_sta, uint32_t mode);
 
 struct wifi_event_sm_connect_ind
 {

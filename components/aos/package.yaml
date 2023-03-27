@@ -1,6 +1,6 @@
 ## 第一部分： 基础信息
 name: aos                                           # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
-version: v7.6.2                                     # <必选项> 组件版本号
+version: v7.7.0                                    # <必选项> 组件版本号
 description: aos kernel api                         # <必选项> 建议至少20字以上
 type: common                                        # <必选项> 组件类型，为：solution, chip, board, common, sdk
 tag: 核心模块                                       # <可选项> 组件分类，缺省值： ''
@@ -38,7 +38,6 @@ license: Apache license v2.0                        # <可选项> 源代码的�
 build_config:
   include:
     - include
-    - include/devices
 
 # source_file:                             # <可选项> 指定参与编译的源代码文件，支持通配符，采用相对路径
 #   - src/*.c                              # 例：组件 src 目录下所有的扩展名为 c 的源代码文件
@@ -56,8 +55,8 @@ source_file:
   - "src/sysinfo.c"
   - "src/ustdio.c"
   - "src/aos_porting.c"
+  - "src/console_uart.c"
   - "src/eventloop/*.c"
-  - "src/devices/*.c"
   - "src/cplusplus/*.c"
   - "src/cplusplus/*.cpp"
   - "src/adapter/rhino/*.c ? <CONFIG_KERNEL_RHINO>"
@@ -71,6 +70,7 @@ source_file:
 def_config:
   CONFIG_OPT_FOOTPRINT_LEVEL: 0                # 0~5, 0 means non-opt for footprint
   CONFIG_INIT_TASK_STACK_SIZE: 8192
+  CONFIG_AOS_NEWLINE_SUPPORT: 1
 
 ## 第六部分：安装信息
 # install:

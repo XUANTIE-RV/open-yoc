@@ -6,10 +6,8 @@
 #include <aos/kv.h>
 #include <yoc/yoc.h>
 #include <yoc/partition.h>
-#include <devices/devicelist.h>
-#include <board_config.h>
+#include <board.h>
 
-#include "pin_name.h"
 #include "app_init.h"
 
 const char *TAG = "INIT";
@@ -24,7 +22,11 @@ void board_yoc_init()
 
     board_init();
 
-    console_init(CONSOLE_UART_IDX, 115200, 0);
+#if defined(CONFIG_BOARD_BT) && CONFIG_BOARD_BT
+    board_bt_init();
+#endif
+
+    console_init(CONSOLE_UART_IDX, CONFIG_CLI_USART_BAUD, 0);
 
     ulog_init();
     aos_set_log_level(AOS_LL_DEBUG);

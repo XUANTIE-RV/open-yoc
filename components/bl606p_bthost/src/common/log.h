@@ -44,7 +44,7 @@ extern "C" {
 #define BT_DBG(fmt, ...) //printf(fmt", %s\r\n", ##__VA_ARGS__, __func__)
 #define BT_ERR(fmt, ...)   printf(fmt", %s\r\n", ##__VA_ARGS__, __func__)
 #define BT_WARN(fmt, ...)  printf(fmt", %s\r\n", ##__VA_ARGS__, __func__)
-#define BT_INFO(fmt, ...) //printf(fmt", %s\r\n", ##__VA_ARGS__, __func__)
+#define BT_INFO(fmt, ...)  printf(fmt", %s\r\n", ##__VA_ARGS__, __func__)
 #if defined(CONFIG_BT_STACK_PTS)
 #define BT_PTS(fmt, ...)   printf(fmt"\r\n", ##__VA_ARGS__)
 #endif

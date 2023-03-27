@@ -5,7 +5,7 @@
 #include "smart_audio.h"
 #include "ulog/ulog.h"
 #include <aos/kv.h>
-#include <avutil/misc.h>
+#include <av/avutil/misc.h>
 
 #define TAG "smtaudio_ctrl_local_play"
 

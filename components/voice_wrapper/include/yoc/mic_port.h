@@ -10,7 +10,8 @@
 #include <yoc/mic.h>
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 typedef struct __mic mic_t;
@@ -24,17 +25,19 @@ typedef struct __mic mic_t;
  */
 typedef void (*mic_event_t)(mic_t *priv, mic_event_id_t evt_id, void *data, int size);
 
-typedef struct mic_ops
-{
+typedef struct mic_ops {
     int (*init)(mic_t *mic, mic_event_t mic_event); /* 模块初始化 */
     int (*deinit)(mic_t *mic);                      /* 去初始化 */
     int (*start)(mic_t *mic);                       /* 启动模块 */
     int (*stop)(mic_t *mic);                        /* 停止模块 */
 
-    int (*pcm_data_control)(mic_t *mic, int enable);      /* 麦克风控制命令 */
-
-    int (*set_push2talk)(mic_t *mic, int mode);                 /* push2talk */
-    int (*notify_play_status)(mic_t *mic, int play_status, int delay); /*  */
+    int (*pcm_data_control)(mic_t *mic, int enable); /* 麦克风控制命令 */
+    int (*set_push2talk)(mic_t *mic, int mode);                        /* push2talk */
+    int (*notify_play_status)(mic_t *mic, int play_status, int delay); /* 播放状态通知算法 */
+    int (*set_wakeup_level)(mic_t *mic, char *wakeup_word, int level); /* 配置唤醒等级 */
+    int (*start_doa)(mic_t *mic);                                      /* 启动声源定位 */
+    int (*enable_linear_aec_data)(mic_t *mic, int enable);             /* 使能线性AEC数据的输出 */
+    int (*enable_asr)(mic_t *mic, int enable);      /* 本地ASR的使能控制 */
 } mic_ops_t;
 
 int mic_ops_register(mic_ops_t *ops);

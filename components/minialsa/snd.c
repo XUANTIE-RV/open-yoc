@@ -27,7 +27,7 @@ int snd_card_free(snd_card_drv_t *card)
 
 int aos_card_attach(const char *name, card_dev_t **card)
 {
-    *card = (card_dev_t *)device_open(name);
+    *card = (card_dev_t *)rvm_hal_device_open(name);
     return *card == NULL? 0 : -1;
 }
 
@@ -38,9 +38,9 @@ int aos_card_lpm(const char *name ,int state)
     int id          = dev_name[len-1] - 0x30;
     dev_name[len-1] = 0;
 
-    card_dev_t *card = (card_dev_t *)device_find(dev_name, id);
+    card_dev_t *card = (card_dev_t *)rvm_hal_device_find(dev_name, id);
 
-    device_lpm((aos_dev_t*)card, state);
+    rvm_hal_device_lpm_enable((rvm_dev_t*)card, state);
 
     aos_free(dev_name);
 

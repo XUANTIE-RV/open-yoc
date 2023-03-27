@@ -46,12 +46,12 @@ DIS组件处理流程如下图所示：
 
 # 4. 接口定义
 
-### **dis_init**
+### **ble_prf_dis_init**
 
 - 函数原型
 
 ```c
-dis_handle_t dis_init(dis_info_t *info)
+dis_handle_t ble_prf_dis_init(dis_info_t *info)
 ```
 
 - 功能描述

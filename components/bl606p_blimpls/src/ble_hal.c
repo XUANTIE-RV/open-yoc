@@ -6,7 +6,7 @@
 
 #include <bluetooth.h>
 #include <conn.h>
-#include <hci.h>
+// #include <hci.h>
 #include <addr.h>
 
 #include "conn_internal.h"

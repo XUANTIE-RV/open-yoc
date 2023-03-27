@@ -70,7 +70,7 @@ int main()
     ble_stack_event_register(&ble_cb);
 
     /* DIS服务初始化 */
-    g_dis_handle = dis_init(&dis_info);
+    g_dis_handle = ble_prf_dis_init(&dis_info);
 	...
 	/* ad_data_t结构体中，len为实际数据长度。
       而BT规范中定义AD Structure数据格式的LEN = （type字段长度 + 实际数据长度），协议栈内部会根据ad_data_t结构体的内容自动填充PDU */

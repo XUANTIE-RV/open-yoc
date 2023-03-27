@@ -180,13 +180,13 @@ int netmgr_start_dhcp(struct netmgr_uservice *netmgr, const char *name)
         return -1;
     }
 
-    aos_dev_t *dev = node->dev;
+    rvm_dev_t *dev = node->dev;
 
     if (node->dhcp_en == 1) {
 
         LOGI(TAG, "start dhcp");
 
-        if (hal_net_start_dhcp(dev) < 0) {
+        if (rvm_hal_net_start_dhcp(dev) < 0) {
             goto failed;
         }
 
@@ -205,9 +205,9 @@ failed:
 static int netmgr_evt_ip_got(struct netmgr_uservice *netmgr, rpc_t *rpc)
 {
     netmgr_dev_t *node = netmgr_find_dev(&netmgr->dev_list, NULL);
-    aos_dev_t *dev = node->dev;
+    rvm_dev_t *dev = node->dev;
 
-    hal_net_get_ipaddr(dev, &node->ipaddr, &node->netmask, &node->gw);
+    rvm_hal_net_get_ipaddr(dev, &node->ipaddr, &node->netmask, &node->gw);
     LOGI(TAG, "IP: %s", ipaddr_ntoa((ip4_addr_t *)ip_2_ip4(&node->ipaddr)));
 
 #ifdef AOS_COMP_ACTIVATION
@@ -222,13 +222,13 @@ static int netmgr_evt_ip_got(struct netmgr_uservice *netmgr, rpc_t *rpc)
 static int netmgr_check_dhcp(struct netmgr_uservice *netmgr, rpc_t *rpc)
 {
     netmgr_dev_t *node = netmgr_find_dev(&netmgr->dev_list, NULL);
-    aos_dev_t *dev = node->dev;
+    rvm_dev_t *dev = node->dev;
     static int link_reason;
 
     if (!netmgr_is_gotip(NULL) && netmgr_is_linkup(NULL)) {
         LOGE(TAG, "dhcp failed");
         link_reason = NET_DISCON_REASON_DHCP_ERROR;
-        hal_net_stop_dhcp(dev);
+        rvm_hal_net_stop_dhcp(dev);
         event_publish(EVENT_NETMGR_NET_DISCON, &link_reason);
     }
 
@@ -247,7 +247,7 @@ static int netmgr_srv_ipconfig(struct netmgr_uservice *netmgr, rpc_t *rpc)
     netmgr_dev_t *node = (netmgr_dev_t *)param->hdl;
 
     if (node != NULL) {
-        aos_dev_t *dev = node->dev;
+        rvm_dev_t *dev = node->dev;
         ip_setting_t *ip = &param->config;
         node->dhcp_en = ip->dhcp_en;
 #ifdef CONFIG_KV_SMART
@@ -276,7 +276,7 @@ static int netmgr_srv_ipconfig(struct netmgr_uservice *netmgr, rpc_t *rpc)
                 ip4addr_aton(ip->netmask, (ip4_addr_t *)ip_2_ip4(&netmask));
                 ip4addr_aton(ip->gw, (ip4_addr_t *)ip_2_ip4(&gw));
 
-                hal_net_set_ipaddr(dev, &ipaddr, &netmask, &gw);
+                rvm_hal_net_set_ipaddr(dev, &ipaddr, &netmask, &gw);
                 event_publish(EVENT_NET_GOT_IP, NULL);
             }
         }
@@ -381,7 +381,7 @@ static int netmgr_service(void *context, rpc_t *rpc)
             node = (netmgr_dev_t *)aos_zalloc(sizeof(netmgr_dev_t));
 
             if (node) {
-                node->dev = device_open(name);
+                node->dev = rvm_hal_device_open(name);
 
                 if (node->dev) {
                     strncpy(node->name, name, NETMGR_NAME_LEN - 1);
@@ -541,7 +541,7 @@ int netmgr_set_linkup(const char *name, int linkup)
 
 ////////////////////////////////////////////
 /* below is for YOC API */
-//API don't include dev operations (aos_dev_t was hiden)
+//API don't include dev operations (rvm_dev_t was hiden)
 ////////////////////////////////////////////
 
 netmgr_hdl_t netmgr_get_handle(const char *name)
@@ -564,7 +564,7 @@ netmgr_hdl_t netmgr_get_handle(const char *name)
  * @param  [in] netmgr_hdl_t
  * @return NULL on error
  */
-aos_dev_t *netmgr_get_dev(netmgr_hdl_t hdl)
+rvm_dev_t *netmgr_get_dev(netmgr_hdl_t hdl)
 {
     CHECK_PARAM(netmgr_svc.inited, NULL);
 

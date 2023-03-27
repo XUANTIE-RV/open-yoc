@@ -62,7 +62,7 @@ int nvram_init(const char *partname)
 
 static int kv_partition_erase(kv_t *kv, int pos, int size)
 {
-    return partition_erase(kv->handle, pos, 1);
+    return partition_erase_size(kv->handle, pos, size);
 }
 
 static int kv_partition_write(kv_t *kv, int pos, void *data, int size)
@@ -88,7 +88,7 @@ static int __kv_init(kv_t *kv, const char *partition)
     kv->ops    = &partition_ops;
 
     if (kv->handle >= 0) {
-        partition_info_t *lp = hal_flash_get_info(kv->handle);
+        partition_info_t *lp = partition_info_get(kv->handle);
         aos_assert(lp);
 
         uint8_t *mem        = (uint8_t *)((unsigned long)(lp->start_addr + lp->base_addr));

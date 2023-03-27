@@ -25,7 +25,7 @@ extern "C" {
 #define BT_DBG_ENABLED 1
 #endif
 
-#if defined(CONFIG_BT_DEBUG_LOG)
+#if (defined(CONFIG_BT_DEBUG_LOG) && CONFIG_BT_DEBUG_LOG)
 
 #if !defined(SYS_LOG_DOMAIN)
 #define SYS_LOG_DOMAIN "bt"

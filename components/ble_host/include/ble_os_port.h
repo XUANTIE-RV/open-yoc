@@ -330,7 +330,7 @@ enum {
 #endif
 
 struct k_queue {
-#if defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE
+#if (defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE)
 #else
     _sem_t sem;
 #endif
@@ -476,7 +476,7 @@ struct k_mutex {
 };
 
 typedef void (*k_timer_handler_t)(void *timer, void *args);
-#if defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE
+#if (defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE)
 #include <work.h>
 typedef struct k_timer {
     struct k_delayed_work          timer;

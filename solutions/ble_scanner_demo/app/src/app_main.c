@@ -8,7 +8,6 @@
 #include "aos/ble.h"
 #include "app_main.h"
 #include "app_init.h"
-#include "pin_name.h"
 #include "aos/kv.h"
 #ifdef AOS_COMP_CLI
 #include "aos/cli.h"

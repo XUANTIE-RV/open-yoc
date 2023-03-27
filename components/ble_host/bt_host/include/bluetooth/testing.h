@@ -29,7 +29,7 @@ extern "C" {
  *  Allows access to Bluetooth stack internals, not exposed by public API.
  */
 struct bt_test_cb {
-#if defined(CONFIG_BT_MESH)
+#if (defined(CONFIG_BT_MESH) && CONFIG_BT_MESH)
 	void (*mesh_net_recv)(u8_t ttl, u8_t ctl, u16_t src, u16_t dst,
 			      const void *payload, size_t payload_len);
 	void (*mesh_model_bound)(u16_t addr, struct bt_mesh_model *model,

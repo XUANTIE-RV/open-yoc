@@ -1,0 +1,46 @@
+/*
+ * Copyright (C) 2022 Alibaba Group Holding Limited
+ */
+#ifndef _BAORD_BUTTON_H_
+#define _BAORD_BUTTON_H_
+
+/* 物理按键定义 */
+#define BUTTON_ID_USER                  BOARD_BUTTON0 /*K3*/
+#define BUTTON_ADC_CHN_USER             BOARD_BUTTON0_ADC_CH
+#define BUTTON_ADC_VALUE_USER           BOARD_BUTTON0_ADC_REF 
+#define BUTTON_ADC_VALUE_USER_RANGE     BOARD_BUTTON0_ADC_RANG
+
+#define BUTTON_ID_PLAY                  BOARD_BUTTON1 /*K4*/
+#define BUTTON_ADC_CHN_PLAY             BOARD_BUTTON1_ADC_CH
+#define BUTTON_ADC_VALUE_PLAY           BOARD_BUTTON1_ADC_REF  
+#define BUTTON_ADC_VALUE_PLAY_RANGE     BOARD_BUTTON1_ADC_RANG
+
+#define BUTTON_ID_VOL_UP                BOARD_BUTTON2 /*K5*/
+#define BUTTON_ADC_CHN_UP               BOARD_BUTTON2_ADC_CH
+#define BUTTON_ADC_VALUE_VOL_UP         BOARD_BUTTON2_ADC_REF 
+#define BUTTON_ADC_VALUE_VOL_UP_RANGE   BOARD_BUTTON2_ADC_RANG
+
+#define BUTTON_ID_VOL_DOWN              BOARD_BUTTON3 /*K6*/
+#define BUTTON_ADC_CHN_DOWN             BOARD_BUTTON3_ADC_CH
+#define BUTTON_ADC_VALUE_VOL_DOWN       BOARD_BUTTON3_ADC_REF 
+#define BUTTON_ADC_VALUE_VOL_DOWN_RANGE BOARD_BUTTON3_ADC_RANG
+
+#define BUTTON_ID_MUTE                  BOARD_BUTTON4 /*K7*/
+#define BUTTON_ADC_CHN_MUTE             BOARD_BUTTON4_ADC_CH
+#define BUTTON_ADC_VALUE_MUTE           BOARD_BUTTON4_ADC_REF 
+#define BUTTON_ADC_VALUE_MUTE_RANGE     BOARD_BUTTON4_ADC_RANG
+
+//#define BUTTON_ID_VOL_UP_DOWN 6
+//#define BUTTON_ADC_VALUE_VOL_UP_DOWN       1 /*预留组合键定义*/
+//#define BUTTON_ADC_VALUE_VOL_UP_DOWN_RANGE 1
+
+//#define BUTTON_ID_VOL_UP_MUTE 7
+//#define BUTTON_ADC_VALUE_VOL_UP_MUTE       1 /*预留组合键定义*/
+//#define BUTTON_ADC_VALUE_VOL_UP_MUTE_RANGE 1
+
+/**
+ * 按键初始化
+ */
+void app_button_init(void);
+
+#endif

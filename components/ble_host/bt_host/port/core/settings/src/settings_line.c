@@ -11,7 +11,7 @@
 #include "settings/settings.h"
 #include "settings_priv.h"
 #include "errno.h"
-#ifdef CONFIG_SETTINGS_USE_BASE64
+#if (defined(CONFIG_SETTINGS_USE_BASE64) && CONFIG_SETTINGS_USE_BASE64)
 #include "base64.h"
 #endif
 
@@ -32,7 +32,7 @@ int settings_line_write(const char *name, const char *value, size_t val_len,
 {
 	size_t w_size, rem, add;
 
-#ifdef CONFIG_SETTINGS_USE_BASE64
+#if (defined(CONFIG_SETTINGS_USE_BASE64) && CONFIG_SETTINGS_USE_BASE64)
 	/* minimal buffer for encoding base64 + EOL*/
 	char enc_buf[MAX_ENC_BLOCK_SIZE + 1];
 
@@ -45,13 +45,13 @@ int settings_line_write(const char *name, const char *value, size_t val_len,
 			/* base64 encoding size and write-block-size */
 	int rc;
 	u8_t wbs = settings_io_cb.rwbs;
-#ifdef CONFIG_SETTINGS_ENCODE_LEN
+#if (defined(CONFIG_SETTINGS_ENCODE_LEN) && CONFIG_SETTINGS_ENCODE_LEN)
 	u16_t len_field;
 #endif
 
 	rem = strlen(name);
 
-#ifdef CONFIG_SETTINGS_ENCODE_LEN
+#if (defined(CONFIG_SETTINGS_ENCODE_LEN) && CONFIG_SETTINGS_ENCODE_LEN)
 	len_field = settings_line_len_calc(name, val_len);
 	memcpy(w_buf, &len_field, sizeof(len_field));
 	w_size = 0;
@@ -99,7 +99,7 @@ int settings_line_write(const char *name, const char *value, size_t val_len,
 
 	while (1) {
 		while (w_size < sizeof(w_buf)) {
-#ifdef CONFIG_SETTINGS_USE_BASE64
+#if (defined(CONFIG_SETTINGS_USE_BASE64) && CONFIG_SETTINGS_USE_BASE64)
 			if (enc_len) {
 				add = MIN(enc_len, sizeof(w_buf) - w_size);
 				memcpy(&w_buf[w_size], p_enc, add);
@@ -109,7 +109,7 @@ int settings_line_write(const char *name, const char *value, size_t val_len,
 			} else {
 #endif
 				if (rem) {
-#ifdef CONFIG_SETTINGS_USE_BASE64
+#if (defined(CONFIG_SETTINGS_USE_BASE64) && CONFIG_SETTINGS_USE_BASE64)
 					add = MIN(rem, MAX_ENC_BLOCK_SIZE/4*3);
 					rc = base64_encode(enc_buf, sizeof(enc_buf), &enc_len, value, add);
 					if (rc) {
@@ -136,7 +136,7 @@ int settings_line_write(const char *name, const char *value, size_t val_len,
 					done = true;
 					break;
 				}
-#ifdef CONFIG_SETTINGS_USE_BASE64
+#if (defined(CONFIG_SETTINGS_USE_BASE64) && CONFIG_SETTINGS_USE_BASE64)
 			}
 #endif
 		}
@@ -156,7 +156,7 @@ int settings_line_write(const char *name, const char *value, size_t val_len,
 	return 0;
 }
 
-#ifdef CONFIG_SETTINGS_ENCODE_LEN
+#if (defined(CONFIG_SETTINGS_ENCODE_LEN) && CONFIG_SETTINGS_ENCODE_LEN)
 int settings_next_line_ctx(struct line_entry_ctx *entry_ctx)
 {
 	size_t len_read;
@@ -188,7 +188,7 @@ int settings_line_len_calc(const char *name, size_t val_len)
 {
 	int len;
 
-#ifdef CONFIG_SETTINGS_USE_BASE64
+#if (defined(CONFIG_SETTINGS_USE_BASE64) && CONFIG_SETTINGS_USE_BASE64)
 	/* <enc(value)> */
 	len = val_len/3*4 + ((val_len%3) ? 4 : 0);
 #else
@@ -286,7 +286,7 @@ int settings_line_raw_read(off_t seek, char *out, size_t len_req,
 					    NULL, cb_arg);
 }
 
-#ifdef CONFIG_SETTINGS_USE_BASE64
+#if (defined(CONFIG_SETTINGS_USE_BASE64) && CONFIG_SETTINGS_USE_BASE64)
 /* off from value begin */
 int settings_line_val_read(off_t val_off, off_t off, char *out, size_t len_req,
 			   size_t *len_read, void *cb_arg)
@@ -372,7 +372,7 @@ size_t settings_line_val_get_len(off_t val_off, void *read_cb_ctx)
 	size_t len;
 
 	len = settings_io_cb.get_len_cb(read_cb_ctx);
-#ifdef CONFIG_SETTINGS_USE_BASE64
+#if (defined(CONFIG_SETTINGS_USE_BASE64) && CONFIG_SETTINGS_USE_BASE64)
 	u8_t raw[2];
 	int rc;
 	size_t len_base64 = len - val_off;

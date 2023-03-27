@@ -18,7 +18,7 @@ enum {
 
 static slist_t bas_list = { NULL };
 
-#if defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE
+#if (defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE)
 GATT_SERVICE_STATIC_DEFINE(bas_service, [BAS_IDX_SVC] = GATT_PRIMARY_SERVICE_DEFINE(UUID_BAS),
                            [BAS_IDX_LEVEL_CHAR]
                            = GATT_CHAR_DEFINE(UUID_BAS_BATTERY_LEVEL, GATT_CHRC_PROP_READ | GATT_CHRC_PROP_NOTIFY),
@@ -132,7 +132,7 @@ bas_handle_t ble_prf_bas_init(bas_t *bas)
         goto err;
     }
 
-#if defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE
+#if (defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE)
     ret = ble_stack_gatt_service_handle(&bas_service);
 #else
     ret = ble_stack_gatt_registe_service(&bas_service, bas_attrs, BLE_ARRAY_NUM(bas_attrs));

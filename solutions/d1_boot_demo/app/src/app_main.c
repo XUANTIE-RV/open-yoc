@@ -11,7 +11,6 @@
 #include <boot.h>
 #include <boot_wrapper.h>
 #include <yoc/partition.h>
-#include <yoc/partition_flash.h>
 
 void boot_load_and_jump(void)
 {
@@ -48,7 +47,7 @@ void boot_sys_reboot(void)
     extern void drv_reboot(void);
     drv_reboot();
 }
-
+#if 0
 #if CONFIG_IMG_AUTHENTICITY_NOT_CHECK == 0
 bool check_is_need_verify(const char *name)
 {
@@ -69,7 +68,7 @@ bool check_is_need_verify(const char *name)
     return false;
 }
 #endif
-
+#endif
 int main(int argc, char *argv[0])
 {
     int ret;

@@ -2,12 +2,15 @@
  * Copyright (C) 2022 Alibaba Group Holding Limited
  */
 
-#include <stdint.h>
-
-#include <devices/drv_snd_bl606p.h>
 #include <board.h>
 
+#if defined(CONFIG_BOARD_AUDIO) && CONFIG_BOARD_AUDIO
+#include <stdint.h>
+#include <devices/drv_snd_bl606p.h>
+#include <alsa/mixer.h>
+
 #include "eq_config.h"
+#include "board_audio.h"
 
 /* 默认采集增益 */
 static int g_audio_in_gain[]  = { AUIDO_IN_GAIN_MIC, AUIDO_IN_GAIN_MIC, AUIDO_IN_GAIN_REF };
@@ -38,12 +41,34 @@ int board_audio_in_get_gain(int id)
 extern int auo_analog_gain(void *context, float val);
 int board_audio_out_set_gain(int id, int gain)
 {
-    // if (id < 0 || id >= sizeof(g_audio_out_gain) / sizeof(int)) {
-    //     return -1;
-    // }
+    //预留2作为全部通道一起配置
+    if (id < 0 || id > sizeof(g_audio_out_gain) / sizeof(int)) {
+        return -1;
+    }
 
-    auo_analog_gain(NULL, gain);
-    g_audio_out_gain[0] = gain;
+    //设置播放模拟增益
+    aos_mixer_t *mixer_hdl;
+    aos_mixer_elem_t *elem;
+
+    aos_mixer_open(&mixer_hdl, 0);  //申请mixer
+    aos_mixer_attach(mixer_hdl, "card0"); //查找声卡
+    aos_mixer_load(mixer_hdl); // 装载mxier
+    elem = aos_mixer_first_elem(mixer_hdl); //查找第一个元素
+
+    if (id == 0) {
+        aos_mixer_selem_set_playback_db(elem, AOS_MIXER_SCHN_FRONT_LEFT, gain);
+        g_audio_out_gain[id] = gain;
+    } else if (id == 1) {
+        aos_mixer_selem_set_playback_db(elem, AOS_MIXER_SCHN_FRONT_RIGHT, gain);
+        g_audio_out_gain[id] = gain;
+    } else if (id == 2) {
+        aos_mixer_selem_set_playback_db_all(elem, gain); //设置音量为
+        g_audio_out_gain[0] = gain;
+        g_audio_out_gain[1] = gain;
+    } else {
+        ;
+    }
+
     return 0;
 }
 
@@ -123,4 +148,11 @@ void board_audio_init(void)
     snd_config.audio_out_gain_list[1] = board_audio_out_get_gain(1);
 
     snd_card_bl606p_register(&snd_config);
+
+#ifdef CONFIG_SMART_AUDIO
+    /* 播放器解码单路输出 */
+    extern void av_set_ao_channel_num(int num);
+    av_set_ao_channel_num(1);
+#endif
 }
+#endif

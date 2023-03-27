@@ -36,7 +36,7 @@ static int get_img_index(netio_t *io, size_t cur_offset)
     int i;
     size_t offsets[PACK_IMG_MAX_COUNT + 1];
 
-    download_img_info_t *dl_img_info = &((pack_private_t *)io->private)->dl_imgs_info;
+    download_img_info_t *dl_img_info = &((pack_private_t *)io->priv)->dl_imgs_info;
     LOGD(TAG, "%s, cur_offset: %d", __func__, cur_offset);
     if (cur_offset == 0) {
         return 0;
@@ -126,7 +126,7 @@ static int flash_open(netio_t *io, const char *path)
     partition_t handle = partition_open(B_ENVAB_NAME);
 
     if (handle >= 0) {
-        partition_info_t *lp = hal_flash_get_info(handle);
+        partition_info_t *lp = partition_info_get(handle);
         aos_assert(lp);
 
         pack_private_t *pack_private = aos_zalloc(sizeof(pack_private_t));
@@ -136,8 +136,8 @@ static int flash_open(netio_t *io, const char *path)
         pack_private->envab_handle = handle;
 
         io->size = lp->length;
-        io->block_size = lp->sector_size;
-        io->private = (void *)pack_private;
+        io->block_size = lp->erase_size;
+        io->priv = (void *)pack_private;
         return 0;
     }
 
@@ -147,7 +147,7 @@ static int flash_open(netio_t *io, const char *path)
 static int flash_close(netio_t *io)
 {
     LOGD(TAG, "%s", __func__);
-    pack_private_t *pack_private = (pack_private_t *)io->private;
+    pack_private_t *pack_private = (pack_private_t *)io->priv;
     if (pack_private) {
         partition_t handle = pack_private->envab_handle;
         partition_close(handle);
@@ -182,7 +182,7 @@ static int flash_write(netio_t *io, uint8_t *buffer, int length, int timeoutms)
     int ret;
     int headsize = 0;
     pack_header_v2_t *header;
-    pack_private_t *priv = (pack_private_t *)io->private;
+    pack_private_t *priv = (pack_private_t *)io->priv;
     download_img_info_t *dl_img_info = &priv->dl_imgs_info;
 
     LOGD(TAG, "\n%s, %d %d %d", __func__, io->size, io->offset, length);
@@ -223,11 +223,7 @@ static int flash_write(netio_t *io, uint8_t *buffer, int length, int timeoutms)
                 return -1;
             }
             off_t offset = OTA_AB_IMG_INFO_OFFSET_GET(io->block_size);
-            int erase_blk = sizeof(pack_header_v2_t) / io->block_size;
-            if (erase_blk == 0) {
-                erase_blk = 1;
-            }
-            ret = partition_erase(priv->envab_handle, offset, erase_blk);
+            ret = partition_erase_size(priv->envab_handle, offset, sizeof(pack_header_v2_t));
             if (ret < 0) {
                 return ret;
             }
@@ -291,7 +287,7 @@ static int flash_write(netio_t *io, uint8_t *buffer, int length, int timeoutms)
 
 static int flash_seek(netio_t *io, size_t offset, int whence)
 {
-    pack_private_t *priv = (pack_private_t *)io->private;
+    pack_private_t *priv = (pack_private_t *)io->priv;
     download_img_info_t *dl_img_info = &priv->dl_imgs_info;
 
     LOGD(TAG, "%s, io->block_size:%d, offset:%d", __func__, io->block_size, offset);

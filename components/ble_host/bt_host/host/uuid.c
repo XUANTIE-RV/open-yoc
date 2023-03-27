@@ -98,7 +98,7 @@ bool bt_uuid_create(struct bt_uuid *uuid, const u8_t *data, u8_t data_len)
 	return 1; // return true;
 }
 
-#if defined(CONFIG_BT_DEBUG)
+#if (defined(CONFIG_BT_DEBUG) && CONFIG_BT_DEBUG)
 void bt_uuid_to_str(const struct bt_uuid *uuid, char *str, size_t len)
 {
 	u32_t tmp1, tmp5;

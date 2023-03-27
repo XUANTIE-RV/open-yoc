@@ -101,7 +101,7 @@ static int32_t at_accept_event_hdl(at_conn_t *conn)
 
 static int32_t at_recv_event_hdl(at_conn_t *conn)
 {
-    int count;
+    int count = 0;
 
     if (conn->status != STATS_CONNECT) {
         return -EINVAL;

@@ -72,18 +72,18 @@ Report Map特征被称为报告描述符，其作用是定义HID设备工作在R
 - Client端扫描蓝牙设备，并发起连接建立请求
 - 连接成功建立后，HIDS组件完成Primary Service以及该服务包含的各个特征属性的发现
 - Client端设置Input Report特征的属性为Notify，使得Server端应用程序在需要键值传送时可以主动发送至Client端
-- Server端应用程序调用hids_key_send（）接口函数将采集的数值传递至HIDS组件，该数值将通过GATT Notify操作通知到Client端。以蓝牙键盘为例，应用程序只需实现键盘驱动和键值采集，通过HIDS组件的接口即可发送键值至Client端。
+- Server端应用程序调用ble_prf_hids_key_send（）接口函数将采集的数值传递至HIDS组件，该数值将通过GATT Notify操作通知到Client端。以蓝牙键盘为例，应用程序只需实现键盘驱动和键值采集，通过HIDS组件的接口即可发送键值至Client端。
 - Client端通过GATT Write操作设置Output Report特征，比如蓝牙键盘的指示灯控制
 - Client端还可以通过GATT Read操作来读取Server端各个特征的Value和Description，比如Input/Output Report的Value和Description、Protocol Mode Value、HID Information、HID Control Point等
 
 # 4. 接口定义
 
-### **hids_init**
+### **ble_prf_hids_init**
 
 - 函数原型
 
 ```c
-hids_handle_t hids_init(uint8_t mode)
+hids_handle_t ble_prf_hids_init(uint8_t mode)
 ```
 
 - 功能描述
@@ -111,12 +111,12 @@ hids_handle_t hids_init(uint8_t mode)
 
   无
 
-### **set_data_map**
+### **ble_prf_hids_set_data_map**
 
 - 函数原型
 
 ```c
-int set_data_map(uint8_t u_data[], uint16_t len, uint8_t u_type)
+int ble_prf_hids_set_data_map(uint8_t u_data[], uint16_t len, uint8_t u_type)
 ```
 
 - 功能描述
@@ -149,12 +149,12 @@ int set_data_map(uint8_t u_data[], uint16_t len, uint8_t u_type)
 
   无
 
-### hids_key_send
+### ble_prf_hids_key_send
 
 - 函数原型
 
 ```c
-int hids_key_send(hids_handle_t handle, uint8_t *key_code, uint16_t us_len)
+int ble_prf_hids_key_send(hids_handle_t handle, uint8_t *key_code, uint16_t us_len)
 ```
 
 - 功能描述
@@ -175,6 +175,94 @@ int hids_key_send(hids_handle_t handle, uint8_t *key_code, uint16_t us_len)
 | ------ | -------- |
 | 0      | 更新成功 |
 | 非0    | 更新失败 |
+
+- 注意事项
+
+  无
+
+### ble_prf_hids_notify_send
+
+- 函数原型
+
+```c
+int ble_prf_hids_notify_send(hids_handle_t handle, uint8_t *key_code, uint16_t us_len)
+```
+
+- 功能描述
+
+notify形式发送数据至Client端，数据格式由Input Report定义
+
+- 参数描述
+
+| IN/OUT | NAME                 | DESC             |
+| ------ | -------------------- | ---------------- |
+| [in]   | hids_handle_t handle | HIDS组件句柄     |
+| [in]   | uint8_t *key_code    | Input Report数据 |
+| [in]   | uint16_t us_len      | 数据长度         |
+
+- 返回值
+
+| 返回值 |          |
+| ------ | -------- |
+| 0      | 更新成功 |
+| 非0    | 更新失败 |
+
+- 注意事项
+
+  无
+
+### ble_prf_hids_regist
+
+- 函数原型
+
+```c
+int ble_prf_hids_regist(int32_t idx, hids_event_cb cb_event)
+```
+
+- 功能描述
+
+Hid事件回调函数注册
+
+- 参数描述
+
+| IN/OUT | NAME                   | DESC                                           |
+| ------ | ---------------------- | ---------------------------------------------- |
+| [in]   | int32_t idx            | HID事件索引                                    |
+| [in]   | hids_event_cb cb_event | HID回调函数类型，参见hids_event_cb回调函数定义 |
+
+- 返回值
+
+| 返回值 |          |
+| ------ | -------- |
+| 0      | 注册成功 |
+| 非0    | 注册失败 |
+
+- 注意事项
+
+  无
+
+### hids_event_cb
+
+- 函数原型
+
+```c
+typedef void (*hids_event_cb)(hids_event_e event, void *event_data)
+```
+
+- 功能描述
+
+HID回调函数类型，
+
+- 参数描述
+
+| IN/OUT | NAME               | DESC                                           |
+| ------ | ------------------ | ---------------------------------------------- |
+| [in]   | hids_event_e event | HID事件索引                                    |
+| [in]   | void *event_data   | HID回调函数类型，参见hids_event_cb回调函数定义 |
+
+- 返回值
+
+  无
 
 - 注意事项
 

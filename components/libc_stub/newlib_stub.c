@@ -10,8 +10,12 @@
 #include <sys/time.h>
 #include <stdarg.h>
 #include <stdlib.h>
-#include <k_api.h>
+#include <string.h>
+#include <malloc.h>
 #include <aos/kernel.h>
+#if defined(CONFIG_KERNEL_RHINO) && CONFIG_KERNEL_RHINO
+#include <k_api.h>
+#endif
 #ifdef CONFIG_AOS_LWIP
 #include <sys/socket.h>
 #ifdef TELNETD_ENABLED
@@ -426,14 +430,102 @@ void *_calloc_r(struct _reent *ptr, size_t size, size_t len)
     return mem;
 }
 
+#if (CONFIG_MEMALIGN_SUPPORT)
+struct align_struct {
+    int   used;
+    void  *ptr;
+};
+
+static struct {
+#define ALIGN_TOTAL_CNT_INIT (8)
+    int                   total_cnt;
+    int                   used_cnt;
+    struct align_struct   *ptrs;
+    aos_mutex_t           lock;
+} g_align_cb;
+
+#define align_is_init() (g_align_cb.total_cnt)
+#define align_lock()    (aos_mutex_lock(&g_align_cb.lock, AOS_WAIT_FOREVER))
+#define align_unlock()  (aos_mutex_unlock(&g_align_cb.lock))
+
 void *_memalign_r(struct _reent *ptr, size_t alignment, size_t size)
 {
-    ptr->_errno = ENOSYS;
+    void *rc = NULL;
+    size_t old_size, new_size;
+
+    if (!align_is_init()) {
+        aos_mutex_new(&g_align_cb.lock);
+        g_align_cb.ptrs      = aos_calloc(ALIGN_TOTAL_CNT_INIT, sizeof(struct align_struct) * ALIGN_TOTAL_CNT_INIT);
+        g_align_cb.total_cnt = ALIGN_TOTAL_CNT_INIT;
+    }
+
+    align_lock();
+    if (g_align_cb.used_cnt >= g_align_cb.total_cnt) {
+        old_size = sizeof(struct align_struct) * g_align_cb.total_cnt;
+        g_align_cb.total_cnt += ALIGN_TOTAL_CNT_INIT;
+        new_size = sizeof(struct align_struct) * g_align_cb.total_cnt;
+        g_align_cb.ptrs = aos_realloc((void*)g_align_cb.ptrs, new_size);
+        memset((uint8_t*)g_align_cb.ptrs + old_size, 0, new_size - old_size);
+    }
+
+    rc = aos_malloc_align(alignment, size);
+    if (rc) {
+        for (int i = 0; i < g_align_cb.total_cnt; i++) {
+            if (g_align_cb.ptrs[i].used == 0) {
+                g_align_cb.used_cnt++;
+                g_align_cb.ptrs[i].used = 1;
+                g_align_cb.ptrs[i].ptr  = rc;
+                break;
+            }
+        }
+    }
+    align_unlock();
+
+    return rc;
+}
+
+int posix_memalign(void **memptr, size_t alignment, size_t size)
+{
+    int rc = -1;
+    void *ptr;
+
+    ptr = memalign(alignment, size);
+    if (ptr) {
+        rc      = 0;
+        *memptr = ptr;
+    }
+
+    return rc;
+}
+#else
+void *_memalign_r(struct _reent *ptr, size_t alignment, size_t size)
+{
     return NULL;
 }
+#endif
 
 void _free_r(struct _reent *ptr, void *addr)
 {
+    if (!addr)
+        return;
+#if (CONFIG_MEMALIGN_SUPPORT)
+    if (align_is_init()) {
+        align_lock();
+        if (g_align_cb.used_cnt) {
+            for (int i = 0; i < g_align_cb.total_cnt; i++) {
+                if (addr == g_align_cb.ptrs[i].ptr) {
+                    aos_free_align(addr);
+                    g_align_cb.used_cnt--;
+                    g_align_cb.ptrs[i].used = 0;
+                    g_align_cb.ptrs[i].ptr  = NULL;
+                    align_unlock();
+                    return;
+                }
+            }
+        }
+        align_unlock();
+    }
+#endif
     aos_free(addr);
 }
 
@@ -460,7 +552,9 @@ void _system(const char *s)
 
 void abort(void)
 {
+#if defined(CONFIG_KERNEL_RHINO) && CONFIG_KERNEL_RHINO
     k_err_proc(RHINO_SYS_FATAL_ERR);
+#endif
     __builtin_unreachable(); // fix noreturn warning
 }
 

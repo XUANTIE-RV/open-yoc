@@ -346,9 +346,23 @@ static int event_manage(void)
     int cnt = 0;
     slist_for_each_entry(&g_button_srv.event_node_head, node, event_node_t, next) {
         if (node->button_count >= g_button_srv.event_pool_depth) {
-            int ret = memcmp(node->buttons, g_button_srv.event_pool, \
-                             sizeof(event_pool_elem_t) * g_button_srv.event_pool_depth);
-
+            int ret = 0;
+            for (int i = 0; i < g_button_srv.event_pool_depth; i++) {
+                int j = 0;
+                for (j = 0; j < g_button_srv.event_pool_depth; j++) {
+                    if (node->buttons[i].button_id == g_button_srv.event_pool[j].button_id) {
+                        ret = memcmp(&node->buttons[i], &g_button_srv.event_pool[j], sizeof(event_pool_elem_t));
+                        if(ret == 0){
+                            break;
+                        }
+                    }
+                }
+                if (j == g_button_srv.event_pool_depth) {
+                    ret |= -1;
+                    break;
+                }
+            }
+            
             if (ret == 0) {
                 node->event_depth = g_button_srv.event_pool_depth;
 

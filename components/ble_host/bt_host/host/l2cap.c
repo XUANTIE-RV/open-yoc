@@ -35,7 +35,7 @@
 #define L2CAP_LE_MIN_MTU		23
 #define L2CAP_ECRED_MIN_MTU		64
 
-#if defined(CONFIG_BT_HCI_ACL_FLOW_CONTROL)
+#if (defined(CONFIG_BT_HCI_ACL_FLOW_CONTROL) && CONFIG_BT_HCI_ACL_FLOW_CONTROL)
 #define L2CAP_LE_MAX_CREDITS		(CONFIG_BT_ACL_RX_COUNT - 1)
 #else
 #define L2CAP_LE_MAX_CREDITS		(CONFIG_BT_RX_BUF_COUNT - 1)
@@ -67,7 +67,7 @@ static sys_slist_t le_channels;
 NET_BUF_POOL_FIXED_DEFINE(disc_pool, 1,
 			  BT_L2CAP_BUF_SIZE(CONFIG_BT_L2CAP_TX_MTU), NULL);
 
-#if defined(CONFIG_BT_L2CAP_DYNAMIC_CHANNEL)
+#if (defined(CONFIG_BT_L2CAP_DYNAMIC_CHANNEL) && CONFIG_BT_L2CAP_DYNAMIC_CHANNEL)
 /* Size of MTU is based on the maximum amount of data the buffer can hold
  * excluding ACL and driver headers.
  */
@@ -120,7 +120,7 @@ void bt_l2cap_le_fixed_chan_register(struct bt_l2cap_fixed_chan *chan)
 }
 #endif
 
-#if defined(CONFIG_BT_L2CAP_DYNAMIC_CHANNEL)
+#if (defined(CONFIG_BT_L2CAP_DYNAMIC_CHANNEL) && CONFIG_BT_L2CAP_DYNAMIC_CHANNEL)
 static struct bt_l2cap_le_chan *l2cap_chan_alloc_cid(struct bt_conn *conn,
 						     struct bt_l2cap_chan *chan)
 {
@@ -200,8 +200,8 @@ const char *bt_l2cap_chan_state_str(bt_l2cap_chan_state_t state)
 	}
 }
 
-#if defined(CONFIG_BT_L2CAP_DYNAMIC_CHANNEL)
-#if defined(CONFIG_BT_DEBUG_L2CAP)
+#if (defined(CONFIG_BT_L2CAP_DYNAMIC_CHANNEL) && CONFIG_BT_L2CAP_DYNAMIC_CHANNEL)
+#if (defined(CONFIG_BT_DEBUG_L2CAP) && CONFIG_BT_DEBUG_L2CAP)
 void bt_l2cap_chan_set_state_debug(struct bt_l2cap_chan *chan,
 				   bt_l2cap_chan_state_t state,
 				   const char *func, int line)
@@ -270,7 +270,7 @@ void bt_l2cap_chan_del(struct bt_l2cap_chan *chan)
 	chan->conn = NULL;
 
 destroy:
-#if defined(CONFIG_BT_L2CAP_DYNAMIC_CHANNEL)
+#if (defined(CONFIG_BT_L2CAP_DYNAMIC_CHANNEL) && CONFIG_BT_L2CAP_DYNAMIC_CHANNEL)
 	/* Reset internal members of common channel */
 	bt_l2cap_chan_set_state(chan, BT_L2CAP_DISCONNECTED);
 	chan->psm = 0U;
@@ -294,7 +294,7 @@ static void l2cap_rtx_timeout(struct k_work *work)
 	bt_l2cap_chan_remove(conn, &chan->chan);
 	bt_l2cap_chan_del(&chan->chan);
 
-#if defined(CONFIG_BT_L2CAP_DYNAMIC_CHANNEL)
+#if (defined(CONFIG_BT_L2CAP_DYNAMIC_CHANNEL) && CONFIG_BT_L2CAP_DYNAMIC_CHANNEL)
 	/* Remove other channels if pending on the same ident */
 	while ((chan = l2cap_remove_ident(conn, chan->chan.ident))) {
 		bt_l2cap_chan_del(&chan->chan);
@@ -302,7 +302,7 @@ static void l2cap_rtx_timeout(struct k_work *work)
 #endif /* CONFIG_BT_L2CAP_DYNAMIC_CHANNEL */
 }
 
-#if defined(CONFIG_BT_L2CAP_DYNAMIC_CHANNEL)
+#if (defined(CONFIG_BT_L2CAP_DYNAMIC_CHANNEL) && CONFIG_BT_L2CAP_DYNAMIC_CHANNEL)
 static void l2cap_chan_le_recv(struct bt_l2cap_le_chan *chan,
 			       struct net_buf *buf);
 
@@ -335,7 +335,7 @@ static bool l2cap_chan_add(struct bt_conn *conn, struct bt_l2cap_chan *chan,
 {
 	struct bt_l2cap_le_chan *ch;
 
-#if defined(CONFIG_BT_L2CAP_DYNAMIC_CHANNEL)
+#if (defined(CONFIG_BT_L2CAP_DYNAMIC_CHANNEL) && CONFIG_BT_L2CAP_DYNAMIC_CHANNEL)
 	ch = l2cap_chan_alloc_cid(conn, chan);
 #else
 	ch = BT_L2CAP_LE_CHAN(chan);
@@ -351,7 +351,7 @@ static bool l2cap_chan_add(struct bt_conn *conn, struct bt_l2cap_chan *chan,
 
 	bt_l2cap_chan_add(conn, chan, destroy);
 
-#if defined(CONFIG_BT_L2CAP_DYNAMIC_CHANNEL)
+#if (defined(CONFIG_BT_L2CAP_DYNAMIC_CHANNEL) && CONFIG_BT_L2CAP_DYNAMIC_CHANNEL)
 	if (L2CAP_LE_CID_IS_DYN(ch->rx.cid)) {
 		k_work_init(&ch->rx_work, l2cap_rx_process);
 		k_fifo_init(&ch->rx_queue);
@@ -447,7 +447,7 @@ static struct net_buf *l2cap_create_le_sig_pdu(struct net_buf *buf,
 	return buf;
 }
 
-#if defined(CONFIG_BT_L2CAP_DYNAMIC_CHANNEL)
+#if (defined(CONFIG_BT_L2CAP_DYNAMIC_CHANNEL) && CONFIG_BT_L2CAP_DYNAMIC_CHANNEL)
 static void l2cap_chan_send_req(struct bt_l2cap_chan *chan,
 				struct net_buf *buf, k_timeout_t timeout)
 {
@@ -575,7 +575,7 @@ void bt_l2cap_encrypt_change(struct bt_conn *conn, u8_t hci_status)
 	}
 
 	SYS_SLIST_FOR_EACH_CONTAINER(&conn->channels, chan, node) {
-#if defined(CONFIG_BT_L2CAP_DYNAMIC_CHANNEL)
+#if (defined(CONFIG_BT_L2CAP_DYNAMIC_CHANNEL) && CONFIG_BT_L2CAP_DYNAMIC_CHANNEL)
 		l2cap_le_encrypt_change(chan, hci_status);
 #endif
 
@@ -721,7 +721,7 @@ struct bt_l2cap_chan *bt_l2cap_le_lookup_rx_cid(struct bt_conn *conn,
 	return NULL;
 }
 
-#if defined(CONFIG_BT_L2CAP_DYNAMIC_CHANNEL)
+#if (defined(CONFIG_BT_L2CAP_DYNAMIC_CHANNEL) && CONFIG_BT_L2CAP_DYNAMIC_CHANNEL)
 static struct bt_l2cap_server *l2cap_server_lookup_psm(u16_t psm)
 {
 	struct bt_l2cap_server *server;
@@ -1896,7 +1896,7 @@ static int l2cap_recv(struct bt_l2cap_chan *chan, struct net_buf *buf)
 	case BT_L2CAP_CONN_PARAM_RSP:
 		le_conn_param_rsp(l2cap, buf);
 		break;
-#if defined(CONFIG_BT_L2CAP_DYNAMIC_CHANNEL)
+#if (defined(CONFIG_BT_L2CAP_DYNAMIC_CHANNEL) && CONFIG_BT_L2CAP_DYNAMIC_CHANNEL)
 	case BT_L2CAP_LE_CONN_REQ:
 		le_conn_req(l2cap, hdr->ident, buf);
 		break;
@@ -1945,7 +1945,7 @@ static int l2cap_recv(struct bt_l2cap_chan *chan, struct net_buf *buf)
 	return 0;
 }
 
-#if defined(CONFIG_BT_L2CAP_DYNAMIC_CHANNEL)
+#if (defined(CONFIG_BT_L2CAP_DYNAMIC_CHANNEL) && CONFIG_BT_L2CAP_DYNAMIC_CHANNEL)
 static void l2cap_chan_shutdown(struct bt_l2cap_chan *chan)
 {
 	struct bt_l2cap_le_chan *ch = BT_L2CAP_LE_CHAN(chan);
@@ -2233,7 +2233,7 @@ static void l2cap_chan_recv_queue(struct bt_l2cap_le_chan *chan,
 
 static void l2cap_chan_recv(struct bt_l2cap_chan *chan, struct net_buf *buf)
 {
-#if defined(CONFIG_BT_L2CAP_DYNAMIC_CHANNEL)
+#if (defined(CONFIG_BT_L2CAP_DYNAMIC_CHANNEL) && CONFIG_BT_L2CAP_DYNAMIC_CHANNEL)
 	struct bt_l2cap_le_chan *ch = BT_L2CAP_LE_CHAN(chan);
 
 	if (L2CAP_LE_CID_IS_DYN(ch->rx.cid)) {
@@ -2358,7 +2358,7 @@ void bt_l2cap_init(void)
 	}
 }
 
-#if defined(CONFIG_BT_L2CAP_DYNAMIC_CHANNEL)
+#if (defined(CONFIG_BT_L2CAP_DYNAMIC_CHANNEL) && CONFIG_BT_L2CAP_DYNAMIC_CHANNEL)
 static int l2cap_le_connect(struct bt_conn *conn, struct bt_l2cap_le_chan *ch,
 			    u16_t psm)
 {

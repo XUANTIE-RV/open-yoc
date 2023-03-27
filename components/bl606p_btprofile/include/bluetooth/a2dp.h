@@ -123,6 +123,7 @@ typedef struct{
     int (*start)(void);
     int (*stop)(void);
     int (*open)(int sample,int chl);
+    int (*ioctl)(int cmd , void *arg);
     int (*close)(void);
 }A2DP_PCM_PRCOESS;
 

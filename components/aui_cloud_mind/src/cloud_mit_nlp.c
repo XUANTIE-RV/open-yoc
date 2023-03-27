@@ -67,9 +67,9 @@ typedef struct mit_kws_data {
     size_t       pos;
 } mit_kws_data_t;
 
-static int            bufferLocked = 0;
+static int            g_buffer_locked = 0;
 static mit_kws_data_t g_mit_kws;
-static aos_event_t    asr_task_quit;
+static aos_event_t    g_asr_task_quit = NULL;
 
 static void mit_nlp_handle(void *data, int len, void *priv)
 {
@@ -148,15 +148,15 @@ static void get_hex_mac(char *hex_mac)
 
     if (s_mac[0] == 0 && s_mac[1] == 0 && s_mac[2] == 0 && 
         s_mac[3] == 0 && s_mac[4] == 0 && s_mac[5] == 0) {
-        aos_dev_t *wifi_dev = NULL;
-        wifi_dev = device_open_id("wifi", 0);
+        rvm_dev_t *wifi_dev = NULL;
+        wifi_dev = rvm_hal_device_open("wifi0");
         if(NULL == wifi_dev) {
             LOGE(TAG, "open wifi device error!");
             return;
         }
 
         do {
-            ret = hal_wifi_get_mac_addr(wifi_dev, s_mac);
+            ret = rvm_hal_wifi_get_mac_addr(wifi_dev, s_mac);
             if (ret == 0) {
                 break;
             }
@@ -521,7 +521,7 @@ static void tsk_wait_for_mit_consuming(void *arg)
     }
 
     LOGD(TAG, "consumig thread end");
-    aos_event_set(&asr_task_quit, MIT_ASR_TASK_QUIT_EVT, AOS_EVENT_OR);
+    aos_event_set(&g_asr_task_quit, MIT_ASR_TASK_QUIT_EVT, AOS_EVENT_OR);
     return;
 }
 
@@ -611,6 +611,10 @@ static int mit_nlp_init(aui_t *aui)
 {
     aos_check_return_einval(aui);
 
+    if (g_asr_task_quit) {
+        return 0;
+    }
+
     mit_context_t *context = aos_malloc(sizeof(mit_context_t));
     aos_check_mem(context);
 
@@ -661,7 +665,7 @@ extern int g_silence_log_level;
     g_silence_log_level=5;
 
     int ret;
-    ret = aos_event_new(&asr_task_quit, 0);
+    ret = aos_event_new(&g_asr_task_quit, 0);
     CHECK_RET_TAG_WITH_RET(ret == 0, -1);
 
     return nui_things_init(&mit_init_config);
@@ -684,7 +688,7 @@ static int mit_start_pcm(aui_t *aui)
         mit_dialog_config.enable_wwv = 0;
         g_mit_kws.do_wwv             = 0;
         g_mit_kws.data_valid         = 0;
-        aos_event_set(&asr_task_quit, 0, AOS_EVENT_AND);
+        aos_event_set(&g_asr_task_quit, 0, AOS_EVENT_AND);
 
         mit_status_t stat = context->status;
         if (stat != MIT_STATE_END) {
@@ -694,7 +698,7 @@ static int mit_start_pcm(aui_t *aui)
             nui_things_stop(1);
 
             if (stat == MIT_STATE_FINISH) {
-                aos_event_get(&asr_task_quit, MIT_ASR_TASK_QUIT_EVT, AOS_EVENT_OR_CLEAR, &flag,
+                aos_event_get(&g_asr_task_quit, MIT_ASR_TASK_QUIT_EVT, AOS_EVENT_OR_CLEAR, &flag,
                             AOS_WAIT_FOREVER);
             }
         }
@@ -716,7 +720,7 @@ static int mit_start_pcm(aui_t *aui)
 
         context->status = MIT_STATE_ONGOING;
         context->err    = MIT_ASR_SUCCESS;
-        bufferLocked    = 0;
+        g_buffer_locked    = 0;
 
         LOGD(TAG, "nui_things_start success");        
     }
@@ -746,11 +750,11 @@ static int mit_push_pcm(aui_t *aui, void *data, size_t size)
             return -1;
         }
 
-        if (bufferLocked || ringbuffer_full(&context->rbuf)) {
-            if (!bufferLocked) {
+        if (g_buffer_locked || ringbuffer_full(&context->rbuf)) {
+            if (!g_buffer_locked) {
                 LOGD(TAG, "buffer locked");
             }
-            bufferLocked = 1;
+            g_buffer_locked = 1;
             return 0;
         }
 
@@ -814,7 +818,7 @@ static int mit_force_stop(aui_t *aui)
         nui_things_stop(1);
 
         if (stat == MIT_STATE_FINISH) {
-            aos_event_get(&asr_task_quit, MIT_ASR_TASK_QUIT_EVT, AOS_EVENT_OR_CLEAR, &flags,
+            aos_event_get(&g_asr_task_quit, MIT_ASR_TASK_QUIT_EVT, AOS_EVENT_OR_CLEAR, &flags,
                         AOS_WAIT_FOREVER);
         }
     } else {

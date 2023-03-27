@@ -8,111 +8,43 @@
 #include <enviro.h>
 #include <aos/kernel.h>
 
-pthread_mutex_t g_enviro_mutex = PTHREAD_MUTEX_INITIALIZER;
-static pthread_environ_t *g_penviron = NULL;
-
-struct _envval {
-    const char *valname;
-    struct _envval *next;
-};
-
-static struct _envval *g_penvval_deprecated = NULL;
-static int envval_deprecat(const char *valname);
+static pthread_environ_t *g_penviron;
+static pthread_mutex_t g_enviro_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 static pthread_environ_t *env_new(const char *envname, const char *envval)
 {
-    pthread_environ_t *penv = NULL;
-    int envname_len, envval_len;
+    pthread_environ_t *penv;
 
-    /* malloc pthread_environ_t */
-    penv = malloc(sizeof(pthread_environ_t));
-    if (penv == NULL) {
-        return NULL;
-    }
-
-    /* malloc envname and copy the envname */
-    envname_len = strlen(envname);
-    penv->envname = malloc(envname_len + 1);
-    if (penv->envname == NULL) {
-        free(penv);
-        return NULL;
-    }
-
-    strcpy(penv->envname, envname);
-
-    /* malloc envval and copy the envval */
-    envval_len = strlen(envval);
-    penv->envval = malloc(envval_len + 1);
-    if (penv->envval == NULL) {
-        free(penv->envname);
-        free(penv);
-        return NULL;
-    }
-
-    strcpy(penv->envval, envval);
-
-    penv->next = NULL;
+    penv = calloc(1, sizeof(pthread_environ_t));
+    penv->envname = strdup(envname);;
+    penv->envval  = strdup(envval);;
 
     return penv;
 }
 
 static void env_free(pthread_environ_t *penv)
 {
-    if (penv == NULL) {
-        return;
-    }
-
-    if (penv->envname != NULL) {
+    if (penv->envname) {
         free(penv->envname);
     }
 
-    if (penv->envval != NULL) {
-        envval_deprecat(penv->envval);
+    if (penv->envval) {
+        free(penv->envval);
     }
 
     free(penv);
-}
-
-static int envval_deprecat(const char *valname)
-{
-    struct _envval *ev;
-
-    ev = malloc(sizeof(struct _envval));
-    if (ev == NULL) {
-        return -1;
-    }
-
-    ev->valname = valname;
-    ev->next = NULL;
-
-    if (g_penvval_deprecated == NULL) {
-        g_penvval_deprecated = ev;
-        return 0;
-    }
-
-    ev->next = g_penvval_deprecated;
-    g_penvval_deprecated = ev;
-
-    return 0;
 }
 
 int setenv(const char *envname, const char *envval, int overwrite)
 {
     pthread_environ_t *penv     = NULL;
     pthread_environ_t *penv_pre = NULL;
-    int envval_len;
 
-    int ret = -1;
-
-    if ((envname == NULL) || (envval == NULL)) {
+    if (!(envname && envval)) {
         return -1;
     }
 
-    ret = pthread_mutex_lock(&g_enviro_mutex);
-    if (ret != 0) {
-        return -1;
-    }
-
+    pthread_mutex_lock(&g_enviro_mutex);
     /* if no environ in tcb, create the first one */
     if (g_penviron == NULL) {
         penv = env_new(envname, envval);
@@ -122,7 +54,6 @@ int setenv(const char *envname, const char *envval, int overwrite)
         }
 
         g_penviron = penv;
-
         pthread_mutex_unlock(&g_enviro_mutex);
         return 0;
     }
@@ -133,26 +64,12 @@ int setenv(const char *envname, const char *envval, int overwrite)
         if (strcmp(penv->envname, envname) == 0) {
             /* if the environment variable named by envname already exists and the value of overwrite is non-zero,
                the function shall return success and the environment shall be updated */
-            if (overwrite != 0) {
-                /* add the deprecated val in deprecated list */
-                if (!envval_deprecat(penv->envval)) {
-                    envval_len = strlen(envval);
-                    penv->envval = malloc(envval_len + 1);
-                    strncpy(penv->envval, envval, envval_len + 1);
-                    penv->envval[envval_len] = '\0';
-                    pthread_mutex_unlock(&g_enviro_mutex);
-                    return 0;
-                } else {
-                    pthread_mutex_unlock(&g_enviro_mutex);
-                    return -1;
-                }
-
-            } else {
-            /* If the environment variable named by envname already exists and the value of overwrite is zero, the
-               function shall return success and the environment shall remain unchanged */
-                pthread_mutex_unlock(&g_enviro_mutex);
-                return 0;
+            if (overwrite) {
+                free(penv->envval);
+                penv->envval = strdup(envval);
             }
+            pthread_mutex_unlock(&g_enviro_mutex);
+            return 0;
         }
 
         penv_pre = penv;
@@ -167,7 +84,6 @@ int setenv(const char *envname, const char *envval, int overwrite)
     }
 
     penv_pre->next = penv;
-
     pthread_mutex_unlock(&g_enviro_mutex);
 
     return 0;
@@ -175,26 +91,17 @@ int setenv(const char *envname, const char *envval, int overwrite)
 
 char *getenv(const char *name)
 {
-    int   ret;
     char *val = NULL;
     pthread_environ_t *penv = NULL;
 
-    if (name == NULL) {
+    if (!(name && g_penviron)) {
         return NULL;
     }
 
     penv = g_penviron;
-    if (penv == NULL) {
-        return NULL;
-    }
-
-    ret = pthread_mutex_lock(&g_enviro_mutex);
-    if (ret != 0) {
-        return NULL;
-    }
-
+    pthread_mutex_lock(&g_enviro_mutex);
     /* search the environ list to find the match item */
-    while (penv != NULL) {
+    while (penv) {
         if (strcmp(penv->envname, name) == 0) {
             val = penv->envval;
             pthread_mutex_unlock(&g_enviro_mutex);
@@ -213,24 +120,14 @@ int unsetenv(const char *name)
     pthread_environ_t *penv     = NULL;
     pthread_environ_t *penv_pre = NULL;
 
-    int ret = -1;
-
-    if (name == NULL) {
+    if (!(name && g_penviron)) {
         return -1;
     }
 
     penv = g_penviron;
-    if (penv == NULL) {
-        return -1;
-    }
-
-    ret = pthread_mutex_lock(&g_enviro_mutex);
-    if (ret != 0) {
-        return -1;
-    }
-
+    pthread_mutex_lock(&g_enviro_mutex);
     /* search the environ list to find the match item and free it */
-    while (penv != NULL) {
+    while (penv) {
         if (strcmp(penv->envname, name) == 0) {
             if (penv_pre == NULL) {
                 g_penviron = penv->next;
@@ -239,7 +136,6 @@ int unsetenv(const char *name)
             }
 
             pthread_mutex_unlock(&g_enviro_mutex);
-
             /* free the pthread_environ_t data */
             env_free(penv);
 
@@ -266,21 +162,13 @@ int putenv(char *string)
         if (string[pos] == '=') {
             envval = &string[pos + 1];
 
-            /* malloc a memory to save envname */
             envname = malloc(pos + 1);
-            if (envname == NULL) {
-                return -1;
-            }
-
-            /* copy envname */
             strncpy(envname, string, pos);
             envname[pos] = '\0';
 
             ret = setenv(envname, envval, 1);
-
             /* free envname */
             free(envname);
-
             return ret;
         }
     }
@@ -292,16 +180,15 @@ int clearenv(void)
 {
     pthread_environ_t *env;
     pthread_environ_t *next;
-    struct _envval *envval, *envval_next;
 
     env = g_penviron;
-    while (env != NULL) {
+    while (env) {
         next= env->next;
-        if (env->envname != NULL) {
+        if (env->envname) {
             free(env->envname);
         }
 
-        if (env->envval != NULL) {
+        if (env->envval) {
             free(env->envval);
         }
 
@@ -310,16 +197,6 @@ int clearenv(void)
     }
 
     g_penviron = NULL;
-
-    envval = g_penvval_deprecated;
-    while (envval != NULL) {
-        envval_next = envval->next;
-        free((void*)envval->valname);
-        free(envval);
-        envval = envval_next;
-    }
-
-    g_penvval_deprecated = NULL;
 
     return 0;
 }
@@ -382,9 +259,9 @@ long sysconf(int name)
         break;
     case _SC_REALTIME_SIGNALS :
 #if (_POSIX_REALTIME_SIGNALS > 0)
-            val = 1;
+        val = 1;
 #else
-            val = 0;
+        val = 0;
 #endif
         break;
     case _SC_SEMAPHORES :

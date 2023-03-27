@@ -170,7 +170,7 @@ typedef struct _evt_data_gap_security_change_t {
     uint8_t  err;
 } evt_data_gap_security_change_t;
 
-#if defined(CONFIG_BT_EXT_ADV)
+#if (defined(CONFIG_BT_EXT_ADV) && CONFIG_BT_EXT_ADV)
 #define ADV_DATA_MAX_SIZE (255)
 #else
 #define ADV_DATA_MAX_SIZE (31)
@@ -180,7 +180,7 @@ typedef struct _evt_data_gap_dev_find_t {
     adv_type_en adv_type;
     uint8_t     adv_len;
     int8_t      rssi;
-#if defined(CONFIG_BT_EXT_ADV)
+#if (defined(CONFIG_BT_EXT_ADV) && CONFIG_BT_EXT_ADV)
     uint8_t  sid;
     int8_t   tx_power;
     uint16_t adv_props;
@@ -443,7 +443,7 @@ typedef enum {
 } adv_chan_en;
 #define ADV_DEFAULT_CHAN_MAP (ADV_CHAN_37 | ADV_CHAN_38 | ADV_CHAN_39)
 
-#if defined(CONFIG_BT_EXT_ADV)
+#if (defined(CONFIG_BT_EXT_ADV) && CONFIG_BT_EXT_ADV)
 typedef enum {
     ADV_PHY_1M    = 0x01,
     ADV_PHY_2M    = 0x02,
@@ -462,7 +462,7 @@ typedef struct _adv_param_t {
     adv_filter_policy_en filter_policy;
     adv_chan_en          channel_map;
     dev_addr_t           direct_peer_addr;
-#if defined(CONFIG_BT_EXT_ADV)
+#if (defined(CONFIG_BT_EXT_ADV) && CONFIG_BT_EXT_ADV)
     uint8_t phy_select;
 #endif
 } adv_param_t;
@@ -493,7 +493,7 @@ typedef enum {
     SCAN_FILTER_POLICY_WHITE_LIST = 1, /* white list adv packages */
 } scan_filter_policy_en;
 
-#if defined(CONFIG_BT_EXT_ADV)
+#if (defined(CONFIG_BT_EXT_ADV) && CONFIG_BT_EXT_ADV)
 typedef enum {
     SCAN_PHY_1M    = 0x01,
     SCAN_PHY_2M    = 0x02,
@@ -514,7 +514,7 @@ typedef struct _scan_param_t {
 
     scan_filter_policy_en scan_filter;
 
-#if defined(CONFIG_BT_EXT_ADV)
+#if (defined(CONFIG_BT_EXT_ADV) && CONFIG_BT_EXT_ADV)
     uint32_t phy_select;
 #endif
 

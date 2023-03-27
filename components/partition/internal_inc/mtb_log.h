@@ -22,14 +22,14 @@ extern "C" {
 #define MTB_LOGE(format, ...) printf(LOG_TAG"[E] ""[%s, %d]"format"\r\n", __func__, __LINE__, ##__VA_ARGS__)
 #elif CONFIG_DEBUG == 2
 #define MTB_LOGD(format, ...)
-#define MTB_LOGI(format, ...) printf(LOG_TAG"[I] "format"\r\n",##__VA_ARGS__)
+#define MTB_LOGI(format, ...) printf(LOG_TAG"[I] ""[%s, %d]"format"\r\n", __func__, __LINE__, ##__VA_ARGS__)
 #define MTB_LOGW(format, ...)
-#define MTB_LOGE(format, ...) printf(LOG_TAG"[E] "format"\r\n",##__VA_ARGS__)
+#define MTB_LOGE(format, ...) printf(LOG_TAG"[E] ""[%s, %d]"format"\r\n", __func__, __LINE__, ##__VA_ARGS__)
 #elif CONFIG_DEBUG == 1
 #define MTB_LOGD(format, ...)
 #define MTB_LOGI(format, ...)
 #define MTB_LOGW(format, ...)
-#define MTB_LOGE(format, ...) printf(LOG_TAG"[E] "format"\r\n",##__VA_ARGS__)
+#define MTB_LOGE(format, ...) printf(LOG_TAG"[E] ""[%s, %d]"format"\r\n", __func__, __LINE__, ##__VA_ARGS__)
 #else
 #define MTB_LOGD(format, ...)
 #define MTB_LOGI(format, ...)

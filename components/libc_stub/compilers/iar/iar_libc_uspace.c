@@ -10,7 +10,6 @@
 
 #include "sys/types.h"
 #include "sys/time.h"
-#include "aos/hal/uart.h"
 #include "umm.h"
 
 int errno;
@@ -65,11 +64,6 @@ void __assert_func(const char *a, int b, const char *c, const char *d)
 #pragma weak __write
 size_t __write(int handle, const unsigned char *buffer, size_t size)
 {
-    uart_dev_t uart_stdio;
-    int i;
-    memset(&uart_stdio, 0, sizeof(uart_stdio));
-    uart_stdio.port = 0;
-
     if (buffer == 0) {
         /*
          * This means that we should flush internal buffers.  Since we don't we just return.
@@ -83,14 +77,8 @@ size_t __write(int handle, const unsigned char *buffer, size_t size)
         return ((size_t) - 1);
     }
 
-    /* Send data. */
-    for (i = 0; i < size; i++) {
-        if (buffer[i] == '\n') {
-            hal_uart_send(&uart_stdio, (void *)"\r", 1, AOS_WAIT_FOREVER);
-        }
-
-        hal_uart_send(&uart_stdio, &buffer[i], 1, AOS_WAIT_FOREVER);
-    }
+    extern int uart_write(const void *buf, size_t size);
+    uart_write((const void*)buffer, size);
 
     return size;
 }

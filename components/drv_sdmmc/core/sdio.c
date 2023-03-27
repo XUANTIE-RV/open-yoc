@@ -839,33 +839,21 @@ status_t SDIO_HostInit(sdio_card_t *card)
 {
     assert(card);
 
-    uint32_t idx;
-
-#ifdef CONFIG_CSI_V2
-    if (card->host.base == (SDIF_TYPE*)DW_SDIO0_BASE) {
-        idx = 0;
-    } 
-#ifdef DW_SDIO1_BASE
-    else if (card->host.base == (SDIF_TYPE*)DW_SDIO1_BASE) {
-        idx = 1;
-    } 
-#endif
-
-#else
-
-    if (card->host.base == (SDIF_TYPE*)CSKY_SDIO0_BASE) {
-        idx = 0;
-    } 
-#ifdef CSKY_SDIO1_BASE
-    else if (card->host.base == (SDIF_TYPE*)CSKY_SDIO1_BASE) {
-        idx = 1;
-    } 
-#endif
-#endif
-    else {
-        return kStatus_InvalidArgument;
+    if ((!card->isHostReady) && SDMMCHOST_Init(&(card->host), (void *)(card->usrParam.cd)) != kStatus_Success) {
+        return kStatus_Fail;
     }
-    SDMMCHOST_BindingSDIF(&(card->host), idx);
+
+    /* set the host status flag, after the card re-plug in, don't need init host again */
+    card->isHostReady = true;
+
+    return kStatus_Success;
+}
+
+status_t SDIO_HostInit2(sdio_card_t *card, void *user_data, uint32_t sdif)
+{
+    assert(card);
+
+    SDMMCHOST_BindingSDIF(&(card->host), sdif);
 
     if ((!card->isHostReady) && SDMMCHOST_Init(&(card->host), (void *)(card->usrParam.cd)) != kStatus_Success) {
         return kStatus_Fail;
@@ -919,6 +907,36 @@ status_t SDIO_Init(sdio_card_t *card)
 
     if (!card->isHostReady) {
         if (SDIO_HostInit(card) != kStatus_Success) {
+            return kStatus_SDMMC_HostNotReady;
+        }
+    } else {
+        /* reset the host */
+        SDIO_HostReset(&(card->host));
+    }
+
+#if 0
+    /* power off card */
+    SDIO_PowerOffCard(card->host.base, card->usrParam.pwr);
+
+    /* card detect */
+    if (SDIO_WaitCardDetectStatus(card->host.base, card->usrParam.cd, true) != kStatus_Success) {
+        return kStatus_SDMMC_CardDetectFailed;
+    }
+
+    /* power on card */
+    SDIO_PowerOnCard(card->host.base, card->usrParam.pwr);
+#endif
+
+    return SDIO_CardInit(card);
+}
+
+status_t SDIO_Init2(sdio_card_t *card, void *user_data, uint32_t sdif)
+{
+    assert(card);
+    assert(card->host.base);
+
+    if (!card->isHostReady) {
+        if (SDIO_HostInit2(card, user_data, sdif) != kStatus_Success) {
             return kStatus_SDMMC_HostNotReady;
         }
     } else {

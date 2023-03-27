@@ -32,6 +32,7 @@ extern void ck_pwm_irqhandler(int32_t idx);
 extern void systick_handler(void);
 extern void xPortSysTickHandler(void);
 extern void OSTimeTick(void);
+extern int clear_timer_int(AP_TIM_TypeDef *TIMx);
 
 #define readl(addr) \
     ({ unsigned int __v = (*(volatile unsigned int *) (addr)); __v; })
@@ -181,6 +182,8 @@ void CSI_AP_TIMER5_IRQHandler(void)
 {
     CSI_INTRPT_ENTER();
     dw_timer_irqhandler(0);
+    if(AP_TIM5->status & 0x1)
+        clear_timer_int(AP_TIM5);
     CSI_INTRPT_EXIT();
 }
 
@@ -188,6 +191,8 @@ void CSI_AP_TIMER6_IRQHandler(void)
 {
     CSI_INTRPT_ENTER();
     dw_timer_irqhandler(1);
+    if(AP_TIM6->status & 0x1)
+        clear_timer_int(AP_TIM6);
     CSI_INTRPT_EXIT();
 }
 

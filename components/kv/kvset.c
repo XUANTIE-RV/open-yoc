@@ -130,7 +130,7 @@ int kv_init(kv_t *kv, uint8_t *mem, int block_num, int block_size)
     for (i = 0; i < block_num; i++) {
         kv->blocks[i].kv = kv;
         kv->blocks[i].id = i;
-        kvblock_init(kv->blocks + i, mem + i * block_size, block_size);
+        kvblock_init(kv->blocks + i, mem + i * block_size, block_size - BLOCK_RESERVE_SPACE);
 
         int v = kvblock_free_size(kv->blocks + i);
         if (v >= gc_size && v > 4) {

@@ -69,7 +69,7 @@ static void esp_supp_handle_wnm_scan_done(struct wpa_supplicant *wpa_s)
 static void esp_supp_scan_done_cleanup(struct wpa_supplicant *wpa_s)
 {
 	uint16_t number = 1;
-	wifi_ap_record_t ap_records;
+	rvm_hal_wifi_ap_record_t ap_records;
 
 	wpa_s->scanning = 0;
 	wpa_s->scan_reason = 0;

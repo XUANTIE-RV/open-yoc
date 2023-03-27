@@ -34,9 +34,33 @@
 
 #include <string.h>
 #include <stdio.h>
-#include <ulog/ulog.h>
 #include "mmc.h"
 #include <assert.h>
+#ifndef CONFIG_KERNEL_NONE
+#include <ulog/ulog.h>
+#else
+#if defined(CONFIG_DEBUG) && CONFIG_DEBUG == 3
+#define LOGD(tag, format, ...) printf("[%s]" "[D] ""[%s, %d]"format"\r\n", tag, __func__, __LINE__, ##__VA_ARGS__)
+#define LOGI(tag, format, ...) printf("[%s]" "[I] ""[%s, %d]"format"\r\n", tag, __func__, __LINE__, ##__VA_ARGS__)
+#define LOGW(tag, format, ...) printf("[%s]" "[W] ""[%s, %d]"format"\r\n", tag, __func__, __LINE__, ##__VA_ARGS__)
+#define LOGE(tag, format, ...) printf("[%s]" "[E] ""[%s, %d]"format"\r\n", tag, __func__, __LINE__, ##__VA_ARGS__)
+#elif defined(CONFIG_DEBUG) && CONFIG_DEBUG == 2
+#define LOGD(tag, format, ...)
+#define LOGI(tag, format, ...) printf("[%s]" "[I] "format"\r\n",tag, ##__VA_ARGS__)
+#define LOGW(tag, format, ...)
+#define LOGE(tag, format, ...) printf("[%s]" "[E] "format"\r\n",tag, ##__VA_ARGS__)
+#elif defined(CONFIG_DEBUG) && CONFIG_DEBUG == 1
+#define LOGD(tag, format, ...)
+#define LOGI(tag, format, ...)
+#define LOGW(tag, format, ...)
+#define LOGE(tag, format, ...) printf("[%s]" "[E] "format"\r\n",tag, ##__VA_ARGS__)
+#else
+#define LOGD(tag, format, ...)
+#define LOGI(tag, format, ...)
+#define LOGW(tag, format, ...)
+#define LOGE(tag, format, ...)
+#endif /*CONFIG_DEBUG*/
+#endif /*CONFIG_KERNEL_NONE*/
 
 /* LOG_LEVEL: 0: Err; 1: Err&Warn; 2: Err&Warn&Info; 3: Err&Warn&Info&Debug */
 #define LOG_LEVEL 0
@@ -210,7 +234,7 @@ static status_t MMC_SendExtendedCsd(mmc_card_t *card, uint8_t *targetAddr, uint3
  * @return The power class switch status.
  */
 static status_t MMC_SetPowerClass(mmc_card_t *card);
-
+#if 0
 /*!
  * @brief Send test pattern to get the functional pin in the MMC bus
  *
@@ -244,7 +268,7 @@ static status_t MMC_ReceiveTestPattern(mmc_card_t *card, uint32_t block_size, ui
  * @retval kStatus_Success Operate successfully.
  */
 static status_t MMC_TestDataBusWidth(mmc_card_t *card, mmc_data_bus_width_t width);
-
+#endif
 /*!
  * @brief Send SET_BUS_WIDTH command to set the bus width.
  *
@@ -706,7 +730,7 @@ static void MMC_DecodeCsd(mmc_card_t *card, uint32_t *rawCsd)
     uint32_t multiplier, i;
 
     for (i = 0; i < 4; i++) {
-        LOGD(TAG,"The csd[%d] is %x\n", i, rawCsd[i]);
+        LOGD(TAG,"The csd[%d] is 0x%x", i, rawCsd[i]);
     }
 
     csd = &(card->csd);
@@ -823,7 +847,9 @@ static status_t MMC_SetMaxEraseUnitSize(mmc_card_t *card)
         erase_group_size = card->csd.eraseGroupSize;
         erase_group_multiplier = card->csd.eraseGroupSizeMultiplier;
         card->eraseGroupBlocks = ((erase_group_size + 1U) * (erase_group_multiplier + 1U));
-    } else {
+    } 
+#ifndef CONFIG_NOT_USE_HC_ERASE_UNIT_SIZE
+    else {
         /* Erase Unit Size = 512Kbyte * HC_ERASE_GRP_SIZE. Block size is 512 bytes. */
         card->eraseGroupBlocks = (card->extendedCsd.highCapacityEraseUnitSize * 1024U);
         /* Enable high capacity erase unit size. */
@@ -836,7 +862,14 @@ static status_t MMC_SetMaxEraseUnitSize(mmc_card_t *card)
             return kStatus_SDMMC_ConfigureExtendedCsdFailed;
         }
     }
-
+#else
+    else {
+        (void)extendedCsdconfig;
+        erase_group_size = card->csd.eraseGroupSize;
+        erase_group_multiplier = card->csd.eraseGroupSizeMultiplier;
+        card->eraseGroupBlocks = ((erase_group_size + 1U) * (erase_group_multiplier + 1U));
+    }
+#endif
     return kStatus_Success;
 }
 
@@ -1017,18 +1050,19 @@ static status_t MMC_SendExtendedCsd(mmc_card_t *card, uint8_t *targetAddr, uint3
         } else {
             MMC_DecodeExtendedCsd(card, card->rawExtendedCsd);
         }
-#ifdef CONFIG_DEBUG
+#if 0//defined(CONFIG_DEBUG) && CONFIG_DEBUG > 2
         /* Print the ext_csd to check */
         uint32_t i;
         uint8_t *e_csd;
         e_csd = (uint8_t*)(card->rawExtendedCsd);
-        LOGD(TAG,"The ext csd is :\n");
-        for (i=0;i<512;i++) {
-            LOGD(TAG,"%x , ", e_csd[i]);
+        printf("The ext csd is :\n");
+        for (i = 0; i < MMC_EXTENDED_CSD_BYTES; i++) {
+            printf("0x%02x , ", e_csd[i]);
             if ((i + 1) % 4 == 0) {
-                LOGD(TAG,"**line %d\n", i);
+                printf("**line %d\n", i);
             }
         }
+        printf("--------------------------\n");
 #endif
         return kStatus_Success;
     }
@@ -1111,7 +1145,7 @@ static status_t MMC_SetPowerClass(mmc_card_t *card)
 
     return kStatus_Success;
 }
-
+#if 0
 static status_t MMC_SendTestPattern(mmc_card_t *card, uint32_t block_size, uint32_t *pattern)
 {
     assert(card);
@@ -1257,13 +1291,13 @@ static status_t MMC_TestDataBusWidth(mmc_card_t *card, mmc_data_bus_width_t widt
 
     /* XOR the send pattern and receive pattern */
     if (((tempPattern[0U] ^ tempsendPattern) & xorMask) != xorResult) {
-        LOGD(TAG,"Bus change test fail. %x \n", tempPattern[0U]);
+        LOGE(TAG,"Bus change test fail. %x \n", tempPattern[0U]);
         return kStatus_Fail;
     }
     LOGD(TAG,"Bus change test success. %x \n", tempPattern[0U]);
     return kStatus_Success;
 }
-
+#endif
 static status_t MMC_SetDataBusWidth(mmc_card_t *card, mmc_data_bus_width_t width)
 {
     assert(card);
@@ -1291,6 +1325,7 @@ static status_t MMC_SetMaxDataBusWidth(mmc_card_t *card, mmc_high_speed_timing_t
     assert(card);
 
     status_t error = kStatus_Fail;
+    mmc_data_bus_width_t bus_with = card->busWidth;
 
     switch (card->busWidth) {
         case kMMC_DataBusWidth1bit:
@@ -1335,36 +1370,38 @@ static status_t MMC_SetMaxDataBusWidth(mmc_card_t *card, mmc_high_speed_timing_t
             }
 #endif
         case kMMC_DataBusWidth8bit:
-            if ((SDMMCHOST_NOT_SUPPORT != kSDMMCHOST_Support8BitBusWidth) &&
-                ((targetTiming == kMMC_HighSpeedTiming) || (targetTiming == kMMC_HighSpeed200Timing))) {
-                LOGD(TAG,"Switch to 8 width.\n");
-                SDMMCHOST_SET_CARD_BUS_WIDTH(card->host.base, kSDMMCHOST_DATABUSWIDTH8BIT);
+            if (bus_with == 0 || bus_with == kMMC_DataBusWidth8bit) {
+                if ((SDMMCHOST_NOT_SUPPORT != kSDMMCHOST_Support8BitBusWidth) &&
+                    ((targetTiming == kMMC_HighSpeedTiming) || (targetTiming == kMMC_HighSpeed200Timing))) {
+                    LOGD(TAG,"Switch to 8 width.");
+                    SDMMCHOST_SET_CARD_BUS_WIDTH(card->host.base, kSDMMCHOST_DATABUSWIDTH8BIT);
 
-                if ((kStatus_Success == MMC_TestDataBusWidth(card, kMMC_DataBusWidth8bit)) &&
-                    (kStatus_Success == MMC_SetDataBusWidth(card, kMMC_DataBusWidth8bit))) {
-                    error = kStatus_Success;
-                    card->busWidth = kMMC_DataBusWidth8bit;
-                    LOGF(TAG, "Switch to 8 width success.\n");
-                    break;
-                }
+                    if ((kStatus_Success == MMC_SetDataBusWidth(card, kMMC_DataBusWidth8bit))) {
+                        error = kStatus_Success;
+                        card->busWidth = kMMC_DataBusWidth8bit;
+                        LOGI(TAG, "Switch to 8 width success.");
+                        break;
+                    }
+                }                
             }
 
         case kMMC_DataBusWidth4bit:
-            if ((SDMMCHOST_NOT_SUPPORT != kSDMMCHOST_Support4BitBusWidth) &&
-                ((targetTiming == kMMC_HighSpeedTiming) || (targetTiming == kMMC_HighSpeed200Timing))) {
-                LOGD(TAG,"Switch to 4 width.\n");
-                SDMMCHOST_SET_CARD_BUS_WIDTH(card->host.base, kSDMMCHOST_DATABUSWIDTH4BIT);
+            if (bus_with == 0 || bus_with == kMMC_DataBusWidth4bit) {
+                if ((SDMMCHOST_NOT_SUPPORT != kSDMMCHOST_Support4BitBusWidth) &&
+                    ((targetTiming == kMMC_HighSpeedTiming) || (targetTiming == kMMC_HighSpeed200Timing))) {
+                    LOGD(TAG,"Switch to 4 width.");
+                    SDMMCHOST_SET_CARD_BUS_WIDTH(card->host.base, kSDMMCHOST_DATABUSWIDTH4BIT);
 
-                if ((kStatus_Success == MMC_TestDataBusWidth(card, kMMC_DataBusWidth4bit)) &&
-                    (kStatus_Success == MMC_SetDataBusWidth(card, kMMC_DataBusWidth4bit))) {
-                    error = kStatus_Success;
-                    card->busWidth = kMMC_DataBusWidth4bit;
-                    LOGF(TAG, "Switch to 4 width success.\n");
-                    break;
-                }
-                /* HS200 mode only support 4bit/8bit data bus */
-                else if (targetTiming == kMMC_HighSpeed200Timing) {
-                    return kStatus_SDMMC_SetDataBusWidthFailed;
+                    if ((kStatus_Success == MMC_SetDataBusWidth(card, kMMC_DataBusWidth4bit))) {
+                        error = kStatus_Success;
+                        card->busWidth = kMMC_DataBusWidth4bit;
+                        LOGI(TAG, "Switch to 4 width success.");
+                        break;
+                    }
+                    /* HS200 mode only support 4bit/8bit data bus */
+                    else if (targetTiming == kMMC_HighSpeed200Timing) {
+                        return kStatus_SDMMC_SetDataBusWidthFailed;
+                    }
                 }
             }
 
@@ -1667,7 +1704,7 @@ static status_t MMC_AllSendCid(mmc_card_t *card)
     if (kStatus_Success == card->host.transfer(card->host.base, &content)) {
         memcpy(card->rawCid, command.response, sizeof(card->rawCid));
         for(i = 0; i < 4; i++) {
-            LOGD(TAG,"The cid[%d] is %x\n", i, command.response[i]);
+            LOGD(TAG,"The cid[%d] is 0x%x", i, command.response[i]);
         }
         MMC_DecodeCid(card, command.response);
 

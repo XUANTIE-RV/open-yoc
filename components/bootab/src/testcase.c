@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <stdint.h>
 #include <string.h>
+#include <inttypes.h>
 #include <aos/kernel.h>
 #include <aos/debug.h>
 #include <aos/cli.h>
@@ -121,7 +122,7 @@ void otaab_test_upgrade_prim(int is_error)
         BOOTAB_TEST_DBG("get part %s e", part_name);
         return;
     }
-    BOOTAB_TEST_DBG("start_addr:0x%x", part_info->start_addr + part_info->base_addr);
+    BOOTAB_TEST_DBG("start_addr:0x%" PRIX64, part_info->start_addr + part_info->base_addr);
     img_size = part_info->length; // FIXME: just use partition length instead
     BOOTAB_TEST_DBG("111img_size:%d", img_size);
     slice_count = img_size / SLICE_SIZE;
@@ -146,6 +147,7 @@ void otaab_test_upgrade_prim(int is_error)
             return;
         }
         offset += SLICE_SIZE;
+        aos_msleep(50);
     }
     last_slice_size = img_size - slice_count * SLICE_SIZE;
     BOOTAB_TEST_DBG("last_slice_size:%d", last_slice_size);

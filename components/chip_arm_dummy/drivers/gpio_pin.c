@@ -162,7 +162,7 @@ csi_error_t csi_gpio_pin_irq_enable(csi_gpio_pin_t *pin,  bool enable)
     return csi_gpio_irq_enable(pin->gpio, (uint32_t)1U << pin->pin_idx, enable);
 }
 
-csi_error_t csi_gpio_pin_debonce(csi_gpio_pin_t *pin, bool enable)
+csi_error_t csi_gpio_pin_debounce(csi_gpio_pin_t *pin, bool enable)
 {
     CSI_PARAM_CHK(pin, CSI_ERROR);
 

@@ -99,6 +99,15 @@ void km_uninit(void);
 uint32_t km_update_kp(uint8_t *kp_info, size_t key_size);
 
 /**
+  \brief       Get KP raw data .
+  \param[in]   kp_in  A pointer to the kp information buffer
+  \param[in]   kp_in_size  The size of kp information
+  \param[out]   key_out  A pointer to the kp raw data buffer
+  \param[out]   key_size A pointer to the size of kp raw data
+*/
+uint32_t km_get_kp_raw_data(uint8_t *kp_in, uint32_t kp_in_size, uint8_t *key_out, uint32_t *key_out_size);
+
+/**
   \brief       Get key from km
   \param[in]   key_type  key type,see \ref km_key_type_e
   \param[out]  key     key

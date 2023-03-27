@@ -11,7 +11,7 @@
 #include <misc/util.h>
 #include <misc/slist.h>
 
-#if defined(CONFIG_BT_MESH)
+#if (defined(CONFIG_BT_MESH) && CONFIG_BT_MESH)
 #include "inc/api/mesh.h"
 #include "inc/net.h"
 #include "inc/lpn.h"
@@ -31,7 +31,7 @@ void bt_test_cb_unregister(struct bt_test_cb *cb)
 	sys_slist_find_and_remove(&cb_slist, &cb->node);
 }
 
-#if defined(CONFIG_BT_MESH)
+#if (defined(CONFIG_BT_MESH) && CONFIG_BT_MESH)
 void bt_test_mesh_net_recv(u8_t ttl, u8_t ctl, u16_t src, u16_t dst,
 			   const void *payload, size_t payload_len)
 {

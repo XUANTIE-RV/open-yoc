@@ -2,7 +2,7 @@
  * Copyright (C) 2020 Alibaba Group Holding Limited
  */
 
-#if defined(CONFIG_USE_LOG_IPC) && CONFIG_USE_LOG_IPC
+#if defined(CONFIG_LOG_IPC_CP) && CONFIG_LOG_IPC_CP
 #include <stdio.h>
 #include <math.h>
 #include <aos/aos.h>
@@ -25,7 +25,7 @@ static char log_rx_buffer[KSIZE];
 
 static ipc_t *_debug_console_ipc;
 
-int ipc_log_rx_read(const uint8_t * buffer, uint32_t size)
+int log_ipc_rx_read(const uint8_t * buffer, uint32_t size)
 {
     return ringbuffer_read(&log_rx_dev, (uint8_t *)buffer, size);
 }
@@ -83,7 +83,7 @@ static int _debug_console_ipc_send(uint16_t command, uint8_t flag, char *data, i
     return 0;
 }
 
-int ipc_log_tx_write(const uint8_t * buffer, uint32_t size)
+int log_ipc_tx_write(const uint8_t * buffer, uint32_t size)
 {
     if (dbg_console_flag == 0) {
         return -1;
@@ -117,7 +117,7 @@ static void console_tx_task(void *priv)
             csi_dcache_clean_range((size_t*)console_data, sizeof(console_data));
 
             if (actual_len > 0) {
-                _debug_console_ipc_send(IPC_CMD_DEBUG_CONSOLE_INFO, MESSAGE_ASYNC, console_data, actual_len + 1);
+                _debug_console_ipc_send(IPC_CMD_DEBUG_CONSOLE_INFO, MESSAGE_SYNC, console_data, actual_len + 1);
             }
         }
     }
@@ -140,7 +140,7 @@ static void _debug_console_ipc_process(ipc_t *ipc, message_t *m, void *priv)
         case IPC_CMD_DEBUG_CMDINFO:
             dbg_console_flag = 1;
             log_rx_write((char *)m->req_data, m->req_len);
-            ipc_log_read_event();
+            log_ipc_read_event();
             break;
 
         case IPC_CMD_DEBUG_CONSOLE_START:
@@ -183,7 +183,7 @@ static void __except_process(int errno, const char *file, int line, const char *
 
 
 /* CPU1与CPU0之间DBG IPC初始化 */
-int ipc_log_cp_init(int cpu_id)
+int log_ipc_cp_init(int cpu_id)
 {
     aos_set_except_callback(__except_process);
 
@@ -197,4 +197,4 @@ int ipc_log_cp_init(int cpu_id)
 
     return 0;
 }
-#endif //#if defined(CONFIG_USE_LOG_IPC) && CONFIG_USE_LOG_IPC
+#endif //#if defined(CONFIG_LOG_IPC_CP) && CONFIG_LOG_IPC_CP

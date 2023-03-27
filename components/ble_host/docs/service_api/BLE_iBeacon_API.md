@@ -17,12 +17,12 @@ iBeacon  是苹果公司2013年9月发布的移动设备用OS（iOS7）上配备
 
 # 3. 接口定义
 
-### **ibeacon_start**
+### **ble_prf_ibeacon_start**
 
 - 函数原型
 
 ```c
-int ibeacon_start(uint8_t _id[2], uint8_t _uuid[16], uint8_t _major[2], 
+int ble_prf_ibeacon_start(uint8_t _id[2], uint8_t _uuid[16], uint8_t _major[2], 
                   uint8_t _minor[2], uint8_t _measure_power, char *_sd)
 ```
 
@@ -52,12 +52,12 @@ int ibeacon_start(uint8_t _id[2], uint8_t _uuid[16], uint8_t _major[2],
 
   无
 
-### **ibeacon_stop**
+### **ble_prf_ibeacon_stop**
 
 - 函数原型
 
 ```c
-int ibeacon_stop(void)
+int ble_prf_ibeacon_stop(void)
 ```
 
 - 功能描述

@@ -37,6 +37,10 @@
 #include "bt_vendor_rtk.h"
 #include "userial_vendor.h"
 
+#if defined(CONFIG_BT_MESH) && CONFIG_BT_MESH
+#define CONFIG_BT_DRV_NO_ONESHOT 1
+#endif
+
 #ifdef CONFIG_BT_DRV_NO_ONESHOT
 #include "rtl8723d_fw.c"
 #else

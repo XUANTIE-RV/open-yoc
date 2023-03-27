@@ -11,8 +11,8 @@ static uint8_t out[XZ_OUT_BUFSIZE];
 struct xz_dec *xz_decoder = NULL;
 
 #define RAM_CODE_SECTION(func)  __attribute__((section(".__sram.code."#func)))  func
-int RAM_CODE_SECTION(xz_img_dec_with_write)(uint8_t* img_addr, uint32_t img_size, uint8_t* write_addr, data_write_fun fun);
-int RAM_CODE_SECTION(xz_decompress)(uint8_t* src, uint32_t src_size, data_read_fun read_func, uint8_t* dst, uint32_t *out_size, data_write_fun write_func);
+int RAM_CODE_SECTION(xz_img_dec_with_write)(uint8_t* img_addr, uint32_t img_size, uint8_t* write_addr, data_write_fun fun, void *ext_info);
+int RAM_CODE_SECTION(xz_decompress)(uint8_t* src, uint32_t src_size, data_read_fun read_func, uint8_t* dst, uint32_t *out_size, data_write_fun write_func, void *ext_info);
 
 static int xz_img_dec_init(void)
 {
@@ -32,7 +32,7 @@ static int xz_img_dec_init(void)
     return 0;
 }
 
-int xz_img_dec_with_write(uint8_t* img_addr, uint32_t img_size, uint8_t* write_addr, data_write_fun fun)
+int xz_img_dec_with_write(uint8_t* img_addr, uint32_t img_size, uint8_t* write_addr, data_write_fun fun, void *ext_info)
 {
     if (xz_img_dec_init()) {
         return -1;
@@ -66,7 +66,7 @@ int xz_img_dec_with_write(uint8_t* img_addr, uint32_t img_size, uint8_t* write_a
 
         ret = xz_dec_run(xz_decoder, &b);
         if (b.out_pos == sizeof(out)) {
-            if(fun((unsigned long)write_addr, out, b.out_pos) < 0) {
+            if(fun((unsigned long)write_addr, out, b.out_pos, ext_info) < 0) {
                 printf("write faild\r\n");
                 goto error;
             }
@@ -77,7 +77,7 @@ int xz_img_dec_with_write(uint8_t* img_addr, uint32_t img_size, uint8_t* write_a
         if (ret == XZ_OK)
             continue;
 
-        if(b.out_pos && fun((unsigned long)write_addr,out, b.out_pos) < 0) {
+        if(b.out_pos && fun((unsigned long)write_addr,out, b.out_pos, ext_info) < 0) {
             printf("write faild\r\n");
             goto error;
         }
@@ -124,7 +124,9 @@ error:
     return -1;
 }
 
-int xz_decompress(uint8_t* src, uint32_t src_size, data_read_fun read_func, uint8_t* dst, uint32_t *out_size, data_write_fun write_func)
+int xz_decompress(uint8_t* src, uint32_t src_size, data_read_fun read_func,
+                 uint8_t* dst, uint32_t *out_size, data_write_fun write_func,
+                 void *ext_info)
 {
     uint32_t olen;
     uint8_t *in_buffer = NULL;
@@ -165,7 +167,7 @@ int xz_decompress(uint8_t* src, uint32_t src_size, data_read_fun read_func, uint
         if (b.in_pos == b.in_size) {
             read_size = src_size < XZ_OUT_BUFSIZE ? src_size : XZ_OUT_BUFSIZE;
             if (read_func) {
-                if (read_func((unsigned long)src, in_buffer, read_size) < 0) {
+                if (read_func((unsigned long)src, in_buffer, read_size, ext_info) < 0) {
                     goto error;
                 }
                 b.in = in_buffer;
@@ -181,7 +183,7 @@ int xz_decompress(uint8_t* src, uint32_t src_size, data_read_fun read_func, uint
         ret = xz_dec_run(xz_decoder, &b);
         if (b.out_pos == sizeof(out)) {
             if (write_func) {
-                if(write_func((unsigned long)dst, out, b.out_pos) < 0) {
+                if(write_func((unsigned long)dst, out, b.out_pos, ext_info) < 0) {
                     printf("write faild\r\n");
                     goto error;
                 }
@@ -198,7 +200,7 @@ int xz_decompress(uint8_t* src, uint32_t src_size, data_read_fun read_func, uint
 
         if(b.out_pos) {
             if (write_func) {
-                if (write_func((unsigned long)dst, out, b.out_pos) < 0) {
+                if (write_func((unsigned long)dst, out, b.out_pos, ext_info) < 0) {
                     printf("write faild\r\n");
                     goto error;
                 }

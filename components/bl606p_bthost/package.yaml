@@ -1,6 +1,6 @@
 ## 第一部分： 基础信息
 name: bl606p_bthost                                  # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
-version: v7.6.0                                     # <必选项> 组件版本号
+version: v7.7.0                                     # <必选项> 组件版本号
 description: bluetooth host source code        # <必选项> 建议至少20字以上
 type: common                                          # <必选项> 组件类型，为：solution, chip, board, common
 
@@ -9,16 +9,35 @@ keywords:                                           # <可选项> 标签，会�
   - chip
 license: Apache license v2.0                        # <可选项> 源代码的许可证，要确保所有代码、文件的许可证不冲突。如：MIT，Apache license v2.0，BSD
 
+## 第二部分：依赖信息
+#           指定该组件依赖的组件及版本
+# sdk_chip:                                # <可选项> 该组件依赖sdk组件，合理的依赖才能保证组件能编译、使用
+#   - sdk_chip_csky_dummy: v7.4.0
+#   - sdk_chip_riscv_dummy: v7.4.0
+# depends:                                 # <可选项> 该组件依赖其他的组件，合理的依赖才能保证组件能编译、使用
+#   - minilibc: v7.4.0
+#   - aos: v7.4.0
 
-hw_info:
-  cpu1:
-    arch_name: riscv
-    vendor_name: bthost
-    cpu_name: e907fp
-    ld_script: gcc_flash_cpu1.ld
-    flash_program: xxxx
-    toolchain_prefix: riscv64-unknown-elf
-
+## 第四部分：编译连接信息
+# build_config:                            # <可选项> 编译配置项
+#   include:                               # <可选项> 编译时，影响编译器的-I 参数 ,全局有效
+#     - src                                #        include 只能是该软件包下的目录，不能使用外部目录
+#   internal_include:                      # <可选项> 编译时，影响编译器的-I 参数 ,组件内有效
+#     - include
+#   cflag: ''                              # <可选项> C 编译器所需要要的编译参数
+#   cxxflag: ''                            # <可选项> CXX 编译器所需要要的编译参数
+#   asmflag: ''                            # <可选项> 汇编器所需要要参数
+#   define:                                # <可选项> 宏定义, 增加编译器的-D 选项,如：
+#     XXX: 1                               #   -DXXX=1
+#     AAA: 1                               #   -DAAA
+#     STR: "abc"                           #   -DSTR="abc"
+#   libs:                                  # 该组件中支持的二进制静态库,如：libxxx.a, libyyy.a
+#     - xxx                                #   -lxxx
+#     - yyy                                #   -lyyy
+#   libpath:                               # 指定静态库所在的路径（相对于该组件路径）
+#     - libs                               #   -Llibs
+#   prebuild_script: ''                    # 开始编译前需要执行的脚本文件(相对路径)
+#   postbuild_script: ''                   # 编译完成之后需要执行的脚本文件(相对路径)
 build_config:
   cflag: >
     -Wno-unused-variable
@@ -51,6 +70,8 @@ build_config:
     -DCONFIG_BT_GATT_DYNAMIC_DB
     -DSBC_DEC_INCLUDED
     -DSBC_ENC_INCLUDED
+    -DCONFIG_BT_STACK_CLI
+    -DCONFIG_BLE_TP_SERVER
 
   include:
   - src/common
@@ -139,6 +160,8 @@ source_file:                             # <可选项> 指定参与编译的源�
   - src/sbc/enc/sbc_encoder.c
   - src/sbc/enc/sbc_packing.c
   - src/cli_cmds/bredr_cli_cmds.c
+  - src/cli_cmds/ble_cli_cmds.c
+  - src/services/ble_tp_svc.c
 #  - src/host/sdp.c #btprofile component
 #  - src/host/a2dp.c
 #  - src/host/avdtp.c
@@ -157,3 +180,18 @@ source_file:                             # <可选项> 指定参与编译的源�
 def_config:
   BFLB_BLE: 1
   CFG_CON: 1
+
+## 第六部分：安装信息
+# install:
+#   - dest: include/                       # 安装的目的路径 dest是相对路径，通常是相对于YoC SDK 安装目录
+#     source:                              # 安装源列表
+#      - src/*.h                           # 支持通配符，相对路径
+
+## 第七部分：导出部分
+# export:
+#   - dest: "<SOLUTION_PATH>/generated/data" # 安装的目的路径 dest是相对路径
+#     source:                                # 安装源列表
+#       - "bootimgs/boot"
+#       - "bootimgs/tee"
+#       - "bootimgs/mtb"
+#       - "configs/config.yaml"

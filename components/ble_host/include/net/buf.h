@@ -808,7 +808,7 @@ struct net_buf_pool {
 	/** Number of uninitialized buffers */
 	u16_t uninit_count;
 
-#if defined(CONFIG_NET_BUF_POOL_USAGE)
+#if (defined(CONFIG_NET_BUF_POOL_USAGE) && CONFIG_NET_BUF_POOL_USAGE)
 	/** Amount of available buffers in the pool. */
 	s16_t avail_count;
 
@@ -835,7 +835,7 @@ int net_buf_pool_init(struct net_buf_pool *pool);
 	net_buf_pool_init(&_name)
 
 /** @cond INTERNAL_HIDDEN */
-#if defined(CONFIG_NET_BUF_POOL_USAGE)
+#if (defined(CONFIG_NET_BUF_POOL_USAGE) && CONFIG_NET_BUF_POOL_USAGE)
 #define NET_BUF_POOL_INITIALIZER(_pool, _alloc, _bufs, _count, _destroy) \
 	{                                                                    \
 		.alloc = _alloc,                                             \
@@ -931,7 +931,7 @@ extern const struct net_buf_data_cb net_buf_fixed_cb;
  * @param _data_size Maximum data payload per buffer.
  * @param _destroy   Optional destroy callback when buffer is freed.
  */
-#ifdef CONFIG_BT_USE_MM
+#if (defined(CONFIG_BT_USE_MM) && CONFIG_BT_USE_MM)
 #define NET_BUF_POOL_FIXED_DEFINE(_name, _count, _data_size, _destroy)        \
 	static struct net_buf net_buf_##_name[_count] __noinit;               \
 	static const struct net_buf_pool_fixed net_buf_fixed_##_name = {      \
@@ -1065,7 +1065,7 @@ int net_buf_id(struct net_buf *buf);
  *
  * @return New buffer or NULL if out of buffers.
  */
-#if defined(CONFIG_NET_BUF_LOG)
+#if (defined(CONFIG_NET_BUF_LOG) && CONFIG_NET_BUF_LOG)
 struct net_buf *net_buf_alloc_fixed_debug(struct net_buf_pool *pool,
 					  k_timeout_t timeout, const char *func,
 					  int line);
@@ -1098,7 +1098,7 @@ struct net_buf *net_buf_alloc_fixed(struct net_buf_pool *pool,
  *
  * @return New buffer or NULL if out of buffers.
  */
-#if defined(CONFIG_NET_BUF_LOG)
+#if (defined(CONFIG_NET_BUF_LOG) && CONFIG_NET_BUF_LOG)
 struct net_buf *net_buf_alloc_len_debug(struct net_buf_pool *pool, size_t size,
 					k_timeout_t timeout, const char *func,
 					int line);
@@ -1128,7 +1128,7 @@ struct net_buf *net_buf_alloc_len(struct net_buf_pool *pool, size_t size,
  *
  * @return New buffer or NULL if out of buffers.
  */
-#if defined(CONFIG_NET_BUF_LOG)
+#if (defined(CONFIG_NET_BUF_LOG) && CONFIG_NET_BUF_LOG)
 struct net_buf *net_buf_alloc_with_data_debug(struct net_buf_pool *pool,
 					      void *data, size_t size,
 					      k_timeout_t timeout,
@@ -1152,7 +1152,7 @@ struct net_buf *net_buf_alloc_with_data(struct net_buf_pool *pool,
  *
  * @return New buffer or NULL if the FIFO is empty.
  */
-#if defined(CONFIG_NET_BUF_LOG)
+#if (defined(CONFIG_NET_BUF_LOG) && CONFIG_NET_BUF_LOG)
 struct net_buf *net_buf_get_debug(struct kfifo *fifo, k_timeout_t timeout,
 				  const char *func, int line);
 #define	net_buf_get(_fifo, _timeout) \
@@ -1237,7 +1237,7 @@ void net_buf_put(struct kfifo *fifo, struct net_buf *buf);
  *
  * @param buf A valid pointer on a buffer
  */
-#if defined(CONFIG_NET_BUF_LOG)
+#if (defined(CONFIG_NET_BUF_LOG) && CONFIG_NET_BUF_LOG)
 void net_buf_unref_debug(struct net_buf *buf, const char *func, int line);
 #define	net_buf_unref(_buf) \
 	net_buf_unref_debug(_buf, __func__, __LINE__)
@@ -1882,7 +1882,7 @@ struct net_buf *net_buf_frag_add_with_flags(struct net_buf *head, struct net_buf
  * @return Pointer to the buffer following the fragment, or NULL if it
  *         had no further fragments.
  */
-#if defined(CONFIG_NET_BUF_LOG)
+#if (defined(CONFIG_NET_BUF_LOG) && CONFIG_NET_BUF_LOG)
 struct net_buf *net_buf_frag_del_debug(struct net_buf *parent,
 				       struct net_buf *frag,
 				       const char *func, int line);
@@ -1892,7 +1892,7 @@ struct net_buf *net_buf_frag_del_debug(struct net_buf *parent,
 struct net_buf *net_buf_frag_del(struct net_buf *parent, struct net_buf *frag);
 #endif
 
-#if defined(CONFIG_NET_BUF_LOG)
+#if (defined(CONFIG_NET_BUF_LOG) && CONFIG_NET_BUF_LOG)
 void net_buf_frag_del_all_debug(struct net_buf *parent,
 				       const char *func, int line);
 #define net_buf_frag_del_all(_parent) \

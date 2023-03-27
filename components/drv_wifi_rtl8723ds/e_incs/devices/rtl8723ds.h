@@ -13,6 +13,7 @@ extern "C" {
 typedef struct rtl8723ds_gpio_pin_t {
     int wl_en;
     int power;
+    int sdio_idx;
 } rtl8723ds_gpio_pin;
 
 typedef struct rtl8723ds_bt_config_t {

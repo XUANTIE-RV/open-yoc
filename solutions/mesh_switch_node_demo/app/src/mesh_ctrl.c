@@ -44,6 +44,7 @@ int gen_onoff_set(uint8_t onoff, uint8_t is_ack)
 
     set_onoff_data.onoff      = onoff;
     set_onoff_data.send_trans = 0;
+    set_onoff_data.tid = 0;
 
     /* publish on or off command to destinated address */
     ret = ble_mesh_generic_onoff_cli_publish(onoff_cli_model, &set_onoff_data, is_ack);

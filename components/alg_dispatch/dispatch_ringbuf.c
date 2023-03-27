@@ -6,66 +6,109 @@
 #include <aos/ringbuffer.h>
 #include <aos/aos.h>
 
-#include "dispatch_internal.h"
+#include "dispatch_ringbuf.h"
 
-#define TAG "Dispatch_buf"
+#define TAG "RINGBUF_GROUP"
 
-static dev_ringbuf_t pcm_rb;
-static dev_ringbuf_t kws_rb;
+#define EVENT_CAN_WRITE 0x0F0F0000
+#define EVENT_CAN_READ  0x00000F0F
 
-int voice_get_pcm_data(void *data, int len) {
-  uint8_t *temp = (uint8_t *)data;
-  int read_len = len;
+typedef struct _ringbuf_group_ {
+    dev_ringbuf_t rb;
+    aos_event_t   event;
+    char         *buffer;
+} ringbuf_group_t;
 
-  read_len = ringbuffer_read(&pcm_rb, (uint8_t *)temp, len);
+static ringbuf_group_t g_rbgroup[TYPE_MAX];
 
-  return read_len;
+/**********************************************************
+ * Dispatch API
+ *********************************************************/
+int voice_get_pcm_data(void *data, int len)
+{
+    uint8_t *temp     = (uint8_t *)data;
+    int      read_len = len;
+
+    read_len = ringbuffer_read(&g_rbgroup[TYPE_PCM].rb, (uint8_t *)temp, len);
+
+    return read_len;
 }
 
-int voice_get_kws_data(void *data, int len) {
-  uint8_t *temp = (uint8_t *)data;
-  int read_len = len;
+int voice_get_kws_data(void *data, int len)
+{
+    uint8_t *temp     = (uint8_t *)data;
+    int      read_len = len;
 
-  read_len = ringbuffer_read(&kws_rb, (uint8_t *)temp, len);
+    read_len = ringbuffer_read(&g_rbgroup[TYPE_KWS].rb, (uint8_t *)temp, len);
 
-  return read_len;
+    return read_len;
 }
 
+int voice_get_feaec_data(void *data, int len, int timeout)
+{
+    uint8_t     *temp       = (uint8_t *)data;
+    int          read_len   = len;
 
-void dispatch_ringbuffer_create(data_type_e type, char *buf, int buf_len) {
-    if (type == TYPE_PCM) {
-        ringbuffer_create(&pcm_rb, buf, buf_len);
-    } else if (type == TYPE_KWS) {
-        ringbuffer_create(&kws_rb, buf, buf_len);
+    if (!aos_event_is_valid(g_rbgroup[TYPE_FEAEC].event)) {
+        return -1;
     }
-}
 
-void dispatch_ringbuffer_destory(data_type_e type) {
-    if (type == TYPE_PCM) {
-        ringbuffer_destroy(&pcm_rb);
-    } else if (type == TYPE_KWS) {
-        ringbuffer_destroy(&kws_rb);
+    if (ringbuffer_available_read_space(&g_rbgroup[TYPE_FEAEC].rb) >= len) {
+         read_len = ringbuffer_read(&g_rbgroup[TYPE_FEAEC].rb, (uint8_t *)temp, len);
+    } else {
+        unsigned int actl_flags = 0;
+        aos_event_get(&g_rbgroup[TYPE_FEAEC].event, EVENT_CAN_READ, AOS_EVENT_OR_CLEAR, &actl_flags, timeout);
+        read_len = ringbuffer_read(&g_rbgroup[TYPE_FEAEC].rb, (uint8_t *)temp, len);
     }
+    return read_len;
 }
 
-void dispatch_ringbuffer_write(data_type_e type, void *data, int data_len) {
-    if (type == TYPE_PCM) {
-        if (ringbuffer_full(&pcm_rb)) {
-          ;//LOGE(TAG, "pcm ringbuffer is full");
+/**********************************************************
+ * Ringbuffer Group
+ *********************************************************/
+int dispatch_ringbuffer_create(data_type_e type, int buf_len)
+{
+    if (g_rbgroup[type].buffer == NULL) {
+
+        int ret = aos_event_new(&g_rbgroup[type].event, 0);
+        if (ret != 0) {
+            return -1;
         }
-        ringbuffer_write(&pcm_rb, (uint8_t *)data, data_len);
-    } else if (type == TYPE_KWS) {
-        if (ringbuffer_full(&kws_rb)) {
-          LOGE(TAG, "pcm ringbuffer is full");
-        }
-        ringbuffer_write(&kws_rb, (uint8_t *)data, data_len);
+
+        g_rbgroup[type].buffer = (char *)malloc(buf_len);
+        ringbuffer_create(&g_rbgroup[type].rb, g_rbgroup[type].buffer, buf_len);
     }
+    return 0;
 }
 
-void dispatch_ringbuffer_clear(data_type_e type) {
-    if (type == TYPE_PCM) {
-        ringbuffer_clear(&pcm_rb);
-    } else if (type == TYPE_KWS) {
-        ringbuffer_clear(&kws_rb);
+int dispatch_ringbuffer_destory(data_type_e type)
+{
+    if (g_rbgroup[type].buffer) {
+        ringbuffer_destroy(&g_rbgroup[type].rb);
+        aos_event_free(g_rbgroup[type].event);
     }
+    return 0;
+}
+
+int dispatch_ringbuffer_write(data_type_e type, void *data, int data_len)
+{
+    if (ringbuffer_available_write_space(&g_rbgroup[type].rb) < data_len) {
+        // LOGE(TAG, "pcm ringbuffer is full");
+        return 0;
+    }
+
+    aos_event_set(g_rbgroup[type].event, EVENT_CAN_READ, AOS_EVENT_OR);
+    return ringbuffer_write(&g_rbgroup[type].rb, (uint8_t *)data, data_len);
+}
+
+int dispatch_ringbuffer_clear(data_type_e type)
+{
+    ringbuffer_clear(&g_rbgroup[type].rb);
+    return 0;
+}
+
+int dispatch_ringbuffer_init()
+{
+    memset(&g_rbgroup, 0, sizeof(g_rbgroup));
+    return 0;
 }

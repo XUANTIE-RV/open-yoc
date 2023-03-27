@@ -21,7 +21,7 @@
 #include "jump_function.h"
 #include <stdio.h>
 #include <string.h>
-#include <device.h>
+#include <devices/device.h>
 #include <aos/hal/uart.h>
 #include <aos/kernel.h>
 #include <drv/usart.h>

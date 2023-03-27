@@ -1,0 +1,11 @@
+{
+  "pages": {
+    "index": "pages/index/index.vue",
+    "hello": "pages/hello/index.vue"
+  },
+  "options": {
+      "style": {
+          "lessPaths": ["styles"]
+      }
+  }
+}

@@ -13,6 +13,7 @@
 @******************************************************************************
 .global cpu_intrpt_save
 .global cpu_intrpt_restore
+.global cpu_is_irq_enable
 .weak cpu_task_switch
 .weak cpu_intrpt_switch
 .weak cpu_first_task_start
@@ -51,6 +52,12 @@ cpu_intrpt_save:
 .thumb_func
 cpu_intrpt_restore:
     MSR     PRIMASK, R0
+    BX      LR
+
+.thumb_func
+cpu_is_irq_enable:
+    MRS     R0, PRIMASK
+    MVN     R0, R0
     BX      LR
 
 @******************************************************************************

@@ -2,26 +2,26 @@
  * Copyright (C) 2019-2020 Alibaba Group Holding Limited
  */
 
-#include "hal/flash_impl.h"
+#include "devices/impl/flash_impl.h"
 
 #include "drv/spiflash.h"
 
 typedef struct {
-    aos_dev_t           device;
+    rvm_dev_t           device;
     spiflash_handle_t handle;
     spiflash_info_t  *info;
 } flash_dev_t;
 
-static aos_dev_t *yoc_spiflash_init(driver_t *drv,void *config, int id)
+static rvm_dev_t *yoc_spiflash_init(driver_t *drv,void *config, int id)
 {
-    flash_dev_t *dev = (flash_dev_t*)device_new(drv, sizeof(flash_dev_t), id);
+    flash_dev_t *dev = (flash_dev_t*)rvm_hal_device_new(drv, sizeof(flash_dev_t), id);
 
-    return (aos_dev_t*)dev;
+    return (rvm_dev_t*)dev;
 }
 
-#define yoc_spiflash_uninit device_free
+#define yoc_spiflash_uninit rvm_hal_device_free
 
-static int yoc_spiflash_lpm(aos_dev_t *dev, int state)
+static int yoc_spiflash_lpm(rvm_dev_t *dev, int state)
 {
     flash_dev_t *flash = (flash_dev_t*)dev;
 
@@ -33,7 +33,7 @@ static int yoc_spiflash_lpm(aos_dev_t *dev, int state)
     return 0;
 }
 
-static int yoc_spiflash_open(aos_dev_t *dev)
+static int yoc_spiflash_open(rvm_dev_t *dev)
 {
     flash_dev_t *flash = (flash_dev_t*)dev;
 
@@ -49,7 +49,7 @@ static int yoc_spiflash_open(aos_dev_t *dev)
     return 0;
 }
 
-static int yoc_spiflash_close(aos_dev_t *dev)
+static int yoc_spiflash_close(rvm_dev_t *dev)
 {
     flash_dev_t *flash = (flash_dev_t*)dev;
 
@@ -58,7 +58,7 @@ static int yoc_spiflash_close(aos_dev_t *dev)
     return 0;
 }
 
-static int yoc_spiflash_read(aos_dev_t *dev, uint32_t addroff, void *buff, int32_t bytesize)
+static int yoc_spiflash_read(rvm_dev_t *dev, uint32_t addroff, void *buff, int32_t bytesize)
 {
 #if defined(CONFIG_SPIFLASH_READ_DIRECT) && CONFIG_SPIFLASH_READ_DIRECT
     flash_dev_t *flash = (flash_dev_t*)dev;
@@ -74,7 +74,7 @@ static int yoc_spiflash_read(aos_dev_t *dev, uint32_t addroff, void *buff, int32
 #endif
 }
 
-static int yoc_spiflash_program(aos_dev_t *dev, uint32_t dstaddr, const void *srcbuf, int32_t bytesize)
+static int yoc_spiflash_program(rvm_dev_t *dev, uint32_t dstaddr, const void *srcbuf, int32_t bytesize)
 {
     flash_dev_t *flash = (flash_dev_t*)dev;
 
@@ -84,7 +84,7 @@ static int yoc_spiflash_program(aos_dev_t *dev, uint32_t dstaddr, const void *sr
 }
 
 #if defined(CONFIG_SPIFLASH_BLOCK_ERASE) && CONFIG_SPIFLASH_BLOCK_ERASE
-static int yoc_spiflash_block_erase(aos_dev_t *dev, int32_t addroff, int32_t sector_cnt)
+static int yoc_spiflash_block_erase(rvm_dev_t *dev, int32_t addroff, int32_t sector_cnt)
 {
     flash_dev_t *flash = (flash_dev_t*)dev;
     int ret = -EIO;
@@ -114,14 +114,14 @@ static int yoc_spiflash_block_erase(aos_dev_t *dev, int32_t addroff, int32_t sec
     return 0;
 }
 #else
-static int yoc_spiflash_block_erase(aos_dev_t *dev, int32_t addroff, int32_t sector_cnt)
+static int yoc_spiflash_block_erase(rvm_dev_t *dev, int32_t addroff, int32_t sector_cnt)
 {
     printf("Error: block erase is not supported!\n");
     return -1;
 }
 #endif
 
-static int yoc_spiflash_erase(aos_dev_t *dev, int32_t addroff, int32_t sector_cnt)
+static int yoc_spiflash_erase(rvm_dev_t *dev, int32_t addroff, int32_t sector_cnt)
 {
     flash_dev_t *flash = (flash_dev_t*)dev;
     int ret = -EIO;
@@ -144,13 +144,13 @@ static int yoc_spiflash_erase(aos_dev_t *dev, int32_t addroff, int32_t sector_cn
     return ret < 0 ? -EIO : 0;
 }
 
-static int yoc_spiflash_get_info(aos_dev_t *dev, flash_dev_info_t *info)
+static int yoc_spiflash_get_info(rvm_dev_t *dev, rvm_hal_flash_dev_info_t *info)
 {
     flash_dev_t *flash = (flash_dev_t*)dev;
 
     info->start_addr = flash->info->start;
-    info->block_size = flash->info->sector_size;
-    info->block_count = (flash->info->end - flash->info->start + 1) / flash->info->sector_size;
+    info->sector_size = flash->info->sector_size;
+    info->sector_count = (flash->info->end - flash->info->start + 1) / flash->info->sector_size;
 
     return 0;
 }
@@ -171,7 +171,7 @@ static flash_driver_t flash_driver = {
     .get_info   = yoc_spiflash_get_info,
 };
 
-void spiflash_csky_register(int idx)
+void rvm_spiflash_drv_register(int idx)
 {
-    driver_register(&flash_driver.drv, NULL, idx);
+    rvm_driver_register(&flash_driver.drv, NULL, idx);
 }

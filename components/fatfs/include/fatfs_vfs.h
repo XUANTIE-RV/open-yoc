@@ -18,6 +18,12 @@ extern "C" {
 #define SD_FATFS_MOUNTPOINT "/mnt/sd"
 #endif
 
+#ifdef CONFIG_FATFS_PARTITION_NAME
+#define FATFS_PARTITION_NAME CONFIG_FATFS_PARTITION_NAME
+#else
+#define FATFS_PARTITION_NAME "fatfs"
+#endif
+
 /**
  * @brief  register file system of fat
  * @return 0 on success

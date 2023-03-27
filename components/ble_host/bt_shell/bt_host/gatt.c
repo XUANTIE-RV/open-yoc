@@ -67,7 +67,7 @@ struct {
     uint8_t indicate_ongoing;
 } g_notify_data[CONFIG_BT_MAX_CONN] = {0};
 
-#if defined(CONFIG_BT_GATT_CLIENT)
+#if (defined(CONFIG_BT_GATT_CLIENT) && CONFIG_BT_GATT_CLIENT)
 static int event_gatt_mtu_exchange(ble_event_en event, void *event_data)
 {
     evt_data_gatt_mtu_exchange_t *e = event_data;
@@ -589,7 +589,7 @@ enum {
     TEST_IDX_MAX,
 };
 
-#if defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE
+#if (defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE)
 GATT_SERVICE_STATIC_DEFINE(test_service,
     [TEST_IDX_SVC] = GATT_PRIMARY_SERVICE_DEFINE(TEST_SERVICE_UUID),
 
@@ -733,7 +733,7 @@ static gatt_attr_t test2_attrs[] = {
 #endif
 #endif
 
-#ifdef CONFIG_BT_SHELL_TRANSPORT_TEST
+#if (defined(CONFIG_BT_SHELL_TRANSPORT_TEST) && CONFIG_BT_SHELL_TRANSPORT_TEST)
 
 enum {
     TEST3_IDX_SVC,
@@ -1082,7 +1082,7 @@ static int test_event_callback(ble_event_en event, void *event_data)
         event_char_ccc_write(event, event_data);
         break;
 
-#if defined(CONFIG_BT_GATT_CLIENT)
+#if (defined(CONFIG_BT_GATT_CLIENT) && CONFIG_BT_GATT_CLIENT)
 
     case EVENT_GATT_DISCOVERY_SVC:
     case EVENT_GATT_DISCOVERY_INC_SVC:
@@ -1353,7 +1353,7 @@ static ble_event_cb_t ble_cb2 = {
 };
 #endif
 
-#ifdef CONFIG_BT_SHELL_TRANSPORT_TEST
+#if (defined(CONFIG_BT_SHELL_TRANSPORT_TEST) && CONFIG_BT_SHELL_TRANSPORT_TEST)
 void test3_start_adv(void)
 {
     ad_data_t ad[2] = {0};
@@ -1607,7 +1607,7 @@ int cmd_gatt_register_test_svc(int argc, char *argv[])
     int ret = 0;
 
     if (!strcmp(argv[0], "gatt-register-service")) {
-#if defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE
+#if (defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE)
 		ret = ble_stack_gatt_service_handle(&test_service);
 #else
         ret = ble_stack_gatt_registe_service(&test_service, test_attrs, BLE_ARRAY_NUM(test_attrs));
@@ -1644,7 +1644,7 @@ int cmd_gatt_register_test_svc(int argc, char *argv[])
 
     return 0;
 }
-#ifdef CONFIG_BT_SHELL_TRANSPORT_TEST
+#if (defined(CONFIG_BT_SHELL_TRANSPORT_TEST) && CONFIG_BT_SHELL_TRANSPORT_TEST)
 uint8_t test_data[256] = {
     0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
     0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f,

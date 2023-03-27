@@ -316,7 +316,6 @@ struct cfg80211_connect_params {
     const u8 *pmk;
 	u8 key_len, pmk_len, key_idx;
 	u32 flags;
-	u32 mode;
 	int bg_scan_period;
 	struct ieee80211_ht_cap ht_capa;
 	struct ieee80211_ht_cap ht_capa_mask;

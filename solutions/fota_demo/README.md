@@ -96,6 +96,36 @@ make SDK=sdk_chip_ch2601
 make flashall SDK=sdk_chip_ch2601
 ```
 
+#### cv181x平台
+
+1. 编译
+
+```bash
+make clean
+make SDK=sdk_chip_cv181xh
+```
+
+2. 烧写
+
+```bash
+make flashall SDK=sdk_chip_cv181xh
+```
+
+#### f133平台
+
+1. 编译
+
+```bash
+make clean
+make SDK=sdk_chip_f133
+```
+
+2. 烧写
+
+```bash
+make flashall SDK=sdk_chip_f133
+```
+
 ### FOTA基础版本烧录
 
 #### D1平台
@@ -107,6 +137,9 @@ product flash 20210304215611061_factory.zip -a -f ../../components/chip_d1/d1_fl
 ```
 
 20210304215611061_factory.zip为从OCC上下载过来的基础镜像包。
+
+**注意：**
+本地编译之前需要先从OCC上下载kp文件，并替换至相应board组件bootimgs目录下的kp文件。否则会提示验签不过。
 
 #### bl606p平台
 
@@ -125,6 +158,26 @@ product flash 20220907183302785_factory.zip -a -f ../../components/chip_ch2601/c
 ```
 
 20220907183302785_factory.zip为从OCC上下载过来的基础镜像包。
+
+#### cv181x平台
+
+直接烧录本地编译好的基础版本即可。
+
+```bash
+make flashall SDK=sdk_chip_cv181xh
+```
+
+#### f133平台
+
+从OCC服务器上下载之前上传的镜像包进行烧录。
+
+```bash
+product flash 20221212160936892_factory.zip -a -f ../../components/chip_d1/d1_flash.elf -x gdbinitflash
+```
+
+20221212160936892_factory.zip为从OCC上下载过来的基础镜像包。
+
+f133的fota升级是全量升级，与 D1 的操作一致
 
 ### 调试
 

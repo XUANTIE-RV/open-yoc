@@ -47,6 +47,14 @@ extern "C" {
 int32_t vfs_lfs_register(char *partition_desc);
 
 /**
+ * @brief  register little file system with mount point
+ * @param  [in] partition_desc: partion table
+ * @param  [in] path: the mount point
+ * @return 0 on success
+ */
+int32_t vfs_lfs_register_with_path(char *partition_desc, const char *path);
+
+/**
  * @brief  unregister little file system
  * @return 0 on success
  */

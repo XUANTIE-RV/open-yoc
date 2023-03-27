@@ -1,0 +1,33 @@
+{
+  "name": "iot_miniapp_demo",
+  "version": "1.2.1",
+  "appid": "8080251822789980",
+  "description": "IoT miniapp demo",
+  "quickjs": {
+    "version": "20200705",
+    "bigNum": false
+  },
+  "simulator": {
+    "path": "",
+    "page": ""
+  },
+  "single-js-bundle": true,
+  "scripts": {
+    "start": "aiot-cli preview",
+    "build": "aiot-cli -p",
+    "build:dev": "aiot-cli",
+    "build:bin": "aiot-cli -q -p",
+    "build:prod": "aiot-cli -c -q -p",
+    "build:bin-nopack": "aiot-cli -q",
+    "build:web": "aiot-cli build-web",
+    "build:simulator": "aiot-cli simulator ./"
+  },
+  "keywords": [
+    "iot",
+    "miniapp"
+  ],
+  "devDependencies": {},
+  "dependencies": {
+    "falcon-ui": "^1.0.3"
+  }
+}

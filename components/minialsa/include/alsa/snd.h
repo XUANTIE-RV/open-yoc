@@ -3,7 +3,7 @@
  */
 
 #include <stdio.h>
-#include <devices/driver.h>
+#include <devices/device.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -19,7 +19,7 @@ typedef struct snd_card_drv {
 } snd_card_drv_t;
 
 typedef struct snd_dev {
-    aos_dev_t           device;
+    rvm_dev_t           device;
     void           *priv;
 } card_dev_t;
 

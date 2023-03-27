@@ -11,8 +11,6 @@ extern "C" {
 #include <stdint.h>
 #include <mtb.h>
 
-int update_imginfo(uint32_t bm_addr, uint32_t type, uint8_t *name, 
-                    uint8_t *section, uint32_t section_len);
 /**
  * 更新mtb镜像
  */
@@ -26,7 +24,7 @@ int mtb_update_ram(mtb_t *mtb);
 /**
  * 更新MTB的备份分区内容
  */
-int mtb_update_backup(mtb_t *mtb, const char *img_name, mtb_partition_info_t *partition_info, int *update_flag);
+int mtb_update_backup(mtb_t *mtb, const char *img_name, mtb_partition_info_t *partition_new_info, int *update_flag);
 
 /**
  * 更新MTB的主分区内容，(拷贝备份分区内容到主分区)

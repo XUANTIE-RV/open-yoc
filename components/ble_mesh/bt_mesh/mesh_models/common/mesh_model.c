@@ -169,6 +169,7 @@ E_MESH_ERROR_TYPE mesh_check_tid(u16_t src_addr, u8_t tid)
                 } else {
                     tid_queue[ri].tid  = tid;
                     tid_queue[ri].time = cur_time;
+					break;
                 }
             } else {
                     tid_queue[ri].tid  = tid;

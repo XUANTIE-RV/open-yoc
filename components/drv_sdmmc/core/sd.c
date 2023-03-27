@@ -333,7 +333,7 @@ SDK_ALIGN(uint32_t g_sdio[SDK_SIZEALIGN(SDMMC_GLOBAL_BUFFER_SIZE, SDMMC_DATA_BUF
           MAX(SDMMC_DATA_BUFFER_ALIGN_CACHE, SDMMCHOST_DMA_BUFFER_ADDR_ALIGN));
 
 //sd_card_t SD_SDCard;
-sd_card_t SDIO_SDCard;
+// sd_card_t SDIO_SDCard;
 
 /*******************************************************************************
  * Code

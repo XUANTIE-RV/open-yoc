@@ -59,7 +59,7 @@ struct esp_dpp_context_t {
     int gas_dialog_token;
     esp_supp_dpp_event_cb_t dpp_event_cb;
     struct dpp_global *dpp_global;
-    wifi_config_t wifi_cfg;
+    rvm_hal_wifi_config_t wifi_cfg;
     int id;
 };
 

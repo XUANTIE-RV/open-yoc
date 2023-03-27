@@ -3,8 +3,10 @@
  */
 
 #include <smart_audio.h>
-#include "drv_amp.h"
+#include <av/player.h>
 #include <csi_core.h>
+
+#include "drv_amp.h"
 
 #define TAG "smart_audio"
 
@@ -132,27 +134,13 @@ static void smtaudio_resume_list_clear(void)
 
 static void smtaudio_resume_list_insert(smtaudio_resume_list_node_t *smt_node)
 {
-    smtaudio_resume_list_node_t *tmp_node = NULL;
-
     /* 清空 delay list */
     smtaudio_delay_list_clear();
 
-    /* 同一播放源只允许 有一个case在resume list中 */
-    dlist_for_each_entry(&smtaudio_resume_list_head, tmp_node, smtaudio_resume_list_node_t, node) {
-        if (tmp_node->id == smt_node->id) {
-            smtaudio_resume_list_rm(tmp_node);
-            break;
-        }
-    }
+    smtaudio_resume_list_clear();
     LOGD(TAG, "add type:%d into resume list, reason:%d", smt_node->id, smt_node->interrupt_reason);
-    /* sort by prio, small to big*/
-    dlist_for_each_entry(&smtaudio_resume_list_head, tmp_node, smtaudio_resume_list_node_t, node) {
-        if (tmp_node->prio > smt_node->prio) {
-            break;
-        }
-    }
     SMTAUDIO_LIST_LOCK();
-    dlist_add_tail(&smt_node->node, &tmp_node->node);
+    dlist_add_tail(&smt_node->node, &smtaudio_resume_list_head);
     SMTAUDIO_LIST_UNLOCK();
 }
 
@@ -335,6 +323,20 @@ static void smtaudio_event_task(void *arg)
             smtaudio_node->status = SMTAUDIO_STATE_PAUSE;
             smtaudio_change_state(SMTAUDIO_STATE_PAUSE, audio_result.type);
             break;
+        
+        case SMTAUDIO_PLAYER_EVENT_PAUSE_BY_REMOTE:
+            smtaudio_node->status = SMTAUDIO_STATE_PAUSE;
+            smtaudio_change_state(SMTAUDIO_STATE_PAUSE, audio_result.type);
+
+            smtaudio_resume_list_node_t *node =
+                        (smtaudio_resume_list_node_t *)malloc(sizeof(smtaudio_resume_list_node_t));
+            node->id               = smtaudio_node->id;
+            node->prio             = smtaudio_node->prio;
+            node->interrupt_reason = SMTAUDIO_INTERRUPT_REASON_BY_REMOTE;
+            node->valid = 1;
+
+            smtaudio_resume_list_insert(node);
+            break;
         default:
             break;
         }
@@ -418,15 +420,17 @@ int8_t smtaudio_init(audio_evt_t audio_evt_cb)
     }
     SMTAUDIO_LIST_UNLOCK();
 
-    SMTAUDIO_UNLOCK();  
-    init_flag = 1;       
+    SMTAUDIO_UNLOCK();
+
+    player_init();
+
+    init_flag = 1;
     return 0;
 }
 
 int8_t smtaudio_vol_up(int16_t vol)
 {
     smtaudio_ops_node_t *node_adjust_ops;
-    smtaudio_resume_list_node_t *node_adjust;
 
     if(!aos_mutex_is_valid(&smtaudio_ctx.smtaudio_mutex)) {
         LOGE(TAG, "smtaudio is not initialized.");
@@ -437,29 +441,10 @@ int8_t smtaudio_vol_up(int16_t vol)
         return 0;
     }
     SMTAUDIO_LOCK();
-    node_adjust_ops = find_first_playing_audio();
-    if (node_adjust_ops && node_adjust_ops->vol_up) {
-        node_adjust_ops->vol_up(vol);
-        SMTAUDIO_UNLOCK();
-        return 0;
-    }
-    //判断resume list是否存在播放对象
-    if(!dlist_empty(&smtaudio_resume_list_head)) {
-        node_adjust = dlist_entry(smtaudio_resume_list_head.next, smtaudio_resume_list_node_t, node);
-        if((node_adjust->interrupt_reason != INTERRUPT_REASON_BY_USER) && (node_adjust->valid == 1)){
-            node_adjust_ops = get_smtaudio_ctrl_ops_by_id(node_adjust->id);
-            if (node_adjust_ops && node_adjust_ops->vol_up) {
-                node_adjust_ops->vol_up(vol);
-                LOGD(TAG, "smart audio adjust volume from resume list. type:%d", node_adjust->id);
-                SMTAUDIO_UNLOCK();
-                return 0;
-            }
+    dlist_for_each_entry(&smtaudio_ctrl_list_head, node_adjust_ops, smtaudio_ops_node_t, node) {
+        if(node_adjust_ops->vol_up) {
+            node_adjust_ops->vol_up(vol);
         }
-    }
-    /*如果没有 audio 播放 则调整 默认音量*/
-    node_adjust_ops = get_default_audio_ops();
-    if (node_adjust_ops) {
-        node_adjust_ops->vol_up(vol);
     }
     SMTAUDIO_UNLOCK();
     return 0;
@@ -468,7 +453,6 @@ int8_t smtaudio_vol_up(int16_t vol)
 int8_t smtaudio_vol_down(int16_t vol)
 {
     smtaudio_ops_node_t *node_adjust_ops;
-    smtaudio_resume_list_node_t *node_adjust;
 
     if(!aos_mutex_is_valid(&smtaudio_ctx.smtaudio_mutex)) {
         LOGE(TAG, "smtaudio is not initialized.");
@@ -479,29 +463,10 @@ int8_t smtaudio_vol_down(int16_t vol)
         return 0;
     }
     SMTAUDIO_LOCK();
-    node_adjust_ops = find_first_playing_audio();
-    if (node_adjust_ops && node_adjust_ops->vol_down) {
-        node_adjust_ops->vol_down(vol);
-        SMTAUDIO_UNLOCK();
-        return 0;
-    }
-    //判断resume list是否存在播放对象
-    if(!dlist_empty(&smtaudio_resume_list_head)) {
-        node_adjust = dlist_entry(smtaudio_resume_list_head.next, smtaudio_resume_list_node_t, node);
-         if((node_adjust->interrupt_reason != INTERRUPT_REASON_BY_USER) && (node_adjust->valid == 1)){
-            node_adjust_ops = get_smtaudio_ctrl_ops_by_id(node_adjust->id);
-            if (node_adjust_ops && node_adjust_ops->vol_down) {
-                node_adjust_ops->vol_down(vol);
-                LOGD(TAG, "smart audio adjust volume from resume list. type:%d", node_adjust->id);
-                SMTAUDIO_UNLOCK();
-                return 0;
-            }
+    dlist_for_each_entry(&smtaudio_ctrl_list_head, node_adjust_ops, smtaudio_ops_node_t, node) {
+        if(node_adjust_ops->vol_down) {
+            node_adjust_ops->vol_down(vol);
         }
-    }
-    /*如果没有 audio 播放 则调整 默认音量*/
-    node_adjust_ops = get_default_audio_ops();
-    if (node_adjust_ops) {
-        node_adjust_ops->vol_down(vol);
     }
     SMTAUDIO_UNLOCK();
     return 0;
@@ -510,7 +475,6 @@ int8_t smtaudio_vol_down(int16_t vol)
 int8_t smtaudio_vol_set(int16_t set_vol)
 {
     smtaudio_ops_node_t *node_adjust_ops;
-    smtaudio_resume_list_node_t *node_adjust;
 
     if(!aos_mutex_is_valid(&smtaudio_ctx.smtaudio_mutex)) {
         LOGE(TAG, "smtaudio is not initialized.");
@@ -521,29 +485,10 @@ int8_t smtaudio_vol_set(int16_t set_vol)
         return 0;
     }
     SMTAUDIO_LOCK();
-    node_adjust_ops = find_first_playing_audio();
-    if (node_adjust_ops && node_adjust_ops->vol_set) {
-        node_adjust_ops->vol_set(set_vol);
-        SMTAUDIO_UNLOCK();
-        return 0;
-    }
-    //判断resume list是否存在播放对象
-    if(!dlist_empty(&smtaudio_resume_list_head)) {
-        node_adjust = dlist_entry(smtaudio_resume_list_head.next, smtaudio_resume_list_node_t, node);
-         if((node_adjust->interrupt_reason != INTERRUPT_REASON_BY_USER) && (node_adjust->valid == 1)){
-            node_adjust_ops = get_smtaudio_ctrl_ops_by_id(node_adjust->id);
-            if (node_adjust_ops && node_adjust_ops->vol_set) {
-                node_adjust_ops->vol_set(set_vol);
-                LOGD(TAG, "smart audio adjust volume from resume list. type:%d", node_adjust->id);
-                SMTAUDIO_UNLOCK();
-                return 0;
-            }
+    dlist_for_each_entry(&smtaudio_ctrl_list_head, node_adjust_ops, smtaudio_ops_node_t, node) {
+        if(node_adjust_ops->vol_set) {
+            node_adjust_ops->vol_set(set_vol);
         }
-    }
-    /*如果没有 audio 播放 则调整 默认音量*/
-    node_adjust_ops = get_default_audio_ops();
-    if (node_adjust_ops) {
-        node_adjust_ops->vol_set(set_vol);
     }
     SMTAUDIO_UNLOCK();
     return 0;
@@ -610,6 +555,7 @@ int8_t smtaudio_start(int type, char *url, uint64_t seek_time, uint8_t resume)
         first_playing_audio_ops = find_first_playing_audio();
         if (first_playing_audio_ops) {
             if (first_playing_audio_ops->prio < smtaudio_node->prio) {
+                LOGD(TAG, "smaller prio, insert delay list");
                 smtaudio_delay_list_node_t *node =
                     (smtaudio_delay_list_node_t *)malloc(sizeof(smtaudio_delay_list_node_t));
                 node->id        = smtaudio_node->id;
@@ -626,6 +572,7 @@ int8_t smtaudio_start(int type, char *url, uint64_t seek_time, uint8_t resume)
                 SMTAUDIO_UNLOCK();
                 return 0;
             } else if (first_playing_audio_ops->prio > smtaudio_node->prio) {
+                LOGD(TAG, "larger prio, put %d insert resume list", first_playing_audio_ops->id);
                 first_playing_audio_ops->pause();
                 smtaudio_resume_list_node_t *node =
                     (smtaudio_resume_list_node_t *)malloc(sizeof(smtaudio_resume_list_node_t));
@@ -635,8 +582,11 @@ int8_t smtaudio_start(int type, char *url, uint64_t seek_time, uint8_t resume)
                 node->valid = 1;
                 smtaudio_resume_list_insert(node);
             } else {
+                LOGD(TAG, "equal prio, pause pre");
                 first_playing_audio_ops->pause();
             }
+        } else {
+            LOGD(TAG, "not in playing");
         }
         ret = smtaudio_node->start(url, seek_time, resume);
         smtaudio_ctx.resume_flag = resume;
@@ -671,7 +621,7 @@ int8_t smtaudio_pause()
                         (smtaudio_resume_list_node_t *)malloc(sizeof(smtaudio_resume_list_node_t));
             node->id               = tmp_node->id;
             node->prio             = tmp_node->prio;
-            node->interrupt_reason = INTERRUPT_REASON_BY_USER;
+            node->interrupt_reason = SMTAUDIO_INTERRUPT_REASON_BY_USER;
             node->valid = 1;
             smtaudio_resume_list_insert(node);
         }

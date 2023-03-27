@@ -13,7 +13,7 @@
 #include <shell/shell.h>
 #include <misc/printk.h>
 
-#if defined(CONFIG_SOC_FAMILY_NRF)
+#if (defined(CONFIG_SOC_FAMILY_NRF) && CONFIG_SOC_FAMILY_NRF)
 #include "../controller/hal/nrf5/ticker.h"
 #endif /* CONFIG_SOC_FAMILY_NRF */
 
@@ -23,7 +23,7 @@
 
 #define TICKER_SHELL_MODULE "ticker"
 
-#if defined(CONFIG_BT_MAX_CONN)
+#if (defined(CONFIG_BT_MAX_CONN) && CONFIG_BT_MAX_CONN)
 #define TICKERS_MAX (CONFIG_BT_MAX_CONN + 2)
 #else
 #define TICKERS_MAX 2

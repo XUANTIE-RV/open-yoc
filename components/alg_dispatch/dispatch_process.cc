@@ -10,13 +10,14 @@
 #include <aos/ringbuffer.h>
 #include <aos/aos.h>
 
-#include "dispatch_internal.h"
+#include "dispatch_ringbuf.h"
 
 #define TAG "Dispatch"
 
 #define FRAME_SIZE ((16000 / 1000) * (16 / 8) * 20) /* 640 */
 #define PCM_RINGBUF_LEN      (FRAME_SIZE * 150)  /* store cloud data: 3sec 1chn */
 #define KWS_RINGBUF_LEN      (FRAME_SIZE * 80)   /* store wakeup data: 1.6sec 1chn */
+#define FEAEC_RINGBUF_LEN     (FRAME_SIZE * 25 * 5)   /* 5chn, 0.5s per chn */
 
 // cxvision message
 using KwsOutMessageT    = thead::voice::proto::KwsOutMsg;
@@ -36,24 +37,17 @@ public:
 private:
   std::shared_ptr<posto::Participant> participant_;
   std::shared_ptr<posto::Reader<SessionMessageT>> session_reader_;
-
-  char *kws_ringbuff;
-  char *pcm_ringbuff;
 };
 
 DispatchProc::DispatchProc()
 {
-  kws_ringbuff = pcm_ringbuff = NULL;
+  ;
 }
 
 bool DispatchProc::Init(const std::map<std::string, std::string>& props) {
 
-  // create ringbuffer
-  kws_ringbuff = (char *)malloc(KWS_RINGBUF_LEN);
-  dispatch_ringbuffer_create(TYPE_KWS, kws_ringbuff, KWS_RINGBUF_LEN);
-
-  pcm_ringbuff = (char *)malloc(PCM_RINGBUF_LEN);
-  dispatch_ringbuffer_create(TYPE_PCM, pcm_ringbuff, PCM_RINGBUF_LEN);
+  /* ringbuffer group init */
+  dispatch_ringbuffer_init();
 
   // sub session
   participant_ = posto::Domain::CreateParticipant("cmd_consumer");
@@ -78,18 +72,14 @@ bool DispatchProc::Init(const std::map<std::string, std::string>& props) {
 }
 
 bool DispatchProc::DeInit() {
-
   dispatch_ringbuffer_destory(TYPE_KWS);
-  free(kws_ringbuff);
-
   dispatch_ringbuffer_destory(TYPE_PCM);
-  free(pcm_ringbuff);
+  dispatch_ringbuffer_destory(TYPE_FEAEC);
 
   return true;
 }
 
 bool DispatchProc::Process(const std::vector<cx::BufferPtr>& data_vec) {
-
   auto ptr0 = data_vec.at(0);
 
   if (ptr0) {
@@ -98,9 +88,26 @@ bool DispatchProc::Process(const std::vector<cx::BufferPtr>& data_vec) {
 
     int len  = iMeta0->buf_len();
 
-    data_type_e type = (iMeta0->type() == thead::voice::proto::TYPE_PCM) ? TYPE_PCM : TYPE_KWS;
+    data_type_e type = TYPE_MAX;
+    switch(iMeta0->type()) {
+      case thead::voice::proto::TYPE_PCM:
+        type = TYPE_PCM;
+        dispatch_ringbuffer_create(TYPE_PCM, PCM_RINGBUF_LEN);
+        break;
+      case thead::voice::proto::TYPE_KWS:
+        type = TYPE_KWS;
+        dispatch_ringbuffer_create(TYPE_KWS, KWS_RINGBUF_LEN);
+        break;
+      case thead::voice::proto::TYPE_FEAEC:
+        type = TYPE_FEAEC;
+        dispatch_ringbuffer_create(TYPE_FEAEC, FEAEC_RINGBUF_LEN); /* 处理程序中初始化,用到了才创建申请内存 */
+        break;
+      default: ;
+    }
 
-    dispatch_ringbuffer_write(type, (uint8_t *)iMemory0->data(), len);
+    if (type < TYPE_MAX) {
+      dispatch_ringbuffer_write(type, (uint8_t *)iMemory0->data(), len);
+    }
   }
 
   return true;

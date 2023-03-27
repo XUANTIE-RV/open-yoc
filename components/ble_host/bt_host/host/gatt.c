@@ -17,7 +17,7 @@
 
 #include <settings/settings.h>
 
-#if defined(CONFIG_BT_GATT_CACHING)
+#if (defined(CONFIG_BT_GATT_CACHING) && CONFIG_BT_GATT_CACHING)
 #include <tinycrypt/constants.h>
 #include <tinycrypt/utils.h>
 #include <tinycrypt/aes.h>
@@ -81,7 +81,7 @@ struct gatt_sub {
 	sys_slist_t list;
 };
 
-#if defined(CONFIG_BT_GATT_CLIENT)
+#if (defined(CONFIG_BT_GATT_CLIENT) && CONFIG_BT_GATT_CLIENT)
 #define SUB_MAX (CONFIG_BT_MAX_PAIRED + CONFIG_BT_MAX_CONN)
 #else
 #define SUB_MAX 0
@@ -91,13 +91,13 @@ static struct gatt_sub subscriptions[SUB_MAX];
 
 static const u16_t gap_appearance = CONFIG_BT_DEVICE_APPEARANCE;
 
-#if defined(CONFIG_BT_GATT_DYNAMIC_DB)
+#if (defined(CONFIG_BT_GATT_DYNAMIC_DB) && CONFIG_BT_GATT_DYNAMIC_DB)
 static sys_slist_t db;
 #endif /* CONFIG_BT_GATT_DYNAMIC_DB */
 
 static atomic_t init;
 
-#if defined(CONFIG_BT_SETTINGS) && CONFIG_BT_SETTINGS
+#if (defined(CONFIG_BT_SETTINGS) && CONFIG_BT_SETTINGS)
 int bt_gatt_settings_init();
 #endif
 
@@ -110,7 +110,7 @@ static ssize_t read_name(struct bt_conn *conn, const struct bt_gatt_attr *attr,
 				 strlen(name));
 }
 
-#if defined(CONFIG_BT_DEVICE_NAME_GATT_WRITABLE)
+#if (defined(CONFIG_BT_DEVICE_NAME_GATT_WRITABLE) && CONFIG_BT_DEVICE_NAME_GATT_WRITABLE)
 
 static ssize_t write_name(struct bt_conn *conn, const struct bt_gatt_attr *attr,
 			 const void *buf, u16_t len, u16_t offset,
@@ -145,7 +145,7 @@ static ssize_t read_appearance(struct bt_conn *conn,
 				 sizeof(appearance));
 }
 
-#if defined (CONFIG_BT_GAP_PERIPHERAL_PREF_PARAMS)
+#if (defined(CONFIG_BT_GAP_PERIPHERAL_PREF_PARAMS) && CONFIG_BT_GAP_PERIPHERAL_PREF_PARAMS)
 /* This checks if the range entered is valid */
 BUILD_ASSERT(!(CONFIG_BT_PERIPHERAL_PREF_MIN_INT > 3200 &&
 	     CONFIG_BT_PERIPHERAL_PREF_MIN_INT < 0xffff));
@@ -177,7 +177,7 @@ static ssize_t read_ppcp(struct bt_conn *conn, const struct bt_gatt_attr *attr,
 }
 #endif
 
-#if defined(CONFIG_BT_CENTRAL) && defined(CONFIG_BT_PRIVACY)
+#if (defined(CONFIG_BT_CENTRAL) && CONFIG_BT_CENTRAL) && (defined(CONFIG_BT_PRIVACY) && CONFIG_BT_PRIVACY)
 static ssize_t read_central_addr_res(struct bt_conn *conn,
 				     const struct bt_gatt_attr *attr, void *buf,
 				     u16_t len, u16_t offset)
@@ -191,7 +191,7 @@ static ssize_t read_central_addr_res(struct bt_conn *conn,
 
 BT_GATT_SERVICE_DEFINE(_2_gap_svc,
 	BT_GATT_PRIMARY_SERVICE(BT_UUID_GAP),
-#if defined(CONFIG_BT_DEVICE_NAME_GATT_WRITABLE)
+#if (defined(CONFIG_BT_DEVICE_NAME_GATT_WRITABLE) && CONFIG_BT_DEVICE_NAME_GATT_WRITABLE)
 	/* Require pairing for writes to device name */
 	BT_GATT_CHARACTERISTIC(BT_UUID_GAP_DEVICE_NAME,
 			       BT_GATT_CHRC_READ | BT_GATT_CHRC_WRITE,
@@ -203,12 +203,12 @@ BT_GATT_SERVICE_DEFINE(_2_gap_svc,
 #endif /* CONFIG_BT_DEVICE_NAME_GATT_WRITABLE */
 	BT_GATT_CHARACTERISTIC(BT_UUID_GAP_APPEARANCE, BT_GATT_CHRC_READ,
 			       BT_GATT_PERM_READ, read_appearance, NULL, NULL),
-#if defined(CONFIG_BT_CENTRAL) && defined(CONFIG_BT_PRIVACY)
+#if (defined(CONFIG_BT_CENTRAL) && CONFIG_BT_CENTRAL) && (defined(CONFIG_BT_PRIVACY) && CONFIG_BT_PRIVACY)
 	BT_GATT_CHARACTERISTIC(BT_UUID_CENTRAL_ADDR_RES,
 			       BT_GATT_CHRC_READ, BT_GATT_PERM_READ,
 			       read_central_addr_res, NULL, NULL),
 #endif /* CONFIG_BT_CENTRAL && CONFIG_BT_PRIVACY */
-#if defined(CONFIG_BT_GAP_PERIPHERAL_PREF_PARAMS)
+#if (defined(CONFIG_BT_GAP_PERIPHERAL_PREF_PARAMS) && CONFIG_BT_GAP_PERIPHERAL_PREF_PARAMS)
 	BT_GATT_CHARACTERISTIC(BT_UUID_GAP_PPCP, BT_GATT_CHRC_READ,
 			       BT_GATT_PERM_READ, read_ppcp, NULL, NULL),
 #endif
@@ -454,7 +454,7 @@ struct gatt_cf_cfg {
 	ATOMIC_DEFINE(flags, CF_NUM_FLAGS);
 };
 
-#if defined(CONFIG_BT_GATT_CACHING)
+#if (defined(CONFIG_BT_GATT_CACHING) && CONFIG_BT_GATT_CACHING)
 #define CF_CFG_MAX (CONFIG_BT_MAX_PAIRED + CONFIG_BT_MAX_CONN)
 #else
 #define CF_CFG_MAX 0
@@ -469,7 +469,7 @@ static void clear_cf_cfg(struct gatt_cf_cfg *cfg)
 	atomic_set(cfg->flags, 0);
 }
 
-#if defined(CONFIG_BT_GATT_CACHING)
+#if (defined(CONFIG_BT_GATT_CACHING) && CONFIG_BT_GATT_CACHING)
 static struct gatt_cf_cfg *find_cf_cfg(struct bt_conn *conn)
 {
 	int i;
@@ -761,7 +761,7 @@ static void remove_cf_cfg(struct bt_conn *conn)
 	}
 }
 
-#if defined(CONFIG_BT_EATT)
+#if (defined(CONFIG_BT_EATT) && CONFIG_BT_EATT)
 #define SF_BIT_EATT	0
 #define SF_BIT_LAST	SF_BIT_EATT
 
@@ -778,7 +778,7 @@ static ssize_t sf_read(struct bt_conn *conn, const struct bt_gatt_attr *attr,
 
 BT_GATT_SERVICE_DEFINE(_1_gatt_svc,
 	BT_GATT_PRIMARY_SERVICE(BT_UUID_GATT),
-#if defined(CONFIG_BT_GATT_SERVICE_CHANGED)
+#if (defined(CONFIG_BT_GATT_SERVICE_CHANGED) && CONFIG_BT_GATT_SERVICE_CHANGED)
 	/* Bluetooth 5.0, Vol3 Part G:
 	 * The Service Changed characteristic Attribute Handle on the server
 	 * shall not change if the server has a trusted relationship with any
@@ -787,7 +787,7 @@ BT_GATT_SERVICE_DEFINE(_1_gatt_svc,
 	BT_GATT_CHARACTERISTIC(BT_UUID_GATT_SC, BT_GATT_CHRC_INDICATE,
 			       BT_GATT_PERM_NONE, NULL, NULL, NULL),
 	BT_GATT_CCC_MANAGED(&sc_ccc, BT_GATT_PERM_READ | BT_GATT_PERM_WRITE),
-#if defined(CONFIG_BT_GATT_CACHING)
+#if (defined(CONFIG_BT_GATT_CACHING) && CONFIG_BT_GATT_CACHING)
 	BT_GATT_CHARACTERISTIC(BT_UUID_GATT_CLIENT_FEATURES,
 			       BT_GATT_CHRC_READ | BT_GATT_CHRC_WRITE,
 			       BT_GATT_PERM_READ | BT_GATT_PERM_WRITE,
@@ -795,7 +795,7 @@ BT_GATT_SERVICE_DEFINE(_1_gatt_svc,
 	BT_GATT_CHARACTERISTIC(BT_UUID_GATT_DB_HASH,
 			       BT_GATT_CHRC_READ, BT_GATT_PERM_READ,
 			       db_hash_read, NULL, NULL),
-#if defined(CONFIG_BT_EATT)
+#if (defined(CONFIG_BT_EATT) && CONFIG_BT_EATT)
 	BT_GATT_CHARACTERISTIC(BT_UUID_GATT_SERVER_FEATURES,
 			       BT_GATT_CHRC_READ, BT_GATT_PERM_READ,
 			       sf_read, NULL, NULL),
@@ -804,7 +804,7 @@ BT_GATT_SERVICE_DEFINE(_1_gatt_svc,
 #endif /* CONFIG_BT_GATT_SERVICE_CHANGED */
 );
 
-#if defined(CONFIG_BT_GATT_DYNAMIC_DB)
+#if (defined(CONFIG_BT_GATT_DYNAMIC_DB) && CONFIG_BT_GATT_DYNAMIC_DB)
 static u8_t found_attr(const struct bt_gatt_attr *attr, void *user_data)
 {
 	const struct bt_gatt_attr **found = user_data;
@@ -910,7 +910,7 @@ static struct gatt_sc {
 static void sc_indicate_rsp(struct bt_conn *conn,
 			    const struct bt_gatt_attr *attr, u8_t err, void *params)
 {
-#if defined(CONFIG_BT_GATT_CACHING)
+#if (defined(CONFIG_BT_GATT_CACHING) && CONFIG_BT_GATT_CACHING)
 	struct gatt_cf_cfg *cfg;
 #endif
 
@@ -924,7 +924,7 @@ static void sc_indicate_rsp(struct bt_conn *conn,
 		k_delayed_work_submit(&gatt_sc.work, K_NO_WAIT);
 	}
 
-#if defined(CONFIG_BT_GATT_CACHING)
+#if (defined(CONFIG_BT_GATT_CACHING) && CONFIG_BT_GATT_CACHING)
 	/* BLUETOOTH CORE SPECIFICATION Version 5.1 | Vol 3, Part G page 2347:
 	 * 2.5.2.1 Robust Caching
 	 * A connected client becomes change-aware when...
@@ -968,7 +968,7 @@ static void sc_process(struct k_work *work)
 	atomic_set_bit(sc->flags, SC_INDICATE_PENDING);
 }
 
-#if defined(CONFIG_BT_SETTINGS_CCC_STORE_ON_WRITE)
+#if (defined(CONFIG_BT_SETTINGS_CCC_STORE_ON_WRITE) && CONFIG_BT_SETTINGS_CCC_STORE_ON_WRITE)
 static struct gatt_ccc_store {
 	struct bt_conn *conn_list[CONFIG_BT_MAX_CONN];
 	struct k_delayed_work work;
@@ -1021,7 +1021,7 @@ static void ccc_delayed_store(struct k_work *work)
 }
 #endif
 
-#if defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE
+#if (defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE)
 #else
 static const struct bt_gatt_service_static *_bt_gatt_service_static[] = 
 {
@@ -1035,7 +1035,7 @@ void bt_gatt_init(void)
 	if (!atomic_cas(&init, 0, 1)) {
 		return;
 	}
-#if defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE
+#if (defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE)
 	Z_STRUCT_SECTION_FOREACH(bt_gatt_service_static, svc) {
 		last_static_handle += svc->attr_count;
 	}
@@ -1044,7 +1044,7 @@ void bt_gatt_init(void)
     last_static_handle += _1_gatt_svc.attr_count;
 #endif
 
-#if defined(CONFIG_BT_GATT_CACHING)
+#if (defined(CONFIG_BT_GATT_CACHING) && CONFIG_BT_GATT_CACHING)
 	k_delayed_work_init(&db_hash_work, db_hash_process);
 
 	/* Submit work to Generate initial hash as there could be static
@@ -1063,17 +1063,17 @@ void bt_gatt_init(void)
 		}
 	}
 
-#if defined(CONFIG_BT_SETTINGS_CCC_STORE_ON_WRITE)
+#if (defined(CONFIG_BT_SETTINGS_CCC_STORE_ON_WRITE) && CONFIG_BT_SETTINGS_CCC_STORE_ON_WRITE)
 	k_delayed_work_init(&gatt_ccc_store.work, ccc_delayed_store);
 #endif
 
-#if defined(CONFIG_BT_SETTINGS) && CONFIG_BT_SETTINGS
+#if (defined(CONFIG_BT_SETTINGS) && CONFIG_BT_SETTINGS)
     bt_gatt_settings_init();
 #endif
 }
 
-#if defined(CONFIG_BT_GATT_DYNAMIC_DB) || \
-    (defined(CONFIG_BT_GATT_CACHING) && defined(CONFIG_BT_SETTINGS))
+#if (defined(CONFIG_BT_GATT_DYNAMIC_DB) && CONFIG_BT_GATT_DYNAMIC_DB) || \
+    ((defined(CONFIG_BT_GATT_CACHING) && CONFIG_BT_GATT_CACHING) && (defined(CONFIG_BT_SETTINGS) && CONFIG_BT_SETTINGS))
 static void sc_indicate(u16_t start, u16_t end)
 {
 	BT_DBG("start 0x%04x end 0x%04x", start, end);
@@ -1099,10 +1099,10 @@ submit:
 }
 #endif /* BT_GATT_DYNAMIC_DB || (BT_GATT_CACHING && BT_SETTINGS) */
 
-#if defined(CONFIG_BT_GATT_DYNAMIC_DB)
+#if (defined(CONFIG_BT_GATT_DYNAMIC_DB) && CONFIG_BT_GATT_DYNAMIC_DB)
 static void db_changed(void)
 {
-#if defined(CONFIG_BT_GATT_CACHING)
+#if (defined(CONFIG_BT_GATT_CACHING) && CONFIG_BT_GATT_CACHING)
 	int i;
 
 	k_delayed_work_submit(&db_hash_work, DB_HASH_TIMEOUT);
@@ -1239,7 +1239,7 @@ static u8_t get_service_handles(const struct bt_gatt_attr *attr,
 
 u16_t find_static_attr(const struct bt_gatt_attr *attr)
 {
-#if defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE
+#if (defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE)
 	extern struct bt_gatt_attr _bt_gatt_attr_list_start[];
 
 	return attr > _bt_gatt_attr_list_start ? attr - _bt_gatt_attr_list_start + 1: 0;
@@ -1392,7 +1392,7 @@ static void foreach_attr_type_dyndb(u16_t start_handle, u16_t end_handle,
 				    const void *attr_data, uint16_t num_matches,
 				    bt_gatt_attr_func_t func, void *user_data)
 {
-#if defined(CONFIG_BT_GATT_DYNAMIC_DB)
+#if (defined(CONFIG_BT_GATT_DYNAMIC_DB) && CONFIG_BT_GATT_DYNAMIC_DB)
 	size_t i;
 	struct bt_gatt_service *svc;
 
@@ -1437,7 +1437,7 @@ void bt_gatt_foreach_attr_type(u16_t start_handle, u16_t end_handle,
 
 	if (start_handle <= last_static_handle) {
 		u16_t handle = 1;
-#if defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE
+#if (defined(CONFIG_BT_HOST_OPTIMIZE) && CONFIG_BT_HOST_OPTIMIZE)
 		Z_STRUCT_SECTION_FOREACH(bt_gatt_service_static, static_svc) {
 #else
 		const struct bt_gatt_service_static *static_svc = NULL;
@@ -1626,7 +1626,7 @@ ssize_t bt_gatt_attr_write_ccc(struct bt_conn *conn,
 	if (cfg->value != ccc->value) {
 		gatt_ccc_changed(attr, ccc);
 
-#if defined(CONFIG_BT_SETTINGS_CCC_STORE_ON_WRITE)
+#if (defined(CONFIG_BT_SETTINGS_CCC_STORE_ON_WRITE) && CONFIG_BT_SETTINGS_CCC_STORE_ON_WRITE)
 		if ((!gatt_ccc_conn_is_queued(conn)) &&
 		    bt_addr_le_is_bonded(conn->id, &conn->le.dst)) {
 			/* Store the connection with the same index it has in
@@ -1688,7 +1688,7 @@ struct notify_data {
 	};
 };
 
-#if defined(CONFIG_BT_GATT_NOTIFY_MULTIPLE)
+#if (defined(CONFIG_BT_GATT_NOTIFY_MULTIPLE) && CONFIG_BT_GATT_NOTIFY_MULTIPLE)
 
 struct nfy_mult_data {
 	bt_gatt_complete_func_t func;
@@ -1802,7 +1802,7 @@ int gatt_notify(struct bt_conn *conn, u16_t handle,
 	struct bt_att_notify *nfy;
 	int err;
 
-#if defined(CONFIG_BT_GATT_ENFORCE_CHANGE_UNAWARE)
+#if (defined(CONFIG_BT_GATT_ENFORCE_CHANGE_UNAWARE) && CONFIG_BT_GATT_ENFORCE_CHANGE_UNAWARE)
 	/* BLUETOOTH CORE SPECIFICATION Version 5.1 | Vol 3, Part G page 2350:
 	 * Except for the Handle Value indication, the  server shall not send
 	 * notifications and indications to such a client until it becomes
@@ -1818,7 +1818,7 @@ int gatt_notify(struct bt_conn *conn, u16_t handle,
 		return -ENOTCONN;
 	}
 
-#if defined(CONFIG_BT_GATT_NOTIFY_MULTIPLE)
+#if (defined(CONFIG_BT_GATT_NOTIFY_MULTIPLE) && CONFIG_BT_GATT_NOTIFY_MULTIPLE)
 	if (gatt_cf_notify_multi(conn)) {
 		return gatt_notify_mult(conn, handle, params);
 	}
@@ -1896,7 +1896,7 @@ static int gatt_indicate(struct bt_conn *conn, u16_t handle,
 	struct bt_att_indicate *ind;
 	int err;
 
-#if defined(CONFIG_BT_GATT_ENFORCE_CHANGE_UNAWARE)
+#if (defined(CONFIG_BT_GATT_ENFORCE_CHANGE_UNAWARE) && CONFIG_BT_GATT_ENFORCE_CHANGE_UNAWARE)
 	/* BLUETOOTH CORE SPECIFICATION Version 5.1 | Vol 3, Part G page 2350:
 	 * Except for the Handle Value indication, the  server shall not send
 	 * notifications and indications to such a client until it becomes
@@ -2102,7 +2102,7 @@ int bt_gatt_notify_cb(struct bt_conn *conn,
 	return data.err;
 }
 
-#if defined(CONFIG_BT_GATT_NOTIFY_MULTIPLE)
+#if (defined(CONFIG_BT_GATT_NOTIFY_MULTIPLE) && CONFIG_BT_GATT_NOTIFY_MULTIPLE)
 int bt_gatt_notify_multiple(struct bt_conn *conn, u16_t num_params,
 			    struct bt_gatt_notify_params *params)
 {
@@ -2215,7 +2215,7 @@ u8_t bt_gatt_check_perm(struct bt_conn *conn, const struct bt_gatt_attr *attr,
 	}
 
 	if ((mask & BT_GATT_PERM_ENCRYPT_MASK)) {
-#if defined(CONFIG_BT_SMP)
+#if (defined(CONFIG_BT_SMP) && CONFIG_BT_SMP)
 		if (!conn->encrypt) {
 			return BT_ATT_ERR_INSUFFICIENT_ENCRYPTION;
 		}
@@ -2230,13 +2230,13 @@ u8_t bt_gatt_check_perm(struct bt_conn *conn, const struct bt_gatt_attr *attr,
 static void sc_restore_rsp(struct bt_conn *conn,
 			   const struct bt_gatt_attr *attr, u8_t err, void *params)
 {
-#if defined(CONFIG_BT_GATT_CACHING)
+#if (defined(CONFIG_BT_GATT_CACHING) && CONFIG_BT_GATT_CACHING)
 	struct gatt_cf_cfg *cfg;
 #endif
 
 	BT_DBG("err 0x%02x", err);
 
-#if defined(CONFIG_BT_GATT_CACHING)
+#if (defined(CONFIG_BT_GATT_CACHING) && CONFIG_BT_GATT_CACHING)
 	/* BLUETOOTH CORE SPECIFICATION Version 5.1 | Vol 3, Part G page 2347:
 	 * 2.5.2.1 Robust Caching
 	 * A connected client becomes change-aware when...
@@ -2493,7 +2493,7 @@ static void gatt_sub_remove(struct bt_conn *conn, struct gatt_sub *sub,
 	}
 }
 
-#if defined(CONFIG_BT_GATT_CLIENT)
+#if (defined(CONFIG_BT_GATT_CLIENT) && CONFIG_BT_GATT_CLIENT)
 static struct gatt_sub *gatt_sub_find_free(struct bt_conn *conn,
 					   struct gatt_sub **free_sub)
 {
@@ -3635,7 +3635,7 @@ static int gatt_read_uuid(struct bt_conn *conn,
 	return err;
 }
 
-#if defined(CONFIG_BT_GATT_READ_MULTIPLE)
+#if (defined(CONFIG_BT_GATT_READ_MULTIPLE) && CONFIG_BT_GATT_READ_MULTIPLE)
 static void gatt_read_mult_rsp(struct bt_conn *conn, u8_t err, const void *pdu,
 			       u16_t length, void *user_data)
 {
@@ -3680,7 +3680,7 @@ static int gatt_read_mult(struct bt_conn *conn,
 	return err;
 }
 
-#if defined(CONFIG_BT_EATT)
+#if (defined(CONFIG_BT_EATT) && CONFIG_BT_EATT)
 static void gatt_read_mult_vl_rsp(struct bt_conn *conn, u8_t err,
 				  const void *pdu, u16_t length,
 				  void *user_data)
@@ -3783,7 +3783,7 @@ int bt_gatt_read(struct bt_conn *conn, struct bt_gatt_read_params *params)
 	}
 
 	if (params->handle_count > 1) {
-#if defined(CONFIG_BT_EATT)
+#if (defined(CONFIG_BT_EATT) && CONFIG_BT_EATT)
 		return gatt_read_mult_vl(conn, params);
 #else
 		return gatt_read_mult(conn, params);
@@ -3839,7 +3839,7 @@ int bt_gatt_write_without_response_cb(struct bt_conn *conn, u16_t handle,
 		return -ENOTCONN;
 	}
 
-#if defined(CONFIG_BT_SMP)
+#if (defined(CONFIG_BT_SMP) && CONFIG_BT_SMP)
 	if (conn->encrypt) {
 		/* Don't need to sign if already encrypted */
 		sign = false;
@@ -4460,7 +4460,7 @@ void bt_gatt_connected(struct bt_conn *conn)
 		bt_conn_set_security(conn, data.sec);
 	}
 
-#if defined(CONFIG_BT_GATT_CLIENT)
+#if (defined(CONFIG_BT_GATT_CLIENT) && CONFIG_BT_GATT_CLIENT)
 	add_subscriptions(conn);
 #endif /* CONFIG_BT_GATT_CLIENT */
 }
@@ -4479,7 +4479,7 @@ void bt_gatt_encrypt_change(struct bt_conn *conn)
 
 bool bt_gatt_change_aware(struct bt_conn *conn, bool req)
 {
-#if defined(CONFIG_BT_GATT_CACHING)
+#if (defined(CONFIG_BT_GATT_CACHING) && CONFIG_BT_GATT_CACHING)
 	struct gatt_cf_cfg *cfg;
 
 	cfg = find_cf_cfg(conn);
@@ -4523,7 +4523,7 @@ bool bt_gatt_change_aware(struct bt_conn *conn, bool req)
 
 static int bt_gatt_store_cf(struct bt_conn *conn)
 {
-#if defined(CONFIG_BT_GATT_CACHING)
+#if (defined(CONFIG_BT_GATT_CACHING) && CONFIG_BT_GATT_CACHING)
 	struct gatt_cf_cfg *cfg;
 	char key[BT_SETTINGS_KEY_MAX];
 	char *str;
@@ -4571,7 +4571,7 @@ void bt_gatt_disconnected(struct bt_conn *conn)
 	BT_DBG("conn %p", conn);
 	bt_gatt_foreach_attr(0x0001, 0xffff, disconnected_cb, conn);
 
-#if defined(CONFIG_BT_SETTINGS_CCC_STORE_ON_WRITE)
+#if (defined(CONFIG_BT_SETTINGS_CCC_STORE_ON_WRITE) && CONFIG_BT_SETTINGS_CCC_STORE_ON_WRITE)
 	gatt_ccc_conn_unqueue(conn);
 
 	if (gatt_ccc_conn_queue_is_empty()) {
@@ -4585,11 +4585,11 @@ void bt_gatt_disconnected(struct bt_conn *conn)
 		bt_gatt_store_cf(conn);
 	}
 
-#if defined(CONFIG_BT_GATT_CLIENT)
+#if (defined(CONFIG_BT_GATT_CLIENT) && CONFIG_BT_GATT_CLIENT)
 	remove_subscriptions(conn);
 #endif /* CONFIG_BT_GATT_CLIENT */
 
-#if defined(CONFIG_BT_GATT_CACHING)
+#if (defined(CONFIG_BT_GATT_CACHING) && CONFIG_BT_GATT_CACHING)
 	remove_cf_cfg(conn);
 #endif
 }
@@ -4611,7 +4611,7 @@ static struct gatt_cf_cfg *find_cf_cfg_by_addr(u8_t id,
 	return NULL;
 }
 
-#if defined(CONFIG_BT_SETTINGS) && CONFIG_BT_SETTINGS
+#if (defined(CONFIG_BT_SETTINGS) && CONFIG_BT_SETTINGS)
 
 struct ccc_save {
 	struct addr_with_id addr_with_id;
@@ -4700,7 +4700,7 @@ int bt_gatt_store_ccc(u8_t id, const bt_addr_le_t *addr)
 	return 0;
 }
 
-#if defined(CONFIG_BT_GATT_SERVICE_CHANGED)
+#if (defined(CONFIG_BT_GATT_SERVICE_CHANGED) && CONFIG_BT_GATT_SERVICE_CHANGED)
 static int sc_set(const char *name, size_t len_rd, settings_read_cb read_cb,
 		  void *cb_arg)
 {
@@ -4778,7 +4778,7 @@ static int sc_commit(void)
 //SETTINGS_STATIC_HANDLER_DEFINE(bt_sc, "bt/sc", NULL, sc_set, sc_commit, NULL);
 #endif /* CONFIG_BT_GATT_SERVICE_CHANGED */
 
-#if defined(CONFIG_BT_GATT_CACHING)
+#if (defined(CONFIG_BT_GATT_CACHING) && CONFIG_BT_GATT_CACHING)
 static int cf_set(const char *name, size_t len_rd, settings_read_cb read_cb,
 		  void *cb_arg)
 {
@@ -4903,11 +4903,11 @@ int bt_gatt_settings_init()
         SETTINGS_HANDLER_DEFINE(bt_ccc, "bt/ccc", NULL, ccc_set, NULL, NULL);
 #endif /* CONFIG_BT_SETTINGS_CCC_LAZY_LOADING */
     
-#if defined(CONFIG_BT_GATT_SERVICE_CHANGED)
+#if (defined(CONFIG_BT_GATT_SERVICE_CHANGED) && CONFIG_BT_GATT_SERVICE_CHANGED)
         SETTINGS_HANDLER_DEFINE(bt_sc, "bt/sc", NULL, sc_set, sc_commit, NULL);
 #endif
     
-#if defined(CONFIG_BT_GATT_CACHING)
+#if (defined(CONFIG_BT_GATT_CACHING) && CONFIG_BT_GATT_CACHING)
         SETTINGS_HANDLER_DEFINE(bt_cf, "bt/cf", NULL, cf_set, NULL, NULL);
     
         SETTINGS_HANDLER_DEFINE(bt_hash, "bt/hash", NULL, db_hash_set,

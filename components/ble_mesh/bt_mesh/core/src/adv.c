@@ -181,8 +181,12 @@ static struct bt_data ad[CONFIG_MAX_AD_NUM] = {0x00};
 static inline void adv_send(struct net_buf *buf)
 {
     extern int bt_le_hci_version_get();
+#if defined(CONFIG_BT_MESH_FAST_ADV) && CONFIG_BT_MESH_FAST_ADV
+	const s32_t adv_int_min = CONFIG_BT_MESH_FAST_ADV;
+#else
 	const s32_t adv_int_min = ((bt_le_hci_version_get() >= BT_HCI_VERSION_5_0) ?
 				   ADV_INT_FAST_MS : ADV_INT_DEFAULT_MS);
+#endif
 	const struct bt_mesh_send_cb *cb = BT_MESH_ADV(buf)->cb;
 	void *cb_data = BT_MESH_ADV(buf)->cb_data;
 	struct bt_le_adv_param param = {0};
@@ -960,9 +964,9 @@ adv_scan_schd_state_en adv_scan_schd_st_change_map[4][4] = {
 #endif
 
 struct adv_scan_data_t {
-    struct bt_data *ad;
+    const struct bt_data *ad;
     uint8_t ad_len;
-    struct bt_data *sd;
+    const struct bt_data *sd;
     uint8_t sd_len;
     struct bt_le_adv_param adv_param;
     struct bt_le_scan_param scan_param;
@@ -1271,35 +1275,6 @@ int bt_mesh_adv_scan_schd_init()
     return 0;
 }
 
-static int set_ad_data(uint8_t *data, const struct bt_data *ad, size_t ad_len)
-{
-    int i;
-    int set_len = 0;
-
-    for (i = 0; i < ad_len; i++) {
-        int len = ad[i].data_len;
-        u8_t type = ad[i].type;
-
-        /* Check if ad fit in the remaining buffer */
-        if (set_len + len + 2 > MAX_AD_LEN) {
-            len = MAX_AD_LEN - (set_len + 2);
-
-            if (type != BT_DATA_NAME_COMPLETE || len <= 0) {
-                return -EINVAL;
-            }
-
-            type = BT_DATA_NAME_SHORTENED;
-        }
-
-        data[set_len++] = len + 1;
-        data[set_len++] = type;
-
-        memcpy(&data[set_len], ad[i].data, len);
-        set_len += len;
-    }
-
-    return set_len;
-}
 int bt_mesh_adv_enable(const struct bt_le_adv_param *param,
                        const struct bt_data *ad, size_t ad_len,
                        const struct bt_data *sd, size_t sd_len)

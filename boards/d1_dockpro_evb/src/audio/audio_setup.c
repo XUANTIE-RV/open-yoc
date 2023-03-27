@@ -5,7 +5,7 @@
 #include <stdint.h>
 
 #include <drv/codec.h>
-#include <board.h>
+#include "board_audio.h"
 
 /* 默认采集增益 */
 
@@ -85,10 +85,4 @@ int board_drc_set_param(void *data, int byte)
 int board_audio_get_pa_mute_pin(void)
 {
     return -1;
-}
-
-void board_audio_init(void)
-{
-    csi_codec_t codec;
-    csi_codec_init(&codec, 0);
 }

@@ -4,13 +4,11 @@
 
 #include <stdio.h>
 #include <aos/kernel.h>
-#include "hal/uart_impl.h"
-
 #include <aos/ringbuffer.h>
-
-#include "drv/uart.h"
-
+#include <drv/uart.h>
+#include <drv/clk.h>
 #include <yoc/lpm.h>
+#include <devices/impl/uart_impl.h>
 
 #define UART_RB_SIZE    1024
 
@@ -21,7 +19,7 @@
 
 #define UART_MAX_NUM (4)
 typedef struct {
-    aos_dev_t      device;
+    rvm_dev_t      device;
     int            flowctrl;
     csi_uart_t     handle;
     char          *recv_buf;
@@ -29,7 +27,7 @@ typedef struct {
     aos_mutex_t    mutex;
     aos_event_t    event_write_read;
     int            event_state;
-    void (*write_event)(aos_dev_t *dev, int event_id, void *priv);
+    void (*write_event)(rvm_dev_t *dev, int event_id, void *priv);
     void *priv;
     void *init_cfg;
     int   type;
@@ -70,17 +68,17 @@ static int32_t get_free_uart_idx(int32_t uart_idx)
     return ret;
 }
 
-static aos_dev_t *uart_csky_init(driver_t *drv, void *config, int id)
+static rvm_dev_t *uart_csky_init(driver_t *drv, void *config, int id)
 {
-    uart_dev_t *uart = (uart_dev_t *)device_new(drv, sizeof(uart_dev_t), id);
+    uart_dev_t *uart = (uart_dev_t *)rvm_hal_device_new(drv, sizeof(uart_dev_t), id);
 
     if (uart) {
         uart->init_cfg   = config;
     }
-    return (aos_dev_t *)uart;
+    return (rvm_dev_t *)uart;
 }
 
-#define uart_csky_uninit device_free
+#define uart_csky_uninit rvm_hal_device_free
 
 static void usart_csky_event_cb_fun(csi_uart_t *uart_handler, csi_uart_event_t event, void *arg)
 {
@@ -100,7 +98,7 @@ static void usart_csky_event_cb_fun(csi_uart_t *uart_handler, csi_uart_event_t e
             uart->event_state |= USART_EVENT_WRITE;
 
             if (uart->write_event)
-                uart->write_event((aos_dev_t *)uart, USART_EVENT_WRITE, uart->priv);
+                uart->write_event((rvm_dev_t *)uart, USART_EVENT_WRITE, uart->priv);
         }
 
         if (aos_event_set(&uart->event_write_read, EVENT_WRITE, AOS_EVENT_OR) != 0) {
@@ -110,7 +108,7 @@ static void usart_csky_event_cb_fun(csi_uart_t *uart_handler, csi_uart_event_t e
     case UART_EVENT_RECEIVE_COMPLETE: {
         if (uart->write_event) {
             uart->event_state |= USART_EVENT_READ;
-            uart->write_event((aos_dev_t *)uart, USART_EVENT_READ, uart->priv);
+            uart->write_event((rvm_dev_t *)uart, USART_EVENT_READ, uart->priv);
         }
 
         aos_event_set(&uart->event_write_read, EVENT_READ, AOS_EVENT_OR);
@@ -126,7 +124,7 @@ static void usart_csky_event_cb_fun(csi_uart_t *uart_handler, csi_uart_event_t e
                 if (ret > 0) {
                     if (ringbuffer_write(&uart->read_buffer, (uint8_t*)temp_buf, ret) != ret) {
                         if (uart->write_event) {
-                            uart->write_event((aos_dev_t *)uart, USART_OVERFLOW, uart->priv);
+                            uart->write_event((rvm_dev_t *)uart, USART_OVERFLOW, uart->priv);
                         }
                         break;
                     }
@@ -136,7 +134,7 @@ static void usart_csky_event_cb_fun(csi_uart_t *uart_handler, csi_uart_event_t e
         if ((uart->event_state & USART_EVENT_READ) == 0) {
             if (uart->write_event) {
                 uart->event_state |= USART_EVENT_READ;
-                uart->write_event((aos_dev_t *)uart, USART_EVENT_READ, uart->priv);
+                uart->write_event((rvm_dev_t *)uart, USART_EVENT_READ, uart->priv);
             }
         }
         aos_event_set(&uart->event_write_read, EVENT_READ, AOS_EVENT_OR);
@@ -164,7 +162,7 @@ static void usart_csky_event_cb_fun(csi_uart_t *uart_handler, csi_uart_event_t e
     }
 }
 
-static int uart_csky_open(aos_dev_t *dev)
+static int uart_csky_open(rvm_dev_t *dev)
 {
     int32_t idx = get_free_uart_idx(dev->id);
 
@@ -195,11 +193,6 @@ static int uart_csky_open(aos_dev_t *dev)
 
     g_uart_idx[idx] = uart(dev);
 
-    ret = csi_uart_attach_callback(&uart(dev)->handle, usart_csky_event_cb_fun, NULL);
-    if (ret != CSI_OK) {
-        goto error0;
-    }
-
     return 0;
 error2:
     aos_event_free(&uart(dev)->event_write_read);
@@ -210,7 +203,7 @@ error0:
     return -1;
 }
 
-static int uart_csky_close(aos_dev_t *dev)
+static int uart_csky_close(rvm_dev_t *dev)
 {
     csi_uart_uninit(&uart(dev)->handle);
     int32_t idx = get_uart_dev_idx(dev->id);
@@ -224,7 +217,17 @@ static int uart_csky_close(aos_dev_t *dev)
     return 0;
 }
 
-static int uart_csky_config(aos_dev_t *dev, uart_config_t *config)
+static int uart_csky_clock(rvm_dev_t *dev, bool enable)
+{
+    if (enable) {
+        csi_clk_enable(&uart(dev)->handle.dev);
+    } else {
+        csi_clk_disable(&uart(dev)->handle.dev);
+    }
+    return 0;
+}
+
+static int uart_csky_config(rvm_dev_t *dev, rvm_hal_uart_config_t *config)
 {
     int ret = csi_uart_baud(&uart(dev)->handle, config->baud_rate);
     if (ret != CSI_OK) {
@@ -237,17 +240,22 @@ static int uart_csky_config(aos_dev_t *dev, uart_config_t *config)
         return -EIO;
     }
 
+    ret = csi_uart_attach_callback(&uart(dev)->handle, usart_csky_event_cb_fun, NULL);
+    if (ret != CSI_OK) {
+        return -EIO;
+    }
+
     return 0;
 }
 
-static int uart_csky_set_type(aos_dev_t *dev, int type)
+static int uart_csky_set_type(rvm_dev_t *dev, int type)
 {
     uart(dev)->type = type;
 
     return 0;
 }
 
-static int uart_csky_set_buffer_size(aos_dev_t *dev, uint32_t size)
+static int uart_csky_set_buffer_size(rvm_dev_t *dev, uint32_t size)
 {
     char *tmp = NULL;
 
@@ -268,25 +276,30 @@ static int uart_csky_set_buffer_size(aos_dev_t *dev, uint32_t size)
     return 0;
 }
 
-static int uart_csky_send(aos_dev_t *dev, const void *data, uint32_t size)
+static int uart_csky_send(rvm_dev_t *dev, const void *data, uint32_t size, uint32_t timeout_ms)
 {
-    if (uart(dev)->type == UART_TYPE_CONSOLE) {
-        int i;
-        for (i = 0; i < size; i++) {
-            //dont depend interrupt
-            csi_uart_putc(&uart(dev)->handle, *((uint8_t *)data + i));
+    int num;
+    csi_error_t ret;
+
+    if (uart(dev)->type == UART_TYPE_SYNC) {
+        num = csi_uart_send(&uart(dev)->handle, data, size, timeout_ms);
+        if (num != size) {
+            return -1;
         }
+        return num;
     } else {
         unsigned int actl_flags = 0;
-        csi_uart_send_async(&uart(dev)->handle, data, size);
-        aos_event_get(&uart(dev)->event_write_read, EVENT_WRITE, AOS_EVENT_OR_CLEAR, &actl_flags,
-                      AOS_WAIT_FOREVER);
+        ret = csi_uart_send_async(&uart(dev)->handle, data, size);
+        if (ret != CSI_OK) {
+            return -1;
+        }
+        aos_event_get(&uart(dev)->event_write_read, EVENT_WRITE, AOS_EVENT_OR_CLEAR, &actl_flags, timeout_ms);
     }
 
     return 0;
 }
 
-static int uart_csky_recv(aos_dev_t *dev, void *data, uint32_t size, unsigned int timeout_ms)
+static int uart_csky_recv(rvm_dev_t *dev, void *data, uint32_t size, uint32_t timeout_ms)
 {
     unsigned int actl_flags;
     int          ret = 0;
@@ -324,7 +337,34 @@ static int uart_csky_recv(aos_dev_t *dev, void *data, uint32_t size, unsigned in
     return size - temp_count;
 }
 
-static void uart_csky_event(aos_dev_t *dev, void (*event)(aos_dev_t *dev, int event_id, void *priv),
+static int uart_csky_send_poll(rvm_dev_t *dev, const void *data, uint32_t size)
+{
+    uint32_t trans_num = 0U;
+    uint8_t *ch = (uint8_t *)data;
+
+    while (trans_num < size) {
+        csi_uart_putc(&uart(dev)->handle, *ch++);
+        trans_num++;
+    }
+
+    return trans_num;
+}
+
+static int uart_csky_recv_poll(rvm_dev_t *dev, void *data, uint32_t size)
+{
+    uint8_t *temp_data = (uint8_t *)data;
+    uint32_t recv_num = 0U;
+
+    while (recv_num < size) {
+        *temp_data = csi_uart_getc(&uart(dev)->handle);
+        recv_num++;
+        temp_data++;
+    }
+
+    return recv_num;
+}
+
+static void uart_csky_event(rvm_dev_t *dev, void (*event)(rvm_dev_t *dev, int event_id, void *priv),
                             void * priv)
 {
     uart(dev)->priv        = priv;
@@ -356,23 +396,19 @@ static uart_driver_t uart_driver = {
         .uninit = uart_csky_uninit,
         .open   = uart_csky_open,
         .close  = uart_csky_close,
+        .clk_en = uart_csky_clock
     },
     .config          = uart_csky_config,
     .set_type        = uart_csky_set_type,
     .set_buffer_size = uart_csky_set_buffer_size,
     .send            = uart_csky_send,
     .recv            = uart_csky_recv,
+    .send_poll       = uart_csky_send_poll,
+    .recv_poll       = uart_csky_recv_poll,
     .set_event       = uart_csky_event,
 };
 
-void uart_csky_register(int uart_idx)
+void rvm_uart_drv_register(int uart_idx)
 {
-    driver_register(&uart_driver.drv, NULL, uart_idx);
-}
-
-csi_uart_t *dev_get_handler(aos_dev_t *dev)
-{
-    uart_dev_t *uart = (uart_dev_t *)dev;
-
-    return &uart->handle;
+    rvm_driver_register(&uart_driver.drv, NULL, uart_idx);
 }
