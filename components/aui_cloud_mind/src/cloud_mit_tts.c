@@ -24,10 +24,6 @@ typedef enum {
 #define EVENT_TTS_FINISHED        (1 << 0)
 #define EVENT_TTS_PLAYER_FINISHED (1 << 1)
 
-#define MIT_TTS_APP_KEY "9a7f47f2"
-#define MIT_TTS_TOKEN   "a2f8b80e04f14fdb9b7c36024fb03f78"
-#define MIT_TTS_URL     "wss://nls-gateway-inner.aliyuncs.com/ws/v1"
-
 #define TAG "MinDCloud"
 
 static bool        g_tts_running     = false;
