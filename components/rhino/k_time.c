@@ -6,15 +6,17 @@
 
 void krhino_tick_proc(void)
 {
+    if (g_sys_stat != RHINO_STOPPED) {
 #if (RHINO_CONFIG_USER_HOOK > 0)
-    krhino_tick_hook();
+        krhino_tick_hook();
 #endif
 
-    tick_list_update(1);
+        tick_list_update(1);
 
 #if (RHINO_CONFIG_SCHED_RR > 0)
-    time_slice_update();
+        time_slice_update();
 #endif
+    }
 }
 
 tick_t krhino_sys_tick_get(void)

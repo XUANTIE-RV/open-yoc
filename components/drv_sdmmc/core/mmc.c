@@ -727,12 +727,12 @@ static void MMC_DecodeCsd(mmc_card_t *card, uint32_t *rawCsd)
     assert(rawCsd);
 
     mmc_csd_t *csd;
-    uint32_t multiplier, i;
-
-    for (i = 0; i < 4; i++) {
+    uint32_t multiplier;
+#ifdef CONFIG_MMC_MORE_INFO_PRINT
+    for (uint32_t i = 0; i < 4; i++) {
         LOGD(TAG,"The csd[%d] is 0x%x", i, rawCsd[i]);
     }
-
+#endif
     csd = &(card->csd);
     csd->csdStructureVersion = (uint8_t)((rawCsd[3U] & 0xC0000000U) >> 30U);
     csd->systemSpecificationVersion = (uint8_t)((rawCsd[3U] & 0x3C000000U) >> 26U);
@@ -1689,7 +1689,6 @@ static status_t MMC_AllSendCid(mmc_card_t *card)
 {
     assert(card);
     assert(card->host.transfer);
-    uint32_t i;
 
     SDMMCHOST_TRANSFER content = {0};
     SDMMCHOST_COMMAND command = {0};
@@ -1703,9 +1702,11 @@ static status_t MMC_AllSendCid(mmc_card_t *card)
 
     if (kStatus_Success == card->host.transfer(card->host.base, &content)) {
         memcpy(card->rawCid, command.response, sizeof(card->rawCid));
-        for(i = 0; i < 4; i++) {
+#ifdef CONFIG_MMC_MORE_INFO_PRINT
+        for(uint32_t i = 0; i < 4; i++) {
             LOGD(TAG,"The cid[%d] is 0x%x", i, command.response[i]);
         }
+#endif
         MMC_DecodeCid(card, command.response);
 
         return kStatus_Success;

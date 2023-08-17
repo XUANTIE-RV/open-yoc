@@ -11,6 +11,7 @@
 
 #include "eq_config.h"
 #include "board_audio.h"
+#include <yoc/partition.h>
 
 /* 默认采集增益 */
 static int g_audio_in_gain[]  = { AUIDO_IN_GAIN_MIC, AUIDO_IN_GAIN_MIC, AUIDO_IN_GAIN_REF };
@@ -138,6 +139,26 @@ int board_audio_get_pa_mute_pin(void)
     return AUIDO_PA_MUTE_PIN;
 }
 
+
+static int audio_fw_load(void)
+{
+#if defined(CONFIG_BOARD_AMP_LOAD_FW) && CONFIG_BOARD_AMP_LOAD_FW
+    partition_t partition;
+    unsigned long run_address;
+    const char *name = "prim";
+
+    partition = partition_open(name);
+    if (partition_split_and_get(partition, 1, NULL, NULL, &run_address)) {
+        printf("get [%s] run_address failed.\n", name);
+        return -1;
+    }
+    partition_close(partition);
+    return board_load_amp_fw(0, (void*)run_address, NULL, 0);
+# else
+    return -1;
+#endif
+}
+
 void board_audio_init(void)
 {
     snd_bl606p_config_t snd_config;
@@ -154,5 +175,8 @@ void board_audio_init(void)
     extern void av_set_ao_channel_num(int num);
     av_set_ao_channel_num(1);
 #endif
+
+    audio_fw_load();
+
 }
 #endif

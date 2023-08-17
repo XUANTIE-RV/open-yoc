@@ -31,7 +31,7 @@ static struct combo_dev_cfg_s dev_cfg_ili9488_320x480 = {
 	.pixel_clk = 20000,
 	.reset_pin = {
 		// .gpio_num = CVI_GPIOE_02, //EVB board
-		.gpio_num = CVI_GPIOA_28,
+		.gpio_num = CVI_GPIOE_03,
 		.active = 0
 	},
 	.power_ct_pin = {

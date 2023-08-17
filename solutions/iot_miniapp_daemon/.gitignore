@@ -49,6 +49,8 @@ __workspace_pack__
 data/resources/fonts
 data/resources/framework
 data/resources/cfg.json
+data/resources/cfg_render.json
+data/resources/cfg_devtool.json
 data/resources/env.json
 data/resources/local_deviceinfo.json
 *footprint.xlsx

@@ -27,8 +27,8 @@ typedef struct {
 } vfs_dirent_t;
 
 typedef struct {
-    int32_t dd_vfs_fd;
-    int32_t dd_rsv;
+    int32_t dd_vfs_fd; /**< file index in vfs */
+    int32_t dd_rsv;    /**< Reserved */
 } vfs_dir_t;
 
 typedef struct {
@@ -46,12 +46,12 @@ typedef struct {
 typedef void (*vfs_poll_notify_t)(void *fds, void *arg);
 
 typedef struct vfs_file_ops       vfs_file_ops_t;
-typedef struct vfs_filesystem_ops vfs_filesystem_ops_t;
+typedef struct vfs_fs_ops vfs_fs_ops_t;
 
-union vfs_inode_ops_t {
+typedef union {
     const vfs_file_ops_t       *i_ops;
-    const vfs_filesystem_ops_t *i_fops;
-};
+    const vfs_fs_ops_t *i_fops;
+} vfs_inode_ops_t;
 
 typedef enum {
     VFS_INODE_VALID,    /* node is available*/
@@ -61,7 +61,7 @@ typedef enum {
 } vfs_inode_status_t;
 
 typedef struct {
-    union vfs_inode_ops_t ops; /* inode operations */
+    vfs_inode_ops_t ops; /* inode operations */
 
     void    *i_arg;   /* per inode private data */
     char    *i_name;  /* name of inode */
@@ -88,48 +88,47 @@ typedef enum {
 } vfs_list_type_t;
 
 struct vfs_file_ops {
-    int32_t (*open)  (vfs_inode_t *node, vfs_file_t *fp);
-    int32_t (*close) (vfs_file_t *fp);
-    int32_t (*read)  (vfs_file_t *fp, void *buf, uint32_t nbytes);
-    int32_t (*write) (vfs_file_t *fp, const void *buf, uint32_t nbytes);
-    int32_t (*ioctl) (vfs_file_t *fp, int32_t cmd, uint32_t arg);
-    int32_t (*poll)  (vfs_file_t *fp, int32_t flag, vfs_poll_notify_t notify, void *fds, void *arg);
-    uint32_t (*lseek) (vfs_file_t *fp, int64_t off, int32_t whence);
+    int     (*open)(vfs_inode_t *node, vfs_file_t *fp);
+    int     (*close)(vfs_file_t *fp);
+    ssize_t (*read)(vfs_file_t *fp, void *buf, size_t nbytes);
+    ssize_t (*write)(vfs_file_t *fp, const void *buf, size_t nbytes);
+    int     (*ioctl)(vfs_file_t *fp, int cmd, unsigned long arg);
+    int     (*poll)(vfs_file_t *fp, int flag, vfs_poll_notify_t notify, void *fd, void *arg);
+    uint32_t (*lseek)(vfs_file_t *fp, int64_t off, int32_t whence);
 #ifdef AOS_PROCESS_SUPPORT
     void*   (*mmap)(vfs_file_t *fp, void *addr, size_t length, int prot, int flags,
                     int fd, off_t offset);
 #endif
-
 };
 
-struct vfs_filesystem_ops {
-    int32_t       (*open)      (vfs_file_t *fp, const char *path, int32_t flags);
-    int32_t       (*close)     (vfs_file_t *fp);
-    int32_t       (*read)      (vfs_file_t *fp, char *buf, uint32_t len);
-    int32_t       (*write)     (vfs_file_t *fp, const char *buf, uint32_t len);
-    uint32_t      (*lseek)     (vfs_file_t *fp, int64_t off, int32_t whence);
-    int32_t       (*sync)      (vfs_file_t *fp);
-    int32_t       (*stat)      (vfs_file_t *fp, const char *path, vfs_stat_t *st);
-    int32_t       (*fstat)     (vfs_file_t *fp, vfs_stat_t *st);
-    int32_t       (*link)      (vfs_file_t *fp, const char *path1, const char *path2);
-    int32_t       (*unlink)    (vfs_file_t *fp, const char *path);
-    int32_t       (*remove)    (vfs_file_t *fp, const char *path);
-    int32_t       (*rename)    (vfs_file_t *fp, const char *oldpath, const char *newpath);
-    vfs_dir_t    *(*opendir)   (vfs_file_t *fp, const char *path);
-    vfs_dirent_t *(*readdir)   (vfs_file_t *fp, vfs_dir_t *dir);
-    int32_t       (*closedir)  (vfs_file_t *fp, vfs_dir_t *dir);
-    int32_t       (*mkdir)     (vfs_file_t *fp, const char *path);
-    int32_t       (*rmdir)     (vfs_file_t *fp, const char *path);
-    void          (*rewinddir) (vfs_file_t *fp, vfs_dir_t *dir);
-    int32_t       (*telldir)   (vfs_file_t *fp, vfs_dir_t *dir);
-    void          (*seekdir)   (vfs_file_t *fp, vfs_dir_t *dir, int32_t loc);
-    int32_t       (*ioctl)     (vfs_file_t *fp, int32_t cmd, uint32_t arg);
-    int32_t       (*statfs)    (vfs_file_t *fp, const char *path, vfs_statfs_t *suf);
-    int32_t       (*access)    (vfs_file_t *fp, const char *path, int32_t amode);
-    int32_t       (*pathconf)  (vfs_file_t *fp, const char *path, int name);
-    int32_t       (*fpathconf) (vfs_file_t *fp, int name);
-    int32_t       (*utime)     (vfs_file_t *fp, const char *path, const vfs_utimbuf_t *times);
-    int32_t       (*truncate)  (vfs_file_t *fp, int64_t length);
+struct vfs_fs_ops {
+    int           (*open)(vfs_file_t *fp, const char *path, int flags);
+    int           (*close)(vfs_file_t *fp);
+    ssize_t       (*read)(vfs_file_t *fp, char *buf, size_t len);
+    ssize_t       (*write)(vfs_file_t *fp, const char *buf, size_t len);
+    off_t         (*lseek)(vfs_file_t *fp, off_t off, int whence);
+    int           (*sync)(vfs_file_t *fp);
+    int           (*stat)(vfs_file_t *fp, const char *path, vfs_stat_t *st);
+    int           (*fstat)(vfs_file_t *fp, vfs_stat_t *st);
+    int           (*link)(vfs_file_t *fp, const char *path1, const char *path2);
+    int           (*unlink)(vfs_file_t *fp, const char *path);
+    int           (*remove)(vfs_file_t *fp, const char *path);
+    int           (*rename)(vfs_file_t *fp, const char *oldpath, const char *newpath);
+    vfs_dir_t    *(*opendir)(vfs_file_t *fp, const char *path);
+    vfs_dirent_t *(*readdir)(vfs_file_t *fp, vfs_dir_t *dir);
+    int           (*closedir)(vfs_file_t *fp, vfs_dir_t *dir);
+    int           (*mkdir)(vfs_file_t *fp, const char *path);
+    int           (*rmdir)(vfs_file_t *fp, const char *path);
+    void          (*rewinddir)(vfs_file_t *fp, vfs_dir_t *dir);
+    long          (*telldir)(vfs_file_t *fp, vfs_dir_t *dir);
+    void          (*seekdir)(vfs_file_t *fp, vfs_dir_t *dir, long loc);
+    int           (*ioctl)(vfs_file_t *fp, int cmd, unsigned long arg);
+    int           (*statfs)(vfs_file_t *fp, const char *path, vfs_statfs_t *suf);
+    int           (*access)(vfs_file_t *fp, const char *path, int amode);
+    long          (*pathconf)(vfs_file_t *fp, const char *path, int name);
+    long          (*fpathconf)(vfs_file_t *fp, int name);
+    int           (*utime)(vfs_file_t *fp, const char *path, const vfs_utimbuf_t *times);
+    int           (*truncate)(vfs_file_t *fp, off_t len);
 };
 
 #if VFS_CONFIG_DEBUG > 0

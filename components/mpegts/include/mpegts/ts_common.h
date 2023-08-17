@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2018-2022 Alibaba Group Holding Limited
- */
+* Copyright (C) 2018-2023 Alibaba Group Holding Limited
+*/
 
 #ifndef __TS_COMMON_H__
 #define __TS_COMMON_H__
@@ -17,8 +17,6 @@
 #ifdef __linux__
 #include <errno.h>
 #include <pthread.h>
-#include "ulog/ulog.h"
-#include "aos_port/common.h"
 #else
 #include <aos/types.h>
 #include <aos/aos.h>
@@ -57,4 +55,3 @@ extern "C" {
 #endif
 
 #endif /* __TS_COMMON_H__ */
-

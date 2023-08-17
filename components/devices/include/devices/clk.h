@@ -79,6 +79,10 @@ int rvm_hal_clk_get_freq(rvm_dev_t *dev, rvm_hal_clk_id_t clk_id, uint32_t idx, 
 int rvm_hal_clk_set_freq(rvm_dev_t *dev, rvm_hal_clk_id_t clk_id, uint32_t idx, uint32_t freq);
 
 
+#if defined(AOS_COMP_DEVFS) && AOS_COMP_DEVFS
+#include <devices/vfs_clk.h>
+#endif
+
 #ifdef __cplusplus
 }
 #endif

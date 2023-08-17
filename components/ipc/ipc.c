@@ -516,7 +516,6 @@ ipc_t *ipc_get(int cpu_id)
     }
 
     ipc  = calloc(1, sizeof(ipc_t) + IPC_NAME_MAX_LEN);
-
     if (ipc == NULL) {
         return NULL;
     }
@@ -529,23 +528,16 @@ ipc_t *ipc_get(int cpu_id)
         slist_add_tail(&ipc->next, &ipc_list);
         ipc->des_cpu_id = cpu_id;
 
-        int ret = aos_event_new(&ipc->evt, 0);
-        aos_check(!ret, ENOMEM);
-        ret = aos_mutex_new(&ipc->ch_mutex);
-        aos_check(!ret, ENOME);
-        ret = aos_mutex_new(&ipc->tx_mutex);
-        aos_check(!ret, ENOME);
-        ret = aos_mutex_new(&ipc->rx_mutex);
-        aos_check(!ret, ENOME);
-        ret = aos_sem_new(&ipc->sem, 0);
-        aos_check(!ret, ENOME);
-        ret = aos_event_set(&ipc->evt, IPC_WRITE_EVENT, AOS_EVENT_OR);
-        aos_check(!ret, ENOME);
+        aos_event_new(&ipc->evt, 0);
+        aos_mutex_new(&ipc->ch_mutex);
+        aos_mutex_new(&ipc->tx_mutex);
+        aos_mutex_new(&ipc->rx_mutex);
+        aos_sem_new(&ipc->sem, 0);
+        aos_event_set(&ipc->evt, IPC_WRITE_EVENT, AOS_EVENT_OR);
 
         snprintf(name_buf, IPC_NAME_MAX_LEN, "ipc->%d", cpu_id);
-        ret = aos_task_new_ext(&ipc->thread, name_buf, ipc_task_process_entry, ipc, CONFIG_IPC_RECV_TASK_STACK_SIZE, 10);
+        aos_task_new_ext(&ipc->thread, name_buf, ipc_task_process_entry, ipc, CONFIG_IPC_RECV_TASK_STACK_SIZE, 10);
 
-        aos_check(!ret, ENOME);
         ipc->seq     = 1;
 
         drv_ipc_mem_init();
@@ -566,10 +558,8 @@ ipc_t *ipc_get(int cpu_id)
 
 #ifdef CONFIG_IPC_PROBE_ENABLE
         ipc->probe_status = 1;
-        ret = aos_event_new(&ipc->probe_freeze_evt, 0);
-        aos_check(!ret, ENOME);
-        ret = aos_task_new_ext(&ipc->probe_thread, "ipc_probe", ipc_probe_entry, ipc, 3072, 32);
-        aos_check(!ret, ENOME);
+        aos_event_new(&ipc->probe_freeze_evt, 0);
+        aos_task_new_ext(&ipc->probe_thread, "ipc_probe", ipc_probe_entry, ipc, 3072, 32);
 #endif
         return ipc;
     }

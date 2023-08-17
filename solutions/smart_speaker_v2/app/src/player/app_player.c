@@ -3,7 +3,7 @@
  */
 #include <board.h>
 
-#if defined(CONFIG_BOARD_AUDIO) && CONFIG_BOARD_AUDIO > 0
+#if defined(BOARD_AUDIO_SUPPORT) && BOARD_AUDIO_SUPPORT
 
 #include <stdio.h>
 #include <time.h>
@@ -205,7 +205,7 @@ void ao_event_hook(int ao_evt)
 
 void app_speaker_init(void)
 {
-#if defined(CONFIG_BOARD_AUDIO_AMP) && CONFIG_BOARD_AUDIO_AMP
+#if defined(BOARD_AUDIO_SUPPORT_AMP) && BOARD_AUDIO_SUPPORT_AMP
     board_audio_amplifier_onoff(0);
 #else
     int pa_pin = board_audio_get_pa_mute_pin();
@@ -214,6 +214,9 @@ void app_speaker_init(void)
 
     if (pa_pin >= 0 ) {
         amplifier_init(AMP_TYPE_GPIO, pa_pin, -1, AMP_MODE_DEF);
+#ifdef BOARD_AUDIO_SUPPORT_AMP_GPIO_FLIP
+        amplifier_config(-1, -1, 1);
+#endif
         amplifier_onoff(1);
     }
 #endif
@@ -224,10 +227,10 @@ void app_speaker_mute(int mute)
     if (smtaudio_get_state() == SMTAUDIO_STATE_MUTE)
         mute = 1;
 
-#if defined(CONFIG_BOARD_AUDIO_AMP) && CONFIG_BOARD_AUDIO_AMP
+#if defined(BOARD_AUDIO_SUPPORT_AMP) && BOARD_AUDIO_SUPPORT_AMP
     board_audio_amplifier_onoff(mute ? 0 : 1);
 #else
     amplifier_onoff(mute ? 0 : 1);
 #endif
 }
-#endif /*CONFIG_BOARD_AUDIO*/
+#endif /*BOARD_AUDIO_SUPPORT*/

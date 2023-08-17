@@ -403,7 +403,7 @@ struct k_sem {
  * @param initial_count Initial semaphore count.
  * @param limit Maximum permitted semaphore count.
  *
- * @return 0 Creat a semaphore succcess
+ * @return 0 Creat a semaphore success
  */
 int k_sem_init(struct k_sem *sem, unsigned int initial_count,
                unsigned int limit);

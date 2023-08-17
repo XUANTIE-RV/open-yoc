@@ -68,7 +68,7 @@ struct cli_status {
 
 static struct cli_status *g_cli = NULL;
 extern cli_console cli_uart_console;
-extern void hal_reboot(void);
+
 #if CLI_IOBOX_ENABLE
 extern uint32_t vfs_get_match_dev_node(const char *name, char *match_name, int match_name_buf_len);
 #endif
@@ -498,8 +498,11 @@ static void cli_tab_complete_path(char *inbuf, uint32_t *idx)
             char dname[256] = {0};
             if (S_ISDIR(s.st_mode))
                 snprintf(dname, 256, "%s%s", entry->d_name, "/");
-            else
-                snprintf(dname, 256, "%s", entry->d_name);
+            else {
+                // not list files
+                continue;
+                // snprintf(dname, 256, "%s", entry->d_name);
+            }
 
             if (match_all) {
                 match_count++;
@@ -585,6 +588,10 @@ redraw:
             inbuf[len++] = '/';
         inbuf[len] = '\0';
     }
+
+    len = strlen(inbuf);
+    if (len > 1 && (inbuf[len - 1] == '/' && inbuf[len - 2] == ' '))
+        inbuf[len - 1] = '\0';
 
     if (m >= 2 || match_all) {
         cli_prefix_print();
@@ -1022,7 +1029,7 @@ void cli_main(void *data)
                    "             Welcome to AliOS Things          ");
     }
 
-#if CLI_IOBOX_ENABLE
+#if 0
     ret = aos_chdir(CONFIG_LFS_MOUNTPOINT);
     if (ret != 0) {
         cli_printf("Failed to change to %s, errno: %d\r\n",
@@ -1179,7 +1186,7 @@ static void help_cmd(char *buf, int len, int argc, char **argv)
 
 static void reboot_cmd(char *buf, int len, int argc, char **argv)
 {
-    hal_reboot();
+    aos_reboot();
 }
 
 static const struct cli_command built_ins[] = {

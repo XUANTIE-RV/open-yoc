@@ -30,7 +30,7 @@ void debug_init(void);
 void debug_cpu_stop(void);
 uint32_t debug_cpu_in_crash(void);
 void fiqafterpanicHandler(void *context);
-void debug_fatal_error(kstat_t err, char *file, int line);
+void debug_fatal_error(int err, char *file, int line);
 
 #ifdef __cplusplus
 }

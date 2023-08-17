@@ -109,7 +109,7 @@ int rvm_hal_display_get_info(rvm_dev_t *dev, rvm_hal_display_info_t *info);
   \param[out]  smem_len   framebuffer size
   \return      0 on success, else on fail.
 */
-int rvm_hal_display_get_framebuffer(rvm_dev_t *dev, void **smem_start, size_t *smem_len);
+int rvm_hal_display_get_framebuffer(rvm_dev_t *dev, void ***smem_start, size_t *smem_len);
 
 /**
   \brief       display set backlight brightness
@@ -170,6 +170,11 @@ int rvm_hal_display_pan_display(rvm_dev_t *dev);
   \return      0 on success, else on fail.
 */
 int rvm_hal_display_blank_on_off(rvm_dev_t *dev, uint8_t on_off);
+
+
+#if defined(AOS_COMP_DEVFS) && AOS_COMP_DEVFS
+#include <devices/vfs_display.h>
+#endif
 
 #ifdef __cplusplus
 }

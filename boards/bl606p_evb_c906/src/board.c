@@ -23,6 +23,8 @@ void board_dma_init(void)
 
 void board_init(void)
 {
+    extern void k_mm_init_sram(void);
+    k_mm_init_sram();
     // board_pinmux_config();
     // board_gpio_init();
     // board_dma_init();

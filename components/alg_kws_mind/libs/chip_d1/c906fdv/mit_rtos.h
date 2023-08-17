@@ -452,7 +452,7 @@ typedef struct {
  */
 int mit_rtos_mode_switch(MitRtosModeSwitchInfo * info);
 
-/*kMitRtosParamOfflineTest*/
+/*kMitRtosParamOfflineTest,  //*_str() in func,to set offline data test.*/
 typedef struct MitRtosSdkOfflineTest{
 	int enable;         //enable 1 or not 0. default disable
 	int looper_times;   //looper times of test. such as 1
@@ -472,20 +472,22 @@ typedef struct MitRtosSdkKwsThresh{
 }MitRtosSdkKwsThresh;
 
 typedef enum  {
-  kMitRtosParamIntCmd = 1, //*_int()接口中 是否需要切换commond模式。内部默认开启
-  kMitRtosParamFEOutNum,   //*_int()接口中 获取算法FE后数据真实输出通道数
-  kMitRtosParamCustomKeyword,    //*_str()接口中 设置自定义唤醒词信息
-  kMitRtosParamCustomKeywordDel, //*_str()接口中 删除自定义唤醒词信息
+  kMitRtosParamIntCmd = 1, // *_int()接口中 是否需要切换commond模式。内部默认开启
+  kMitRtosParamFEOutNum,   // *_int()接口中 获取算法FE后数据真实输出通道数
+  kMitRtosParamCustomKeyword,    // *_str()接口中 设置自定义唤醒词信息
+  kMitRtosParamCustomKeywordDel, // *_str()接口中 删除自定义唤醒词信息
   kMitRtosParamCustomKwsModuleSwitch, //开关KWS模块，热切换，用于识别过程关闭kws检测的场景。
   kMitRtosParamLpmMode, //用户低功耗切换相关参数. 1 enter lpm, 0 exit lpm
   kMitRtosParamSdkSwitchEnable, //算法切换功能开关。默认开启
-  kMitRtosParamKwsUpdataExtend, //*_int()接口中,设置kws数据上传扩展功能是否使能。开启后，返回值0X04可以获取完整的kws数据。
+  kMitRtosParamKwsUpdataExtend, // *_int()接口中,设置kws数据上传扩展功能是否使能。开启后，返回值0X04可以获取完整的kws数据。
   kMitRtosParamSdkKwsThresh, //算法切换功能开关。默认开启
-  kMitRtosParamAsrVadConfig, //*_str()接口中,设置识别专用VAD的配置参数. work with MitRtosVadConfig structure and mit_rtos_get_param_str().
-  kMitRtosParamOfflineTest,  //*_str() in func,to set offline data test. must call after init()/start(), but before updata_audio().
-  kMitRtosParamDoa,  //*_int(), get doa
-  KMitRtosParamAlg1mic,      //*_str() in func,to set alg to 1mic+1ref ==> 1out
-  KMitRtosParamDebugVoice,      //*_str() in func,to set save debug voice of input+output in 20ms. call after init()
+  kMitRtosParamAsrVadConfig, // *_str()接口中,设置识别专用VAD的配置参数. work with MitRtosVadConfig structure and mit_rtos_get_param_str().
+  kMitRtosParamOfflineTest,  // *_str() in func,to set offline data test. must call after init()/start(), but before updata_audio().
+  kMitRtosParamDoa,  // *_int(), get doa
+  KMitRtosParamAlg1mic,      // *_str() in func,to set alg to 1mic+1ref ==> 1out
+  KMitRtosParamDebugVoice,      // *_str() in func,to set save debug voice of input+output in 20ms. call after init()
+  kMitRtosParamSdkKwsThreshRT,  // *_str() in func,to set kwsthreshold realtime for one keyword 'word_pinyin' with value 'thresh_day_'
+  kMitRtosParamFEOutAEC,  // *_str() in func, to set addr of feout before AGC,for distributed. with 'struct MitRtosSdkOfflineTest' buffer/leng_byte
 }MitRtosParamInt_t;
 
 /*设置 语音调试模式的结构体参数*/
@@ -551,6 +553,7 @@ typedef struct {
 typedef struct MitRtosSdkKeywordList_ {
 	int keyword_type; // 0 main keyword , 1 command keyword,2 deputy
 	int index;		  // index of keywrod. all words count from [0,...): keyword1 keyword2 comand1 comand2
+	char word_hanzi[64];	  // hanzi of keyword in word[]. used to set map info by user.
 	char word[64];	  // pinyin of keyword: 'ni hao xiao zhi'
 	int enable; 	  // 1 enable or 0 disable
 	float threshold;  //threshold of this word
@@ -588,7 +591,15 @@ MitRtosSdkKeywordList* mit_rtos_get_keyword_list();
  */
 int mit_rtos_set_keyword_enable(MitRtosSdkKeywordList * keyword_newinfo, int count);
 
+/**
+ * const char * mit_rtos_get_keyword_pinyin(const char * keyword_hanzi)
+ * get the pinyin of keyword_hanzi.
+ * parameter:
+ *	keyword_hanzi: the hanzi of keyword want to check
+ * return the pointer to pinyin or null error.
+ */
 
+const char * mit_rtos_get_keyword_pinyin(const char * keyword_hanzi);
 
 #ifdef __cplusplus 
 }

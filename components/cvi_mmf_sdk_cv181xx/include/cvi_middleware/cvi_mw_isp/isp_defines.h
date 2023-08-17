@@ -216,7 +216,7 @@ CHECK_VALID_ARRAY_3D(_struct, stAuto._param, _idx1, _idx2, ISP_AUTO_ISO_STRENGTH
 	} \
 } while (0)
 
-#ifdef ARCH_RTOS_MARS
+#ifdef ARCH_RTOS_CV181X
 #include "malloc.h"
 
 #define ISP_MALLOC(size)\
@@ -325,6 +325,8 @@ CHECK_VALID_ARRAY_3D(_struct, stAuto._param, _idx1, _idx2, ISP_AUTO_ISO_STRENGTH
 #define ATTR __attribute__
 #define ISP_PACKED ATTR((packed))
 #define ISP_ALIGNED(x) ATTR((aligned(x)))
+
+#define ENABLE_FE_WBG_UPDATE    0   // for rgbmap
 
 #ifdef __cplusplus
 #if __cplusplus

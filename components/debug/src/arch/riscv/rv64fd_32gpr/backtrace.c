@@ -16,8 +16,17 @@
 extern char *__etext;
 extern char *__stext;
 
+#if defined(CONFIG_BENGINE_ENABLE) && CONFIG_BENGINE_ENABLE
+extern char *__post_text_start;
+extern char *__post_text_end;
+#define BT_CHK_PC_AVAIL(pc)   (((uintptr_t)(pc) < (uintptr_t)(&__etext) \
+                              && (uintptr_t)(pc) > (uintptr_t)(&__stext)) || \
+                              ((uintptr_t)(pc) < (uintptr_t)(&__post_text_end) \
+                              && (uintptr_t)(pc) > (uintptr_t)(&__post_text_start)))
+#else
 #define BT_CHK_PC_AVAIL(pc)   ((uintptr_t)(pc) < (uintptr_t)(&__etext) \
                               && (uintptr_t)(pc) > (uintptr_t)(&__stext))
+#endif
 
 #define BT_PC2ADDR(pc)        ((char *)(((uintptr_t)(pc))))
 
@@ -57,7 +66,21 @@ static int riscv_backtrace_framesize_get(unsigned short inst)
     return -1;
 }
 
-/* get ra position in the stach */
+/* get framesize from c ins32 */
+static int riscv_backtrace_framesize_get1(unsigned int inst)
+{
+    unsigned int imm = 0;
+    /* addi sp, sp, -im */
+    if ((inst & 0x800FFFFF) == 0x80010113) {
+        imm = (inst >> 20) & 0x7FF;
+        imm = (~imm & 0x7FF) + 1;
+        return imm >> 3;
+    }
+
+    return -1;
+}
+
+/* get ra position in the stack */
 static int riscv_backtrace_ra_offset_get(unsigned short inst)
 {
     unsigned int imm = 0;
@@ -67,6 +90,20 @@ static int riscv_backtrace_ra_offset_get(unsigned short inst)
         imm = (imm << 3) | ((inst >> 10) & 0x7);
         /* The unit is size_t, So we don't have to move 3 bits to the left */
         return imm;
+    }
+
+    return -1;
+}
+
+static int riscv_backtrace_ra_offset_get1(unsigned int inst)
+{
+    unsigned int imm = 0;
+    /* sd ra,552(sp) */
+    if ((inst & 0x81FFF07F) == 0x113023) {
+        imm = (inst >> 7) & 0x1F;
+        imm |= ((inst >> 25) & 0x7F) << 5;
+        /* The unit is size_t, So we don't have to move 3 bits to the left */
+        return imm >> 3;
     }
 
     return -1;
@@ -82,7 +119,7 @@ static int backtraceFindLROffset(char *LR, int (*print_func)(const char *fmt, ..
 
     LR_indeed = BT_PC2ADDR(LR);
 
-   /* callstack bottom */
+    /* callstack bottom */
     if (LR_indeed == BT_PC2ADDR(&_interrupt_return_address)) {
         /* EXC_RETURN, so here is callstack bottom of interrupt handler */
         if (print_func != NULL) {
@@ -120,7 +157,7 @@ static int backtraceFindLROffset(char *LR, int (*print_func)(const char *fmt, ..
             1  success and find buttom
             -1 fail */
 static int riscv_backtraceFromStack(long **pSP, char **pPC,
-                                  int (*print_func)(const char *fmt, ...))
+                                    int (*print_func)(const char *fmt, ...))
 {
     char *CodeAddr = NULL;
     long  *SP      = *pSP;
@@ -129,7 +166,7 @@ static int riscv_backtraceFromStack(long **pSP, char **pPC,
     int   i;
     int   framesize;
     int   offset = 0;
-
+    unsigned int ins32;
     unsigned short ins16;
 
 #ifdef OS_BACKTRACE_DEBUG
@@ -144,18 +181,28 @@ static int riscv_backtraceFromStack(long **pSP, char **pPC,
     }
 
     /* 1. scan code, find lr pushed */
-    for (i = 0; i < BT_FUNC_LIMIT; i += 4) {
-        CodeAddr = (char *)(((long)PC & (~0x3)) - i);
-
-        ins16 = *(unsigned short *)(CodeAddr + 2);
-        framesize = riscv_backtrace_framesize_get(ins16);
-        if (framesize >= 0) {
-            break;
+    for (i = 0; i < BT_FUNC_LIMIT;) {
+        /* FIXME: not accurate from bottom to up. how to judge 2 or 4byte inst */
+        //CodeAddr = (char *)(((long)PC & (~0x3)) - i);
+        CodeAddr = (char *)(PC - i);
+        ins32 = *(unsigned int *)(CodeAddr);
+        if ((ins32 & 0x3) == 0x3) {
+            ins16 = *(unsigned short *)(CodeAddr - 2);
+            if ((ins16 & 0x3) != 0x3) {
+                i += 4;
+                framesize = riscv_backtrace_framesize_get1(ins32);
+                if (framesize >= 0) {
+                    CodeAddr += 4;
+                    break;
+                }
+                continue;
+            }
         }
-
-        ins16 = *(unsigned short *)(CodeAddr);
+        i += 2;
+        ins16 = (ins32 >> 16) & 0xffff;
         framesize = riscv_backtrace_framesize_get(ins16);
         if (framesize >= 0) {
+            CodeAddr += 2;
             break;
         }
     }
@@ -168,18 +215,22 @@ static int riscv_backtraceFromStack(long **pSP, char **pPC,
         return -1;
     }
 
-    /* 2. scan code, find ins: sd ra,24(sp) */
-    for (i = 0; CodeAddr + i < PC; i += 4) {
-        ins16 = *(unsigned short *)(CodeAddr + i + 2);
-        offset = riscv_backtrace_ra_offset_get(ins16);
-        if (offset >= 0) {
-            break;
-        }
-
-        ins16 = *(unsigned short *)(CodeAddr + i);
-        offset = riscv_backtrace_ra_offset_get(ins16);
-        if (offset >= 0) {
-            break;
+    /* 2. scan code, find ins: sd ra,24(sp) or sd ra,552(sp) */
+    for (i = 0; CodeAddr + i < PC;) {
+        ins32 = *(unsigned int *)(CodeAddr + i);
+        if ((ins32 & 0x3) == 0x3) {
+            i += 4;
+            offset = riscv_backtrace_ra_offset_get1(ins32);
+            if (offset >= 0) {
+                break;
+            }
+        } else {
+            i += 2;
+            ins16 = ins32 & 0xffff;
+            offset = riscv_backtrace_ra_offset_get(ins16);
+            if (offset >= 0) {
+                break;
+            }
         }
     }
 
@@ -257,6 +308,7 @@ int backtrace_caller(char *PC, long *SP, char *LR,
     long *bt_sp;
     char *bt_pc;
     int   lvl, ret;
+    char  panic_call[] = "backtrace : 0x         \r\n";
 
     /* caller must save LR in stack, so find LR from stack */
 
@@ -279,8 +331,14 @@ int backtrace_caller(char *PC, long *SP, char *LR,
         bt_sp = SP;
         bt_pc = PC;
     } else {
+        int offset = backtraceFindLROffset(LR, NULL);
+
         bt_sp = SP;
-        bt_pc = LR;
+        bt_pc = LR - offset;
+        if (print_func != NULL) {
+            k_int64tostr((int)((unsigned long)BT_PC2ADDR(bt_pc)), &panic_call[14]);
+            print_func(panic_call);
+        }
     }
 
     for (lvl = 1; lvl < BT_LVL_LIMIT; lvl++) {
@@ -368,20 +426,31 @@ int backtrace_now_get(void *trace[], int size, int offset)
 void backtrace_handle(char *PC, int *SP, char *LR,
                       int (*print_func)(const char *fmt, ...))
 {
-    int   lvl;
-    int   ret;
     long  *pSP = (long *)SP;
+    char  panic_call[] = "backtrace : 0x         \r\n";
 
     if (print_func == NULL) {
         print_func = printf;
     }
 
-    for (lvl = 0; lvl < BT_LVL_LIMIT; lvl++) {
-        ret = backtraceFromStack(&pSP, &PC, print_func);
-        if (ret != 0) {
-            break;
-        }
+    if (print_func != NULL) {
+        k_int64tostr((int)((unsigned long)BT_PC2ADDR(PC)), &panic_call[14]);
+        print_func(panic_call);
     }
+
+#if defined(CONFIG_BENGINE_ENABLE) && CONFIG_BENGINE_ENABLE
+    long  cause;
+    __asm__ volatile("csrr %0, scause" : "=r"(cause));
+    /* FIXME: pc may be in post segment */
+    if (cause == CAUSE_FETCH_PAGE_FAULT || cause == CAUSE_LOAD_PAGE_FAULT || cause == CAUSE_STORE_PAGE_FAULT) {
+        int offset = backtraceFindLROffset(LR, NULL);
+
+        PC = LR - offset;
+    }
+#endif
+
+    backtrace_caller(PC, pSP, LR, print_func);
+
     return;
 }
 

@@ -1,6 +1,6 @@
 ## 第一部分： 基础信息
 name: gateway_mgmt
-version: v7.7.0s
+version: v7.8.0
 description: gateway management
 type: common
 tag: 核心模块
@@ -44,13 +44,13 @@ build_config:
   cxxflag: ""
   asmflag: ""
   define: ~
-  libs: ~
-  libpath: ~
+  libs:
+    - gateway_mgmt_prebuild
+  libpath:
+    - libs/<cpu>
 # source_file:                             # <可选项> 指定参与编译的源代码文件，支持通配符，采用相对路径
 #   - src/*.c                              # 例：组件 src 目录下所有的扩展名为 c 的源代码文件
 source_file:
-  - src/*.c
-  - src/gateway_porting/*.c
 
 ## 第五部分：配置信息
 def_config:                              # 组件的可配置项

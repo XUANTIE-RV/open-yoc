@@ -6,7 +6,7 @@
 #include <ulog/ulog.h>
 
 #include <smart_audio.h>
-#include "app_net.h"
+#include "wifi/app_net.h"
 #include "voice/app_voice.h"
 
 #include "app_disp.h"

@@ -166,6 +166,13 @@ typedef enum _MWB_MODE {
 	MWB_TUNGSTEN,
 } MWB_MODE;
 
+typedef enum _AWB_PARAMETER_UPDATE {
+	AWB_ATTR_UPDATE,
+	AWB_ATTR_EX_UPDATE,
+	AWB_CALIB_UPDATE,
+	AWB_UPDATE_TOTAL,
+} AWB_PARAMETER_UPDATE;
+
 typedef struct _WbEnvironmentInfo {
 	CVI_S16 s16LvX100;
 	CVI_U32 u32ISONum;
@@ -420,7 +427,8 @@ void AWB_GetGrayWorldWB(CVI_U8 sID, CVI_U16 *pRgain, CVI_U16 *pBgain);
 void AWB_SetAwbSimMode(CVI_BOOL bMode);
 CVI_BOOL AWB_GetAwbSimMode(void);
 AWB_CTX_S *AWB_GET_CTX(VI_PIPE ViPipe);
-
+void AWB_SetAwbRunStatus(CVI_U8 sID, CVI_BOOL bState);
+CVI_BOOL AWB_GetAwbRunStatus(CVI_U8 sID);
 #ifdef __cplusplus
 #if __cplusplus
 }

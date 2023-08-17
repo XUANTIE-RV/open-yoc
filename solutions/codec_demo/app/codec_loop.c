@@ -131,7 +131,7 @@ static uint32_t                 g_recv_size;
 static aos_sem_t                g_input_sem;
 static csi_ringbuf_t            input_ring_buffer;
 static uint8_t                  g_input_buf[INPUT_BUFFER_SIZE];
-static uint8_t                  g_read_buf[READ_BUFFER_SIZE];
+static uint8_t                  *g_read_buf;
 
 static void codec_input_event_cb_fun(csi_codec_input_t *i2s, csi_codec_event_t event, void *arg)
 {
@@ -233,7 +233,10 @@ static void codec_input_task(void *priv)
         input_wait();
         r_size = (g_recv_size + INPUT_PERIOD_SIZE) < READ_BUFFER_SIZE ? INPUT_PERIOD_SIZE : (READ_BUFFER_SIZE-g_recv_size);
         size = csi_codec_input_read_async(&g_input_hdl, g_read_buf + g_recv_size, r_size);
-        if (size != INPUT_PERIOD_SIZE) {
+        if (size != INPUT_PERIOD_SIZE || g_recv_size >= sizeof(g_read_buf)) {
+            if (g_recv_size >= sizeof(g_read_buf)) {
+                size = 0;
+            }
             printf("read size err(%d)(%d)(%d)\n", size, r_size, g_recv_size);
             break;
         }
@@ -254,6 +257,11 @@ static void loop_cmd(char *wbuf, int wbuf_len, int argc, char **argv)
 
 void codec_loop_init(void)
 {
+    g_read_buf = aos_malloc(READ_BUFFER_SIZE);
+    if (g_read_buf == NULL) {
+        LOG("codec_loop malloc read buffer failed!");
+        return;
+    }
     static const struct cli_command cmd_info = {
         "loop",
         "codec loop test",

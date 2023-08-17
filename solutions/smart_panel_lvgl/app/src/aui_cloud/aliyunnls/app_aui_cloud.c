@@ -8,10 +8,13 @@
 #include <av/avutil/named_straightfifo.h>
 #include <cJSON.h>
 #include <yoc/aui_cloud.h>
+#include <yoc/mic.h>
 
-#include "app_player.h"
+#include "aui_cloud/app_aui_cloud.h"
+#include "aui_cloud/ex_cjson.h"
+#include "aui_action/aui_action.h"
+#include "player/app_player.h"
 #include "event_mgr/app_event.h"
-#include "aui_nlp.h"
 
 #define TAG "auinlp"
 
@@ -33,31 +36,22 @@ static void nlp_handle(void *data, int len, void *priv)
         app_aui_cloud_wwv(confirmed);
         cJSON_Delete(js);
     } else if (req_ack_info->data_type == AUI_AUDIO_REQ_TYPE_NLP) {
-        LOGD(TAG, "what JSON=%s\n", req_ack_info->data);
+        LOGD(TAG, "JSON=%s\n", req_ack_info->data);
         cJSON *js = cJSON_Parse(req_ack_info->data);
-
-        int ret = aui_nlp_proc_mit(js, req_ack_info->data);
-        if (ret == AUI_CMD_PROC_NOMATCH) {
-            app_event_update(EVENT_STATUS_NLP_NOTHING); /* 没听清楚 */
-            LOGD(TAG, "没听清楚");
-        } else if (ret == AUI_CMD_PROC_MATCH_NOACTION) {
-            app_event_update(EVENT_STATUS_NLP_UNKNOWN); /* 不懂 */
-            LOGD(TAG, "不懂");
-        } else if (ret == AUI_CMD_PROC_NET_ABNORMAL) {
-            app_event_update(EVENT_STATUS_NLP_NOTHING); /* 网络异常 */
-            LOGD(TAG, "网络异常");
-        } else if (ret == AUI_CMD_PROC_ERROR) {
-            app_event_update(EVENT_STATUS_NLP_NOTHING); /* 没听清楚 */
-            LOGD(TAG, "其他错误");
-        } else {
-            ;
+        cJSON *name = cJSON_GetObjectItemByPath(js, "header.name");
+        //nlp only
+        if( cJSON_IsString(name) && strcmp(name->valuestring, "DialogResultGenerated") == 0 ){
+            app_aui_nlpEnd(req_ack_info->data);
+        }
+        //asr + 异常处理
+        else{
+            app_aui_shortcutCMD(js , req_ack_info->data);
         }
         cJSON_Delete(js);
     } else {
         LOGE(TAG, "unknown type %d", req_ack_info->data_type);
     }
 }
-
 
 static void tts_handle(void *data, int data_len, void *priv)
 {
@@ -74,6 +68,7 @@ int app_aui_cloud_init(void)
 
     aui_nlp_register(g_aui_handler, nlp_handle, g_aui_handler);
     aui_tts_register(g_aui_handler, tts_handle, g_aui_handler);
+
     g_initialized = 1;
 
     return 0;

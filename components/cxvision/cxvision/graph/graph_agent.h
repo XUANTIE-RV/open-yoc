@@ -12,6 +12,8 @@
 
 #ifdef __YOC__
 #include <aos/kernel.h>
+#elif defined(__linux__)
+#include <semaphore.h>
 #endif
 
 #include <posto/base/mutex.h>
@@ -202,7 +204,11 @@ class GraphAgentClient final {
 
  private:
   struct PendingRequest {
+#ifdef __YOC__
     aos_sem_t notifier;
+#elif defined(__linux__)
+    sem_t notifier;
+#endif
     ResponseTPtr response;
   };
 

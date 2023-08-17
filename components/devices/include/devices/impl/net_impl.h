@@ -38,6 +38,11 @@ typedef struct net_ops {
 
     int (*subscribe)(rvm_dev_t *dev, uint32_t event, event_callback_t cb, void *param);
     int (*unsubscribe)(rvm_dev_t *dev, uint32_t event, event_callback_t cb, void *param);
+
+    void* (*alloc_buf)(rvm_dev_t *dev, size_t size);
+    int (*send_data)(rvm_dev_t *dev, void* buff, size_t len);
+    int (*recv_data)(rvm_dev_t *dev, void* buff, size_t len, int timeout_ms);
+    int (*set_event)(rvm_dev_t *dev, rvm_hal_net_event event_cb, void *priv);
 } net_ops_t;
 
 typedef struct netdev_driver {

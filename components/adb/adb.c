@@ -16,7 +16,7 @@
 
 #define TAG "adb"
 
-#define RINGBUFFER_WRITE_EVENT 0x0F0F0000
+#define RINGBUFFER_WRITE_EVENT 0x000000F0
 static char device[] = "4144426465766963656964";
 
 typedef struct {
@@ -55,6 +55,7 @@ typedef struct {
     aos_sem_t    connect_sem;
     adb_status_e status;
     uint8_t      exit;
+    adb_event_cb_t adb_event_cb;
 } adb_t;
 
 static adb_t *adb = NULL;
@@ -266,7 +267,7 @@ void adb_cmd_pushinfo(char *cmd, int type, char *data)
 void adb_cmd_pullinfo(char *cmd, int type, char *data)
 {
     char        buf[128];
-    struct aos_stat s;
+    aos_stat_t s;
 
     LOGD(TAG, "adb_cmd_pullinfo");
     if (type == WRITE_CMD) {
@@ -289,6 +290,7 @@ void adb_cmd_pushstart(char *cmd, int type, char *data)
 {
     is_pushstart_cmd = 1;
     LOGD(TAG, "adb_cmd_pushstart");
+    adb->adb_event_cb(ADB_PUSH_START);
 
     if ((adb->recv->pfile = aos_open(adb->recv->fpath, (O_WRONLY | O_CREAT | O_TRUNC))) < 0) {
         LOGD(TAG, "the file %s can not be opened.\n", adb->recv->fpath);
@@ -310,11 +312,15 @@ void adb_cmd_pushfinish(char *cmd, int type, char *data)
     adb->recv->size   = 0;
     adb->status       = ADB_STOP;
     aos_close(adb->recv->pfile);
+
+    adb->adb_event_cb(ADB_PUSH_FINISH);
 }
 
 void adb_cmd_pullstart(char *cmd, int type, char *data)
 {
     LOGD(TAG, "adb_cmd_pullstart");
+    adb->adb_event_cb(ADB_PULL_START);
+
     if ((adb->send->pfile = aos_open(adb->send->fpath, O_RDONLY)) < 0) {
         LOGD(TAG, "the file %s can not be opened.\n", adb->send->fpath);
         ADB_BACK_ERRNO(FILE_NOT_EXIST);
@@ -332,6 +338,8 @@ void adb_cmd_pullfinish(char *cmd, int type, char *data)
     ADB_BACK_OK();
     adb->status = ADB_STOP;
     aos_close(adb->send->pfile);
+
+    adb->adb_event_cb(ADB_PULL_FINISH);
 }
 
 static void pass_th_cb(void *data, int len)
@@ -382,7 +390,7 @@ void adb_cmd_stop(char *cmd, int type, char *data)
     if (is_pushstart_cmd == 1) {
         /* 需要删除当 tydb 推送失败后的空文件*/
         is_pushstart_cmd = 0;
-        struct aos_stat s;
+        aos_stat_t s;
 
         if (aos_stat(adb->recv->fpath, &s) >= 0) {
             uint32_t total_len = s.st_size;
@@ -406,7 +414,7 @@ static int adb_read(uint8_t *buffer, int length, int timeoutms)
     int         ret;
     uint16_t    r_crc16, calc_crc16;
     int         content_len = 0;
-    struct aos_stat s;
+    aos_stat_t s;
 
     LOGD(TAG, "adb_read, timeoutms:%d", timeoutms);
 
@@ -474,7 +482,7 @@ static int adb_write(uint8_t *buffer, int length, int timeoutms)
     uint16_t    calc_crc16;
     int         content_len = 0;
     char        buf[128];
-    struct aos_stat s;
+    aos_stat_t s;
 
     LOGD(TAG, "adb_write, timeoutms:%d", timeoutms);
 
@@ -526,7 +534,7 @@ _err:
 }
 void adb_cmd_delete(char *cmd, int type, char *data)
 {
-    struct aos_stat s;
+    aos_stat_t s;
     char *      del_file = data;
 
     if (aos_stat(del_file, &s) >= 0) {
@@ -723,4 +731,13 @@ void adb_info_print(int clear)
     }
     printf("trans rb full %d\r\n", adb->transmit->transmit_rb_full_count);
     printf("trans rb max %d\r\n", adb->transmit->transmit_rb_max);
+}
+
+int adb_event_register(adb_event_cb_t cb)
+{
+    if (adb) {
+        adb->adb_event_cb = cb;
+        return 0;
+    }
+    return -1;
 }

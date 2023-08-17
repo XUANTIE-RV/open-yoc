@@ -43,8 +43,8 @@ bool IpcWriter<MessageT>::Write(const MessagePtr& msg,
   msg->header().dst_id = dst_attr.guid;
   std::string str{};
   size_t total_size = msg->ByteSizeLong();
-  str.resize(total_size);
-  char *_buf = &str[0];
+  str.resize(total_size + POSTO_LL_MESSAGE_INLINE_SIZE);
+  char *_buf = &str[POSTO_LL_MESSAGE_INLINE_SIZE];
   msg->SerializeToArray(_buf, total_size);
   amp_ipc_->SendTo((uint8_t*)str.data(), str.size(),
       (uint32_t)dst_attr.host_id, AmpIpc::USER_MSG_PORT);

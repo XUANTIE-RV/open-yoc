@@ -52,4 +52,3 @@ int rvm_hal_hci_start(rvm_dev_t *dev, hci_driver_send_cmd_t send_cmd)
 
     return ret;
 }
-

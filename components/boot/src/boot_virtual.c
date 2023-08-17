@@ -39,7 +39,13 @@ __attribute__((weak)) void boot_load_and_jump(void)
         printf("#########fallback to prim%s\n", pre_slot);
         snprintf(j2part, sizeof(j2part), "prim%s", pre_slot);
     }
-
+    {
+        extern int update_mtb_for_ab(void);
+        if (update_mtb_for_ab()) {
+            printf("update mtb for ab failed !\n");
+            goto fail;
+        }
+    }
     printf("load img & jump to [%s]\n", j2part);
     part = partition_open(j2part);
     part_info = partition_info_get(part);
@@ -62,7 +68,13 @@ __attribute__((weak)) void boot_load_and_jump(void)
     load_addr = part_info->load_addr;
     image_size = part_info->image_size;
 #if defined(CONFIG_OTA_AB) && (CONFIG_OTA_AB > 0)
-    image_size = part_info->length;
+    mtb_partition_info_t mtb_part_info;
+    if (mtb_get_partition_info(jump_to, &mtb_part_info)) {
+        printf("get image size error\n");
+        goto fail;
+    }
+    image_size = mtb_part_info.img_size;
+    printf("the image size is 0x%x\n", image_size);
 #endif
 
     printf("load&jump 0x%lx,0x%lx,%d\n", static_addr, load_addr, image_size);

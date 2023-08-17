@@ -57,7 +57,12 @@ enum {
     NETDEV_TYPE_NBIOT,
 };
 
+enum {
+    NETDEV_EVENT_RECV_DATA = 0,
+};
 
+/** @brief net recv event callback */
+typedef void (*rvm_hal_net_event)(rvm_dev_t *dev, int event_id, void *priv);
 
 /**
     These APIs define Ethernet level operation
@@ -78,6 +83,46 @@ int rvm_hal_net_ping(rvm_dev_t *dev, int type, char *remote_ip);
 int rvm_hal_net_subscribe(rvm_dev_t *dev, uint32_t event, event_callback_t cb, void *param);
 int rvm_hal_net_unsubscribe(rvm_dev_t *dev, uint32_t event, event_callback_t cb, void *param);
 
+
+/**
+  \brief       alloc a buffer for send or recv data
+  \param[in]   dev        Pointer to device object.
+  \param[in]   size       buffer size
+  \return      NULL for failed or buffer pointer
+*/
+void* rvm_hal_net_alloc_buf(rvm_dev_t *dev, size_t size);
+
+/**
+  \brief       send data, should use buff alloced from rvm_hal_net_alloc_buf
+  \param[in]   dev        Pointer to device object.
+  \param[in]   buff       data buff
+  \param[in]   len        buffer size
+  \return      0 on success, else on fail.
+*/
+int rvm_hal_net_send_data(rvm_dev_t *dev, void* buff, size_t len);
+
+/**
+  \brief       recv data, should use buff alloced from rvm_hal_net_alloc_buf
+  \param[in]   dev        Pointer to device object.
+  \param[in]   buff       data buff
+  \param[in]   len        buffer size
+  \param[in]   timeout_ms timeout in ms
+  \return      0 on success, else on fail.
+*/
+int rvm_hal_net_recv_data(rvm_dev_t *dev, void* buff, size_t len, int timeout_ms);
+
+/**
+  \brief       set event callback
+  \param[in]   dev      Pointer to device object.
+  \param[in]   event_cb event callback
+  \param[in]   priv     private data for user
+  \return      0 on success, else on fail.
+*/
+int rvm_hal_net_set_event(rvm_dev_t *dev, rvm_hal_net_event event_cb, void *priv);
+
+#if defined(AOS_COMP_DEVFS) && AOS_COMP_DEVFS
+#include <devices/vfs_netdrv.h>
+#endif
 
 #ifdef __cplusplus
 }

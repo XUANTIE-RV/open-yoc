@@ -38,7 +38,7 @@ typedef struct pthread_cleanup {
 } pthread_cleanup_t;
 
 typedef struct pthread_tcb {
-    aos_task_t task;    /* The rhino task handle. */
+    aos_task_t task;    /* The aos task handle. */
     unsigned int magic; /* The pthread tcb memory magic number. */
     void *(*thread_entry)(void *para); /* The start routine of the thread. */
     void *thread_para;   /* The parameter of start routine. */

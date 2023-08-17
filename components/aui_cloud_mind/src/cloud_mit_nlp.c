@@ -25,6 +25,10 @@
 
 #define MIT_ASR_BUFFER_SIZE 200 * 1024 //50K
 
+#define MIT_ASR_KEY "y5QsLk2A3acWEhCs"
+#define MIT_ASR_TOKEN "4a37aa0c0373498ea04f732054841b62"
+#define MIT_ASR_URL "wss://nls-gateway-inner.aliyuncs.com/ws/v1"
+
 #define MIT_ASR_TASK_QUIT_EVT (0x01)
 
 mit_account_info_t g_mit_account_info;
@@ -196,7 +200,62 @@ static void get_uuid(char *uuid)
 
 static char *mit_asr_get_account(void)
 {
-    return NULL;
+    cJSON *js_account_info = NULL;
+    char *account_info_p   = NULL;
+    char device_uuid[100]  = {0};
+
+    get_uuid(device_uuid);
+
+    js_account_info = cJSON_CreateObject();
+    CHECK_RET_WITH_GOTO(js_account_info, END);
+
+    int mitasr_key = 0;
+    aos_kv_getint("mitasr", &mitasr_key);
+
+    switch(mitasr_key) {
+    case 1:
+        /*ASR IoT feiyan*/
+        cJSON_AddStringToObject(js_account_info, "device_uuid", device_uuid);
+        cJSON_AddStringToObject(js_account_info, "asr_app_key", "DxcfGXG8NLCuH37h");
+        cJSON_AddStringToObject(js_account_info, "asr_token", "4a37aa0c0373498ea04f732054841b62");
+        cJSON_AddStringToObject(js_account_info, "asr_url", "wss://nls-gateway-inner.aliyuncs.com/ws/v1");
+        cJSON_AddStringToObject(js_account_info, "dialog_context", "{\"systemInfo\":\"{\\\"app_package\\\":\\\"com.cibn.tv\\\",\\\"package_name\\\":\\\"com.cibn.tv\\\",\\\"ykPid\\\":\\\"68935a5f396b549b\\\",\\\"uuid\\\":\\\"C55301A5037835E20B07AF9B10697AD9\\\",\\\"device_model\\\":\\\"Konka Android TV 551\\\",\\\"device_system_version\\\":\\\"5.1.1\\\",\\\"device_sn\\\":\\\"C55301A5037835E2\\\",\\\"device_firmware_version\\\":\\\"5.1.1\\\",\\\"firmware\\\":\\\"5.1.1\\\",\\\"charge_type\\\":\\\"2,3,5,7\\\",\\\"sw\\\":\\\"sw1080\\\",\\\"version_code\\\":2120601225,\\\"yingshi_version\\\":2120601225,\\\"com.cibn.tv\\\":2120601225,\\\"device_media\\\":\\\"\\\",\\\"mac\\\":\\\"90C35FB9D08C\\\",\\\"ethmac\\\":\\\"88795B2C38D6\\\",\\\"from\\\":\\\"0,7,9\\\",\\\"license\\\":\\\"7\\\",\\\"bcp\\\":\\\"7\\\",\\\"v_model\\\":\\\"F\\\",\\\"version_name\\\":\\\"6.1.2.25\\\"}\",\"platformKey\":\"\",\"sceneInfo\":\"{\\\"appPackage\\\":\\\"com.konka.athena\\\",\\\"awakenWord\\\":\\\"小康小康\\\",\\\"childVoiceOpen\\\":0,\\\"city\\\":\\\"深圳\\\",\\\"clientVersion\\\":1083,\\\"clientVersionName\\\":\\\"1.0.1083\\\",\\\"deviceMode\\\":0,\\\"media_source\\\":\\\"konka_tencent\\\",\\\"micType\\\":0,\\\"speakerInfoBO\\\":{},\\\"supportChild\\\":0,\\\"useApp\\\":\\\"com.konka.livelauncher\\\",\\\"useAppClientVersion\\\":90008,\\\"vipType\\\":0}\",\"packageInfo\":\"{\\\"com.konka.multimedia\\\":\\\"89649\\\",\\\"com.hisilicon.android.hiRMService\\\":\\\"1\\\",\\\"com.android.defcontainer\\\":\\\"22\\\",\\\"com.konka.message\\\":\\\"100079\\\",\\\"com.konka.konkabtctlbind_5\\\":\\\"82425\\\",\\\"com.konka.applist\\\":\\\"88654\\\",\\\"com.konka.smartengine\\\":\\\"90426\\\",\\\"com.iflytek.showcomesettings\\\":\\\"1159\\\",\\\"com.konka.kksmarthome\\\":\\\"175\\\",\\\"com.gitvkonka.video\\\":\\\"73513\\\",\\\"com.konka.bootlogicproxy\\\":\\\"2\\\",\\\"com.android.inputdevices\\\":\\\"22\\\",\\\"com.tencent.karaoketv\\\":\\\"32\\\",\\\"com.konka.systemsetting\\\":\\\"90086\\\",\\\"com.konka.setupwizard\\\":\\\"89490\\\",\\\"com.konka.mor.tv\\\":\\\"180818\\\",\\\"com.android.externalstorage\\\":\\\"22\\\",\\\"com.konka.vadr\\\":\\\"39815\\\",\\\"com.konka.SmartControl\\\":\\\"20190412\\\",\\\"com.konka.localserver\\\":\\\"89893\\\",\\\"com.konka.hotelmenu\\\":\\\"90227\\\",\\\"com.android.keychain\\\":\\\"22\\\",\\\"com.konka.downloadcenter\\\":\\\"102\\\",\\\"com.konka.cloudsearch\\\":\\\"88623\\\",\\\"com.konka.fourkshow\\\":\\\"90060\\\",\\\"com.android.managedprovisioning\\\":\\\"22\\\",\\\"com.iflytek.xiri.ime\\\":\\\"10493\\\",\\\"com.konka.kkfactory\\\":\\\"89882\\\",\\\"com.konka.systemadvert\\\":\\\"88999\\\",\\\"com.iflytek.itvs\\\":\\\"20110\\\",\\\"com.konka.livelauncher\\\":\\\"90008\\\",\\\"com.bestv.mishitong.tv\\\":\\\"23081306\\\",\\\"com.shafa.konka.appstore\\\":\\\"401\\\",\\\"com.ktcp.tvvideo\\\":\\\"3720\\\",\\\"com.konka.kksystemui\\\":\\\"90084\\\",\\\"com.xiaodianshi.tv.yst\\\":\\\"101602\\\",\\\"com.konka.tvsettings\\\":\\\"90155\\\",\\\"com.konka.passport\\\":\\\"80571\\\",\\\"android\\\":\\\"22\\\",\\\"com.yunos.tvtaobao\\\":\\\"2110500004\\\",\\\"com.konka.familycontrolcenter\\\":\\\"72300\\\",\\\"com.konka.quickstandby\\\":\\\"1\\\",\\\"com.android.webview\\\":\\\"399992\\\",\\\"com.dianshijia.newlive\\\":\\\"335\\\",\\\"com.android.providers.settings\\\":\\\"22\\\",\\\"com.android.systemui\\\":\\\"22\\\",\\\"com.yunos.tv.appstore\\\":\\\"2101403003\\\",\\\"hdpfans.com\\\":\\\"93\\\",\\\"com.konka.appupgrade\\\":\\\"1000199\\\",\\\"com.konka.activitycontainer\\\":\\\"788\\\",\\\"com.konka.a2dpsink\\\":\\\"10904\\\",\\\"com.konka.athena\\\":\\\"1083\\\",\\\"com.konka.tvmall\\\":\\\"38586\\\",\\\"com.konka.account\\\":\\\"83534\\\",\\\"com.konka.market.main\\\":\\\"90000\\\",\\\"com.bajintech.karaok\\\":\\\"1031\\\",\\\"com.kangjia.dangbeimarket\\\":\\\"132\\\",\\\"com.android.packageinstaller\\\":\\\"81283\\\",\\\"com.iflytek.showcome\\\":\\\"20433\\\",\\\"com.android.bluetooth\\\":\\\"22\\\",\\\"com.konka.videorecords\\\":\\\"89981\\\",\\\"com.android.shell\\\":\\\"22\\\",\\\"com.konka.kkmultiscreen\\\":\\\"90152\\\",\\\"com.konka.upgrade\\\":\\\"100206\\\",\\\"com.iflytek.xiri\\\":\\\"190000001\\\",\\\"com.konka.adverttool\\\":\\\"89495\\\",\\\"com.konka.tvmanager\\\":\\\"89701\\\",\\\"com.cibn.tv\\\":\\\"2120601225\\\",\\\"com.tencent.qqmusictv\\\":\\\"311\\\",\\\"com.konka.systeminfo\\\":\\\"190226\\\"}\"}");
+        break;
+    case 2:
+        /*ASR kaishu*/
+        cJSON_AddStringToObject(js_account_info, "device_uuid", device_uuid);
+        cJSON_AddStringToObject(js_account_info, "asr_app_key", "y5QsLk2A3acWEhCs");
+        cJSON_AddStringToObject(js_account_info, "asr_token", "4a37aa0c0373498ea04f732054841b62");
+        cJSON_AddStringToObject(js_account_info, "asr_url", "wss://nls-gateway-inner.aliyuncs.com/ws/v1");
+        break;
+    case 3:
+        /*ASR IoT meeting*/
+        cJSON_AddStringToObject(js_account_info, "device_uuid", "a1IB0paJvIz&H000029J00000034");
+        cJSON_AddStringToObject(js_account_info, "asr_app_key", "d119971b");
+        cJSON_AddStringToObject(js_account_info, "asr_token", "df28a632ca2e41d38db53ddf4957e573");
+        cJSON_AddStringToObject(js_account_info, "asr_url", "wss://smarth.alibaba-inc.com/ws/v1");
+        break;
+    default:
+        /*ASR kaishu test account*/
+        cJSON_AddStringToObject(js_account_info, "device_uuid", device_uuid);
+        cJSON_AddStringToObject(js_account_info, "asr_app_key", "g3aHMdL7v63bZCS3");
+        cJSON_AddStringToObject(js_account_info, "asr_token", "4a37aa0c0373498ea04f732054841b62");
+        cJSON_AddStringToObject(js_account_info, "asr_url", "wss://nls-gateway-inner.aliyuncs.com/ws/v1");
+        ;
+    }
+
+    /*TTS*/
+    cJSON_AddStringToObject(js_account_info, "tts_app_key", "9a7f47f2");
+    cJSON_AddStringToObject(js_account_info, "tts_token", "a2f8b80e04f14fdb9b7c36024fb03f78");
+    cJSON_AddStringToObject(js_account_info, "tts_url", "wss://nls-gateway-inner.aliyuncs.com/ws/v1");
+   
+    account_info_p = cJSON_PrintUnformatted(js_account_info);
+    CHECK_RET_TAG_WITH_GOTO(account_info_p, END);
+
+END:
+    cJSON_Delete(js_account_info);
+
+    return account_info_p;
 }
 
 static int mit_asr_event_cb(void *user_data, NuiThingsEvent event, int dialog_finish)
@@ -486,6 +545,64 @@ static int nui_things_return_data_main(void *              user_data,
 
 static int mit_asr_set_account(aui_t *aui)
 {
+    cJSON *j_info            = NULL;
+
+    aos_check_param(aui);
+
+    char *js_account = mit_asr_get_account();
+    LOGD(TAG, "mit_asr_set_account json_account_info: %s", js_account);
+
+    j_info                = cJSON_Parse(js_account);
+
+    cJSON *device_uuid    = cJSON_GetObjectItem(j_info, "device_uuid");
+    cJSON *asr_app_key    = cJSON_GetObjectItem(j_info, "asr_app_key");
+    cJSON *asr_token      = cJSON_GetObjectItem(j_info, "asr_token");
+    cJSON *asr_url        = cJSON_GetObjectItem(j_info, "asr_url");
+    cJSON *tts_app_key    = cJSON_GetObjectItem(j_info, "tts_app_key");
+    cJSON *tts_token      = cJSON_GetObjectItem(j_info, "tts_token");
+    cJSON *tts_url        = cJSON_GetObjectItem(j_info, "tts_url");
+    cJSON *tts_key_id     = cJSON_GetObjectItem(j_info, "tts_key_id");
+    cJSON *tts_key_secret = cJSON_GetObjectItem(j_info, "tts_key_secret");
+    cJSON *dialog_context = cJSON_GetObjectItem(j_info, "dialog_context");
+
+    CHECK_RET_TAG_WITH_GOTO(j_info && device_uuid && cJSON_IsString(device_uuid) && asr_app_key &&
+                                cJSON_IsString(asr_app_key) && asr_token &&
+                                cJSON_IsString(asr_token) && asr_url && cJSON_IsString(asr_url) &&
+                                tts_app_key && cJSON_IsString(tts_app_key) && tts_token &&
+                                cJSON_IsString(tts_token) && tts_url && cJSON_IsString(tts_url),
+                            ERR);
+
+    g_mit_account_info.device_uuid    = device_uuid->valuestring;
+    g_mit_account_info.asr_app_key    = asr_app_key->valuestring;
+    g_mit_account_info.asr_token      = asr_token->valuestring;
+    g_mit_account_info.asr_url        = asr_url->valuestring;
+    g_mit_account_info.tts_app_key    = tts_app_key->valuestring;
+    g_mit_account_info.tts_token      = tts_token->valuestring;
+    g_mit_account_info.tts_url        = tts_url->valuestring;
+    if (dialog_context) {
+        g_mit_account_info.dialog_context = dialog_context->valuestring;
+    }
+
+    if ((tts_key_id && cJSON_IsString(tts_key_id)) &&
+        (tts_key_secret && cJSON_IsString(tts_key_secret))) {
+        g_mit_account_info.tts_key_id     = tts_key_id->valuestring;
+        g_mit_account_info.tts_key_secret = tts_key_secret->valuestring;
+    }
+
+    mit_dialog_config.device_uuid        = g_mit_account_info.device_uuid;
+    mit_dialog_config.app_key            = g_mit_account_info.asr_app_key;
+    mit_dialog_config.token              = g_mit_account_info.asr_token;
+    mit_dialog_config.url                = g_mit_account_info.asr_url;
+    mit_dialog_config.dialog_context     = g_mit_account_info.dialog_context;
+    mit_dialog_config.enable_vad_cloud   = 1; //1;//enable cloud nn vad
+    mit_dialog_config.enable_decoder_vad = 1; //1;// enable cloud decoder vad
+    return 0;
+
+ERR:
+    if (j_info) {
+        cJSON_Delete(j_info);
+    }
+
     return -1;
 }
 
@@ -660,7 +777,7 @@ static int mit_stop_pcm(aui_t *aui)
     } else if (aui->audio_req_type == AUI_AUDIO_REQ_TYPE_NLP) {
         mit_context_t *context = (mit_context_t *)aui->ops.nlp->priv;
 
-        if (context->status == MIT_STATE_RESULT) {
+        if (context->status == MIT_STATE_RESULT || context->status == MIT_STATE_END) {
             return 0;
         } else if (context->status != MIT_STATE_ONGOING) {
             return -1;

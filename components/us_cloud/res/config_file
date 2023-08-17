@@ -1,0 +1,29 @@
+{
+  "name": "Unisound VUI config",
+    "version": "v1.0",
+    "rasr": {
+      "enable": 1,
+      "save_file": 0,
+      "databuf_len": 96000,
+      "save_path": "/tmp",
+      "ser": {
+        "appkey": "jw3opu3jzrujom6rwmd5mhilnerw3tzhngt6pkim",
+        "seckey": "b5b95e6378ea750cdff4ca3b0b79cb9c",
+        "nlu": "ver=3.0;scenario=smarthome;filterName=nlu-manager;req_nlu_length=1;returnType=json;fullDuplex=true;appendLength=1;mode=child;version=0.1",
+        "sever_prm": "audioCodec=adpcm;audioFormat=audio/x-wav;greeOta=G10-0.1;false_alarm=4;domains_penalty=1;best_result_return=true;confidence_measure=true;threshold=3;vad_time=0.6;modelType=home,song,ysdw,aux;sampleRate=16k;voiceField=far;serverVad=true;start_sil=30;textFormat=json",
+        "server_domain": "asrv3.hivoice.cn",
+        "host": "47.102.50.144",
+        "port": "80"
+      }
+    },
+    "tts": {
+      "host": "39.105.241.224",
+      "server_domain": "tts-g2.hivoice.cn",
+      "port": "80",
+      "appkey": "jw3opu3jzrujom6rwmd5mhilnerw3tzhngt6pkim",
+      "seckey": "b5b95e6378ea750cdff4ca3b0b79cb9c",
+      "server_prm": "audioCodec=raw;audioFormat=audio/mpeg;bright=50;e2c=false;emt=20;pit=50;sampleRate=16000;smt=20;spd=50;vcn=kiyo;vol=55;",
+      "save_file": 0,
+      "save_path": "/tmp"
+    }
+}

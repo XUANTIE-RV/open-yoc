@@ -30,6 +30,7 @@ else
             ;;
         "a")
             # echo "the all variables from yoctools, value is $OPTARG"
+            CONFIG_DEFINES=$OPTARG
             ;;
         "h")
             ;;
@@ -65,9 +66,25 @@ BOOT_BIN="${MK_BOARD_PATH}/bootimgs/boot"
 CONFIG_YAML="${MK_BOARD_PATH}/configs/config.yaml"
 KP_BIN="${MK_BOARD_PATH}/bootimgs/kp"
 
+# # yoctools >= 2.0.44
+# check components alg_asr_lyeva
+
+COMP_ALG_ASR_PATH=$(echo $CONFIG_DEFINES | grep "PATH_ALG_ASR_LYEVA" | awk -F ':' '{print $2}')
+#echo $CONFIG_DEFINES
+if [ -n "$EXE_EXT" ]; then
+    # CDK
+    COMP_ALG_ASR_PATH=$PATH_ALG_ASR_LYEVA
+fi
+
+if [ -n "$COMP_ALG_ASR_PATH" ];then
+echo $COMP_ALG_ASR_PATH
+CONFIG_YAML="${MK_BOARD_PATH}/configs/config_lyeva_asr.yaml"
+fi
+
 cp ${BOOT0_BIN} $MK_GENERATED_PATH/data
 cp ${BOOT_BIN} $MK_GENERATED_PATH/data
-cp ${CONFIG_YAML} $MK_GENERATED_PATH/data/
+cp ${CONFIG_YAML} $MK_GENERATED_PATH/data/config.yaml
+echo $CONFIG_YAML
 [ -f ${KP_BIN} ] && cp ${KP_BIN} $MK_GENERATED_PATH/data/
 
 BOARD_DIR=$MK_BOARD_PATH

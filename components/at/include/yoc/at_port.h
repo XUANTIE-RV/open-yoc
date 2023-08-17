@@ -16,6 +16,7 @@ typedef void (*channel_event_t)(int event_id, void *priv);
 typedef struct {
     void* (*init)(const char *name, void *config);
     int (*set_event)(void *hdl, channel_event_t evt_cb, void *priv);
+    int (*set_baud)(void *hdl, int uartbaud);
     int (*send)(void *hdl, const char *data, int size);
     int (*recv)(void *hdl, const char *data, int size, int timeout);
 } at_channel_t;

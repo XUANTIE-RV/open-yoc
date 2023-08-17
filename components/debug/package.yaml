@@ -1,7 +1,7 @@
 
 ## 第一部分： 基础信息
 name: debug                                         # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
-version: v7.7.0                                    # <必选项> 组件版本号
+version: v7.8.0                                    # <必选项> 组件版本号
 description: coredump and debug cmds support        # <必选项> 建议至少20字以上
 type: common                                        # <必选项> 组件类型，为：solution, chip, board, common, sdk
 license: Apache license v2.0                        # <可选项> 源代码的许可证，要确保所有代码、文件的许可证不冲突。如：MIT，Apache license v2.0，BSD
@@ -48,18 +48,18 @@ build_config:
 source_file:
   - src/debug_panic.c
   - src/debug_print.c
-  - src/debug_overview.c
-  - src/debug_backtrace.c
-  - src/debug_infoget.c
-  - src/debug_cpuusage.c
+  - src/debug_overview.c ? <CONFIG_KERNEL_RHINO>
+  - src/debug_backtrace.c ? <CONFIG_KERNEL_RHINO>
+  - src/debug_infoget.c ? <CONFIG_KERNEL_RHINO>
+  - src/debug_cpuusage.c ? <CONFIG_KERNEL_RHINO>
   - src/debug_test.c ? <DEBUG_TEST_CMDS_ENABLE>
-  - src/debug_dumpsys.c ? <AOS_COMP_CLI>
-  - src/debug_cli_cmd.c ? <AOS_COMP_CLI>
+  - src/debug_dumpsys.c ? <CONFIG_KERNEL_RHINO>
+  - src/debug_cli_cmd.c
   - src/debug_lastword.c ? <DEBUG_LAST_WORD_ENABLE>
   - src/debug.c
   - src/debug_weak.c
-  - src/arch/<arch>/<cpu_num>/panic.c
-  - src/arch/<arch>/<cpu_num>/backtrace.c
+  - src/arch/<arch>/<cpu_num>/panic.c ? <CONFIG_KERNEL_RHINO>
+  - src/arch/<arch>/<cpu_num>/backtrace.c ? <CONFIG_KERNEL_RHINO>
   #- example/*.c ? <AOS_COMP_CLI>
 
 ## 第五部分：配置信息

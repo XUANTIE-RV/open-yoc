@@ -25,8 +25,19 @@
 #endif
 static aos_task_t app_task_handle;
 extern int main(void);
+
+static void components_init(void)
+{
+#if defined(AOS_COMP_VFS) && AOS_COMP_VFS
+    extern int aos_vfs_init(void);
+    aos_vfs_init();
+#endif
+}
+
 static void application_task_entry(void *arg)
 {
+    components_init();
+
     main();
 
     aos_task_exit(0);

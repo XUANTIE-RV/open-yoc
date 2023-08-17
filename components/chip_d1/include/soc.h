@@ -21,6 +21,9 @@
 extern "C" {
 #endif
 
+#define PLIC_BASE           (0x10000000UL)
+#define CORET_BASE          (PLIC_BASE + 0x4000000UL)               /*!< CORET Base Address */
+#define PLIC                ((PLIC_Type *)PLIC_BASE)
 
 #ifndef EHS_VALUE
 #define EHS_VALUE               20000000U
@@ -719,11 +722,6 @@ typedef enum {
 #define DW_UART4_BASE               0x02501000UL
 #define DW_UART5_BASE               0x02501400UL
 #define DW_UART_SIZE                0x1000U
-
-
-#define PLIC_BASE           (0x10000000UL)
-#define CORET_BASE          (PLIC_BASE + 0x4000000UL)               /*!< CORET Base Address */
-#define PLIC                ((PLIC_Type *)PLIC_BASE)
 
 /* ================================================================================ */
 /* ================                  otp declaration               ================ */

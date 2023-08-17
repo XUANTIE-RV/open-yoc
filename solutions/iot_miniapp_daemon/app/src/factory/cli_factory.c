@@ -7,6 +7,7 @@
 #include <aos/cli.h>
 #include <yoc/adb_server.h>
 
+#if defined(CONFIG_COMP_VOICE_WRAPPER) && CONFIG_COMP_VOICE_WRAPPER
 extern void fct_pcm_chk_record(char *play_url, int second, int vol, int pcmchk, int savefile);
 
 static void cmd_factory_func(char *wbuf, int wbuf_len, int argc, char **argv)
@@ -38,10 +39,14 @@ static void cmd_factory_func(char *wbuf, int wbuf_len, int argc, char **argv)
         ;
     }
 }
+#endif
 
 void cli_reg_cmd_factory(void)
 {
+#if defined(CONFIG_COMP_VOICE_WRAPPER) && CONFIG_COMP_VOICE_WRAPPER
     static const struct cli_command cmd_info = { "factory", "factory test", cmd_factory_func };
 
     aos_cli_register_command(&cmd_info);
+#endif
 }
+

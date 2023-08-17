@@ -49,7 +49,6 @@ cvi_json_bool cvi_json_object_object_get_ex2(struct cvi_json_object *obj, const 
 	} while (0)
 #define JSON_(r_w_flag, base, type, key, value) type##_JSON(r_w_flag, base, key, (value))
 #define JSON(r_w_flag, type, value) JSON_(r_w_flag, obj, type, #value, &data->value)
-#define JSON_T(r_w_flag, type, value) JSON_(r_w_flag, obj, type, #type, &data->value)
 #define JSON_A_(r_w_flag, base, type, key, value, length)                                                              \
 	{                                                                                                              \
 		JSON *array;                                                                                           \

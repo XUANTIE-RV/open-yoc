@@ -197,7 +197,7 @@ CVI_S32 DISK_SdGetCapacity(CVI_DOUBLE *Total,CVI_DOUBLE *Free)
     if(DISK_SdGetStatus(CVI_TRUE)!= STORAGE_NORMAL) {
         return 0;
     }
-    struct aos_statfs fsinfo;
+    aos_statfs_t fsinfo;
     aos_statfs(SDPATH, &fsinfo);
 
     *Total = (CVI_DOUBLE)fsinfo.f_blocks *fsinfo.f_bsize /(1024 *1024);//单位MB

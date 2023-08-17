@@ -1,5 +1,5 @@
 
-out/smart_speaker_alg_bl606p_mind/yoc.elf:     file format elf64-littleriscv
+out/smart_speaker_alg_bl606p_lyeva/yoc.elf:     file format elf64-littleriscv
 
 
 Disassembly of section .text:

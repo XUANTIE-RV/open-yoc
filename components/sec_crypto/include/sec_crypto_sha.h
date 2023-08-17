@@ -23,6 +23,9 @@
 #include "crypto_sha1.h"
 #include "crypto_sha256.h"
 #endif
+#if defined(CONFIG_WITH_SE)
+#include <se_sha.h>
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -84,6 +87,9 @@ typedef struct sc_sha {
 #endif
 #endif
 #if defined(CONFIG_TEE_CA)
+#endif
+#if defined(CONFIG_WITH_SE)
+	se_sha_t se_sha;
 #endif
   void *user;   ///< CID 68702（1 的 1 数)：编码标准冲突 (MISRA C-2012 Rule 21.18)
 } sc_sha_t;

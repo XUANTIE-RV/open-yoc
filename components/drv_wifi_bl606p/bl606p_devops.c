@@ -31,7 +31,6 @@
 #endif
 #define WIFI_STACK_SIZE  (1536)
 #define TASK_PRIORITY_FW (1)
-#include "k_api.h"
 
 #define TAG "wifi"
 
@@ -112,9 +111,9 @@ static rvm_hal_wifi_event_func      *g_evt_func;
 static rvm_hal_wifi_mgnt_cb_t        mgmt_fn;
 static rvm_dev_t            *wifi_evt_dev;
 
-__attribute__((section(".wifi_ram"))) static cpu_stack_t wifi_stack[WIFI_STACK_SIZE];
+__attribute__((section(".wifi_ram"))) static unsigned long wifi_stack[WIFI_STACK_SIZE];
 
-static ktask_t wifi_fw_task;
+static aos_task_t wifi_fw_task;
 
 #define DRIVER_INVALID_RETURN_VAL                             \
     do {                                                      \
@@ -292,7 +291,10 @@ static int bl606p_get_ipaddr(rvm_dev_t *dev, ip_addr_t *ipaddr, ip_addr_t *netma
 
 static int bl606p_subscribe(rvm_dev_t *dev, uint32_t event, event_callback_t cb, void *param)
 {
-    return -1;
+    if (cb) {
+        event_subscribe(event, cb, param);
+    }
+    return 0;
 }
 
 static int bl606p_ping_remote(rvm_dev_t *dev, int type, char *remote_ip)
@@ -916,10 +918,12 @@ static void event_cb_wifi_event(input_event_t *event, void *private_data)
         case CODE_WIFI_ON_GOT_IP: {
             LOGD(TAG, "[APP] [EVT] GOT IP %ld\r\n", aos_now_ms());
             event_publish(EVENT_NET_GOT_IP, NULL);
+#ifdef CONFIG_COMP_BL606P_BLIMPLS
             extern bool hal_bt_is_connected(void);
             if (hal_bt_is_connected()) {
                 tg_wifi_ps_mode_entry();
             }
+#endif
 
         } break;
         case CODE_WIFI_ON_EMERGENCY_MAC: {
@@ -942,15 +946,14 @@ static void event_cb_wifi_event(input_event_t *event, void *private_data)
 static int _wifi_start_firmware_task(void)
 {
     bl_pm_init();
-    krhino_task_create(&wifi_fw_task,
-                       "fw",
-                       NULL,
-                       TASK_PRIORITY_FW,
-                       0,
-                       (cpu_stack_t *)((uint32_t)wifi_stack | 0x40000000),
-                       WIFI_STACK_SIZE,
-                       wifi_main,
-                       1);
+    aos_task_create(&wifi_fw_task,
+                    "fw",
+                    wifi_main,
+                    NULL,
+                    (void *)((uint32_t)wifi_stack | 0x40000000),
+                    WIFI_STACK_SIZE * sizeof(unsigned long),
+                    TASK_PRIORITY_FW,
+                    1);
     return 0;
 }
 

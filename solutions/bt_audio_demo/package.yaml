@@ -1,7 +1,7 @@
 
 ## 第一部分： 基础信息
 name: bt_audio_demo                                  # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
-version: v7.7.0                                     # <必选项> 组件版本号
+version: v7.8.0                                     # <必选项> 组件版本号
 description:  bt_audio_demo                          # <必选项> 建议至少20字以上
 type: solution                                       # <必选项> 组件类型，为：solution, chip, board, common, sdk
 
@@ -12,32 +12,31 @@ type: solution                                       # <必选项> 组件类型�
 #   - minilibc: v7.2.0
 #   - aos: >=v7.2.0
 sdk_chip:
-  - sdk_chip_bl606p_e907: v7.7.0
-  - sdk_chip_d1: v7.7.0
-  - sdk_chip_f133: v7.7.0
-  - sdk_chip_cv181xh: v7.7.0
+  - sdk_chip_bl606p_e907: v7.8.0
+  - sdk_chip_d1: v7.8.0
+  - sdk_chip_f133: v7.8.0
 
 mkflash_script: mkflash.sh
 
 depends:
-  - sdk_chip_bl606p_e907: v7.7.0
-  - av: v7.7.0
-  - amrnb: v7.7.0
-  - amrwb: v7.7.0
-  - flac: v7.7.0
-  - ogg: v7.7.0
-  - opus: v7.7.0
-  - pvmp3dec: v7.7.0
-  - sonic: v7.7.0
-  - speex: v7.7.0
-  - speexdsp: v7.7.0
-  - lwip: v7.7.0
-  - mbedtls: v7.7.0
-  - smart_audio: v7.7.0
-  - drv_amplifier: v7.7.0
-  - voice_wrapper: v7.7.0
-  - cjson: v7.7.0
-  - wifi_provisioning: v7.7.0
+  - sdk_chip_bl606p_e907: v7.8.0
+  - av: v7.8.0
+  - amrnb: v7.8.0
+  - amrwb: v7.8.0
+  - flac: v7.8.0
+  - ogg: v7.8.0
+  - opus: v7.8.0
+  - pvmp3dec: v7.8.0
+  - sonic: v7.8.0
+  - speex: v7.8.0
+  - speexdsp: v7.8.0
+  - lwip: v7.8.0
+  - mbedtls: v7.8.0
+  - smart_audio: v7.8.0
+  - drv_amplifier: v7.8.0
+  - voice_wrapper: v7.8.0
+  - cjson: v7.8.0
+  - wifi_provisioning: v7.8.0
 
 ## 第三部分：板级信息
 # hw_info:                                 # 对 solution、board、chip 三个字段的改进，统称为 hw_info 字段

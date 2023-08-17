@@ -18,7 +18,7 @@
 #define CONFIG_H
 
 #ifdef __riscv_vector
-#define CSK_CPU_STACK_EXTRAL    (280 + 512 + 40) /* if use vector instructions, we need add extra more stack size*/
+#define CSK_CPU_STACK_EXTRAL    (280 + 1024 + 40) /* if use vector instructions, we need add extra more stack size*/
 #else
 #define CSK_CPU_STACK_EXTRAL    280
 #endif

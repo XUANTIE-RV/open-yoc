@@ -25,6 +25,7 @@ typedef struct iic_driver {
                      const void *data, uint32_t size, uint32_t timeout);
     int (*mem_read)(rvm_dev_t *dev, uint16_t dev_addr, uint16_t mem_addr, uint16_t mem_addr_size,\
                     void *data, uint32_t size, uint32_t timeout);
+    int (*trans_dma_enable)(rvm_dev_t *dev, bool enable);
 } iic_driver_t;
 
 #ifdef __cplusplus

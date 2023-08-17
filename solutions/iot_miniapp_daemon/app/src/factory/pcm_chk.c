@@ -1,3 +1,4 @@
+#if defined(CONFIG_COMP_VOICE_WRAPPER) && CONFIG_COMP_VOICE_WRAPPER
 #include <stdint.h>
 #include <smart_audio.h>
 
@@ -168,3 +169,4 @@ void fct_pcm_chk_record(char *play_url, int second, int vol, int pcmchk, int sav
         aos_msleep(200);
     }
 }
+#endif

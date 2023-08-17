@@ -124,6 +124,7 @@ int mtb_update_backup(mtb_t *mtb, const char *img_name, mtb_partition_info_t *pa
             || partition_new_info->storage_info.id != part_info.storage_info.id
             || partition_new_info->storage_info.type != part_info.storage_info.type
             || partition_new_info->storage_info.area != part_info.storage_info.area
+            || partition_new_info->preload_size != part_info.preload_size
 #endif
             )
             {
@@ -140,6 +141,7 @@ int mtb_update_backup(mtb_t *mtb, const char *img_name, mtb_partition_info_t *pa
                     strncpy(part_at->pub_key_name, partition_new_info->pub_key_name, PUBLIC_KEY_NAME_SIZE);
 #else
                     memcpy(&part_at->storage_info, &partition_new_info->storage_info, sizeof(storage_info_t));
+                    part_at->preload_size = partition_new_info->preload_size;
 #endif
                     uint32_t blk_cnt = (partition_new_info->end_addr - partition_new_info->start_addr) / 512;
                     part_at->block_count_h = (blk_cnt >> 16) & 0xFFFF;
@@ -154,6 +156,8 @@ int mtb_update_backup(mtb_t *mtb, const char *img_name, mtb_partition_info_t *pa
             }
         }
     }
+#if defined(CONFIG_OTA_AB) && (CONFIG_OTA_AB > 0)
+#else
     // update version & crc32
     uint8_t *app_version_at;
     uint8_t version[MTB_OS_VERSION_LEN_V4];
@@ -168,6 +172,7 @@ int mtb_update_backup(mtb_t *mtb, const char *img_name, mtb_partition_info_t *pa
     }
     UPD_LOGI("version:[%s]", version);
     memcpy(app_version_at, version, olen);
+#endif
     imtb_head_v4_t *m_head = (imtb_head_v4_t *)mtb_ram;
     int crc_content_len = sizeof(imtb_head_v4_t) + MTB_OS_VERSION_LEN_V4 + \
                             m_head->partition_count * sizeof(imtb_partition_info_v4_t);
@@ -218,4 +223,45 @@ fail:
     free(mtb_ram);
     return -1;
 }
+
+#if defined(CONFIG_OTA_AB) && (CONFIG_OTA_AB > 0)
+#include <yoc/ota_ab_img.h>
+int update_mtb_for_ab(const char *ab)
+{
+    int update_flag;
+    download_img_info_t dl_img_info;
+
+    int ret = otaab_env_img_info_init(ab, &dl_img_info, NULL);
+    if (ret < 0) {
+        UPD_LOGI("do not need update mtb.");
+        return 0;
+    }
+    for (int i = 0; i < dl_img_info.image_count; i++) {
+        mtb_partition_info_t part_old_info;
+        if (mtb_get_partition_info(dl_img_info.img_info[i].partition_name, &part_old_info)) {
+            UPD_LOGE("mtb get part info e");
+            return -1;
+        }
+        if (part_old_info.img_size != dl_img_info.img_info[i].img_size
+            || part_old_info.preload_size != dl_img_info.img_info[i].preload_size) {
+            part_old_info.img_size = dl_img_info.img_info[i].img_size;
+            part_old_info.preload_size = dl_img_info.img_info[i].preload_size;
+            if (mtb_update_backup(mtb_get(), dl_img_info.img_info[i].partition_name, &part_old_info, &update_flag)) {
+                UPD_LOGE("mtb update backup e");
+                return -1;
+            }
+            if (mtb_update_valid(mtb_get())) {
+                UPD_LOGE("mtb update valid e");
+                return -1;
+            }
+            if (mtb_update_ram(mtb_get())) {
+                UPD_LOGE("mtb update ram e");
+                return -1;
+            }
+        }
+    }
+    return 0;
+}
+#endif
+
 #endif

@@ -20,6 +20,7 @@ void AE_SaveParameterSetting(void);
 
 extern SAE_BOOT_INFO *AeBootInfo[AE_SENSOR_NUM];
 
+extern ISP_EXP_INFO_S *pstAeMpiExpInfo[AE_SENSOR_NUM];
 extern ISP_EXPOSURE_ATTR_S *pstAeMpiExposureAttr[AE_SENSOR_NUM];
 extern ISP_EXPOSURE_ATTR_S *pstAeExposureAttrInfo[AE_SENSOR_NUM];
 
@@ -57,10 +58,13 @@ void AE_Free(CVI_U8 sID, void *ptr);
 void AE_MemoryAlloc(CVI_U8 sID, AE_MEMORY_ITEM item);
 void AE_MemoryFree(CVI_U8 sID, AE_MEMORY_ITEM item);
 
+void AE_SetParamUpdateFlag(CVI_U8 sID, AE_PARAMETER_UPDATE flag);
+void AE_CheckParamUpdateFlag(CVI_U8 sID);
+
 void AE_SnapLogInit(void);
 void AE_SnapLogPrintf(const char *szFmt, ...);
 
-#ifdef ARCH_RTOS_MARS
+#ifdef ARCH_RTOS_CV181X
 void AE_RtosBufInit(CVI_U8 sID);
 #endif
 

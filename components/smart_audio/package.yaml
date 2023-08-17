@@ -1,7 +1,7 @@
 
 ## 第一部分： 基础信息
 name: smart_audio                                   # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
-version: v7.7.0                                    # <必选项> 组件版本号
+version: v7.8.0                                    # <必选项> 组件版本号
 description: 提供了对播放器播放状态逻辑的控制       # <必选项> 建议至少20字以上
 type: common                                        # <必选项> 组件类型，为：solution, chip, board, common
 
@@ -59,6 +59,7 @@ source_file:
 def_config:
     CONFIG_SMART_AUDIO: 1
     CONFIG_SMART_AUDIO_STACK_SIZE: 3072
+    CONFIG_SMART_AUDIO_MEDIA_STACK_SIZE: 4096
 
 ## 第六部分：安装信息
 # install:

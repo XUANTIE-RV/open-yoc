@@ -635,6 +635,15 @@ extern "C"
      */
     gw_status_t gateway_subdev_get_info(gw_subdev_t subdev, subdev_info_t *info);
 
+    /*
+    group0、group1、group2、group3
+    场景一：子设备可以同时属于0,1,2,3，加入新的分组时，遍历没有，push_back/有序插入(提高遍历效率)：2->2,3->0,2,3
+    场景二：子设备不能同时属于01，也不能同时属于23，subgrp[0]= -1/group0/group1 ，subgrp[1]= -1/group2/group3，
+    */
+    gw_subgrp_t gateway_subdev_get_subgrpx(gw_subdev_t subdev,int index);
+
+    int gateway_subdev_set_subgrpx(gw_subdev_t subdev,int index,gw_subgrp_t newgrp);
+
     /**
      * @brief This function will get triples of the subdev local
      * @param[in]  subdev the handle of the subdev

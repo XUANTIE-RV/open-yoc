@@ -5,6 +5,7 @@
     "image-alpha": "pages/image-alpha/index.vue",
     "text": "pages/text/index.vue",
     "cards": "pages/cards/index.vue",
+    "small_cards": "pages/small_cards/index.vue",
     "image-cards": "pages/image-cards/index.vue",
     "lottie": "pages/lottie/index.vue"
   },

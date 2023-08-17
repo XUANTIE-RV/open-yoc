@@ -46,6 +46,11 @@ int rvm_hal_battery_fetch(rvm_dev_t *dev, rvm_hal_battery_attr_t attr);
 int rvm_hal_battery_getvalue(rvm_dev_t *dev, rvm_hal_battery_attr_t attr, void *value, size_t size);
 int rvm_hal_battery_event_cb(rvm_hal_battery_event_t event);
 
+
+#if defined(AOS_COMP_DEVFS) && AOS_COMP_DEVFS
+#include <devices/vfs_battery.h>
+#endif
+
 #ifdef __cplusplus
 }
 #endif

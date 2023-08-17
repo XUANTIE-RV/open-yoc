@@ -1,0 +1,70 @@
+@import './var';
+@import './mixin';
+
+// 背景颜色
+.background {
+    // background-color: rgba(255, 255, 255, 1);
+    background-color: @background-color;
+    position: relative;
+    width: 480px;
+    height: 480px;
+    // overflow: hidden;
+}
+// 普通大小文字
+.small_text {
+    font-size: 22px;
+    color: @text-color;
+}
+// 普通大小文字
+.text {
+    font-size: 24px;
+    color: @text-color;
+}
+.larger_text {
+    font-size: 36px;
+    color: @text-color;
+}
+// 顶部标签区域
+.top_label_panel {
+    background-color: transparent;
+    height: 50px;
+    width: 480px;
+}
+// 顶部标签文字
+.top_label_text {
+    color: #ffffff;
+    font-size: 28px;
+    margin-top: 10px;
+    align-self: center;
+}
+
+// 返回按钮
+.nav-back {
+    position: absolute;
+    /* 上边 | 右边 | 下边 | 左边 + 顺时针*/
+    padding: 5px 10px 100% 15px;
+    color: #ffffff;
+    font-size: 38px;
+    font-weight: bold;
+
+    // border-width: 1;
+    // border-color: red;
+}
+
+.card_root_section {
+    width: 424px;
+    height: 424px;
+    margin: 28px 0 0 28px;
+  
+  }
+
+
+.demo-block {
+    flex-wrap: wrap;
+    row-gap: 20px;
+    column-gap: 20px;
+  }
+  
+  .demo-row {
+    flex-direction: row;
+  }

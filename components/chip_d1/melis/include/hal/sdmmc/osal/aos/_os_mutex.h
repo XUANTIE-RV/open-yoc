@@ -133,23 +133,23 @@ static inline void OS_MutexSetInvalid(OS_Mutex_t *mutex)
 	mutex->handle = OS_INVALID_HANDLE;
 }
 
-/**
- * @brief Get the mutex object's owner
- * @note A mutex object's owner is a thread that locks the mutex
- * @param[in] mutex Pointer to the mutex object
- * @return The handle of the thread that locks the mutex object.
- *         NULL when the mutex is not locked by any thread.
- */
-static inline OS_ThreadHandle_t OS_MutexGetOwner(OS_Mutex_t *mutex)
-{
-#ifndef CONFIG_KERNEL_NONE
-	kmutex_t *k_mutex = (kmutex_t *)mutex->handle;
+// /**
+//  * @brief Get the mutex object's owner
+//  * @note A mutex object's owner is a thread that locks the mutex
+//  * @param[in] mutex Pointer to the mutex object
+//  * @return The handle of the thread that locks the mutex object.
+//  *         NULL when the mutex is not locked by any thread.
+//  */
+// static inline OS_ThreadHandle_t OS_MutexGetOwner(OS_Mutex_t *mutex)
+// {
+// #ifndef CONFIG_KERNEL_NONE
+// 	kmutex_t *k_mutex = (kmutex_t *)mutex->handle;
 
-	return (OS_ThreadHandle_t)(k_mutex->mutex_task);
-#else
-    return (OS_ThreadHandle_t)0;
-#endif
-}
+// 	return (OS_ThreadHandle_t)(k_mutex->mutex_task);
+// #else
+//     return (OS_ThreadHandle_t)0;
+// #endif
+// }
 
 #ifdef __cplusplus
 }

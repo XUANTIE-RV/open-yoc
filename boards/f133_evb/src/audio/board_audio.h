@@ -78,6 +78,7 @@ int      board_drc_set_param(void *data, int byte);
 /**
  * 获取PA控制引脚号
  */
+#define BOARD_AUDIO_SUPPORT_AMP_GPIO_FLIP 1
 int board_audio_get_pa_mute_pin(void);
 
 #endif

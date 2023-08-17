@@ -273,9 +273,6 @@ int rvm_hal_wifi_power_off(rvm_dev_t *dev)
     return ret;
 }
 
-
-
-
 int rvm_hal_wifi_start_scan(rvm_dev_t *dev, wifi_scan_config_t *config, bool block)
 {
     int ret;
@@ -456,5 +453,6 @@ int rvm_hal_wifi_set_smartcfg(rvm_dev_t *dev, int enable)
 
     return ret;
 }
+
 #endif
 

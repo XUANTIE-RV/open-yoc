@@ -49,6 +49,7 @@ static int local_player_init()
 
 static smtaudio_ops_node_t ctrl_local_play = {
     .name = "simple_local_play",
+    .url  = NULL,
     .prio = 1,
     .id = SMTAUDIO_LOCAL_PLAY,
     .status = SMTAUDIO_STATE_STOP,
@@ -66,14 +67,12 @@ static smtaudio_ops_node_t ctrl_local_play = {
 
 static void _player_event(void *player, uint8_t type, const void *data, uint32_t len)
 {
-    int rc;
-
     LOGD(TAG, "=====%s, %d, type = %d", __FUNCTION__, __LINE__, type);
 
     switch (type)
     {
     case PLAYER_EVENT_ERROR:
-        rc = player_stop((player_t *)player);
+        player_stop((player_t *)player);
 
         break;
 
@@ -81,9 +80,8 @@ static void _player_event(void *player, uint8_t type, const void *data, uint32_t
     {
         media_info_t minfo;
         memset(&minfo, 0, sizeof(media_info_t));
-        rc = player_get_media_info((player_t *)player, &minfo);
-        LOGD(TAG, "=====rc = %d, duration = %llums, bps = %llu, size = %u", rc, minfo.duration, minfo.bps,
-             minfo.size);
+        player_get_media_info((player_t *)player, &minfo);
+
         if (ctrl_local_play.callback)
         {
             ctrl_local_play.callback(SMTAUDIO_LOCAL_PLAY, SMTAUDIO_PLAYER_EVENT_START);

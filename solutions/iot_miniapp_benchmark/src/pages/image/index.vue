@@ -1,5 +1,5 @@
 <template>
-  <div class="page" @click="back">
+  <div class="page" :style="pagestyle" @click="back">
     <img class="image" :style="style" resize="stretch" :src="require('../../images/img.jpg')" />
     <img class="image" :style="style" resize="stretch" :src="require('../../images/img.jpg')" />
     <img class="image" :style="style" resize="stretch" :src="require('../../images/img.jpg')" />
@@ -47,6 +47,11 @@ export default {
         s.transform = 'rotate(10deg)';
       }
       return s;
+    },
+    pagestyle () {
+      return {
+        opacity: this.$page.loadOptions.opacity
+      };
     }
   },
   methods: {

@@ -264,7 +264,10 @@ static int rtl8723ds_get_ipaddr(rvm_dev_t *dev, ip_addr_t *ipaddr, ip_addr_t *ne
 
 int rtl8723ds_subscribe(rvm_dev_t *dev, uint32_t event, event_callback_t cb, void *param)
 {
-    return -1;
+    if (cb) {
+        event_subscribe(event, cb, param);
+    }
+    return 0;
 }
 
 int rtl8723ds_ping_remote(rvm_dev_t *dev, int type, char *remote_ip)

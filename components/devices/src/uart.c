@@ -24,10 +24,11 @@
             aos_mutex_lock(&UART_DRIVER(dev)->tx_mtx, AOS_WAIT_FOREVER); \
         }                                                                \
     } while (0)
-#define UART_TX_UNLOCK(dev)                          \
-    do                                               \
-    {                                                \
-        aos_mutex_unlock(&UART_DRIVER(dev)->tx_mtx); \
+#define UART_TX_UNLOCK(dev)                                \
+    do                                                     \
+    {                                                      \
+        if (aos_mutex_is_valid(&UART_DRIVER(dev)->tx_mtx)) \
+            aos_mutex_unlock(&UART_DRIVER(dev)->tx_mtx);   \
     } while (0)
 #define UART_RX_LOCK(dev)                                                \
     do                                                                   \
@@ -38,10 +39,11 @@
             aos_mutex_lock(&UART_DRIVER(dev)->rx_mtx, AOS_WAIT_FOREVER); \
         }                                                                \
     } while (0)
-#define UART_RX_UNLOCK(dev)                          \
-    do                                               \
-    {                                                \
-        aos_mutex_unlock(&UART_DRIVER(dev)->rx_mtx); \
+#define UART_RX_UNLOCK(dev)                                \
+    do                                                     \
+    {                                                      \
+        if (aos_mutex_is_valid(&UART_DRIVER(dev)->rx_mtx)) \
+            aos_mutex_unlock(&UART_DRIVER(dev)->rx_mtx);   \
     } while (0)
 
 void rvm_hal_uart_config_default(rvm_hal_uart_config_t *config)
@@ -59,9 +61,28 @@ int rvm_hal_uart_config(rvm_dev_t *dev, rvm_hal_uart_config_t *config)
     int ret;
 
     UART_VAILD(dev);
+    if (!config) {
+        return -EINVAL;
+    }
 
     device_lock(dev);
     ret = UART_DRIVER(dev)->config(dev, config);
+    device_unlock(dev);
+
+    return ret;
+}
+
+int rvm_hal_uart_config_get(rvm_dev_t *dev, rvm_hal_uart_config_t *config)
+{
+    int ret;
+
+    UART_VAILD(dev);
+    if (!config) {
+        return -EINVAL;
+    }
+
+    device_lock(dev);
+    ret = UART_DRIVER(dev)->config_get(dev, config);
     device_unlock(dev);
 
     return ret;
@@ -160,3 +181,15 @@ void rvm_hal_uart_set_event(rvm_dev_t *dev, void (*event)(rvm_dev_t *dev, int ev
     device_unlock(dev);
 }
 
+int rvm_hal_uart_trans_dma_enable(rvm_dev_t *dev, bool enable)
+{
+    int ret;
+
+    UART_VAILD(dev);
+
+    device_lock(dev);
+    ret = UART_DRIVER(dev)->trans_dma_enable(dev, enable);
+    device_unlock(dev);
+
+    return ret;
+}

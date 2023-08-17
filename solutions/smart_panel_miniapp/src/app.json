@@ -1,0 +1,24 @@
+{
+  "pages": {
+    "index": "pages/index/index.js",
+    "network": "pages/page/network.vue",
+    "sound": "pages/page/sound/index.vue",
+    "pull-down": "pages/page/pull-down.vue",
+    "systemSet": "pages/page/systemSet.vue",
+    "musicPlay": "pages/page/music_play/index.js",
+    "screen": "pages/page/screen/index.js",
+    "fota": "pages/page/fota/index.js",
+    "scences": "components/Scences.vue",
+    "voice": "pages/page/voice/index.js",
+    "sys": "pages/page/sys/index.js",
+    "mesh": "pages/page/subdev_mgt/index.js",
+    "wirednet": "pages/page/wired_net/index.js",
+    "mesh_ctrl": "pages/page/mesh_ctrl/index.js"
+
+  },
+  "options": {
+      "style": {
+          "lessPaths": ["styles"]
+      }
+  }
+}

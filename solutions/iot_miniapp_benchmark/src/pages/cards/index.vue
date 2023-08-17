@@ -42,6 +42,8 @@ export default {
   computed: {
     style() {
       return {
+        borderWidth: this.$page.loadOptions.border,
+        opacity: this.$page.loadOptions.opacity,
         borderRadius: this.$page.loadOptions.radius,
         boxShadow: this.$page.loadOptions.shadow ? '3px 3px 5px red' : ''
       };
@@ -70,6 +72,7 @@ export default {
   width: 152px;
   height: 152px;
   margin: 3px;
+  border-color: rgb(255, 0, 0);
   background-color: white;
   align-items: center;
   justify-content: flex-end;

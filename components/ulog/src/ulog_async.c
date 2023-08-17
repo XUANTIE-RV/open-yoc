@@ -122,7 +122,7 @@ void ulog_async_init()
                      log_routine,
                      NULL,
                      LOG_ROUTINE_TASK_STACK_DEPTH,
-                     RHINO_CONFIG_USER_PRI_MAX);
+                     AOS_MAX_APP_PRI);
 }
 
 void ulog_async_flush()

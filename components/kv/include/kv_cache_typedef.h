@@ -20,8 +20,13 @@ extern "C" {
 #define CACHE_INVALID_VAL (0xFFFF)
 
 typedef struct cache_node {
+#if CONFIG_KV_LARGE_NODE
+    uint32_t           block_id;
+    uint32_t           offset;
+#else
     uint16_t           block_id;
     uint16_t           offset;
+#endif
 } cache_node_t;
 
 //FIXME: kv-conflict may be one only, list no-needed

@@ -128,7 +128,7 @@ static int eth_subscribe(rvm_dev_t *dev, uint32_t event, event_callback_t cb, vo
     return 0;
 }
 
-int eth_set_dns_server(rvm_dev_t *dev, ip_addr_t ipaddr[], uint32_t num)
+static int eth_set_dns_server(rvm_dev_t *dev, ip_addr_t ipaddr[], uint32_t num)
 {
     int n, i;
 

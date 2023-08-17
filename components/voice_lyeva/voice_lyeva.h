@@ -21,8 +21,10 @@ typedef struct voice {
     voice_state_t   state;
     int             task_running;
     int             task_exit;
+    int             task_start;
     aos_task_t      plugin_task;
     aos_sem_t       pcm_sem;
+    aos_sem_t       start_sem;
 } voice_t;
 
 #ifdef __cplusplus

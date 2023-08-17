@@ -31,6 +31,11 @@ typedef struct gnss_info {
 
 int rvm_hal_gnss_getinfo(rvm_dev_t *dev, rvm_hal_gnss_info_t *info);
 
+
+#if defined(AOS_COMP_DEVFS) && AOS_COMP_DEVFS
+#include <devices/vfs_gnss.h>
+#endif
+
 #ifdef __cplusplus
 }
 #endif

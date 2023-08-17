@@ -1,7 +1,7 @@
 
 ## 第一部分： 基础信息
 name: rhino                                         # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
-version: v7.7.0                                    # <必选项> 组件版本号
+version: v7.8.0                                    # <必选项> 组件版本号
 description: Rhino实时操作系统内核，体积小、功耗低、实时性、调试方便等特点 # <必选项> 建议至少20字以上
 type: common                                        # <必选项> 组件类型，为：solution, chip, board, common, sdk
 tag: 核心模块                                       # <可选项> 组件分类，缺省值： ''
@@ -37,6 +37,7 @@ license: Apache license v2.0                        # <可选项> 源代码的�
 #   libpath:                               # 指定静态库所在的路径（相对于该组件路径）
 #     - libs                               #   -Llibs
 build_config:
+  #cflag: -g -O0
   include:
     - include
 
@@ -78,7 +79,7 @@ source_file:
 #   CONFIG_PARAM_NOT_CHECK: y
 #   CONFIG_CLI: y
 def_config:
-  CONFIG_KERNEL_RHINO: 1
+  CONFIG_KERNEL_RHINO: y
 
 ## 第六部分：安装信息
 # install:

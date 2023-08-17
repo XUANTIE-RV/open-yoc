@@ -31,19 +31,13 @@
 #define _ROM_DEBUG_H_
 
 #include <stdio.h>
-#ifndef CONFIG_KERNEL_FREERTOS
 #include <log.h>
-#endif
 
 #include "sys/sys_debug.h"
 
 
 /* debug */
-#ifndef CONFIG_KERNEL_FREERTOS
 #define ROM_SYSLOG      printk
-#else
-#define ROM_SYSLOG      printf
-#endif
 
 #define ROM_DUMP_ON     1
 #define ROM_DBG_ON      1

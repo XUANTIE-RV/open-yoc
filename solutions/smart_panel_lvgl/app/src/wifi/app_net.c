@@ -12,16 +12,17 @@
 #include <softap_prov.h>
 #include <ntp.h>
 
-#include "app_player.h"
-#include "app_sys.h"
+#include "player/app_player.h"
+#include "sys/app_sys.h"
 #include "event_mgr/app_event.h"
+#include "occ_fota/app_fota.h"
+#include "wifi/app_net.h"
 
-#include "app_net.h"
 #include "app_main.h"
-#include "app_fota.h"
+
 #include <smartliving/sl_wifi_prov.h>
 #if defined(EN_COMBO_NET) && EN_COMBO_NET
-#include "combo_net.h"
+#include "linkkit_gateway/combo_net.h"
 #endif
 
 #define TAG "app_net"
@@ -115,7 +116,7 @@ static void network_reset_handle(uint32_t event_id, int reason)
                         }
                     }
                     // Debug
-                    LOGD(TAG, "now ssid is:%s psk is:%s", ssid, psk);
+                    // LOGD(TAG, "now ssid is:%s psk is:%s", ssid, psk);
                     //reconnect
                     netmgr_reset(app_netmgr_hdl, net_reset_delay_time);
 

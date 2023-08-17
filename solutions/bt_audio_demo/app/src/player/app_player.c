@@ -160,7 +160,7 @@ void ao_event_hook(int ao_evt)
 
 void app_speaker_init(void)
 {
-#if defined(CONFIG_BOARD_AUDIO_AMP) && CONFIG_BOARD_AUDIO_AMP
+#if defined(BOARD_AUDIO_SUPPORT_AMP) && BOARD_AUDIO_SUPPORT_AMP
     board_audio_amplifier_onoff(0);
 #else
     int pa_pin = board_audio_get_pa_mute_pin();
@@ -179,7 +179,7 @@ void app_speaker_mute(int mute)
     if (smtaudio_get_state() == SMTAUDIO_STATE_MUTE)
         mute = 1;
 
-#if defined(CONFIG_BOARD_AUDIO_AMP) && CONFIG_BOARD_AUDIO_AMP
+#if defined(BOARD_AUDIO_SUPPORT_AMP) && BOARD_AUDIO_SUPPORT_AMP
     board_audio_amplifier_onoff(mute ? 0 : 1);
 #else
     amplifier_onoff(mute ? 0 : 1);

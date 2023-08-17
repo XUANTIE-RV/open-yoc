@@ -29,7 +29,7 @@ extern "C" {
  * @return 0 on success, negative error on failure
  *
  */
-int32_t vfs_init(void);
+int vfs_init(void);
 
 /**
  * @brief Open the file or device by path
@@ -40,7 +40,7 @@ int32_t vfs_init(void);
  * @return the new file descriptor, negative error on failure
  *
  */
-int32_t vfs_open(const char *path, int32_t flags);
+int vfs_open(const char *path, int flags);
 
 /**
  * @brief Close the file or device by file descriptor
@@ -50,7 +50,7 @@ int32_t vfs_open(const char *path, int32_t flags);
  * @return 0 on success, negative error on failure
  *
  */
-int32_t vfs_close(int32_t fd);
+int vfs_close(int fd);
 
 /**
  * @brief Read the contents of a file or device into a buffer
@@ -62,7 +62,7 @@ int32_t vfs_close(int32_t fd);
  * @return the number of bytes read, 0 at end of file, negative error on failure
  *
  */
-int32_t vfs_read(int32_t fd, void *buf, uint32_t nbytes);
+ssize_t vfs_read(int fd, void *buf, size_t nbytes);
 
 /**
  * @brief Write the contents of a buffer to file or device
@@ -74,7 +74,7 @@ int32_t vfs_read(int32_t fd, void *buf, uint32_t nbytes);
  * @return the number of bytes written, negative error on failure
  *
  */
-int32_t vfs_write(int32_t fd, const void *buf, uint32_t nbytes);
+ssize_t vfs_write(int fd, const void *buf, size_t nbytes);
 
 /**
  * @brief This is a wildcard API for sending specific commands
@@ -86,7 +86,7 @@ int32_t vfs_write(int32_t fd, const void *buf, uint32_t nbytes);
  * @return any return from the command
  *
  */
-int32_t vfs_ioctl(int32_t fd, int32_t cmd, uint32_t arg);
+int vfs_ioctl(int fd, int cmd, unsigned long arg);
 
 /**
  * @brief This is a wildcard API for executing the particular poll by fd
@@ -100,7 +100,7 @@ int32_t vfs_ioctl(int32_t fd, int32_t cmd, uint32_t arg);
  * @return 0 on success, negative error on failure
  *
  */
-int32_t vfs_do_pollfd(int32_t fd, int32_t flag, vfs_poll_notify_t notify,
+int vfs_do_pollfd(int fd, int flag, vfs_poll_notify_t notify,
                       void *fds, void *arg);
 
 /**
@@ -116,7 +116,7 @@ int32_t vfs_do_pollfd(int32_t fd, int32_t flag, vfs_poll_notify_t notify,
  * @return the new offset of the file
  *
  */
-uint32_t vfs_lseek(int32_t fd, int64_t offset, int32_t whence);
+off_t vfs_lseek(int fd, off_t offset, int whence);
 
 /**
  * @brief truncate a file to a specified size
@@ -127,7 +127,7 @@ uint32_t vfs_lseek(int32_t fd, int64_t offset, int32_t whence);
  * @return 0 on success, negative error on failure
  *
  */
-int32_t vfs_truncate(const char *path, int64_t size);
+int vfs_truncate(const char *path, int64_t size);
 
 /**
  * @brief truncate a file to a specified size
@@ -137,7 +137,7 @@ int32_t vfs_truncate(const char *path, int64_t size);
  * @return 0 on success, negative error on failure
  *
  */
-int32_t vfs_ftruncate(int32_t fd, int64_t size);
+int vfs_ftruncate(int fd, int64_t size);
 
 /**
  * @brief Flush any buffers associated with the file
@@ -147,7 +147,7 @@ int32_t vfs_ftruncate(int32_t fd, int64_t size);
  * @return 0 on success, negative error on failure
  *
  */
-int32_t vfs_sync(int32_t fd);
+int vfs_sync(int fd);
 
 /**
  * @brief Flush all information in memory that updates file systems to be
@@ -167,7 +167,7 @@ void vfs_allsync(void);
  * @return 0 on success, negative error on failure
  *
  */
-int32_t vfs_stat(const char *path, vfs_stat_t *st);
+int vfs_stat(const char *path, vfs_stat_t *st);
 
 /**
  * Store information about the file in a vfs_stat structure
@@ -178,7 +178,7 @@ int32_t vfs_stat(const char *path, vfs_stat_t *st);
  * @return 0 on success, negative error on failure
  *
  */
-int32_t vfs_fstat(int fd, vfs_stat_t *st);
+int vfs_fstat(int fd, vfs_stat_t *st);
 
 #ifdef AOS_PROCESS_SUPPORT
 /**
@@ -211,7 +211,7 @@ int vfs_munmap(void *start, size_t len);
  * @return 0 on success, negative error on failure
  *
  */
-int32_t vfs_link(const char *oldpath, const char *newpath);
+int vfs_link(const char *oldpath, const char *newpath);
 
 /**
  * @brief Remove a file from the filesystem
@@ -221,7 +221,7 @@ int32_t vfs_link(const char *oldpath, const char *newpath);
  * @return 0 on success, negative error on failure
  *
  */
-int32_t vfs_unlink(const char *path);
+int vfs_unlink(const char *path);
 
 /**
  * @brief Remove a file from the filesystem
@@ -231,7 +231,7 @@ int32_t vfs_unlink(const char *path);
  * @return 0 on success, negative error on failure
  *
  */
-int32_t vfs_remove(const char *path);
+int vfs_remove(const char *path);
 
 /**
  * @brief Rename a file in the filesystem
@@ -242,7 +242,7 @@ int32_t vfs_remove(const char *path);
  * @return 0 on success, negative error on failure
  *
  */
-int32_t vfs_rename(const char *oldpath, const char *newpath);
+int vfs_rename(const char *oldpath, const char *newpath);
 
 /**
  * @brief Open a directory on the filesystem
@@ -262,7 +262,7 @@ vfs_dir_t *vfs_opendir(const char *path);
  * @return 0 on success, negative error on failure
  *
  */
-int32_t vfs_closedir(vfs_dir_t *dir);
+int vfs_closedir(vfs_dir_t *dir);
 
 /**
  * @brief Read the next directory entry
@@ -282,7 +282,7 @@ vfs_dirent_t *vfs_readdir(vfs_dir_t *dir);
  * @return 0 on success, negative error on failure
  *
  */
-int32_t vfs_mkdir(const char *path);
+int vfs_mkdir(const char *path);
 
 /**
  * @brief Remove a directory
@@ -292,7 +292,7 @@ int32_t vfs_mkdir(const char *path);
  * @return 0 on success, negative error on failure
  *
  */
-int32_t vfs_rmdir(const char *path);
+int vfs_rmdir(const char *path);
 
 /**
  * @brief Reset the position of a directory stream to the beginning of a directory
@@ -312,7 +312,7 @@ void vfs_rewinddir(vfs_dir_t *dir);
  * @return the current location of the directory, negative error on failure
  *
  */
-int32_t vfs_telldir(vfs_dir_t *dir);
+int vfs_telldir(vfs_dir_t *dir);
 
 /**
  * @brief Move the directory position to a given location
@@ -322,7 +322,7 @@ int32_t vfs_telldir(vfs_dir_t *dir);
  *
  * @return none
  */
-void vfs_seekdir(vfs_dir_t *dir, int32_t loc);
+void vfs_seekdir(vfs_dir_t *dir, long loc);
 
 /**
  * @brief Store information about the filesystem in a vfs_statfs structure
@@ -333,7 +333,7 @@ void vfs_seekdir(vfs_dir_t *dir, int32_t loc);
  * @return 0 on success, negative error on failure
  *
  */
-int32_t vfs_statfs(const char *path, vfs_statfs_t *buf);
+int vfs_statfs(const char *path, vfs_statfs_t *buf);
 
 /**
  * @brief Get access information
@@ -344,7 +344,7 @@ int32_t vfs_statfs(const char *path, vfs_statfs_t *buf);
  * @return 0 on success, negative error on failure
  *
  */
-int32_t vfs_access(const char *path, int32_t amode);
+int vfs_access(const char *path, int amode);
 
 
 /**
@@ -387,7 +387,7 @@ char *vfs_getcwd(char *buf, size_t size);
  *
  * @return value of path info
  */
-int32_t vfs_pathconf(const char *path, int name);
+int vfs_pathconf(const char *path, int name);
 
 /**
  * @brief Get path info
@@ -396,7 +396,7 @@ int32_t vfs_pathconf(const char *path, int name);
  *
  * @return value of path info
  */
-int32_t vfs_fpathconf(int fd, int name);
+int vfs_fpathconf(int fd, int name);
 
 /**
  * @brief Set the access and modification times
@@ -414,7 +414,7 @@ int vfs_utime(const char *path, const vfs_utimbuf_t *times);
  * @return the vfs file descriptor offset
  *
  */
-int32_t vfs_fd_offset_get(void);
+int vfs_fd_offset_get(void);
 
 /**
  * @brief Bind driver to the file or device
@@ -426,7 +426,7 @@ int32_t vfs_fd_offset_get(void);
  * @return 0 on success, negative error on failure
  *
  */
-int32_t vfs_register_driver(const char *path, vfs_file_ops_t *ops, void *arg);
+int vfs_register_driver(const char *path, vfs_file_ops_t *ops, void *arg);
 
 /**
  * @brief Unbind driver from the file or device
@@ -436,7 +436,7 @@ int32_t vfs_register_driver(const char *path, vfs_file_ops_t *ops, void *arg);
  * @return 0 on success, negative error on failure
  *
  */
-int32_t vfs_unregister_driver(const char *path);
+int vfs_unregister_driver(const char *path);
 
 /**
  * @brief Mount filesystem to the path
@@ -448,7 +448,7 @@ int32_t vfs_unregister_driver(const char *path);
  * @return 0 on success, negative error on failure
  *
  */
-int32_t vfs_register_fs(const char *path, vfs_filesystem_ops_t* ops, void *arg);
+int vfs_register_fs(const char *path, const vfs_fs_ops_t* ops, void *arg);
 
 /**
  * @brief Unmount the filesystem
@@ -458,7 +458,7 @@ int32_t vfs_register_fs(const char *path, vfs_filesystem_ops_t* ops, void *arg);
  * @return 0 on success, negative error on failure
  *
  */
-int32_t vfs_unregister_fs(const char *path);
+int vfs_unregister_fs(const char *path);
 
 /**
  * @brief  open vfs file dump
@@ -474,7 +474,7 @@ void vfs_dump_open();
  * @return 0 on success, negative error on failure
  *
  */
-int32_t vfs_list(vfs_list_type_t t);
+int vfs_list(vfs_list_type_t t);
 
 /**
  * @brief get fs node name for current path.
@@ -484,7 +484,7 @@ int32_t vfs_list(vfs_list_type_t t);
  * @param[out] size          names count.
  * @return    0 on success, negative error on failure.
  */
-int32_t vfs_get_node_name(const char *path, char names[][64], uint32_t* size);
+int vfs_get_node_name(const char *path, char names[][64], uint32_t* size);
 
 /**
  * @brief set detach state of the node.
@@ -492,7 +492,7 @@ int32_t vfs_get_node_name(const char *path, char names[][64], uint32_t* size);
  * @param[in] name           the name of the node.
  * @return    0 on success, negative error on failure.
  */
-int32_t vfs_inode_detach_by_name(const char *name);
+int vfs_inode_detach_by_name(const char *name);
 
 /**
  * @brief the node is busy or not
@@ -500,7 +500,7 @@ int32_t vfs_inode_detach_by_name(const char *name);
  * @param[in] name           the name of the node.
  * @return    0 on success, negative error on failure.
  */
-int32_t vfs_inode_busy_by_name(const char *name);
+int vfs_inode_busy_by_name(const char *name);
 
 /**
  * @brief copy the file descriptor

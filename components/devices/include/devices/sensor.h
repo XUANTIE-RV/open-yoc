@@ -68,6 +68,11 @@ int rvm_hal_sensor_fetch(rvm_dev_t *dev);
 */
 int rvm_hal_sensor_getvalue(rvm_dev_t *dev, void *value, size_t size);
 
+
+#if defined(AOS_COMP_DEVFS) && AOS_COMP_DEVFS
+#include <devices/vfs_sensor.h>
+#endif
+
 #ifdef __cplusplus
 }
 #endif

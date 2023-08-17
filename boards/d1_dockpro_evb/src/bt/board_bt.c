@@ -7,12 +7,14 @@
 #if defined(BOARD_BT_SUPPORT) && BOARD_BT_SUPPORT > 0
 #include <stdlib.h>
 #include <stdio.h>
-
+#include <devices/devicelist.h>
 #include <devices/rtl8723ds_bt.h>
 #include <drv/pin.h>
 
 void board_bt_init(void)
 {
+    rvm_uart_drv_register(1);
+
     csi_pin_set_mux(PG6, PG6_UART1_TX);
     csi_pin_set_mux(PG7, PG7_UART1_RX);
 

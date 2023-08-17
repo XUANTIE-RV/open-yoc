@@ -10,7 +10,9 @@
 
 //多级别结构 确定使用的多级数组加number作标定 (多级限定场景 串行结构 不允许存在同一级别有多个多级存在) 大结构必须精简尽量使用指针
 
-
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
 
 CVI_S32 PARAM_LoadCfg(CVI_VOID);
 PARAM_SYS_CFG_S *PARAM_getSysCtx(void);
@@ -22,5 +24,9 @@ void PARAM_setPipeline(int pipeline);
 int PARAM_getPipeline(void);
 void PARAM_setSceneMode(int mode);
 int PARAM_getSceneMode();
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif

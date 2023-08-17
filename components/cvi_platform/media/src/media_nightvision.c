@@ -6,8 +6,9 @@
 #include "cvi_isp.h"
 #include "cvi_bin.h"
 #include "platform.h"
-#include "aos/cli.h"
 #include "cvi_ae.h"
+#include <aos/kernel.h>
+#include <aos/cli.h>
 
 static ISP_IR_AUTO_ATTR_S g_stIrAttr[VI_MAX_DEV_NUM] = {0};
 int g_runStatus = 0;
@@ -144,3 +145,24 @@ ALIOS_CLI_CMD_REGISTER(testMedia_NightVisionInit, testMedia_NightVisionInit, tes
 ALIOS_CLI_CMD_REGISTER(testMedia_NightVisionDeInit, testMedia_NightVisionDeInit, testMedia_NightVisionDeInit);
 ALIOS_CLI_CMD_REGISTER(testMedia_NightVisionAutoRun, testMedia_NightVisionAutoRun, testMedia_NightVisionAutoRun);
 #endif
+
+
+void cli_switch_led(int argc,char **argv)
+{
+	if (2 == argc)
+	{
+		if (0 == atoi(argv[1]))
+		{
+			PLATFORM_IrCutCtl(0);
+		}
+		else if(1 == atoi(argv[1]))
+		{
+			PLATFORM_IrCutCtl(10000);
+		}
+	} 
+    else 
+    {
+        printf("usage: cli_switch_led 0/1\r\n");
+    }
+}
+ALIOS_CLI_CMD_REGISTER(cli_switch_led, cli_switch_led, cli_switch_led);

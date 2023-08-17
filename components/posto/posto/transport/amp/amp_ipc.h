@@ -12,6 +12,9 @@
 #include "posto/base/mutex.h"
 #include "posto/common/macros.h"
 
+// Low level message inline size for 2 bytes port field + 6 bytes reserved.
+#define POSTO_LL_MESSAGE_INLINE_SIZE 8
+
 namespace posto {
 
 using IpcMessageHandler =

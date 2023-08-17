@@ -87,54 +87,10 @@ Mcoret_Handler:
     fsd     ft9, (68+68)(sp)
     fsd     ft10,(72+72)(sp)
     fsd     ft11,(76+76)(sp)
-#ifdef __riscv_vector
-    addi    sp, sp, -(20+20)
-    csrr    t0, vl
-    sd      t0,  (0  +0  )(sp)
-    csrr    t0, vtype
-    sd      t0,  (4  +4  )(sp)
-    csrr    t0, vstart
-    sd      t0,  (8  +8  )(sp)
-    csrr    t0, vxsat
-    sd      t0,  (12 +12 )(sp)
-    csrr    t0, vxrm
-    sd      t0,  (16 +16 )(sp)
 
-    addi    sp, sp, -(256+256)
-    vsetvli zero, zero, e8, m8
-    vsb.v   v0, (sp)
-    addi    sp, sp, 128
-    vsb.v   v8, (sp)
-    addi    sp, sp, 128
-    vsb.v   v16, (sp)
-    addi    sp, sp, 128
-    vsb.v   v24, (sp)
-    addi    sp, sp, -(256+256-128)
-#endif
     la      t2, do_irq
     jalr    t2
-#ifdef __riscv_vector
-    vsetvli  zero, zero, e8, m8
-    vlb.v    v0, (sp)
-    addi     sp, sp, 128
-    vlb.v    v8, (sp)
-    addi     sp, sp, 128
-    vlb.v    v16, (sp)
-    addi     sp, sp, 128
-    vlb.v    v24, (sp)
-    addi     sp, sp, 128
 
-    lwu     t0, (0 +0)(sp)
-    lwu     t1, (4 +4)(sp)
-    lwu     t2, (8 +8)(sp)
-    vsetvl  zero, t0, t1
-    csrw    vstart, t2
-    lwu     t2, (12 +12)(sp)
-    csrw    vxsat, t2
-    lwu     t2, (16 +16)(sp)
-    csrw    vxrm, t2
-    addi    sp, sp, (20+20)
-#endif
     fld     ft0, (0 +0 )(sp)
     fld     ft1, (4 +4 )(sp)
     fld     ft2, (8 +8 )(sp)
@@ -244,10 +200,6 @@ Sirq_Handler:
     la      t2, do_irq
     jalr    t2
 
-    /* write PLIC_CLAIM and exit interrupt */
-    ld      a1, (72+72+160)(sp)
-    andi    a0, a1, 0x3FF
-
     fld     ft0, (0 +0 )(sp)
     fld     ft1, (4 +4 )(sp)
     fld     ft2, (8 +8 )(sp)
@@ -345,59 +297,10 @@ Mirq_Handler:
     fsd     ft9, (68+68)(sp)
     fsd     ft10,(72+72)(sp)
     fsd     ft11,(76+76)(sp)
-#ifdef __riscv_vector
-    addi    sp, sp, -(20+20)
-    csrr    t0, vl
-    sd      t0,  (0  +0  )(sp)
-    csrr    t0, vtype
-    sd      t0,  (4  +4  )(sp)
-    csrr    t0, vstart
-    sd      t0,  (8  +8  )(sp)
-    csrr    t0, vxsat
-    sd      t0,  (12 +12 )(sp)
-    csrr    t0, vxrm
-    sd      t0,  (16 +16 )(sp)
 
-    addi     sp, sp, -(256+256)
-    vsetvli  zero, zero, e8, m8
-    vsb.v    v0, (sp)
-    addi     sp, sp, 128
-    vsb.v    v8, (sp)
-    addi     sp, sp, 128
-    vsb.v    v16, (sp)
-    addi     sp, sp, 128
-    vsb.v    v24, (sp)
-    addi     sp, sp, -(256+256-128)
-#endif
     la      t2, do_irq
     jalr    t2
 _interrupt_return_address:
-    /* write PLIC_CLAIM and exit interrupt */
-    ld      a1, (72+72+160)(sp)
-    andi    a0, a1, 0x3FF
-
-#ifdef __riscv_vector
-    vsetvli  zero, zero, e8, m8
-    vlb.v    v0, (sp)
-    addi     sp, sp, 128
-    vlb.v    v8, (sp)
-    addi     sp, sp, 128
-    vlb.v    v16, (sp)
-    addi     sp, sp, 128
-    vlb.v    v24, (sp)
-    addi     sp, sp, 128
-    
-    lwu     t0, (0 +0)(sp)
-    lwu     t1, (4 +4)(sp)
-    lwu     t2, (8 +8)(sp)
-    vsetvl  zero, t0, t1
-    csrw    vstart, t2
-    lwu     t2, (12 +12)(sp)
-    csrw    vxsat, t2
-    lwu     t2, (16 +16)(sp)
-    csrw    vxrm, t2
-    addi    sp, sp, (20+20)
-#endif
     fld     ft0, (0 +0 )(sp)
     fld     ft1, (4 +4 )(sp)
     fld     ft2, (8 +8 )(sp)

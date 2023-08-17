@@ -11,7 +11,7 @@
 
 #include <stdio.h>
 #include "isp_comm_inc.h"
-#ifndef ARCH_RTOS_MARS
+#ifndef ARCH_RTOS_CV181X
 #include "cvi_debug.h"
 #endif
 
@@ -21,7 +21,7 @@ extern "C" {
 #endif
 #endif /* End of #ifdef __cplusplus */
 
-#ifndef ARCH_RTOS_MARS
+#ifndef ARCH_RTOS_CV181X
 #define LOG_EMERG	0	/* system is unusable */
 #define LOG_ALERT	1	/* action must be taken immediately */
 #define LOG_CRIT		2	/* critical conditions */
@@ -42,7 +42,7 @@ CVI_S32 isp_dbg_dumpFrameRawInfoToBuffer(VI_PIPE ViPipe, CVI_U8 *buf, CVI_S32 bu
 // isp_debug.h
 //-----------------------------------------------------------------------------
 static const char ISP_DEBUG_LEVEL_SYMBOL[] = {'e', 'A', 'C', 'E', 'W', 'N', 'I', 'D'};
-#ifdef ARCH_RTOS_MARS
+#ifdef ARCH_RTOS_CV181X
 #define ISP_DEBUG(level, fmt, ...) do { \
 	if (level <= 5) { \
 		printf("#[%c] %s::%d : " fmt, \

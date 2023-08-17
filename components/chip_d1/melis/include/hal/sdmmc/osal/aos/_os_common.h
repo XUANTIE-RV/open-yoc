@@ -39,7 +39,7 @@ extern "C" {
 
 #ifndef CONFIG_KERNEL_NONE
 #include "aos/kernel.h"
-#include <k_api.h>
+
 typedef enum  {
     OS_PRIORITY_IDLE            = 62, //(RT_THREAD_PRIORITY_MAX - 1) - 0,   // 31
     OS_PRIORITY_LOW             = AOS_MAX_APP_PRI, //(RT_THREAD_PRIORITY_MAX - 1) - 1,   // 30

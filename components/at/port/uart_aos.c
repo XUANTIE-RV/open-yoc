@@ -68,6 +68,17 @@ static int at_uart_set_event(void *hdl, channel_event_t evt_cb, void *priv)
     return 0;
 }
 
+static int at_uart_set_baud(void *hdl, int uartbaud)
+{
+    aos_uart_t *uart = (aos_uart_t *)hdl;
+    rvm_hal_uart_config_t config;
+    memset(&config, 0, sizeof(config));
+    rvm_hal_uart_config_default(&config);
+    config.baud_rate = uartbaud;
+    return (rvm_hal_uart_config(uart->dev, &config));
+  
+}
+
 static int at_uart_send(void *hdl, const char *data, int size)
 {
     aos_uart_t *uart = (aos_uart_t *)hdl;
@@ -92,6 +103,7 @@ static int at_uart_recv(void *hdl, const char *data, int size, int timeout)
 at_channel_t uart_channel = {
     .init       = at_uart_init,
     .set_event  = at_uart_set_event,
+    .set_baud   = at_uart_set_baud,
     .send       = at_uart_send,
     .recv       = at_uart_recv,
 };

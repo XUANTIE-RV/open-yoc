@@ -237,5 +237,6 @@ int rvm_hal_gprs_get_simcard_info(rvm_dev_t *dev, char ccid[21], int *insert)
 
     return ret;
 }
+
 #endif
 

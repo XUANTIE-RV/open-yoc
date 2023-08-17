@@ -1,7 +1,7 @@
 
 ## 第一部分： 基础信息
 name: alg_kws_lyeva                                         # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
-version: v7.7.0                                    # <必选项> 组件版本号
+version: v7.8.0                                    # <必选项> 组件版本号
 description: thead的kws算法节点 # <必选项> 建议至少20字以上
 type: common                                        # <必选项> 组件类型，为：solution, chip, board, common, sdk
 tag: 算法节点                                   # <可选项> 组件分类，缺省值： ''
@@ -39,7 +39,6 @@ license: APACHE                                     # <可选项> 源代码的�
 build_config:
   cxxflag: ' -Wall -O2 -Wno-attributes '
   include:
-    - include
     - libs
   libs:
     - shl_c906_rtos

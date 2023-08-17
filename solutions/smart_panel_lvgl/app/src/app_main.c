@@ -11,24 +11,22 @@
 #include <sys_clk.h>
 #include <gateway.h>
 
-#include <alg_kws.h>
-
-#include "app_sys.h"
+#include "sys/app_sys.h"
 #include "aui_cloud/app_aui_cloud.h"
-#include "app_player.h"
-#include "app_fota.h"
+#include "player/app_player.h"
+#include "occ_fota/app_fota.h"
 #include "voice/app_voice.h"
-#include "app_net.h"
-#include "app_key_msg.h"
+#include "wifi/app_net.h"
+#include "key_msg/app_key_msg.h"
 #include "event_mgr/app_event.h"
 #include "linkkit_gateway/app_gateway_ut.h"
 #include "display/app_disp.h"
 #include "bt/app_bt.h"
 #include "alarms/app_alarms.h"
 #include "button/app_button.h"
-#include "app_factory.h"
+#include "factory/app_factory.h"
+#include "ui/ui_entry.h"
 #include "app_main.h"
-#include "ui_entry.h"
 
 #define TAG "UI"
 
@@ -351,33 +349,25 @@ int         main(int argc, char *argv[])
         app_ftmode_entry();
     }
 
-#if defined(CONFIG_BOARD_AUDIO) && CONFIG_BOARD_AUDIO > 0
-    app_speaker_init();
-
-    app_player_init();
-#endif
-
     /* 播放器 */
-#if defined(CONFIG_BOARD_AUDIO) && CONFIG_BOARD_AUDIO
+    LOGI("main", "audio init");
+#if defined(BOARD_AUDIO_SUPPORT) && BOARD_AUDIO_SUPPORT
     board_audio_init();
-#endif
 
-#if defined(CONFIG_BOARD_AUDIO) && CONFIG_BOARD_AUDIO
     app_speaker_init();
-
     app_player_init();
 #endif
 
     /* 网络蓝牙 */
-#if defined(CONFIG_BOARD_WIFI) && CONFIG_BOARD_WIFI
+#if defined(BOARD_WIFI_SUPPORT) && BOARD_WIFI_SUPPORT
     board_wifi_init();
 #endif
 
-#if defined(CONFIG_BOARD_BT) && CONFIG_BOARD_BT
+#if defined(BOARD_BT_SUPPORT) && BOARD_BT_SUPPORT
     board_bt_init();
 #endif
 
-#if defined(CONFIG_BOARD_WIFI) && CONFIG_BOARD_WIFI
+#if defined(BOARD_WIFI_SUPPORT) && BOARD_WIFI_SUPPORT
     app_network_init();
 #endif
     _app_set_init_state(g_init_state);
@@ -386,16 +376,17 @@ int         main(int argc, char *argv[])
 #endif
 
     /* 语音交互 */
-    alg_kws_init();
     app_mic_init();
+#if defined(CONFIG_AUI_CLOUD) && CONFIG_AUI_CLOUD
     app_aui_cloud_init();
+#endif
 
     /* 其他外设 */
 #if defined(CONFIG_BOARD_BUTTON) && BOARD_BUTTON_NUM > 0
     app_button_init();
 #endif
 
-    app_alrams_init();
+    // app_alrams_init();
 
 #if defined(CONFIG_GW_FOTA_EN) && (CONFIG_GW_FOTA_EN == 1)
     app_fota_init();

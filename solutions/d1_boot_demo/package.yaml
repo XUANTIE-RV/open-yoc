@@ -1,5 +1,5 @@
 name: d1_boot_demo
-version: v7.7.0                                     # <必选项> 组件版本号
+version: v7.8.0                                     # <必选项> 组件版本号
 description: BootLoader for D1
 
 type: solution
@@ -10,13 +10,13 @@ hw_info:
   ld_script: gcc_flash.ld
 
 depends:                                       # 该组件依赖其他的组件
-  - csi: v7.7.0
-  - chip_d1: v7.7.0
-  - boot: v7.7.0
-  - partition: v7.7.0
-  - sec_crypto: v7.7.0
-  - key_mgr: v7.7.0
-  - xz: v7.7.0
+  - csi: v7.8.0
+  - chip_d1: v7.8.0
+  - boot: v7.8.0
+  - partition: v7.8.0
+  - sec_crypto: v7.8.0
+  - key_mgr: v7.8.0
+  - xz: v7.8.0
 
 # 编译参数
 build_config:

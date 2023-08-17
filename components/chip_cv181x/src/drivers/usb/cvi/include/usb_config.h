@@ -11,6 +11,9 @@
 #define CONFIG_USB_PRINTF printf
 #endif
 
+#define usb_malloc(size) malloc(size)
+#define usb_free(ptr)    free(ptr)
+
 /* Enable print with color */
 #define CONFIG_USB_PRINTF_COLOR_ENABLE
 

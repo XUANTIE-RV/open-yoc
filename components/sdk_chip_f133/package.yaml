@@ -1,7 +1,7 @@
 
 ## 第一部分： 基础信息
 name: sdk_chip_f133                                        # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
-version: v7.7.0                                    # <必选项> 组件版本号
+version: v7.8.0                                    # <必选项> 组件版本号
 description: the sdk chip for f133                  # <必选项> 建议至少20字以上
 type: sdk                                        # <必选项> 组件类型，为：solution, chip, board, common, sdk
 
@@ -12,16 +12,20 @@ type: sdk                                        # <必选项> 组件类型，�
 #   - minilibc: v7.2.0
 #   - aos: >=v7.2.0
 depends:
-  - yoc_kernel: v7.7.0
-  - libc_stub: v7.7.0
-  - posix: v7.7.0
-  - vfs: v7.7.0
-  - f133_evb: v7.7.0
-  - chip_d1: v7.7.0
-  - drv_wifi_rtl8723ds: v7.7.0
-  - drv_bt_rtl8723ds: v7.7.0
-  - lwip: v7.7.0
-  - mbedtls: v7.7.0
-  - sec_crypto: v7.7.0
-  - ble_host: v7.7.0
-  - key_mgr: v7.7.0
+  - yoc_base: v7.8.0
+  - rhino: v7.8.0
+  - rhino_arch: v7.8.0
+  - rhino_pwrmgmt: v7.8.0
+  # - freertos: v7.8.0
+  - libc_stub: v7.8.0
+  - posix: v7.8.0
+  - vfs: v7.8.0
+  - f133_evb: v7.8.0
+  - chip_d1: v7.8.0
+  - drv_wifi_rtl8723ds: v7.8.0
+  - drv_bt_rtl8723ds: v7.8.0
+  - lwip: v7.8.0
+  - mbedtls: v7.8.0
+  - sec_crypto: v7.8.0
+  - ble_host: v7.8.0
+  - key_mgr: v7.8.0

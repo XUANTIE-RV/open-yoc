@@ -30,7 +30,7 @@ int ulog(const unsigned char lvl, const char *mod, const char *f, const unsigned
         return 0;
     }
 
-    if (access("/etc/syslog.yoc", F_OK) != 0) {
+    if (access("/etc/yoc.syslog", F_OK) == 0) {
         openlog(mod, LOG_CONS | LOG_PID, LOG_LOCAL0);
         va_list args;
         va_start(args, fmt);

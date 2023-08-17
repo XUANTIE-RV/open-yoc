@@ -8,11 +8,10 @@
 #include <softap_prov.h>
 #include <wifi_provisioning.h>
 
-#include "app_net.h"
-#include "app_player.h"
+#include "wifi/app_net.h"
+#include "player/app_player.h"
 #include "event_mgr/app_event.h"
 
-#include "wifi_prov.h"
 #include "app_main.h"
 
 #define TAG "wifiprov"

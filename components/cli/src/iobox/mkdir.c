@@ -68,6 +68,9 @@ static int mkdir_do(char *path, int flags)
         }
 
         if (mkdir(path, 0777) < 0) {
+            if ((flags & MKDIR_FLAGS_PARENTS) && (errno == ENODEV)) {
+                goto next;
+            }
             aos_cli_printf("mkdir %s failed\n", path);
             return -1;
         }
@@ -98,6 +101,9 @@ static int mkdir_main(int argc, char **argv)
                 return -1;
             case ':':
                 aos_cli_printf("option -%c requires an argument\n", optopt);
+                show_help();
+                return -1;
+            default:
                 show_help();
                 return -1;
         }

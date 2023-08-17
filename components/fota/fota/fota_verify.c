@@ -403,10 +403,14 @@ __attribute__((weak)) int fota_data_verify(void)
         LOGE(TAG, "there is no pubkey found!");
         return -1;
     }
+#if CONFIG_FOTA_DATA_IN_RAM > 0
+    memcpy(buffer, (void *)(signature_offset + data_address_start), signature_len);
+#else
     if (partition_read(partition, signature_offset, buffer, signature_len) < 0) {
         ret = -EIO;
         goto out;
     }
+#endif
 #if DUMP_DATA_EN
     dump_data(buffer, signature_len);
 #endif

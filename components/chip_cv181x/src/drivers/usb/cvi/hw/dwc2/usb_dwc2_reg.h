@@ -469,6 +469,9 @@ typedef struct
 #define USB_OTG_GRSTCTL_TXFNUM_2                 (0x04UL << USB_OTG_GRSTCTL_TXFNUM_Pos) /*!< 0x00000100 */
 #define USB_OTG_GRSTCTL_TXFNUM_3                 (0x08UL << USB_OTG_GRSTCTL_TXFNUM_Pos) /*!< 0x00000200 */
 #define USB_OTG_GRSTCTL_TXFNUM_4                 (0x10UL << USB_OTG_GRSTCTL_TXFNUM_Pos) /*!< 0x00000400 */
+#define USB_OTG_GRSTCTL_CSRSTDONE_Pos            (29U)
+#define USB_OTG_GRSTCTL_CSRSTDONE_Msk            (0x1UL << USB_OTG_GRSTCTL_CSRSTDONE_Pos) /*!< 0x00000001 */
+#define USB_OTG_GRSTCTL_CSRSTDONE                USB_OTG_GRSTCTL_CSRSTDONE_Msk     /*!< Core soft reset          */
 #define USB_OTG_GRSTCTL_DMAREQ_Pos               (30U)
 #define USB_OTG_GRSTCTL_DMAREQ_Msk               (0x1UL << USB_OTG_GRSTCTL_DMAREQ_Pos) /*!< 0x40000000 */
 #define USB_OTG_GRSTCTL_DMAREQ                   USB_OTG_GRSTCTL_DMAREQ_Msk    /*!< DMA request signal */

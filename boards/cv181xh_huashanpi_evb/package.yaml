@@ -1,0 +1,271 @@
+
+## 第一部分： 基础信息
+name: cv181xh_huashanpi_evb                          # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
+version: v7.8.0                                     # <必选项> 组件版本号
+description: cv181xh huashanpi board configure       # <必选项> 建议至少20字以上
+type: board                                          # <必选项> 组件类型，为：solution, chip, board, common, sdk
+license: Apache license v2.0                         # <可选项> 源代码的许可证，要确保所有代码、文件的许可证不冲突。如：MIT，Apache license v2.0，BSD
+
+## 第二部分：依赖信息
+#           指定该组件依赖的组件及版本
+# sdk_chip:                                # <可选项> 该组件依赖sdk组件，合理的依赖才能保证组件能编译、使用
+#   - sdk_chip_csky_dummy: v7.4.0
+#   - sdk_chip_riscv_dummy: v7.4.0
+# depends:                                 # <可选项> 该组件依赖其他的组件，合理的依赖才能保证组件能编译、使用
+#   - minilibc: v7.4.0
+#   - aos: v7.4.0
+
+## 第三部分：板级信息
+# hw_info:                                 # 对 solution、board、chip 三个字段的改进，统称为 hw_info 字段
+#   cpu_id: cpu0
+#   cpu_name: CK804EF
+#   vendor_name: t-head
+#   chip_name: chip_pangu                  # <可选项> 指定芯片组件名,未设置时，使用depends中 chip 第一个组件
+#   board_name: pangu_cpu0_evb             # <可选项> 指定开发板组件名，未设置时，使用depends中 board 第一个组件
+#   ld_script: configs/gcc_eflash.ld       # <可选项> 连接时使用 LD 脚本，当选把未设置时，使用对应的 board 的 LD 脚本
+#   flash_program: bin/flash_program.elf   # <可选项> 芯片全局烧写程序
+#   toolchain_prefix: csky-abiv2-elf       # <可选项> 编译器前缀
+#   cpu0:
+#     cpu_name: CK804EF                    # <必选项> 该芯片使用的 CPU 型号
+#     ld_script: configs/gcc_eflash.ld     # <必选项> 连接时使用 LD 脚本
+#     flash_program: bin/flash_program.elf # <可选项> 该CPU对应烧写程序，未指定时使用全局烧写程序
+#     toolchain_prefix: csky-abiv2-elf     # <可选项> 编译器前缀
+#   cpu1:
+#     cpu_name: CK804EF                    # <必选项> 该芯片使用的 CPU 型号
+#     ld_script: configs/gcc_eflash.ld     # <可选项> 连接时使用 LD 脚本
+#     flash_program: bin/flash_program.elf # <可选项> 该CPU对应烧写程序，未指定时使用全局烧写程序
+#     toolchain_prefix: csky-abiv2-elf     # <可选项> 编译器前缀
+
+## board component
+# hw_info:
+#   chip_name: chip_pangu
+#   ld_script: configs/gcc_eflash.ld
+hw_info:
+  cpu_id: cpu0
+  chip_name: chip_cv181x
+
+## 第四部分：编译连接信息
+# build_config:                            # <可选项> 编译配置项
+#   include:                               # <可选项> 编译时，影响编译器的-I 参数 ,全局有效
+#     - src                                #        include 只能是该软件包下的目录，不能使用外部目录
+#   internal_include:                      # <可选项> 编译时，影响编译器的-I 参数 ,组件内有效
+#     - include
+#   cflag: ''                              # <可选项> C 编译器所需要要的编译参数
+#   cxxflag: ''                            # <可选项> CXX 编译器所需要要的编译参数
+#   asmflag: ''                            # <可选项> 汇编器所需要要参数
+#   define:                                # <可选项> 宏定义, 增加编译器的-D 选项,如：
+#     XXX: 1                               #   -DXXX=1
+#     AAA: 1                               #   -DAAA
+#     STR: "abc"                           #   -DSTR="abc"
+#   libs:                                  # 该组件中支持的二进制静态库,如：libxxx.a, libyyy.a
+#     - xxx                                #   -lxxx
+#     - yyy                                #   -lyyy
+#   libpath:                               # 指定静态库所在的路径（相对于该组件路径）
+#     - libs                               #   -Llibs
+build_config:
+  cflag: >
+        -c -g -Os -ffunction-sections -fdata-sections -Wall -fno-common -fno-asynchronous-unwind-tables -fno-builtin-fprintf
+        -Wno-stringop-truncation -Wno-stringop-overflow
+  asmflag: -c -g -ffunction-sections -fdata-sections -Wall
+  ldflag: -Wl,--gc-sections -lstdc++ -lsupc++ -lm -lc -lgcc -lnosys -nostartfiles --specs=nosys.specs -Wl,-Map="yoc.map" -fno-asynchronous-unwind-tables
+  cxxflag: >
+        -D_GLIBCXX_HAS_GTHREADS
+        -std=gnu++11 -fno-common -fno-exceptions -ffunction-sections -Wall -fdata-sections -fomit-frame-pointer -fpermissive -g -Os
+        -fno-asynchronous-unwind-tables -fexceptions -Wno-stringop-truncation -Wno-stringop-overflow
+  include:
+    - include
+    - src
+    - src/display
+  prebuild_script: "script/pre_build.sh"
+  postbuild_script: "script/aft_build.sh"
+
+# source_file:                             # <可选项> 指定参与编译的源代码文件，支持通配符，采用相对路径
+#   - src/*.c                              # 例：组件 src 目录下所有的扩展名为 c 的源代码文件
+source_file:
+  - "src/*.c"
+  - "src/audio/*.c ? <CONFIG_BOARD_AUDIO>"
+  - "adapter/*.c"
+  - "src/flash/*.c"
+  - "src/display/*.c"
+  - "src/display/custom_vo_osd/*.c ? <CONFIG_BOARD_VO_OSD>"
+  - "src/bt/*.c"
+  - "src/wifi/*.c"
+  - "src/eth/*.c"
+  - "src/uart/*.c"
+  - "src/vendor/*.c"
+  - "src/cv/*.cpp ? <CONFIG_BOARD_CV>"
+  - "test/pinmux/*.c"
+
+## 第五部分：配置信息
+# def_config:                              # 组件的可配置项
+#   CONFIG_DEBUG: y
+#   CONFIG_PARAM_NOT_CHECK: y
+#   CONFIG_CLI: y
+def_config:
+  CONFIG_BOARD_CV181XC: 0
+  CONFIG_BOARD_CV181XH: 1
+  CONFIG_BOARD_HUASHANPI: 1
+  CONFIG_TOUCHSCREEN_GSL1680_XINBAI: 1
+  WITH_LWIP: 1
+  CONFIG_KERNEL_LWIP_HOOK: 1
+  CONFIG_SYSTICK_HZ: 250
+  #CONFIG_KERNEL_WORKQUEUE: 1
+  # CONFIG_INIT_TASK_STACK_SIZE: 4096
+  CLI_CONFIG_STACK_SIZE: 8192
+  CONFIG_LFS_BLOCK_CYCLES: 500
+  CONFIG_LFS_MOUNTPOINT: "/"
+  CONFIG_HAL_UART_FIFO_SIZE: 32
+  CONFIG_KV_SMART: 1
+  POSIX_DEVICE_IO_NEED: 1
+  CONFIG_USING_TLS: y
+  FD_SETSIZE: 128
+  CONFIG_USERVICE_EVENT_TASK_STACK_SIZE: 8192
+
+  # CONFIG_XIP: y
+  CONFIG_SOFTWDT: y
+  CONFIG_MAX_PARTITION_NUM: 16
+  SHOW_PART_INFO_EN: 0
+
+  # emmc support
+  CONFIG_PARTITION_SUPPORT_EMMC: 1
+  CONFIG_PARTITION_SUPPORT_SD: 1
+  CONFIG_PARTITION_SUPPORT_USB: 1
+  CONFIG_PARTITION_SUPPORT_SPINORFLASH: 1
+  CONFIG_NOT_USE_HC_ERASE_UNIT_SIZE: y
+  CONFIG_KV_GET_ERASE_FLAG_AUTO: 1
+  CONFIG_KV_LARGE_NODE: 1
+
+  #sec_crypto
+  CONFIG_SYSTEM_SECURE: 1
+  CONFIG_SEC_CRYPTO_AES_SW: 1
+  CONFIG_SEC_BASE64_SW: 1
+  CONFIG_SEC_CRYPTO_SHA_SW: 1
+  CONFIG_SEC_CRYPTO_RSA_SW: 1
+  CONFIG_SEC_CRYPTO_RNG_SW: 0
+
+  HAVE_MBEDTLS_USER_CONFIG: 1
+  CONFIG_TB_KP: 1
+  CONFIG_KP_BUFFER_LEN: 4096
+  CONFIG_KEY_MGR_KP_PROTECT: 1
+  CONFIG_DEVICEID_FROM_KV: 1
+  # CONFIG_SHOW_KEY_IN_KP: y
+  # player
+  CONFIG_AV_AO_CHANNEL_NUM: 2
+  CONFIG_AEFXER_SONA: 0
+  CONFIG_RESAMPLE_RATE: 16000
+  # fota
+  CONFIG_OTA_AB: 1
+  USE_4K_ERASE_SECTION: 1
+  CONFIG_FOTA_BUFFER_SIZE: 262144
+  CONFIG_PARITION_NO_VERIFY: 0
+  CONFIG_FOTA_IMG_AUTHENTICITY_NOT_CHECK: 0
+  # Sensor
+  CONFIG_SENSOE_RGB0: 1
+  CONFIG_SENSOE_IR0: 1
+  CONFIG_SENSOE_IR1: 1
+
+  CONFIG_SNS0_TYPE: 9
+  CONFIG_SNS1_TYPE: 10
+  CONFIG_SENSOR_GCORE_GC02M1: 1
+  CONFIG_SENSOR_GCORE_GC02M1_SLAVE: 1
+  CONFIG_BOARD_EVT: 1
+  CONFIG_FATFS_LANGUAGE_CODE: 437
+  # Display Support
+  CONFIG_BOARD_DISPLAY: 0
+  CONFIG_MEDIA_VPSS_GRP: 0
+  CONFIG_MEDIA_VPSS_CHN: 0
+  CONFIG_GUI_RGN_DEVID: 0
+  CONFIG_GUI_RGN_CHNID: 0
+  #CONFIG_SNS0_TYPE: 2
+  #CONFIG_SNS1_TYPE: 0
+  CONFIG_PANEL_HX8394: 0
+  CONFIG_PANEL_ILI9488: 0
+  CONFIG_PANEL_ST7701S: 1
+  # AUDIO Support
+  CONFIG_BOARD_AUDIO: 0
+  # ADC Support
+  CONFIG_BOARD_ADC: 0
+  # Button Support
+  CONFIG_BOARD_BUTTON: 0
+  # app define
+  CONFIG_BLUETOOTH_WORK_QUEUE_STACK_SIZE: 6144
+  CONFIG_BT_AUTO_DATA_LEN_UPDATE: 1
+  CONFIG_BT_CENTRAL: 1
+  CONFIG_BT_CONN_TX_MAX: 3
+  CONFIG_BT_DEBUG_LOG: 1
+  CONFIG_BT_H5_RECV_DATA_LIMIT: 20
+  CONFIG_BT_HCI_CMD_COUNT: 12
+  CONFIG_BT_L2CAP_RX_MTU: 247
+  CONFIG_BT_L2CAP_TX_BUF_COUNT: 8
+  CONFIG_BT_L2CAP_TX_MTU: 247
+  CONFIG_BT_PERIPHERAL: 1
+  CONFIG_BT_RX_BUF_COUNT: 4
+  CONFIG_BT_RX_BUF_LEN: 512
+  CONFIG_BT_RX_STACK_SIZE: 8192
+  CONFIG_BT_SHELL: 1
+  CONFIG_BT_BREDR: 1
+  CONFIG_BT_SMP: 1
+  CONFIG_BT_WHITELIST: 1
+  CONFIG_BT_WORK_INDEPENDENCE: 1
+  CONFIG_BT_TINYCRYPT_ECC: 1
+  CONFIG_BT_MESH_TX_SDU_MAX: 512
+  CONFIG_BT_MESH_SCAN_INTERVAL_MS: 50
+  CONFIG_BT_MESH_SCAN_WINDOW_MS: 25
+  CONFIG_BT_HCI_ECC_STACK_SIZE: 4096
+  CONFIG_BT_HFP_HF: 0
+  CONFIG_BT_HFP: 0
+  CONFIG_BT_HFP_AUDIO_I2S: 0
+  CONFIG_BT_A2DP: 1
+  CONFIG_BT_DRV_NO_ONESHOT: 1
+  CONFIG_HAL_UART_RINGBUF_LEN: 8192
+  CONFIG_BT_MAX_PAIRED: 5
+  CONFIG_BT_A2DP_AUDIO_OUTPUT_INSIDE: 1
+
+  # SDIF
+  CONFIG_EMMC_SDIF: 2
+  CONFIG_SDIO_SDIF: 0
+  CONFIG_SD_SDIF: 1
+
+  # WiFi Support
+  CONFIG_BOARD_WIFI: 1
+  CONFIG_BOARD_WIFI_RTL8723DS: 1
+  RTL8723DS_DEV_WIFI_EN_CHN: 30
+
+  # BLE Support
+  CONFIG_BOARD_BT: 1
+  CONFIG_BOARD_BT_RTL8723DS: 1
+
+  # filesystem
+  CONFIG_FS_EXT4: y
+  CONFIG_EXT4_MOUNTPOINT: "/"
+  CONFIG_FS_FAT: y
+  CONFIG_USB_MSC: y
+
+  CONFIG_SUPPORT_USB_DC: 1
+  CONFIG_SUPPORT_USB_HC: 1
+  CONFIG_USB_DWC2_PORT: 1
+  CONFIG_USB_HS: 1
+
+## 第六部分：安装信息
+# install:
+#   - dest: include/                       # 安装的目的路径 dest是相对路径，通常是相对于YoC SDK 安装目录
+#     source:                              # 安装源列表
+#      - src/*.h                           # 支持通配符，相对路径
+
+## 第七部分：导出部分
+# export:
+#   - dest: "<SOLUTION_PATH>/generated/data" # 安装的目的路径 dest是相对路径
+#     source:                                # 安装源列表
+#       - "bootimgs/boot"
+#       - "bootimgs/tee"
+#       - "bootimgs/mtb"
+#       - "configs/config.yaml"
+export:
+  - dest: "<SOLUTION_PATH>/generated/data" # 安装的目的路径 dest是相对路径
+    source:                                # 安装源列表
+       - "bootimgs/boot"
+       - "bootimgs/boot0"
+       - "configs/config.yaml"
+       - "configs/partition_alios_spinor.xml"
+       - "bootimgs/fip_fsbl.bin"
+       - "bootimgs/fip.bin"

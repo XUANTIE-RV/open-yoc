@@ -37,6 +37,8 @@ void board_init(void);
  */
 void board_flash_init(void);
 
+void board_uart_init(void);
+
 #ifdef __cplusplus
 }
 #endif

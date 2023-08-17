@@ -25,7 +25,7 @@ extern "C" {
 #endif
 
 #ifndef CONFIG_BT_RFCOMM_STASK_STACK_SIZE
-#define CONFIG_BT_RFCOMM_STASK_STACK_SIZE 1024
+#define CONFIG_BT_RFCOMM_STASK_STACK_SIZE 4096
 #endif
 
 /* RFCOMM channels (1-30): pre-allocated for profiles to avoid conflicts */

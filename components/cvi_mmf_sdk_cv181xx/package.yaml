@@ -1,6 +1,6 @@
 ##
 name: cvi_mmf_sdk_cv181xx
-version: v7.7.0
+version: v7.8.0
 description: Cvitek cvi_mmf_sdk_cv181xx library.
 type: common
 keywords:
@@ -9,16 +9,33 @@ license: Copyright (C) Cvitek Co., Ltd. 2019-2020. All rights reserved.
 build_config:
   include:
     - include
+    # - include/cvi_miniz/include/cvi_miniz
     - include/cvi_miniz/include/
+    # - include/cvi_json_c/include/cvi_json_c
     - include/cvi_json_c/include/
     - include/cviai/include/core/utils
-    - include/cviai/include/core/core
     - include/cviai/include/core/face
     - include/cviai/include/core/object
+    - include/cviai/include/core/core
     - include/cviai/include/core
     - include/cviai/include/
+    # - include/cvi_middleware/include/cvi_mw_venc
+    # - include/cvi_middleware/include/cvi_mw_isp_daemon
+    # - include/cvi_middleware/include/cvi_mw_sys
     - include/cvi_middleware/include/panel
-    - include/cvi_middleware/include/isp/mars
+    # - include/cvi_middleware/include/cvi_mw_isp_bin
+    # - include/cvi_middleware/include/cvi_mw_isp
+    # - include/cvi_middleware/include/cvi_mw_isp_com_raw_dump
+    - include/cvi_middleware/include/isp/cv181x
+    # - include/cvi_middleware/include/cvi_mw_isp_af
+    # - include/cvi_middleware/include/cvi_mw_vpu
+    # - include/cvi_middleware/include/cvi_mw_isp_ae
+    # - include/cvi_middleware/include/cvi_mw_isp_com_raw_replay
+    # - include/cvi_middleware/include/cvi_mw_bin
+    # - include/cvi_middleware/include/cvi_mw_isp_awb
+    # - include/cvi_middleware/include/cvi_mw_isp_algo
+    # - include/cvi_middleware/include/cvi_mw_mipi_tx
+    # - include/cvi_middleware/include/cvi_mw_vdec
     - include/cvi_middleware/include/isp
     - include/cvi_middleware/include/
     - include/cvi_tpu/include/bmkernel/bm1822
@@ -26,7 +43,10 @@ build_config:
     - include/cvi_tpu/include/runtime
     - include/cvi_tpu/include/cvikernel/mars
     - include/cvi_tpu/include/cvikernel
+    # - include/cvi_tpu/include/cvi_math
     - include/cvi_tpu/include/cvimath
+    # - include/cvi_tpu/include/cvi_kernel
+    # - include/cvi_tpu/include/cvi_runtime
     - include/cvi_tpu/include/
     - include/cvi_miniz/include
     - include/cvi_json_c/include
@@ -34,6 +54,28 @@ build_config:
     - include/cvi_osdrv/include
     - include/cvi_middleware/include
     - include/cvi_tpu/include
+    # - include/cvi_miniz/include/cvi_miniz
+    # - include/cvi_json_c/include/cvi_json_c
+    # - include/cviai/include/cviai
+    # - include/cvi_middleware/include/cvi_mw_audio
+    # - include/cvi_middleware/include/cvi_mw_venc
+    # - include/cvi_middleware/include/cvi_mw_isp_daemon
+    # - include/cvi_middleware/include/cvi_mw_sys
+    # - include/cvi_middleware/include/cvi_mw_isp_bin
+    # - include/cvi_middleware/include/cvi_mw_isp_com_raw_dump
+    # - include/cvi_middleware/include/cvi_mw_isp_com_raw_replay
+    # - include/cvi_middleware/include/cvi_mw_isp
+    # - include/cvi_middleware/include/cvi_mw_isp_af
+    # - include/cvi_middleware/include/cvi_mw_vpu
+    # - include/cvi_middleware/include/cvi_mw_isp_ae
+    # - include/cvi_middleware/include/cvi_mw_bin
+    # - include/cvi_middleware/include/cvi_mw_isp_awb
+    # - include/cvi_middleware/include/cvi_mw_isp_algo
+    # - include/cvi_middleware/include/cvi_mw_mipi_tx
+    # - include/cvi_middleware/include/cvi_mw_vdec
+    # - include/cvi_tpu/include/cvi_math
+    # - include/cvi_tpu/include/cvi_kernel
+    # - include/cvi_tpu/include/cvi_runtime
     - include/cvi_osdrv/include/common/kapi
     - include/cvi_osdrv/include/chip/<CVI_SOC_NAME>/uapi
     - include/cvi_osdrv/include/common/uapi
@@ -42,24 +84,29 @@ build_config:
     - cvi_json_c
     - cviai
     - cvi_osdrv
-#    - cvi_mw_audio
-    - cvi_mw_venc
-    - cvi_mw_isp_daemon
-    - cvi_mw_sys
-    - cvi_mw_isp_bin
-    - cvi_mw_isp_com_raw_replay
-    - cvi_mw_isp
-    - cvi_mw_isp_af
-    - cvi_mw_vpu
-    - cvi_mw_isp_ae
-    - cvi_mw_bin
-    - cvi_mw_isp_awb
-    - cvi_mw_isp_algo
     - cvi_mw_mipi_tx
+    - cvi_mw_vpu
+    - cvi_mw_sys
+    - cvi_mw_isp_algo
+    - cvi_mw_bin
+    # - cvi_mw_audio
+    - cvi_mw_venc
+    - cvi_mw_isp_awb
+    - cvi_mw_isp_bin
+    - cvi_mw_isp_af
+    - cvi_mw_isp_com_raw_dump
+    - cvi_mw_isp_com_raw_replay
+    - cvi_mw_isp_daemon
     - cvi_mw_vdec
-    - cvi_math
+    - cvi_mw_isp_ae
+    - cvi_mw_isp
     - cvi_kernel
     - cvi_runtime
+    - cvi_math
   libpath:
     - lib
-
+source_file:
+def_config:
+install:
+  - dest: "include/"
+    source:

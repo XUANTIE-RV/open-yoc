@@ -4,6 +4,11 @@
 
 #ifndef DEVICES_HCI_H_
 #define DEVICES_HCI_H_
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdint.h>
 
 #include <devices/device.h>
@@ -53,5 +58,14 @@ int rvm_hal_hci_recv(rvm_dev_t *dev, void* data, uint32_t size);
   \return      0 on success, else on fail.
 */
 int rvm_hal_hci_start(rvm_dev_t *dev, hci_driver_send_cmd_t send_cmd);
+
+
+#if defined(AOS_COMP_DEVFS) && AOS_COMP_DEVFS
+#include <devices/vfs_hci.h>
+#endif
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

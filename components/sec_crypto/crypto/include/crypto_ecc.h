@@ -164,28 +164,28 @@ static const struct uECC_Curve_t curve_secp256r1 = {
 	256, /* num_n_bits */ {
 		BYTES_TO_WORDS_8(FF, FF, FF, FF, FF, FF, FF, FF),
 		BYTES_TO_WORDS_8(FF, FF, FF, FF, 00, 00, 00, 00),
-        	BYTES_TO_WORDS_8(00, 00, 00, 00, 00, 00, 00, 00),
-        	BYTES_TO_WORDS_8(01, 00, 00, 00, FF, FF, FF, FF)
+		BYTES_TO_WORDS_8(00, 00, 00, 00, 00, 00, 00, 00),
+		BYTES_TO_WORDS_8(01, 00, 00, 00, FF, FF, FF, FF)
 	}, {
 		BYTES_TO_WORDS_8(51, 25, 63, FC, C2, CA, B9, F3),
-            	BYTES_TO_WORDS_8(84, 9E, 17, A7, AD, FA, E6, BC),
-            	BYTES_TO_WORDS_8(FF, FF, FF, FF, FF, FF, FF, FF),
-            	BYTES_TO_WORDS_8(00, 00, 00, 00, FF, FF, FF, FF)
+		BYTES_TO_WORDS_8(84, 9E, 17, A7, AD, FA, E6, BC),
+		BYTES_TO_WORDS_8(FF, FF, FF, FF, FF, FF, FF, FF),
+		BYTES_TO_WORDS_8(00, 00, 00, 00, FF, FF, FF, FF)
 	}, {
 		BYTES_TO_WORDS_8(96, C2, 98, D8, 45, 39, A1, F4),
-                BYTES_TO_WORDS_8(A0, 33, EB, 2D, 81, 7D, 03, 77),
-                BYTES_TO_WORDS_8(F2, 40, A4, 63, E5, E6, BC, F8),
-                BYTES_TO_WORDS_8(47, 42, 2C, E1, F2, D1, 17, 6B),
+		BYTES_TO_WORDS_8(A0, 33, EB, 2D, 81, 7D, 03, 77),
+		BYTES_TO_WORDS_8(F2, 40, A4, 63, E5, E6, BC, F8),
+		BYTES_TO_WORDS_8(47, 42, 2C, E1, F2, D1, 17, 6B),
 
-                BYTES_TO_WORDS_8(F5, 51, BF, 37, 68, 40, B6, CB),
-                BYTES_TO_WORDS_8(CE, 5E, 31, 6B, 57, 33, CE, 2B),
-                BYTES_TO_WORDS_8(16, 9E, 0F, 7C, 4A, EB, E7, 8E),
-                BYTES_TO_WORDS_8(9B, 7F, 1A, FE, E2, 42, E3, 4F)
+		BYTES_TO_WORDS_8(F5, 51, BF, 37, 68, 40, B6, CB),
+		BYTES_TO_WORDS_8(CE, 5E, 31, 6B, 57, 33, CE, 2B),
+		BYTES_TO_WORDS_8(16, 9E, 0F, 7C, 4A, EB, E7, 8E),
+		BYTES_TO_WORDS_8(9B, 7F, 1A, FE, E2, 42, E3, 4F)
 	}, {
 		BYTES_TO_WORDS_8(4B, 60, D2, 27, 3E, 3C, CE, 3B),
-                BYTES_TO_WORDS_8(F6, B0, 53, CC, B0, 06, 1D, 65),
-                BYTES_TO_WORDS_8(BC, 86, 98, 76, 55, BD, EB, B3),
-                BYTES_TO_WORDS_8(E7, 93, 3A, AA, D8, 35, C6, 5A)
+		BYTES_TO_WORDS_8(F6, B0, 53, CC, B0, 06, 1D, 65),
+		BYTES_TO_WORDS_8(BC, 86, 98, 76, 55, BD, EB, B3),
+		BYTES_TO_WORDS_8(E7, 93, 3A, AA, D8, 35, C6, 5A)
 	},
         &double_jacobian_default,
         &x_side_default,

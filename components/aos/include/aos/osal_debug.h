@@ -40,13 +40,13 @@ extern "C" {
         }                                                                                          \
     } while (0)
 
-#define except_process(err) aos_except_process(errno, SHORT_FILE, __LINE__,                  \
+#define except_process(err) aos_except_process(err, SHORT_FILE, __LINE__,                  \
                                 __PRETTY_FUNCTION__,  __builtin_return_address(0))
 
 #else
 
 #define aos_assert(X)
-#define except_process(err) aos_except_process(errno, NULL, 0, NULL,                   \
+#define except_process(err) aos_except_process(err, NULL, 0, NULL,                   \
                                __builtin_return_address(0))
 #endif
 
@@ -436,10 +436,10 @@ extern "C" {
     } while (1 == 0)
 #endif
 
+void aos_except_process(int err, const char *file, int line, const char *func_name, void *caller);
+
 #ifdef __cplusplus
 }
 #endif
-
-void aos_except_process(int errno, const char *file, int line, const char *func_name, void *caller);
 
 #endif /* OSAL_DEBUG_H */

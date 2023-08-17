@@ -13,6 +13,7 @@
 
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <vfs_types.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -24,118 +25,18 @@ extern "C" {
  *  @{
  */
 
-/**
- * @brief aos_utimbuf structure describes the filesystem inode's
- *        last access time and last modification time.
- */
-struct aos_utimbuf {
-    time_t actime;  /**< time of last access */
-    time_t modtime; /**< time of last modification */
-};
+typedef vfs_utimbuf_t         aos_utimbuf_t;
+typedef vfs_stat_t            aos_stat_t;
+typedef vfs_statfs_t          aos_statfs_t;
+typedef vfs_dir_t             aos_dir_t;
+typedef vfs_dirent_t          aos_dirent_t;
 
-struct aos_statfs {
-    long f_type;    /**< fs type */
-    long f_bsize;   /**< optimized transport block size */
-    long f_blocks;  /**< total blocks */
-    long f_bfree;   /**< available blocks */
-    long f_bavail;  /**< number of blocks that non-super users can acquire */
-    long f_files;   /**< total number of file nodes */
-    long f_ffree;   /**< available file nodes */
-    long f_fsid;    /**< fs id */
-    long f_namelen; /**< max file name length */
-};
-
-struct aos_stat {
-    uint16_t st_mode;    /**< mode of file */
-    uint32_t st_size;    /**< bytes of file */
-    time_t   st_actime;  /**< time of last access */
-    time_t   st_modtime; /**< time of last modification */
-};
-
-typedef struct {
-    int32_t d_ino;    /**< file number */
-    uint8_t d_type;   /**< type of file */
-    char    d_name[]; /**< file name */
-} aos_dirent_t;
-
-typedef struct {
-    int32_t dd_vfs_fd;  /**< file index in vfs */
-    int32_t dd_rsv;     /**< Reserved */
-} aos_dir_t;
-
-typedef const struct file_ops file_ops_t;
-typedef const struct fs_ops   fs_ops_t;
-
-union inode_ops_t {
-    const file_ops_t *i_ops;  /**< char driver operations */
-    const fs_ops_t   *i_fops; /**< FS operations */
-};
-
-typedef struct {
-    union inode_ops_t  ops;     /**< inode operations */
-    void              *i_arg;   /**< per inode private data */
-    char              *i_name;  /**< name of inode */
-    int                i_flags; /**< flags for inode */
-    uint8_t            type;    /**< type for inode */
-    uint8_t            refs;    /**< refs for inode */
-} inode_t;
-
-typedef struct {
-    inode_t *node;   /**< node for file */
-    void    *f_arg;  /**< f_arg for file */
-    size_t   offset; /**< offset for file */
-} file_t;
-
-typedef void (*poll_notify_t)(void *pollfd, void *arg);
-
-/**
- * @brief file_ops structure defines the file operation handles
- */
-struct file_ops {
-    int     (*open)(inode_t *node, file_t *fp);
-    int     (*close)(file_t *fp);
-    ssize_t (*read)(file_t *fp, void *buf, size_t nbytes);
-    ssize_t (*write)(file_t *fp, const void *buf, size_t nbytes);
-    int     (*ioctl)(file_t *fp, int cmd, unsigned long arg);
-    int     (*poll)(file_t *fp, int flag, poll_notify_t notify, void *fd, void *arg);
-    uint32_t (*lseek)(file_t *fp, int64_t off, int32_t whence);
-    int     (*stat)(file_t *fp, const char *path, struct aos_stat *st);
-    void*   (*mmap)(file_t *fp, size_t len);
-    int     (*access)(file_t *fp, const char *path, int amode);
-};
-
-/**
- * @brief fs_ops structures defines the filesystem operation handles
- */
-struct fs_ops {
-    int           (*open)(file_t *fp, const char *path, int flags);
-    int           (*close)(file_t *fp);
-    ssize_t       (*read)(file_t *fp, char *buf, size_t len);
-    ssize_t       (*write)(file_t *fp, const char *buf, size_t len);
-    off_t         (*lseek)(file_t *fp, off_t off, int whence);
-    int           (*sync)(file_t *fp);
-    int           (*stat)(file_t *fp, const char *path, struct aos_stat *st);
-    int           (*fstat)(file_t *fp, struct aos_stat *st);
-    int           (*link)(file_t *fp, const char *path1, const char *path2);
-    int           (*unlink)(file_t *fp, const char *path);
-    int           (*remove)(file_t *fp, const char *path);
-    int           (*rename)(file_t *fp, const char *oldpath, const char *newpath);
-    aos_dir_t    *(*opendir)(file_t *fp, const char *path);
-    aos_dirent_t *(*readdir)(file_t *fp, aos_dir_t *dir);
-    int           (*closedir)(file_t *fp, aos_dir_t *dir);
-    int           (*mkdir)(file_t *fp, const char *path);
-    int           (*rmdir)(file_t *fp, const char *path);
-    void          (*rewinddir)(file_t *fp, aos_dir_t *dir);
-    long          (*telldir)(file_t *fp, aos_dir_t *dir);
-    void          (*seekdir)(file_t *fp, aos_dir_t *dir, long loc);
-    int           (*ioctl)(file_t *fp, int cmd, unsigned long arg);
-    int           (*statfs)(file_t *fp, const char *path, struct aos_statfs *suf);
-    int           (*access)(file_t *fp, const char *path, int amode);
-    long          (*pathconf)(file_t *fp, const char *path, int name);
-    long          (*fpathconf)(file_t *fp, int name);
-    int           (*utime)(file_t *fp, const char *path, const struct aos_utimbuf *times);
-    int           (*truncate)(file_t *fp, off_t len);
-};
+typedef vfs_file_ops_t        file_ops_t;
+typedef vfs_fs_ops_t          fs_ops_t;
+typedef vfs_inode_t           inode_t;
+typedef vfs_inode_ops_t       inode_ops_t;
+typedef vfs_file_t            file_t;
+typedef vfs_poll_notify_t     poll_notify_t;
 
 /**
  * @brief aos_vfs_init() initializes vfs system.
@@ -309,7 +210,7 @@ void aos_allsync(void);
  *          On error, negative error code is returned to indicate the cause
  *          of the error.
  */
-int aos_stat(const char *path, struct aos_stat *st);
+int aos_stat(const char *path, aos_stat_t *st);
 
 /**
  * @brief aos_fstat() return information about a file specified by the file
@@ -326,7 +227,7 @@ int aos_stat(const char *path, struct aos_stat *st);
  *          On error, negative error code is returned to indicate the cause
  *          of the error.
  */
-int aos_fstat(int fd, struct aos_stat *st);
+int aos_fstat(int fd, aos_stat_t *st);
 
 /**
  * @brief aos_link() creates a new link @newpath to an existing file @oldpath.
@@ -487,7 +388,7 @@ void aos_seekdir(aos_dir_t *dir, long loc);
  *          On error, negative error code is returned to indicate the cause
  *          of the error.
  */
-int aos_statfs(const char *path, struct aos_statfs *buf);
+int aos_statfs(const char *path, aos_statfs_t *buf);
 
 /**
  * @brief aos_access() checks whether the calling process can access the
@@ -583,7 +484,7 @@ long aos_fpathconf(int fd, int name);
  *
  * @return 0 on success, negative error code on failure
  */
-int aos_utime(const char *path, const struct aos_utimbuf *times);
+int aos_utime(const char *path, const aos_utimbuf_t *times);
 
 /**
  * @brief aos_vfs_fd_offset_get() gets VFS fd offset
@@ -652,9 +553,6 @@ int aos_register_fs(const char *path, fs_ops_t* ops, void *arg);
  *         of the error.
  */
 int aos_unregister_fs(const char *path);
-
-/* adapter tmp */
-//typedef struct aos_stat stat;
 
 /** @} */
 

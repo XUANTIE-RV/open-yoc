@@ -4,12 +4,16 @@
 
 #include <k_api.h>
 #include <k_arch.h>
+#include <csi_core.h>
 
 void *cpu_task_stack_init(cpu_stack_t *stack_base, size_t stack_size,
                           void *arg, task_entry_t entry)
 {
     register int *gp asm("x3");
     cpu_stack_t *stk;
+#ifdef __riscv_vector
+    int vlenb = csi_vlenb_get_value();
+#endif
 
     /* stack aligned by 8 byte */
     stk = (cpu_stack_t *)((uintptr_t)(stack_base + stack_size) & 0xfffffff0);
@@ -47,8 +51,13 @@ void *cpu_task_stack_init(cpu_stack_t *stack_base, size_t stack_size,
     *(--stk)  = (cpu_stack_t)0x1234567812345678L;       /* F1          */
     *(--stk)  = (cpu_stack_t)0x1234567812345678L;       /* F0          */
 
+#if defined(CONFIG_RISCV_SMODE) && CONFIG_RISCV_SMODE
+    /* FS=0b01 SPP=0b01 MPIE=0b10 */
+    *(--stk)  = (cpu_stack_t)SR_FS_INITIAL | SR_SPP_S | SR_SPIE; /* sstatus */
+#else
     /* FS=0b01 MPP=0b11 MPIE=0b1 */
     *(--stk)  = (cpu_stack_t)SR_FS_INITIAL | SR_MPP_M | SR_MPIE; /* mstatus */
+#endif
     *(--stk)  = (cpu_stack_t)entry;                     /* Entry Point */
 
     *(--stk)  = (cpu_stack_t)0x3131313131313131L;       /* X31         */
@@ -88,6 +97,7 @@ void *cpu_task_stack_init(cpu_stack_t *stack_base, size_t stack_size,
     *(--stk)  = (cpu_stack_t)0x0L;                      /* VTYPE       */
     *(--stk)  = (cpu_stack_t)0x0L;                      /* VL          */
 
+    if (vlenb == 16) {
     *(--stk)  = (cpu_stack_t)0x1234567812345678L;       /* V31         */
     *(--stk)  = (cpu_stack_t)0x1234567812345678L;       /* V31         */
     *(--stk)  = (cpu_stack_t)0x1234567812345678L;       /* V30         */
@@ -152,6 +162,72 @@ void *cpu_task_stack_init(cpu_stack_t *stack_base, size_t stack_size,
     *(--stk)  = (cpu_stack_t)0x1234567812345678L;       /* V1          */
     *(--stk)  = (cpu_stack_t)0x1234567812345678L;       /* V0          */
     *(--stk)  = (cpu_stack_t)0x1234567812345678L;       /* V0          */
+    } else if (vlenb == 32) {
+    *(--stk)  = (cpu_stack_t)0x1234567812345678L;  *(--stk)  = (cpu_stack_t)0x1234567812345678L;       /* V31         */
+    *(--stk)  = (cpu_stack_t)0x1234567812345678L;  *(--stk)  = (cpu_stack_t)0x1234567812345678L;       /* V31         */
+    *(--stk)  = (cpu_stack_t)0x1234567812345678L;  *(--stk)  = (cpu_stack_t)0x1234567812345678L;       /* V30         */
+    *(--stk)  = (cpu_stack_t)0x1234567812345678L;  *(--stk)  = (cpu_stack_t)0x1234567812345678L;       /* V30         */
+    *(--stk)  = (cpu_stack_t)0x1234567812345678L;  *(--stk)  = (cpu_stack_t)0x1234567812345678L;       /* V29         */
+    *(--stk)  = (cpu_stack_t)0x1234567812345678L;  *(--stk)  = (cpu_stack_t)0x1234567812345678L;       /* V29         */
+    *(--stk)  = (cpu_stack_t)0x1234567812345678L;  *(--stk)  = (cpu_stack_t)0x1234567812345678L;       /* V28         */
+    *(--stk)  = (cpu_stack_t)0x1234567812345678L;  *(--stk)  = (cpu_stack_t)0x1234567812345678L;       /* V28         */
+    *(--stk)  = (cpu_stack_t)0x1234567812345678L;  *(--stk)  = (cpu_stack_t)0x1234567812345678L;       /* V27         */
+    *(--stk)  = (cpu_stack_t)0x1234567812345678L;  *(--stk)  = (cpu_stack_t)0x1234567812345678L;       /* V27         */
+    *(--stk)  = (cpu_stack_t)0x1234567812345678L;  *(--stk)  = (cpu_stack_t)0x1234567812345678L;       /* V26         */
+    *(--stk)  = (cpu_stack_t)0x1234567812345678L;  *(--stk)  = (cpu_stack_t)0x1234567812345678L;       /* V26         */
+    *(--stk)  = (cpu_stack_t)0x1234567812345678L;  *(--stk)  = (cpu_stack_t)0x1234567812345678L;       /* V25         */
+    *(--stk)  = (cpu_stack_t)0x1234567812345678L;  *(--stk)  = (cpu_stack_t)0x1234567812345678L;       /* V25         */
+    *(--stk)  = (cpu_stack_t)0x1234567812345678L;  *(--stk)  = (cpu_stack_t)0x1234567812345678L;       /* V24         */
+    *(--stk)  = (cpu_stack_t)0x1234567812345678L;  *(--stk)  = (cpu_stack_t)0x1234567812345678L;       /* V24         */
+    *(--stk)  = (cpu_stack_t)0x1234567812345678L;  *(--stk)  = (cpu_stack_t)0x1234567812345678L;       /* V23         */
+    *(--stk)  = (cpu_stack_t)0x1234567812345678L;  *(--stk)  = (cpu_stack_t)0x1234567812345678L;       /* V23         */
+    *(--stk)  = (cpu_stack_t)0x1234567812345678L;  *(--stk)  = (cpu_stack_t)0x1234567812345678L;       /* V22         */
+    *(--stk)  = (cpu_stack_t)0x1234567812345678L;  *(--stk)  = (cpu_stack_t)0x1234567812345678L;       /* V22         */
+    *(--stk)  = (cpu_stack_t)0x1234567812345678L;  *(--stk)  = (cpu_stack_t)0x1234567812345678L;       /* V21          */
+    *(--stk)  = (cpu_stack_t)0x1234567812345678L;  *(--stk)  = (cpu_stack_t)0x1234567812345678L;       /* V21          */
+    *(--stk)  = (cpu_stack_t)0x1234567812345678L;  *(--stk)  = (cpu_stack_t)0x1234567812345678L;       /* V20          */
+    *(--stk)  = (cpu_stack_t)0x1234567812345678L;  *(--stk)  = (cpu_stack_t)0x1234567812345678L;       /* V20          */
+    *(--stk)  = (cpu_stack_t)0x1234567812345678L;  *(--stk)  = (cpu_stack_t)0x1234567812345678L;       /* V19         */
+    *(--stk)  = (cpu_stack_t)0x1234567812345678L;  *(--stk)  = (cpu_stack_t)0x1234567812345678L;       /* V19         */
+    *(--stk)  = (cpu_stack_t)0x1234567812345678L;  *(--stk)  = (cpu_stack_t)0x1234567812345678L;       /* V18         */
+    *(--stk)  = (cpu_stack_t)0x1234567812345678L;  *(--stk)  = (cpu_stack_t)0x1234567812345678L;       /* V18         */
+    *(--stk)  = (cpu_stack_t)0x1234567812345678L;  *(--stk)  = (cpu_stack_t)0x1234567812345678L;       /* V17         */
+    *(--stk)  = (cpu_stack_t)0x1234567812345678L;  *(--stk)  = (cpu_stack_t)0x1234567812345678L;       /* V17         */
+    *(--stk)  = (cpu_stack_t)0x1234567812345678L;  *(--stk)  = (cpu_stack_t)0x1234567812345678L;       /* V16         */
+    *(--stk)  = (cpu_stack_t)0x1234567812345678L;  *(--stk)  = (cpu_stack_t)0x1234567812345678L;       /* V16         */
+    *(--stk)  = (cpu_stack_t)0x1234567812345678L;  *(--stk)  = (cpu_stack_t)0x1234567812345678L;       /* V15         */
+    *(--stk)  = (cpu_stack_t)0x1234567812345678L;  *(--stk)  = (cpu_stack_t)0x1234567812345678L;       /* V15         */
+    *(--stk)  = (cpu_stack_t)0x1234567812345678L;  *(--stk)  = (cpu_stack_t)0x1234567812345678L;       /* V14         */
+    *(--stk)  = (cpu_stack_t)0x1234567812345678L;  *(--stk)  = (cpu_stack_t)0x1234567812345678L;       /* V14         */
+    *(--stk)  = (cpu_stack_t)0x1234567812345678L;  *(--stk)  = (cpu_stack_t)0x1234567812345678L;       /* V13         */
+    *(--stk)  = (cpu_stack_t)0x1234567812345678L;  *(--stk)  = (cpu_stack_t)0x1234567812345678L;       /* V13         */
+    *(--stk)  = (cpu_stack_t)0x1234567812345678L;  *(--stk)  = (cpu_stack_t)0x1234567812345678L;       /* V12         */
+    *(--stk)  = (cpu_stack_t)0x1234567812345678L;  *(--stk)  = (cpu_stack_t)0x1234567812345678L;       /* V12         */
+    *(--stk)  = (cpu_stack_t)0x1234567812345678L;  *(--stk)  = (cpu_stack_t)0x1234567812345678L;       /* V11         */
+    *(--stk)  = (cpu_stack_t)0x1234567812345678L;  *(--stk)  = (cpu_stack_t)0x1234567812345678L;       /* V11         */
+    *(--stk)  = (cpu_stack_t)0x1234567812345678L;  *(--stk)  = (cpu_stack_t)0x1234567812345678L;       /* V10         */
+    *(--stk)  = (cpu_stack_t)0x1234567812345678L;  *(--stk)  = (cpu_stack_t)0x1234567812345678L;       /* V10         */
+    *(--stk)  = (cpu_stack_t)0x1234567812345678L;  *(--stk)  = (cpu_stack_t)0x1234567812345678L;       /* V9          */
+    *(--stk)  = (cpu_stack_t)0x1234567812345678L;  *(--stk)  = (cpu_stack_t)0x1234567812345678L;       /* V9          */
+    *(--stk)  = (cpu_stack_t)0x1234567812345678L;  *(--stk)  = (cpu_stack_t)0x1234567812345678L;       /* V8          */
+    *(--stk)  = (cpu_stack_t)0x1234567812345678L;  *(--stk)  = (cpu_stack_t)0x1234567812345678L;       /* V8          */
+    *(--stk)  = (cpu_stack_t)0x1234567812345678L;  *(--stk)  = (cpu_stack_t)0x1234567812345678L;       /* V7          */
+    *(--stk)  = (cpu_stack_t)0x1234567812345678L;  *(--stk)  = (cpu_stack_t)0x1234567812345678L;       /* V7          */
+    *(--stk)  = (cpu_stack_t)0x1234567812345678L;  *(--stk)  = (cpu_stack_t)0x1234567812345678L;       /* V6          */
+    *(--stk)  = (cpu_stack_t)0x1234567812345678L;  *(--stk)  = (cpu_stack_t)0x1234567812345678L;       /* V6          */
+    *(--stk)  = (cpu_stack_t)0x1234567812345678L;  *(--stk)  = (cpu_stack_t)0x1234567812345678L;       /* V5          */
+    *(--stk)  = (cpu_stack_t)0x1234567812345678L;  *(--stk)  = (cpu_stack_t)0x1234567812345678L;       /* V5          */
+    *(--stk)  = (cpu_stack_t)0x1234567812345678L;  *(--stk)  = (cpu_stack_t)0x1234567812345678L;       /* V4          */
+    *(--stk)  = (cpu_stack_t)0x1234567812345678L;  *(--stk)  = (cpu_stack_t)0x1234567812345678L;       /* V4          */
+    *(--stk)  = (cpu_stack_t)0x1234567812345678L;  *(--stk)  = (cpu_stack_t)0x1234567812345678L;       /* V3          */
+    *(--stk)  = (cpu_stack_t)0x1234567812345678L;  *(--stk)  = (cpu_stack_t)0x1234567812345678L;       /* V3          */
+    *(--stk)  = (cpu_stack_t)0x1234567812345678L;  *(--stk)  = (cpu_stack_t)0x1234567812345678L;       /* V2          */
+    *(--stk)  = (cpu_stack_t)0x1234567812345678L;  *(--stk)  = (cpu_stack_t)0x1234567812345678L;       /* V2          */
+    *(--stk)  = (cpu_stack_t)0x1234567812345678L;  *(--stk)  = (cpu_stack_t)0x1234567812345678L;       /* V1          */
+    *(--stk)  = (cpu_stack_t)0x1234567812345678L;  *(--stk)  = (cpu_stack_t)0x1234567812345678L;       /* V1          */
+    *(--stk)  = (cpu_stack_t)0x1234567812345678L;  *(--stk)  = (cpu_stack_t)0x1234567812345678L;       /* V0          */
+    *(--stk)  = (cpu_stack_t)0x1234567812345678L;  *(--stk)  = (cpu_stack_t)0x1234567812345678L;       /* V0          */ 
+    }
 #endif
     return (void *)stk;
 }

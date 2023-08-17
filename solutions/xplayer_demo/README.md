@@ -56,19 +56,6 @@ make flashall SDK=sdk_chip_bl606p_e907
 
 #### ch2601平台
 
-由于CH2601 RAM资源比较有限，所以针对xplayer demo需要使用另一个连接脚本`gcc_flash_heap_bigger.ld`，具体在component/chip_ch2601下。需要替换
-`component/chip_ch2601/package.ymal`文件中的如下部分：
-
-```yaml
-hw_info:
-  arch_name: riscv
-  vendor_name: thead
-  cpu_name: e906
-  ld_script: gcc_flash_heap_bigger.ld    # gcc_flash.ld
-  toolchain_prefix: riscv64-unknown-elf
-  flash_program: ch2601_flash.elf
-```
-
 由于资源受限，CH2601平台的xplayer demo暂不支持网络歌曲的播放。
 
 1. 编译
@@ -82,21 +69,6 @@ make SDK=sdk_chip_ch2601
 
 ```bash
 make flashall SDK=sdk_chip_ch2601
-```
-
-#### cv181x平台
-
-1. 编译
-
-```bash
-make clean
-make SDK=sdk_chip_cv181xh
-```
-
-2. 烧写
-
-```bash
-make flashall SDK=sdk_chip_cv181xh
 ```
 
 #### f133平台
@@ -118,6 +90,21 @@ make flashall SDK=sdk_chip_f133
 
 ```bash
 riscv64-unknown-elf-gdb yoc.elf -x gdbinit
+```
+
+#### cv181xh_huashanpi_evb 平台
+
+1. 编译
+
+```bash
+make clean
+make SDK=sdk_chip_cv181xh_bga
+```
+
+2. 烧写
+
+```bash
+make flashall SDK=sdk_chip_cv181xh_bga
 ```
 
 # 运行

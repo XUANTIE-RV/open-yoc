@@ -20,8 +20,8 @@ partitions:
   - { name: imtb,     address: 0x031000, size: 0x002000 }
   - { name: fct,      address: 0x033000, size: 0x004000 }
   - { name: envab,    address: 0x037000, size: 0x004000 } # for ab switch, size must be 2*sector+1024B at least
-  - { name: prima,    address: 0x03C000, size: 0x660000, load_addr: 0x54020000, file: prim, update: AB, verify: true } # boliu flashtool will add 4KB header
-  - { name: primb,    address: 0x69C000, size: 0x060000, load_addr: 0x54020000, verify: true }
+  - { name: prima,    address: 0x03C000, size: 0x660000, load_addr: 0x54020000, file: prim, update: AB, verify: false } # boliu flashtool will add 4KB header
+  - { name: primb,    address: 0x69C000, size: 0x060000, load_addr: 0x54020000, verify: false }
   - { name: kv,       address: 0x6FC000, size: 0x002000 }
   - { name: lfs,      address: 0x6FE000, size: 0x100000 } # media
   - { name: user,     address: 0x7FE000, size: 0x001000 }

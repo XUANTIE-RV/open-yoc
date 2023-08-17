@@ -270,8 +270,8 @@ static void at_cmd_ais_ota(char *cmd, int type, char *data)
 
 void app_at_server_init(utask_t *task)
 {
-    uart_config_t config;
-    uart_config_default(&config);
+    rvm_hal_uart_config_t config;
+    rvm_hal_uart_config_default(&config);
     config.baud_rate = CONFIG_AT_UART_BAUD;
 
     if (task == NULL) {

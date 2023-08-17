@@ -134,6 +134,7 @@ static int codec_output_test(uint32_t timeout)
     csi_codec_output_link_dma(&g_output_hdl, NULL);
     csi_codec_output_detach_callback(&g_output_hdl);
     csi_codec_output_close(&g_output_hdl);
+    g_output_hdl.codec = NULL;
 
     return 0;
 }
@@ -161,18 +162,38 @@ static void output_cmd(char *wbuf, int wbuf_len, int argc, char **argv)
     if (strcmp(argv[1], "play") == 0) {
         aos_task_new("output", codec_output_task, NULL, 4096);
     } else if (strcmp(argv[1], "pause") == 0) {
+        if (!g_output_hdl.codec) {
+            printf("Please input \"output play\" first!\n");
+            return;
+        }
         ret = csi_codec_output_pause(&g_output_hdl);    
         printf("ret: %d\n", ret);
     } else if (strcmp(argv[1], "resume") == 0) {
+        if (!g_output_hdl.codec) {
+            printf("Please input \"output play\" first!\n");
+            return;
+        }
         ret = csi_codec_output_resume(&g_output_hdl);    
         printf("ret: %d\n", ret);
     } else if (strcmp(argv[1], "mute") == 0) {
+        if (!g_output_hdl.codec) {
+            printf("Please input \"output play\" first!\n");
+            return;
+        }
         ret = csi_codec_output_mute(&g_output_hdl, 1); 
         printf("ret: %d\n", ret);
     } else if (strcmp(argv[1], "unmute") == 0) {
+        if (!g_output_hdl.codec) {
+            printf("Please input \"output play\" first!\n");
+            return;
+        }
         ret = csi_codec_output_mute(&g_output_hdl, 0); 
         printf("ret: %d\n", ret);
     } else if (strcmp(argv[1], "gain") == 0) {
+        if (!g_output_hdl.codec) {
+            printf("Please input \"output play\" first!\n");
+            return;
+        }
         printf("set gain:%d\n", atoi(argv[2]));
 
         ret = csi_codec_output_digital_gain(&g_output_hdl, atoi(argv[2]));

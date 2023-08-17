@@ -11,7 +11,6 @@ extern "C" {
 #endif
 
 #include <yoc/lpm.h>
-// #include <yoc/partition.h>
 #include <yoc/init.h>
 #include <yoc/sysinfo.h>
 

@@ -1,14 +1,17 @@
 /*
  * Copyright (C) 2015-2018 Alibaba Group Holding Limited
  */
+#include <errno.h>
+#include <stdint.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <time.h>
-#include "debug_api.h"
-#include "k_compiler.h"
 #include "aos/kernel.h"
+#include "debug_api.h"
 #include "debug/dbg.h"
-#include "aos/errno.h"
+#ifdef CONFIG_KERNEL_RHINO
+#include "k_api.h"
+#include "k_compiler.h"
 
 int backtrace_now(int (*print_func)(const char *fmt, ...));
 void debug_panic_backtrace(char *PC, int *SP, char *LR,
@@ -51,7 +54,6 @@ __attribute__((weak)) void alios_cli_panic_hook()
     return;
 }
 
-extern void hal_reboot(void);
 /* functions followed should defined by arch\...\panic_c.c */
 extern void panicShowRegs(void *context,
                           int (*print_func)(const char *fmt, ...));
@@ -130,7 +132,7 @@ static void debug_panic_end(void)
         if (g_crash_not_reboot == OS_PANIC_NOT_REBOOT) {
             panic_goto_cli();
         } else if (panicNmiFlagCheck() == 0) {
-            hal_reboot();
+            aos_reboot();
         } else { /* '$' is also effective in release version*/
             panic_goto_cli();
         }        
@@ -509,7 +511,7 @@ void panicHandler(void *context)
     g_crash_by_NMI  = 0;
 }
 
-void debug_fatal_error(kstat_t err, char *file, int line)
+void debug_fatal_error(int err, char *file, int line)
 {
     void *pmm_head = NULL;
     (void)pmm_head;
@@ -566,6 +568,12 @@ void debug_set_panic_cli_enable(int enable)
 {
     g_debug_panic_cli = enable;
 }
+#else
+uint32_t debug_cpu_in_crash(void)
+{
+    return 0;
+}
+#endif /*CONFIG_KERNEL_RHINO*/
 
 void debug_init(void)
 {

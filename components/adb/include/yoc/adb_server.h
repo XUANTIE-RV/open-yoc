@@ -7,7 +7,7 @@
 
 #include <stdarg.h>
 
-#include <aos/hal/uart.h>
+#include <devices/uart.h>
 #include <uservice/uservice.h>
 #include <yoc/adb_port.h>
 
@@ -63,7 +63,7 @@ typedef struct adbserver_cmd {
     const cmd_callback cb;
 } adbserver_cmd_t;
 
-int adbserver_init(utask_t *task, uint8_t port, uart_config_t *config);
+int adbserver_init(utask_t *task, uint8_t port, rvm_hal_uart_config_t *config);
 int  adbserver_channel_init(utask_t *task, uint8_t port, void *config, adb_channel_t *channel);
 int  adbserver_send(const char *format, ...);
 int  adbserver_sendv(const char *command, va_list args);
@@ -76,7 +76,7 @@ int  adbserver_scanf(const char *format, ...);
 int adbserver_pass_through(int len, pass_through_cb cb);
 int adbserver_pass_through_exit(void);
 void adbserver_enabled(int flag);
-void adbserver_uart_config(uart_config_t *config);
+void adbserver_uart_config(rvm_hal_uart_config_t *config);
 
 #ifdef __cplusplus
 }

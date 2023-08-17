@@ -1,6 +1,6 @@
 ## 第一部分： 基础信息
 name: bl606p_c906_ipc_demo                          # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
-version: v7.7.0                                    # <必选项> 组件版本号
+version: v7.8.0                                    # <必选项> 组件版本号
 description: ipc demo                               # <必选项> 建议至少20字以上
 type: solution                                      # <必选项> 组件类型，为：solution, chip, board, common, sdk
 
@@ -11,12 +11,12 @@ type: solution                                      # <必选项> 组件类型�
 #   - minilibc: v7.2.0
 #   - aos: >=v7.2.0
 depends:
-  - yoc_kernel: v7.7.0
-  - bl606p_evb_c906: v7.7.0
-  - chip_bl606p: v7.7.0
-  - libc_stub: v7.7.0
-  - ipc: v7.7.0
-  - log_ipc: v7.7.0
+  - yoc_kernel: v7.8.0
+  - bl606p_evb_c906: v7.8.0
+  - chip_bl606p: v7.8.0
+  - libc_stub: v7.8.0
+  - ipc: v7.8.0
+  - log_ipc: v7.8.0
 
 ## 第三部分：板级信息
 # hw_info:                                 # 对 solution、board、chip 三个字段的改进，统称为 hw_info 字段

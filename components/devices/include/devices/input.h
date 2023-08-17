@@ -84,6 +84,11 @@ int rvm_hal_input_unset_event(rvm_dev_t *dev, rvm_hal_input_event event_cb);
 */
 int rvm_hal_input_read(rvm_dev_t *dev, void *data, uint32_t size, unsigned int timeout_ms);
 
+
+#if defined(AOS_COMP_DEVFS) && AOS_COMP_DEVFS
+#include <devices/vfs_input.h>
+#endif
+
 #ifdef __cplusplus
 }
 #endif

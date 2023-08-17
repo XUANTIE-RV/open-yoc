@@ -5,7 +5,6 @@
 #include "dfu_port.h"
 #include "ota_server.h"
 #include "ota_process.h"
-#include "aos/hal/flash.h"
 #include "errno.h"
 #include "ulog/ulog.h"
 #include "crc/crc16.h"

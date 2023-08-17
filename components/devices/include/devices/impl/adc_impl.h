@@ -20,10 +20,11 @@ typedef struct adc_driver {
     int (*config)(rvm_dev_t *dev, rvm_hal_adc_config_t *config);
     int (*pin2channel)(rvm_dev_t *dev, int pin);
 #ifdef CONFIG_CSI_V2
-    int (*read)(rvm_dev_t *dev, uint8_t ch, void *output, uint32_t timeout);
+    int (*read)(rvm_dev_t *dev, uint8_t ch, void *output, size_t num, uint32_t timeout);
 #else
     int (*read)(rvm_dev_t *dev, void *output, uint32_t timeout);
 #endif
+    int (*trans_dma_enable)(rvm_dev_t *dev, bool enable);
 } adc_driver_t;
 
 #ifdef __cplusplus

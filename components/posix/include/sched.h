@@ -18,7 +18,7 @@ extern "C" {
 #define SCHED_OTHER 0
 #define SCHED_FIFO  1
 #define SCHED_RR    2
-#define SCHED_CFS   3
+#define SCHED_CFS   0 /* Alias to SCHED_OTHER */
 
 struct sched_param {
     int      sched_priority; /* process execution scheduling priority */

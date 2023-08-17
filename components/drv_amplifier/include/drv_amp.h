@@ -19,8 +19,12 @@
 #define AMP_MODE_D3  3 /*D类 ，防破音关闭*/
 #define AMP_MODE_AB  4 /*AB类，防破音关闭*/
 
+/* GPIO PA 使能电平翻转 */
+#define AMP_MODE_GPIO_FLIP 0x00100000
+
 /* 调试扩展：高两字节非0，进入不关闭模式 */
-#define AMP_MODE_LOCK_ON 0x00010000
+#define AMP_MODE_LOCK_ON   0x00010000
+
 
 /**
  * Amplifier init
@@ -56,11 +60,11 @@ int amplifier_onoff(int onoff);
  * Amplifier working mode config
  *
  * @param[in]  amp_mode  Working mode of power amplifier.
- * @param[in]  lock_on   Disable amplifier off.
- * 
+ * @param[in]  lock_on   Disable amplifier off. <0: ignore config
+ * @param[in]  gpio_flip 0: GPIO high level enable PA 1: GPIO low lowlevel enable PA <0: ignore config
  * @return  0: success.
  */
-int amplifier_config(int amp_mode, int lock_on);
+int amplifier_config(int amp_mode, int lock_on, int gpio_flip);
 
 /**
  * Get amplifier chip id

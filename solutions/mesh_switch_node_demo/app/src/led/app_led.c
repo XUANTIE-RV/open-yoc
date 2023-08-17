@@ -3,10 +3,9 @@
  */
 
 #include <aos/aos.h>
-#include <aos/hal/pwm.h>
 #include <board.h>
 #include <ulog/ulog.h>
-
+#include <devices/gpiopin.h>
 #include "app_main.h"
 #include "drv_light.h"
 
@@ -20,17 +19,17 @@ static int init_flag = 1;
 #if defined(BOARD_LED_NUM) && BOARD_LED_NUM
 #if defined(BOARD_LED_PWM_NUM) && BOARD_LED_PWM_NUM
 
-static pwm_dev_t pmw_light[3];
+static pwm_dev_res_t pmw_light[3];
 
 static pwm_port_func_t pwm_channel_config[] = {
 #ifdef BOARD_LED0_PWM_CH
-    {BOARD_LED0_PWM_CH},
+    {0, BOARD_LED0_PWM_CH},
 #endif
 #ifdef BOARD_LED1_PWM_CH
-    {BOARD_LED1_PWM_CH},
+    {1, BOARD_LED1_PWM_CH},
 #endif
 #ifdef BOARD_LED2_PWM_CH
-    {BOARD_LED2_PWM_CH},
+    {2, BOARD_LED2_PWM_CH},
 #endif
 };
 
@@ -64,18 +63,19 @@ static void _led_set(bool on, uint8_t r_s, uint8_t g_s, uint8_t b_s, uint8_t r_a
         rgb_config.rgb_config[1].led_actual   = 0;
         rgb_config.rgb_config[2].led_actual   = 0;
     }
+
     led_light_control((void *)&rgb_config);
 }
 #elif defined(BOARD_LED_GPIO_NUM) && BOARD_LED_GPIO_NUM
 
-static gpio_dev_t led0;
+static rvm_dev_t *led0;
 
 static void _led_init(void)
 {
     if (init_flag) {
-        led0->port = BOARD_LED0_GPIO_PIN;
-        led0->config = OUTPUT_PUSH_PULL;
-        hal_gpio_init(&led0);
+        rvm_gpio_pin_drv_register(BOARD_LED0_GPIO_PIN);
+        led0 = rvm_hal_gpio_pin_open_by_pin_name("gpio_pin", BOARD_LED0_GPIO_PIN);
+        rvm_hal_gpio_pin_set_mode(led0, RVM_GPIO_MODE_PUSH_PULL);
         init_flag = 0;
     }
 }
@@ -90,10 +90,10 @@ static void _led_set(bool on, uint8_t r_s, uint8_t g_s, uint8_t b_s, uint8_t r_a
     (void)b_a;
     if (on)
     {
-        hal_gpio_output_high(&led0);
+        rvm_hal_gpio_pin_write(led0, RVM_GPIO_PIN_HIGH);
     else
     {
-        hal_gpio_output_low(&led0);
+        rvm_hal_gpio_pin_write(led0, RVM_GPIO_PIN_LOW);
     }
 }
 

@@ -98,9 +98,10 @@ static bool usbd_set_endpoint(const struct usb_endpoint_descriptor *ep_desc)
     ep_cfg.ep_addr = ep_desc->bEndpointAddress;
     ep_cfg.ep_mps = ep_desc->wMaxPacketSize & USB_MAXPACKETSIZE_MASK;
     ep_cfg.ep_type = ep_desc->bmAttributes & USB_ENDPOINT_TYPE_MASK;
+    ep_cfg.ep_interval = ep_desc->bInterval;
 
-    USB_LOG_INFO("Open endpoint:0x%x type:%u mps:%u\r\n",
-                 ep_cfg.ep_addr, ep_cfg.ep_type, ep_cfg.ep_mps);
+    USB_LOG_INFO("Open endpoint:0x%x type:%u mps:%u, interval:%u\r\n",
+                 ep_cfg.ep_addr, ep_cfg.ep_type, ep_cfg.ep_mps, ep_cfg.ep_interval);
 
     return usbd_ep_open(&ep_cfg) == 0 ? true : false;
 }
@@ -121,9 +122,10 @@ static bool usbd_reset_endpoint(const struct usb_endpoint_descriptor *ep_desc)
     ep_cfg.ep_addr = ep_desc->bEndpointAddress;
     ep_cfg.ep_mps = ep_desc->wMaxPacketSize & USB_MAXPACKETSIZE_MASK;
     ep_cfg.ep_type = ep_desc->bmAttributes & USB_ENDPOINT_TYPE_MASK;
+    ep_cfg.ep_interval = ep_desc->bInterval;
 
-    USB_LOG_INFO("Close endpoint:0x%x type:%u\r\n",
-                 ep_cfg.ep_addr, ep_cfg.ep_type);
+    USB_LOG_INFO("Close endpoint:0x%x type:%u mps:%u, interval:%u\r\n",
+                 ep_cfg.ep_addr, ep_cfg.ep_type, ep_cfg.ep_mps, ep_cfg.ep_interval);
 
     return usbd_ep_close(ep_cfg.ep_addr) == 0 ? true : false;
 }

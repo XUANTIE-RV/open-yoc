@@ -318,6 +318,7 @@ int get_sys_partition(uint8_t *out, uint32_t *out_len)
         p->part_size = part_info.end_addr - part_info.start_addr;
         p->image_size = part_info.img_size;
         p->load_addr = part_info.load_addr;
+        p->preload_size = part_info.preload_size;
 #if CONFIG_PARTITION_SUPPORT_BLOCK_OR_MULTI_DEV
         memcpy(&p->storage_info, &part_info.storage_info, sizeof(storage_info_t));
 #endif

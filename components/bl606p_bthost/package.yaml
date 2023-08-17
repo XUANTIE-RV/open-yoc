@@ -1,6 +1,6 @@
 ## 第一部分： 基础信息
 name: bl606p_bthost                                  # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
-version: v7.7.0                                     # <必选项> 组件版本号
+version: v7.8.0                                     # <必选项> 组件版本号
 description: bluetooth host source code        # <必选项> 建议至少20字以上
 type: common                                          # <必选项> 组件类型，为：solution, chip, board, common
 
@@ -115,10 +115,10 @@ source_file:                             # <可选项> 指定参与编译的源�
   - src/common/tinycrypt/source/cmac_mode.c
   - src/common/tinycrypt/source/ctr_mode.c
   - src/common/tinycrypt/source/ctr_prng.c
-  - src/common/tinycrypt/source/ecc.c
-  - src/common/tinycrypt/source/ecc_dh.c
-  - src/common/tinycrypt/source/ecc_dsa.c
-  - src/common/tinycrypt/source/ecc_platform_specific.c
+  - "src/common/tinycrypt/source/ecc.c ? <CONFIG_TINY_CRYPTO_ECC_SW>"
+  - "src/common/tinycrypt/source/ecc_dh.c ? <CONFIG_TINY_CRYPTO_ECC_SW>"
+  - "src/common/tinycrypt/source/ecc_dsa.c ? <CONFIG_TINY_CRYPTO_ECC_SW>"
+  - "src/common/tinycrypt/source/ecc_platform_specific.c ? <CONFIG_TINY_CRYPTO_ECC_SW>"
   - src/common/tinycrypt/source/hmac.c
   - src/common/tinycrypt/source/hmac_prng.c
   - src/common/tinycrypt/source/sha256.c
@@ -130,7 +130,7 @@ source_file:                             # <可选项> 指定参与编译的源�
   - src/host/crypto.c
   - src/host/gatt.c
   - src/host/hci_core.c
-  - src/host/hci_ecc.c
+  - "src/host/hci_ecc.c ? <CONFIG_TINY_CRYPTO_ECC_SW>"
   - src/host/l2cap.c
   - src/host/uuid.c
   - src/host/smp.c #CONFIG_DISABLE_BT_SMP

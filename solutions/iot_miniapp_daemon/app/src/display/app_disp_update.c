@@ -28,8 +28,10 @@ void app_display_update(void)
         app_display_show(DISP_SHOW_WIFI_PROV);
     } else if (!app_network_internet_is_connected()) {
         app_display_show(DISP_SHOW_WIFI_CONN_FAIL);
+#if defined(CONFIG_COMP_VOICE_WRAPPER) && CONFIG_COMP_VOICE_WRAPPER
     } else if (app_mic_is_wakeup()) {
         app_display_show(DISP_SHOW_WAKEUP);
+#endif
     } else if (state == SMTAUDIO_STATE_MUTE) {
         app_display_show(DISP_SHOW_MUTE);
     } else if (state == SMTAUDIO_STATE_PLAYING) {

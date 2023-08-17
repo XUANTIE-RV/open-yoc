@@ -69,6 +69,32 @@
 
 /* Enable interrupts when returning from the handler */
 #define MSTATUS_PRV1 0x1880
+.equ RISCV_MSTATUS_MIE,        (1<<3)       /*machine-level interrupt bit*/
+/******************************************************************************
+ * Functions:
+ *     size_t cpu_intrpt_save(void);
+ *     void   cpu_intrpt_restore(size_t psr);
+ ******************************************************************************/
+
+.global cpu_intrpt_save
+.type cpu_intrpt_save, %function
+cpu_intrpt_save:
+    csrr    a0, mstatus
+    csrc    mstatus, 8
+    ret
+
+.global cpu_intrpt_restore
+.type cpu_intrpt_restore, %function
+cpu_intrpt_restore:
+    csrw    mstatus, a0
+    ret
+
+.global cpu_is_irq_enable
+.type cpu_is_irq_enable, %function
+cpu_is_irq_enable:
+    csrr a0, mstatus
+    andi a0, a0, RISCV_MSTATUS_MIE
+    ret
 
 /********************************************************************
  * Functions: vPortYield
@@ -216,22 +242,22 @@ tspend_handler:
     lw      x13, 44(sp)
     lw      x14, 48(sp)
     lw      x15, 52(sp)
-    sw      x16, 56(sp)
-    sw      x17, 60(sp)
-    sw      x18, 64(sp)
-    sw      x19, 68(sp)
-    sw      x20, 72(sp)
-    sw      x21, 76(sp)
-    sw      x22, 80(sp)
-    sw      x23, 84(sp)
-    sw      x24, 88(sp)
-    sw      x25, 92(sp)
-    sw      x26, 96(sp)
-    sw      x27, 100(sp)
-    sw      x28, 104(sp)
-    sw      x29, 108(sp)
-    sw      x30, 112(sp)
-    sw      x31, 116(sp)
+    lw      x16, 56(sp)
+    lw      x17, 60(sp)
+    lw      x18, 64(sp)
+    lw      x19, 68(sp)
+    lw      x20, 72(sp)
+    lw      x21, 76(sp)
+    lw      x22, 80(sp)
+    lw      x23, 84(sp)
+    lw      x24, 88(sp)
+    lw      x25, 92(sp)
+    lw      x26, 96(sp)
+    lw      x27, 100(sp)
+    lw      x28, 104(sp)
+    lw      x29, 108(sp)
+    lw      x30, 112(sp)
+    lw      x31, 116(sp)
 
     addi    sp, sp, 124
     mret

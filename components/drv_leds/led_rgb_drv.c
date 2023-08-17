@@ -209,7 +209,7 @@ static led_driver_t led_driver = {
     .control = yoc_led_rgb_control,
 };
 
-void led_rgb_register(led_pin_config_t *config, int idx)
+void rvm_led_rgb_drv_register(led_pin_config_t *config, int idx)
 {
     rvm_driver_register(&led_driver.drv, (void *)config, idx);
 }

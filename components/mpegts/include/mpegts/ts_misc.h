@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2018-2022 Alibaba Group Holding Limited
- */
+* Copyright (C) 2018-2023 Alibaba Group Holding Limited
+*/
 
 #ifndef __TS_MISC_H__
 #define __TS_MISC_H__
@@ -24,27 +24,14 @@ uint32_t ts_crc32(const uint8_t *data, size_t len);
 * @param  [in] type
 * @return 0 on error
 */
-uint8_t ts_get_stream_id(es_type_t type);
+uint8_t ts_get_stream_id(ES_TYPE_ID type);
 
 /**
  * @brief  whether audio by es type
  * @param  [in] type
  * @return 0/1
  */
-int is_ts_audio_stream(es_type_t type);
 
-/**
- * @brief  whether video by es type
- * @param  [in] type
- * @return 0/1
- */
-int is_ts_video_stream(es_type_t type);
-
-/**
- * @brief  read pts or dts
- * @param  [in] data[5]
- * @return
- */
 uint64_t ts_read_pts(const uint8_t data[5]);
 
 /**
@@ -69,4 +56,3 @@ void ts_write_pcr(uint8_t data[6], uint64_t pcr);
 #endif
 
 #endif /* __TS_MISC_H__ */
-

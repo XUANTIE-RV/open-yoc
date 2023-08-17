@@ -56,10 +56,10 @@ MK_GENERATED_PATH=${MK_SOLUTION_PATH}/generated
 rm -fr $MK_GENERATED_PATH
 mkdir -p $MK_GENERATED_PATH/data/
 
-echo $MK_SOLUTION_PATH
-echo $MK_BOARD_PATH
-echo $MK_CHIP_PATH
-echo $MK_GENERATED_PATH
+echo "Solution: "$MK_SOLUTION_PATH
+echo "Board: "$MK_BOARD_PATH
+echo "Chip: "$MK_CHIP_PATH
+echo "Out: "$MK_GENERATED_PATH
 
 if [ -d data ]; then
     LFS_SIZE=$(cat $MK_BOARD_PATH/configs/config.yaml | grep lfs | sed 's/[[:space:]\"]//g' | awk -F 'size:' '{print $2}' | awk -F '}' '{print strtonum($1)}')
@@ -69,8 +69,79 @@ if [ -d data ]; then
 	cp -arf ${MK_GENERATED_PATH}/data/lfs  ${MK_GENERATED_PATH}/littlefs.bin
 fi
 
+# # yoctools >= 2.0.44
+# check components alg_kws_mind
+COMP_ALG_KWS_MIND_PATH=$(echo $CONFIG_DEFINES | grep "PATH_ALG_KWS_MIND" | awk -F ':' '{print $2}')
+#echo $CONFIG_DEFINES
+if [ -n "$EXE_EXT" ]; then
+    # CDK
+    COMP_ALG_KWS_MIND_PATH=$PATH_ALG_KWS_MIND
+fi
+
+# check components alg_kws_lyeva
+COMP_ALG_KWS_LYEVA_PATH=$(echo $CONFIG_DEFINES | grep "PATH_ALG_KWS_LYEVA" | awk -F ':' '{print $2}')
+#echo $CONFIG_DEFINES
+if [ -n "$EXE_EXT" ]; then
+    # CDK
+    COMP_ALG_KWS_LYEVA_PATH=$PATH_ALG_KWS_LYEVA
+fi
+
+# check components alg_asr_lyeva
+CONFIG_ALG_ASR_LYEVA=$(echo $CONFIG_DEFINES | grep "CONFIG_ALG_ASR_LYEVA" | awk -F ':' '{print $2}')
+#echo $CONFIG_DEFINES
+if [ -n "$EXE_EXT" ]; then
+    # CDK
+    CONFIG_ALG_ASR_LYEVA=$CONFIG_ALG_ASR_LYEVA
+fi
+
+# check components us_algo_c906
+COMP_US_ALGO_C906_PATH=$(echo $CONFIG_DEFINES | grep "PATH_US_ALGO_C906" | awk -F ':' '{print $2}')
+#echo $CONFIG_DEFINES
+if [ -n "$EXE_EXT" ]; then
+    # CDK
+    COMP_US_ALGO_C906_PATH=$PATH_US_ALGO_C906
+fi
+
+# check components us_cloud
+COMP_US_CLOUD_PATH=$(echo $CONFIG_DEFINES | grep "PATH_US_CLOUD" | awk -F ':' '{print $2}')
+#echo $CONFIG_DEFINES
+if [ -n "$EXE_EXT" ]; then
+    # CDK
+    COMP_US_CLOUD_PATH=$PATH_US_CLOUD
+fi
+
+# check components us_algo_c906
+CONFIG_US_ALGO_C906=$(echo $CONFIG_DEFINES | grep "CONFIG_ALG_US" | awk -F ':' '{print $2}')
+#echo $CONFIG_DEFINES
+if [ -n "$EXE_EXT" ]; then
+    # CDK
+    CONFIG_US_ALGO_C906=$CONFIG_ALG_US
+fi
+
+echo "Firmware check ..."
+echo "COMP_ALG_KWS_LYEVA_PATH: "$COMP_ALG_KWS_LYEVA_PATH
+echo "CONFIG_ALG_ASR_LYEVA: "$CONFIG_ALG_ASR_LYEVA
+echo "COMP_US_ALGO_C906_PATH: "$COMP_US_ALGO_C906_PATH
+echo "COMP_US_CLOUD_PATH: "$COMP_US_CLOUD_PATH
+echo "CONFIG_US_ALGO_C906: "$CONFIG_US_ALGO_C906
+
+if [ -n "$COMP_US_CLOUD_PATH" ];then
+if [ ! -d "$MK_SOLUTION_PATH/data/data" ];then
+mkdir -p $MK_SOLUTION_PATH/data/data
+fi
+if [ -d "$COMP_US_CLOUD_PATH/res/config_file"];then
+cp -arf $COMP_US_CLOUD_PATH/res/config_file ${MK_SOLUTION_PATH}/data/data
+fi
+fi
+
+if [ -n "$CONFIG_ALG_ASR_LYEVA" ] || [ -n "$CONFIG_US_ALGO_C906" ];then
+cp -arf $MK_BOARD_PATH/configs/config_lyeva_asr.yaml ${MK_GENERATED_PATH}/data/config.yaml
+cp -arf $MK_BOARD_PATH/configs/partition_lyeva_asr.toml ${MK_GENERATED_PATH}/data/partition.toml
+else
 cp -arf $MK_BOARD_PATH/configs/config.yaml ${MK_GENERATED_PATH}/data
 cp -arf $MK_BOARD_PATH/configs/*.toml ${MK_GENERATED_PATH}/data
+fi
+
 cp -arf $MK_BOARD_PATH/bootimgs/bootmini.bin ${MK_GENERATED_PATH}/data
 cp -arf $MK_BOARD_PATH/bootimgs/boot.bin ${MK_GENERATED_PATH}/data
 [ -f $MK_BOARD_PATH/bootimgs/c906.bin ] && cp $MK_BOARD_PATH/bootimgs/c906.bin ${MK_GENERATED_PATH}/data
@@ -85,42 +156,42 @@ cp -arf $MK_BOARD_PATH/bootimgs/boot.bin ${MK_GENERATED_PATH}/data
 # $PRODUCT combine -i yoc.bin,0x54020000,null ${MK_GENERATED_PATH}/data/c906.bin,0x54C00000,lz4 -o ${MK_GENERATED_PATH}/data/prim
 e907_run_addr=0x`grep "__stext>:" yoc.asm | awk -F ' ' '{print $1}'`
 echo "e907 run address: $e907_run_addr"
-c906_run_addr=0x`grep "__stext>:" $MK_BOARD_PATH/bootimgs/c906.asm | awk -F ' ' '{print $1}'`
-echo "c906 run address: $c906_run_addr"
-$PRODUCT combine -i yoc.bin,$e907_run_addr,lz4 ${MK_GENERATED_PATH}/data/c906.bin,$c906_run_addr,lz4 -o ${MK_GENERATED_PATH}/data/prim
 
-# # yoctools >= 2.0.44
-# check components alg_kws_mind
-COMP_PATH=$(echo $CONFIG_DEFINES | grep "PATH_ALG_KWS_MIND" | awk -F ':' '{print $2}')
-#echo $CONFIG_DEFINES
-if [ -n "$EXE_EXT" ]; then
-    # CDK
-    COMP_PATH=$PATH_ALG_KWS_MIND
-fi
+if [ -n "$COMP_ALG_KWS_MIND_PATH" ]; then
 
-if [ -n "$COMP_PATH" ];then
-    echo $COMP_PATH
-    FIRMWARE_PATH=$COMP_PATH/libs/chip_bl606p/e907fp/firmware
+# mind kws + lyeva asr 
+if [ -n "$CONFIG_ALG_ASR_LYEVA" ]; then
+    FIRMWARE_NAME="c906fdv_fw_asr_lyeva"
+    FIRMWARE_PATH="../../components/alg_asr_lyeva/libs/chip_bl606p/e907fp/firmware"
+else
+# mind kws only
     FIRMWARE_NAME="c906fdv_fw_mind"
-    c906_run_addr=0x`grep "__stext>:" ${FIRMWARE_PATH}/${FIRMWARE_NAME}.asm | awk -F ' ' '{print $1}'`
-    echo "c906 run address: $c906_run_addr"
-    $PRODUCT combine -i yoc.bin,$e907_run_addr,lz4 ${FIRMWARE_PATH}/${FIRMWARE_NAME}.bin,$c906_run_addr,lz4 -o ${MK_GENERATED_PATH}/data/prim
+    FIRMWARE_PATH="$COMP_ALG_KWS_MIND_PATH/libs/chip_bl606p/e907fp/firmware"
 fi
 
-# check components alg_kws_lyeva
-COMP_PATH=$(echo $CONFIG_DEFINES | grep "PATH_ALG_KWS_LYEVA" | awk -F ':' '{print $2}')
-#echo $CONFIG_DEFINES
-if [ -n "$EXE_EXT" ]; then
-    # CDK
-    COMP_PATH=$PATH_ALG_KWS_LYEVA
-fi
-if [ -n "$COMP_PATH" ];then
-    echo $COMP_PATH
-    FIRMWARE_PATH=$COMP_PATH/libs/chip_bl606p/e907fp/firmware
+else
+
+if [ -n "$COMP_ALG_KWS_LYEVA_PATH" ]; then
+# lyeva kws
     FIRMWARE_NAME="c906fdv_fw_lyeva"
+    FIRMWARE_PATH="$COMP_ALG_KWS_LYEVA_PATH/libs/chip_bl606p/e907fp/firmware"
+elif [ -n "$CONFIG_US_ALGO_C906" ]; then
+# us_alog_c906
+    FIRMWARE_NAME="c906fdv_fw_us"
+    FIRMWARE_PATH="../../components/us_algo_c906/libs/chip_bl606p/e907fp/firmware"
+fi
+
+fi
+
+if [ -n "$FIRMWARE_PATH" ];then
+    echo "Firware source:"$FIRMWARE_PATH/$FIRMWARE_NAME
     c906_run_addr=0x`grep "__stext>:" ${FIRMWARE_PATH}/${FIRMWARE_NAME}.asm | awk -F ' ' '{print $1}'`
     echo "c906 run address: $c906_run_addr"
     $PRODUCT combine -i yoc.bin,$e907_run_addr,lz4 ${FIRMWARE_PATH}/${FIRMWARE_NAME}.bin,$c906_run_addr,lz4 -o ${MK_GENERATED_PATH}/data/prim
+else
+    c906_run_addr=0x`grep "__stext>:" $MK_BOARD_PATH/bootimgs/c906.asm | awk -F ' ' '{print $1}'`
+    echo "c906 run address: $c906_run_addr"
+    $PRODUCT combine -i yoc.bin,$e907_run_addr,lz4 ${MK_GENERATED_PATH}/data/c906.bin,$c906_run_addr,lz4 -o ${MK_GENERATED_PATH}/data/prim
 fi
 
 $PRODUCT image ${MK_GENERATED_PATH}/images.zip -i ${MK_GENERATED_PATH}/data  -p

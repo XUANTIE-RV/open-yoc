@@ -70,9 +70,13 @@
 #define EVENT_GUI_USER_FOTA_PROGRESS            (EVENT_USER + 188)
 #define EVENT_GUI_USER_MUSIC_NEXT               (EVENT_USER + 189)
 #define EVENT_GUI_USER_MUSIC_PREV               (EVENT_USER + 190)
-#define EVENT_GUI_USER_MUSIC_PAUSE              (EVENT_USER + 191)
-#define EVENT_GUI_USER_MUSIC_PLAY               (EVENT_USER + 192)
-#define EVENT_GUI_USER_PLAY_OVER                (EVENT_USER + 193)
+#define EVENT_GUI_USER_MUSIC_PLAY               (EVENT_USER + 191)
+#define EVENT_GUI_USER_PLAY_OVER                (EVENT_USER + 192)
+
+#define EVENT_GUI_USER_MUSIC_START              (EVENT_USER + 193)
+#define EVENT_GUI_USER_MUSIC_PAUSE              (EVENT_USER + 194)
+#define EVENT_GUI_USER_MUSIC_RESUME             (EVENT_USER + 195)
+#define EVENT_GUI_USER_MUSIC_STOP               (EVENT_USER + 196)
 
 /* 调试 */
 #define EVENT_DEBUG_EVENT_BLOCK   (EVENT_USER + 200)

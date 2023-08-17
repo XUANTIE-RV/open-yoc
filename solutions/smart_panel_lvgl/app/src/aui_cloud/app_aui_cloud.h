@@ -16,4 +16,5 @@ int app_aui_cloud_stop_tts();
 int app_aui_cloud_push_text(char *text);
 
 int app_aui_cloud_wwv(int confirmed);
+void app_aui_shortcutCMD_offline(const char *resultCMD);
 #endif

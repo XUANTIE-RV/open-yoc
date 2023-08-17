@@ -86,6 +86,8 @@ struct isp_i2c_data {
  * struct snsr_regs_s - structure of sensor update wrapper
  *
  * @sns_type: i2c or other interface
+ * @magic_num: the frame number to updated
+ * @magic_num_dly: the frame number to updated on synthetic hdr mode
  * @regs_num: the maximum sensor registers to be updated
  * @i2c_data: sensor registers to be updated
  * @use_snsr_sram: does this sensor support group update
@@ -96,6 +98,7 @@ struct isp_i2c_data {
 struct snsr_regs_s {
 	enum isp_sns_type_e	sns_type;
 	unsigned int		magic_num;
+	unsigned int		magic_num_dly;
 	unsigned int		regs_num;
 	struct isp_i2c_data	i2c_data[ISP_MAX_SNS_REGS];
 	unsigned char		cfg_valid_max_dly_frm;

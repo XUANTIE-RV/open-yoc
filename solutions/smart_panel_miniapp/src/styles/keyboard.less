@@ -1,0 +1,182 @@
+// 键盘整体
+.key_container {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    left: 0;
+    top: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 9;
+  
+
+  }
+// 输入窗口 部分
+.input_div {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 50%;
+    opacity: 1;
+    justify-content: center;
+    align-items: center;
+  
+
+  }
+// 输入窗口部分 外侧
+.input_part_out {
+    width: 80%;
+    height: 90%;
+    border-radius: 10px;
+    background-color: black;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  
+
+  }
+  .input_part_in{
+    width: 80%; 
+    height: 96%;
+  }
+
+  @yxp-touch-opactiy: 0.7; //点击时的透明度，用于触感反馈
+  .yxp-touch:active { // 点击有反馈
+    opacity: @yxp-touch-opactiy;
+    // opacity: 0.7;
+    // background: #ff0;
+  }
+  
+// 输入窗口部分
+
+.input_part_bt{
+    width: 30%;
+    height: 90%;
+    justify-content: center; 
+    align-items: center; 
+    border-radius: 10px;
+
+    background-color: green;
+}
+.input_part_bt_text{
+    color: white; 
+    font-size: 22px;
+}
+.input_info_text{
+  font-size: 22;
+  color: white;
+}
+.input_box {
+  width: 200px;
+  height: 40%;
+  justify-content: center;
+  align-items: center;
+  padding: 2px 2px 2px 5px;
+  border-radius: 10px;
+
+  // border-color: red;
+  // border-width: 1px;
+}
+.input-text {
+  color: #ccc9c4;
+  font-size: 20px;
+}
+
+// ************************************************
+// 键盘部分
+.key_div {
+    position: absolute;
+    left: 0; top: 50%;
+    width: 100%;
+    height: 50%;
+    background-color: white;
+  }
+  
+  .key-panel{
+    width: 100%;
+    height: 100%;
+    flex-direction: row;
+    flex-wrap: wrap;
+
+    justify-content: center;
+    align-items: center;
+  }
+  // 按钮
+  .btn-key{
+    margin: 3px 3px 3px 4px;
+    justify-content: center;
+    align-items: center;
+    min-width: 40px;
+    height: 55px;
+    background-color: #1a1a1a;
+    // background-color: green;
+    border-radius: 10px;
+  }
+  .btn-key2 {
+    margin: 3px;
+    justify-content: center;
+    align-items: center;
+    min-width: 80px;
+    height: 55px;
+    border-radius: 10px;
+  }
+  .btn-transparency{
+    min-width: 83px;
+    height: 55px;
+    opacity: 0;
+  }
+  .btn-transparency1{
+    min-width: 55px;
+    height: 55px;
+    opacity: 0;
+  }
+  .key-text{
+    color: #ccc9c4;
+    font-size: 24px;
+    font-weight: bold;
+  }
+  
+
+  // 功能区
+  .menu_panel{
+    position: absolute;
+    top: 77%;
+    width: 100%; height: 22%;   
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    
+  }
+
+  .btn-menu{
+    width: 50px;
+    height: 50px;
+    background-color: #333333;
+  }
+  .btn-check {
+    width: 70px;
+    height: 50px;
+    justify-content: center;
+    align-items: center;
+    margin-left: 20px;
+    
+    border-radius: 10px;
+    background-color: #333333;
+  }
+  .btn-del{
+    width: 70px;
+    height: 50px;
+    margin-right: 20px;
+    padding: 8px 8px 8px 8px;
+    justify-content: center;
+    align-items: center;
+    
+    border-radius: 10px;
+    background-color: #333333;
+  }
+  .img {
+    // width: 46px;
+    // height: 40px;
+    width: 100%;
+    height: 100%;
+  }

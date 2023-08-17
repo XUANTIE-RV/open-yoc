@@ -14,6 +14,7 @@
 
 #define SC_lOG(...)
 
+#ifndef CHECK_PARAM
 #define CHECK_PARAM(x, ret) \
 	do { \
 		if (!(x)) { \
@@ -21,15 +22,17 @@
 		}\
 	} while (0)
 
-#endif
+#endif /* CHECK_PARAM */
 
+#ifndef CHECK_RET_WITH_RET
 #define CHECK_RET_WITH_RET(x, ret) \
 	do { \
 		if (!(x)) { \
 			return ret; \
 		}\
 	} while (0)
-
+#endif /* CHECK_RET_WITH_RET */
 
 
 void sc_common_set_key_bits(sc_rsa_t *rsa, sc_rsa_context_t *context);
+#endif /* __SEC_CRYPTO_COMMON_H__ */

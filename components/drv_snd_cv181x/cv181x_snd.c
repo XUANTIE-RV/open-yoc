@@ -95,7 +95,7 @@ static int output_db2idx(int dB)
     return dB_idx;
 }
 
-static uint8_t *get_buffer_alig_64(uint32_t len, uint64_t *first_addr)
+static uint8_t *get_buffer_alig_64(uint32_t len, uint64_t **first_addr)
 {
 	uint8_t  *addr;
 	uint64_t tmp;
@@ -104,7 +104,7 @@ static uint8_t *get_buffer_alig_64(uint32_t len, uint64_t *first_addr)
 	if(!tmp){
 		return NULL;
 	}
-	first_addr = (uint64_t *)tmp;
+	*first_addr = (uint64_t *)tmp;
 	addr = (uint8_t *)((tmp+ (1 << 6) - 1) & ~((1 << 6) - 1));
 	//printf("get_buffer_alig_64 tmp = 0x%lx, addr = %p\n", tmp, addr);
 	return addr;
@@ -213,7 +213,7 @@ static int pcmp_param_set(aos_pcm_t *pcm, aos_pcm_hw_params_t *params)
 
     csi_codec_output_attach_callback(codec, codec_event_cb, pcm);
 
-    output_config.buffer = get_buffer_alig_64(params->buffer_bytes, (uint64_t *)codec->priv);//(uint8_t *)(AUDIO_OUTPUT_NONCACHE_MEM);
+    output_config.buffer = get_buffer_alig_64(params->buffer_bytes, (uint64_t **)&codec->priv);//(uint8_t *)(AUDIO_OUTPUT_NONCACHE_MEM);
     output_config.bit_width = params->sample_bits;
     output_config.sample_rate = params->rate;
     output_config.buffer_size = params->buffer_bytes;
@@ -281,6 +281,8 @@ static int pcm_pause(aos_pcm_t *pcm, int enable)
 
     if (enable) {
         csi_codec_output_pause(playback->hdl);
+        csi_codec_output_stop(playback->hdl);
+        csi_codec_output_start(playback->hdl);
     } else {
         csi_codec_output_resume(playback->hdl);
     }
@@ -408,7 +410,7 @@ static int pcmc_param_set(aos_pcm_t *pcm, struct aos_pcm_hw_params *params)
     /* input ch config */
     csi_codec_input_attach_callback(codec, codec_event_cb, pcm);
 
-    input_config.buffer = get_buffer_alig_64(params->buffer_bytes, (uint64_t *)codec->priv);
+    input_config.buffer = get_buffer_alig_64(params->buffer_bytes, (uint64_t **)&codec->priv);
     input_config.bit_width = params->format;
     input_config.sample_rate = params->rate;
     input_config.buffer_size = params->buffer_bytes;
@@ -504,7 +506,7 @@ static int pcmd_param_set(aos_pcm_t *pcm, struct aos_pcm_hw_params *params)
     /* input ch config */
     csi_codec_input_attach_callback(codec, codec_event_cb, pcm);
 
-    input_config.buffer = get_buffer_alig_64(params->buffer_bytes, (uint64_t *)codec->priv);
+    input_config.buffer = get_buffer_alig_64(params->buffer_bytes, (uint64_t **)&codec->priv);
     input_config.bit_width = params->format;
     input_config.sample_rate = params->rate;
     input_config.buffer_size = params->buffer_bytes;

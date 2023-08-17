@@ -34,9 +34,9 @@
 #define INPUT_PERIOD_SIZE 512
 #define READ_BUFFER_SIZE 61440
 #else
-#define READ_TIME (2000)  //MS
-#define INPUT_TIME (1200) //MS
-#define PERIOD_TIME (20)  //MS
+#define READ_TIME   (2000)  //MS
+#define INPUT_TIME  (1200)  //MS
+#define PERIOD_TIME (20)    //MS
 
 #define FRAME_SIZE (INPUT_SAMPLE_RATE * INPUT_SAMPLE_BITS / 8 / 1000 * INPUT_CHANNELS)
 #define INPUT_BUFFER_SIZE FRAME_SIZE * INPUT_TIME
@@ -53,7 +53,7 @@ static aos_sem_t                g_input_sem;
 static csi_ringbuf_t            input_ring_buffer;
 static uint8_t                  start_run;
 static uint8_t                  g_input_buf[INPUT_BUFFER_SIZE];
-static uint8_t                  g_read_buffer[READ_BUFFER_SIZE];
+static uint8_t                  *g_read_buffer;
 
 static void codec_input_event_cb_fun(csi_codec_input_t *i2s, csi_codec_event_t event, void *arg)
 {
@@ -114,15 +114,18 @@ static void input_task(void *priv)
 
     uint32_t size   = 0;
     uint32_t r_size = 0;
-    g_input_size     = 0;
+    g_input_size    = 0;
     // printf("input start(%lld)\n", aos_now_ms());
-
+    printf("read start, please wait...\n");
     while (1) {
         input_wait();
         r_size = (g_input_size + INPUT_PERIOD_SIZE) < READ_BUFFER_SIZE ? INPUT_PERIOD_SIZE : (READ_BUFFER_SIZE-g_input_size);
         size = csi_codec_input_read_async(&g_input_hdl, g_read_buffer + g_input_size, r_size);
-        if (size != INPUT_PERIOD_SIZE) {
+        if (size != INPUT_PERIOD_SIZE || g_input_size >= sizeof(g_read_buffer)) {
             // printf("input stop, get (%d)ms data (%lld)\n", READ_TIME, aos_now_ms());
+            if (g_input_size >= sizeof(g_read_buffer)) {
+                size = 0;
+            }
             printf("read size err(%u)(%u)\n", size, r_size);
             break;
         }
@@ -134,6 +137,7 @@ static void input_task(void *priv)
     csi_codec_input_link_dma(&g_input_hdl, NULL);
     csi_codec_input_detach_callback(&g_input_hdl);
     csi_codec_uninit(&g_codec);
+    g_input_hdl.codec = NULL;
     start_run = 0;
 }
 
@@ -148,6 +152,11 @@ static void input_cmd(char *wbuf, int wbuf_len, int argc, char **argv)
 
 void codec_input_init(void)
 {
+    g_read_buffer = aos_malloc(READ_BUFFER_SIZE);
+    if (g_read_buffer == NULL) {
+        LOG("codec_input malloc read buffer failed!");
+        return;
+    }
     static const struct cli_command cmd_info = {
         "input",
         "codec input test",

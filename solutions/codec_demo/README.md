@@ -67,7 +67,7 @@ riscv64-unknown-elf-gdb yoc.elf -x gdbinit
 
 ## output
 
-主要测试播放相关api，
+主要测试播放相关api，以下所有命令必须先从output play开始。
 
 ### 播放
 

@@ -11,7 +11,7 @@
   *
   ******************************************************************************
   */
-#ifndef CONFIG_KERNEL_NONE
+#if !defined(CONFIG_KERNEL_NONE) && defined(CONFIG_KERNEL_RHINO)
 #include <k_api.h>
 #include <assert.h>
 #include <stdio.h>

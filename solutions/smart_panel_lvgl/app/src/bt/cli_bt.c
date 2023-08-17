@@ -33,7 +33,7 @@ static void cmd_bt_func(char *wbuf, int wbuf_len, int argc, char **argv)
 
 void cli_reg_cmd_bt(void)
 {
-    static const struct cli_command cmd_info = { "bt", "bt test", cmd_bt_func };
+    static const struct cli_command cmd_info = { "bttest", "bt test", cmd_bt_func };
 
     aos_cli_register_command(&cmd_info);
 }

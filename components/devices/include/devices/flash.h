@@ -57,6 +57,11 @@ int rvm_hal_flash_erase(rvm_dev_t *dev, int32_t addroff, int32_t blkcnt);
 */
 int rvm_hal_flash_get_info(rvm_dev_t *dev, rvm_hal_flash_dev_info_t *info);
 
+
+#if defined(AOS_COMP_DEVFS) && AOS_COMP_DEVFS
+#include <devices/vfs_flash.h>
+#endif
+
 #ifdef __cplusplus
 }
 #endif

@@ -8,11 +8,6 @@
 #include <unistd.h>
 #include <uservice/event.h>
 #include <sys/select.h>
-#ifndef __linux__
-#include <aos/kernel.h>
-#include <aos/debug.h>
-#endif
-
 #include "internal.h"
 
 #define FD_MASK (1UL << 31)

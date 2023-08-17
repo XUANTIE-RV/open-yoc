@@ -43,6 +43,9 @@ int vi_sdk_set_chn_attr(int fd, int pipe, int chn, VI_CHN_ATTR_S *pstChnAttr);
 int vi_sdk_enable_chn(int fd, int pipe, int chn);
 int vi_sdk_disable_chn(int fd, int pipe, int chn);
 int vi_sdk_set_motion_lv(int fd, struct mlv_info_s *mlv_i);
+int vi_sdk_enable_dis(int fd, int pipe);
+int vi_sdk_disable_dis(int fd, int pipe);
+int vi_sdk_set_dis_info(int fd, struct dis_info_s *pdis_i);
 int vi_sdk_set_pipe_frm_src(int fd, int pipe, VI_PIPE_FRAME_SOURCE_E *source);
 int vi_sdk_send_pipe_raw(int fd, int pipe, VIDEO_FRAME_INFO_S *sVideoFrm);
 int vi_sdk_set_dev_timing_attr(int fd, int dev, VI_DEV_TIMING_ATTR_S *pstDevTimingAttr);
@@ -59,5 +62,7 @@ int vi_sdk_put_smooth_rawdump(int fd, int pipe, VIDEO_FRAME_INFO_S *pstFrameInfo
 int vi_sdk_set_chn_rotation(int fd, const struct vi_chn_rot_cfg *cfg);
 int vi_sdk_set_chn_ldc(int fd, const struct vi_chn_ldc_cfg *cfg);
 int vi_sdk_enable_pattern(int fd, int pattern);
+int vi_sdk_reg_sync_task(int fd, int pipe, void *sync_task);
+int vi_sdk_unreg_sync_task(int fd, int pipe, void *sync_task);
 
 #endif // MODULES_VPU_INCLUDE_VI_IOCTL_H_

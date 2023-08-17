@@ -54,12 +54,12 @@ int aos_close(int fd)
 
 ssize_t aos_read(int fd, void *buf, size_t nbytes)
 {
-    return _vfs_to_aos_res(vfs_read(fd, buf, nbytes));
+    return vfs_read(fd, buf, nbytes);
 }
 
 ssize_t aos_write(int fd, const void *buf, size_t nbytes)
 {
-    return _vfs_to_aos_res(vfs_write(fd, buf, nbytes));
+    return vfs_write(fd, buf, nbytes);
 }
 
 int aos_ioctl(int fd, int cmd, unsigned long arg)
@@ -97,12 +97,12 @@ void aos_allsync(void)
     vfs_allsync();
 }
 
-int aos_stat(const char *path, struct aos_stat *st)
+int aos_stat(const char *path, aos_stat_t *st)
 {
     return _vfs_to_aos_res(vfs_stat(path, (vfs_stat_t *)st));
 }
 
-int aos_fstat(int fd, struct aos_stat *st)
+int aos_fstat(int fd, aos_stat_t *st)
 {
     return _vfs_to_aos_res(vfs_fstat(fd, (vfs_stat_t *)st));
 }
@@ -167,7 +167,7 @@ void aos_seekdir(aos_dir_t *dir, long loc)
     vfs_seekdir((vfs_dir_t *)dir, loc);
 }
 
-int aos_statfs(const char *path, struct aos_statfs *buf)
+int aos_statfs(const char *path, aos_statfs_t *buf)
 {
     return _vfs_to_aos_res(vfs_statfs(path, (vfs_statfs_t *)buf));
 }
@@ -207,7 +207,7 @@ long aos_fpathconf(int fh, int name)
     return _vfs_to_aos_res(vfs_fpathconf(fh, name));
 }
 
-int aos_utime(const char *path, const struct aos_utimbuf *times)
+int aos_utime(const char *path, const aos_utimbuf_t *times)
 {
     return _vfs_to_aos_res(vfs_utime(path, (vfs_utimbuf_t *)times));
 }
@@ -224,7 +224,7 @@ int aos_unregister_driver(const char *path)
 
 int aos_register_fs(const char *path, fs_ops_t* ops, void *arg)
 {
-    return _vfs_to_aos_res(vfs_register_fs(path, (vfs_filesystem_ops_t *)ops, arg));
+    return _vfs_to_aos_res(vfs_register_fs(path, (vfs_fs_ops_t *)ops, arg));
 }
 
 int aos_unregister_fs(const char *path)

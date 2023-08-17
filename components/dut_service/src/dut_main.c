@@ -9,13 +9,9 @@
 #include <aos/aos.h>
 #include "dut_utility.h"
 #include "dut_service.h"
-#if defined(CONFIG_COMP_AOSHAL) && CONFIG_COMP_AOSHAL
-#include <aos/hal/uart.h>
-#include <aos/hal/wdg.h>
-#else
 #include <devices/uart.h>
 #include <devices/wdt.h>
-#endif
+#include <devices/devicelist.h>
 
 #define   NO_ADD    0x1
 #define   ADD       0x2
@@ -36,11 +32,7 @@ typedef struct cmd_list {
 struct dut_service {
     dut_at_cmd_t   *cmd;
     aos_mutex_t    lock;
-#if defined(CONFIG_COMP_AOSHAL) && CONFIG_COMP_AOSHAL
-    uart_dev_t     uart_dev;
-#else
     rvm_dev_t      *uart_dev;
-#endif
     slist_t        cmd_lists;
 };
 
@@ -53,24 +45,7 @@ static char *argqv[DUT_CMD_MAX_ARGS] = {0};
 
 static int dut_disable_wdt()
 {
-#if defined(CONFIG_COMP_AOSHAL) && CONFIG_COMP_AOSHAL
-    wdg_dev_t wdg_dev = {
-        0,
-        {2000},
-        NULL
-    };
-
-    int ret = hal_wdg_init(&wdg_dev);
-    if (ret != 0) {
-        return -1;
-    }
-
-    ret = hal_wdg_finalize(&wdg_dev);
-    if (ret != 0) {
-        return -1;
-    }
-#else
-    // TODO: need call rvm_wdt_drv_register first
+    rvm_wdt_drv_register(0);
     rvm_dev_t *wdt_dev = rvm_hal_wdt_open("wdt0");
     if (!wdt_dev) {
         return -1;
@@ -83,7 +58,6 @@ static int dut_disable_wdt()
     if (ret != 0) {
         return -1;
     }
-#endif
     return 0;
 }
 
@@ -95,15 +69,8 @@ int dut_sendv(const char *command, va_list args)
     char *send_buf = NULL;
 
     if (vasprintf(&send_buf, command, args) >= 0) {
-#if defined(CONFIG_COMP_AOSHAL) && CONFIG_COMP_AOSHAL
-        ret = hal_uart_send_poll(&dut_svr.uart_dev, send_buf, strlen(send_buf));
-
-        ret |= hal_uart_send_poll(&dut_svr.uart_dev, AT_OUTPUT_TERMINATION, strlen(AT_OUTPUT_TERMINATION));
-#else
         ret = rvm_hal_uart_send_poll(dut_svr.uart_dev, send_buf, strlen(send_buf));
-
         ret |= rvm_hal_uart_send_poll(dut_svr.uart_dev, AT_OUTPUT_TERMINATION, strlen(AT_OUTPUT_TERMINATION));
-#endif
         free(send_buf);
     }
 
@@ -301,18 +268,12 @@ void dut_task_entry(void)
 {
     int ret = -1;
     char input_c;
-    uint32_t tmp_len = 0;
 
     while (1) {
-        tmp_len = 0;
-#if defined(CONFIG_COMP_AOSHAL) && CONFIG_COMP_AOSHAL
-        ret = hal_uart_recv_II(&dut_svr.uart_dev, &input_c, 1, &tmp_len, HAL_WAIT_FOREVER);
-#else
-        ret = rvm_hal_uart_recv(dut_svr.uart_dev, &input_c, 1, &tmp_len, AOS_WAIT_FOREVER);
+        ret = rvm_hal_uart_recv(dut_svr.uart_dev, &input_c, 1, AOS_WAIT_FOREVER);
         if (ret == 1) {
             ret = 0;
         }
-#endif
         if (ret != 0) {
             /* read err, clear buf */
             memset(msg_recv, 0, sizeof(msg_recv));
@@ -354,22 +315,6 @@ int dut_service_init(dut_service_cfg_t *config)
 
     aos_mutex_new(&dut_svr.lock);
 
-#if defined(CONFIG_COMP_AOSHAL) && CONFIG_COMP_AOSHAL
-    /* config uart pin function */
-    dut_svr.uart_dev.port =  config->uart_idx;
-    dut_svr.uart_dev.config.baud_rate = config->uart_baud;
-    dut_svr.uart_dev.config.data_width = DATA_WIDTH_8BIT;
-    dut_svr.uart_dev.config.parity = NO_PARITY;
-    dut_svr.uart_dev.config.stop_bits = STOP_BITS_1;
-
-    /* config uart for AT cmd input */
-    int ret = hal_uart_init(&dut_svr.uart_dev);
-
-    if (ret) {
-        printf("hal_uart_init error\r\n");
-        return -1;
-    }
-#else
     char dev_name[12];
     rvm_hal_uart_config_t uart_config;
     /* config uart pin function */
@@ -386,7 +331,8 @@ int dut_service_init(dut_service_cfg_t *config)
         printf("rvm_hal_uart_open error\r\n");
         return -1;
     }
-#endif
+    rvm_hal_uart_config(dut_svr.uart_dev, &uart_config);
+
     return 0;
 }
 

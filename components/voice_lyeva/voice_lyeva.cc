@@ -145,6 +145,9 @@ static void plugin_task_entry(void *arg)
     /* publish to kws about control cmd (such as play_state, push2talk) */
     algcmd_writer_ = participant_->CreateWriter<AlgCmdMessageT>("AlgCmdMsg");
 
+    /* mic_adaptor_start wait thsi signal */
+    aos_sem_signal(&g_voice_priv.start_sem);
+
     char *pcm_data = (char *)aos_malloc_check(FRAME_SIZE);
     int data_size = 0;
 
@@ -170,10 +173,8 @@ static int mic_adaptor_init(mic_t *mic, mic_event_t event)
 
     g_voice_priv.mic = mic;
 
-    int ret = aos_sem_new(&g_voice_priv.pcm_sem, 0);
-    if (ret < 0) {
-        return -1;
-    }
+    aos_sem_new(&g_voice_priv.pcm_sem, 0);
+    aos_sem_new(&g_voice_priv.start_sem, 0);
 
     return 0;
 }
@@ -197,8 +198,10 @@ static int mic_adaptor_start(mic_t *mic)
 
     g_voice_priv.task_running = 1;
     g_voice_priv.task_exit    = 0;
-
+    g_voice_priv.task_start   = 0;
     aos_task_new_ext(&g_voice_priv.plugin_task, "voice_lyeva", &plugin_task_entry, NULL, 1024 * 8, AOS_DEFAULT_APP_PRI);
+    aos_sem_wait(&g_voice_priv.start_sem, AOS_WAIT_FOREVER);
+    g_voice_priv.task_start   = 1;
 
     return 0;
 }
@@ -233,6 +236,10 @@ static int mic_adaptor_pcm_data_control(mic_t *mic, int enable)
 
 static int mic_adaptor_set_push2talk(mic_t *mic, int mode)
 {
+    if (g_voice_priv.task_start == 0) {
+        return -1;
+    }
+
     auto msg = std::make_shared<AlgCmdMessageT>();
 
     msg->body().set_cmd(thead::voice::proto::PUSH2TALK_CMD);
@@ -245,6 +252,10 @@ static int mic_adaptor_set_push2talk(mic_t *mic, int mode)
 
 static int mic_adaptor_wakeup_notify_play_status(mic_t *mic, int play_status, int timeout)
 {
+    if (g_voice_priv.task_start == 0) {
+        return -1;
+    }
+
     auto msg = std::make_shared<AlgCmdMessageT>();
 
     msg->body().set_cmd(thead::voice::proto::PLAYSTATE_CMD);

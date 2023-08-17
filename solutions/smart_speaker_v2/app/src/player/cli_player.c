@@ -3,7 +3,7 @@
  */
 #include <board.h>
 
-#if defined(CONFIG_BOARD_AUDIO) && CONFIG_BOARD_AUDIO > 0
+#if defined(BOARD_AUDIO_SUPPORT) && BOARD_AUDIO_SUPPORT
 #include <math.h>
 #include <smart_audio.h>
 #include <av/media.h>
@@ -185,7 +185,7 @@ static int cli_player_proc(int argc, char **argv)
     } else if (strcmp(argv[1], "get_curtime") == 0) {
         aui_play_time_t ptime;
 
-        int ret = aui_player_get_time(MEDIA_MUSIC, &ptime);
+        int ret = smtaudio_get_time(&ptime);
         if (ret == 0) {
             printf("get current time %lld %lld\n", (long long)ptime.curtime, (long long)ptime.duration);
         } else {
@@ -227,8 +227,12 @@ static int cli_player_proc(int argc, char **argv)
         smtaudio_pause();
     } else if (strcmp(argv[1], "resume") == 0) {
         smtaudio_resume();
+    } else if (strcmp(argv[1], "rdylist") == 0) {
+        smtaudio_enable_ready_list(atoi(argv[2]));
     } else if (strcmp(argv[1], "splay") == 0) {
         smtaudio_start(MEDIA_SYSTEM, argv[2], 0, 1);
+    } else if (strcmp(argv[1], "wplay") == 0) {
+        smtaudio_start(MEDIA_SYSTEM, argv[2], 0, 0);
     } else if (strcmp(argv[1], "speed") == 0) {
         if (argc == 3) {
             char *ptr   = NULL;
@@ -248,13 +252,18 @@ static int cli_player_proc(int argc, char **argv)
         } else {
             printf("Device is mute\n");
         }
-    } else if (strcmp(argv[1], "state_get") == 0) {
+    } else if (strcmp(argv[1], "substate") == 0) {
         int         smt_cur_state, smt_last_state;
         extern void smtaudio_substate_get(int *cur_state, int *last_state);
         smtaudio_substate_get(&smt_cur_state, &smt_last_state);
         printf("smt audio cur_state:%d last_state:%d\n", smt_cur_state, smt_last_state);
         extern void smtaudio_check_ready_list(void);
         smtaudio_check_ready_list();
+    } else if (strcmp(argv[1], "state") == 0) {
+        printf("smt audio state:%d\n", smtaudio_get_state());
+    } else if (strcmp(argv[1], "url") == 0) {
+        char *url = smtaudio_get_play_url();
+        printf("smt audio url:%s\n", url ? url : "null");
     } else if (strcmp(argv[1], "volmap") == 0) {
         int16_t in[] = {32767};
         int16_t out[] = {0};
@@ -309,6 +318,10 @@ static int cli_player_proc(int argc, char **argv)
     } else if (strcmp(argv[1], "pamute") == 0) {
         int mute = atoi(argv[2]);
         app_speaker_mute(mute);
+    } else if (strcmp(argv[1], "mute") == 0) {
+        smtaudio_mute();
+    } else if (strcmp(argv[1], "unmute") == 0) {
+        smtaudio_unmute();
     } else {
         return -1;
     }
@@ -328,7 +341,6 @@ static void cmd_player_func(char *wbuf, int wbuf_len, int argc, char **argv)
         printf("\tsmta vol +|-|?|[0-100]\n");
         printf("\tsmta sin 3\n");
         printf("\tsmta a2dp 1|0\n");
-        printf("\tsmta state_get\n");
     }
 }
 
@@ -338,4 +350,4 @@ void cli_reg_cmd_player(void)
 
     aos_cli_register_command(&cmd_info);
 }
-#endif /*CONFIG_BOARD_AUDIO*/
+#endif /*BOARD_AUDIO_SUPPORT*/

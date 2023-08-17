@@ -34,12 +34,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <hal_atomic.h>
-#ifndef CONFIG_KERNEL_FREERTOS
-// #include <k_timer.h>
 #include <hal_cfg.h>
-#else
-#include <hal_cache.h>
-#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -208,9 +203,7 @@ static inline void free_align_buf(void *addr)
 #define HAL_Memmove(d, s, n)    memmove(d, s, n)
 #define HAL_MallocAlign(l)      (malloc_align_buf(l))
 #define HAL_FreeAlign(p)        (free_align_buf(p))
-#ifndef CONFIG_KERNEL_FREERTOS
 #define HAL_SetPin
-#endif
 
 
 #ifdef __cplusplus

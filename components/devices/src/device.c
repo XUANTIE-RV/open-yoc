@@ -106,7 +106,7 @@ int rvm_driver_register(driver_t *drv, void *config, int idx)
 
     /* name exist check */
     if (rvm_hal_device_find(drv->name, idx) != NULL)
-        return -1;
+        return 0;
 
     rvm_dev_t *dev = drv->init(drv, config, idx);
 
@@ -117,6 +117,16 @@ int rvm_driver_register(driver_t *drv, void *config, int idx)
         slist_add_tail(&dev->node, &device_list);
         LIST_UNLOCK();
 
+#if defined(AOS_COMP_DEVFS) && AOS_COMP_DEVFS
+        extern int devices_fs_init(rvm_dev_t *dev, const char *name, int id);
+        int ret = devices_fs_init(dev, drv->name, idx);
+        if (ret) {
+            char buf[16];
+            snprintf(buf, sizeof(buf), "%s%d", drv->name, idx);
+            rvm_driver_unregister(buf);
+            return ret;
+        }
+#endif
         return 0;
     }
 
@@ -172,6 +182,12 @@ int rvm_driver_unregister(const char *name)
     if (dev) {
         driver_t *drv = (driver_t *)dev->drv;
         aos_assert(drv);
+
+#if defined(AOS_COMP_DEVFS) && AOS_COMP_DEVFS
+    if (devfs_node_is_valid(&dev->devfs_node))
+        (void)devfs_remove_node(&dev->devfs_node);
+#endif
+
         if (drv->uninit)
             drv->uninit(dev);
 

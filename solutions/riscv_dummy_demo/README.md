@@ -77,7 +77,7 @@ hw_info:
   flash_program: nofile
 ```
 
-目前支持的cpu型号：`e902 e906 e906f e906fd e907fp e907fdp c906fd`
+目前支持的cpu型号：`e902 e906 e906f e906fd e907fp e907fdp c906fd c908 c908v`
 
 # QEMU
 

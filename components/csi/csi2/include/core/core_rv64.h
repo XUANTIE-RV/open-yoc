@@ -590,7 +590,7 @@ __STATIC_INLINE uint32_t csi_plic_get_vector(int32_t IRQn)
   \param [in]  enable     enable or disable memory protected region.
   */
 __STATIC_INLINE void csi_mpu_config_region(uint32_t idx, uint32_t base_addr, region_size_e size,
-                                           mpu_region_attr_t attr, uint32_t enable)
+        mpu_region_attr_t attr, uint32_t enable)
 {
     uint8_t  pmpxcfg = 0;
     uint32_t addr = 0;
@@ -692,10 +692,11 @@ __STATIC_INLINE uint32_t csi_clint_config(uint64_t clint_base, uint32_t ticks, i
     return (0UL);
 }
 
-__STATIC_INLINE uint32_t csi_coret_disable(uint64_t clint_base)
+__STATIC_INLINE void csi_coret_reset_value(uint64_t clint_base)
 {
+    uint32_t value = 0x0;
     CLINT_Type *clint = (CLINT_Type *)clint_base;
-    uint32_t value = 0xffffffff;
+
 #if defined(CONFIG_RISCV_SMODE) && CONFIG_RISCV_SMODE
     clint->STIMECMPH0 = (uint32_t)value;
     clint->STIMECMPL0 = (uint32_t)value;
@@ -703,7 +704,6 @@ __STATIC_INLINE uint32_t csi_coret_disable(uint64_t clint_base)
     clint->MTIMECMPH0 = (uint32_t)value;
     clint->MTIMECMPL0 = (uint32_t)value;
 #endif
-    return (0UL);
 }
 
 /**
@@ -771,21 +771,32 @@ __STATIC_INLINE uint32_t csi_clint_get_valueh(void)
  */
 
 /**
+  \brief   whether I-Cache enable
+  */
+__STATIC_INLINE int csi_icache_is_enable()
+{
+    uint32_t cache = __get_MHCR();
+    return (cache & CACHE_MHCR_IE_Msk) >> CACHE_MHCR_IE_Pos;
+}
+
+/**
   \brief   Enable I-Cache
   \details Turns on I-Cache
   */
 __STATIC_INLINE void csi_icache_enable(void)
 {
 #if (__ICACHE_PRESENT == 1U)
-    uint32_t cache;
-    __DSB();
-    __ISB();
-    __ICACHE_IALL();
-    cache = __get_MHCR();
-    cache |= CACHE_MHCR_IE_Msk;
-    __set_MHCR(cache);
-    __DSB();
-    __ISB();
+    if (!csi_icache_is_enable()) {
+        uint32_t cache;
+        __DSB();
+        __ISB();
+        __ICACHE_IALL();
+        cache = __get_MHCR();
+        cache |= CACHE_MHCR_IE_Msk;
+        __set_MHCR(cache);
+        __DSB();
+        __ISB();
+    }
 #endif
 }
 
@@ -797,15 +808,17 @@ __STATIC_INLINE void csi_icache_enable(void)
 __STATIC_INLINE void csi_icache_disable(void)
 {
 #if (__ICACHE_PRESENT == 1U)
-    uint32_t cache;
-    __DSB();
-    __ISB();
-    cache = __get_MHCR();
-    cache &= ~CACHE_MHCR_IE_Msk;            /* disable icache */
-    __set_MHCR(cache);
-    __ICACHE_IALL();                        /* invalidate all icache */
-    __DSB();
-    __ISB();
+    if (csi_icache_is_enable()) {
+        uint32_t cache;
+        __DSB();
+        __ISB();
+        cache = __get_MHCR();
+        cache &= ~CACHE_MHCR_IE_Msk;            /* disable icache */
+        __set_MHCR(cache);
+        __ICACHE_IALL();                        /* invalidate all icache */
+        __DSB();
+        __ISB();
+    }
 #endif
 }
 
@@ -825,6 +838,14 @@ __STATIC_INLINE void csi_icache_invalid(void)
 #endif
 }
 
+/**
+  \brief   whether D-Cache enable
+  */
+__STATIC_INLINE int csi_dcache_is_enable()
+{
+    uint32_t cache = __get_MHCR();
+    return (cache & CACHE_MHCR_DE_Msk) >> CACHE_MHCR_DE_Pos;
+}
 
 /**
   \brief   Enable D-Cache
@@ -834,16 +855,18 @@ __STATIC_INLINE void csi_icache_invalid(void)
 __STATIC_INLINE void csi_dcache_enable(void)
 {
 #if (__DCACHE_PRESENT == 1U)
-    uint32_t cache;
-    __DSB();
-    __ISB();
-    __DCACHE_IALL();                        /* invalidate all dcache */
-    cache = __get_MHCR();
-    cache |= (CACHE_MHCR_DE_Msk | CACHE_MHCR_WB_Msk | CACHE_MHCR_WA_Msk | CACHE_MHCR_RS_Msk | CACHE_MHCR_BPE_Msk | CACHE_MHCR_L0BTB_Msk | CACHE_MHCR_IBPE_Msk | CACHE_MHCR_WBR_Msk);      /* enable all Cache */
-    __set_MHCR(cache);
+    if (!csi_dcache_is_enable()) {
+        uint32_t cache;
+        __DSB();
+        __ISB();
+        __DCACHE_IALL();                        /* invalidate all dcache */
+        cache = __get_MHCR();
+        cache |= (CACHE_MHCR_DE_Msk | CACHE_MHCR_WB_Msk | CACHE_MHCR_WA_Msk | CACHE_MHCR_RS_Msk | CACHE_MHCR_BPE_Msk | CACHE_MHCR_L0BTB_Msk | CACHE_MHCR_IBPE_Msk | CACHE_MHCR_WBR_Msk);      /* enable all Cache */
+        __set_MHCR(cache);
 
-    __DSB();
-    __ISB();
+        __DSB();
+        __ISB();
+    }
 #endif
 }
 
@@ -856,15 +879,17 @@ __STATIC_INLINE void csi_dcache_enable(void)
 __STATIC_INLINE void csi_dcache_disable(void)
 {
 #if (__DCACHE_PRESENT == 1U)
-    uint32_t cache;
-    __DSB();
-    __ISB();
-    cache = __get_MHCR();
-    cache &= ~(uint32_t)CACHE_MHCR_DE_Msk; /* disable all Cache */
-    __set_MHCR(cache);
-    __DCACHE_IALL();                             /* invalidate all Cache */
-    __DSB();
-    __ISB();
+    if (csi_dcache_is_enable()) {
+        uint32_t cache;
+        __DSB();
+        __ISB();
+        cache = __get_MHCR();
+        cache &= ~(uint32_t)CACHE_MHCR_DE_Msk; /* disable all Cache */
+        __set_MHCR(cache);
+        __DCACHE_IALL();                             /* invalidate all Cache */
+        __DSB();
+        __ISB();
+    }
 #endif
 }
 
@@ -1188,7 +1213,7 @@ __STATIC_INLINE void csi_mmu_disable(void)
   */
 __STATIC_INLINE void csi_mmu_invalid_tlb_all(void)
 {
-    __ASM volatile("sfence.vma" : : : "memory");	
+    __ASM volatile("sfence.vma" : : : "memory");
 }
 
 /**
@@ -1198,9 +1223,9 @@ __STATIC_INLINE void csi_mmu_invalid_tlb_all(void)
 __STATIC_INLINE void csi_mmu_invalid_tlb_by_asid(unsigned long asid)
 {
     __ASM volatile("sfence.vma zero, %0"
-                                    :
-                                    : "r"(asid)
-                                    : "memory");
+                   :
+                   : "r"(asid)
+                   : "memory");
 }
 
 /**
@@ -1210,9 +1235,9 @@ __STATIC_INLINE void csi_mmu_invalid_tlb_by_asid(unsigned long asid)
 __STATIC_INLINE void csi_mmu_invalid_tlb_by_page(unsigned long asid, unsigned long addr)
 {
     __ASM volatile("sfence.vma %0, %1"
-                                    :
-                                    : "r"(addr), "r"(asid)
-                                    : "memory");
+                   :
+                   : "r"(addr), "r"(asid)
+                   : "memory");
 }
 
 /**
@@ -1227,9 +1252,9 @@ __STATIC_INLINE void csi_mmu_invalid_tlb_by_range(unsigned long asid, page_size_
 
     while(start_addr < end_addr) {
         __ASM volatile("sfence.vma %0, %1"
-                                        :
-                                        : "r"(start_addr), "r"(asid)
-                                        : "memory");
+                       :
+                       : "r"(start_addr), "r"(asid)
+                       : "memory");
     }
 }
 
@@ -1269,6 +1294,16 @@ __STATIC_INLINE void csi_irq_restore(uint64_t irq_state)
 
 /*@} end of IRQ Functions */
 
+/**
+  \brief   Get the byte-width of vector register
+  \return  the byte-width of vector register
+ */
+__STATIC_INLINE int csi_vlenb_get_value(void)
+{
+    int result;
+    __ASM volatile("csrr %0, vlenb" : "=r"(result) : : "memory");
+    return result;
+}
 
 #ifdef __cplusplus
 }

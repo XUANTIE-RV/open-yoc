@@ -1,8 +1,8 @@
 
 ## 第一部分： 基础信息
 name: smart_speaker_v2                              # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
-version: v7.7.0                                    # <必选项> 组件版本号
-description: 智能语音终端                            # <必选项> 建议至少20字以上
+version: v7.8.0                                     # <必选项> 组件版本号
+description: 智能语音终端，KWS评估算法                # <必选项> 建议至少20字以上
 type: solution                                      # <必选项> 组件类型，为：solution, chip, board, common, sdk
 
 ## 第二部分：依赖信息
@@ -12,53 +12,53 @@ type: solution                                      # <必选项> 组件类型�
 #   - minilibc: v7.2.0
 #   - aos: >=v7.2.0
 sdk_chip:
-  - sdk_chip_bl606p_e907: v7.7.0
-  - sdk_chip_d1: v7.7.0
-  - sdk_chip_f133: v7.7.0
-  - sdk_chip_cv181xh: v7.7.0
+  - sdk_chip_bl606p_e907: v7.8.0
+  - sdk_chip_d1: v7.8.0
+  - sdk_chip_f133: v7.8.0
+  - sdk_chip_cv181xh_bga: v7.8.0
 
 mkflash_script: mkflash.sh
 
 depends:
-  - sdk_chip_d1: v7.7.0
-  - av: v7.7.0
-  - amrnb: v7.7.0
-  - amrwb: v7.7.0
-  - flac: v7.7.0
-  - ogg: v7.7.0
-  - opus: v7.7.0
-  - pvmp3dec: v7.7.0
-  - sonic: v7.7.0
-  - speex: v7.7.0
-  - speexdsp: v7.7.0
-  - netmgr: v7.7.0
-  - littlefs: v7.7.0
-  - zlib: v7.7.0
-  - ntp: v7.7.0
-  - smart_audio: v7.7.0
-  - drv_amplifier: v7.7.0
-  - wifi_provisioning: v7.7.0
-  - aui_cloud_mind: v7.7.0
-  - cjson: v7.7.0
-  - alg_pcm_input: v7.7.0
-  - alg_record: v7.7.0
-  - record: v7.7.0
-  - websocket: v7.7.0
-  - posto: v7.7.0
-  - cxvision: v7.7.0
-  - voice_wrapper: v7.7.0
-  - httpclient: v7.7.0
-  - transport: v7.7.0
-  - button: v7.7.0
-  - alg_dispatch: v7.7.0         # alg: mind & thead
-  - alg_kws_lyeva: v7.7.0        # alg: thead
-  - voice_lyeva: v7.7.0          # alg: thead
-  - adb: v7.7.0
-  - clock_alarm: v7.7.0
-  - at: v7.7.0
-  - ers: v7.7.0
-  - ota_module: v7.7.0
-  - drv_ethernet: v7.7.0
+  - sdk_chip_d1: v7.8.0
+  - av: v7.8.0
+  - amrnb: v7.8.0
+  - amrwb: v7.8.0
+  - flac: v7.8.0
+  - ogg: v7.8.0
+  - opus: v7.8.0
+  - pvmp3dec: v7.8.0
+  - sonic: v7.8.0
+  - speex: v7.8.0
+  - speexdsp: v7.8.0
+  - netmgr: v7.8.0
+  - littlefs: v7.8.0
+  - zlib: v7.8.0
+  - ntp: v7.8.0
+  - smart_audio: v7.8.0
+  - drv_amplifier: v7.8.0
+  - wifi_provisioning: v7.8.0
+  - aui_cloud_mind: v7.8.0
+  - cjson: v7.8.0
+  - alg_pcm_input: v7.8.0
+  - alg_record: v7.8.0
+  - record: v7.8.0
+  - websocket: v7.8.0
+  - posto: v7.8.0
+  - cxvision: v7.8.0
+  - voice_wrapper: v7.8.0
+  - httpclient: v7.8.0
+  - transport: v7.8.0
+  - button: v7.8.0
+  - alg_dispatch: v7.8.0         # alg: mind & thead
+  - alg_kws_lyeva: v7.8.0        # alg: thead
+  - voice_lyeva: v7.8.0          # alg: thead
+  - adb: v7.8.0
+  - clock_alarm: v7.8.0
+  - at: v7.8.0
+  - ers: v7.8.0
+  - ota_module: v7.8.0
+  - drv_ethernet: v7.8.0
 
 ## 第三部分：板级信息
 # hw_info:                                 # 对 solution、board、chip 三个字段的改进，统称为 hw_info 字段
@@ -147,6 +147,7 @@ build_config:
 source_file:
   - app/src/*.c
   - app/src/cli/*.c
+  - app/src/aui_action/*.c
   - app/src/aui_cloud/*.c
   - app/src/aui_cloud/aliyunnls/*.c
   - app/src/player/*.c
@@ -206,6 +207,8 @@ def_config:                              # 组件的可配置项
     CONFIG_DECODER_SPEEX: 1
     CONFIG_DECODER_ADPCM_MS: 1
     CONFIG_DECODER_FLAC: 1
+#alg config
+    CONFIG_AUI_CLOUD: 1
 
 ## 第六部分：安装信息
 # install:

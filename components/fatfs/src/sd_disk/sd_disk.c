@@ -124,40 +124,40 @@ DRESULT sd_disk_ioctl(uint8_t physicalDrive, uint8_t command, void *buffer)
         return RES_PARERR;
     }
     switch (command) {
-        case GET_SECTOR_COUNT:
-            if (buffer) {
-                *(uint32_t *)buffer = part_info->length / part_info->block_size;
-            } else {
-                result = RES_PARERR;
-            }
-
-            break;
-
-        case GET_SECTOR_SIZE:
-            if (buffer) {
-                *(uint32_t *)buffer = part_info->block_size;
-            } else {
-                result = RES_PARERR;
-            }
-
-            break;
-
-        case GET_BLOCK_SIZE:
-            if (buffer) {
-                *(uint32_t *)buffer = part_info->erase_size / part_info->block_size;
-            } else {
-                result = RES_PARERR;
-            }
-
-            break;
-
-        case CTRL_SYNC:
-            result = RES_OK;
-            break;
-
-        default:
+    case GET_SECTOR_COUNT:
+        if (buffer) {
+            *(uint32_t *)buffer = part_info->length / part_info->block_size;
+        } else {
             result = RES_PARERR;
-            break;
+        }
+
+        break;
+
+    case GET_SECTOR_SIZE:
+        if (buffer) {
+            *(uint32_t *)buffer = part_info->block_size;
+        } else {
+            result = RES_PARERR;
+        }
+
+        break;
+
+    case GET_BLOCK_SIZE:
+        if (buffer) {
+            *(uint32_t *)buffer = part_info->erase_size / part_info->block_size;
+        } else {
+            result = RES_PARERR;
+        }
+
+        break;
+
+    case CTRL_SYNC:
+        result = RES_OK;
+        break;
+
+    default:
+        result = RES_PARERR;
+        break;
     }
 
     return result;
@@ -179,6 +179,10 @@ DSTATUS sd_disk_initialize(uint8_t physicalDrive)
         return STA_NOINIT;
     }
 
+    if (g_sd_partition >= 0) {
+        partition_close(g_sd_partition);
+        g_sd_partition = -1;
+    }
     partition_t partition = partition_open(FATFS_PARTITION_NAME);
     if (partition < 0) {
         LOGE(TAG, "open %s failed.", (char *)FATFS_PARTITION_NAME);

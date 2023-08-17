@@ -5,7 +5,6 @@
 #ifndef __PCM_INPUT_PORT_H__
 #define __PCM_INPUT_PORT_H__
 
-#include <aos/aos.h>
 #include "yoc/pcm_input.h"
 
 #ifdef __cplusplus
@@ -25,6 +24,11 @@ typedef struct _pcm_input_ops {
  * 注册Mic操作ops
  */
 void pcm_acquire_register(pcm_input_ops_t *ops);
+
+/**
+ * 采集回调使能控制
+ */
+void pcm_acquire_set_enable(int en);
 
 #ifdef __cplusplus
 }

@@ -1,16 +1,16 @@
 /*
  * Copyright (C) 2019-2022 Alibaba Group Holding Limited
  */
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <math.h>
+#include <ctype.h>
 
 #include <yoc/fota.h>
 #include <aos/kv.h>
 #include <aos/cli.h>
-#include <stdio.h>
 #include <aos/aos.h>
-#include <ctype.h>
-#include <string.h>
-#include <stdlib.h>
-#include <stdio.h>
 #include <sys/socket.h>
 #include <yoc/netmgr.h>
 #include <devices/netdrv.h>
@@ -20,24 +20,23 @@
 #include <devices/wifi.h>
 #include <yoc/netmgr.h>
 #include <yoc/netmgr_service.h>
-#include <wifi_prov.h>
 #include <devices/display.h>
-#include "wifi_config.h"
 #include <gateway.h>
-#include <math.h>
 #include <smart_audio.h>
 #include <av/avutil/vol_scale.h>
-#include "app_player.h"
-#include "bt/app_bt.h"
-#include "event_mgr/app_event.h"
 #include <ulog/ulog.h>
-#include "app_net.h"
 #include <devices/device.h>
 #include <devices/display.h>
 #include <devices/input.h>
 #include <lvgl.h>
 #include <lv_port_disp.h>
 #include <lv_port_indev.h>
+
+#include "wifi/app_wifi.h"
+#include "wifi/app_net.h"
+#include "player/app_player.h"
+#include "bt/app_bt.h"
+#include "event_mgr/app_event.h"
 
 #include "ui_entry.h"
 
@@ -104,6 +103,12 @@ static aos_mutex_t lvgl_mutex;
 
 static lv_obj_t *meshadd_spinner;
 static uint32_t  track_id;
+static char *urlList[]={
+    "file:///mnt/alibaba1.mp3",
+    "file:///mnt/alibaba2.mp3",
+    "file:///mnt/alibaba3.mp3",
+};
+static bool isPlaying=false;
 static int       display_480p; // display 480p or 720p confirm
 static lv_obj_t *wifilist_btn;
 // static int disp_brightness = 200;                                //default display brightness
@@ -174,6 +179,7 @@ static void clock_date_task_callback(lv_timer_t *timer);
 /*****Func Src******/
 static void      track_load(uint32_t id);             // music scr song change event
 static void      lv_demo_music_album_next(bool next); // music scr song track_load id
+static lv_obj_t *album_img_init(lv_obj_t *parent);
 static lv_obj_t *album_img_create(lv_obj_t *parent);
 static void      set_img_angle(void *img, int32_t v); // music scr song img animation
 // static void set_slider_value(void* slider, int32_t v);                                              //music scr song
@@ -517,7 +523,7 @@ void gw_main(void)
     lv_obj_align_to(music_next, play_obj, LV_ALIGN_OUT_RIGHT_MID, 50, 0); // MUSIC_SCR control slider create
 
     // music_scr spectrum create
-    album_img_obj = album_img_create(music_scr);
+    album_img_obj = album_img_init(music_scr);
     lv_obj_align(album_img_obj, LV_ALIGN_CENTER, 0, 0);
 
     /*HOME_SCR CONTROL scene create*/
@@ -989,6 +995,7 @@ static void home_scr_func_event_cb(lv_event_t *e)
                     if (strcmp(kv_pos, "卧室灯") == 0) {
                         // add btn in mesh_scr_devctl_list
                         lv_obj_t *listbtn = lv_list_add_btn(mesh_scr_devctl_list, NULL, NULL);
+                        listbtn->user_data=(void*)"卧室灯";
                         lv_obj_set_style_bg_opa(listbtn, LV_OPA_0, 0);
                         lv_obj_set_style_bg_opa(listbtn, LV_OPA_0, LV_STATE_PRESSED);
 
@@ -1072,6 +1079,7 @@ static void home_scr_func_event_cb(lv_event_t *e)
                     } else if (strcmp(kv_pos, "客厅灯") == 0) {
                         // add btn in mesh_scr_devctl_list
                         lv_obj_t *listbtn = lv_list_add_btn(mesh_scr_devctl_list, NULL, NULL);
+                        listbtn->user_data=(void*)"客厅灯";
                         lv_obj_set_style_bg_opa(listbtn, LV_OPA_0, 0);
                         lv_obj_set_style_bg_opa(listbtn, LV_OPA_0, LV_STATE_PRESSED);
 
@@ -1104,6 +1112,7 @@ static void home_scr_func_event_cb(lv_event_t *e)
                     if (strcmp(kv_pos, "窗帘") == 0) {
                         // add btn in mesh_scr_devctl_list
                         lv_obj_t *listbtn = lv_list_add_btn(mesh_scr_devctl_list, NULL, NULL);
+                        listbtn->user_data=(void*)"窗帘";
                         lv_obj_set_style_bg_opa(listbtn, LV_OPA_0, 0);
                         lv_obj_set_style_bg_opa(listbtn, LV_OPA_0, LV_STATE_PRESSED);
                         lv_obj_set_style_layout(listbtn, LV_FLEX_FLOW_ROW, 0);
@@ -1256,41 +1265,62 @@ static void func_scr_img_close_event_cb(lv_event_t *e)
     }
 }
 
+//仅仅调用smtaudio接口
 static void play_obj_event_click_cb(lv_event_t *e)
 {
-    lv_obj_t *      obj  = lv_event_get_target(e);
     lv_event_code_t code = lv_event_get_code(e);
     if (code == LV_EVENT_CLICKED) {
-        if (lv_obj_has_state(obj, LV_STATE_CHECKED)) {
-            switch (track_id) {
-                case 2: // swtich 2th song
-                    smtaudio_start(MEDIA_MUSIC, "file:///mnt/alibaba3.mp3", 0, 0);
-                    lv_label_set_text(music_label_name, "#ffffff Music 3");
-                    lv_label_set_text(music_label_author, "#ffffff Author 3");
-                    break;
-                case 1: // switch 1th song
-                    smtaudio_start(MEDIA_MUSIC, "file:///mnt/alibaba2.mp3", 0, 0);
-                    lv_label_set_text(music_label_name, "#ffffff Music 2");
-                    lv_label_set_text(music_label_author, "#ffffff Author 2");
-                    break;
-                case 0: // switch 3th song
-                    smtaudio_start(MEDIA_MUSIC, "file:///mnt/alibaba1.mp3", 0, 0);
-                    lv_label_set_text(music_label_name, "#ffffff Music 1");
-                    lv_label_set_text(music_label_author, "#ffffff Author 1");
-                    break;
-                default:
-                    break;
-            };
-            // music animation start
-            music_anim_status(true);
-            lv_img_set_src(obj, &img_musicpause);
-        } else {
-            lv_img_set_src(obj, &img_musicplay);
-            // close all music
-            smtaudio_stop(SMTAUDIO_TYPE_ALL);
-            // music animation stop
-            music_anim_status(false);
+        if(isPlaying){
+            smtaudio_pause();
         }
+        else{
+            if(smtaudio_get_state_by_id(MEDIA_MUSIC)==SMTAUDIO_STATE_PAUSE){
+                smtaudio_enable_ready_list(1);
+                smtaudio_resume();
+            }
+            else{
+                smtaudio_start(MEDIA_MUSIC, urlList[track_id], 0, 0);  
+            } 
+        }
+    }
+}
+//start等事件里更新页面显示，也更新curNum
+static void update_music_name(void)
+{
+    //更新歌曲名字
+    char *url=smtaudio_get_url_by_id(MEDIA_MUSIC);
+    if(url){
+        if (strcmp(url, urlList[0]) == 0){
+            track_id=0;
+            lv_label_set_text(music_label_name, "#ffffff alibaba 1");
+            lv_label_set_text(music_label_author, "#ffffff Author 1");
+        }
+        else if (strcmp(url, urlList[1]) == 0){
+            track_id=1;
+            lv_label_set_text(music_label_name, "#ffffff alibaba 2");
+            lv_label_set_text(music_label_author, "#ffffff Author 2");
+        }
+        else if (strcmp(url, urlList[2]) == 0){
+            track_id=2;
+            lv_label_set_text(music_label_name, "#ffffff alibaba 3");
+            lv_label_set_text(music_label_author, "#ffffff Author 3");
+        }
+    }
+}
+
+static void update_music_button(void)
+{
+    //更新按钮状态和动画状态
+    if(smtaudio_get_state_by_id(MEDIA_MUSIC)==SMTAUDIO_STATE_PLAYING){
+            music_anim_status(true);
+            lv_img_set_src(play_obj, &img_musicpause);
+            isPlaying=true;
+    }
+    else{
+            music_anim_status(false);
+            lv_img_set_src(play_obj, &img_musicplay);
+            lv_obj_add_state(play_obj, LV_STATE_CHECKED);
+            isPlaying=false;
     }
 }
 
@@ -2905,22 +2935,22 @@ static void mesh_scr_devctl_listbtn_event_cb(lv_event_t *e)
             if (strcmp(kv_pos, "卧室灯") == 0) {
                 if (lv_obj_has_state(obj, LV_STATE_CHECKED)) {
                     // lv_obj_set_style_bg_opa(obj, LV_OPA_0, 0);
-                    lv_img_set_src(lv_obj_get_child(obj, 0), &img_bedroom_100);
+                    //lv_img_set_src(lv_obj_get_child(obj, 0), &img_bedroom_100);
                     gateway_subdev_set_onoff(index, on);
                 } else {
                     // lv_obj_set_style_bg_opa(obj, LV_OPA_80, 0);
-                    lv_img_set_src(lv_obj_get_child(obj, 0), &img_bedroom_0);
+                    //lv_img_set_src(lv_obj_get_child(obj, 0), &img_bedroom_0);
                     gateway_subdev_set_onoff(index, off);
                 }
             }
             if (strcmp(kv_pos, "窗帘") == 0) {
                 if (lv_obj_has_state(obj, LV_STATE_CHECKED)) {
                     // lv_obj_set_style_bg_opa(obj, LV_OPA_0, 0);
-                    lv_img_set_src(lv_obj_get_child(obj, 0), &img_curtain_on);
+                    //lv_img_set_src(lv_obj_get_child(obj, 0), &img_curtain_on);
                     gateway_subdev_set_onoff(index, on);
                 } else {
                     // lv_obj_set_style_bg_opa(obj, LV_OPA_80, 0);
-                    lv_img_set_src(lv_obj_get_child(obj, 0), &img_curtain_off);
+                    //lv_img_set_src(lv_obj_get_child(obj, 0), &img_curtain_off);
                     gateway_subdev_set_onoff(index, off);
                 }
             } else if (strcmp(kv_pos, "厨房灯") == 0) {
@@ -2936,11 +2966,11 @@ static void mesh_scr_devctl_listbtn_event_cb(lv_event_t *e)
             } else if (strcmp(kv_pos, "客厅灯") == 0) {
                 if (lv_obj_has_state(obj, LV_STATE_CHECKED)) {
                     // lv_obj_set_style_bg_opa(obj, LV_OPA_0, 0);
-                    lv_img_set_src(lv_obj_get_child(obj, 0), &img_livingled_on);
+                    //lv_img_set_src(lv_obj_get_child(obj, 0), &img_livingled_on);
                     gateway_subdev_set_onoff(index, on);
                 } else {
                     // lv_obj_set_style_bg_opa(obj, LV_OPA_80, 0);
-                    lv_img_set_src(lv_obj_get_child(obj, 0), &img_livingled_off);
+                    //lv_img_set_src(lv_obj_get_child(obj, 0), &img_livingled_off);
                     gateway_subdev_set_onoff(index, off);
                 }
             } else if (strcmp(kv_pos, "无线开关1") == 0 || strcmp(kv_pos, "无线开关2") == 0) {
@@ -2982,6 +3012,24 @@ void lv_demo_music_album_next(bool next)
     }
     track_load(id);
 }
+static lv_obj_t *album_img_init(lv_obj_t *parent)
+{
+    lv_obj_t *img;
+    img = lv_img_create(parent);
+     
+    lv_img_set_src(img, &img_record);
+    // lv_obj_add_event_cb(play_obj, play_obj_event_click_cb, LV_EVENT_CLICKED, NULL);
+    //lv_event_send(play_obj, LV_EVENT_CLICKED, NULL);
+    lv_label_set_text(music_label_name, "#ffffff alibaba 1");
+    lv_label_set_text(music_label_author, "#ffffff Author 1");
+
+    lv_img_set_antialias(img, false);
+    lv_obj_align(img, LV_ALIGN_CENTER, 0, 0);
+    lv_obj_add_event_cb(img, album_gesture_event_cb, LV_EVENT_GESTURE, NULL);
+    lv_obj_clear_flag(img, LV_OBJ_FLAG_GESTURE_BUBBLE);
+    lv_obj_add_flag(img, LV_OBJ_FLAG_CLICKABLE);
+    return img;
+}
 static lv_obj_t *album_img_create(lv_obj_t *parent)
 {
     lv_obj_t *img;
@@ -2990,23 +3038,24 @@ static lv_obj_t *album_img_create(lv_obj_t *parent)
         case 2: // switch song 2
             lv_img_set_src(img, &img_record);
             // lv_obj_add_event_cb(play_obj, play_obj_event_click_cb, LV_EVENT_CLICKED, NULL);
-            lv_event_send(play_obj, LV_EVENT_CLICKED, NULL);
-            lv_label_set_text(music_label_name, "#ffffff Music 3");
-            lv_label_set_text(music_label_author, "#ffffff Author 3");
+            //lv_obj_add_state(play_obj, LV_STATE_CHECKED);
+            //lv_event_send(play_obj, LV_EVENT_CLICKED, NULL);
+            //控制显示分离后，直接调用控制逻辑即可
+            smtaudio_start(MEDIA_MUSIC, urlList[track_id], 0, 0);
             break;
         case 1: // switch song 1
             lv_img_set_src(img, &img_record);
             // lv_obj_add_event_cb(play_obj, play_obj_event_click_cb, LV_EVENT_CLICKED, NULL);
-            lv_event_send(play_obj, LV_EVENT_CLICKED, NULL);
-            lv_label_set_text(music_label_name, "#ffffff Music 2");
-            lv_label_set_text(music_label_author, "#ffffff Author 2");
+            //lv_obj_add_state(play_obj, LV_STATE_CHECKED);
+            //lv_event_send(play_obj, LV_EVENT_CLICKED, NULL);
+            smtaudio_start(MEDIA_MUSIC, urlList[track_id], 0, 0);
             break;
         case 0: // switch song 0
             lv_img_set_src(img, &img_record);
             // lv_obj_add_event_cb(play_obj, play_obj_event_click_cb, LV_EVENT_CLICKED, NULL);
-            lv_event_send(play_obj, LV_EVENT_CLICKED, NULL);
-            lv_label_set_text(music_label_name, "#ffffff Music 1");
-            lv_label_set_text(music_label_author, "#ffffff Author 1");
+            //lv_obj_add_state(play_obj, LV_STATE_CHECKED);
+            //lv_event_send(play_obj, LV_EVENT_CLICKED, NULL);
+            smtaudio_start(MEDIA_MUSIC, urlList[track_id], 0, 0);
             break;
     }
     lv_img_set_antialias(img, false);
@@ -3283,6 +3332,19 @@ static void gw_main_event_handler(uint32_t event_id, const void *data, void *con
     uint8_t on  = atoi("1");
     uint8_t off = atoi("0");
     switch (event_id) {
+        case EVENT_GUI_USER_MUSIC_START:
+            update_music_name();
+            update_music_button();
+            break;
+        case EVENT_GUI_USER_MUSIC_PAUSE:
+            update_music_button();
+            break;
+        case EVENT_GUI_USER_MUSIC_RESUME:
+            update_music_button();
+            break;
+        case EVENT_GUI_USER_MUSIC_STOP:
+            update_music_button();
+            break;
         case EVENT_GUI_USER_MESH_SCAN_INFO_UPDATE: {
             scan_msg = (gw_evt_discovered_info_t *)data;
             // debug
@@ -3351,6 +3413,48 @@ static void gw_main_event_handler(uint32_t event_id, const void *data, void *con
                         //         }
                         //     }
                         // }
+                    }
+                }else if (strcmp(kv_pos, "客厅灯") == 0) {
+                    int cnt=lv_obj_get_child_cnt(mesh_scr_devctl_list);
+                    for(int i=0;i<cnt;i++){
+                        lv_obj_t *listbtn=lv_obj_get_child(mesh_scr_devctl_list,i);
+                        if(listbtn&&listbtn->user_data&&strcmp((const char*)listbtn->user_data, "客厅灯") == 0){
+                            if(onoffstatus.onoff){
+                                lv_img_set_src(lv_obj_get_child(listbtn, 0), &img_livingled_on);
+                            }
+                            else{
+                                lv_img_set_src(lv_obj_get_child(listbtn, 0), &img_livingled_off);
+                            }
+                            break;
+                        }
+                    }
+                }else if (strcmp(kv_pos, "卧室灯") == 0) {
+                    int cnt=lv_obj_get_child_cnt(mesh_scr_devctl_list);
+                    for(int i=0;i<cnt;i++){
+                        lv_obj_t *listbtn=lv_obj_get_child(mesh_scr_devctl_list,i);
+                        if(listbtn&&listbtn->user_data&&strcmp((const char*)listbtn->user_data, "卧室灯") == 0){
+                            if(onoffstatus.onoff){
+                                lv_img_set_src(lv_obj_get_child(listbtn, 0), &img_bedroom_100);
+                            }
+                            else{
+                                lv_img_set_src(lv_obj_get_child(listbtn, 0), &img_bedroom_0);
+                            }
+                            break;
+                        }
+                    }
+                }else if (strcmp(kv_pos, "窗帘") == 0) {
+                    int cnt=lv_obj_get_child_cnt(mesh_scr_devctl_list);
+                    for(int i=0;i<cnt;i++){
+                        lv_obj_t *listbtn=lv_obj_get_child(mesh_scr_devctl_list,i);
+                        if(listbtn&&listbtn->user_data&&strcmp((const char*)listbtn->user_data, "窗帘") == 0){
+                            if(onoffstatus.onoff){
+                                lv_img_set_src(lv_obj_get_child(listbtn, 0), &img_curtain_on);
+                            }
+                            else{
+                                lv_img_set_src(lv_obj_get_child(listbtn, 0), &img_curtain_off);
+                            }
+                            break;
+                        }
                     }
                 }
             }
@@ -3686,7 +3790,6 @@ void app_ui_event_init()
 {
     event_subscribe(EVENT_GUI_USER_MUSIC_PREV, gw_main_event_handler, NULL);
     event_subscribe(EVENT_GUI_USER_MUSIC_NEXT, gw_main_event_handler, NULL);
-    event_subscribe(EVENT_GUI_USER_MUSIC_PAUSE, gw_main_event_handler, NULL);
     event_subscribe(EVENT_GUI_USER_MUSIC_PLAY, gw_main_event_handler, NULL);
     event_subscribe(EVENT_GUI_USER_FOTA_PROGRESS, gw_main_event_handler, NULL);
     event_subscribe(EVENT_STATUS_WIFI_CONN_SUCCESS, gw_main_event_handler, NULL);
@@ -3715,6 +3818,12 @@ void app_ui_event_init()
     event_subscribe(EVENT_GUI_USER_MESH_ADD_INFO_UPDATE, gw_main_event_handler, NULL);
     event_subscribe(EVENT_GUI_USER_MESH_STATUS_ONOFF_UPDATE, gw_main_event_handler, NULL);
     event_subscribe(EVENT_GUI_USER_PLAY_OVER, gw_main_event_handler, NULL);
+
+    event_subscribe(EVENT_GUI_USER_MUSIC_START, gw_main_event_handler, NULL);
+    event_subscribe(EVENT_GUI_USER_MUSIC_PAUSE, gw_main_event_handler, NULL);
+    event_subscribe(EVENT_GUI_USER_MUSIC_RESUME, gw_main_event_handler, NULL);
+    event_subscribe(EVENT_GUI_USER_MUSIC_STOP, gw_main_event_handler, NULL);
+
 }
 
 /* LVGL UI Demo */

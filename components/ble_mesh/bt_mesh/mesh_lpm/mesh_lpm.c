@@ -8,7 +8,6 @@
 #include <ctype.h>
 #include <aos/aos.h>
 #include <aos/kernel.h>
-#include <aos/hal/gpio.h>
 #include <mesh_sal_lpm.h>
 #include <mesh_lpm.h>
 //#include "inc/adv.h"

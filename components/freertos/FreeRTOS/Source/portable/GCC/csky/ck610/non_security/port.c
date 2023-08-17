@@ -72,6 +72,7 @@
 #include "task.h"
 #include <csi_config.h>
 
+extern void aos_task_exit(int code);
 extern void vPortStartTask(void);
 
 /* Used to keep track of the number of nested calls to taskENTER_CRITICAL().  This
@@ -92,7 +93,7 @@ StackType_t *pxPortInitialiseStack( StackType_t * pxTopOfStack, TaskFunction_t p
     *(--stk)  = (uint32_t)0x80000140L;       /* PSR                                                 */
     *(--stk)  = (uint32_t)0x88888888L;       /* HI                                                  */
     *(--stk)  = (uint32_t)0x88888888L;       /* LO                                                  */
-    *(--stk)  = (uint32_t)vTaskExit;         /* R15 (LR) (init value will cause fault if ever used) */
+    *(--stk)  = (uint32_t)aos_task_exit;     /* R15 (LR) (init value will cause fault if ever used) */
     *(--stk)  = (uint32_t)0x14141414L;       /* R14                                                 */
     *(--stk)  = (uint32_t)0x13131313L;       /* R13                                                 */
     *(--stk)  = (uint32_t)0x12121212L;       /* R12                                                 */

@@ -11,7 +11,7 @@
     "path": "",
     "page": ""
   },
-  "single-js-bundle": false,
+  "single-js-bundle": true,
   "scripts": {
     "start": "aiot-cli preview",
     "build": "aiot-cli -p",

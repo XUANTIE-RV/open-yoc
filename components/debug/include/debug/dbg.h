@@ -15,7 +15,6 @@ extern "C" {
  */
 
 #include <stdint.h>
-#include <k_api.h>
 
 /**
  * Show current contex backtrace
@@ -139,7 +138,7 @@ void aos_debug_total_cpu_usage_show(void);
  * @param[in]  file  same as __line__
  * @return NULL
  */
-void aos_debug_fatal_error(kstat_t err, char *file, int32_t line);
+void aos_debug_fatal_error(int err, char *file, int32_t line);
 
 /**
  * This function support debug print same as printf

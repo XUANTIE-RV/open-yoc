@@ -26,9 +26,15 @@ struct usbd_interface *usbd_video_init_intf(struct usbd_interface *intf,
                                             uint32_t dwMaxVideoFrameSize,
                                             uint32_t dwMaxPayloadTransferSize);
 
-void usbd_video_open(uint8_t intf);
-void usbd_video_close(uint8_t intf);
-uint32_t usbd_video_mjpeg_payload_fill(uint8_t *input, uint32_t input_len, uint8_t *output, uint32_t *out_len);
+uint32_t usbd_video_payload_fill(uint8_t *input, uint32_t input_len, uint8_t *output, uint32_t *out_len);
+
+struct usbd_endpoint *usbd_video_init_ep(struct usbd_endpoint *ep,
+                        uint8_t ep_addr,
+                        usbd_endpoint_callback ep_cb);
+
+void usbd_video_register_uvc_callbacks(uvc_event_callbacks_t *cb);
+
+void usbd_video_commit_set_cur(struct video_probe_and_commit_controls *commit);
 
 #ifdef __cplusplus
 }

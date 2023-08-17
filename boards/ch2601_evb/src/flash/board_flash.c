@@ -3,7 +3,6 @@
  */
 #ifndef CONFIG_KERNEL_NONE
 #include <board.h>
-
 #include <stdlib.h>
 #include <stdio.h>
 #include <devices/devicelist.h>

@@ -45,4 +45,5 @@ void board_yoc_init(void)
 #if defined(CONFIG_BOARD_VENDOR) && CONFIG_BOARD_VENDOR
     board_vendor_init();
 #endif
+
 }

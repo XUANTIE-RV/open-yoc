@@ -51,7 +51,11 @@ static void key_msg_proc_task(void *arg)
                 break;
 
             case KEY_MSG_MUTE:
-                smtaudio_mute();
+                if (smtaudio_get_state() == SMTAUDIO_STATE_MUTE) {
+                    smtaudio_unmute();
+                } else {
+                    smtaudio_mute();
+                }
                 app_event_update(EVENT_PLAYER_CHANGE);
                 break;
 

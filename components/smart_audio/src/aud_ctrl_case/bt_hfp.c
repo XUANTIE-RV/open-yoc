@@ -14,9 +14,9 @@
 #include <aos/ringbuffer.h>
 #include "speex/speex_resampler.h"
 // #include <sys_freq.h>
-#include <yoc/mic.h>
+//#include <yoc/mic.h>
 // #include <voice.h>
-#include <output/ao.h>
+#include <av/output/ao.h>
 
 #define TAG "smtaudio_ctrl_bt_hfp"
 
@@ -67,6 +67,7 @@ static int bt_hfp_vol_down(int vol);
 
 smtaudio_ops_node_t ctrl_bt_hfp = {
     .name     = "bt_hfp",
+    .url      = NULL,
     .prio     = 0,
     .id       = SMTAUDIO_BT_HFP,
     .status   = SMTAUDIO_STATE_STOP,
@@ -683,6 +684,11 @@ int32_t yoc_app_bt_hfp_get_call_status(void)
 
 int32_t yoc_app_bt_hfp_volume_update(int type, int volume)
 {
+    if (yoc_app_bt_hfp_connect_flag == 0) {
+        LOGD(TAG, "ignore vol change hfp state %d", yoc_app_bt_hfp_connect_flag);
+        return -1;
+    }
+
     bt_prf_hfp_hf_vol_update(type, volume);
 
     return 0;
@@ -801,36 +807,14 @@ static int bt_hfp_vol_set(int vol)
 
 static int bt_hfp_vol_up(int vol)
 {
-    int ret = -1;
-    /*调整 bt call 音量*/
-
-    /*同时提高本地音音量*/
-    smtaudio_ops_node_t *audio_default_ops;
-
-    extern smtaudio_ops_node_t *get_default_audio_ops(void);
-    audio_default_ops = get_default_audio_ops();
-    if (audio_default_ops) {
-        audio_default_ops->vol_up(vol);
-    }
-
-    return ret;
+    int cur_vol = aui_player_vol_get(SMTAUDIO_LOCAL_PLAY);
+    return bt_hfp_vol_set(cur_vol);
 }
 
 static int bt_hfp_vol_down(int vol)
 {
-    int ret = -1;
-    /*调整 bt call 音量*/
-
-    /*同时提高本地音音量*/
-    smtaudio_ops_node_t *audio_default_ops;
-
-    extern smtaudio_ops_node_t *get_default_audio_ops(void);
-    audio_default_ops = get_default_audio_ops();
-    if (audio_default_ops) {
-        audio_default_ops->vol_down(vol);
-    }
-
-    return ret;
+    int cur_vol = aui_player_vol_get(SMTAUDIO_LOCAL_PLAY);
+    return bt_hfp_vol_set(cur_vol);
 }
 
 int8_t smtaudio_register_bt_hfp(uint8_t min_vol, uint8_t *aef_conf, size_t aef_conf_size, float speed, int resample)

@@ -48,6 +48,9 @@ static int cd_main(int argc, char **argv)
         return -1;
     }
 
+    if (target[0] == '.' && strlen(target) == 1)
+        return 0;
+
     ret = getcwd(absolute, sizeof(absolute));
     if (!ret) {
         aos_cli_printf("Failed to get current working directory!\r\n");
@@ -76,7 +79,7 @@ static int cd_main(int argc, char **argv)
         }
 
         // parse heading ".."
-        while (target && strncmp(target, "..", strlen("..")) == 0) {
+        while (strncmp(target, "..", strlen("..")) == 0) {
             if (up_one_level(absolute) != 0) {
                 aos_cli_printf("up to parent dir failed. %s may " \
                            "not be a valid path!", target);
@@ -88,14 +91,30 @@ static int cd_main(int argc, char **argv)
                 target++;
         }
 
-        if (target)
-            strncpy(absolute + strlen(absolute), target, \
-                            sizeof(absolute) - strlen(absolute));
+        // filter "./" in path
+        int cnt = 0;
+        char *p = target;
+        int tlen = strlen(target);
+        int len = strlen(absolute);
+        for (int i = 0; i < tlen;) {
+            if (*p == '.' && *(p + 1) == '/') {
+                i += 2;
+                p += 2;
+                continue;
+            }
+            *(absolute + len + cnt++) = *p;
+            i++;
+            p++;
+        }
     } else {
         strncpy(absolute, target, sizeof(absolute));
     }
+    absolute[sizeof(absolute) - 1] = 0;
 
 check_and_cd:
+    if (strlen(absolute) > 1 && absolute[strlen(absolute) - 1] == '/')
+        absolute[strlen(absolute) - 1] = 0;
+
     if (stat(absolute, &s)) {
         aos_cli_printf("cd: %s not existed\r\n", target);
         return -1;

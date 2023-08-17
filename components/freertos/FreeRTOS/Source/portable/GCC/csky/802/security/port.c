@@ -71,6 +71,7 @@
 #include "FreeRTOS.h"
 #include "task.h"
 
+extern void aos_task_exit(int code);
 extern void vPortStartTask(void);
 
 /* Used to keep track of the number of nested calls to taskENTER_CRITICAL().  This
@@ -89,7 +90,7 @@ StackType_t *pxPortInitialiseStack( StackType_t * pxTopOfStack, TaskFunction_t p
 
     *(--stk)  = (uint32_t)pxCode;            /* Entry Point                                         */
     *(--stk)  = (uint32_t)0xE0000140L;       /* PSR                                                 */
-    *(--stk)  = (uint32_t)vTaskExit;         /* R15 (LR) (init value will cause fault if ever used) */
+    *(--stk)  = (uint32_t)aos_task_exit;     /* R15 (LR) (init value will cause fault if ever used) */
     *(--stk)  = (uint32_t)0x13131313L;       /* R13                                                 */
     *(--stk)  = (uint32_t)0x12121212L;       /* R12                                                 */
     *(--stk)  = (uint32_t)0x11111111L;       /* R11                                                 */

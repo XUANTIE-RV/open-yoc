@@ -1,10 +1,12 @@
 #include <stdbool.h>
 #include <aos/kv.h>
-#include <debug/dbg.h>
 #include <uservice/uservice.h>
 #include <yoc/partition.h>
 #include <yoc/init.h>
 #include "board.h"
+#if defined(AOS_COMP_DEBUG) && (AOS_COMP_DEBUG > 0)
+#include <debug/dbg.h>
+#endif
 
 #define TAG "init"
 
@@ -25,4 +27,7 @@ void board_yoc_init(void)
     event_service_init(NULL);
     ulog_init();
     aos_set_log_level(AOS_LL_INFO);
+#if defined(AOS_COMP_DEBUG) && (AOS_COMP_DEBUG > 0)
+    aos_debug_init();
+#endif
 }

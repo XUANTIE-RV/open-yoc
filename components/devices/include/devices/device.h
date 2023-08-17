@@ -9,10 +9,13 @@
 #include <aos/list.h>
 #include <aos/kernel.h>
 #include <devices/driver.h>
+#if defined(AOS_COMP_DEVFS) && AOS_COMP_DEVFS
+#include <devices/vfs_device.h>
+#endif
 
 #ifdef __cplusplus
 extern "C" {
-#endif 
+#endif
 
 typedef struct _dev_obj {
     slist_t     node;
@@ -22,6 +25,9 @@ typedef struct _dev_obj {
     aos_mutex_t mutex;
     driver_t    *drv;
     void        *config;
+#if defined(AOS_COMP_DEVFS) && AOS_COMP_DEVFS
+    devfs_node_t devfs_node;
+#endif
 } rvm_dev_t;
 // #define aos_dev_t rvm_dev_t;
 

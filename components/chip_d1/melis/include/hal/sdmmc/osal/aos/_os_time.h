@@ -42,7 +42,6 @@ extern "C" {
 
 #ifndef CONFIG_KERNEL_NONE
 #include <aos/kernel.h>
-#include <k_api.h>
 
 /* system clock's frequency, OS ticks per second */
 

@@ -57,7 +57,7 @@ typedef void (*OS_ThreadEntry_t)(void *arg);
 #include <aos/kernel.h>
 
 /** @brief Thread handle definition */
-typedef ktask_t* OS_ThreadHandle_t;
+typedef aos_task_t OS_ThreadHandle_t;
 
 /**
  * @brief Thread object definition
@@ -124,7 +124,7 @@ static inline void OS_ThreadYield(void)
  */
 static inline OS_ThreadHandle_t OS_ThreadGetCurrentHandle(void)
 {
-	return (OS_ThreadHandle_t)krhino_cur_task_get();
+    return (OS_ThreadHandle_t)aos_task_self();
 }
 
 /**

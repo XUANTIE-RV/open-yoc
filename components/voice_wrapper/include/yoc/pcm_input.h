@@ -5,8 +5,6 @@
 #ifndef _YOC_PCM_INPUT_H__
 #define _YOC_PCM_INPUT_H__
 
-#include <aos/aos.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif

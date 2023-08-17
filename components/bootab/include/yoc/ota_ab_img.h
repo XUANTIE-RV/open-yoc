@@ -14,8 +14,9 @@ extern "C" {
 #define OTA_AB_IMG_INFO_OFFSET_GET(sector) (sector << 1)
 
 typedef struct {
-#define IMG_NAME_MAX_LEN    16
+#define IMG_NAME_MAX_LEN    12
     char img_name[IMG_NAME_MAX_LEN];
+    uint32_t preload_size;
     uint32_t offset;
     uint32_t size;
 } pack_header_imginfo_v2_t;
@@ -48,6 +49,7 @@ typedef struct {
         char partition_name[IMG_NAME_MAX_LEN + 4];
         uint32_t img_offset;
         uint32_t img_size;
+        uint32_t preload_size;
         uint32_t write_size;
         uint32_t read_size;
         int partition_handle;
@@ -60,6 +62,15 @@ typedef struct {
     int envab_handle;
     download_img_info_t dl_imgs_info;
 } pack_private_t;
+
+/**
+ * @brief 获取ota固件信息
+ * @param[in]  ab            当前的slot，a还是b
+ * @param[out] dl_img_info   解析完成的镜像信息
+ * @param[in]  header_buf    外部申请的，已存在header数据的buffer；传入NULL表示内部申请处理
+ * @return 0 : success; other: fail
+ */
+int otaab_env_img_info_init(const char *ab, download_img_info_t *dl_img_info, uint8_t *header_buf);
 
 #ifdef __cplusplus
 }

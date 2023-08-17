@@ -14,6 +14,12 @@
 #include "at_cmd/app_at_cmd.h"
 #include "app_voice.h"
 
+#ifdef CONFIG_ALG_ASR_LYEVA
+#include "aui_asr/app_asr.h"
+#endif
+
+#include <jsapi_publish.h>
+
 #define TAG "APPVOICE"
 
 #define SESSION_STATE_IDLE  0
@@ -24,7 +30,7 @@
  * 麦克风
  *************************************************/
 /* 调试变量 */
-static unsigned int g_send_byte    = 0;
+static unsigned int g_send_byte  = 0;
 static uint32_t     g_wakeup_cnt = 0;
 
 /* 状态处理 */
@@ -32,14 +38,15 @@ static int       session_state = SESSION_STATE_IDLE;
 static mic_kws_t g_wk_info_bak = { MIC_WAKEUP_TYPE_NONE, 0, 0, 0, "" };
 
 /* 唤醒词PCM数据 */
-static int g_wwv_data_len = 0;
-static uint8_t * g_wwv_data = NULL;
+static int      g_wwv_data_len = 0;
+static uint8_t *g_wwv_data     = NULL;
 
 /* 接收到 MIC 事件 */
 static void mic_evt_cb(int source, mic_event_id_t evt_id, void *data, int size)
 {
-    int ret = 0;
+    int        ret     = 0;
     mic_kws_t *wk_info = NULL;
+    (void)ret;
 
     switch (evt_id) {
         case MIC_EVENT_PCM_DATA: {
@@ -47,10 +54,10 @@ static void mic_evt_cb(int source, mic_event_id_t evt_id, void *data, int size)
             //     break;
             // LOGD(TAG, "mic_evt_cb session pcm %d\n", size);
 
-            #if defined(CONFIG_SMART_SPEAKER_AT) && CONFIG_SMART_SPEAKER_AT
+#if defined(CONFIG_SMART_SPEAKER_AT) && CONFIG_SMART_SPEAKER_AT
             app_at_pcm_data_out(data, size);
-            #endif
-
+#endif
+#if defined(CONFIG_AUI_CLOUD) && CONFIG_AUI_CLOUD
             /* 麦克风数据，推到云端 */
             ret = app_aui_cloud_push_audio(data, size);
             if (ret < 0) {
@@ -71,26 +78,22 @@ static void mic_evt_cb(int source, mic_event_id_t evt_id, void *data, int size)
                 }
             }
             g_send_byte += size;
+#endif
         } break;
 
         case MIC_EVENT_SESSION_START:
             /* 重新记录唤醒后上传的数据量 */
-            g_send_byte = 0;
+            g_send_byte   = 0;
             wk_info       = (mic_kws_t *)data;
             g_wk_info_bak = *wk_info; /* 保存全局变量，二次确认流程时可以从这里读取信息 */
 
-            LOGI(TAG,
-                 "WAKEUP (%s)type:%d id:%d score:%d doa:%d cnt:%u",
-                 wk_info->word,
-                 wk_info->type,
-                 wk_info->id,
-                 wk_info->score,
-                 wk_info->doa,
-                 ++g_wakeup_cnt);
+            LOGI(TAG, "WAKEUP (%s)type:%d id:%d score:%d cnt:%u", wk_info->word, wk_info->type, wk_info->id,
+                 wk_info->score, ++g_wakeup_cnt);
 
-#if 0 /* 打开后，关闭唤醒和云交互, 避免干扰, 用于录音训练 */
-            LOGD(TAG, "Record mode, ignore wakeup process");
-            return;
+#ifdef CONFIG_ALG_ASR_LYEVA
+            //c处理麦克风控制逻辑，页面处理业务逻辑 或者jsapi增加麦克风的控制接口后，都在页面处理
+            asr_process_session_start(wk_info);
+            jsapi_voice_publish_sessionBegin(wk_info->word,wk_info->score);
 #endif
 
 #if defined(CONFIG_SMART_SPEAKER_AT) && CONFIG_SMART_SPEAKER_AT
@@ -122,7 +125,7 @@ static void mic_evt_cb(int source, mic_event_id_t evt_id, void *data, int size)
                 LOGD(TAG, "Device is mute\n");
                 return;
             }
-
+#if defined(CONFIG_AUI_CLOUD) && CONFIG_AUI_CLOUD
             /* 网络检测 */
             if (app_network_internet_is_connected() == 0) {
                 LOGE(TAG, "mic_evt net connect failed");
@@ -146,6 +149,7 @@ static void mic_evt_cb(int source, mic_event_id_t evt_id, void *data, int size)
 
             /* 确认是唤醒，更新状态 */
             app_event_update(EVENT_STATUS_SESSION_START);
+            jsapi_voice_publish_sessionBegin(wk_info->word,wk_info->score);
             ret = app_aui_cloud_start(0);
             if (ret != 0) {
                 session_state = SESSION_STATE_IDLE;
@@ -153,6 +157,11 @@ static void mic_evt_cb(int source, mic_event_id_t evt_id, void *data, int size)
                 return;
             }
             aui_mic_control(MIC_CTRL_START_PCM);
+#else
+            session_state = SESSION_STATE_START;
+            app_event_update(EVENT_STATUS_SESSION_START);
+#endif
+            //jsapi_voice_publish_nlpBegin(); //Fixme
             break;
 
         case MIC_EVENT_SESSION_STOP:
@@ -161,29 +170,44 @@ static void mic_evt_cb(int source, mic_event_id_t evt_id, void *data, int size)
             app_event_update(EVENT_STATUS_SESSION_STOP);
 
             if (session_state != SESSION_STATE_IDLE) {
+#if defined(CONFIG_AUI_CLOUD) && CONFIG_AUI_CLOUD
                 app_aui_cloud_stop(0);
+#endif
                 aui_mic_control(MIC_CTRL_STOP_PCM);
                 session_state = SESSION_STATE_IDLE;
-                #if defined(CONFIG_SMART_SPEAKER_AT) && CONFIG_SMART_SPEAKER_AT
+#if defined(CONFIG_SMART_SPEAKER_AT) && CONFIG_SMART_SPEAKER_AT
                 app_at_session_stop();
-                #endif
+#endif
             }
+//本地asr，在asr_timeout回复更快
+#if defined(CONFIG_AUI_CLOUD) && CONFIG_AUI_CLOUD
+            jsapi_voice_publish_sessionEnd();
+#endif
             break;
 
         case MIC_EVENT_KWS_DATA:
             LOGD(TAG, "MIC_EVENT_KWS_DATA %p %d", data, size);
             if (session_state == SESSION_STATE_WWV) {
-                //app_aui_cloud_start(1); /* 云端切换到二次唤醒模式 */
-                //app_aui_cloud_push_audio(data, size); /* 发送数据 */
+                // app_aui_cloud_start(1); /* 云端切换到二次唤醒模式 */
+                // app_aui_cloud_push_audio(data, size); /* 发送数据 */
                 /* 保存数据,可导出作为调试使用 */
                 if (g_wwv_data_len < size) {
-                    g_wwv_data = aos_realloc(g_wwv_data, size);
+                    g_wwv_data     = aos_realloc(g_wwv_data, size);
                     g_wwv_data_len = size;
                 }
                 memcpy(g_wwv_data, data, size);
-            } break;
+            }
+            break;
         case MIC_EVENT_SESSION_DOA:
             LOGD(TAG, "MIC_EVENT_SESSION_DOA %ld", (long)data);
+            break;
+        case MIC_EVENT_LOCAL_ASR:
+            LOGI(TAG, "MIC_EVENT_LOCAL_ASR %s", (char *)data);
+
+#ifdef CONFIG_ALG_ASR_LYEVA
+            app_aui_shortcutCMD_offline(data);
+#endif
+
             break;
         default:;
     }
@@ -204,6 +228,10 @@ int app_mic_init(void)
     ret               = aui_mic_init(task_mic, mic_evt_cb);
 
     aui_mic_start();
+
+#ifdef CONFIG_ALG_ASR_LYEVA
+    asr_process_init();
+#endif
 
     return ret;
 }

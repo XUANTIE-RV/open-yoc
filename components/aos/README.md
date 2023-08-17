@@ -156,7 +156,6 @@ yoc install aos
 | aos_mutex_lock | 请求互斥信号量 |
 | aos_mutex_unlock | 释放互斥信号量 |
 | aos_mutex_is_valid | 判断互斥信号量是否有效 |
-| aos_mutex_is_locked | 判断互斥信号量是否被请求 |
 
 ### 信号量
 | 函数 | 说明 |
@@ -229,8 +228,8 @@ yoc install aos
 | aos_kernel_sched_resume | 内核调度恢复 |
 | aos_kernel_tick2ms | TICK数转毫秒数 |
 | aos_kernel_ms2tick | 毫秒数转TICK数 |
-| aos_kernel_suspend | 内核挂起 |
-| aos_kernel_resume | 内核恢复 |
+| aos_kernel_next_sleep_ticks_get | 获取下个将要睡醒并执行的任务的tick数 |
+| aos_kernel_ticks_announce | tick补偿 |
 | aos_set_except_callback | 设置系统异常回调函数 |
 | aos_set_except_default | 设置默认的系统异常回调函数 |
 
@@ -678,19 +677,6 @@ yoc install aos
 - 返回值:
    - 0: mutex为无效互斥信号量。
    - 1: mutex为有效的互斥信号量。
-   
-### aos_mutex_is_locked
-`int aos_mutex_is_locked(aos_mutex_t *mutex);`
-
-- 功能描述:
-   - 判断互斥信号量是否被请求。
-
-- 参数:
-   - `mutex`: 互斥信号量结构体指针。 
-
-- 返回值:
-   - 0: 没有被请求。
-   - 1: 被请求。
 
 ### aos_sem_new
 `int aos_sem_new(aos_sem_t *sem, int count);`
@@ -1336,7 +1322,7 @@ yoc install aos
    - 无。
    
 ### aos_kernel_tick2ms
-`uint64_t aos_kernel_tick2ms(uint32_t ticks);`
+`uint64_t aos_kernel_tick2ms(uint64_t ticks);`
 
 - 功能描述:
    - TICK数转毫秒数。
@@ -1348,7 +1334,7 @@ yoc install aos
    - 毫秒数。
    
 ### aos_kernel_ms2tick
-`uint64_t aos_kernel_ms2tick(uint32_t ms);`
+`uint64_t aos_kernel_ms2tick(uint64_t ms);`
 
 - 功能描述:
    - 毫秒数转TICK数。
@@ -1359,24 +1345,24 @@ yoc install aos
 - 返回值:
    - TICK数。
    
-### aos_kernel_suspend
-`int32_t aos_kernel_suspend(void);`
+### aos_kernel_next_sleep_ticks_get
+`int32_t aos_kernel_next_sleep_ticks_get(void);`
 
 - 功能描述:
-   - 内核挂起。
+   - 获取下个将要睡醒并执行的任务的tick数。
 
 - 参数:
    - 无。 
 
 - 返回值:
-   - 大于等于0: 内核挂起的TICK数。
-   - 小于0：获取失败
+   - 大于等于0: 离下个将要睡醒的任务的tick数。
+   - 小于0：没有任务在tick等待列表中
 
-### aos_kernel_resume
-`void aos_kernel_resume(int32_t ticks);`
+### aos_kernel_ticks_announce
+`void aos_kernel_ticks_announce(int32_t ticks);`
 
 - 功能描述:
-   - 内核恢复。
+   - tick补偿。
 
 - 参数:
    - `ticks`: TICK数。 
@@ -1968,10 +1954,7 @@ static void test_workqueue()
 无。
 
 ## 依赖资源
-  - kv
-  - ulog
-  - uservice
-  - partition
+无。
 
 ## 组件参考
 无。

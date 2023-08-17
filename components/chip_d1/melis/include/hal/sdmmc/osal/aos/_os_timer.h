@@ -51,7 +51,6 @@ typedef void (*OS_TimerCallback_t)(void *arg);
 
 #ifndef CONFIG_KERNEL_NONE
 #include <aos/kernel.h>
-#include <k_api.h>
 
 typedef struct OS_Timer
 {
@@ -113,9 +112,7 @@ static inline void OS_TimerSetInvalid(OS_Timer_t *timer)
 static inline int OS_TimerIsActive(OS_Timer_t *timer)
 {
 #ifndef CONFIG_KERNEL_NONE
-    ktimer_t *k_timer = (ktimer_t *)timer->handle;
-
-	return ((k_timer->timer_state == TIMER_ACTIVE) ? 1 : 0);
+    return aos_timer_is_active(&timer->handle);
 #else
     return 0;
 #endif

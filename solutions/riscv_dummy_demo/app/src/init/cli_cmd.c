@@ -33,7 +33,4 @@ void board_cli_init()
 {
     aos_cli_init();
     cli_reg_cmd_quit();
-
-    extern void debug_cli_cmd_init(void);
-    debug_cli_cmd_init();
 }

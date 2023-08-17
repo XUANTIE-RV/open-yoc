@@ -273,7 +273,45 @@ aos debug init ok.
 
 设备启动以后usb协议栈会检测usb hub和usb device，检测到en200a模块后 会启动netmgr 进行联网，联网完成后会进行ntp时间同步
 
-## 调试
+
+## RNDIS 网卡调试
+默认开了CONFIG_RNDIS_DEVICE_ETH宏，是通过接入windows，作为windows的网卡，和设备进行通讯。
+启动后可以usb插入pc后有如下打印
+
+```
+[10:38:01.816]收←◆(cli-uart)# ###YoC###[Jun 20 2023,02:35:46]
+cpu clock is 0Hz
+aos debug init ok.
+[   0.024]<D>main app_main.c[62]: build time: Jun 20 2023, 02:35:47
+
+[   0.032]<E>rndis v_rndis_device.c[237]: queue send error
+[   0.036]<I>netmgr netmgr_service.c[316]: start eth
+
+[10:38:01.929]收←◆DevEnumSpeed:0
+
+[10:38:01.995]收←◆USBD_EVENT_CONFIGURED
+USBD_EVENT_CONFIGURED
+usbd_configure_done_callback
+```
+
+设备端输入ifconfig可以看到有一个 eth0的网卡，ip为 192.168.11.10。
+```
+ifconfig
+
+eth0	Link encap:eth  HWaddr 00:00:00:00:00:00
+    	inet addr:192.168.11.10
+	GWaddr:192.168.11.1
+	Mask:255.255.255.0
+	DNS SERVER 0: 208.67.222.222
+```
+
+同时，windows电脑上也会有一个rndis网卡出现，通过修改 windows上的rndis网卡在的ip，就可以和设备进行通讯了。（由于通过usb连接，没有dhcpd功能，电脑和设备都需要设置静态ip）
+
+
+
+通过去掉 宏 CONFIG_RNDIS_DEVICE_ETH 可以配置使用 移远的4G网卡。
+
+## 4G 网卡调试
 
 查看USB设备
 ```

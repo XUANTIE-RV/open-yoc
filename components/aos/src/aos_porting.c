@@ -2,7 +2,7 @@
 #include <string.h>
 #include <soc.h>
 #include <aos/console_uart.h>
-#include <aos/hal/uart.h>
+#include <devices/uart.h>
 
 #if defined(DEBUG_LAST_WORD_ENABLE) && (DEBUG_LAST_WORD_ENABLE > 0)
 
@@ -43,16 +43,16 @@ int alios_debug_print(const char *buf, int size)
 
 #if defined(CONFIG_AOS_NEWLINE_SUPPORT) && (CONFIG_AOS_NEWLINE_SUPPORT > 0)
     if((size >= 2 && buf[size - 1] == '\n' && buf[size - 2] != '\r')) {
-        hal_uart_send_poll(console_get_uart(), buf, size - 1);
-        hal_uart_send_poll(console_get_uart(), "\r\n", 2);
+        rvm_hal_uart_send_poll(console_get_uart(), buf, size - 1);
+        rvm_hal_uart_send_poll(console_get_uart(), "\r\n", 2);
     } else if(size == 1 && buf[0] == '\n') {
-        hal_uart_send_poll(console_get_uart(), "\r\n", 2);
+        rvm_hal_uart_send_poll(console_get_uart(), "\r\n", 2);
     } else {
-        hal_uart_send_poll(console_get_uart(), buf, size);
+        rvm_hal_uart_send_poll(console_get_uart(), buf, size);
     }
 #else
-    hal_uart_send_poll(console_get_uart(), buf, size);
-#endif
+    rvm_hal_uart_send_poll(console_get_uart(), buf, size);
+#endif /*CONFIG_AOS_NEWLINE_SUPPORT*/
 
     return size;
 }
@@ -68,7 +68,7 @@ int uart_input_read()
         return 0;
     }
 
-    ret = hal_uart_recv_poll(console_get_uart(), &rx_byte, 1);
+    ret = rvm_hal_uart_recv_poll(console_get_uart(), &rx_byte, 1);
 
     return ret > 0 ? rx_byte : 0;
 }

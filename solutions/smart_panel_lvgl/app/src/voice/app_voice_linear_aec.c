@@ -16,10 +16,10 @@ static void linear_aec_process(void *arg)
     long long read_byte = 0;
 
     while(1) {
-        int ret = voice_get_feaec_data(data, FRAME_DATA_BYTE, 1000);
+        int ret = voice_get_feaec_data(data, FRAME_DATA_BYTE, 200);
         if (ret < 0) {
             LOGD(TAG, "fe ace: unsupport");
-            aos_msleep(2000);
+            aos_msleep(500); // ringbuffer len is 500 ms
             continue;
         }
 

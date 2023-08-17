@@ -1,7 +1,7 @@
 
 ## 第一部分： 基础信息
 name: sec_crypto                                    # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
-version: v7.7.0                                    # <必选项> 组件版本号
+version: v7.8.0                                    # <必选项> 组件版本号
 description: cryptographic components.              # <必选项> 建议至少20字以上
 type: common                                        # <必选项> 组件类型，为：solution, chip, board, common, sdk
 tag: 核心模块                                       # <可选项> 组件分类，缺省值： ''
@@ -57,6 +57,8 @@ source_file:
   - "crypto/rng/*.c ? <CONFIG_SEC_CRYPTO_RNG_SW>"
   - "crypto/base64/*.c ? <CONFIG_SEC_BASE64_SW>"
   - "secure/common/*.c"
+  - "secure/softse/softse_ecdh.c ? <CONFIG_SEC_CRYPTO_ECC_SW>"
+  - "secure/softse/softse_ecdsa.c ? <CONFIG_SEC_CRYPTO_ECC_SW>"
   - "secure/softse/softse_aes.c ? <CONFIG_SEC_CRYPTO_AES_SW>"
   - "secure/softse/softse_sha.c ? <CONFIG_SEC_CRYPTO_SHA_SW>"
   - "secure/softse/softse_rsa.c ? <CONFIG_SEC_CRYPTO_RSA_SW>"
@@ -64,9 +66,9 @@ source_file:
   - "secure/softse/softse_base64.c ? <CONFIG_SEC_BASE64_SW>"
   - "crypto/ecc/*.c ? <CONFIG_SEC_CRYPTO_ECC_SW>"
   - "secure/tee/*.c ? <CONFIG_TEE_CA>"
+  - "secure/se/*.c ? <CONFIG_SE>"
   - "secure/mcu/*.c ? <CONFIG_SYSTEM_SECURE>"
   - "secure/mcu/csi_v1/*.c ? <CONFIG_SYSTEM_SECURE>"
-  - "secure/se/*.c ? <CONFIG_SE_CA>"
 
 ## 第五部分：配置信息
 # def_config:                              # 组件的可配置项

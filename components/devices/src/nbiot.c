@@ -146,4 +146,5 @@ int rvm_hal_nbiot_set_signal_strength_ind(rvm_dev_t *dev, int status)
 
     return ret;
 }
+
 #endif

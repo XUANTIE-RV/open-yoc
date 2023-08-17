@@ -9,6 +9,8 @@
 extern "C" {
 #endif
 
+#ifdef CONFIG_KERNEL_RHINO
+
 #define CPU_USAGE_MAX_TASKNAME_LEN 32
 
 struct cpuusage_data {
@@ -22,6 +24,8 @@ uint32_t debug_total_cpu_usage_get(uint32_t cpuid);
 void     debug_total_cpu_usage_show(struct cpuusage_data *cpuusage_record, int32_t record_len, int32_t index);
 kstat_t  debug_task_cpu_usage_init(void);
 void     debug_cpuusage_cmds_register(void);
+
+#endif
 
 #ifdef __cplusplus
 }

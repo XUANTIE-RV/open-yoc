@@ -12,7 +12,6 @@
 #include "player/app_player.h"
 #include "event_mgr/app_event.h"
 
-#include "wifi_prov.h"
 #include "app_main.h"
 
 #define TAG "wifiprov"

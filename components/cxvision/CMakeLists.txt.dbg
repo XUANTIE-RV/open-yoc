@@ -1,0 +1,43 @@
+cmake_minimum_required(VERSION 3.16.3)
+project(libcxvision)
+
+option(BUILD_STATIC_LIBS "Build the static library" ON)
+
+set(CMAKE_C_FLAGS "-Wall -Werror -Wno-unused-variable -Wno-unused-parameter -Wno-unused-function")
+set(CMAKE_CXX_FLAGS "-Wall -Werror -Wno-unused-variable -Wno-unused-parameter -Wno-unused-function")
+
+set(DEPS_POSTO_LIB "${CMAKE_CURRENT_SOURCE_DIR}/../posto/build/libposto.a")
+set(DEPS_CJSON_LIB "${CMAKE_CURRENT_SOURCE_DIR}/third_party/cJSON/build/libcjson.a")
+
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../posto)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/third_party/cJSON)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+
+FILE(GLOB SOURCE_FILES
+  cxvision/*.cc
+  cxvision/base/*.cc
+  cxvision/graph/*.cc
+  cxvision/plugin/*.cc
+)
+
+if(BUILD_STATIC_LIBS)
+  add_library(cxvision STATIC ${SOURCE_FILES})
+else()
+  add_library(cxvision SHARED ${SOURCE_FILES})
+  target_link_libraries(cxvision ${DEPS_CJSON_LIB})
+endif()
+
+FILE(GLOB DEMO_SOURCE_FILES
+  test/*.cc
+  test/plugins/*.cc
+)
+
+add_executable(demo ${DEMO_SOURCE_FILES})
+if(BUILD_STATIC_LIBS)
+  target_link_libraries(demo cxvision ${DEPS_POSTO_LIB} ${DEPS_CJSON_LIB})
+else()
+  target_link_libraries(demo cxvision ${DEPS_POSTO_LIB})
+endif()
+
+find_package(Threads)
+target_link_libraries(demo ${CMAKE_THREAD_LIBS_INIT})

@@ -29,10 +29,17 @@ struct kvnode {
     uint16_t   val_size; /* value size */
     uint32_t   erase_flag;
 
+#if CONFIG_KV_LARGE_NODE
+    uint32_t  head_offset; /* offset base block */
+    uint32_t  value_offset;
+    uint32_t  next_offset;
+    uint32_t  node_size;
+#else
     uint16_t  head_offset; /* offset base block */
     uint16_t  value_offset;
     uint16_t  next_offset;
     uint16_t  node_size;
+#endif
 
     kvblock_t *block;
 };

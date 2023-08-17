@@ -1,5 +1,3 @@
-/csi
-out
 .vscode
 .gdbinit
 yoc.asm
@@ -38,17 +36,20 @@ node_modules
 
 cdkws.mk
 *.modify.bat
+*.cdkws
 project.tags
 project.cdkws
 **/.cdk
 **/Obj
 **/Lst
-display_drv_demo*.mk
-display_drv_demo*.txt
+smart_speaker*.mk
+smart_speaker*.txt
 __workspace_pack__
 
-data/mnt/D/data/firmware
-data/resources/**
-!data/resources/local_packages.json
-!resources/presetpkgs
+data/resources/fonts
+data/resources/framework
+data/resources/cfg.json
+data/resources/env.json
+data/resources/local_deviceinfo.json
 *footprint.xlsx
+.defsdk

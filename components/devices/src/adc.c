@@ -16,10 +16,12 @@
 
 void rvm_hal_adc_config_default(rvm_hal_adc_config_t *config)
 {
-    config->mode          = HAL_ADC_SINGLE;
+    config->mode          = RVM_ADC_CONTINUOUS;
     config->trigger       = 0;
     config->intrp_mode    = 0;
-    config->sampling_time = 0;
+    config->sampling_time = 2;
+    config->freq          = 128;
+    config->offset        = 0;
 }
 
 int rvm_hal_adc_config(rvm_dev_t *dev, rvm_hal_adc_config_t *config)
@@ -64,7 +66,7 @@ int rvm_hal_adc_read(rvm_dev_t *dev, void *output, uint32_t timeout)
 
     device_lock(dev);
 #ifdef CONFIG_CSI_V2
-    ret = ADC_DRIVER(dev)->read(dev, ch, output, timeout);
+    ret = ADC_DRIVER(dev)->read(dev, ch, output, 1, timeout);
 #else
     ret = ADC_DRIVER(dev)->read(dev, output, timeout);
 #endif
@@ -73,4 +75,34 @@ int rvm_hal_adc_read(rvm_dev_t *dev, void *output, uint32_t timeout)
     return ret;
 }
 
+#ifdef CONFIG_CSI_V2
+int rvm_hal_adc_read_multiple(rvm_dev_t *dev, uint8_t ch, void *output, size_t num, uint32_t timeout)
+{
+    if (output == 0 && num < 1) {
+        return -EINVAL;
+    }
 
+    int ret;
+
+    ADC_VAILD(dev);
+
+    device_lock(dev);
+    ret = ADC_DRIVER(dev)->read(dev, ch, output, num, timeout);
+    device_unlock(dev);
+
+    return ret;
+}
+#endif
+
+int rvm_hal_adc_trans_dma_enable(rvm_dev_t *dev, bool enable)
+{
+    int ret;
+
+    ADC_VAILD(dev);
+
+    device_lock(dev);
+    ret = ADC_DRIVER(dev)->trans_dma_enable(dev, enable);
+    device_unlock(dev);
+
+    return ret;
+}

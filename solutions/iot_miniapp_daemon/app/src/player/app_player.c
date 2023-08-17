@@ -3,7 +3,7 @@
  */
 #include <board.h>
 
-#if defined(CONFIG_BOARD_AUDIO) && CONFIG_BOARD_AUDIO > 0
+#if defined(BOARD_AUDIO_SUPPORT) && BOARD_AUDIO_SUPPORT
 
 #include <stdio.h>
 #include <time.h>
@@ -15,10 +15,10 @@
 #include "event_mgr/app_event.h"
 
 #include "app_main.h"
-
+#include "jsapi_publish.h"
 #define TAG "app_player"
 
-#define MINI_VOLUME 20
+#define MINI_VOLUME 0
 
 #ifndef CONFIG_RESAMPLE_RATE
 #define CONFIG_RESAMPLE_RATE 48000
@@ -60,24 +60,33 @@ static void media_evt(int type, smtaudio_player_evtid_t evt_id)
         switch (evt_id) {
             case SMTAUDIO_PLAYER_EVENT_START:
                 app_event_update(type == SMTAUDIO_LOCAL_PLAY ? EVENT_MEDIA_SYSTEM_START : EVENT_MEDIA_START);
+                if (SMTAUDIO_ONLINE_MUSIC == type) {
+                    jsapi_audio_publish_start();
+                }
                 break;
 
             case SMTAUDIO_PLAYER_EVENT_ERROR:
                 app_event_update(type == SMTAUDIO_LOCAL_PLAY ? EVENT_MEDIA_SYSTEM_ERROR : EVENT_MEDIA_MUSIC_ERROR);
                 if (SMTAUDIO_ONLINE_MUSIC == type) {
                     /* media_system doesn't need to play error audio */
+                    jsapi_audio_publish_error();
                     LOGE(TAG, "SMTAUDIO_PLAYER_EVENT_ERROR");
-                } else {
-                    // app_tts_update_running(TTS_STATE_IDLE);
                 }
-
                 LOGI(TAG, "audio player exit %d", av_errno_get());
                 break;
             case SMTAUDIO_PLAYER_EVENT_PAUSE:
+                app_event_update(type == SMTAUDIO_LOCAL_PLAY ? EVENT_MEDIA_SYSTEM_FINISH : EVENT_MEDIA_MUSIC_FINISH);
+                if (SMTAUDIO_ONLINE_MUSIC == type) {
+                    jsapi_audio_publish_pause();
+                }
+
+                LOGD(TAG, "audio player exit %d", SMTAUDIO_PLAYER_EVENT_PAUSE);
+                break;
             case SMTAUDIO_PLAYER_EVENT_STOP:
                 app_event_update(type == SMTAUDIO_LOCAL_PLAY ? EVENT_MEDIA_SYSTEM_FINISH : EVENT_MEDIA_MUSIC_FINISH);
-                if (SMTAUDIO_LOCAL_PLAY == type) {
-                    // app_tts_update_running(TTS_STATE_IDLE);
+                if (SMTAUDIO_ONLINE_MUSIC == type) {
+                    jsapi_audio_publish_finish();
+                    jsapi_audio_publish_stop();
                 }
 
                 LOGD(TAG, "audio player exit %d", SMTAUDIO_PLAYER_EVENT_STOP);
@@ -85,6 +94,9 @@ static void media_evt(int type, smtaudio_player_evtid_t evt_id)
             case SMTAUDIO_PLAYER_EVENT_RESUME:
                 // app_event_update(EVENT_MEDIA_START);
                 LOGD(TAG, "audio player resumed %d", SMTAUDIO_PLAYER_EVENT_RESUME);
+                if (SMTAUDIO_ONLINE_MUSIC == type) {
+                    jsapi_audio_publish_resume();
+                }
                 break;
             case SMTAUDIO_PLAYER_EVENT_UNDER_RUN:
                 LOGD(TAG, "audio player underrun");
@@ -205,7 +217,7 @@ void ao_event_hook(int ao_evt)
 
 void app_speaker_init(void)
 {
-#if defined(CONFIG_BOARD_AUDIO_AMP) && CONFIG_BOARD_AUDIO_AMP
+#if defined(BOARD_AUDIO_SUPPORT_AMP) && BOARD_AUDIO_SUPPORT_AMP
     board_audio_amplifier_onoff(0);
 #else
     int pa_pin = board_audio_get_pa_mute_pin();
@@ -214,6 +226,9 @@ void app_speaker_init(void)
 
     if (pa_pin >= 0 ) {
         amplifier_init(AMP_TYPE_GPIO, pa_pin, -1, AMP_MODE_DEF);
+#ifdef BOARD_AUDIO_SUPPORT_AMP_GPIO_FLIP
+        amplifier_config(-1, -1, 1);
+#endif
         amplifier_onoff(1);
     }
 #endif
@@ -224,10 +239,10 @@ void app_speaker_mute(int mute)
     if (smtaudio_get_state() == SMTAUDIO_STATE_MUTE)
         mute = 1;
 
-#if defined(CONFIG_BOARD_AUDIO_AMP) && CONFIG_BOARD_AUDIO_AMP
+#if defined(BOARD_AUDIO_SUPPORT_AMP) && BOARD_AUDIO_SUPPORT_AMP
     board_audio_amplifier_onoff(mute ? 0 : 1);
 #else
     amplifier_onoff(mute ? 0 : 1);
 #endif
 }
-#endif /*CONFIG_BOARD_AUDIO*/
+#endif /*BOARD_AUDIO_SUPPORT*/

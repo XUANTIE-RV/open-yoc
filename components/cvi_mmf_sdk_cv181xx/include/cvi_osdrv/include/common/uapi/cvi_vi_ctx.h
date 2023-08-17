@@ -30,6 +30,7 @@ struct cvi_vi_ctx {
 
 	// pipe
 	CVI_BOOL isPipeCreated[VI_MAX_PIPE_NUM];
+	CVI_BOOL isDisEnable[VI_MAX_PIPE_NUM];
 	VI_PIPE_FRAME_SOURCE_E enSource[VI_MAX_PIPE_NUM];
 	VI_PIPE_ATTR_S pipeAttr[VI_MAX_PIPE_NUM];
 	CROP_INFO_S    pipeCrop[VI_MAX_PIPE_NUM];

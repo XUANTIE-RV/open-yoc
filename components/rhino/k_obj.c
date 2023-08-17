@@ -4,7 +4,7 @@
 
 #include "k_api.h"
 
-kstat_t g_sys_stat;
+kstat_t g_sys_stat = RHINO_STOPPED;
 uint8_t g_idle_task_spawned[RHINO_CONFIG_CPU_NUM];
 
 runqueue_t g_ready_queue;

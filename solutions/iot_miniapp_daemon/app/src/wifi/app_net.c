@@ -19,6 +19,8 @@
 #include "app_net.h"
 #include "app_main.h"
 
+#define APP_ENABLE_WIFI_PROV 0
+
 #if defined(EN_COMBO_NET) && EN_COMBO_NET
 #include "combo_net.h"
 #endif
@@ -32,9 +34,9 @@
 
 netmgr_hdl_t     app_netmgr_hdl;
 static int       ntp_sync_flag;
-static int       net_reset_err_times  = 0;
-static int       net_reset_delay_time = 2;
-static int       net_retry_cnt        = -1;
+// static int       net_reset_err_times  = 0;
+// static int       net_reset_delay_time = 2;
+// static int       net_retry_cnt        = -1;
 static int       net_is_linkup        = 1;
 static int       ntp_retry_count      = 0;
 static int       net_lpm_en           = 0;
@@ -60,76 +62,79 @@ void app_network_internet_set_connected(int connected)
     ntp_sync_flag = connected;
 }
 
-static void network_reset_handle(uint32_t event_id, int reason)
-{
-    switch (event_id) {
-    case EVENT_NET_RECONNECT:
-    case EVENT_NETMGR_NET_DISCON:
-        net_reset_err_times++;
-        LOGD(TAG, "net reset cnt %d", net_reset_err_times);
+// static void network_reset_handle(uint32_t event_id, int reason)
+// {
+//     switch (event_id) {
+//     case EVENT_NET_RECONNECT:
+//             LOGD(TAG, "[[[[[[[EVENT_NET_RECONNECT]]]]]]");
+//     case EVENT_NETMGR_NET_DISCON:
+//         net_reset_err_times++;
+//         LOGD(TAG, "[[[[[[net reset cnt %d reson:%d]]]]]]", net_reset_err_times, reason);
 
-        if (net_reset_err_times >= MAX_NET_RESET_ERR_TIMES && MAX_NET_RESET_ERR_TIMES > 0) {
-            LOGD(TAG, "Net Reset times %d, reboot", net_reset_err_times);
-            //do reboot
-            app_sys_reboot(BOOT_REASON_SOFT_RESET);
-        } else {
-            if (net_lpm_en && net_reset_err_times > MAX_NET_RETRY_TIMES) {
-                LOGD(TAG, "Net Reset times %d, goto sleep", net_reset_err_times);
-                // if in low power mode, net should stop retry to allow system to goto sleep
-                app_event_update(EVENT_NET_LPM_RECONNECT);
-            } else {
-                if (reason == NET_DISCON_REASON_WIFI_NOEXIST) {
-                    LOGD(TAG, "AP not found");
-                } else if (reason == NET_DISCON_REASON_WIFI_PSK_ERR) {
-                    LOGD(TAG, "password error");
-                }
+//         if (net_reset_err_times >= MAX_NET_RESET_ERR_TIMES && MAX_NET_RESET_ERR_TIMES > 0) {
+//             LOGD(TAG, "Net Reset times %d, reboot", net_reset_err_times);
+//             //do reboot
+//             app_sys_reboot(BOOT_REASON_SOFT_RESET);
+//         } else {
+//             if (net_lpm_en && net_reset_err_times > MAX_NET_RETRY_TIMES) {
+//                 LOGD(TAG, "Net Reset times %d, goto sleep", net_reset_err_times);
+//                 // if in low power mode, net should stop retry to allow system to goto sleep
+//                 app_event_update(EVENT_NET_LPM_RECONNECT);
+//             } else {
+//                 if (reason == NET_DISCON_REASON_WIFI_NOEXIST) {
+//                     LOGD(TAG, "AP not found");
+//                 } else if (reason == NET_DISCON_REASON_WIFI_PSK_ERR) {
+//                     LOGD(TAG, "password error");
+//                 } else if (reason == NET_DISCON_REASON_NORMAL){
+//                     LOGD(TAG, "normal decon sussec!!!");
+//                     break;
+//                 }
 
-                if (!wifi_is_pairing()) {
-                    char *ssid, *psk;
-                    net_is_linkup  = 1;
+//                 if (!wifi_is_pairing()) {
+//                     char *ssid, *psk;
+//                     net_is_linkup  = 1;
+//                     net_retry_cnt = (net_retry_cnt + 1) % 4;
+//                     if (net_retry_cnt == 3) {
+//                         int ret = app_wifi_config_select_ssid(&ssid, &psk);
+//                         LOGD(TAG, "check new ssid:%s,psk:%s", ssid, psk);
+//                         if (ret >= 0) {
+//                             netmgr_config_wifi(app_netmgr_hdl, ssid, strlen(ssid), psk,
+//                                                strlen(psk));
+//                         }
+//                     }
 
-                    net_retry_cnt = (net_retry_cnt + 1) % 4;
-                    if (net_retry_cnt == 3) {
-                        int ret = app_wifi_config_select_ssid(&ssid, &psk);
+//                     netmgr_reset(app_netmgr_hdl, net_reset_delay_time);
 
-                        if (ret >= 0) {
-                            netmgr_config_wifi(app_netmgr_hdl, ssid, strlen(ssid), psk,
-                                               strlen(psk));
-                        }
-                    }
+//                     /* double delay time to reconnect */
+//                     net_reset_delay_time *= 2;
+//                     if (net_reset_delay_time > NET_RESET_DELAY_TIME) {
+//                         net_reset_delay_time = NET_RESET_DELAY_TIME;
+//                     }
+//                 }
+//             }
+//         }
+//         break;
+//     case EVENT_NETMGR_GOT_IP:
+//         net_retry_cnt        = -1;
+//         net_is_linkup        = 0;
+//         net_reset_err_times  = 0;
+//         net_reset_delay_time = 2;
 
-                    netmgr_reset(app_netmgr_hdl, net_reset_delay_time);
+//         /* 启动小程序在线推送 */
+//         extern void start_jquick_debugger();
+//         start_jquick_debugger();
 
-                    /* double delay time to reconnect */
-                    net_reset_delay_time *= 2;
-                    if (net_reset_delay_time > NET_RESET_DELAY_TIME) {
-                        net_reset_delay_time = NET_RESET_DELAY_TIME;
-                    }
-                }
-            }
-        }
-        break;
-    case EVENT_NETMGR_GOT_IP:
-        net_retry_cnt        = -1;
-        net_is_linkup        = 0;
-        net_reset_err_times  = 0;
-        net_reset_delay_time = 2;
-
-        /* 启动小程序在线推送 */
-        extern void start_jquick_debugger();
-        start_jquick_debugger();
-
-        break;
-    case EVENT_NET_LPM_RECONNECT:
-        LOGD(TAG, "reconnect %d s later", NET_LPM_RECONNECT_DELAY_TIME);
-        net_is_linkup        = 0;
-        net_reset_err_times  = 0;
-        net_reset_delay_time = 2;
-        event_publish_delay(EVENT_NETMGR_NET_DISCON, NULL, NET_LPM_RECONNECT_DELAY_TIME * 1000);
-    default:
-        break;
-    }
-}
+//         break;
+//     case EVENT_NET_LPM_RECONNECT:
+//         LOGD(TAG, "reconnect %d s later", NET_LPM_RECONNECT_DELAY_TIME);
+//         net_is_linkup        = 0;
+//         net_reset_err_times  = 0;
+//         net_reset_delay_time = 2;
+//         event_publish_delay(EVENT_NETMGR_NET_DISCON, NULL, NET_LPM_RECONNECT_DELAY_TIME * 1000);
+//     default:
+//         break;
+//     }
+// }
 
 static void network_normal_handle(uint32_t event_id, const void *param)
 {
@@ -141,7 +146,8 @@ static void network_normal_handle(uint32_t event_id, const void *param)
 
     case EVENT_NETMGR_NET_DISCON: {
         LOGD(TAG, "Net down");
-        app_event_update(EVENT_STATUS_WIFI_CONN_FAILED);
+        //只允许voice.c 发布
+        //app_event_update(EVENT_STATUS_WIFI_CONN_FAILED);
         /* 不主动语音提示异常，等有交互再提示 */
         app_network_internet_set_connected(0);
     } break;
@@ -149,8 +155,8 @@ static void network_normal_handle(uint32_t event_id, const void *param)
     case EVENT_NET_CHECK_TIMER: {
         if (app_network_internet_is_connected() == 0) {
             /* (配网超时)您输入的密码好像不太对，请检查后再试一次吧  */
-            app_event_update(EVENT_STATUS_WIFI_PROV_FAILED);
-            app_wifi_config_del(app_wifi_config_get_cur_ssid());
+            // app_event_update(EVENT_STATUS_WIFI_PROV_FAILED);
+            // app_wifi_config_del(app_wifi_config_get_cur_ssid());
         } else {
             LOGI(TAG, "wifi connection: check ok");
         }
@@ -167,7 +173,7 @@ static void network_normal_handle(uint32_t event_id, const void *param)
             if (app_network_internet_is_connected() == 0) {
                 /* 同步到时间,确认网络成功,提示音和升级只在第一次启动 */
                     app_network_internet_set_connected(1);
-                    app_wifi_config_save();
+                    // app_wifi_config_save();
                     app_event_update(EVENT_STATUS_NTP_SUCCESS);
 
 #if defined(APP_FOTA_EN) && APP_FOTA_EN
@@ -200,9 +206,9 @@ static void user_local_event_cb(uint32_t event_id, const void *param, void *cont
     if ((wifi_is_pairing() == 0) && wifi_network_inited()) {
         network_normal_handle(event_id, NULL);
         if(param) {
-            network_reset_handle(event_id, *(int *)param);
+            // network_reset_handle(event_id, *(int *)param);
         } else {
-            network_reset_handle(event_id, -1);
+            // network_reset_handle(event_id, -1);
         }
     } else {
         LOGE(TAG, "Critical network status callback %d", event_id);
@@ -248,7 +254,7 @@ static wifi_mode_e network_event_init(void)
     event_subscribe(EVENT_NET_LPM_RECONNECT, user_local_event_cb, NULL);
 
     /* 进入配网模式 */
-#if 0
+#if APP_ENABLE_WIFI_PROV
     if (app_wifi_config_is_empty() || app_sys_get_boot_reason() == BOOT_REASON_WIFI_CONFIG) {
         if (app_sys_get_boot_reason() == BOOT_REASON_WIFI_CONFIG) {
             int last_method = 0;
@@ -300,7 +306,11 @@ static wifi_mode_e app_network_start(void)
 
     utask_t *task = utask_new("netmgr", 10 * 1024, QUEUE_MSG_COUNT, AOS_DEFAULT_APP_PRI);
 
+#if defined(CONFIG_BOARD_ETH) && CONFIG_BOARD_ETH
+    app_netmgr_hdl = netmgr_dev_eth_init();
+#else
     app_netmgr_hdl = netmgr_dev_wifi_init();
+#endif
     netmgr_service_init(task);
     return network_event_init();
 }
@@ -323,9 +333,11 @@ static wifi_mode_e app_network_check(void)
     }
 
     app_wifi_config_init();
+#if APP_ENABLE_WIFI_PROV
     if (app_wifi_config_is_empty() || app_sys_get_boot_reason() == BOOT_REASON_WIFI_CONFIG) {
         return MODE_WIFI_PAIRING;
     }
+#endif
     return MODE_WIFI_NORMAL;
 }
 

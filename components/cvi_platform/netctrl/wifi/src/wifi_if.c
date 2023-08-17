@@ -199,7 +199,7 @@ CVI_S32 WifiGetMac(CVI_U8 *Mac)
 		printf("%s err dev Null\n", __func__);
 		return CVI_FAILURE;
 	}
-	if (rvm_hal_wifi_get_mac_addr(dev, Mac) != CVI_SUCCESS) {
+	if (rvm_hal_net_get_mac_addr(dev, Mac) != CVI_SUCCESS) {
 		printf("%s err get mac err\n", __func__);
 		return CVI_FAILURE;
 	}

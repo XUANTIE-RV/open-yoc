@@ -17,6 +17,7 @@ static int online_music_resume(void);
 
 smtaudio_ops_node_t ctrl_online_music = {
     .name     = "online_music",
+    .url      = NULL,
     .prio     = 2,
     .id       = SMTAUDIO_ONLINE_MUSIC,
     .status   = SMTAUDIO_STATE_STOP,

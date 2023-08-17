@@ -6,11 +6,9 @@
 #include <av/player.h>
 #include <csi_core.h>
 
-#include "drv_amp.h"
-
 #define TAG "smart_audio"
 
-#define SMTAUDIO_MESSAGE_NUM 5
+#define SMTAUDIO_MESSAGE_NUM 10
 
 static uint32_t smtaudio_crtl_id;
 static dlist_t smtaudio_ctrl_list_head;
@@ -27,9 +25,12 @@ typedef struct smtaudio_type {
     uint8_t *            smtaudio_q_buffer;
     uint8_t              resume_flag;
     uint8_t              run_flag;
-} smtaudio_type_t;
+    smtaudio_action_t    cur_action; // 记录action来管理因为反馈的异步导致反复可以执行action的问题
+    long long            action_time;
+} smtaudio_ctx_t;
 
-static smtaudio_type_t smtaudio_ctx;
+static smtaudio_ctx_t smtaudio_ctx;
+static bool pauseBeforeMute;
 
 #define SMTAUDIO_LOCK()                                                 \
     do {                                                                \
@@ -183,6 +184,18 @@ static smtaudio_ops_node_t *find_first_playing_audio(void)
     return NULL;
 }
 
+static smtaudio_ops_node_t *find_first_pause_audio(void)
+{
+    smtaudio_ops_node_t *tmp_node = NULL;
+
+    dlist_for_each_entry(&smtaudio_ctrl_list_head, tmp_node, smtaudio_ops_node_t, node) {
+        if (tmp_node->status == SMTAUDIO_STATE_PAUSE) {
+            return tmp_node;
+        }
+    }
+    return NULL;
+}
+
 smtaudio_ops_node_t *get_default_audio_ops(void)
 {
     return get_smtaudio_ctrl_ops_by_id(DEFAULT_PLAY_TYPE);
@@ -217,12 +230,34 @@ static void smtaudio_change_state(smtaudio_state_t new_state, smtaudio_player_ty
     smtaudio_ops_node_t *first_playing_audio_ops = NULL;
     smtaudio_sub_state_t new_sub_state;
 
-    LOGD(TAG, "Enter %s: current state:%d type:%d new_state:%d", __FUNCTION__,
-         smtaudio_ctx.cur_state, type, new_state);
-    new_sub_state = type * 3 + new_state;
+    //通过播放类型和节点的播放状态，转化为smtaudio_sub_state_t的全局状态
+    switch(type) {
+        case SMTAUDIO_ONLINE_MUSIC:
+            new_sub_state = SMTAUDIO_SUBSTATE_ONLINE_PLAYING;
+            break;
+        case SMTAUDIO_LOCAL_PLAY:
+            new_sub_state = SMTAUDIO_SUBSTATE_LOCAL_PLAYING;
+            break;
+        case SMTAUDIO_BT_A2DP:
+            new_sub_state = SMTAUDIO_SUBSTATE_BT_A2DP_PLAYING;
+            break;
+        case SMTAUDIO_BT_HFP:
+            new_sub_state = SMTAUDIO_SUBSTATE_BT_HFP_PLAYING;
+            break;
+        default:
+            LOGE(TAG, "play type error", __FUNCTION__);
+            return;
+    }
+    new_sub_state += new_state;
 
-    if (smtaudio_ctx.cur_state == new_sub_state)
+    LOGD(TAG, "Enter %s: current state:%d type:%d new_state:%d new_sub_state=%d", __FUNCTION__,
+         smtaudio_ctx.cur_state, type, new_state, new_sub_state);
+
+    if (smtaudio_ctx.cur_state == new_sub_state) {
+        LOGD(TAG, "seem state, ignore check", __FUNCTION__);
         return;
+    }
+
     smtaudio_node = get_smtaudio_ctrl_ops_by_id(type);
     if (smtaudio_node) {
         if (new_state == SMTAUDIO_STATE_PLAYING) {
@@ -276,6 +311,35 @@ static void smtaudio_change_state(smtaudio_state_t new_state, smtaudio_player_ty
     }
 }
 
+static void actmgr_set_action(smtaudio_action_t action)
+{
+    smtaudio_ctx.cur_action = action;
+    smtaudio_ctx.action_time =  aos_now_ms();
+    return;
+}
+
+static void actmgr_action_check(smtaudio_state_t state)
+{
+    int do_clear = 0;
+    if (smtaudio_ctx.cur_action == SMTAUDIO_ACTION_PAUSE && 
+            (state == SMTAUDIO_STATE_PAUSE || state == SMTAUDIO_STATE_STOP) ) {
+        do_clear = 1;
+    }
+
+    long long ms = aos_now_ms();
+    if ((smtaudio_ctx.cur_action != SMTAUDIO_ACTION_NULL) &&
+                            (ms - smtaudio_ctx.action_time > 5000) ) {
+        LOGD(TAG, "action check timeout, clear");
+        do_clear = 1;
+    }
+
+    if (do_clear) {
+        smtaudio_ctx.cur_action  = SMTAUDIO_ACTION_NULL;
+        smtaudio_ctx.action_time =  0;
+    }
+    return;
+}
+
 /* 所有播放源产生事件(start、pause、stop)时, 需要调用的回调函数 */
 static void smtaudio_event_callback(int type, smtaudio_player_evtid_t evt_id)
 {
@@ -284,10 +348,6 @@ static void smtaudio_event_callback(int type, smtaudio_player_evtid_t evt_id)
 
     result.type   = type;
     result.evt_id = evt_id;
-
-    if(audio_event_callback) {
-        audio_event_callback(type, evt_id);
-    }
 
     ret = aos_queue_send(&smtaudio_ctx.smtaudio_queue, &result, sizeof(audio_result_t));
     if (ret < 0) {
@@ -302,6 +362,7 @@ static void smtaudio_event_task(void *arg)
     smtaudio_ops_node_t *smtaudio_node;
     smtaudio_resume_list_node_t *first_resume_node;
     smtaudio_delay_list_node_t *first_delay_node;
+    aui_play_time_t tempTime;
 
     while (smtaudio_ctx.run_flag) {
         aos_queue_recv(&smtaudio_ctx.smtaudio_queue, AOS_WAIT_FOREVER, &audio_result, &len);
@@ -310,6 +371,10 @@ static void smtaudio_event_task(void *arg)
         smtaudio_node = get_smtaudio_ctrl_ops_by_id(audio_result.type);
         switch (audio_result.evt_id) {
         case SMTAUDIO_PLAYER_EVENT_START:
+            if(audio_result.type == MEDIA_MUSIC) {
+                aui_player_get_time(MEDIA_MUSIC, &tempTime);
+                smtaudio_node->duration=tempTime.duration;
+            }
         case SMTAUDIO_PLAYER_EVENT_RESUME:
             smtaudio_node->status = SMTAUDIO_STATE_PLAYING;
             smtaudio_change_state(SMTAUDIO_STATE_PLAYING, audio_result.type);
@@ -340,6 +405,16 @@ static void smtaudio_event_task(void *arg)
         default:
             break;
         }
+
+        if(audio_event_callback) {
+            audio_event_callback(audio_result.type, audio_result.evt_id);
+        }
+
+        //清理action标记
+        if (smtaudio_node) {
+            actmgr_action_check(smtaudio_node->status);
+        }
+
         if ((audio_result.evt_id == SMTAUDIO_PLAYER_EVENT_STOP) ||
             (audio_result.evt_id == SMTAUDIO_PLAYER_EVENT_PAUSE)) {
             if (!dlist_empty(&smtaudio_resume_list_head)) {
@@ -367,6 +442,14 @@ static void smtaudio_event_task(void *arg)
                             if (smtaudio_node) {
                                 LOGD(TAG, "start type:%d from delay list", smtaudio_node->id);
                                 smtaudio_node->start(first_delay_node->url, first_delay_node->seek_time, 0);
+                                if (smtaudio_node->url) {
+                                    free(smtaudio_node->url);
+                                    smtaudio_node->url = NULL;
+                                }
+
+                                if (first_delay_node->url) { 
+                                    smtaudio_node->url = strdup(first_delay_node->url);
+                                }
                             }
                             smtaudio_delay_list_rm(first_delay_node);
                             break;
@@ -375,7 +458,7 @@ static void smtaudio_event_task(void *arg)
                         }
                     }
                 }
-            }
+            } 
         }
     }
     aos_task_exit(0);
@@ -396,7 +479,7 @@ int8_t smtaudio_init(audio_evt_t audio_evt_cb)
     LOGD(TAG, "Enter %s", __FUNCTION__);
     aos_task_t smt_task_hdl;
 
-    memset(&smtaudio_ctx, 0, sizeof(smtaudio_type_t));
+    memset(&smtaudio_ctx, 0, sizeof(smtaudio_ctx_t));
     aos_mutex_new(&smtaudio_ctx.smtaudio_mutex);
     smtaudio_ctx.smtaudio_q_buffer = (uint8_t *)malloc(sizeof(audio_result_t) * SMTAUDIO_MESSAGE_NUM);
     if (smtaudio_ctx.smtaudio_q_buffer == NULL) {
@@ -407,11 +490,15 @@ int8_t smtaudio_init(audio_evt_t audio_evt_cb)
                   SMTAUDIO_MESSAGE_NUM * sizeof(audio_result_t), sizeof(audio_result_t));
 
     SMTAUDIO_LOCK();
-    smtaudio_ctx.cur_state = smtaudio_ctx.last_state = SMTAUDIO_SUBSTATE_LOCAL_STOP;
-    smtaudio_ctx.run_flag                            = 1;
+    smtaudio_ctx.cur_state  = SMTAUDIO_SUBSTATE_LOCAL_STOP;
+    smtaudio_ctx.last_state = SMTAUDIO_SUBSTATE_LOCAL_STOP;
+    smtaudio_ctx.run_flag   = 1;
+    smtaudio_ctx.cur_action = SMTAUDIO_ACTION_NULL;
+
     aos_task_new_ext(&smt_task_hdl, "smtaudio_event_task", smtaudio_event_task, NULL, CONFIG_SMART_AUDIO_STACK_SIZE,
                      AOS_DEFAULT_APP_PRI);
     SMTAUDIO_LIST_LOCK();
+
     dlist_init(&smtaudio_ctrl_list_head);
     dlist_init(&smtaudio_delay_list_head);
     dlist_init(&smtaudio_resume_list_head);
@@ -431,6 +518,7 @@ int8_t smtaudio_init(audio_evt_t audio_evt_cb)
 int8_t smtaudio_vol_up(int16_t vol)
 {
     smtaudio_ops_node_t *node_adjust_ops;
+    smtaudio_ops_node_t *audio_default_ops = get_default_audio_ops();
 
     if(!aos_mutex_is_valid(&smtaudio_ctx.smtaudio_mutex)) {
         LOGE(TAG, "smtaudio is not initialized.");
@@ -441,8 +529,9 @@ int8_t smtaudio_vol_up(int16_t vol)
         return 0;
     }
     SMTAUDIO_LOCK();
+    audio_default_ops->vol_up(vol); //确保默认音量被先处理
     dlist_for_each_entry(&smtaudio_ctrl_list_head, node_adjust_ops, smtaudio_ops_node_t, node) {
-        if(node_adjust_ops->vol_up) {
+        if(node_adjust_ops->vol_up && node_adjust_ops != audio_default_ops) {
             node_adjust_ops->vol_up(vol);
         }
     }
@@ -453,6 +542,7 @@ int8_t smtaudio_vol_up(int16_t vol)
 int8_t smtaudio_vol_down(int16_t vol)
 {
     smtaudio_ops_node_t *node_adjust_ops;
+    smtaudio_ops_node_t *audio_default_ops = get_default_audio_ops();
 
     if(!aos_mutex_is_valid(&smtaudio_ctx.smtaudio_mutex)) {
         LOGE(TAG, "smtaudio is not initialized.");
@@ -463,8 +553,9 @@ int8_t smtaudio_vol_down(int16_t vol)
         return 0;
     }
     SMTAUDIO_LOCK();
+    audio_default_ops->vol_down(vol);//确保默认音量被先处理
     dlist_for_each_entry(&smtaudio_ctrl_list_head, node_adjust_ops, smtaudio_ops_node_t, node) {
-        if(node_adjust_ops->vol_down) {
+        if(node_adjust_ops->vol_down && node_adjust_ops != audio_default_ops) {
             node_adjust_ops->vol_down(vol);
         }
     }
@@ -544,6 +635,13 @@ int8_t smtaudio_start(int type, char *url, uint64_t seek_time, uint8_t resume)
         return 0;
     }
 
+    if (smtaudio_ctx.cur_state == SMTAUDIO_SUBSTATE_ONLINE_PLAYING) {
+        if (type != SMTAUDIO_LOCAL_PLAY) {
+            /* 解决两次重复播放音乐导致的状态异常问题 */
+            smtaudio_stop(SMTAUDIO_TYPE_ALL);
+        }
+    }
+
     if ((type < 0) || (type >= SMTAUDIO_PLAY_TYPE_NUM)) {
         LOGD(TAG, "invalid play type");
         return -1;
@@ -589,6 +687,10 @@ int8_t smtaudio_start(int type, char *url, uint64_t seek_time, uint8_t resume)
             LOGD(TAG, "not in playing");
         }
         ret = smtaudio_node->start(url, seek_time, resume);
+        if (smtaudio_node->url) {
+            free(smtaudio_node->url);
+        }
+        smtaudio_node->url = strdup(url);
         smtaudio_ctx.resume_flag = resume;
     } else {
         LOGD(TAG, "%s ops not found", __func__);
@@ -607,12 +709,32 @@ int8_t smtaudio_pause()
     }
 
     LPM_RETURN_RET(-1);
-    LOGD(TAG, "Enter %s: current state [%d]", __FUNCTION__, smtaudio_ctx.cur_state);
+    LOGD(TAG, "Enter %s: current state [%d] action [%d]", __FUNCTION__, smtaudio_ctx.cur_state, smtaudio_ctx.cur_action);
+
+    if (smtaudio_ctx.cur_action != SMTAUDIO_ACTION_NULL) {
+        return 0;
+    }
 
     if (smtaudio_ctx.cur_state == SMTAUDIO_SUBSTATE_MUTE) {
         return 0;
     }
+
+    //重复调用暂停，直接返回
+    if ( smtaudio_ctx.cur_state == SMTAUDIO_SUBSTATE_ONLINE_PAUSE ||
+        smtaudio_ctx.cur_state == SMTAUDIO_SUBSTATE_ONLINE_STOP ||
+        smtaudio_ctx.cur_state == SMTAUDIO_SUBSTATE_BT_A2DP_PAUSE ||
+        smtaudio_ctx.cur_state == SMTAUDIO_SUBSTATE_BT_A2DP_STOP ||
+        smtaudio_ctx.cur_state == SMTAUDIO_SUBSTATE_BT_HFP_PAUSE ||
+        smtaudio_ctx.cur_state == SMTAUDIO_SUBSTATE_BT_HFP_STOP
+       ) {
+        return 0;
+    }
+
+    LOGD(TAG, "do pause ...");
+
     SMTAUDIO_LOCK();
+    actmgr_set_action(SMTAUDIO_ACTION_PAUSE);
+
     smtaudio_clear_ready_list();
     dlist_for_each_entry(&smtaudio_ctrl_list_head, tmp_node, smtaudio_ops_node_t, node) {
         if (tmp_node->status == SMTAUDIO_STATE_PLAYING) {
@@ -644,15 +766,23 @@ int8_t smtaudio_stop(int type)
     SMTAUDIO_LOCK();
     if(SMTAUDIO_TYPE_ALL == type) {
         dlist_for_each_entry(&smtaudio_ctrl_list_head, tmp_node, smtaudio_ops_node_t, node) {
-            if (tmp_node->status == SMTAUDIO_STATE_PLAYING) {
+            if (tmp_node->status == SMTAUDIO_STATE_PLAYING || tmp_node->status == SMTAUDIO_STATE_PAUSE) {
                 tmp_node->stop();
+                if (tmp_node->url) {
+                    free(tmp_node->url);
+                    tmp_node->url = NULL;
+                }
             }
         }
     } else if((type >=0) && (type <SMTAUDIO_PLAY_TYPE_NUM)) {
         tmp_node = get_smtaudio_ctrl_ops_by_id(type);
         if (tmp_node) {
-            if (tmp_node->status == SMTAUDIO_STATE_PLAYING) {
+            if (tmp_node->status == SMTAUDIO_STATE_PLAYING || tmp_node->status == SMTAUDIO_STATE_PAUSE) {
                 tmp_node->stop();
+                if (tmp_node->url) {
+                    free(tmp_node->url);
+                    tmp_node->url = NULL;
+                }
             }
         }
     }
@@ -662,38 +792,6 @@ int8_t smtaudio_stop(int type)
 
 int8_t smtaudio_mute()
 {
-    smtaudio_ops_node_t *tmp_node = NULL;
-
-    if(!aos_mutex_is_valid(&smtaudio_ctx.smtaudio_mutex)) {
-        LOGE(TAG, "smtaudio is not initialized.");
-        return -1;
-    }
-
-    LPM_RETURN_RET(-1);
-    LOGD(TAG, "Enter %s: current state [%d]", __FUNCTION__, smtaudio_ctx.cur_state);
-    SMTAUDIO_LOCK();
-    if (smtaudio_ctx.cur_state != SMTAUDIO_SUBSTATE_MUTE) {
-        amplifier_onoff(0);
-        switch_state(smtaudio_ctx.cur_state, SMTAUDIO_SUBSTATE_MUTE);
-    } else {
-        amplifier_onoff(1);
-        dlist_for_each_entry(&smtaudio_ctrl_list_head, tmp_node, smtaudio_ops_node_t, node) {
-            if (tmp_node->status == SMTAUDIO_STATE_PLAYING) {
-                switch_state(SMTAUDIO_SUBSTATE_MUTE, tmp_node->id * 3 + SMTAUDIO_STATE_PLAYING);
-                SMTAUDIO_UNLOCK();
-                return 0;
-            }
-        }
-        switch_state(SMTAUDIO_SUBSTATE_MUTE, SMTAUDIO_SUBSTATE_LOCAL_STOP);
-    }
-    SMTAUDIO_UNLOCK();
-    return 0;
-}
-
-int8_t smtaudio_resume()
-{
-    int                  ret = -1;
-    smtaudio_ops_node_t *smtaudio_node;
     smtaudio_resume_list_node_t *tmp_resume_list_node = NULL;
 
     if(!aos_mutex_is_valid(&smtaudio_ctx.smtaudio_mutex)) {
@@ -703,6 +801,92 @@ int8_t smtaudio_resume()
 
     LPM_RETURN_RET(-1);
     LOGD(TAG, "Enter %s: current state [%d]", __FUNCTION__, smtaudio_ctx.cur_state);
+    
+    //重复调用静音，直接返回
+    if (smtaudio_ctx.cur_state == SMTAUDIO_SUBSTATE_MUTE){
+        return 0;
+    }
+
+    pauseBeforeMute=false;  
+    if(smtaudio_get_state_by_id(MEDIA_MUSIC)==SMTAUDIO_STATE_PAUSE){
+        dlist_for_each_entry(&smtaudio_resume_list_head, tmp_resume_list_node, smtaudio_resume_list_node_t, node) {
+            if(tmp_resume_list_node->id == MEDIA_MUSIC){
+                if(!tmp_resume_list_node->valid || tmp_resume_list_node->interrupt_reason==SMTAUDIO_INTERRUPT_REASON_BY_USER){
+                    pauseBeforeMute=true;//语音暂停/按键暂停
+                }
+                break;
+            }
+        }
+    }
+    if(smtaudio_get_state_by_id(MEDIA_MUSIC)==SMTAUDIO_STATE_PLAYING){
+        //pause内判断cur_state，只能先调用
+        smtaudio_pause();
+    }
+
+    SMTAUDIO_LOCK();
+    switch_state(smtaudio_ctx.cur_state, SMTAUDIO_SUBSTATE_MUTE);
+    SMTAUDIO_UNLOCK();
+    return 0;
+}
+
+int8_t smtaudio_unmute()
+{
+    smtaudio_ops_node_t *tmp_node = NULL;
+    int flag=0;
+
+    if(!aos_mutex_is_valid(&smtaudio_ctx.smtaudio_mutex)) {
+        LOGE(TAG, "smtaudio is not initialized.");
+        return -1;
+    }
+
+    LPM_RETURN_RET(-1);
+    LOGD(TAG, "Enter %s: current state [%d]", __FUNCTION__, smtaudio_ctx.cur_state);
+    
+    //重复调用取消静音，直接返回
+    if (smtaudio_ctx.cur_state != SMTAUDIO_SUBSTATE_MUTE) {
+        return 0;
+    }
+    //先切换状态
+    SMTAUDIO_LOCK();
+    dlist_for_each_entry(&smtaudio_ctrl_list_head, tmp_node, smtaudio_ops_node_t, node) {
+        if (tmp_node->status == SMTAUDIO_STATE_PLAYING) {
+            flag=1;
+            switch_state(SMTAUDIO_SUBSTATE_MUTE, tmp_node->id * 3 + SMTAUDIO_STATE_PLAYING);
+            break;
+        }
+    }
+    if(flag==0){
+        switch_state(SMTAUDIO_SUBSTATE_MUTE, SMTAUDIO_SUBSTATE_LOCAL_STOP);
+    }
+    SMTAUDIO_UNLOCK(); 
+    //修改前bug:播放->按键暂停->静音->取消静音  ->恢复播放（应该还是暂停状态才对）
+    //修改前语音暂停，因为此处没有调用smtaudio_enable_ready_list(1)，所以不会恢复播放
+    smtaudio_ctx.cur_action  = SMTAUDIO_ACTION_NULL;
+    if(!pauseBeforeMute){
+        smtaudio_resume();
+    }
+    return 0;
+}
+
+
+int8_t smtaudio_resume()
+{
+    int                  ret = -1;
+    smtaudio_ops_node_t *smtaudio_node;
+    smtaudio_resume_list_node_t *tmp_resume_list_node = NULL;
+
+    smtaudio_state_t state = smtaudio_get_state();
+    if (state != SMTAUDIO_STATE_PAUSE && state != SMTAUDIO_STATE_STOP) {
+        return -1;
+    }
+
+    LPM_RETURN_RET(-1);
+    LOGD(TAG, "Enter %s: current state [%d] action [%d]", __FUNCTION__, smtaudio_ctx.cur_state, smtaudio_ctx.cur_action);
+
+    if (smtaudio_ctx.cur_action != SMTAUDIO_ACTION_NULL) {
+        return -1;
+    }
+
     SMTAUDIO_LOCK();
     dlist_for_each_entry(&smtaudio_resume_list_head, tmp_resume_list_node, smtaudio_resume_list_node_t, node) {
         if((tmp_resume_list_node) && (tmp_resume_list_node->valid)) {
@@ -777,23 +961,65 @@ void smtaudio_check_ready_list(void)
     }
 }
 
+bool smtaudio_check_resume_list_by_id(int id)
+{
+    smtaudio_resume_list_node_t *tmp_resume_list_node = NULL;
+
+    if(!aos_mutex_is_valid(&smtaudio_ctx.smtaudio_mutex)) {
+        LOGE(TAG, "smtaudio is not initialized.");
+        return false;
+    }
+
+
+    dlist_for_each_entry(&smtaudio_resume_list_head, tmp_resume_list_node, smtaudio_resume_list_node_t, node) {
+        if(tmp_resume_list_node->id == id && tmp_resume_list_node->valid && tmp_resume_list_node->interrupt_reason!=SMTAUDIO_INTERRUPT_REASON_BY_USER) {
+            return true;
+        }
+    }
+    return false;
+}
+
 smtaudio_state_t smtaudio_get_state(void)
 {
-    smtaudio_ops_node_t *first_playing_audio_ops;
-
     if(!aos_mutex_is_valid(&smtaudio_ctx.smtaudio_mutex)) {
         LOGE(TAG, "smtaudio is not initialized.");
         return SMTAUDIO_STATE_NOINIT;
     }
 
-    if (smtaudio_ctx.cur_state == SMTAUDIO_SUBSTATE_MUTE) {
-        return SMTAUDIO_STATE_MUTE;
-    }
-    first_playing_audio_ops = find_first_playing_audio();
-    if (first_playing_audio_ops) {
-        return SMTAUDIO_STATE_PLAYING;
+    switch (smtaudio_ctx.cur_state) {
+        case SMTAUDIO_SUBSTATE_MUTE:
+            return SMTAUDIO_STATE_MUTE;
+        case SMTAUDIO_SUBSTATE_ONLINE_PLAYING:
+        case SMTAUDIO_SUBSTATE_LOCAL_PLAYING:
+        case SMTAUDIO_SUBSTATE_BT_A2DP_PLAYING:
+        case SMTAUDIO_SUBSTATE_BT_HFP_PLAYING:
+            return SMTAUDIO_STATE_PLAYING;
+        case SMTAUDIO_SUBSTATE_ONLINE_PAUSE:
+        case SMTAUDIO_SUBSTATE_LOCAL_PAUSE:
+        case SMTAUDIO_SUBSTATE_BT_A2DP_PAUSE:
+        case SMTAUDIO_SUBSTATE_BT_HFP_PAUSE:
+            return SMTAUDIO_STATE_PAUSE;
+        case SMTAUDIO_SUBSTATE_ONLINE_STOP:
+        case SMTAUDIO_SUBSTATE_LOCAL_STOP:
+        case SMTAUDIO_SUBSTATE_BT_A2DP_STOP:
+        case SMTAUDIO_SUBSTATE_BT_HFP_STOP:
+            return SMTAUDIO_STATE_STOP;
+    default:
+        break;
     }
     return SMTAUDIO_STATE_STOP;
+}
+
+smtaudio_state_t smtaudio_get_state_by_id(int id)
+{
+    smtaudio_ops_node_t *tmp_node = NULL;
+
+    dlist_for_each_entry(&smtaudio_ctrl_list_head, tmp_node, smtaudio_ops_node_t, node) {
+        if (tmp_node->id == id) {
+            return tmp_node->status;
+        }
+    }
+    return SMTAUDIO_STATE_NOINIT;
 }
 
 smtaudio_player_type_t smtaudio_get_play_type(void)
@@ -822,6 +1048,44 @@ smtaudio_player_type_t smtaudio_get_play_type(void)
     }
 
     return ret;
+}
+
+char *smtaudio_get_play_url(void)
+{
+    smtaudio_ops_node_t *audio_ops = find_first_playing_audio();
+    if (audio_ops == NULL) {
+        audio_ops = find_first_pause_audio();
+    }
+
+    if (audio_ops) {
+        return audio_ops->url;
+    }
+
+    return NULL;
+}
+
+char *smtaudio_get_url_by_id(int id)
+{
+    smtaudio_ops_node_t *tmp_node = NULL;
+
+    dlist_for_each_entry(&smtaudio_ctrl_list_head, tmp_node, smtaudio_ops_node_t, node) {
+        if (tmp_node->id == id) {
+            return tmp_node->url;
+        }
+    }
+    return NULL;
+}
+
+int smtaudio_get_duration_by_id(int id)
+{
+    smtaudio_ops_node_t *tmp_node = NULL;
+
+    dlist_for_each_entry(&smtaudio_ctrl_list_head, tmp_node, smtaudio_ops_node_t, node) {
+        if (tmp_node->id == id) {
+            return tmp_node->duration;
+        }
+    }
+    return 0;
 }
 
 void smtaudio_substate_get(int *cur_state, int *last_state)

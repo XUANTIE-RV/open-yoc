@@ -31,8 +31,6 @@
 #include <core/core_810.h>
 #elif defined(__CK807__) || defined(__C807__) || defined(__C807F__) || defined(__C807FV__) || defined(__R807__)
 #include <core/core_807.h>
-#elif defined(__riscv) && defined(CONFIG_CSKY_CORETIM)
-#include <core/core_rv32_old.h>
 #elif defined(__riscv) && (__riscv_xlen == 32)
 #include <core/core_rv32.h>
 #elif defined(__riscv) && (__riscv_xlen == 64)

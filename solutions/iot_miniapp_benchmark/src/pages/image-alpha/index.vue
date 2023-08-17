@@ -1,5 +1,5 @@
 <template>
-  <div class="page" @click="back">
+  <div class="page" :style="pagestyle" @click="back">
     <img class="image" :style="style" resize="stretch" :src="require('../../images/img.png')" />
     <img class="image" :style="style" resize="stretch" :src="require('../../images/img.png')" />
     <img class="image" :style="style" resize="stretch" :src="require('../../images/img.png')" />
@@ -44,6 +44,11 @@ export default {
         };
       }
       return s;
+    },
+    pagestyle () {
+      return {
+        opacity: this.$page.loadOptions.opacity
+      };
     }
   },
   methods: {

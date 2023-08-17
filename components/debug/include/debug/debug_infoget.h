@@ -9,6 +9,9 @@
 extern "C" {
 #endif
 
+#ifdef CONFIG_KERNEL_RHINO
+#include "k_api.h"
+
 /**
  * This function will get task handle by its name.
  */
@@ -40,6 +43,8 @@ uint32_t debug_task_id_now();
  * @return  the bottom of stack
  */
 void *debug_task_stack_bottom(ktask_t *task);
+
+#endif
 
 #ifdef __cplusplus
 }

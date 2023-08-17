@@ -53,7 +53,7 @@ static duk_ret_t cb_load_module(duk_context *ctx)
     const char *filename;
     const char *module_id;
 #if defined (AOS_COMP_VFS) && AOS_COMP_VFS
-    struct aos_stat st;
+    aos_stat_t st;
 #else
     struct stat st;
 #endif        

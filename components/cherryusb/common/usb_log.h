@@ -8,10 +8,6 @@
 
 #include <stdio.h>
 
-#ifdef AOS_COMP_ULOG
-#include <ulog/ulog.h>
-#endif
-
 /* DEBUG level */
 #define USB_DBG_ERROR   0
 #define USB_DBG_WARNING 1
@@ -53,33 +49,6 @@
         _USB_DBG_LOG_X_END;                      \
     } while (0)
 
-#ifdef AOS_COMP_ULOG
-#if (CONFIG_USB_DBG_LEVEL >= USB_DBG_LOG)
-#define USB_LOG_DBG(fmt, ...) LOGD(USB_DBG_TAG, fmt, ##__VA_ARGS__)
-#else
-#define USB_LOG_DBG(...)
-#endif
-
-#if (CONFIG_USB_DBG_LEVEL >= USB_DBG_INFO)
-#define USB_LOG_INFO(fmt, ...) LOGI(USB_DBG_TAG, fmt, ##__VA_ARGS__)
-#else
-#define USB_LOG_INFO(...)
-#endif
-
-#if (CONFIG_USB_DBG_LEVEL >= USB_DBG_WARNING)
-#define USB_LOG_WRN(fmt, ...) LOGW(USB_DBG_TAG, fmt, ##__VA_ARGS__)
-#else
-#define USB_LOG_WRN(...)
-#endif
-
-#if (CONFIG_USB_DBG_LEVEL >= USB_DBG_ERROR)
-#define USB_LOG_ERR(fmt, ...) LOGE(USB_DBG_TAG, fmt, ##__VA_ARGS__)
-#else
-#define USB_LOG_ERR(...)
-#endif
-
-#define USB_LOG_RAW(...) CONFIG_USB_PRINTF(__VA_ARGS__)
-#else
 #if (CONFIG_USB_DBG_LEVEL >= USB_DBG_LOG)
 #define USB_LOG_DBG(fmt, ...) usb_dbg_log_line("D", 0, fmt, ##__VA_ARGS__)
 #else
@@ -105,7 +74,6 @@
 #endif
 
 #define USB_LOG_RAW(...) CONFIG_USB_PRINTF(__VA_ARGS__)
-#endif
 
 void usb_assert(const char *filename, int linenum);
 #define USB_ASSERT(f)                       \

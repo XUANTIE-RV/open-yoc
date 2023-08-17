@@ -1,7 +1,7 @@
 
 ## 第一部分： 基础信息
 name: ble_host                                      # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
-version: v7.7.0                                    # <必选项> 组件版本号
+version: v7.8.0                                    # <必选项> 组件版本号
 description: ble_host stack                         # <必选项> 建议至少20字以上
 type: common                                        # <必选项> 组件类型，为：solution, chip, board, common, sdk
 
@@ -87,7 +87,7 @@ license: Apache license v2.0                        # <可选项> 源代码的�
 #     - libs                               #   -Llibs
 build_config:
   libs:                                  # 该组件中支持的二进制静态库,如：libxxx.a, libyyy.a
-    - t_head_voice_call ?<CONFIG_BT_HFP_HF>                      #   -lxxx
+    - t_head_voice_call ?<CONFIG_BT_HFP_AUDIO_I2S>                      #   -lxxx
   libpath:                               # 指定静态库所在的路径（相对于该组件路径）
     - bt_host/audio/aec/<cpu>                               #   -Llibs
   internal_include:

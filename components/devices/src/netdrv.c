@@ -232,5 +232,49 @@ int rvm_hal_net_unsubscribe(rvm_dev_t *dev, uint32_t event, event_callback_t cb,
 
     return ret;
 }
-#endif
 
+void* rvm_hal_net_alloc_buf(rvm_dev_t *dev, size_t size)
+{
+    void* ret;
+
+    device_lock(dev);
+    ret = NET_DRIVER(dev)->alloc_buf(dev, size);
+    device_unlock(dev);
+
+    return ret;
+}
+
+int rvm_hal_net_send_data(rvm_dev_t *dev, void* buff, size_t len)
+{
+    int ret;
+
+    device_lock(dev);
+    ret = NET_DRIVER(dev)->send_data(dev, buff, len);
+    device_unlock(dev);
+
+    return ret;
+}
+
+int rvm_hal_net_recv_data(rvm_dev_t *dev, void* buff, size_t len, int timeout_ms)
+{
+    int ret;
+
+    device_lock(dev);
+    ret = NET_DRIVER(dev)->recv_data(dev, buff, len, timeout_ms);
+    device_unlock(dev);
+
+    return ret;
+}
+
+int rvm_hal_net_set_event(rvm_dev_t *dev, rvm_hal_net_event event_cb, void *priv)
+{
+    int ret;
+
+    device_lock(dev);
+    ret = NET_DRIVER(dev)->set_event(dev, event_cb, priv);
+    device_unlock(dev);
+
+    return ret;
+}
+
+#endif

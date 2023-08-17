@@ -17,6 +17,8 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
+#ifdef CONFIG_KERNEL_RHINO
+
 #include <csi_config.h>
 
 #if defined (__CSKY_DSP__) || defined(__CSKY_DSPV2__) || defined(__CSKY_VDSPV2__) || defined (__CSKY_HARD_FLOAT__) || defined(__C807__)
@@ -165,6 +167,6 @@
 #define RHINO_CONFIG_KOBJ_LIST               1
 #endif
 
-
+#endif /*CONFIG_KERNEL_RHINO*/
 #endif /* CONFIG_H */
 

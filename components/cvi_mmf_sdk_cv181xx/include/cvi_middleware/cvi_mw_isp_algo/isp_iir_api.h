@@ -35,11 +35,22 @@ typedef struct {
 	uint16_t	u16IIRWeight;		// max 10b @ u10 input
 } TIIR_U10_Ctrl;
 
+typedef struct {
+	uint16_t	*pu16LutIn;
+	uint32_t	*pu32LutHistory;
+	uint16_t	*pu16LutOut;
+	uint16_t	u16LutSize;
+	uint16_t	u16IIRWeight;		// max 16b @ u16 input
+} TIIR_U16_Ctrl;
+
 int IIR_U8_Once(TIIR_U8_Ctrl *ptIIRCoef);
 int IIR_U8_UpdateIIROutFromHistory(TIIR_U8_Ctrl *ptIIRCoef);
 
 int IIR_U10_Once(TIIR_U10_Ctrl *ptIIRCoef);
 int IIR_U10_UpdateIIROutFromHistory(TIIR_U10_Ctrl *ptIIRCoef);
+
+int IIR_U16_Once(TIIR_U16_Ctrl *ptIIRCoef);
+int IIR_U16_UpdateIIROutFromHistory(TIIR_U16_Ctrl *ptIIRCoef);
 
 #ifdef __cplusplus
 #if __cplusplus

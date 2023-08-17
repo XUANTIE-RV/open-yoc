@@ -26,6 +26,10 @@
 extern "C" {
 #endif
 
+#if defined(CONFIG_WITH_SE)
+#include <se_aes.h>
+#endif
+
 typedef enum {
     SC_AES_KEY_LEN_BITS_128 = 0U, ///< 128 Data bits
     SC_AES_KEY_LEN_BITS_192,      ///< 192 Data bits
@@ -53,6 +57,9 @@ typedef struct {
 #endif
 #if defined(CONFIG_SEC_CRYPTO_AES_SW)
     sc_mbedtls_aes_context aes_ctx;
+#endif
+#if defined(CONFIG_WITH_SE)
+	se_aes_t	se_aes;
 #endif
     //void *ctx;
 } sc_aes_t;

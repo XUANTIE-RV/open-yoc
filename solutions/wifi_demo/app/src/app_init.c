@@ -4,7 +4,7 @@
 #include <yoc/partition.h>
 #include <yoc/init.h>
 #include <uservice/uservice.h>
-#ifdef AOS_COMP_DEBUG
+#if defined(AOS_COMP_DEBUG) && (AOS_COMP_DEBUG > 0)
 #include <debug/dbg.h>
 #endif
 #include "app_main.h"
@@ -27,6 +27,9 @@ void board_yoc_init(void)
     event_service_init(NULL);
     ulog_init();
     aos_set_log_level(AOS_LL_DEBUG);
+#if defined(AOS_COMP_DEBUG) && (AOS_COMP_DEBUG > 0)
+    aos_debug_init();
+#endif
     int ret = partition_init();
     if (ret <= 0) {
         LOGE(TAG, "partition init failed");

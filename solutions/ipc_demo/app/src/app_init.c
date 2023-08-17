@@ -10,7 +10,7 @@
 #include <board.h>
 #include <drv/uart.h>
 #include <log_ipc.h>
-#ifdef AOS_COMP_DEBUG
+#if defined(AOS_COMP_DEBUG) && (AOS_COMP_DEBUG > 0)
 #include <debug/dbg.h>
 #endif
 
@@ -44,7 +44,7 @@ void board_yoc_init(void)
     ulog_init();
     aos_set_log_level(AOS_LL_DEBUG);
 
-#ifdef AOS_COMP_DEBUG
+#if defined(AOS_COMP_DEBUG) && (AOS_COMP_DEBUG > 0)
     aos_debug_init();
 #endif
 

@@ -36,6 +36,14 @@ typedef enum {
 } smtaudio_state_t;
 
 typedef enum {
+    SMTAUDIO_ACTION_PLAY,
+    SMTAUDIO_ACTION_PAUSE,
+    SMTAUDIO_ACTION_STOP,
+    SMTAUDIO_ACTION_MUTE,
+    SMTAUDIO_ACTION_NULL
+} smtaudio_action_t;
+
+typedef enum {
     SMTAUDIO_SUBSTATE_ONLINE_PLAYING,
     SMTAUDIO_SUBSTATE_ONLINE_PAUSE,
     SMTAUDIO_SUBSTATE_ONLINE_STOP,
@@ -79,6 +87,8 @@ typedef struct smtaudio_ops_node {
     int         id;
     dlist_t     node;
     int         status;
+    char       *url;
+    int        duration;//more media info:author……停止播放时无法获取duration
     int (*init)(void);
     int (*deinit)(void);
     int (*start)(const char *url, uint64_t seek_time, int resume);
@@ -111,8 +121,8 @@ typedef struct smtaudio_broken_list_node {
 } smtaudio_resume_list_node_t;
 
 typedef struct audio_result {
-    int type;
-    int evt_id;
+    int type;  //smtaudio_player_type_t
+    int evt_id;  //smtaudio_player_evtid_t
 } audio_result_t;
 
 typedef struct _audio_vol_config {
@@ -226,6 +236,19 @@ int8_t smtaudio_pause(void);
 int8_t smtaudio_mute(void);
 
 /**
+ * @brief  unmute music
+ * @return 0 on success, negative value on failed
+ */
+int8_t smtaudio_unmute(void);
+
+/**
+ * @brief  check if node's in the resume list
+ * @return 0 on success, negative value on failed
+ */
+bool smtaudio_check_resume_list_by_id(int id);
+
+
+/**
  * @brief  resume music playback
  * @return 0 on success, negative value on failed
  */
@@ -251,6 +274,7 @@ int8_t smtaudio_stop(int type);
 
 #define smtaudio_set_speed(speed) aui_player_set_speed(MEDIA_MUSIC, speed)
 #define smtaudio_get_speed(speed) aui_player_get_speed(MEDIA_MUSIC, speed)
+#define smtaudio_get_time(t) aui_player_get_time(MEDIA_MUSIC, t);
 
 /**
  * @brief  set smart audio to lpm mode
@@ -266,10 +290,34 @@ int8_t smtaudio_lpm(uint8_t state);
 smtaudio_state_t smtaudio_get_state(void);
 
 /**
+ * @brief  get state by id
+ * @return smart audio state
+ */
+smtaudio_state_t smtaudio_get_state_by_id(int id);
+
+/**
  * @brief  get current smart audio state
  * @return smart audio play type
  */
 smtaudio_player_type_t smtaudio_get_play_type(void);
+
+/**
+ * @brief  get the current playing url
+ * @return url
+ */
+char *smtaudio_get_play_url(void);
+
+/**
+ * @brief  get url by id
+ * @return url
+ */
+char *smtaudio_get_url_by_id(int id);
+
+/**
+ * @brief  get duration by id
+ * @return duration
+ */
+int smtaudio_get_duration_by_id(int id);
 
 /**
  * @brief  clear resume/delay_play node

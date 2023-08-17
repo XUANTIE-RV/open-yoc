@@ -32,6 +32,15 @@ typedef enum adb_error {
     FILE_NOT_EXIST   = 5,
 } adb_error_e;
 
+typedef enum adb_event {
+    ADB_PUSH_START,
+    ADB_PUSH_FINISH,
+    ADB_PULL_START,
+    ADB_PULL_FINISH,
+} adb_event_t;
+
+typedef void (*adb_event_cb_t)(adb_event_t event);
+
 /* push */
 #define AT_PUSHINFO     {"AT+PUSHINFO",   adb_cmd_pushinfo}
 #define AT_PUSHSTART    {"AT+PUSHSTART",  adb_cmd_pushstart}
@@ -78,7 +87,6 @@ int  adb_cmd_transmit_write(uint8_t *buff, int size);
 int adb_get_transmit_channel(void);
 int adb_get_compress_flag(void);
 int adb_transmit_raw_data_add(uint32_t size);
-
+int adb_event_register(adb_event_cb_t cb);
 int adb_start(void);
-
 #endif

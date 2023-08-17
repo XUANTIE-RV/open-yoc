@@ -33,6 +33,7 @@ static aos_mutex_t wifi_config_mutex;
 static void wifi_config_init(app_wifi_config_t *config)
 {
     memset(config, 0, sizeof(app_wifi_config_t));
+    config->empty_ssid_table |= 0xFFFF;
     int32_t i;
     int ret = -1;
     char wifi_ssid_key[32];
@@ -55,6 +56,7 @@ static void wifi_config_init(app_wifi_config_t *config)
 
         snprintf(wifi_psk_key, sizeof(wifi_psk_key), WIFI_CONFIG_PSK_KEY_PATTERN, i);
         aos_kv_getstring(wifi_psk_key, config->psk[i], sizeof(config->psk[i]));
+        config->empty_ssid_table &= ~(1 << i);
         LOGI(TAG, "%s ssid: %s, psk %s", __func__, config->ssid[i], config->psk[i]);
     }
 
@@ -228,8 +230,12 @@ static int wifi_config_get_last_ssid_psk(app_wifi_config_t *config, char **selec
                 *select_psk  = config->psk[config->cur_used_ssid];
                 aos_mutex_unlock(&wifi_config_mutex);
                 return config->cur_used_ssid;
+            }else{
+                continue;
             }
-            config->cur_used_ssid = ((config->cur_used_ssid + 1) % config->max_num);
+
+            LOGD(TAG, "{{{{{{{%d}}}}}}}", config->cur_used_ssid);
+            // config->cur_used_ssid = ((config->cur_used_ssid + 1) % config->max_num);
         }
     }
         /* if no qualified ssid, just pick the next saved ssid */

@@ -10,8 +10,6 @@
 #include <aos/yloop.h>
 #include <sys_clk.h>
 #include <aos/kv.h>
-#include <alg_kws.h>
-
 #include "sys/app_sys.h"
 #include "aui_cloud/app_aui_cloud.h"
 #include "player/app_player.h"
@@ -30,6 +28,7 @@
 #define TAG "main"
 
 extern void cxx_system_init(void);
+
 int main(int argc, char *argv[])
 {
     long long enter_main_ms = aos_now_ms();
@@ -44,13 +43,10 @@ int main(int argc, char *argv[])
 
     /* 播放器 */
     LOGI("main", "audio init");
-#if defined(CONFIG_BOARD_AUDIO) && CONFIG_BOARD_AUDIO
+#if defined(BOARD_AUDIO_SUPPORT) && BOARD_AUDIO_SUPPORT
     board_audio_init();
-#endif
 
-#if defined(CONFIG_BOARD_AUDIO) && CONFIG_BOARD_AUDIO
     app_speaker_init();
-
     app_player_init();
 #endif
 
@@ -64,42 +60,46 @@ int main(int argc, char *argv[])
 
     /* 网络蓝牙 */
     LOGI("main", "wifi init");
-#if defined(CONFIG_BOARD_WIFI) && CONFIG_BOARD_WIFI
+#if defined(BOARD_WIFI_SUPPORT) && BOARD_WIFI_SUPPORT
     board_wifi_init();
 #endif
 
-#if defined(CONFIG_BOARD_BT) && CONFIG_BOARD_BT
+#if defined(BOARD_BT_SUPPORT) && BOARD_BT_SUPPORT
     board_bt_init();
 #endif
 
+#if defined(BOARD_ETH_SUPPORT) && BOARD_ETH_SUPPORT
+    board_eth_init();
+#endif
+
     LOGI("main", "network init");
-#if (defined(CONFIG_BOARD_WIFI) && CONFIG_BOARD_WIFI) \
- || (defined(CONFIG_BOARD_ETH) && CONFIG_BOARD_ETH)
+#if (defined(BOARD_WIFI_SUPPORT) && BOARD_WIFI_SUPPORT) || (defined(BOARD_ETH_SUPPORT) && BOARD_ETH_SUPPORT)
     app_network_init();
 #endif
 
-#if defined(CONFIG_BT_BREDR) && (CONFIG_BT_BREDR == 1)
+#if (defined(BOARD_BT_SUPPORT) && BOARD_BT_SUPPORT) && (defined(CONFIG_BT_BREDR) && CONFIG_BT_BREDR)
     app_bt_init();
 #endif
 
     LOGI("main", "voice init");
     /* 语音交互 */
-    alg_kws_init();
     app_mic_init();
+#if defined(CONFIG_AUI_CLOUD) && CONFIG_AUI_CLOUD
     app_aui_cloud_init();
+#endif
 
     /* 其他外设 */
 #if defined(CONFIG_BOARD_BUTTON) && BOARD_BUTTON_NUM > 0
     app_button_init();
 #endif
 
-    //app_alrams_init();
+    // app_alrams_init();
 
 #if defined(CONFIG_SMART_SPEAKER_AT) && CONFIG_SMART_SPEAKER_AT
     app_at_cmd_init();
 #endif
 
-    //app_linear_aec_init();
+    // app_linear_aec_init();
 
     // while(1) {
     //     aos_msleep(1000);

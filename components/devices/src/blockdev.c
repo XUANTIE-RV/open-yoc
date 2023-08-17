@@ -13,30 +13,15 @@
         return -1; \
 } while(0)
 
-#define BLOCK_DEV_LOCK(dev)                                                   \
-    do                                                                        \
-    {                                                                         \
-        if (!aos_mutex_is_valid(&BLOCKDEV_DRIVER(dev)->dev_mtx))              \
-        {                                                                     \
-            aos_mutex_new(&BLOCKDEV_DRIVER(dev)->dev_mtx);                    \
-            aos_mutex_lock(&BLOCKDEV_DRIVER(dev)->dev_mtx, AOS_WAIT_FOREVER); \
-        }                                                                     \
-    } while (0)
-#define BLOCK_DEV_UNLOCK(dev)                             \
-    do                                                    \
-    {                                                     \
-        aos_mutex_unlock(&BLOCKDEV_DRIVER(dev)->dev_mtx); \
-    } while (0)
-
 int rvm_hal_blockdev_read_blks(rvm_dev_t *dev, void *buffer, uint32_t start_block, uint32_t block_cnt)
 {
     int ret;
 
     BLOCKDEV_VAILD(dev);
 
-    BLOCK_DEV_LOCK(dev);
+    device_lock(dev);
     ret = BLOCKDEV_DRIVER(dev)->read_blks(dev, buffer, start_block, block_cnt);
-    BLOCK_DEV_UNLOCK(dev);
+    device_unlock(dev);
 
     return ret;
 }
@@ -47,9 +32,9 @@ int rvm_hal_blockdev_write_blks(rvm_dev_t *dev, void *buffer, uint32_t start_blo
 
     BLOCKDEV_VAILD(dev);
 
-    BLOCK_DEV_LOCK(dev);
+    device_lock(dev);
     ret = BLOCKDEV_DRIVER(dev)->write_blks(dev, buffer, start_block, block_cnt);
-    BLOCK_DEV_UNLOCK(dev);
+    device_unlock(dev);
 
     return ret;
 }
@@ -60,9 +45,9 @@ int rvm_hal_blockdev_erase_blks(rvm_dev_t *dev, uint32_t start_block, uint32_t b
 
     BLOCKDEV_VAILD(dev);
 
-    BLOCK_DEV_LOCK(dev);
+    device_lock(dev);
     ret = BLOCKDEV_DRIVER(dev)->erase_blks(dev, start_block, block_cnt);
-    BLOCK_DEV_UNLOCK(dev);
+    device_unlock(dev);
 
     return ret;
 }
@@ -78,15 +63,14 @@ int rvm_hal_blockdev_mmc_select_area(rvm_dev_t *dev, rvm_hal_mmc_access_area_t a
     if (!BLOCKDEV_DRIVER(dev)->current_area || !BLOCKDEV_DRIVER(dev)->select_area)
         return 0;
 
-    BLOCK_DEV_LOCK(dev);
-
+    device_lock(dev);
     ret = BLOCKDEV_DRIVER(dev)->current_area(dev, &def_area);
     if (ret == 0) {
         if (def_area != area) {
             ret = BLOCKDEV_DRIVER(dev)->select_area(dev, area);
         }
     }
-    BLOCK_DEV_UNLOCK(dev);
+    device_unlock(dev);
     return ret;
 }
 #endif
@@ -97,9 +81,9 @@ int rvm_hal_blockdev_get_info(rvm_dev_t *dev, rvm_hal_blockdev_info_t *info)
 
     BLOCKDEV_VAILD(dev);
 
-    BLOCK_DEV_LOCK(dev);
+    device_lock(dev);
     ret = BLOCKDEV_DRIVER(dev)->get_info(dev, info);
-    BLOCK_DEV_UNLOCK(dev);
+    device_unlock(dev);
 
     return ret;
 }

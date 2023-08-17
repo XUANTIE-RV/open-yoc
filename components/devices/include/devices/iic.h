@@ -35,7 +35,7 @@ typedef struct {
     rvm_hal_iic_mode_t          mode;
     rvm_hal_iic_speed_t         speed;
     rvm_hal_iic_address_mode_t  addr_mode;
-    int32_t                 slave_addr;
+    int32_t                     slave_addr;
 } rvm_hal_iic_config_t;
 
 #define I2C_MEM_ADDR_SIZE_8BIT  0 /* i2c menory address size 8bit */
@@ -52,7 +52,12 @@ int rvm_hal_iic_slave_recv(rvm_dev_t *dev, void *data, uint32_t size, uint32_t t
 int rvm_hal_iic_mem_write(rvm_dev_t *dev, uint16_t dev_addr, uint16_t mem_addr, uint16_t mem_addr_size, const void *data, uint32_t size, uint32_t timeout);
 int rvm_hal_iic_mem_read(rvm_dev_t *dev, uint16_t dev_addr, uint16_t mem_addr, uint16_t mem_addr_size, void *data, uint32_t size, uint32_t timeout);
 void rvm_hal_iic_config_default(rvm_hal_iic_config_t *config);
+int rvm_hal_iic_trans_dma_enable(rvm_dev_t *dev, bool enable);
 
+
+#if defined(AOS_COMP_DEVFS) && AOS_COMP_DEVFS
+#include <devices/vfs_iic.h>
+#endif
 
 #ifdef __cplusplus
 }

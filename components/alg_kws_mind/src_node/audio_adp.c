@@ -87,8 +87,6 @@ static int mit_rtos_data_out(void *user_data, mit_rtos_event_t event, char *buff
 
 void audio_alginit(void)
 {
-
-#ifdef CONFIG_CHIP_BL606P
     int ret = 0;
 
     // app启动，执行初始化等操作。
@@ -184,69 +182,6 @@ void audio_alginit(void)
     mit_rtos_set_param_str(kMitRtosParamFEOutAEC, (char *)&g_debug_test_feout_aec);
 #endif
 
-#else
-    int ret = 0;
-
-    // app启动，执行初始化等操作。
-    g_nuithings_listener.on_event_callback  = mit_rtos_event_main;
-    g_nuithings_listener.need_data_callback = mit_rtos_data_get_main;
-    g_nuithings_listener.put_data_callback  = mit_rtos_data_out;
-    g_nuithings_listener.user_data          = NULL;
-
-    g_mit_rtos_config.listener                   = &g_nuithings_listener;
-    g_mit_rtos_config.alg_type                   = kMitRtosAlgBSSOpt;
-    g_mit_rtos_config.task_enable                = 0;
-    g_mit_rtos_config.kws_alwayson_enable        = 1;
-    g_mit_rtos_config.fe_enable                  = 1;
-    g_mit_rtos_config.kws_enable                 = 1;
-    g_mit_rtos_config.vad_enable                 = 1;
-    g_mit_rtos_config.vad_endpoint_ignore_enable = 0;
-    g_mit_rtos_config.need_data_after_vad        = 1;
-    g_mit_rtos_config.wwv_enable                 = 0; // enable wwv or not.
-    /*if (2==g_mit_rtos_config.wwv_enable) {
-      g_mit_rtos_config.local_threshold = 20;
-      g_mit_rtos_config.wwv_threshold = 10;
-    }*/
-
-    g_mit_rtos_config.voice_filter_type = kMitRtosVoiceFilterTypeDisable;
-    // g_mit_rtos_config.log_in_asr_enable = 1;
-    g_mit_rtos_config.is_interleave = 1;
-
-    g_mit_rtos_config.vad_endpoint_delay = 1000;
-    g_mit_rtos_config.vad_silencetimeout = 8000;
-    g_mit_rtos_config.vad_voicetimeout   = 10000;
-    g_mit_rtos_config.vad_kws_strategy   = 0;
-
-    g_mit_rtos_config.kws_thres.vad_speech_noise_thres_sp = -0.2;
-    g_mit_rtos_config.kws_thres.vad_speech_noise_thres_ep = -0.1;
-    g_mit_rtos_config.asr_thres.vad_speech_noise_thres_sp = -0.2;
-    g_mit_rtos_config.asr_thres.vad_speech_noise_thres_ep = -0.1;
-
-    g_mit_rtos_config.enable_individual_vad4asr = 1; // enable process of individula_vad for asr function.
-    g_mit_rtos_config.vad4asr_enable            = 1; //是否使能ASR专用VAD子模块
-    g_mit_rtos_config.fe_tune.mic_num           = 2;
-    g_mit_rtos_config.fe_tune.ref_num           = 1;
-    g_mit_rtos_config.fe_tune.out_num           = 2;
-
-    g_mit_rtos_config.gain_tune_db       = 12; // gain: 12dB
-    g_mit_rtos_config.fe_tune.agc_enable = 1;  // agc enable
-    // g_mit_rtos_config.fe_tune.agc_gain = 4.0f;
-    g_mit_rtos_config.fe_tune.agc_power = 8;
-    g_mit_rtos_config.fe_tune.agc_level = 4;
-    // g_mit_rtos_config.add_kwsdetect_enable = 0;
-
-    g_mit_rtos_config.enable_init_more_log = 2;
-
-    // g_silence_log_level = 3;
-    ret = mit_rtos_init(&g_mit_rtos_config);
-    // g_log_enable = 1;   // 底层算法log打印
-    LOGD(TAG, "call mit_rtos_init() return %d\n", ret);
-    ret = mit_rtos_start();
-    LOGD(TAG, "call mit_rtos_start() return %d\n", ret);
-    // disabled debug info
-    mit_rtos_debug_set_mode(0x00);
-
-#endif
 }
 
 void audio_wakeup_voice_stat(int stat, int buf_delay, int hw_delay)
@@ -258,7 +193,6 @@ void audio_wakeup_voice_stat(int stat, int buf_delay, int hw_delay)
 
 void audio_set_wakeup_level(const char *wakeup_word, int level)
 {
-#if defined(CONFIG_CHIP_BL606P) && CONFIG_CHIP_BL606P
     int                    kws_count = mit_rtos_get_keyword_count();
     MitRtosSdkKeywordList *kws_list  = mit_rtos_get_keyword_list();
     LOGD(TAG, "kws_count=%d, kws_list=%p", kws_count, kws_list);
@@ -283,7 +217,6 @@ void audio_set_wakeup_level(const char *wakeup_word, int level)
     } else {
         LOGE(TAG, "get list error");
     }
-#endif
 }
 
 static mit_rtos_voice_data g_voice_data;
@@ -649,4 +582,4 @@ int audio_get_linear_aec_en_status(void)
 }
 #endif
 
-#endif
+#endif /* CONFIG_BOARD_AMP_LOAD_FW */

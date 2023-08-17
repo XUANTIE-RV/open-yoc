@@ -16,7 +16,7 @@ static char *fatfs_mnt_path = SD_FATFS_MOUNTPOINT;
 typedef struct {
     int dd_vfs_fd;
     int dd_rsv;
-    aos_dirent_t *dir;
+    vfs_dirent_t *dir;
 } fatfs_dir_t;
 
 static char *translate_relative_path(const char *path)
@@ -103,7 +103,7 @@ static int _fatfs_ret_to_err(int ret)
     }
 }
 
-static int _fatfs_open(file_t *fp, const char *path, int flags)
+static int _fatfs_open(vfs_file_t *fp, const char *path, int flags)
 {
     FRESULT ret;
     //char *relpath = NULL;
@@ -126,7 +126,7 @@ static int _fatfs_open(file_t *fp, const char *path, int flags)
     return ret;
 }
 
-static int _fatfs_close(file_t *fp)
+static int _fatfs_close(vfs_file_t *fp)
 {
     FRESULT ret;
     FIL *file;
@@ -141,7 +141,7 @@ static int _fatfs_close(file_t *fp)
     return  _fatfs_ret_to_err(ret);
 }
 
-static ssize_t _fatfs_read(file_t *fp, char *buf, size_t len)
+static ssize_t _fatfs_read(vfs_file_t *fp, char *buf, size_t len)
 {
     FRESULT ret;
     FIL *file;
@@ -157,7 +157,7 @@ static ssize_t _fatfs_read(file_t *fp, char *buf, size_t len)
     return _fatfs_ret_to_err(ret);
 }
 
-static ssize_t _fatfs_write(file_t *fp, const char *buf, size_t len)
+static ssize_t _fatfs_write(vfs_file_t *fp, const char *buf, size_t len)
 {
     FRESULT ret;
     FIL *file;
@@ -174,7 +174,7 @@ static ssize_t _fatfs_write(file_t *fp, const char *buf, size_t len)
 }
 
 #if 0
-static long int _fatfs_tell(file_t *fp)
+static long int _fatfs_tell(vfs_file_t *fp)
 {
     FRESULT ret;
     FIL *file;
@@ -186,7 +186,7 @@ static long int _fatfs_tell(file_t *fp)
 }
 #endif
 
-static int _fatfs_access(file_t *fp, const char *path, int amode)
+static int _fatfs_access(vfs_file_t *fp, const char *path, int amode)
 {
     char *relpath = NULL;
     FILINFO info;
@@ -214,7 +214,7 @@ static int _fatfs_access(file_t *fp, const char *path, int amode)
     return ret;
 }
 
-static off_t _fatfs_lseek(file_t *fp, off_t off, int whence)
+static off_t _fatfs_lseek(vfs_file_t *fp, off_t off, int whence)
 {
     int64_t cur_pos, new_pos, size;
 
@@ -245,7 +245,7 @@ static off_t _fatfs_lseek(file_t *fp, off_t off, int whence)
     return new_pos;
 }
 
-static int _fatfs_sync(file_t *fp)
+static int _fatfs_sync(vfs_file_t *fp)
 {
     FRESULT ret;
     FIL *file;
@@ -256,7 +256,20 @@ static int _fatfs_sync(file_t *fp)
     return _fatfs_ret_to_err(ret);
 }
 
-static int _fatfs_stat(file_t *fp, const char *path, struct aos_stat *st)
+static int _fatfs_fstat(vfs_file_t *fp, vfs_stat_t *st)
+{
+    FIL *file = (FIL*)(fp->f_arg);
+
+    if (file) {
+        st->st_mode = S_IFREG;
+        st->st_size = file->obj.objsize;
+        return 0;
+    }
+
+    return -1;
+}
+
+static int _fatfs_stat(vfs_file_t *fp, const char *path, vfs_stat_t *st)
 {
     FRESULT ret;
     FILINFO fno = {0};
@@ -276,7 +289,7 @@ static int _fatfs_stat(file_t *fp, const char *path, struct aos_stat *st)
     return  _fatfs_ret_to_err(ret);
 }
 
-static int _fatfs_unlink(file_t *fp, const char *path)
+static int _fatfs_unlink(vfs_file_t *fp, const char *path)
 {
     FRESULT ret;
 
@@ -285,7 +298,7 @@ static int _fatfs_unlink(file_t *fp, const char *path)
     return _fatfs_ret_to_err(ret);
 }
 
-static int _fatfs_rename(file_t *fp, const char *oldpath, const char *newpath)
+static int _fatfs_rename(vfs_file_t *fp, const char *oldpath, const char *newpath)
 {
     FRESULT ret;
 
@@ -294,7 +307,7 @@ static int _fatfs_rename(file_t *fp, const char *oldpath, const char *newpath)
     return _fatfs_ret_to_err(ret);
 }
 
-static int _fatfs_truncate(file_t *fp, off_t len)
+static int _fatfs_truncate(vfs_file_t *fp, off_t len)
 {
     FRESULT ret;
     FIL *file;
@@ -309,7 +322,7 @@ static int _fatfs_truncate(file_t *fp, off_t len)
     return _fatfs_ret_to_err(ret);
 }
 
-static aos_dir_t *_fatfs_opendir(file_t *fp, const char *path)
+static vfs_dir_t *_fatfs_opendir(vfs_file_t *fp, const char *path)
 {
     FRESULT ret;
 
@@ -320,7 +333,7 @@ static aos_dir_t *_fatfs_opendir(file_t *fp, const char *path)
         return NULL;
     }
 
-    aos_dirent_t *dirnet = aos_malloc(sizeof(aos_dirent_t) + FF_LFN_BUF + 1);
+    vfs_dirent_t *dirnet = aos_malloc(sizeof(vfs_dirent_t) + FF_LFN_BUF + 1);
 
     if (dirnet == NULL) {
         aos_free(dir);
@@ -343,7 +356,7 @@ static aos_dir_t *_fatfs_opendir(file_t *fp, const char *path)
 
     if (ret == FR_OK) {
         fp->f_arg = dir;
-        return (aos_dir_t*)ret_dir;
+        return (vfs_dir_t*)ret_dir;
     } else {
         aos_free(dir);
         aos_free(ret_dir);
@@ -353,13 +366,13 @@ static aos_dir_t *_fatfs_opendir(file_t *fp, const char *path)
     }
 }
 
-static aos_dirent_t *_fatfs_readdir(file_t *fp, aos_dir_t *dir)
+static vfs_dirent_t *_fatfs_readdir(vfs_file_t *fp, vfs_dir_t *dir)
 {
     FRESULT ret;
     FF_DIR *dirp;
     FILINFO fno;
     fatfs_dir_t *dp = (fatfs_dir_t*)dir;
-    aos_dirent_t *dirent = dp->dir;
+    vfs_dirent_t *dirent = dp->dir;
 
     dirp = (FF_DIR*)(fp->f_arg);
     ret = f_readdir(dirp, &fno);
@@ -380,12 +393,12 @@ static aos_dirent_t *_fatfs_readdir(file_t *fp, aos_dir_t *dir)
     return NULL;
 }
 
-static int _fatfs_closedir(file_t *fp, aos_dir_t *dir)
+static int _fatfs_closedir(vfs_file_t *fp, vfs_dir_t *dir)
 {
     FRESULT ret;
     FF_DIR *dirp;
     fatfs_dir_t *dp = (fatfs_dir_t*)dir;
-    aos_dirent_t *dirent = dp->dir;
+    vfs_dirent_t *dirent = dp->dir;
 
     dirp = (FF_DIR*)(fp->f_arg);
     ret = f_closedir(dirp);
@@ -401,7 +414,7 @@ static int _fatfs_closedir(file_t *fp, aos_dir_t *dir)
     return ret;
 }
 
-static int _fatfs_mkdir(file_t *fp, const char *path)
+static int _fatfs_mkdir(vfs_file_t *fp, const char *path)
 {
     FRESULT ret;
 
@@ -412,7 +425,7 @@ static int _fatfs_mkdir(file_t *fp, const char *path)
     return ret;
 }
 
-static int _fatfs_rmdir(file_t *fp, const char *path)
+static int _fatfs_rmdir(vfs_file_t *fp, const char *path)
 {
     FRESULT ret;
 
@@ -423,7 +436,7 @@ static int _fatfs_rmdir(file_t *fp, const char *path)
     return ret;
 }
 
-static void _fatfs_rewinddir(file_t *fp, aos_dir_t *dir)
+static void _fatfs_rewinddir(vfs_file_t *fp, vfs_dir_t *dir)
 {
     FF_DIR *dirp;
     fatfs_dir_t *dp = (fatfs_dir_t *)dir;
@@ -438,7 +451,7 @@ static void _fatfs_rewinddir(file_t *fp, aos_dir_t *dir)
     return;
 }
 
-static long _fatfs_telldir(file_t *fp, aos_dir_t *dir)
+static long _fatfs_telldir(vfs_file_t *fp, vfs_dir_t *dir)
 {
     FF_DIR *dirp;
     fatfs_dir_t *dp = (fatfs_dir_t *)dir;
@@ -452,7 +465,7 @@ static long _fatfs_telldir(file_t *fp, aos_dir_t *dir)
     return (long)(dirp->dptr);
 }
 
-static void _fatfs_seekdir(file_t *fp, aos_dir_t *dir, long loc)
+static void _fatfs_seekdir(vfs_file_t *fp, vfs_dir_t *dir, long loc)
 {
     FF_DIR *dirp;
     fatfs_dir_t *dp = (fatfs_dir_t *)dir;
@@ -467,7 +480,7 @@ static void _fatfs_seekdir(file_t *fp, aos_dir_t *dir, long loc)
     return;
 }
 
-static int _fatfs_statfs (file_t *fp, const char *path, struct aos_statfs *suf)
+static int _fatfs_statfs (vfs_file_t *fp, const char *path, vfs_statfs_t *suf)
 {
     FATFS *fs;
     int32_t ret = -EPERM;
@@ -501,7 +514,7 @@ static int _fatfs_statfs (file_t *fp, const char *path, struct aos_statfs *suf)
     return ret;
 }
 
-static const fs_ops_t fatfs_ops = {
+static const vfs_fs_ops_t fatfs_ops = {
     .open       = &_fatfs_open,
     .close      = &_fatfs_close,
     .read       = &_fatfs_read,
@@ -510,6 +523,7 @@ static const fs_ops_t fatfs_ops = {
     .lseek      = &_fatfs_lseek,
     .sync       = &_fatfs_sync,
     .stat       = &_fatfs_stat,
+    .fstat      = &_fatfs_fstat,
     .unlink     = &_fatfs_unlink,
     .remove     = &_fatfs_unlink,
     .rename     = &_fatfs_rename,
@@ -543,14 +557,12 @@ int vfs_fatfs_register(void)
         return -1;
     }
 
-    return aos_register_fs(fatfs_mnt_path, &fatfs_ops, fs);
+    return vfs_register_fs(fatfs_mnt_path, &fatfs_ops, fs);
 }
 
-
-#if 1
 int vfs_fatfs_unregister(void)
 {
     f_mount(NULL, "", 1);
-    return aos_unregister_fs(fatfs_mnt_path);
+    return vfs_unregister_fs(fatfs_mnt_path);
 }
-#endif
+

@@ -10,7 +10,7 @@
 
 #define TAG "RINGBUF_GROUP"
 
-#define EVENT_CAN_WRITE 0x0F0F0000
+#define EVENT_CAN_WRITE 0x000000F0
 #define EVENT_CAN_READ  0x00000F0F
 
 typedef struct _ringbuf_group_ {
@@ -27,9 +27,11 @@ static ringbuf_group_t g_rbgroup[TYPE_MAX];
 int voice_get_pcm_data(void *data, int len)
 {
     uint8_t *temp     = (uint8_t *)data;
-    int      read_len = len;
+    int      read_len = 0;
 
-    read_len = ringbuffer_read(&g_rbgroup[TYPE_PCM].rb, (uint8_t *)temp, len);
+    if (ringbuffer_available_read_space(&g_rbgroup[TYPE_PCM].rb) >= len) {
+        read_len = ringbuffer_read(&g_rbgroup[TYPE_PCM].rb, (uint8_t *)temp, len);
+    }
 
     return read_len;
 }
@@ -97,8 +99,9 @@ int dispatch_ringbuffer_write(data_type_e type, void *data, int data_len)
         return 0;
     }
 
+    int ret = ringbuffer_write(&g_rbgroup[type].rb, (uint8_t *)data, data_len);
     aos_event_set(g_rbgroup[type].event, EVENT_CAN_READ, AOS_EVENT_OR);
-    return ringbuffer_write(&g_rbgroup[type].rb, (uint8_t *)data, data_len);
+    return ret;
 }
 
 int dispatch_ringbuffer_clear(data_type_e type)

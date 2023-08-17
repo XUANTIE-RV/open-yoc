@@ -6,7 +6,6 @@
 #include "ulog/ulog.h"
 #include <stdio.h>
 #include <string.h>
-#include "aos/hal/flash.h"
 
 #define TAG "DFU_PORT"
 

@@ -9,7 +9,7 @@
 #include <stdarg.h>
 #include <ulog/ulog.h>
 
-#define TAG "voice_wrapper"
+#define TAG "VoiceWrapper"
 
 #define FRAME_SIZE      ((16000 / 1000) * (16 / 8) * 20)           /* 640 */
 #define RINGBUFFER_SIZE (FRAME_SIZE * CONFIG_MIC_RINGBUF_RAME + 1) /* 20ms * 20 */
@@ -37,6 +37,7 @@ struct __mic {
     audio_t       audio[MIC_KWS_MAX];
     mic_ops_t    *ops;
     int           mute_state;
+    int           start_state;
 };
 
 typedef enum
@@ -280,6 +281,7 @@ static int _start(mic_t *mic, rpc_t *rpc)
 {
     if (g_mic.ops->start) {
         g_mic.ops->start(&g_mic);
+        g_mic.start_state = 1;
     }
 
     return 0;
@@ -289,6 +291,7 @@ static int _stop(mic_t *mic, rpc_t *rpc)
 {
     if (g_mic.ops->stop) {
         g_mic.ops->stop(&g_mic);
+        g_mic.start_state = 0;
     }
 
     return 0;
@@ -319,9 +322,12 @@ int mic_process_rpc(void *context, rpc_t *rpc)
 
 int aui_mic_control(mic_ctrl_cmd_t cmd, ...)
 {
-    int ret = 0;
+    if (g_mic.start_state == 0 && cmd != MIC_CTRL_VOICE_MUTE) {
+        LOGW(TAG, "service is starting up, wait");
+        return -1;
+    }
 
-    aos_check_return_einval(g_mic.srv);
+    int ret = 0;
     va_list ap;
     mic_t  *mic = &g_mic;
 

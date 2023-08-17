@@ -79,6 +79,8 @@ struct combo_dev_cfg_s {
 	struct gpio_desc_s      reset_pin;
 	struct gpio_desc_s      pwm_pin;
 	struct gpio_desc_s      power_ct_pin;
+	unsigned int            lane_num;
+	unsigned int            bits;
 };
 
 struct cmd_info_s {

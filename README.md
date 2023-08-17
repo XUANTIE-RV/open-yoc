@@ -6,7 +6,7 @@ YoC是一个基于AliOS Things的基础软件平台。它为开发人员提供�
 
 ## 架构
 
-<img src="https://github.com/T-head-Semi/open-yoc/blob/v7.7.0/components/yoc/resources/yoc.png?raw=true">
+<img src="https://github.com/T-head-Semi/open-yoc/blob/v7.8.0/components/yoc/resources/yoc.png?raw=true">
 
 - 内核与驱动： RVM CSI 层定义了 片上系统外设的统一接口，芯片对接完成RVM CSI接口，就可以支持 YoC 的软件系统。OSAL/POSIX接口提供了内核统一接口，集成了AliOS Things、FreeRTOS以及RT-Thread内核。RVM HAL为上层各类组件提供了统一的硬件抽象接口。
 - 基础组件： 包含了设备管理框架、低功耗管理、高级安全可信计算（TEE）、网络协议、蓝牙协议栈、虚拟文件系统、网络管理器等。核心服务层采用独立模块化设计，用户可以根据应用需求，自由组装。
@@ -23,24 +23,6 @@ RVB2601是基于平头哥生态芯片CH2601的开发板，板载JTAG调试器，
 具体开发板硬件规格及信息请到[RVB2601开发板](https://occ.t-head.cn/vendor/detail/index?spm=a2cl5.14300867.0.0.681c1f9cxK233N&id=3886757103532519424&vendorId=3706716635429273600&module=4).
 
 开发板快速上手手册请参考[RVB2601应用开发实战系列一: Helloworld最小系统](https://occ.t-head.cn/community/post/detail?spm=a2cl5.14300867.0.0.713b180fsACOZd&id=3887622217227972608)。
-
-### PHY6220开发板
-
-PHY6220是奉加微电子最新推出的超低功耗系统级蓝牙芯片，搭载平头哥玄铁CK802 CPU，可配置128KB-8MB Flash；超低功耗，RX/TX峰值电流低至4.6/4mA@3.3V；拥有全套自主知识产权协议栈，支持多通信标准协议，可以满足客户的定制化需求；异构多对多的蓝牙Mesh网络，实现基于BLE的大规模物联网；接收灵敏度-97dBm@1Mbps/-103dBm@125Kbps；支持高速OTA升级和AoA/AoD定位功能。
-
-具体开发板硬件规格及信息请到[PHY6220开发板](https://occ.t-head.cn/vendor/detail/index?spm=a2cl5.26076654.0.0.75c9180fBd3xmo&id=3844141476569686016).
-
-开发板快速上手手册请参考[PHY6220开发板快速上手手册](https://occ-oss-prod.oss-cn-hangzhou.aliyuncs.com/userFiles/3712904037927702528/resource/3712904037927702528hfGSSiepmB.pdf)
-
-
-### W800开发板
-
-W800开发板是一款基于IoT Wi-Fi/蓝牙SoC芯片W800的调试板卡，兼容Arduino接口。支持作为Wi-Fi/蓝牙模块与其他MCU主板今天对接调试，也支持作为主控设备进行开发调试。
-
-具体开发板硬件规格及信息请到[W800开发板](https://occ.t-head.cn/vendor/detail/index?spm=a2cl5.26076654.0.0.47b8180fQDHEWX&id=3819785372310183936).
-
-开发板快速上手手册请参考[CB6201开发板快速上手手册](https://occ-oss-prod.oss-cn-hangzhou.aliyuncs.com/userFiles/3717897501090217984/resource/371789750109021798416243697382898DSDaM3TmQ.pdf);
-[蓝⽛MESH⽹关开发板快速上⼿⼿册](https://occ-oss-prod.oss-cn-hangzhou.aliyuncs.com/userFiles/3814675761722499072/resource/3814675761722499072/1636114574507/%E8%93%9D%E7%89%99MESH%E7%BD%91%E5%85%B3%E5%BC%80%E5%8F%91%E6%9D%BF%E5%BF%AB%E9%80%9F%E4%B8%8A%E6%89%8B%E6%89%8B%E5%86%8C.pdf)
 
 ### d1_dock_pro开发板
 
@@ -61,12 +43,12 @@ BL606P-DVK专为用于评估音视频应用诞生，适用于智能面板、智�
 
 ## 示例列表
 
-使用之前请先安装[yoctools](https://yoc.docs.t-head.cn/yocbook/Chapter2-%E5%BF%AB%E9%80%9F%E4%B8%8A%E6%89%8B%E6%8C%87%E5%BC%95/YocTools.html)编译构建工具。
+使用之前请先安装[yoctools](https://xuantie.t-head.cn/document?temp=yoctools&slug=yocbook)编译构建工具。
 
 试用示例之前请先使用以下命令进行下载:
 
 ```bash
-git clone git@github.com:T-head-Semi/open-yoc.git -b v7.7.0
+git clone git@github.com:T-head-Semi/open-yoc.git -b v7.8.0
 ```
 
 或者从GITEE下载：
@@ -74,7 +56,7 @@ git clone git@github.com:T-head-Semi/open-yoc.git -b v7.7.0
 mkdir yocworkspace
 cd yocworkspace
 yoc init
-yoc install yoc -b v7.7.0
+yoc install yoc -b v7.8.0
 ```
 
 然后到`solutions`目录下，所有的示例都在那里，用户可以根据每个示例下的`README.md`文件进行操作。
@@ -106,17 +88,30 @@ yoc install yoc -b v7.7.0
 
 ## 参考资料
 
-- 平头哥开源社区: https://occ.t-head.cn/
+- 平头哥开源社区: https://xuantie.t-head.cn/
 
-- 平头哥开源社区文档中心：[文档中心](https://occ.t-head.cn/document-index?spm=a2cl5.14290816.0.0.d3efMKzXMKzXtJ)
+- 平头哥开源社区文档中心：[文档中心](https://xuantie.t-head.cn/document-index)
 
-- YoC使用手册yocbook: [yocbook](https://yoc.docs.t-head.cn/yocbook/Chapter1-YoC%E6%A6%82%E8%BF%B0/)
+- YoC使用手册yocbook: [yocbook](https://xuantie.t-head.cn/document?temp=yoc-platform-overview&slug=yocbook)
 
 ## 许可证
 
 YoC系统完全开源，代码版本遵循Apache License 2.0开源许可协议，可以免费在商业产品中使用，并且不需要公开私有代码。
 
 ## Release Note
+
+### 2023.8.15
+#### 新增特性
+1. 完善设备驱动
+2. 新增CSI2D图像加速库
+3. 支持MMU，虚拟地址映射
+4. 支持S态运行，M/S态相互切换
+5. 完善安全子系统
+6. 完善语音子系统
+7. 完善视频视觉子系统
+8. 完善图形子系统
+#### 新增开发板
+1. 支持华山派开发板
 
 ### 2023.3.11
 #### 新增特性
@@ -141,6 +136,6 @@ YoC系统完全开源，代码版本遵循Apache License 2.0开源许可协议�
 #### 开发工具
 |开发工具|版本|说明|
 | --- | --- | --- |
-|[CDK](https://occ.t-head.cn/community/download?id=575997419775328256)|>=V2.18.2|集成开发环境IDE|
-|[yoctools](https://yoc.docs.t-head.cn/yocbook/Chapter2-%E5%BF%AB%E9%80%9F%E4%B8%8A%E6%89%8B%E6%8C%87%E5%BC%95/YocTools.html)|>=2.0.52|Linux下命令行构建编译工具|
+|[CDK](https://xuantie.t-head.cn/soft-tools/tools/4197790929093988352?spm=a2cl5.14290816.0.0.5911jOGIjOGIaJ)|>=V2.22.0|集成开发环境IDE|
+|[yoctools](https://yoc.docs.t-head.cn/yocbook/Chapter2-%E5%BF%AB%E9%80%9F%E4%B8%8A%E6%89%8B%E6%8C%87%E5%BC%95/YocTools.html)|>=2.0.56|Linux下命令行构建编译工具|
 |[玄铁工具链](https://occ.t-head.cn/community/download?id=4090445921563774976)|V2.6.1|riscv编译所需工具链，可通过yoc命令安装(yoc toolchain --riscv -f)；也可以自行下载安装，并在系统变量中设置对应的路径信息|

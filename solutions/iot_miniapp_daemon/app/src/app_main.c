@@ -11,7 +11,7 @@
 #include <sys_clk.h>
 #include <ui_port.h>
 #include <aos/kv.h>
-#include <alg_kws.h>
+#include <jsapi_publish.h>
 
 #include "sys/app_sys.h"
 #include "aui_cloud/app_aui_cloud.h"
@@ -25,6 +25,11 @@
 #include "alarms/app_alarms.h"
 #include "at_cmd/app_at_cmd.h"
 #include "button/app_button.h"
+
+#if defined(CONFIG_BT_MESH) && CONFIG_BT_MESH
+#include "linkkit_gateway/app_gateway_ut.h"
+#include "linkkit_gateway/app_gateway_opt/app_gateway_opt.h"
+#endif
 
 #include "app_main.h"
 
@@ -45,7 +50,8 @@ int main(int argc, char *argv[])
 
     /* 图形 */
     ui_task_run();
-    
+    aos_msleep(2500); //wait ui init
+
     /* 应用事件 */
     app_sys_init();
     app_display_init();
@@ -54,38 +60,48 @@ int main(int argc, char *argv[])
     app_cli_init();
 
     /* 播放器 */
-#if defined(CONFIG_BOARD_AUDIO) && CONFIG_BOARD_AUDIO
+#if defined(BOARD_AUDIO_SUPPORT) && BOARD_AUDIO_SUPPORT
     board_audio_init();
 #endif
 
-#if defined(CONFIG_BOARD_AUDIO) && CONFIG_BOARD_AUDIO
+#if defined(BOARD_AUDIO_SUPPORT) && BOARD_AUDIO_SUPPORT
     app_speaker_init();
 
     app_player_init();
 #endif
 
     /* 网络蓝牙 */
-#if defined(CONFIG_BOARD_WIFI) && CONFIG_BOARD_WIFI
+    LOGI("main", "wifi init");
+#if defined(BOARD_WIFI_SUPPORT) && BOARD_WIFI_SUPPORT
     board_wifi_init();
 #endif
 
+    LOGI("main", "bt init");
 #if defined(CONFIG_BOARD_BT) && CONFIG_BOARD_BT
     board_bt_init();
 #endif
 
-#if defined(CONFIG_BOARD_WIFI) && CONFIG_BOARD_WIFI
+#if defined(CONFIG_BOARD_ETH) && CONFIG_BOARD_ETH
+    board_eth_init();
+#endif
+
+    LOGI("main", "network init");
+#if (defined(BOARD_WIFI_SUPPORT) && BOARD_WIFI_SUPPORT) \
+ || (defined(CONFIG_BOARD_ETH) && CONFIG_BOARD_ETH)
     app_network_init();
 #endif
 
-#if defined(CONFIG_BT_BREDR) && (CONFIG_BT_BREDR == 1)
-    app_bt_init();
+#if defined(CONFIG_COMP_VOICE_WRAPPER) && CONFIG_COMP_VOICE_WRAPPER
+    LOGI("main", "voice init");
+    /* 语音交互 */
+    app_mic_init();
 #endif
 
-    /* 语音交互 */
-    //alg_kws_init();
-    //app_mic_init();
-    //app_aui_cloud_init();
+#if defined(CONFIG_AUI_CLOUD) && CONFIG_AUI_CLOUD
+    app_aui_cloud_init();
+#endif
 
+    LOGI("main", "button init");
     /* 其他外设 */
 #if defined(CONFIG_BOARD_BUTTON) && BOARD_BUTTON_NUM > 0
     app_button_init();
@@ -95,6 +111,25 @@ int main(int argc, char *argv[])
 
 #if defined(CONFIG_SMART_SPEAKER_AT) && CONFIG_SMART_SPEAKER_AT
     app_at_cmd_init();
+#endif
+
+#if defined(CONFIG_BT_MESH) && CONFIG_BT_MESH
+    LOGI("main", "gateway init");
+    app_gateway_init();
+#endif
+
+#if (defined(BOARD_BT_SUPPORT) && BOARD_BT_SUPPORT) && (defined(CONFIG_BT_BREDR) && CONFIG_BT_BREDR)
+    /*
+       if mesh and bt are coexist, initial order must be
+       1. gateway init(mesh init)
+       2. bt init
+    */
+    app_bt_init();
+#endif
+
+#if defined(CONFIG_BT_MESH) && CONFIG_BT_MESH
+    LOGI("main", "main finished");
+    jsapi_miniapp_init_finish();
 #endif
 
     return 0;

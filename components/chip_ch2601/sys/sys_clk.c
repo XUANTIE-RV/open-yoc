@@ -136,7 +136,7 @@ uint32_t soc_get_ahb_freq(uint32_t idx)
 
 uint32_t soc_get_sys_freq(void)
 {
-    return 0;
+    return g_system_clock;
 }
 
 uint32_t soc_get_usi_freq(uint32_t idx)

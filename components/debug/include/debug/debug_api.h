@@ -10,8 +10,6 @@ extern "C" {
 #endif
 
 #include <stdio.h>
-
-#include "k_api.h"
 #include "debug_infoget.h"
 #include "debug_overview.h"
 #include "debug_panic.h"
@@ -21,6 +19,10 @@ extern "C" {
 #include "debug_cli_cmd.h"
 #include "debug_dumpsys.h"
 #include "debug_cpuusage.h"
+
+#ifdef CONFIG_KERNEL_RHINO
+#include "k_api.h"
+#endif
 
 #if DEBUG_LAST_WORD_ENABLE
 #include "debug_lastword.h"

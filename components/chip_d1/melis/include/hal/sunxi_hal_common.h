@@ -83,11 +83,7 @@ typedef s32(*mem_long_jump_fn) (u32 arg);
     })
 #endif
 
-#ifdef CONFIG_KERNEL_FREERTOS
-#define in_interrupt(...)       uGetInterruptNest()
-#else
 #define in_interrupt(...)       rt_interrupt_get_nest()
-#endif
 
 #define in_nmi(...)             (0)
 

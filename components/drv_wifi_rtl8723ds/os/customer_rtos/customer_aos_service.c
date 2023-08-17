@@ -5,7 +5,6 @@
 /* AOS includes */
 
 #include <aos/aos.h>
-#include "k_api.h"
 #include <osdep_service.h>
 #include <stdio.h>
 #include <stdarg.h>
@@ -519,7 +518,7 @@ static u32 _aos_get_current_time(void)
 #if DBG_OS_API
     printf("[AOS]%s\n", __FUNCTION__);
 #endif
-    return krhino_sys_tick_get();
+    return aos_sys_tick_get();
 }
 
 static u32 _aos_systime_to_ms(u32 systime)
@@ -528,7 +527,7 @@ static u32 _aos_systime_to_ms(u32 systime)
     printf("[AOS]%s\n", __FUNCTION__);
 #endif
 
-    return krhino_ticks_to_ms(systime);;
+    return (u32)aos_kernel_tick2ms(systime);
 }
 
 static u32 _aos_systime_to_sec(u32 systime)
@@ -537,7 +536,7 @@ static u32 _aos_systime_to_sec(u32 systime)
     printf("[AOS]%s\n", __FUNCTION__);
 #endif
 
-    return krhino_ticks_to_ms(systime) / 1000;
+    return (u32)(aos_kernel_tick2ms(systime) / 1000);
 }
 
 static u32 _aos_ms_to_systime(u32 ms)
@@ -545,7 +544,7 @@ static u32 _aos_ms_to_systime(u32 ms)
 #if DBG_OS_API
     printf("[AOS]%s\n", __FUNCTION__);
 #endif
-    return krhino_ms_to_ticks(ms);
+    return (u32)aos_kernel_ms2tick(ms);
 }
 
 static u32 _aos_sec_to_systime(u32 sec)
@@ -553,7 +552,7 @@ static u32 _aos_sec_to_systime(u32 sec)
 #if DBG_OS_API
     printf("[AOS]%s\n", __FUNCTION__);
 #endif
-    return krhino_ms_to_ticks(sec * 1000);
+    return (u32)aos_kernel_ms2tick(sec * 1000);
 }
 
 static void _aos_msleep_os(int ms)
@@ -851,6 +850,7 @@ typedef struct atimer_t {
     aos_timer_t timer;
     TIMER_FUN pxCallbackFunction;
     void *arg;
+    bool repeat;
 } atimer;
 #define TIMER_NUM 100
 
@@ -891,11 +891,12 @@ _timerHandle _aos_timerCreate(const signed char *pcTimerName,
         xTimerPeriodInTicks = 10 * 365 * 86400; // aos < v3.3.0 smaller than RHINO_MAX_TICKS, aos = v3.3.0 smaller than MAX_TIMER_TICKS
     }
 
-    int ms = krhino_ticks_to_ms(xTimerPeriodInTicks);
+    int ms = aos_kernel_tick2ms(xTimerPeriodInTicks);
 
     atimer *timer = _get_timer();
     timer->pxCallbackFunction = pxCallbackFunction;
     timer->arg = timer;
+    timer->repeat = uxAutoReload;
 
     ret = aos_timer_new_ext(&timer->timer, timer_callback_wrapper, timer, ms, uxAutoReload, 0);
 
@@ -933,9 +934,7 @@ u32 _aos_timerIsTimerActive(_timerHandle xTimer)
 #if DBG_OS_API
     printf("[AOS]%s handle=%x\n", __FUNCTION__, xTimer);
 #endif
-
-    ktimer_t *ktimer = (ktimer_t *)(timer->timer);
-    return ktimer->timer_state;
+    return aos_timer_is_active(&timer->timer);
 }
 
 u32  _aos_timerStop(_timerHandle xTimer,
@@ -954,7 +953,7 @@ u32  _aos_timerChangePeriod(_timerHandle xTimer,
                             osdepTickType xBlockTime)
 {
     atimer *timer = (atimer *)xTimer;
-    ktimer_t *ktimer = (ktimer_t *)(timer->timer);
+    // ktimer_t *ktimer = (ktimer_t *)(timer->timer);
 
 #if DBG_OS_API
     printf("[AOS]%s handle=%x,xNewPeriod=%d,xBlockTime=%d\n", __FUNCTION__, xTimer, xNewPeriod, xBlockTime);
@@ -965,7 +964,11 @@ u32  _aos_timerChangePeriod(_timerHandle xTimer,
     //ktimer->round_ticks = old_round; //restore old
     //printf("tttt0 = %d\n", ((ktimer_t *)ktimer)->round_ticks);
 
-    krhino_timer_change(ktimer, xNewPeriod, ktimer->round_ticks);
+    // krhino_timer_change(ktimer, xNewPeriod, ktimer->round_ticks);
+    if (timer->repeat)
+        aos_timer_change(&timer->timer, aos_kernel_tick2ms(xNewPeriod));
+    else
+        aos_timer_change_once(&timer->timer, aos_kernel_tick2ms(xNewPeriod));
 
     aos_timer_start(&timer->timer);
 
@@ -1093,12 +1096,11 @@ u8 _aos_get_scheduler_state(void)
 #if DBG_OS_API
     printf("[AOS]%s\n", __FUNCTION__);
 #endif
-    extern kstat_t  g_sys_stat;
-    kstat_t get = g_sys_stat;
+    int get = aos_kernel_status_get();
 
-    if (get == RHINO_STOPPED) {
+    if (get == AOS_SCHEDULER_SUSPENDED) {
         return OS_SCHEDULER_SUSPENDED;
-    } else if (get == RHINO_RUNNING) {
+    } else if (get == AOS_SCHEDULER_RUNNING) {
         return OS_SCHEDULER_RUNNING;
     } else {
         printf("Error %s\n", __FUNCTION__);

@@ -5,7 +5,7 @@
 #include "hci_core.h"
 //#include "FreeRTOS.h"
 //#include "task.h"
-#include "../../../cli/include/aos/cli.h"
+#include "aos/cli.h"
 
 #include "bl_port.h"
 #include "ble_cli_cmds.h"

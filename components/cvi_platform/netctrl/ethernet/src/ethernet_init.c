@@ -1,4 +1,13 @@
 #include "aos/kernel.h"
+#include <devices/netdrv.h>
+#include <devices/ethernet.h>
+#include <devices/impl/net_impl.h>
+#include <devices/impl/ethernet_impl.h>
+#include <lwip/apps/dhcps.h>
+#include <lwip/netifapi.h>
+#include <lwip/dns.h>
+#include <yoc/netmgr_service.h>
+#include <yoc/netmgr.h>
 #include "k_api.h"
 #include "lwip/etharp.h"
 #include "lwip/tcpip.h"
@@ -9,11 +18,9 @@
 #if (CONFIG_APP_RTSP_SUPPORT == 1)
 #include "rtsp_exapi.h"
 #endif
-// #include "ntp.h"
-// #include "cx_cloud.h"
-#define TAG "ethernet"
-// #include "link_visual_struct.h"
 uint8_t g_eth_got_ip = 0;
+netmgr_hdl_t g_netmgr;
+#define TAG "ethernet"
 /*Static IP ADDRESS*/
 #ifndef IP_ADDR0
 #define IP_ADDR0   192
@@ -36,6 +43,9 @@ uint8_t g_eth_got_ip = 0;
 #define GW_ADDR3   1
 #endif
 
+#if !defined(MIN)
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
+#endif
 struct netif xnetif; /* network interface structure */
 
 #if 0
@@ -116,11 +126,236 @@ void net_status_callback(struct netif *netif)
         aos_task_new_ext(&cx_cloud_handle, "cx_cloud_task", cx_cloud_task, NULL, 8192, AOS_DEFAULT_APP_PRI + 10);
     }
 #endif
+    if (!ip_addr_isany(ip_2_ip4(&netif->ip_addr))) {
+        event_publish(EVENT_NET_GOT_IP, NULL);
+    }
 #if (CONFIG_APP_RTSP_SUPPORT == 1)
     CVI_RtspUpdateIP_CallBack();
 #endif
     g_eth_got_ip = 1;
 }
+
+typedef struct {
+    rvm_dev_t device;
+
+    void *priv;
+} eth_dev_t;
+
+
+static rvm_dev_t *eth_dev_init(driver_t *drv, void *config, int id)
+{
+    rvm_dev_t *dev = rvm_hal_device_new(drv, sizeof(eth_dev_t), id);
+
+    return dev;
+}
+
+#define eth_dev_uninit rvm_hal_device_free
+
+static int eth_dev_open(rvm_dev_t *dev)
+{
+
+    return 0;
+}
+
+static int eth_dev_close(rvm_dev_t *dev)
+{
+
+    return 0;
+}
+
+/*****************************************
+ * common netif driver interface
+ ******************************************/
+static int eth_set_mac_addr(rvm_dev_t *dev, const uint8_t *mac)
+{
+    csi_set_macaddr((uint8_t *)mac);
+    return 0;
+}
+
+static int eth_get_mac_addr(rvm_dev_t *dev, uint8_t *mac)
+{
+    csi_get_macaddr(mac);
+    return 0;
+}
+
+static int eth_start_dhcp(rvm_dev_t *dev)
+{
+#if 0
+    struct netif *netif = &xnetif;
+    aos_check_return_einval(netif);
+
+    if (!netif_is_link_up(netif)) {
+        return -1;
+    }
+
+    netif_set_ipaddr(netif, NULL);
+    netif_set_netmask(netif, NULL);
+    netif_set_gw(netif, NULL);
+
+    netif_set_status_callback(netif, net_status_callback);
+    return netifapi_dhcp_start(netif);
+#endif
+    return 0;
+}
+
+static int eth_stop_dhcp(rvm_dev_t *dev)
+{
+#if 0
+    struct netif *netif = &xnetif;
+    aos_check_return_einval(netif);
+
+    netifapi_dhcp_stop(netif);
+#endif
+    return 0;
+}
+
+static int eth_set_ipaddr(rvm_dev_t *dev, const ip_addr_t *ipaddr, const ip_addr_t *netmask, const ip_addr_t *gw)
+{
+    return -1;
+}
+
+static int eth_get_ipaddr(rvm_dev_t *dev, ip_addr_t *ipaddr, ip_addr_t *netmask_addr, ip_addr_t *gw_addr)
+{
+    struct netif *netif = &xnetif;
+    aos_check_return_einval(netif && ipaddr && netmask_addr && gw_addr);
+
+    ip_addr_copy(*(ip4_addr_t *)ip_2_ip4(ipaddr), *netif_ip_addr4(netif));
+    ip_addr_copy(*(ip4_addr_t *)ip_2_ip4(gw_addr), *netif_ip_gw4(netif));
+    ip_addr_copy(*(ip4_addr_t *)ip_2_ip4(netmask_addr), *netif_ip_netmask4(netif));
+
+    return 0;
+}
+
+static int eth_subscribe(rvm_dev_t *dev, uint32_t event, event_callback_t cb, void *param)
+{
+    if (cb) {
+        event_subscribe(event, cb, param);
+    }
+
+    return 0;
+}
+
+int eth_set_dns_server(rvm_dev_t *dev, ip_addr_t ipaddr[], uint32_t num)
+{
+    int n, i;
+
+    n = MIN(num, DNS_MAX_SERVERS);
+
+    for (i = 0; i < n; i++) {
+        dns_setserver(i, &ipaddr[i]);
+    }
+
+    return n;
+}
+
+static int eth_get_dns_server(rvm_dev_t *dev, ip_addr_t ipaddr[], uint32_t num)
+{
+    int n, i;
+
+    n = MIN(num, DNS_MAX_SERVERS);
+
+    for (i = 0; i < n; i++) {
+        if (!ip_addr_isany(dns_getserver(i))) {
+            memcpy(&ipaddr[i], dns_getserver(i), sizeof(ip_addr_t));
+        } else {
+            return i;
+        }
+    }
+
+    return n;
+}
+
+static int eth_set_hostname(rvm_dev_t *dev, const char *name)
+{
+#if LWIP_NETIF_HOSTNAME
+    struct netif *netif = &xnetif;
+    netif_set_hostname(netif, name);
+    return 0;
+#else
+    return -1;
+#endif
+}
+
+static const char *eth_get_hostname(rvm_dev_t *dev)
+{
+#if LWIP_NETIF_HOSTNAME
+    struct netif *netif = &xnetif;
+    return netif_get_hostname(netif);
+#else
+    return NULL;
+#endif
+}
+
+/*****************************************
+ * eth driver interface
+ ******************************************/
+
+static int eth_mac_control(rvm_dev_t *dev, eth_config_t *config)
+{
+
+    return 0;
+}
+
+static int eth_set_packet_filter(rvm_dev_t *dev, int type)
+{
+
+    return 0;
+}
+
+static int eth_start(rvm_dev_t *dev)
+{
+
+    return 0;
+}
+
+static int eth_stop(rvm_dev_t *dev)
+{
+
+    return 0;
+}
+
+static int eth_reset(rvm_dev_t *dev)
+{
+
+    return 0;
+}
+
+static net_ops_t eth_net_driver = {
+    .get_mac_addr   = eth_get_mac_addr,
+    .set_mac_addr   = eth_set_mac_addr,
+    .set_dns_server = eth_set_dns_server,
+    .get_dns_server = eth_get_dns_server,
+    .set_hostname   = eth_set_hostname,
+    .get_hostname   = eth_get_hostname,
+    .start_dhcp     = eth_start_dhcp,
+    .stop_dhcp      = eth_stop_dhcp,
+    .set_ipaddr     = eth_set_ipaddr,
+    .get_ipaddr     = eth_get_ipaddr,
+    .subscribe      = eth_subscribe,
+    .ping           = NULL,
+};
+
+static eth_driver_t eth_driver = {
+    .mac_control       = eth_mac_control,
+    .set_packet_filter = eth_set_packet_filter,
+    .start             = eth_start,
+    .stop              = eth_stop,
+    .reset             = eth_reset,
+};
+
+static netdev_driver_t neteth_driver = {
+    .drv = {
+        .name   = "eth",
+        .init   = eth_dev_init,
+        .uninit = eth_dev_uninit,
+        .open   = eth_dev_open,
+        .close  = eth_dev_close,
+    },
+    .link_type = NETDEV_TYPE_ETH,
+    .net_ops =  &eth_net_driver,
+    .link_ops = &eth_driver,
+};
+
 static void eth_init_func(void *paras)
 {
 	ip_addr_t ipaddr;
@@ -150,6 +385,14 @@ static void eth_init_func(void *paras)
     // netif_set_netmask(&xnetif, NULL);
     // netif_set_gw(&xnetif[0], NULL);
 	netif_set_status_callback(&xnetif, net_status_callback);
+    if(rvm_driver_register(&neteth_driver.drv, NULL, 0) < 0) {
+        printf("ether device register error \r\n");
+    } else {
+        printf("ether device register success \r\n");
+    }
+    g_netmgr = netmgr_dev_eth_init();
+    event_service_init(NULL);
+    netmgr_service_init(NULL);
     LOGD(TAG, "DHCP start");
 	netifapi_dhcp_start(&xnetif);
 }

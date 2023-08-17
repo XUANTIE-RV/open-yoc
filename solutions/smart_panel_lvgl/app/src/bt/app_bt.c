@@ -4,7 +4,7 @@
 #include <aos/bt.h>
 #include <ulog/ulog.h>
 
-#include "app_wifi.h"
+#include "wifi/app_wifi.h"
 #include "event_mgr/app_event.h"
 
 #define TAG "appbt"

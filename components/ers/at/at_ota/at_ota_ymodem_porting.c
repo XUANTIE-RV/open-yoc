@@ -3,9 +3,8 @@
  */
 
 #include <aos/aos.h>
-#include <aos/hal/uart.h>
 #include <ulog/ulog.h>
-
+#include <devices/uart.h>
 #include "at_ota.h"
 #include "at_ota_internal.h"
 #include "ymodem.h"
@@ -15,21 +14,17 @@
 static inline int _ymodem_porting_recv(ymodem_ctx_t *ctx, void *buf, uint32_t len)
 {
     at_ota_ctx_t *at_ota_ctx = ymodem_get_user_ctx(ctx);
-    uart_dev_t    uart_dev;
-    uart_dev.port = at_ota_ctx->ymodem_port;
-    ;
+    rvm_dev_t *uart_dev = rvm_hal_device_find("uart", at_ota_ctx->ymodem_port);
     uint32_t recv_len = 0;
-    hal_uart_recv_II(&uart_dev, buf, len, &recv_len, 100);
-
+    recv_len = rvm_hal_uart_recv(uart_dev, buf, len, 100);
     return recv_len;
 }
 
 static inline int _ymodem_porting_send(ymodem_ctx_t *ctx, char ch)
 {
     at_ota_ctx_t *at_ota_ctx = ymodem_get_user_ctx(ctx);
-    uart_dev_t    uart_dev;
-    uart_dev.port = at_ota_ctx->ymodem_port;
-    return hal_uart_send(&uart_dev, (void *)&ch, 1, AOS_WAIT_FOREVER);
+    rvm_dev_t *uart_dev = rvm_hal_device_find("uart", at_ota_ctx->ymodem_port);
+    return rvm_hal_uart_send(uart_dev, (void *)&ch, 1, AOS_WAIT_FOREVER);
 }
 
 static inline int _ymodem_porting_init(ymodem_ctx_t *ctx)

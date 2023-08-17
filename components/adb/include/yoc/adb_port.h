@@ -14,7 +14,8 @@ extern "C" {
 typedef void (*channel_event_t)(int event_id, void *priv);
 
 typedef struct {
-    int (*init)(void *hdl, void *config);
+    void *(*init)(void *config, int port);
+    void (*deinit)(void *hdl);
     int (*send)(void *hdl, const char *data, int size); /* send success return 0*/
     int (*set_event)(void *hdl, channel_event_t evt_cb, void *priv);
     int (*recv)(void *hdl, const char *data, int size, int timeout); /* return real recv size */

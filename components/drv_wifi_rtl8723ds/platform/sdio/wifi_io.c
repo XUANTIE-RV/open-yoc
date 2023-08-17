@@ -44,7 +44,7 @@
 
 #ifndef CONFIG_CHIP_D1
 void SDMMCHOST_Disable_Interrupt(int idx);
-void SDMMCHOST_RegisterInterrupt(sdmmchost_interrupt_t interrupt_func);
+void SDMMCHOST_RegisterInterrupt(int idx, sdmmchost_interrupt_t interrupt_func);
 void SDMMCHOST_Enable_Interrupt(int idx);
 static sdio_card_t SDIO_Card;
 #else
@@ -128,7 +128,9 @@ void rtl8723ds_irq_callback(void *prim)
 #endif
 {
 #ifndef CONFIG_CHIP_D1
-    g_idx = idx;
+    if (g_idx != idx) {
+        return;
+    }
     SDMMCHOST_Disable_Interrupt(g_idx);
 #endif
     aos_event_set(&g_wifi_irq_event, 1, AOS_EVENT_OR);
@@ -153,7 +155,7 @@ void sdio_irq_thread(void *arg)
     LOGD(TAG, "sdio_irq_thread enter IRQ routine");
 
 #ifndef CONFIG_CHIP_D1
-    SDMMCHOST_RegisterInterrupt(rtl8723ds_irq_callback);
+    SDMMCHOST_RegisterInterrupt(g_idx, rtl8723ds_irq_callback);
 #else
     sdio_claim_irq(SDIO_Card->sdio_func[0], (sdio_irq_handler_t *)rtl8723ds_irq_callback);
 #endif
@@ -230,7 +232,7 @@ int __sdio_release_irq(struct rtl_sdio_func *func)
 #ifdef CONFIG_CHIP_D1
     sdio_release_irq(SDIO_Card->sdio_func[0]);
 #else
-    SDMMCHOST_RegisterInterrupt(NULL);
+    SDMMCHOST_RegisterInterrupt(g_idx, NULL);
 #endif
     irq_handler = NULL;
     sdio_thread_running = 0;
@@ -264,6 +266,7 @@ int __sdio_bus_probe(int idx)
 {
     LOGD(TAG, "%s", __FUNCTION__);
 #ifndef CONFIG_CHIP_D1
+    g_idx = idx;
     memset(&SDIO_Card, 0, sizeof(SDIO_Card));
     SDIO_Card.usrParam.cd = NULL;
     SDIO_Card.host.base = csi_sdif_get_handle(idx);

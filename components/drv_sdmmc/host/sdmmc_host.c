@@ -81,7 +81,7 @@ uint32_t s_sdifDmaTable[4][SDIF_DMA_TABLE_WORDS] __attribute__((aligned(64)));
 static volatile bool g_sdifTransferSuccessFlag[4] = {true, true, true, true};
 /*! @brief Card detect flag. */
 static volatile bool s_sdInsertedFlag[4] = {false, false, false, false};
-static sdmmchost_interrupt_t g_interrupt_func;
+static sdmmchost_interrupt_t g_interrupt_func[4];
 
 static void SDMMCHOST_DetectCardInsertByHost(uint32_t sdif, void *user_data)
 {
@@ -117,9 +117,10 @@ static void SDMMCHOST_transfer_completeCallback(uint32_t sdif, void *handle, sta
     SDMMCEVENT_Notify(sdif, kSDMMCEVENT_transfer_complete);
 }
 
-void SDMMCHOST_RegisterInterrupt(sdmmchost_interrupt_t interrupt_func)
+void SDMMCHOST_RegisterInterrupt(int idx, sdmmchost_interrupt_t interrupt_func)
 {
-    g_interrupt_func = interrupt_func;
+    if (idx < ARRAY_SIZE(g_interrupt_func))
+        g_interrupt_func[idx] = interrupt_func;
 }
 
 void SDMMCHOST_Enable_Interrupt(int idx)
@@ -135,8 +136,8 @@ void SDMMCHOST_Disable_Interrupt(int idx)
 static void SDMMCHOST_Interrupt(uint32_t idx, void *user_data)
 {
     /* application callback */
-    if (g_interrupt_func) {
-        g_interrupt_func(idx, user_data);
+    if (g_interrupt_func[idx]) {
+        g_interrupt_func[idx](idx, user_data);
     }
 }
 

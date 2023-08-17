@@ -725,8 +725,8 @@ int w800_connect_remote(int id, net_conn_e type, char *srvname, uint16_t port)
 
         default:
             LOGE(TAG, "type=%d err!", type);
-            return -1;
-
+            ret = -1;
+            goto out;
     }
 
     if (ret == 0) {
@@ -741,7 +741,7 @@ int w800_connect_remote(int id, net_conn_e type, char *srvname, uint16_t port)
     }
 
     atparser_cmd_exit(g_atparser_uservice_t);
-
+out:
     aos_mutex_unlock(&g_cmd_mutex);
 
     return ret;

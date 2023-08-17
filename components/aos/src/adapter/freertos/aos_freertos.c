@@ -13,7 +13,22 @@
 #include <timers.h>
 #include <event_groups.h>
 #include <aos/aos.h>
-#include <drv/irq.h>
+#include <aos/wdt.h>
+#include <debug/dbg.h>
+
+#define AOS_MIN_STACK_SIZE       64
+
+#define CHECK_HANDLE(handle)                                 \
+    do                                                       \
+    {                                                        \
+        if(handle == NULL || (void *)(*handle) == NULL)      \
+        {                                                    \
+            return -EINVAL;                                  \
+        }                                                    \
+    } while (0)
+
+static aos_task_key_t used_bitmap;
+static long long start_time_ms = 0;
 
 // weak hook
 __attribute__((weak)) void aos_task_create_hook_lwip_thread_sem(aos_task_t *task)
@@ -25,10 +40,16 @@ __attribute__((weak)) void aos_task_del_hook_lwip_thread_sem(aos_task_t *task, v
 {
     
 }
-volatile int g_intrpt_nested_cnt;
-static uint32_t is_in_intrp(void)
+
+void vApplicationMallocFailedHook( void )
 {
-    return g_intrpt_nested_cnt;
+    // do not assert
+}
+
+volatile int g_intrpt_nested_cnt;
+static inline bool is_in_intrp(void)
+{
+    return g_intrpt_nested_cnt > 0;
 }
 
 void aos_reboot_ext(int cmd)
@@ -52,6 +73,25 @@ const char *aos_version_get(void)
     return aos_get_os_version();
 }
 
+const char *aos_kernel_version_get(void)
+{
+    static char ver_buf[24] = {0};
+    if (ver_buf[0] == 0) {
+        snprintf(ver_buf, sizeof(ver_buf), "FreeRTOS %s", tskKERNEL_VERSION_NUMBER);
+    }
+    return ver_buf;
+}
+
+int aos_kernel_status_get(void)
+{
+    BaseType_t state = xTaskGetSchedulerState();
+    if (state == taskSCHEDULER_SUSPENDED)
+        return AOS_SCHEDULER_SUSPENDED;
+    else if (state == taskSCHEDULER_RUNNING)
+        return AOS_SCHEDULER_RUNNING;
+    else
+        return AOS_SCHEDULER_NOT_STARTED;
+}
 
 #define AOS_MAGIC 0x20171020
 typedef struct {
@@ -61,24 +101,6 @@ typedef struct {
     char name[32];
     uint32_t magic;
 } AosStaticTask_t;
-
-struct targ {
-    AosStaticTask_t *task;
-    void (*fn)(void *);
-    void *arg;
-};
-
-static void dfl_entry(void *arg)
-{
-    struct targ *targ = arg;
-    void (*fn)(void *) = targ->fn;
-    void *farg = targ->arg;
-    free(targ);
-
-    fn(farg);
-
-    vTaskDelete(NULL);
-}
 
 void vPortCleanUpTCB(void *pxTCB)
 {
@@ -92,11 +114,62 @@ void vPortCleanUpTCB(void *pxTCB)
     free(task);
 }
 
+aos_status_t aos_task_suspend(aos_task_t *task)
+{
+    CHECK_HANDLE(task);
+
+    TaskHandle_t ptask = (TaskHandle_t)*task;
+    vTaskSuspend(ptask);
+
+    return 0;
+}
+
+aos_status_t aos_task_resume(aos_task_t *task)
+{
+    CHECK_HANDLE(task);
+
+    TaskHandle_t ptask = (TaskHandle_t)*task;
+    vTaskResume(ptask);
+
+    return 0;
+}
+
+aos_status_t aos_task_create(aos_task_t *task, const char *name, void (*fn)(void *),
+                             void *arg, void *stack, size_t stack_size, int32_t prio, uint32_t options)
+{
+    int       ret;
+
+    if(task == NULL) {
+        return -EINVAL;
+    }
+
+    if (stack != NULL) {
+        // TODO:
+    }
+
+    ret = aos_task_new_ext(task,name,fn,arg,stack_size,prio);
+    if (ret != 0) {
+        return ret;
+    }
+
+    if (options == 0) {
+        ret = aos_task_suspend(task);
+        if (ret != 0) {
+            return ret;
+        }       
+    }
+
+    return 0;
+}
+
 int aos_task_new(const char *name, void (*fn)(void *), void *arg,
                  int stack_size)
 {
+    aos_task_t task;
 
-    return aos_task_new_ext(NULL,name,fn,arg,stack_size,AOS_DEFAULT_APP_PRI);
+    aos_check_return_einval(name && fn && (stack_size >= AOS_MIN_STACK_SIZE));
+
+    return aos_task_new_ext(&task,name,fn,arg,stack_size,AOS_DEFAULT_APP_PRI);
 }
 
 int aos_task_new_ext(aos_task_t *task, const char *name, void (*fn)(void *), void *arg,
@@ -104,27 +177,27 @@ int aos_task_new_ext(aos_task_t *task, const char *name, void (*fn)(void *), voi
 {
     TaskHandle_t xHandle;
     /* vreify param */
-    if (fn == NULL || (stack_size % 4 != 0) ) {
-        return -1;
-    }
+    int prio_freertos = configMAX_PRIORITIES - 1 - prio;
 
-    /*create task */
+    aos_check_return_einval(task && fn && (stack_size >= AOS_MIN_STACK_SIZE) &&
+                            (prio_freertos >= 0 && prio_freertos < configMAX_PRIORITIES));
+
     if (name == NULL) {
-        name = "default_name";
+        return -EFAULT; // match as rhino
     }
-    BaseType_t ret = xTaskCreate(fn, name, stack_size>>2, arg, configMAX_PRIORITIES-prio, &xHandle);
 
+#if defined(CSK_CPU_STACK_EXTRAL)
+    stack_size += CSK_CPU_STACK_EXTRAL;
+#endif
+    BaseType_t ret = xTaskCreate(fn, name, stack_size / sizeof( StackType_t ), arg, prio_freertos, &xHandle);
     if (ret == pdPASS) {
         if(task) {
             *task = xHandle;
         }
         aos_task_create_hook_lwip_thread_sem(task);
         return 0;
-    } else {
-        return -1;
     }
-
-    return 0;
+    return -1;
 }
 
 void aos_task_exit(int code)
@@ -132,25 +205,27 @@ void aos_task_exit(int code)
     /* task exit by itself */
     vTaskDelete(NULL);
     aos_task_t task = aos_task_self();
-// #if (RHINO_CONFIG_USER_HOOK_FOR_LWIP > 0)
+
     aos_task_del_hook_lwip_thread_sem(&task, NULL);
-// #endif
 }
 
 aos_status_t aos_task_delete(aos_task_t *task)
 {
+    CHECK_HANDLE(task);
+
     TaskHandle_t ptask = (TaskHandle_t)*task;
 
     vTaskDelete(ptask);
 
     return 0;
 }
+
 const char *aos_task_name(void)
 {
-    TaskHandle_t task = (TaskHandle_t)xTaskGetCurrentTaskHandle();
-    return  pcTaskGetTaskName(task);
-
+    TaskHandle_t ptask = (TaskHandle_t)xTaskGetCurrentTaskHandle();
+    return pcTaskGetTaskName(ptask);
 }
+
 const char *aos_task_get_name(aos_task_t *task)
 {
     TaskHandle_t ptask = (TaskHandle_t)*task;
@@ -158,6 +233,11 @@ const char *aos_task_get_name(aos_task_t *task)
     return pcTaskGetTaskName(ptask);
 }
 
+aos_task_t aos_task_find(char *name)
+{
+    // TODO: Not support
+    return NULL;
+}
 
 void aos_task_show_info(void)
 {
@@ -173,13 +253,13 @@ void aos_task_show_info(void)
     }
 
     total_task_number = uxTaskGetSystemState(pTaskStatus,total_task_number,&total_time);
-    printf("task                 pri status  stack_wm      \n");
-    printf("-------------------- --- ------- ------------- \n");
+    printf("task                 pri stack_base sp         status  min_remained  \n");
+    printf("-------------------- --- ---------- ---------  ------  ------------  \n");
 
 
     for (i = 0; i < total_task_number; i++) {
 
-        printf("%-20s %3d ", pTaskStatus->pcTaskName, (uint32_t)(pTaskStatus->uxCurrentPriority));
+        printf("%-20s %3d %p %p ", pTaskStatus->pcTaskName, (uint32_t)(pTaskStatus->uxCurrentPriority), pTaskStatus->pxStackBase, (void *)(*(unsigned long *)pTaskStatus->xHandle));
 
         if (pTaskStatus->eCurrentState == eRunning)            printf("runing ");
         else if ( pTaskStatus->eCurrentState == eReady)        printf("ready  ");
@@ -196,59 +276,131 @@ void aos_task_show_info(void)
     aos_free(pTaskStatus_bk);
 }
 
+aos_status_t aos_task_ptcb_get(aos_task_t *task, void **ptcb)
+{
+    CHECK_HANDLE(task);
+    if (ptcb == NULL) {
+        return -EINVAL;
+    }
+#if ( configUSE_APPLICATION_TASK_TAG == 1 )
+    TaskHandle_t xTask = (TaskHandle_t)*task;
+    /* Return a reference to this pthread object, which is stored in the
+     * FreeRTOS task tag. */
+    void *pxthread = (void *)xTaskGetApplicationTaskTag( xTask );
+    *ptcb = pxthread;
+#endif
+    return 0;
+}
+
+aos_status_t aos_task_ptcb_set(aos_task_t *task, void *ptcb)
+{
+    CHECK_HANDLE(task);
+#if ( configUSE_APPLICATION_TASK_TAG == 1 )
+    TaskHandle_t xTask = (TaskHandle_t)*task;
+    /* Store the pointer to the thread object in the task tag. */
+    vTaskSetApplicationTaskTag( xTask, ( TaskHookFunction_t ) ptcb );
+#endif
+    return 0;
+}
+
+aos_status_t aos_task_pri_change(aos_task_t *task, uint8_t pri, uint8_t *old_pri)
+{
+    CHECK_HANDLE(task);
+
+    TaskHandle_t ptask = (TaskHandle_t)*task;
+
+    if (pri > configMAX_PRIORITIES - 1)
+        return -EINVAL;
+
+    if (old_pri == NULL)
+        return -EFAULT; // match as rhino
+
+    vTaskPrioritySet(ptask, configMAX_PRIORITIES - 1 - pri);
+
+    return 0;
+}
+
+aos_status_t aos_task_pri_get(aos_task_t *task, uint8_t *priority)
+{
+    CHECK_HANDLE(task);
+    if (priority == NULL) {
+        return -EINVAL;
+    }
+
+    TaskHandle_t ptask = (TaskHandle_t)*task;
+
+    UBaseType_t pri = uxTaskPriorityGet(ptask);
+    if (pri > configMAX_PRIORITIES - 1)
+        return -1;
+    *priority = configMAX_PRIORITIES - 1 - pri;
+
+    return 0;
+}
+
 int aos_task_key_create(aos_task_key_t *key)
 {
-    //todo
-    /*
-    AosStaticTask_t *task = (AosStaticTask_t *)xTaskGetCurrentTaskHandle();
     int i;
+    if (NULL == key)
+        return -EINVAL;
 
-    if (task->magic != AOS_MAGIC)
-        return -1;
+    for (i = configNUM_THREAD_LOCAL_STORAGE_POINTERS - 1; i >= 0; i--) {
+        if (!((1 << i) & used_bitmap)) {
+            used_bitmap |= 1 << i;
+            *key = i;
 
-    for (i=0;i<4;i++) {
-        if (task->key_bitmap & (1 << i))
-            continue;
-
-        task->key_bitmap |= 1 << i;
-        *key = i;
-        return 0;
+            return 0;
+        }
     }
-    */
-    return -1;
+
+    return -EINVAL;
 }
 
 void aos_task_key_delete(aos_task_key_t key)
 {
-    //todo
-    /*
-    AosStaticTask_t *task = (AosStaticTask_t *)xTaskGetCurrentTaskHandle();
-    if (task->magic != AOS_MAGIC)
+    if (key >= configNUM_THREAD_LOCAL_STORAGE_POINTERS) {
         return;
-    task->key_bitmap &= ~(1 << key);
-    */
+    }
+
+    uint32_t bit = 1 << key;
+    TaskHandle_t task = (TaskHandle_t)xTaskGetCurrentTaskHandle();
+
+    if ((used_bitmap & bit) == bit) {
+        used_bitmap &= ~(bit);
+        vTaskSetThreadLocalStoragePointer(task, key, NULL);
+    }
 }
 
 int aos_task_setspecific(aos_task_key_t key, void *vp)
 {
     TaskHandle_t task = (TaskHandle_t)xTaskGetCurrentTaskHandle();
+    uint32_t bit = 1 << key;
 
-	vTaskSetThreadLocalStoragePointer(task, key, vp);
+    if ((used_bitmap & bit) == bit) {
+        vTaskSetThreadLocalStoragePointer(task, key, vp);
+    } else {
+        return -EINVAL;
+    }
 
     return 0;
 }
 
 void *aos_task_getspecific(aos_task_key_t key)
 {
+    void *vp = NULL;
+    uint32_t bit = 1 << key;
     TaskHandle_t task = (TaskHandle_t)xTaskGetCurrentTaskHandle();
 
-    return (void *)pvTaskGetThreadLocalStoragePointer(task, key);;
+    if ((used_bitmap & bit) == bit) {
+        vp = pvTaskGetThreadLocalStoragePointer(task, key);
+    }
+
+    return vp;
 }
 
 void aos_task_wdt_attach(void (*will)(void *), void *args)
 {
 #ifdef CONFIG_SOFTWDT
-    aos_wdt_attach((uint32_t)xTaskGetCurrentTaskHandle(), will, args);
+    aos_wdt_attach((long)xTaskGetCurrentTaskHandle(), will, args);
 #else
     (void)will;
     (void)args;
@@ -258,7 +410,7 @@ void aos_task_wdt_attach(void (*will)(void *), void *args)
 void aos_task_wdt_detach()
 {
 #ifdef CONFIG_SOFTWDT
-    uint32_t index = (uint32_t)xTaskGetCurrentTaskHandle();
+    long index = (long)xTaskGetCurrentTaskHandle();
 
     aos_wdt_feed(index, 0);
     aos_wdt_detach(index);
@@ -268,94 +420,119 @@ void aos_task_wdt_detach()
 void aos_task_wdt_feed(int time)
 {
 #ifdef CONFIG_SOFTWDT
-    ktask_t *task = xTaskGetCurrentTaskHandle();
+    TaskHandle_t task = xTaskGetCurrentTaskHandle();
+    char *task_name = pcTaskGetTaskName(task);
 
-    if (!aos_wdt_exists((uint32_t)task))
-        aos_wdt_attach((uint32_t)task, NULL, (void*)task->task_name);
+    if (!aos_wdt_exists((long)task))
+        aos_wdt_attach((long)task, NULL, (void *)task_name);
 
-    aos_wdt_feed((uint32_t)task, time);
+    aos_wdt_feed((long)task, time);
 #endif
 }
 
 int aos_mutex_new(aos_mutex_t *mutex)
 {
-    SemaphoreHandle_t mux = xSemaphoreCreateMutex();
+    aos_check_return_einval(mutex);
+
+    SemaphoreHandle_t mux = xSemaphoreCreateRecursiveMutex();
     *mutex = mux;
     return mux != NULL ? 0 : -1;
 }
 
 void aos_mutex_free(aos_mutex_t *mutex)
 {
+    aos_check_return(mutex && *mutex);
+
     vSemaphoreDelete(*mutex);
+
+    *mutex = NULL;
 }
 
 int aos_mutex_lock(aos_mutex_t *mutex, unsigned int ms)
 {
+    CHECK_HANDLE(mutex);
+
+    if (is_in_intrp()) {
+        return -EPERM;
+    }
     if (mutex && *mutex) {
-        if(is_in_intrp()) {
-            BaseType_t temp = pdFALSE;
-            xSemaphoreTakeFromISR(*mutex,&temp);
-        } else {
-            xSemaphoreTake(*mutex, ms == AOS_WAIT_FOREVER ? portMAX_DELAY : pdMS_TO_TICKS(ms));
+        if ((xTaskGetSchedulerState() == taskSCHEDULER_SUSPENDED) && ms != 0) {
+            return -EPERM;
         }
+        BaseType_t ret = xSemaphoreTakeRecursive(*mutex, ms == AOS_WAIT_FOREVER ? portMAX_DELAY : pdMS_TO_TICKS(ms));
+        if (ret != pdPASS)
+            return -1;
     }
     return 0;
 }
 
 int aos_mutex_unlock(aos_mutex_t *mutex)
 {
-    if (mutex && *mutex) {
-        if(is_in_intrp()) {
-            BaseType_t temp = pdFALSE;
-            xSemaphoreGiveFromISR(*mutex,&temp);
-        } else {
-            xSemaphoreGive(*mutex);
-        }
+    CHECK_HANDLE(mutex);
+
+    if (is_in_intrp()) {
+        return -EPERM;
     }
+    if (mutex && *mutex) {
+        BaseType_t ret = xSemaphoreGiveRecursive(*mutex);
+        if (ret != pdPASS)
+            return -1;
+    }
+
     return 0;
 }
 
 int aos_mutex_is_valid(aos_mutex_t *mutex)
 {
-    return *mutex != NULL;
+    return mutex && *mutex != NULL;
+}
+
+#define SEM_MAXCOUNT 0xffffffffu
+aos_status_t aos_sem_create(aos_sem_t *sem, uint32_t count, uint32_t options)
+{
+    aos_check_return_einval(sem);
+
+    SemaphoreHandle_t s = xSemaphoreCreateCounting(SEM_MAXCOUNT, count);
+    *sem = s;
+    return s != NULL ? 0 : -1;
 }
 
 int aos_sem_new(aos_sem_t *sem, int count)
 {
-    SemaphoreHandle_t s = xSemaphoreCreateCounting(1024, count);
+    aos_check_return_einval(sem && (count >= 0));
+
+    SemaphoreHandle_t s = xSemaphoreCreateCounting(SEM_MAXCOUNT, count);
     *sem = s;
-    return 0;
+    return s != NULL ? 0 : -1;
 }
 
 void aos_sem_free(aos_sem_t *sem)
 {
-    if (sem == NULL || *sem ) {
-        return;
-    }
+    aos_check_return(sem && *sem);
 
     vSemaphoreDelete(*sem);
+
+    *sem = NULL;
 }
 
 int aos_sem_wait(aos_sem_t *sem, unsigned int ms)
 {
-    if (sem == NULL) {
-        return -1;
+    aos_check_return_einval(sem && *sem);
+
+    if (ms == 0) {
+        return (-EBUSY);
     }
-    int ret;
-    if(is_in_intrp()) {
-        BaseType_t pxHiProTskWkup = pdTRUE;
-        ret = xSemaphoreTakeFromISR(*sem, &pxHiProTskWkup);
-    } else {
-        ret = xSemaphoreTake(*sem, ms == AOS_WAIT_FOREVER ? portMAX_DELAY : pdMS_TO_TICKS(ms));
+    if (is_in_intrp()) {
+        return -EPERM;
     }
+    int ret = xSemaphoreTake(*sem, ms == AOS_WAIT_FOREVER ? portMAX_DELAY : pdMS_TO_TICKS(ms));
     return ret == pdPASS ? 0 : -1;
 }
 
 void aos_sem_signal(aos_sem_t *sem)
 {
-    if (sem == NULL && *sem) {
-        return;
-    }
+    aos_check_return(sem && *sem);
+
     if(is_in_intrp()) {
         BaseType_t  temp = pdTRUE;
         xSemaphoreGiveFromISR(*sem, &temp);
@@ -371,35 +548,99 @@ int aos_sem_is_valid(aos_sem_t *sem)
 
 void aos_sem_signal_all(aos_sem_t *sem)
 {
-    //todo freertos doesn't has signall all function
-    aos_sem_signal(sem);
+    // TODO: Not support
 }
 
-int aos_queue_new(aos_queue_t *queue, void *buf, size_t size, int max_msg)
+int aos_task_sem_new(aos_task_t *task, aos_sem_t *sem, const char *name, int count)
 {
+    return ENOSYS;
+}
+
+int aos_task_sem_free(aos_task_t *task)
+{
+    return ENOSYS;
+}
+
+void aos_task_sem_signal(aos_task_t *task)
+{
+    // TODO: Not Support
+    return;
+}
+
+int aos_task_sem_wait(unsigned int timeout)
+{
+    return ENOSYS;
+}
+
+int aos_task_sem_count_set(aos_task_t *task, int count)
+{
+    return ENOSYS;
+}
+
+int aos_task_sem_count_get(aos_task_t *task, int *count)
+{
+    return ENOSYS;
+}
+
+typedef struct {
     xQueueHandle q;
-    (void)(buf);
-    /* verify param */
-    if(queue == NULL || size == 0) {
+    int msg_size;
+} queue_hdl_t;
+
+aos_status_t aos_queue_create(aos_queue_t *queue, size_t size, size_t max_msgsize, uint32_t options)
+{
+    aos_check_return_einval(queue && (size > 0) && (max_msgsize > 0));
+
+    xQueueHandle q;
+    queue_hdl_t *q_hdl = aos_zalloc(sizeof(queue_hdl_t));
+    if (q_hdl == NULL)
+        return -ENOMEM;
+
+    /* create queue object */
+    q = xQueueCreate(size / max_msgsize, max_msgsize);
+    if(q == NULL) {
+        aos_free(q_hdl);
         return -1;
     }
 
+    q_hdl->q = q;
+    q_hdl->msg_size = max_msgsize;
+    *queue = q_hdl;
+
+    return 0;
+}
+
+int aos_queue_new(aos_queue_t *queue, void *buf, size_t size, int max_msgsize)
+{
+    aos_check_return_einval(queue && buf && (size > 0) && (max_msgsize > 0));
+
+    xQueueHandle q;
+    (void)(buf);
+
     /* create queue object */
-    q = xQueueCreate(size / max_msg, max_msg);
-    if(q == NULL) {
-        return -1;
-    }
-    *queue = q;
+    q = xQueueCreate(size / max_msgsize, max_msgsize);
+    if(q == NULL)
+        return -ENOMEM;
+    queue_hdl_t *q_hdl = aos_zalloc(sizeof(queue_hdl_t));
+    if (q_hdl == NULL)
+        return -ENOMEM;
+    q_hdl->q = q;
+    q_hdl->msg_size = max_msgsize;
+    *queue = q_hdl;
 
     return 0;
 }
 
 void aos_queue_free(aos_queue_t *queue)
 {
+    aos_check_return(queue && *queue);
+
+    queue_hdl_t *q_hdl = *queue;
     /* delete queue object */
-    if(queue && *queue) {
-        vQueueDelete(*queue);
-    }
+    vQueueDelete(q_hdl->q);
+    aos_free(q_hdl);
+
+    *queue = NULL;
 
     return;
 }
@@ -407,24 +648,35 @@ void aos_queue_free(aos_queue_t *queue)
 int aos_queue_send(aos_queue_t *queue, void *msg, size_t size)
 {
     /* verify param */
-    if(queue == NULL || msg == NULL || size == 0 ) {
-        return -1;
-    }
+    CHECK_HANDLE(queue);
 
+    if (!msg)
+        return -EFAULT; //same as rhino return value
+
+    if (!(size > 0)) {
+        return -EINVAL;
+    }
+    queue_hdl_t *q_hdl = *queue;
     /* send msg  to specific queue */
-    return xQueueSend(*queue, msg, portMAX_DELAY) == pdPASS ? 0 : -1;
+    return xQueueSend(q_hdl->q, msg, portMAX_DELAY) == pdPASS ? 0 : -1;
 }
 
 int aos_queue_recv(aos_queue_t *queue, unsigned int ms, void *msg, size_t *size)
 {
     /* verify param */
-    if(queue == NULL || msg == NULL || size == 0 ) {
+    CHECK_HANDLE(queue);
+    if (size == NULL || msg == NULL) {
+        return -EFAULT; //same as rhino return value
+    }
+    queue_hdl_t *q_hdl = *queue;
+    /* receive msg from specific queue */
+    BaseType_t ret = xQueueReceive(q_hdl->q, msg, ms == AOS_WAIT_FOREVER ? portMAX_DELAY : pdMS_TO_TICKS(ms));
+    if (ret != pdPASS) {
+        *size = 0;
         return -1;
     }
-
-    /* receive msg from specific queue */
-    return xQueueReceive(*queue, msg, ms == AOS_WAIT_FOREVER ? portMAX_DELAY : pdMS_TO_TICKS(ms)) == pdPASS ? 0 : -1;
-
+    *size = q_hdl->msg_size;
+    return 0;
 }
 
 int aos_queue_is_valid(aos_queue_t *queue)
@@ -434,7 +686,7 @@ int aos_queue_is_valid(aos_queue_t *queue)
 
 void *aos_queue_buf_ptr(aos_queue_t *queue)
 {
-    //todo  freertos doesn't support this feature
+    // TODO: Not support
     (void)queue;
     return NULL;
 }
@@ -442,7 +694,9 @@ void *aos_queue_buf_ptr(aos_queue_t *queue)
 int aos_queue_get_count(aos_queue_t *queue)
 {
     BaseType_t ret;
-    ret = uxQueueMessagesWaiting(*queue);
+    CHECK_HANDLE(queue);
+    queue_hdl_t *q_hdl = *queue;
+    ret = uxQueueMessagesWaiting(q_hdl->q);
     return ret;
 }
 
@@ -451,6 +705,9 @@ typedef struct tmr_adapter {
     void (*func)(void *, void *);
     void *func_arg;
     uint8_t bIsRepeat;
+    uint16_t valid_flag;
+    uint64_t init_ms;
+    uint64_t round_ms;
 } tmr_adapter_t;
 
 static void tmr_adapt_cb(TimerHandle_t xTimer)
@@ -466,6 +723,8 @@ static void tmr_adapt_cb(TimerHandle_t xTimer)
 int aos_timer_new(aos_timer_t *timer, void (*fn)(void *, void *),
                   void *arg, int ms, int repeat)
 {
+    aos_check_return_einval(timer && fn);
+
     return aos_timer_new_ext(timer,fn,arg,ms,repeat,1);
 }
 
@@ -473,9 +732,10 @@ int aos_timer_new_ext(aos_timer_t *timer, void (*fn)(void *, void *),
                       void *arg, int ms, int repeat, unsigned char auto_run)
 {
     /* verify param */
-    if (timer == NULL || ms == 0 || fn == NULL) {
-        return -1;
-    }
+    aos_check_return_einval(timer && fn);
+
+    if (ms == 0)
+        return -EINVAL;
 
     /* create timer wrap object ,then initlize timer object */
     tmr_adapter_t *tmr_adapter = pvPortMalloc(sizeof(tmr_adapter_t));
@@ -487,14 +747,17 @@ int aos_timer_new_ext(aos_timer_t *timer, void (*fn)(void *, void *),
     tmr_adapter->func = fn;
     tmr_adapter->func_arg = arg;
     tmr_adapter->bIsRepeat = repeat;
+    tmr_adapter->init_ms = ms;
+    tmr_adapter->round_ms = (repeat == true) ? ms : 0;
 
     /* create timer by kernel api */
-    TimerHandle_t ptimer = xTimerCreate("Timer", pdMS_TO_TICKS(ms),repeat,tmr_adapter, tmr_adapt_cb);
+    TimerHandle_t ptimer = xTimerCreate("Timer", pdMS_TO_TICKS(ms), repeat, tmr_adapter, tmr_adapt_cb);
 
     if (timer == NULL) {
         vPortFree(tmr_adapter);
         return -1;
     }
+    tmr_adapter->valid_flag = 0xA598;
 
     tmr_adapter->timer = ptimer;
     *timer = (void*)tmr_adapter;
@@ -511,9 +774,7 @@ int aos_timer_new_ext(aos_timer_t *timer, void (*fn)(void *, void *),
 
 void aos_timer_free(aos_timer_t *timer)
 {
-    if (timer == NULL) {
-        return;
-    }
+    aos_check_return(timer && *timer);
 
     tmr_adapter_t *tmr_adapter = *timer;
     int ret = xTimerDelete(tmr_adapter->timer, 0);
@@ -521,19 +782,14 @@ void aos_timer_free(aos_timer_t *timer)
     if (!ret) {
         return ;
     }
-
+    tmr_adapter->valid_flag = 0;
     vPortFree(tmr_adapter);
     *timer = NULL;
-
-    return ;
 }
 
 int aos_timer_start(aos_timer_t *timer)
 {
-    /* verify param */
-    if (timer == NULL ) {
-        return -1;
-    }
+    CHECK_HANDLE(timer);
 
     /* start timer  */
     tmr_adapter_t *tmr_adapter = *timer;
@@ -545,6 +801,7 @@ int aos_timer_start(aos_timer_t *timer)
     } else {
         ret = xTimerStart(tmr_adapter->timer, 0);
     }
+
     if (ret != pdPASS) {
         return -1;
     }
@@ -554,10 +811,7 @@ int aos_timer_start(aos_timer_t *timer)
 
 int aos_timer_stop(aos_timer_t *timer)
 {
-    /* verify param */
-    if (timer == NULL) {
-        return -1;
-    }
+    CHECK_HANDLE(timer);
 
     /* stop timer */
     tmr_adapter_t *tmr_adapter = *timer;
@@ -577,132 +831,139 @@ int aos_timer_stop(aos_timer_t *timer)
     return 0;
 }
 
+int aos_timer_is_valid(aos_timer_t *timer)
+{
+    if (timer == NULL || *timer == NULL) {
+        return 0;
+    }
+    tmr_adapter_t *tmr_adapter = *timer;
+    if (tmr_adapter->valid_flag != 0xA598)
+        return 0;
+    return 1;
+}
+
+int aos_timer_is_active(aos_timer_t *timer)
+{
+    if ((timer == NULL) || (*timer == NULL)) {
+        return 0;
+    }
+    
+    tmr_adapter_t *pTimer = *timer;
+
+    if( xTimerIsTimerActive(pTimer->timer) == pdFALSE ) {
+        return 0;
+    }
+    else {
+        return 1;
+    }
+}
+
 int aos_timer_change(aos_timer_t *timer, int ms)
 {
-    /* verify param */
-    if(timer == NULL ) {
-        return -1;
-    }
-    BaseType_t  xHigherProTskWoken  = pdFALSE;
-    /* change timer period value */
+    int ret = -1;
+    CHECK_HANDLE(timer);
+
     tmr_adapter_t *pTimer = *timer;
-    int ret;
+
     if(is_in_intrp()) {
+        BaseType_t  xHigherProTskWoken  = pdFALSE;
         ret = xTimerChangePeriodFromISR(pTimer->timer,pdMS_TO_TICKS(ms),&xHigherProTskWoken);
     } else {
         ret = xTimerChangePeriod(pTimer->timer,pdMS_TO_TICKS(ms),10);
     }
 
-    if(ret != pdPASS) {
-        return -1;
-    }
-
-    return 0;
-}
-
-int aos_timer_is_valid(aos_timer_t *timer)
-{
-    tmr_adapter_t *pTimer = *timer;
-    if( xTimerIsTimerActive(pTimer->timer) != pdFALSE ) {
-        // pTimer is active, do something.
-        return 1;
-    }
-    else {
-        // pTimer is not active, do something else.
+    if (ret == pdPASS) {
         return 0;
-    }
-}
-
-int aos_timer_change_once(aos_timer_t *timer, int ms)
-{
-    int ret = -1;
-
-    aos_check_return_einval(timer && *timer);
-    tmr_adapter_t *pTimer = *timer;
-    if( xTimerIsTimerActive(pTimer->timer) != pdFALSE ) {
-        xTimerStop(pTimer->timer, 100);
-    }
-    if( xTimerIsTimerActive(pTimer->timer) == pdFALSE ) {
-
-        if(is_in_intrp()) {
-            BaseType_t xHigherProTskWoken = pdFALSE;
-            ret = xTimerChangePeriodFromISR(pTimer->timer,pdMS_TO_TICKS(ms),&xHigherProTskWoken);
-        } else {
-            ret = xTimerChangePeriod(pTimer->timer, pdMS_TO_TICKS(ms), 100);
-        }
-
-        if (ret == pdPASS) {
-            return 0;
-        } else {
-            return -1;
-        }
+    } else {
+        return -1;
     }
 
     return ret;
 }
 
+/*
+该接口的使用与rhino内核的有区别
+freertos:
+创建的多周期时钟，调用该接口无效
+只有创建单周期时钟，调用该接口才有效
+rhino:
+创建的多周期时钟，调用该接口也是有效的
+*/
+int aos_timer_change_once(aos_timer_t *timer, int ms)
+{
+    CHECK_HANDLE(timer);
+    
+    int ret = -1;
+
+    tmr_adapter_t *pTimer = *timer;
+
+    if(is_in_intrp()) {
+        BaseType_t xHigherProTskWoken = pdFALSE;
+        ret = xTimerChangePeriodFromISR(pTimer->timer,pdMS_TO_TICKS(ms),&xHigherProTskWoken);
+    } else {
+        ret = xTimerChangePeriod(pTimer->timer, pdMS_TO_TICKS(ms), 10);
+    }
+
+    if (ret == pdPASS) {
+        return 0;
+    } else {
+        return -1;
+    }
+
+    return ret;
+}
+
+int aos_timer_gettime(aos_timer_t *timer, uint64_t value[4])
+{
+    tmr_adapter_t *pTimer = NULL;
+    uint64_t init_ms;
+    uint64_t round_ms;
+
+    pTimer = (tmr_adapter_t *)*timer;
+    init_ms = pTimer->init_ms;
+    round_ms = pTimer->round_ms;
+
+    value[0] = round_ms / 1000;
+    value[1] = (round_ms % 1000) * 1000000UL;
+    value[2] = init_ms / 1000;
+    value[3] = (init_ms % 1000) * 1000000UL;
+
+    return 0;
+}
+
 int aos_workqueue_create(aos_workqueue_t *workqueue, int pri, int stack_size)
 {
-    //todo
-    return 0;
+    return ENOSYS;
 }
 
 void aos_workqueue_del(aos_workqueue_t *workqueue)
 {
-    //todo
-    return;
+    // TODO: 不支持
 }
-
-struct work {
-    void (*fn)(void *);
-    void *arg;
-    int dly;
-};
 
 int aos_work_init(aos_work_t *work, void (*fn)(void *), void *arg, int dly)
 {
-    //todo
-    struct work *w = malloc(sizeof(*w));
-    w->fn = fn;
-    w->arg = arg;
-    w->dly = dly;
-    *work = w;
-    return 0;
+    return ENOSYS;
 }
 
 void aos_work_destroy(aos_work_t *work)
 {
-    //todo
-    free(*work);
+    // TODO: 不支持
 }
 
 int aos_work_run(aos_workqueue_t *workqueue, aos_work_t *work)
 {
-    //todo
-    return aos_work_sched(work);
-}
-
-static void worker_entry(void *arg)
-{
-    //todo
-    struct work *w = arg;
-    if (w->dly) {
-        usleep(w->dly * 1000);
-    }
-    w->fn(w->arg);
+    return ENOSYS;
 }
 
 int aos_work_sched(aos_work_t *work)
 {
-    //todo
-    struct work *w = *work;
-    return aos_task_new("worker", worker_entry, w, 8192);
+    return ENOSYS;
 }
 
 int aos_work_cancel(aos_work_t *work)
 {
-    //todo
-    return -1;
+    return ENOSYS;
 }
 
 void *aos_zalloc(size_t size)
@@ -716,6 +977,10 @@ void *aos_zalloc(size_t size)
 
 void *aos_malloc(size_t size)
 {
+    if (size == 0) {
+        return NULL;
+    }    
+
     return pvPortMalloc(size);
 }
 
@@ -727,13 +992,63 @@ void *aos_realloc(void *mem, size_t size)
 
 void aos_alloc_trace(void *addr, size_t allocator)
 {
-    //todo
+    // 在分配的内存区加跟踪信息
+    // TODO: freertos不支持，无法使用 CONFIG_DEBUG_MM 功能
 }
 
 void aos_free(void *mem)
 {
+    if (mem == NULL) {
+        return;
+    }
+
     vPortFree(mem);
 }
+
+
+void *aos_malloc_align(size_t alignment, size_t size)
+{
+    void *ptr;
+    void *align_ptr;
+    size_t align_size = sizeof(void*);
+
+    if (alignment > align_size) {
+        for (;;) {
+            align_size = align_size << 1;
+            if (align_size >= alignment)
+                break;
+        }
+    }
+    alignment = align_size;
+
+    /* get total aligned size */
+    align_size = size + (alignment << 1);
+    /* allocate memory block from heap */
+    ptr = aos_malloc(align_size);
+    if (ptr != NULL) {
+        /* the allocated memory block is aligned */
+        if (((unsigned long)ptr & (alignment - 1)) == 0) {
+            align_ptr = (void *)((unsigned long)ptr + alignment);
+        } else {
+            align_ptr = (void *)(((unsigned long)ptr + (alignment - 1)) & ~(alignment - 1));
+        }
+
+        /* set the pointer before alignment pointer to the real pointer */
+        *((unsigned long *)((unsigned long)align_ptr - sizeof(void *))) = (unsigned long)ptr;
+        ptr = align_ptr;
+    }
+
+    return ptr;
+}
+
+void aos_free_align(void *ptr)
+{
+    if (ptr) {
+        void *real_ptr = (void *)*(unsigned long *)((unsigned long)ptr - sizeof(void *));
+        aos_free(real_ptr);
+    }
+}
+
 
 void *aos_zalloc_check(size_t size)
 {
@@ -753,6 +1068,18 @@ void *aos_malloc_check(size_t size)
     aos_check_mem(p);
 
     return p;
+}
+
+void *aos_calloc(size_t nitems, size_t size)
+{
+    size_t len = (size_t)nitems*size;
+    void *tmp = aos_malloc(len);
+
+    if (tmp) {
+        memset(tmp, 0, len);
+    }
+
+    return tmp;
 }
 
 void *aos_calloc_check(size_t size, size_t num)
@@ -782,6 +1109,29 @@ long long aos_now_ms(void)
     return ms;
 }
 
+long long aos_sys_tick_get(void)
+{
+    return xTaskGetTickCount();
+}
+
+void aos_calendar_time_set(uint64_t now_ms)
+{
+    start_time_ms = now_ms - aos_now_ms();
+}
+
+uint64_t aos_calendar_time_get(void)
+{
+    return aos_now_ms() + start_time_ms;
+}
+
+uint64_t aos_calendar_localtime_get(void)
+{
+    if ((aos_calendar_time_get() - 8 * 3600 * 1000) < 0) {
+        return aos_calendar_time_get();
+    }
+    return aos_calendar_time_get() + 8 * 3600 * 1000;
+}
+
 void aos_msleep(int ms)
 {
     vTaskDelay(pdMS_TO_TICKS(ms));
@@ -790,6 +1140,7 @@ void aos_msleep(int ms)
 
 void aos_init(void)
 {
+    // nothing to do
     return;
 }
 
@@ -848,23 +1199,33 @@ void aos_task_yield()
 
 aos_task_t aos_task_self(void)
 {
-    static TaskHandle_t task;
-    task = xTaskGetCurrentTaskHandle();
-
-    return (aos_task_t)task;
+    return xTaskGetCurrentTaskHandle();
 }
 
+/*
+freertos限制 flags　<=0x00FFFFFF
+*/
 int aos_event_new(aos_event_t *event, unsigned int flags)
 {
     EventGroupHandle_t event_handle;
-    *event = NULL;
     aos_check_return_einval(event);
+    *event = NULL;
+
+    if ((flags & 0xff000000UL) != 0) {
+        return -EPERM;
+    }
 
     /* create event handle */
     event_handle = xEventGroupCreate();
     /* initlized event */
     if(event_handle != NULL) {
-        xEventGroupSetBits(event_handle,flags);
+        EventBits_t event_bits = xEventGroupSetBits(event_handle,flags);
+        if (flags != 0) {
+            if (!(event_bits & flags)) {
+                return -1;
+            }
+        }
+
     } else {
         return -1;
     }
@@ -891,102 +1252,128 @@ int aos_event_get
     unsigned int timeout
 )
 {
-    uint32_t   wait_bits = 0;
-    (void)opt;
+    uint32_t   wait_bits = 0, ticks_wait = 0;;
+    uint8_t clean_exit = 0, wait_all_bits = 0;
     aos_check_return_einval(event && *event);
 
-    if (timeout == AOS_WAIT_FOREVER) {
-        wait_bits = xEventGroupWaitBits(*event,
-                                        flags,
-                                        pdTRUE,
-                                        pdFALSE,
-                                        0xffffffff
-                                       );
-    } else {
-        wait_bits=  xEventGroupWaitBits(*event,
-                                        flags,
-                                        pdTRUE,
-                                        pdFALSE,
-                                        pdMS_TO_TICKS(timeout)
-                                       );
+    if (is_in_intrp()) {
+        return -EPERM;
+    }
+    if ((flags & 0xff000000UL) != 0) {
+        return -EPERM;
+    }
+    if ((xTaskGetSchedulerState() == taskSCHEDULER_SUSPENDED) && timeout != 0) {
+        return -EPERM;
     }
 
+    if (opt == AOS_EVENT_AND) {
+        clean_exit = pdFALSE;
+        wait_all_bits = pdTRUE;
+
+    } else if (opt == AOS_EVENT_AND_CLEAR) {
+        clean_exit = pdTRUE;
+        wait_all_bits = pdTRUE;
+
+    } else if (opt == AOS_EVENT_OR) {
+        clean_exit = pdFALSE;
+        wait_all_bits = pdFALSE;
+
+    } else if (opt == AOS_EVENT_OR_CLEAR) {
+        clean_exit = pdTRUE;
+        wait_all_bits = pdFALSE;
+    }
+
+    ticks_wait = AOS_WAIT_FOREVER;
+    if (timeout != AOS_WAIT_FOREVER) {
+        ticks_wait = pdMS_TO_TICKS(timeout);
+    }
+
+    wait_bits = xEventGroupWaitBits(*event,
+                                    flags,
+                                    clean_exit,
+                                    wait_all_bits,
+                                    ticks_wait
+                                    );
+
     *actl_flags = wait_bits;
+    if (timeout == AOS_NO_WAIT) {
+        if (opt == AOS_EVENT_AND || opt == AOS_EVENT_AND_CLEAR) {
+            if ((wait_bits & flags) != flags) {
+                return -EBUSY; // same as rhino
+            }
+        } else if (opt == AOS_EVENT_OR || opt == AOS_EVENT_AND_CLEAR) {
+            if (!(wait_bits & flags)) {
+                return -EBUSY; // same as rhino
+            }
+        }
+    }
     return 0;
 }
 
 int aos_event_set(aos_event_t *event, unsigned int flags, unsigned char opt)
 {
     aos_check_return_einval(event && *event);
-    if(is_in_intrp()) {
-        BaseType_t xHighProTaskWoken = pdFALSE;
-        xEventGroupSetBitsFromISR(*event,flags,&xHighProTaskWoken);
-    } else {
-        xEventGroupSetBits(*event,flags);
+
+    // for compatible with rhino
+    if (opt == AOS_EVENT_AND) {
+        flags = ~flags;
+        flags &= ~0xff000000UL;
     }
 
+    if ((flags & 0xff000000UL) != 0) {
+        return -EPERM;
+    }
+
+    if(is_in_intrp()) {
+        BaseType_t xHighProTaskWoken = pdFALSE;
+        if (opt == AOS_EVENT_AND) {
+            xEventGroupClearBitsFromISR(*event, flags);
+        } else {
+            xEventGroupSetBitsFromISR(*event, flags, &xHighProTaskWoken);
+        }
+    } else {
+        if (opt == AOS_EVENT_AND) {
+            xEventGroupClearBits(*event, flags);
+        } else {
+            xEventGroupSetBits(*event, flags);
+        }
+    }
     return 0;
 }
 
 int aos_event_is_valid(aos_event_t *event)
 {
-    EventGroupHandle_t k_event;
-
-    if (event == NULL) {
-        return 0;
-    }
-
-    k_event = *event;
-
-    if (k_event == NULL) {
-        return 0;
-    }
-
-    return 1;
+    return event && *event != NULL;
 }
 
 /// Suspend the scheduler.
-/// \return time in ticks, for how long the system can sleep or power-down.
 void aos_kernel_sched_suspend(void)
 {
     vTaskSuspendAll();
 }
 
 /// Resume the scheduler.
-/// \param[in]     sleep_ticks   time in ticks for how long the system was in sleep or power-down mode.
 void aos_kernel_sched_resume()
 {
     xTaskResumeAll();
 }
 
-/* YoC extend aos API */
-
 int aos_get_mminfo(int32_t *total, int32_t *used, int32_t *mfree, int32_t *peak)
 {
-    aos_check_return_einval(total && used && mfree && peak);
-    //todo
-    *total = 0;
-    *used =  0;
-    *mfree = 0;
-    *peak =  0;
-
-    return 0;
+    return ENOSYS;
 }
 
 int aos_mm_dump(void)
 {
-#if defined(CONFIG_DEBUG) && defined(CONFIG_DEBUG_MM)
-//todo
-#endif
-    return 0;
+    return ENOSYS;
 }
 
-uint64_t aos_kernel_tick2ms(uint32_t ticks)
+uint64_t aos_kernel_tick2ms(uint64_t ticks)
 {
     return ticks*1000/configTICK_RATE_HZ;
 }
 
-uint64_t aos_kernel_ms2tick(uint32_t ms)
+uint64_t aos_kernel_ms2tick(uint64_t ms)
 {
     return ms *configTICK_RATE_HZ/1000;
 }
@@ -1008,4 +1395,95 @@ void aos_sys_tick_handler(void)
 {
     extern void xPortSysTickHandler(void);
     xPortSysTickHandler();
+}
+
+int aos_is_sched_disable(void)
+{
+    BaseType_t state = xTaskGetSchedulerState();
+    if (state != taskSCHEDULER_RUNNING)
+        return 1;
+    return 0u;
+}
+
+int aos_is_irq_disable(void)
+{
+    extern unsigned long cpu_is_irq_enable();
+    return !cpu_is_irq_enable();
+}
+
+void aos_freep(char **ptr)
+{
+    if (ptr && (*ptr)) {
+        aos_free(*ptr);
+        *ptr = NULL;
+    }
+}
+
+int g_fr_next_sleep_ticks = -1;
+int32_t aos_kernel_next_sleep_ticks_get(void)
+{
+    return g_fr_next_sleep_ticks;
+}
+
+void aos_kernel_ticks_announce(int32_t ticks)
+{
+    g_fr_next_sleep_ticks = -1;
+    vTaskStepTick(ticks);
+    vPortYield();
+}
+
+aos_status_t aos_task_sched_policy_set(aos_task_t *task, uint8_t policy, uint8_t pri)
+{
+    // TODO: Not Support
+    // freertos 的任务调度策略是对于整个系统而言的,
+    // 通过 FreeRTOSConfig.h 中宏进行配置
+    // configUSE_PREEMPTION（是否支持抢占）
+    // configUSE_TIME_SLICING（是否支持时间片的轮转）
+    // configIDLE_SHOULD_YIELD（空闲任务是否会让步）
+    return ENOSYS;
+}
+
+aos_status_t aos_task_sched_policy_get(aos_task_t *task, uint8_t *policy)
+{
+#if (configUSE_PREEMPTION == 1)
+#if (configUSE_TIME_SLICING == 1)
+    return AOS_KSCHED_RR;
+#else
+    return AOS_KSCHED_FIFO;
+#endif /*(configUSE_TIME_SLICING == 1)*/
+#else
+    return AOS_KSCHED_OTHER;
+#endif
+}
+
+uint32_t aos_task_sched_policy_get_default(void)
+{
+#if (configUSE_PREEMPTION == 1)
+#if (configUSE_TIME_SLICING == 1)
+    return AOS_KSCHED_RR;
+#else
+    return AOS_KSCHED_FIFO;
+#endif /*(configUSE_TIME_SLICING == 1)*/
+#else
+    return AOS_KSCHED_OTHER;
+#endif
+}
+
+aos_status_t aos_task_time_slice_set(aos_task_t *task, uint32_t slice)
+{
+    // TODO: freertos 的时间片就是一个 tick 的时间，是根据硬件一个 tick 的时间对宏 configTICK_RATE_HZ 配置实现的
+    return ENOSYS;
+}
+
+aos_status_t aos_task_time_slice_get(aos_task_t *task, uint32_t *slice)
+{
+    if (!slice)
+        return -EINVAL;
+    *slice = 1000 / configTICK_RATE_HZ;
+    return 0;
+}
+
+uint32_t aos_sched_get_priority_max(uint32_t policy)
+{
+    return configMAX_PRIORITIES - 1;
 }

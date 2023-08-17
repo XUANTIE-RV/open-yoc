@@ -477,6 +477,7 @@ static int _iter_calc(kvnode_t *node, void *i)
             if (valid && idx >= 0) {
                 /* conflict */
                 lcache_node_t *lnode = (lcache_node_t*)calloc(1, sizeof(lcache_node_t));
+                aos_check_mem(lnode);
 
                 cache            = &lnode->cache;
                 cache->block_id  = node->block->id;

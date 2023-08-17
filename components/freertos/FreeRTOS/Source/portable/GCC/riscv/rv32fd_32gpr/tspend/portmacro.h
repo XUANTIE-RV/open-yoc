@@ -115,7 +115,7 @@ typedef void (*portvectorfunc)(void);
 /* Hardware specifics. */
 #define portBYTE_ALIGNMENT          8
 #define portSTACK_GROWTH            -1
-#define portMS_PERIOD_TICK          10
+#define portTICK_PERIOD_MS			( ( TickType_t ) 1000 / configTICK_RATE_HZ )
 
 static inline void vPortEnableInterrupt( void )
 {
@@ -173,6 +173,13 @@ extern void vPortYield( void );
                                                     }while(0)
 
 #define portYIELD_FROM_ISR( a )     portEND_SWITCHING_ISR( a )
+
+extern int g_fr_next_sleep_ticks;
+#define configPRE_SUPPRESS_TICKS_AND_SLEEP_PROCESSING(x) \
+do                                                       \
+{                                                        \
+    g_fr_next_sleep_ticks = x;                           \
+} while (0)
 
 #define configASSERT( a )   do {if ((a)==0){printf("Assert : %s %d\r\n", __FILE__, __LINE__);while(1);}}while(0)
 

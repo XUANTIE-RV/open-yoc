@@ -262,6 +262,135 @@ struct cvi_vdec_vb_ctx {
 };
 extern struct cvi_vdec_vb_ctx	vdec_vb_ctx[VENC_MAX_CHN_NUM];
 
+struct cvi_vc_info {
+	CVI_BOOL enable;
+	CVI_U32 reg_00;
+	CVI_U32 reg_08;
+	CVI_U32 reg_88;
+	CVI_U32 reg_90;
+	CVI_U32 reg_94;
+};
+
+struct cvi_vpss_info {
+	CVI_BOOL enable;
+	CVI_U32 dev_num;
+	CVI_U32 latched_line_cnt;
+	CVI_U32 sc;
+	struct {
+		CVI_BOOL isp2ip_y_in[2];
+		CVI_BOOL isp2ip_u_in[2];
+		CVI_BOOL isp2ip_v_in[2];
+		CVI_BOOL img_d_out[2];
+		CVI_BOOL img_v_out[2];
+		CVI_BOOL bld_sa[2];
+		CVI_BOOL bld_sb[2];
+		CVI_BOOL bld_m[2];
+		CVI_BOOL pri_sp[2];
+		CVI_BOOL pri_m[2];
+		CVI_BOOL sc_d[2];
+		CVI_BOOL sc_v1[2];
+		CVI_BOOL sc_v2[2];
+		CVI_BOOL sc_v3[2];
+		CVI_BOOL sc_d_out[2];
+	} sc_top;
+	struct {
+		CVI_BOOL sc_odma_axi_cmd_cs[4];
+		CVI_BOOL sc_odma_v_buf_empty;
+		CVI_BOOL sc_odma_v_buf_full;
+		CVI_BOOL sc_odma_u_buf_empty;
+		CVI_BOOL sc_odma_u_buf_full;
+		CVI_BOOL sc_odma_y_buf_empty;
+		CVI_BOOL sc_odma_y_buf_full;
+		CVI_BOOL sc_odma_axi_v_active;
+		CVI_BOOL sc_odma_axi_u_active;
+		CVI_BOOL sc_odma_axi_y_active;
+		CVI_BOOL sc_odma_axi_active;
+		CVI_BOOL reg_v_sb_empty;
+		CVI_BOOL reg_v_sb_full;
+		CVI_BOOL reg_u_sb_empty;
+		CVI_BOOL reg_u_sb_full;
+		CVI_BOOL reg_y_sb_empty;
+		CVI_BOOL reg_y_sb_full;
+		CVI_BOOL reg_sb_full;
+	} odma;
+	struct {
+		CVI_BOOL sb_mode;
+		CVI_BOOL sb_size;
+		CVI_BOOL sb_nb;
+		CVI_BOOL sb_full_nb;
+		CVI_BOOL sb_sw_wptr;
+	} sb_ctrl;
+	struct {
+		CVI_BOOL u_sb_wptr_ro;
+		CVI_BOOL u_sb_full;
+		CVI_BOOL u_sb_empty;
+		CVI_BOOL u_sb_dptr_ro;
+		CVI_BOOL v_sb_wptr_ro;
+		CVI_BOOL v_sb_full;
+		CVI_BOOL v_sb_empty;
+		CVI_BOOL v_sb_dptr_ro;
+		CVI_BOOL y_sb_wptr_ro;
+		CVI_BOOL y_sb_full;
+		CVI_BOOL y_sb_empty;
+		CVI_BOOL y_sb_dptr_ro;
+		CVI_BOOL sb_full;
+	} sb_stat;
+};
+
+struct cvi_vi_info {
+	CVI_BOOL enable;
+	struct {
+		CVI_U32 blk_idle;
+		struct {
+			CVI_U32 r_0;
+			CVI_U32 r_4;
+			CVI_U32 r_8;
+			CVI_U32 r_c;
+		} dbus_sel[7];
+	} isp_top;
+	struct {
+		CVI_U32 preraw_info;
+		CVI_U32 fe_idle_info;
+	} preraw_fe;
+	struct {
+		CVI_U32 preraw_be_info;
+		CVI_U32 be_dma_idle_info;
+		CVI_U32 ip_idle_info;
+		CVI_U32 stvalid_status;
+		CVI_U32 stready_status;
+	} preraw_be;
+	struct {
+		CVI_U32 stvalid_status;
+		CVI_U32 stready_status;
+		CVI_U32 dma_idle;
+	} rawtop;
+	struct {
+		CVI_U32 ip_stvalid_status;
+		CVI_U32 ip_stready_status;
+		CVI_U32 dmi_stvalid_status;
+		CVI_U32 dmi_stready_status;
+		CVI_U32 xcnt_rpt;
+		CVI_U32 ycnt_rpt;
+	} rgbtop;
+	struct {
+		CVI_U32 debug_state;
+		CVI_U32 stvalid_status;
+		CVI_U32 stready_status;
+		CVI_U32 xcnt_rpt;
+		CVI_U32 ycnt_rpt;
+	} yuvtop;
+	struct {
+		CVI_U32 dbg_sel;
+		CVI_U32 status;
+	} rdma28[2];
+};
+
+struct cvi_overflow_info {
+	struct cvi_vc_info vc_info;
+	struct cvi_vpss_info vpss_info;
+	struct cvi_vi_info vi_info;
+};
+
 int base_set_mod_ctx(struct mod_ctx_s *ctx_s);
 int32_t base_get_frame_info(PIXEL_FORMAT_E fmt, SIZE_S size, struct cvi_buffer *buf, u64 mem_base, u8 align);
 CVI_S32 base_get_chn_buffer(MMF_CHN_S chn, VB_BLK *blk, CVI_S32 timeout_ms);

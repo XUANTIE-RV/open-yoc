@@ -41,10 +41,10 @@ static int yoc_spiflash_open(rvm_dev_t *dev)
     flash_dev_t *flash = (flash_dev_t*)dev;
     csi_error_t ret = csi_spiflash_qspi_init(&flash->handle, dev->id, NULL);
     if (ret != CSI_OK) {
-        LOGW(TAG, "csi qspi init error:%d, start to try spiflash", ret);
+        LOGW(TAG, "qspi_flash init failed, start to try spiflash!");
         ret = csi_spiflash_spi_init(&flash->handle, dev->id, NULL);
         if (ret != CSI_OK) {
-            LOGE(TAG, "csi spi init error:%d", ret);
+            LOGW(TAG, "spi init failed, maybe no flash in board!");
             return -1;
         }
     }

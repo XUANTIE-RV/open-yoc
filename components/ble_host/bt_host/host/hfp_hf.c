@@ -1400,6 +1400,10 @@ bt_stack_status_t bt_prf_hfp_hf_answer_call(void)
 {
     struct bt_hfp_hf *hf = hfp_hf;
 
+    if (hf == NULL) {
+        return -EINVAL;
+    }
+
     return hfp_hf_send_at_ata(hf);
 }
 
@@ -1408,6 +1412,10 @@ bt_stack_status_t bt_prf_hfp_hf_reject_call(void)
 {
     struct bt_hfp_hf *hf = hfp_hf;
 
+    if (hf == NULL) {
+        return -EINVAL;
+    }
+
     return hfp_hf_send_at_chup(hf);
 }
 
@@ -1415,6 +1423,10 @@ bt_stack_status_t bt_prf_hfp_hf_reject_call(void)
 bt_stack_status_t bt_prf_hfp_hf_dial(char *number)
 {
     struct bt_hfp_hf *hf = hfp_hf;
+
+    if (hf == NULL) {
+        return -EINVAL;
+    }
 
     if (strlen(number) != 0) {
         return hfp_hf_send_at_atd(hf, number);
@@ -1428,6 +1440,10 @@ bt_stack_status_t bt_prf_hfp_hf_send_chld_cmd(bt_prf_hfp_hf_chld_type_t chld, in
 {
     struct bt_hfp_hf *hf  = hfp_hf;
     int               ret = 0;
+
+    if (hf == NULL) {
+        return -EINVAL;
+    }
 
     switch (chld) {
         case BT_PRF_HFP_HF_CHLD_TYPE_REL:
@@ -1455,6 +1471,10 @@ bt_stack_status_t bt_prf_hfp_hf_vol_update(pbt_prf_hfp_hf_vol_ctrl_target_t type
 {
     struct bt_hfp_hf *hf  = hfp_hf;
     int               ret = 0;
+
+    if (hf == NULL) {
+        return -EINVAL;
+    }
 
     switch (type) {
         case BT_PRF_HFP_HF_VOLUME_CONTROL_TARGET_SPK:

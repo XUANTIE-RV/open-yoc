@@ -223,7 +223,7 @@ yoc install vfs
 
 ### aos_stat
 
-`int aos_stat(const char *path, struct stat *st);`
+`int aos_stat(const char *path, aos_stat_t *st);`
 
 - 功能描述:
    - 获取文件状态。

@@ -24,7 +24,7 @@ typedef struct display_driver {
     /** get display infomation */
     int (*get_info)(rvm_dev_t *dev, rvm_hal_display_info_t *info);
     /** get framebuffer */
-    int (*get_framebuffer)(rvm_dev_t *dev, void **smem_start, size_t *smem_len);
+    int (*get_framebuffer)(rvm_dev_t *dev, void ***smem_start, size_t *smem_len);
     /** set backlight brightness */
     int (*set_brightness)(rvm_dev_t *dev, uint8_t brightness);
     /** get backlight brightness */

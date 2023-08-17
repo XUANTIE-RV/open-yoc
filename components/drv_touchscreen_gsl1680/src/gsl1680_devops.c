@@ -149,6 +149,8 @@ static int _i2c_write(unsigned char i2c_addr, unsigned int addr,
 
 static void _gpio_interrupt_cb()
 {
+    csi_gpio_irq_enable(&_interrupt_gpio, 1 << _gsl1680_gpio.interrupt_gpio_chn, false);
+
     aos_event_set(&_gslEvent, 0x01, AOS_EVENT_OR);
 }
 
@@ -379,6 +381,8 @@ void drv_gsl1680_devops_register(gsl1680_gpio_pin * config)
         _gsl1680_gpio.reset_gpio_chn = config->reset_gpio_chn;
         _gsl1680_gpio.interrupt_gpio_group = config->interrupt_gpio_group;
         _gsl1680_gpio.interrupt_gpio_chn = config->interrupt_gpio_chn;
+        _gsl1680_gpio.rotation_angle = config->rotation_angle;
+        _gsl1680_gpio.mirror_type = config->mirror_type;
     }
     rvm_driver_register(&gsl1680_drv.drv, NULL, 0);
 }
@@ -395,6 +399,60 @@ void gs1680_report_event(void *args, int id)
     }
 }
 
+static void pt_move(int *x, int *y, int dx, int dy)
+{
+    *x += dx;
+    *y += dy;
+}
+
+static void pt_rotation(int *x, int *y, int angle)
+{
+    int tmp;
+    switch(angle) {
+        case 90:
+            tmp = *x;
+            *x = *y;
+            *y = -tmp;
+            break;
+        case 180:
+            *x = -*x;
+            *y = -*y;
+            break;
+        case 270:
+            tmp = *x;
+            *x = -*y;
+            *y = tmp;
+            break;
+        default:;
+    }
+}
+
+static void touch_rotation(int *x, int *y, int w, int h, int angle)
+{
+    if (angle != 90 && angle != 180 && angle != 270) {
+        return;
+    }
+    pt_move(x, y, -w / 2, -h / 2);
+    pt_rotation(x, y, angle);
+    pt_move(x, y, w / 2, h / 2);
+}
+
+static void touch_mirror(int *x, int *y, int w, int h, int type)
+{
+    switch(type) {
+        case 1:
+            *x = w - *x;
+            break;
+        case 2:
+            *y = h - *y;
+            break;
+        default:;
+    }
+}
+
+#define GSL1680_ROTATION(x, y) touch_rotation(x, y, TP_HEIGHT, TP_HEIGHT, _gsl1680_gpio.rotation_angle)
+#define GSL1680_MIRROR(x, y) touch_mirror(x, y, TP_HEIGHT, TP_HEIGHT, _gsl1680_gpio.mirror_type)
+
 static void _gsl1680_event_process(unsigned char * touch_data, void * args)
 {
     static unsigned int finger_num = 0;
@@ -408,6 +466,7 @@ static void _gsl1680_event_process(unsigned char * touch_data, void * args)
     //#define INPUT_EVENT_READ     0
     //#define INPUT_EVENT_OVERFLOW 1
     rvm_hal_input_event_t  _event = {0};
+    uint64_t       timestamp_ms = aos_now_ms();
 
     tp_point.x[0] = (((touch_data[7]&0x0f)<<8) | touch_data[6]);
     tp_point.y[0] = ((touch_data[5]<<8) | touch_data[4]);
@@ -425,20 +484,31 @@ static void _gsl1680_event_process(unsigned char * touch_data, void * args)
                     _event.type = EV_KEY;
                     _event.code = BTN_TOUCH;
                     _event.value = 1;
+                    _event.timestamp_ms = timestamp_ms;
                     if(event_push_back(&_event_fifo, &_event) != 0) {
                         gs1680_report_event(args,1);
                     }
                 }
+
+                int rx = tp_point.x[0];
+                int ry = tp_point.y[0];
+                GSL1680_ROTATION(&rx, &ry);
+                //printf("--> tp (%d,%d) rotation %d -> (%d,%d)\r\n",tp_point.x[0], tp_point.y[0], _gsl1680_gpio.rotation_angle, rx, ry);
+                GSL1680_MIRROR(&rx, &ry);
+                //printf("--> tp (%d,%d) mirror %d -> (%d,%d)\r\n",tp_point.x[0], tp_point.y[0], _gsl1680_gpio.rotation_angle, rx, ry);
+
                 _event.type = EV_ABS;
                 _event.code = ABS_X;
-                _event.value = tp_point.y[0];
+                _event.value = rx;
+                _event.timestamp_ms = timestamp_ms;
                 if(event_push_back(&_event_fifo, &_event) != 0) {
                     gs1680_report_event(args,1);
                 }
                 _event.type = EV_ABS;
                 _event.code = ABS_Y;
-                _event.value = TP_HEIGHT - tp_point.x[0];
-                //printf("tp_point.y is %d  tp_point.x[0] %d\n",tp_point.y[0], tp_point.x[0]);
+                _event.value = ry;
+                _event.timestamp_ms = timestamp_ms;
+
                 if(event_push_back(&_event_fifo, &_event) != 0) {
                     gs1680_report_event(args,1);
                 }
@@ -449,6 +519,7 @@ static void _gsl1680_event_process(unsigned char * touch_data, void * args)
                     _event.type = EV_SYN;
                     _event.code = SYN_REPORT;
                     _event.value = 0;
+                    _event.timestamp_ms = timestamp_ms;
                     if(event_push_back(&_event_fifo, &_event) != 0) {
                         gs1680_report_event(args,1);
                     }
@@ -462,6 +533,7 @@ static void _gsl1680_event_process(unsigned char * touch_data, void * args)
                             _event.type = EV_SYN;
                             _event.code = SYN_REPORT;
                             _event.value = 0;
+                            _event.timestamp_ms = timestamp_ms;
                             if(event_push_back(&_event_fifo, &_event) != 0) {
                                 gs1680_report_event(args,1);
                             }
@@ -469,6 +541,7 @@ static void _gsl1680_event_process(unsigned char * touch_data, void * args)
                         _event.type = EV_KEY;
                         _event.code = BTN_TOUCH;
                         _event.value = 1;
+                        _event.timestamp_ms = timestamp_ms;
                         if(event_push_back(&_event_fifo, &_event) != 0) {
                             gs1680_report_event(args,1);
                         }
@@ -479,16 +552,24 @@ static void _gsl1680_event_process(unsigned char * touch_data, void * args)
     } else {
         if(touch1_down_flag && cur_touch_point == 0) {
             touch1_down_flag = 0;
-            //printf("-- event = %d -- \n", (data[3]>>6)&0x3);
+            //printf("-- event = %d -- \n", (touch_data[3]>>6)&0x3);
+            
+            int rx = tp_point.x[0];
+            int ry = tp_point.y[0];
+            GSL1680_ROTATION(&rx, &ry);
+            GSL1680_MIRROR(&rx, &ry);
+
             _event.type = EV_ABS;
             _event.code = ABS_X;
-            _event.value = tp_point.y[0];
+            _event.value = rx;
+            _event.timestamp_ms = timestamp_ms;
             if(event_push_back(&_event_fifo, &_event) != 0) {
                 gs1680_report_event(args,1);
             }
             _event.type = EV_ABS;
             _event.code = ABS_Y;
-            _event.value = TP_HEIGHT - tp_point.x[0];
+            _event.value = ry;
+            _event.timestamp_ms = timestamp_ms;
             if(event_push_back(&_event_fifo, &_event) != 0) {
                 gs1680_report_event(args,1);
             }
@@ -497,6 +578,7 @@ static void _gsl1680_event_process(unsigned char * touch_data, void * args)
             _event.type = EV_KEY;
             _event.code = BTN_TOUCH;
             _event.value = 0;
+            _event.timestamp_ms = timestamp_ms;
             if(event_push_back(&_event_fifo, &_event) != 0) {
                 gs1680_report_event(args,1);
             }
@@ -546,6 +628,7 @@ void * _gsl1680_task(void * args)
                     if(_ret > 0) {
                         _gsl1680_event_process(touch_data, args);
                     }
+                    csi_gpio_irq_enable(&_interrupt_gpio, 1 << _gsl1680_gpio.interrupt_gpio_chn, true);
                 // }
             }
     }

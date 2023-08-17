@@ -8,14 +8,16 @@
 #include <drv/tee.h>
 #include <yoc/nvram.h>
 #include <yoc/sysinfo.h>
-// #include <mtb.h>
+#if !CONFIG_DEVICEID_FROM_KV && defined(CONFIG_COMP_KEY_MGR) && CONFIG_COMP_KEY_MGR
+#include <key_mgr.h>
+#endif
 
 #ifndef SYSINFO_WEAK
 #define SYSINFO_WEAK __attribute__((weak))
 #endif
 
 #ifndef CONFIG_SDK_VERSION
-#define CONFIG_SDK_VERSION "v7.6.0_20220930"
+#define CONFIG_SDK_VERSION "v7.8.0"
 #endif
 
 
@@ -103,7 +105,7 @@ char *aos_get_device_id(void)
 
     if (cidbuf[0] == 0) {
         memset(cidbuf, 0, sizeof(cidbuf));
-#ifdef CONFIG_DEVICEID_FROM_KV
+#if CONFIG_DEVICEID_FROM_KV
         ret = nvram_get_val("device_id", cidbuf, sizeof(cidbuf));
 #else
 #ifdef CONFIG_TEE_CA
@@ -112,7 +114,17 @@ char *aos_get_device_id(void)
             ret = csi_tee_get_cid((uint8_t *)cidbuf, (uint32_t *)&len);
         }
 #else
+#if defined(CONFIG_COMP_KEY_MGR) && CONFIG_COMP_KEY_MGR
+        uint32_t len;
+        key_handle key_addr;
+        ret = km_get_key(KEY_ID_CHIPID, &key_addr, &len);
+        if (ret != KM_OK) {
+            return NULL;
+        }
+        memcpy(cidbuf, (void *)key_addr, len < sizeof(cidbuf) ? len : sizeof(cidbuf));
+#else
         ret = nvram_get_val("device_id", cidbuf, sizeof(cidbuf));
+#endif
 #endif /* CONFIG_TEE_CA */
 #endif /* CONFIG_DEVICEID_FROM_KV */
         if (ret < 0) {

@@ -79,6 +79,7 @@ int mtbv4_get_partition_info(const char *name, mtb_partition_info_t *part_info)
                 memcpy(part_info->pub_key_name, pp->pub_key_name, PUBLIC_KEY_NAME_SIZE);
 #else
                 memcpy(&part_info->storage_info, &pp->storage_info, sizeof(storage_info_t));
+                part_info->preload_size = pp->preload_size;
 #endif
                 storage_info.id = 0;
                 storage_info.type = mtb_get_default_device_type();
@@ -131,6 +132,7 @@ int mtbv4_get_partition_info_with_index(int index, mtb_partition_info_t *part_in
             memcpy(part_info->pub_key_name, pp->pub_key_name, PUBLIC_KEY_NAME_SIZE);
 #else
             memcpy(&part_info->storage_info, &pp->storage_info, sizeof(storage_info_t));
+            part_info->preload_size = pp->preload_size;
 #endif
             storage_info.id = 0;
             storage_info.type = mtb_get_default_device_type();
@@ -152,7 +154,6 @@ int mtbv4_get_partition_info_with_index(int index, mtb_partition_info_t *part_in
 
             part_info->start_addr = flash_info.base_addr + pp->block_offset * 512;
             uint32_t blk_cnt = (uint32_t)pp->block_count_h << 16 | pp->block_count;
-            // printf("%d, %d, %d, %s\r\n", pp->block_count_h, pp->block_count, blk_cnt, pp->name);
             part_info->end_addr = part_info->start_addr + (uint64_t)blk_cnt * 512;
             part_info->load_addr = pp->load_address;
             memcpy(part_info->name, pp->name, MTB_IMAGE_NAME_SIZE);
@@ -239,11 +240,13 @@ int mtbv4_image_verify(const char *name)
     partition_t part = partition_open(name);
     part_info = partition_info_get(part);
     if (!part_info) {
+        MTB_LOGE("get partition:%d info failed.", part);
         return -1;
     }
 
     memset(buf, 0, sizeof(buf));
     if (partition_read(part, custom_offset, buf, sizeof(buf))) {
+        MTB_LOGE("read partition:%d failed.", part);
         return -1;
     }
 #if 0

@@ -3,7 +3,7 @@
  */
 #include <board.h>
 
-#if defined(CONFIG_BOARD_AUDIO) && CONFIG_BOARD_AUDIO > 0
+#if defined(BOARD_AUDIO_SUPPORT) && BOARD_AUDIO_SUPPORT
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

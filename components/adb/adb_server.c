@@ -64,7 +64,8 @@ typedef struct adbserver {
     const char      *output_terminator;
     slist_t          cmd_head;
     uservice_t      *srv;
-    uart_dev_t       uart_dev;
+    int              port;
+    void            *uart_dev;
     aos_mutex_t      mutex;
     adbserver_mode_t adb_mode;
     adb_channel_t   *channel;
@@ -108,7 +109,7 @@ static int adbserver_uart_send(const char *data, size_t size, size_t timeout)
         return 0;
     }
 
-    int ret = g_adbserver.channel->send(&g_adbserver.uart_dev, (void *)data, size);
+    int ret = g_adbserver.channel->send(g_adbserver.uart_dev, (void *)data, size);
 
     return ret;
 }
@@ -116,7 +117,7 @@ static int adbserver_uart_send(const char *data, size_t size, size_t timeout)
 static int adbserver_uart_recv(char *data)
 {
     if (g_adbserver.uart_inc == g_adbserver.uart_count) {
-        int ret = g_adbserver.channel->recv(&g_adbserver.uart_dev, g_adbserver.uart_buffer, UART_BUF_SIZE, 0);
+        int ret = g_adbserver.channel->recv(g_adbserver.uart_dev, g_adbserver.uart_buffer, UART_BUF_SIZE, 0);
         if (ret > 0) {
             g_adbserver.uart_count = ret;
             g_adbserver.uart_inc   = 0;
@@ -142,7 +143,7 @@ static void channel_event(int event_id, void *priv)
     }
 }
 
-int adbserver_init(utask_t *task, uint8_t port, uart_config_t *config)
+int adbserver_init(utask_t *task, uint8_t port, rvm_hal_uart_config_t *config)
 {
     aos_assert(task);
     memset(&g_adbserver, 0, sizeof(adbserver_uservice_t));
@@ -150,8 +151,8 @@ int adbserver_init(utask_t *task, uint8_t port, uart_config_t *config)
     g_adbserver.channel = &adb_uart_channel;
 
     // uart init
-    g_adbserver.uart_dev.port = port | HAL_SHADOW_PORT_MASK;
-    g_adbserver.channel->init(&g_adbserver.uart_dev, config);
+    g_adbserver.port = port | RVM_HAL_SHADOW_PORT_MASK;
+    g_adbserver.uart_dev = g_adbserver.channel->init(config, g_adbserver.port);
 
     g_adbserver.buffer_size = BUFFER_MIN_SIZE;
     g_adbserver.buffer      = aos_malloc(BUFFER_MIN_SIZE);
@@ -168,7 +169,7 @@ int adbserver_init(utask_t *task, uint8_t port, uart_config_t *config)
 
     utask_add(task, g_adbserver.srv);
 
-    g_adbserver.channel->set_event(&g_adbserver.uart_dev, channel_event, NULL);
+    g_adbserver.channel->set_event(g_adbserver.uart_dev, channel_event, NULL);
 
     aos_mutex_new(&g_adbserver.mutex);
 
@@ -183,8 +184,8 @@ int adbserver_channel_init(utask_t *task, uint8_t port, void *config, adb_channe
     g_adbserver.channel = channel;
 
     // uart init
-    g_adbserver.uart_dev.port = port;
-    g_adbserver.channel->init(&g_adbserver.uart_dev, config);
+    g_adbserver.port = port;
+    g_adbserver.uart_dev = g_adbserver.channel->init(config, g_adbserver.port);
 
     g_adbserver.buffer_size = BUFFER_MIN_SIZE;
     g_adbserver.buffer      = aos_malloc(BUFFER_MIN_SIZE);
@@ -201,14 +202,14 @@ int adbserver_channel_init(utask_t *task, uint8_t port, void *config, adb_channe
 
     utask_add(task, g_adbserver.srv);
 
-    g_adbserver.channel->set_event(&g_adbserver.uart_dev, channel_event, NULL);
+    g_adbserver.channel->set_event(g_adbserver.uart_dev, channel_event, NULL);
 
     aos_mutex_new(&g_adbserver.mutex);
 
     return 0;
 }
 
-void adbserver_uart_config(uart_config_t *config)
+void adbserver_uart_config(rvm_hal_uart_config_t *config)
 {
     // if(g_adbserver.channel->config)
     //     g_adbserver.channel->config(config);
@@ -222,8 +223,8 @@ void adbserver_enabled(int flag)
         aos_set_log_level(AOS_LL_NONE);
 
         /* 串口驱动切换到ADB模式 */
-        hal_uart_init(&g_adbserver.uart_dev);
-        g_adbserver.channel->set_event(&g_adbserver.uart_dev, channel_event, NULL);
+        g_adbserver.uart_dev = g_adbserver.channel->init(NULL, g_adbserver.port);
+        g_adbserver.channel->set_event(g_adbserver.uart_dev, channel_event, NULL);
         g_adbserver.adb_en = 1;
 
         /* 刷掉无效数据 */
@@ -231,8 +232,8 @@ void adbserver_enabled(int flag)
         aos_msleep(100);
     } else {
         g_adbserver.adb_en = 0;
-        g_adbserver.channel->set_event(&g_adbserver.uart_dev, NULL, NULL);
-        hal_uart_finalize(&g_adbserver.uart_dev);
+        g_adbserver.channel->set_event(g_adbserver.uart_dev, NULL, NULL);
+        g_adbserver.channel->deinit(g_adbserver.uart_dev);
 
         aos_set_log_level(g_adbserver.log_level);
     }
@@ -566,7 +567,7 @@ static int pass_through_handle(void)
         recv_size = adbmode(g_adbserver).push_len - adbmode(g_adbserver).recv_size;
         offset    = adbmode(g_adbserver).recv_size;
 
-        ret       = g_adbserver.channel->recv(&g_adbserver.uart_dev, adbmode(g_adbserver).data + offset, recv_size, 0);
+        ret       = g_adbserver.channel->recv(g_adbserver.uart_dev, adbmode(g_adbserver).data + offset, recv_size, 0);
         adbmode(g_adbserver).recv_size += ret;
 
         if (adbmode(g_adbserver).recv_size >= adbmode(g_adbserver).push_len) {

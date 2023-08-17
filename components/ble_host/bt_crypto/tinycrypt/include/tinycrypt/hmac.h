@@ -104,7 +104,7 @@ int tc_hmac_init(TCHmacState_t ctx);
 /**
  *  @brief HMAC update procedure
  *  Mixes data_length bytes addressed by data into state
- *  @return returns TC_CRYPTO_SUCCCESS (1)
+ *  @return returns TC_CRYPTO_SUCCESS (1)
  *          returns TC_CRYPTO_FAIL (0) if: ctx == NULL or key == NULL
  *  @note Assumes state has been initialized by tc_hmac_init
  *  @param ctx IN/OUT -- state of HMAC computation so far

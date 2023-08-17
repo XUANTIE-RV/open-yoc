@@ -116,6 +116,13 @@ static int up_one_level(char *abspath)
     return 0;
 }
 
+static inline int ls_specialdir(const char *dir)
+{
+    /* '.' and '..' directories are not listed like normal directories */
+
+    return (strcmp(dir, ".")  == 0 || strcmp(dir, "..") == 0);
+}
+
 static int ls_do(int argc, char **argv, int flags)
 {
     int index;
@@ -158,7 +165,7 @@ static int ls_do(int argc, char **argv, int flags)
             }
 
             // parse heading ".."
-            while (dir && (strncmp(dir, "..", strlen(".."))) == 0) {
+            while (strncmp(dir, "..", strlen("..")) == 0) {
                 if (up_one_level(cur) != 0) {
                     aos_cli_printf("up to parent dir failed. %s may " \
                                "not be a valid path!", dir);
@@ -173,13 +180,12 @@ static int ls_do(int argc, char **argv, int flags)
             }
 
             // deal with '.', './', './dir/file' cases
-            if (dir && dir[0] == '.') {
+            if (dir[0] == '.') {
                 while (*(++dir) == '/')
                     ;
             }
 
-            if (dir)
-                snprintf(cur + curlen, sizeof(cur) - curlen, "/%s", dir);
+            snprintf(cur + curlen, sizeof(cur) - curlen, "/%s", dir);
             dir = cur;
         }
 
@@ -209,6 +215,11 @@ static int ls_do(int argc, char **argv, int flags)
             while ((entry = readdir(pdir))) {
                 char fpath[FPATH_SIZE];
                 int len;
+                int ret;
+
+                if (ls_specialdir(entry->d_name)) {
+                    continue;
+                }
 
                 memset(fpath, 0, sizeof(fpath));
                 len = strlen(dir);
@@ -218,17 +229,19 @@ static int ls_do(int argc, char **argv, int flags)
                  * readdir/opendir on spiffs will traverse all
                  * files in all directories
                  */
-                snprintf(fpath, FPATH_SIZE, "/data/%s", entry->d_name);
+                ret = snprintf(fpath, FPATH_SIZE, "/data/%s", entry->d_name);
                 if (strncmp(dir, fpath, len))
                     continue;
 #else
                 if (dir[len] == '/') {
-                    snprintf(fpath, FPATH_SIZE, "%s%s", dir, entry->d_name);
+                    ret = snprintf(fpath, FPATH_SIZE, "%s%s", dir, entry->d_name);
                 } else {
-                    snprintf(fpath, FPATH_SIZE, "%s/%s", dir, entry->d_name);
+                    ret = snprintf(fpath, FPATH_SIZE, "%s/%s", dir, entry->d_name);
                 }
 #endif
-
+                if (ret < 0 || ret >= sizeof(fpath)) {
+                    continue;
+                }
                 if (stat(fpath, &s)) {
                     aos_cli_printf("stat %s failed - %s\n", fpath, strerror(errno));
                     continue;

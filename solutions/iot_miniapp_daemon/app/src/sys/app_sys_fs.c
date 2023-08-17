@@ -26,12 +26,37 @@ static void vfs_init(void)
     int ret;
 
     aos_vfs_init();
+#ifdef CONFIG_FS_EXT4
+    extern int vfs_ext4_register(void);
+    ret = vfs_ext4_register();
+    if (ret != 0) {
+        LOGE(TAG, "ext4 register failed(%d).", ret);
+        //aos_assert(false);
+    } else {
+        LOGD(TAG, "ext4 register ok.");
+    }
+#endif
+#if 0 //def CONFIG_FS_FAT
+    extern int vfs_fatfs_register(void);
+    ret = vfs_fatfs_register();
+    if (ret != 0) {
+        LOGE(TAG, "fatfs register failed(%d).", ret);
+        //aos_assert(false);
+    } else {
+        LOGD(TAG, "fatfs register ok.");
+    }
+#endif
+#ifdef CONFIG_FS_LFS
+    extern int32_t vfs_lfs_register(char *partition_desc);
     ret = vfs_lfs_register("lfs");
     if (ret != 0) {
         LOGE(TAG, "littlefs register failed(%d)", ret);
-        return;
+        //aos_assert(false);
+    } else {
+        LOGD(TAG, "littlefs register ok.");
     }
-    LOGI(TAG, "filesystem init ok.");
+#endif
+    LOGI(TAG, "filesystem init finished");
 
     cli_reg_cmd_ls();
     cli_reg_cmd_rm();

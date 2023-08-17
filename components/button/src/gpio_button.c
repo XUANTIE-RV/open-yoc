@@ -27,13 +27,13 @@ static button_t *button_gpio_find(int pin_id)
     return NULL;
 }
 
-void pin_event(void *arg)
+void pin_event(rvm_dev_t *dev, void *arg)
 {
     button_t *button = NULL;
     int idx = (size_t)arg;
 
     button = button_gpio_find(idx);
-    hal_gpio_clear_irq(b_gpio_param(button)->pin_hdl);
+    rvm_hal_gpio_pin_irq_enable(b_gpio_param(button)->pin_hdl, false);
 
     if (button != NULL && (b_gpio_param(button)->pin_hdl != NULL)) {
         button_irq(button);
@@ -43,22 +43,22 @@ void pin_event(void *arg)
 static int gpio_irq_disable(button_t *button)
 {
     if (b_gpio_param(button)->active_level == LOW_LEVEL) {
-        hal_gpio_disable_irq(b_gpio_param(button)->pin_hdl);
+        rvm_hal_gpio_pin_irq_enable(b_gpio_param(button)->pin_hdl, false);
     } else {
-        hal_gpio_disable_irq(b_gpio_param(button)->pin_hdl);
+        rvm_hal_gpio_pin_irq_enable(b_gpio_param(button)->pin_hdl, false);
     }
-
     return 0;
 }
 
 static int gpio_irq_enable(button_t *button)
 {
+    rvm_hal_gpio_pin_irq_enable(b_gpio_param(button)->pin_hdl, true);
     if (b_gpio_param(button)->active_level == LOW_LEVEL) {
-        hal_gpio_enable_irq(b_gpio_param(button)->pin_hdl, IRQ_TRIGGER_FALLING_EDGE, pin_event, (void *)(size_t)b_gpio_param(button)->pin_id);
+        rvm_hal_gpio_pin_set_irq_mode(b_gpio_param(button)->pin_hdl, RVM_GPIO_IRQ_MODE_FALLING_EDGE);
     } else {
-        hal_gpio_enable_irq(b_gpio_param(button)->pin_hdl, IRQ_TRIGGER_RISING_EDGE, pin_event, (void *)(size_t)b_gpio_param(button)->pin_id);
+        rvm_hal_gpio_pin_set_irq_mode(b_gpio_param(button)->pin_hdl, RVM_GPIO_IRQ_MODE_RISING_EDGE);
     }
-
+    rvm_hal_gpio_pin_attach_callback(b_gpio_param(button)->pin_hdl, pin_event, (void *)(size_t)b_gpio_param(button)->pin_id);
     return 0;
 }
 
@@ -67,8 +67,7 @@ static int gpio_pin_read(button_t *button)
     uint32_t val = 0;
     int is_pressed = 0;
 
-    hal_gpio_input_get(b_gpio_param(button)->pin_hdl, &val);
-
+    rvm_hal_gpio_pin_read(b_gpio_param(button)->pin_hdl, (rvm_hal_gpio_pin_data_t *)&val);
     if (val == b_gpio_param(button)->active_level) {
         is_pressed = 1;
     }
@@ -78,35 +77,28 @@ static int gpio_pin_read(button_t *button)
 
 static int gpio_pin_init(button_t *button)
 {
-    gpio_dev_t *gpio = (gpio_dev_t *)aos_malloc_check(sizeof(gpio_dev_t));
-    
-    gpio->port = b_gpio_param(button)->pin_id;
-
-    if (b_gpio_param(button)->active_level == LOW_LEVEL) {
-        gpio->config = INPUT_PULL_UP;
-    } else {
-        gpio->config = INPUT_PULL_DOWN;
+    int pin_id = b_gpio_param(button)->pin_id;
+    rvm_gpio_pin_drv_register(pin_id);
+    rvm_dev_t *gpio_pin = rvm_hal_gpio_pin_open_by_pin_name("gpio_pin", pin_id);
+    if (!gpio_pin) {
+        return -1;
     }
-
-    hal_gpio_init(gpio);
-
-    b_gpio_param(button)->pin_hdl = gpio;
-
+    rvm_hal_gpio_mode_t mode;
+    if (b_gpio_param(button)->active_level == LOW_LEVEL) {
+        mode = RVM_GPIO_MODE_PULLUP;
+    } else {
+        mode = RVM_GPIO_MODE_PULLDOWN;
+    }
+    rvm_hal_gpio_pin_set_mode(gpio_pin, mode);
+    b_gpio_param(button)->pin_hdl = gpio_pin;
     gpio_irq_enable(button);
-
     return 0;
 }
 
 static int gpio_pin_deinit(button_t *button)
 {
-    gpio_dev_t *gpio = b_gpio_param(button)->pin_hdl;
-
-    if (gpio) {
-        hal_gpio_finalize(gpio);
-        aos_free(gpio);
-        b_gpio_param(button)->pin_hdl = NULL;
-    }
-
+    rvm_hal_gpio_pin_close(b_gpio_param(button)->pin_hdl);
+    b_gpio_param(button)->pin_hdl = NULL;
     return 0;
 }
 

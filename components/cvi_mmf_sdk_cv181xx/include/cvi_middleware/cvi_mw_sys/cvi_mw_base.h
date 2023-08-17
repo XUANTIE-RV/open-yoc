@@ -52,7 +52,7 @@
 #define GDC_SUPPORT_FMT(fmt) \
 	((fmt == PIXEL_FORMAT_RGB_888_PLANAR) || (fmt == PIXEL_FORMAT_BGR_888_PLANAR) ||	\
 	 (fmt == PIXEL_FORMAT_YUV_PLANAR_420) || (fmt == PIXEL_FORMAT_YUV_400))
-#elif defined(ARCH_CV182X) || defined(ARCH_MARS) || defined(ARCH_PHOBOS)
+#elif defined(ARCH_CV182X) || defined(__CV181X__) || defined(__CV180X__)
 #define VPSS_GRP_SUPPORT_FMT(fmt) \
 	((fmt == PIXEL_FORMAT_RGB_888_PLANAR) || (fmt == PIXEL_FORMAT_BGR_888_PLANAR) ||	\
 	 (fmt == PIXEL_FORMAT_RGB_888) || (fmt == PIXEL_FORMAT_BGR_888) ||			\

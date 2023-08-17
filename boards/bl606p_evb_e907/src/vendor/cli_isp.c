@@ -7,8 +7,7 @@
 #include <string.h>
 #include <bl606p_hbn.h>
 #include <aos/cli.h>
-
-extern void hal_reboot(void);
+#include <aos/kernel.h>
 
 typedef enum {
     ISP_REBOOT_AS_BOOTPIN,           /*!< reboot as bootpin level */
@@ -45,10 +44,10 @@ static void cmd_ispboot_func(char *wbuf, int wbuf_len, int argc, char **argv)
     
     if (strcmp(argv[1], "if") == 0) {
         isp_reboot_config(ISP_REBOOT_FROM_INTERFACE);
-        hal_reboot();
+        aos_reboot();
     } else if (strcmp(argv[1], "media") == 0) {
         isp_reboot_config(ISP_REBOOT_FROM_MEDIA);
-        hal_reboot();
+        aos_reboot();
     } else {
         printf("error\r\n");
     }

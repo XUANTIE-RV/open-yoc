@@ -1,7 +1,7 @@
 
 ## 第一部分： 基础信息
 name: d1_dockpro_evb                                # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
-version: v7.7.0                                    # <必选项> 组件版本号
+version: v7.8.0                                    # <必选项> 组件版本号
 description: d1 dockpro board configure             # <必选项> 建议至少20字以上
 type: board                                         # <必选项> 组件类型，为：solution, chip, board, common, sdk
 license: Apache license v2.0                        # <可选项> 源代码的许可证，要确保所有代码、文件的许可证不冲突。如：MIT，Apache license v2.0，BSD
@@ -104,6 +104,7 @@ source_file:
 #   CONFIG_PARAM_NOT_CHECK: y
 #   CONFIG_CLI: y
 def_config:
+  CONFIG_BOARD_D1_DOCKPRO_EVB: 1
   CONFIG_SYSTICK_HZ: 100
   WITH_LWIP: 1
   CONFIG_KERNEL_WORKQUEUE: 1
@@ -119,7 +120,6 @@ def_config:
   FD_SETSIZE: 128
   CONFIG_USERVICE_EVENT_TASK_STACK_SIZE: 8192
   SYSINFO_DEVICE_NAME: "d1_dockpro_evb"
-  OSAL_RHINO: 1
   CONFIG_OTA_AB: 0
   CONFIG_AOS_AUDIO_PCM: y
   CONFIG_PARITION_NO_VERIFY: 0
@@ -159,16 +159,17 @@ def_config:
   CONFIG_BT_MESH_SCAN_WINDOW_MS: 25
   CONFIG_BT_HCI_ECC_STACK_SIZE: 4096
   CONFIG_BT_BREDR: 1
-  CONFIG_BT_HFP_HF: 0
-  CONFIG_BT_HFP: 0
+  CONFIG_BT_HFP_HF: 1
+  CONFIG_BT_HFP: 1
   CONFIG_BT_HFP_AUDIO_I2S: 0
   CONFIG_BT_A2DP: 1
-  CONFIG_DRV_BT_AOS_HAL: 1
   CONFIG_BT_DRV_NO_ONESHOT: 1
   CONFIG_HAL_UART_RINGBUF_LEN: 8192
   CONFIG_BT_A2DP_AUDIO_OUTPUT_INSIDE: 1
   CONFIG_BT_MAX_PAIRED: 5
   CONFIG_FOTA_BUFFER_SIZE: 16384
+  # filesystem
+  CONFIG_FS_LFS: y
 
 ## 第六部分：安装信息
 # install:

@@ -13,5 +13,6 @@ static void board_pinmux_config(void)
 void board_init(void)
 {
     board_pinmux_config();
+    board_uart_init();
     board_flash_init();
 }

@@ -41,6 +41,7 @@ static int bt_a2dp_vol_down(int vol);
 
 static smtaudio_ops_node_t ctrl_bt_a2dp = {
     .name     = "bt_a2dp",
+    .url      = NULL,
     .prio     = 2,
     .id       = SMTAUDIO_BT_A2DP,
     .status   = SMTAUDIO_STATE_STOP,
@@ -500,6 +501,11 @@ int yoc_app_bt_avrcp_send_passthrouth_cmd(yoc_app_avrcp_cmd_type_t cmd_type)
 
 int yoc_app_bt_avrcp_change_vol(uint8_t vol)
 {
+    if (g_a2dp_connect_state != BT_PRF_A2DP_CONNECTION_STATE_CONNECTED) {
+        LOGD(TAG, "ignore vol change a2dp state %d", g_a2dp_connect_state);
+        return -1;
+    }
+
 #if (defined(CONFIG_BT_AVRCP_VOL_CONTROL) && CONFIG_BT_AVRCP_VOL_CONTROL)
     return bt_prf_avrcp_tg_notify_vol_changed(vol);
 #else
@@ -711,7 +717,11 @@ static void bt_callback(yoc_app_bt_event_t event, yoc_app_bt_param_t *param)
         audio_default_ops = get_default_audio_ops();
         s_vol = param->a2dp_vol.volume;
         if (audio_default_ops) {
-            audio_default_ops->vol_set(param->a2dp_vol.volume * 100 / 127);
+            int cur_vol = aui_player_vol_get(SMTAUDIO_LOCAL_PLAY);
+            int sync_vol = param->a2dp_vol.volume * 100 / 127;
+            if (abs(cur_vol - sync_vol) > 1) {
+                audio_default_ops->vol_set(sync_vol);
+            }
         }
         LOGD(TAG, "VOLUME_CHANGE: %d/127", param->a2dp_vol.volume);
         break;
@@ -841,34 +851,16 @@ static int bt_a2dp_vol_set(int vol)
 
 static int bt_a2dp_vol_up(int vol)
 {
-    int ret;
+    /* 从本地音量获取后是已经变化后的音量，无需在进行变化 */
     int cur_vol = aui_player_vol_get(SMTAUDIO_LOCAL_PLAY);
-
-    s_vol = (cur_vol + vol) * 127 / 100;
-
-    if (s_vol > 127) {
-        s_vol = 127;
-    }
-    /*调整 bt music 音量*/
-    ret = yoc_app_bt_avrcp_change_vol(s_vol);
-
-    return ret;
+    return bt_a2dp_vol_set(cur_vol);
 }
 
 static int bt_a2dp_vol_down(int vol)
 {
-    int ret;
+    /* 从本地音量获取后是已经变化后的音量，无需在进行变化 */
     int cur_vol = aui_player_vol_get(SMTAUDIO_LOCAL_PLAY);
-    s_vol = (cur_vol - vol) * 127 / 100;
-
-    if (s_vol < 0) {
-        s_vol = 0;
-    }
-
-    /*调整 bt music 音量*/
-    ret = yoc_app_bt_avrcp_change_vol(s_vol);
-
-    return ret;
+    return bt_a2dp_vol_set(cur_vol);
 }
 
 int8_t smtaudio_register_bt_a2dp(uint8_t min_vol, uint8_t *aef_conf, size_t aef_conf_size, float speed, int resample)

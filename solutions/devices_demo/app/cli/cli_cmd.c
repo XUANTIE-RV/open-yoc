@@ -8,5 +8,8 @@
 void board_cli_init()
 {
     aos_cli_init();
+
+    extern void cli_reg_cmd_kvtool(void);
+    cli_reg_cmd_kvtool();
 }
 

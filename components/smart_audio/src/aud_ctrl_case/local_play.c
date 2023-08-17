@@ -28,6 +28,7 @@ static int local_play_vol_down(int vol);
 
 static smtaudio_ops_node_t ctrl_local_play = {
     .name     = "local_play",
+    .url      = NULL,
     .prio     = 1,
     .id       = SMTAUDIO_LOCAL_PLAY,
     .status   = SMTAUDIO_STATE_STOP,
@@ -111,7 +112,7 @@ static int media_init(uint8_t *aef_conf, size_t aef_conf_size, float speed, int 
 
 static int local_play_init(void)
 {
-    aui_task_media = utask_new("task_media", 4 * 1024, QUEUE_MSG_COUNT, AOS_DEFAULT_APP_PRI);
+    aui_task_media = utask_new("task_media", CONFIG_SMART_AUDIO_MEDIA_STACK_SIZE, QUEUE_MSG_COUNT, AOS_DEFAULT_APP_PRI);
     if (NULL == aui_task_media) {
         LOGE(TAG, "media task created failed!");
         return -EINVAL;
@@ -232,7 +233,7 @@ int8_t smtaudio_register_local_play(uint8_t min_vol, uint8_t *aef_conf, size_t a
     media_init(aef_conf, aef_conf_size, speed, resample);
 
     aui_player_key_config(media_dec_key_cb);
-    aui_player_set_minvol(MEDIA_ALL, (min_vol <= 0) ? 20 : min_vol);
+    aui_player_set_minvol(MEDIA_ALL, min_vol);
 
     aos_kv_getint(VOLUME_SAVE_KV_NAME, &vol);
     ctrl_local_play.vol_set(((vol == 0) ? 20 : vol));

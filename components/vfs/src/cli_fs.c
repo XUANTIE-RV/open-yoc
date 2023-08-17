@@ -16,6 +16,7 @@
 
 #include <vfs.h>
 #include <vfs_cli.h>
+#include <vfs_api.h>
 #if defined(AOS_COMP_FATFS)
 #include <ff.h>
 #endif
@@ -333,7 +334,7 @@ static int ls_handler(const char *dirpath,
     /* Check if any options will require that we stat the file */
 
     if ((lsflags & (LSFLAGS_SIZE | LSFLAGS_LONG)) != 0) {
-        struct aos_stat buf = {0};
+        aos_stat_t buf = {0};
 
         /* stat the file */
 
@@ -438,7 +439,7 @@ static int ls_handler(const char *dirpath,
 
 static void cmd_ls(char *wbuf, int wbuf_len, int argc, char **argv)
 {
-    struct aos_stat st = {0};
+    aos_stat_t st = {0};
     char *path;
     unsigned long lsflags = 0;
     uint8_t badarg = 0;
@@ -533,7 +534,7 @@ static void cmd_rm(char *wbuf, int wbuf_len, int argc, char **argv)
     int ret = -1;
     char *path;
     int len;
-    struct aos_stat st;
+    aos_stat_t st;
 
     if (argc != 2) {
         printf(g_fmtarginvalid, argv[0]);
@@ -878,42 +879,208 @@ void cli_reg_cmd_diff(void)
     aos_cli_register_command(&cmd_info);
 }
 
+
+static int up_one_level(char *s)
+{
+    char *tail;
+
+    if (!s)
+        return -1;
+
+    tail = s + strlen(s) - 1;
+    if (*tail == '/')
+        tail--;
+
+    while (*tail != '\0' && *tail != '/')
+        tail--;
+
+    if (*tail == '\0') {
+        return -1;
+    } else {
+        *(tail + 1) = '\0';
+        return 0;
+    }
+}
+
+static char *get_realpath(const char *path, char *resolved_path, unsigned int len)
+{
+    char *ret, *p = (char *)path, *r = resolved_path;
+
+    if (!path || !r || len < 1)
+        return NULL;
+
+    memset(r, 0, len);
+
+    // deal with heading char
+    if (p[0] != '/') {
+        // relative path
+        ret = getcwd(r, len);
+        if (!ret)
+            return NULL;
+
+        // add tailing '/' if no
+        if (r[strlen(r) - 1] != '/') {
+            r[strlen(r)] = '/';
+        }
+
+        r += strlen(r);
+    } else {
+        // absolute path
+        r[0] = '/';
+        r++;
+    }
+
+    // iterate to exclude '.', '..'. '/'
+    while (*p != '\0') {
+        while (*p == '/')
+            p++;
+        if (*p == '\0')
+            break;
+
+        if (*p == '.') {
+            p++;
+            // end with '.'
+            if (*p == '\0')
+                break;
+
+            if (*p == '.') {
+                // '..' or '../'
+                if ((*(p + 1) != '/') && (*(p + 1) != '\0')) {
+                    printf("Invalid path %s\r\n", path);
+                    return NULL;
+                } else {
+                    // '..' case
+                    p++;
+                    // if (*p == '/') {
+                    if (up_one_level(resolved_path) != 0) {
+                        printf("Failed to go up now. Invalid path %s\r\n", path);
+                        return NULL;
+                    }
+
+                    r = resolved_path + strlen(resolved_path);
+                    // }
+
+                    // end with '.'
+                    if (*p == '\0') {
+                        break;
+                    }
+                }
+            } else {
+                if (*p == '/' || *p == '\0') {
+                    p++;
+                } else {
+                    // '.xxx' might be hidden file or dir
+                    p--;
+                    goto copy_valid;
+                }
+            }
+        }
+
+        while (*p == '/')
+            p++;
+        if (*p == '\0')
+            break;
+
+        // if another round of ./.., just continue
+        if (*p == '.')
+            continue;
+
+copy_valid:
+        // path string may be found now, save to r
+        while ((*p != '/') && (*p != '\0'))
+            *r++ = *p++;
+
+        // add taling '/' if necessary
+        if (*(r - 1) != '/') {
+            *r++ = '/';
+        }
+    }
+
+    /**
+     * considering "cd ../config" for tab key case,
+     * we need set string EOF avoid out of control.
+     */
+    *r = '\0';
+
+    // exclude the tailing '/', just in case it is a file
+    if ((resolved_path[strlen(resolved_path) - 1] == '/') &&
+        (strlen(resolved_path) != 1)) {
+        resolved_path[strlen(resolved_path) - 1] = '\0';
+    }
+
+    return resolved_path;
+}
+
+static void df_do_dir(const char *dir)
+{
+    aos_statfs_t sfs;
+    unsigned long long total, used, free;
+    char abspath[256] = {0}, *dir1;
+
+    dir1 = get_realpath(dir, abspath, sizeof(abspath));
+    if (!dir1) {
+        aos_cli_printf("Failed to get real path!\r\n");
+        return;
+    }
+
+    if (access(dir1, F_OK) != 0) {
+        aos_cli_printf("Failed to access path:%s\r\n", dir1);
+        return;
+    }
+
+    memset(&sfs, 0, sizeof(aos_statfs_t));
+    if (aos_statfs(dir1, &sfs) < 0) {
+        aos_cli_printf("statfs %s failed\n", dir);
+        return;
+    }
+
+    total = ((unsigned long long)sfs.f_bsize * (unsigned long long)sfs.f_blocks) >> 10;
+    if (total == 0) {
+        aos_cli_printf("total size error!\r\n");
+        return;
+    }
+    free = ((unsigned long long)sfs.f_bsize * (unsigned long long)sfs.f_bfree) >> 10;
+    used = total - free;
+
+    aos_cli_printf("%10llu%10llu%10llu%6llu%%    %s\n", total, used, free, used * 100 / total, dir);
+}
+
+static void print_help()
+{
+    aos_cli_printf(
+        "usage:\r\n"
+        "  df <dir>\r\n"
+        "eg:\r\n"
+        "  1.show /etc/config disk space info:\r\n"
+        "    df /etc/cofig\r\n");
+}
+
 static void cmd_df(char *wbuf, int wbuf_len, int argc, char **argv)
 {
-    int ret = -1;
-    struct aos_statfs sfs;
-    unsigned long long total, used, free;
-    char *dir = NULL;
+    int i;
+    char node_names[8][64];
+    uint32_t count = 0;
+    uint32_t index;
 
-    if (argc == 1) {
-        dir = "/";
-    } else if(argc == 2) {
-        dir = argv[1];
+
+    if (argc >= 2 && (strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "--help") == 0)) {
+        print_help();
+        return;
     }
 
-    if (dir) {
-        ret = aos_statfs(dir, &sfs);
-        if (ret < 0) {
-            printf(g_fmtcmdfailed, argv[0], "df", ret);
-            return;
-        }
-        total = ((unsigned long long)sfs.f_bsize * (unsigned long long)sfs.f_blocks) >> 10;
-        if (total == 0) {
-            printf("total size error!\r\n");
-            return;
-        }
-        free = ((unsigned long long)sfs.f_bsize * (unsigned long long)sfs.f_bavail) >> 10;
-        used = total - free;
+    aos_cli_printf("%10s%10s%10s%7s    %s\n", "Total(KB)", "Used(KB)", "Free(KB)", "Use%", "Mount");
 
-        printf("%10s%10s%10s%7s    %s\n", "Total", "Used", "Free", "Use%", "Mount");
-        if (!strcmp(dir, "/")) {
-            printf("%10llu%10llu%10llu%6llu%%    %s\n", total, used, free,
-                    used * 100 / total, dir);
-        } else {
-            printf("%10llu%10llu%10llu     0%%    %s\n", total, used, free, dir);
+    if (argc <= 1) {
+        vfs_get_node_name("/", node_names, &count);
+        for (index = 0; index < count; index++) {
+            df_do_dir(node_names[index]);
         }
+
+        return;
     }
 
+    for (i = 1; i < argc; i++)
+        df_do_dir(argv[i]);
     return;
 }
 

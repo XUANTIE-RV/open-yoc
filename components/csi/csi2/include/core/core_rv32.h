@@ -637,7 +637,7 @@ __STATIC_INLINE uint32_t csi_vic_get_vector(int32_t IRQn)
   \param [in]  enable     enable or disable memory protected region.
   */
 __STATIC_INLINE void csi_mpu_config_region(uint32_t idx, uint32_t base_addr, region_size_e size,
-                                           mpu_region_attr_t attr, uint32_t enable)
+        mpu_region_attr_t attr, uint32_t enable)
 {
     uint8_t  pmpxcfg = 0;
     uint32_t addr = 0;
@@ -768,15 +768,24 @@ __STATIC_INLINE uint32_t csi_coret_get_valueh(void)
 __STATIC_INLINE uint8_t __get_SYSMAPCFGx(uint32_t idx)
 {
     switch (idx) {
-    case 0: return SYSMAP->SYSMAPCFG0;
-    case 1: return SYSMAP->SYSMAPCFG1;
-    case 2: return SYSMAP->SYSMAPCFG2;
-    case 3: return SYSMAP->SYSMAPCFG3;
-    case 4: return SYSMAP->SYSMAPCFG4;
-    case 5: return SYSMAP->SYSMAPCFG5;
-    case 6: return SYSMAP->SYSMAPCFG6;
-    case 7: return SYSMAP->SYSMAPCFG7;
-    default: return 0;
+    case 0:
+        return SYSMAP->SYSMAPCFG0;
+    case 1:
+        return SYSMAP->SYSMAPCFG1;
+    case 2:
+        return SYSMAP->SYSMAPCFG2;
+    case 3:
+        return SYSMAP->SYSMAPCFG3;
+    case 4:
+        return SYSMAP->SYSMAPCFG4;
+    case 5:
+        return SYSMAP->SYSMAPCFG5;
+    case 6:
+        return SYSMAP->SYSMAPCFG6;
+    case 7:
+        return SYSMAP->SYSMAPCFG7;
+    default:
+        return 0;
     }
 }
 
@@ -789,15 +798,32 @@ __STATIC_INLINE uint8_t __get_SYSMAPCFGx(uint32_t idx)
 __STATIC_INLINE void __set_SYSMAPCFGx(uint32_t idx, uint32_t sysmapxcfg)
 {
     switch (idx) {
-    case 0: SYSMAP->SYSMAPCFG0 = sysmapxcfg; break;
-    case 1: SYSMAP->SYSMAPCFG1 = sysmapxcfg; break;
-    case 2: SYSMAP->SYSMAPCFG2 = sysmapxcfg; break;
-    case 3: SYSMAP->SYSMAPCFG3 = sysmapxcfg; break;
-    case 4: SYSMAP->SYSMAPCFG4 = sysmapxcfg; break;
-    case 5: SYSMAP->SYSMAPCFG5 = sysmapxcfg; break;
-    case 6: SYSMAP->SYSMAPCFG6 = sysmapxcfg; break;
-    case 7: SYSMAP->SYSMAPCFG7 = sysmapxcfg; break;
-    default: return;
+    case 0:
+        SYSMAP->SYSMAPCFG0 = sysmapxcfg;
+        break;
+    case 1:
+        SYSMAP->SYSMAPCFG1 = sysmapxcfg;
+        break;
+    case 2:
+        SYSMAP->SYSMAPCFG2 = sysmapxcfg;
+        break;
+    case 3:
+        SYSMAP->SYSMAPCFG3 = sysmapxcfg;
+        break;
+    case 4:
+        SYSMAP->SYSMAPCFG4 = sysmapxcfg;
+        break;
+    case 5:
+        SYSMAP->SYSMAPCFG5 = sysmapxcfg;
+        break;
+    case 6:
+        SYSMAP->SYSMAPCFG6 = sysmapxcfg;
+        break;
+    case 7:
+        SYSMAP->SYSMAPCFG7 = sysmapxcfg;
+        break;
+    default:
+        return;
     }
 }
 
@@ -809,16 +835,25 @@ __STATIC_INLINE void __set_SYSMAPCFGx(uint32_t idx, uint32_t sysmapxcfg)
  */
 __STATIC_INLINE uint32_t __get_SYSMAPADDRx(uint32_t idx)
 {
-    switch(idx){
-    case 0: return SYSMAP->SYSMAPADDR0;
-    case 1: return SYSMAP->SYSMAPADDR1;
-    case 2: return SYSMAP->SYSMAPADDR2;
-    case 3: return SYSMAP->SYSMAPADDR3;
-    case 4: return SYSMAP->SYSMAPADDR4;
-    case 5: return SYSMAP->SYSMAPADDR5;
-    case 6: return SYSMAP->SYSMAPADDR6;
-    case 7: return SYSMAP->SYSMAPADDR7;
-    default: return 0;
+    switch(idx) {
+    case 0:
+        return SYSMAP->SYSMAPADDR0;
+    case 1:
+        return SYSMAP->SYSMAPADDR1;
+    case 2:
+        return SYSMAP->SYSMAPADDR2;
+    case 3:
+        return SYSMAP->SYSMAPADDR3;
+    case 4:
+        return SYSMAP->SYSMAPADDR4;
+    case 5:
+        return SYSMAP->SYSMAPADDR5;
+    case 6:
+        return SYSMAP->SYSMAPADDR6;
+    case 7:
+        return SYSMAP->SYSMAPADDR7;
+    default:
+        return 0;
     }
 }
 
@@ -831,15 +866,32 @@ __STATIC_INLINE uint32_t __get_SYSMAPADDRx(uint32_t idx)
 __STATIC_INLINE void __set_SYSMAPADDRx(uint32_t idx, uint32_t sysmapxaddr)
 {
     switch (idx) {
-    case 0: SYSMAP->SYSMAPADDR0 = sysmapxaddr; break;
-    case 1: SYSMAP->SYSMAPADDR1 = sysmapxaddr; break;
-    case 2: SYSMAP->SYSMAPADDR2 = sysmapxaddr; break;
-    case 3: SYSMAP->SYSMAPADDR3 = sysmapxaddr; break;
-    case 4: SYSMAP->SYSMAPADDR4 = sysmapxaddr; break;
-    case 5: SYSMAP->SYSMAPADDR5 = sysmapxaddr; break;
-    case 6: SYSMAP->SYSMAPADDR6 = sysmapxaddr; break;
-    case 7: SYSMAP->SYSMAPADDR7 = sysmapxaddr; break;
-    default: return;
+    case 0:
+        SYSMAP->SYSMAPADDR0 = sysmapxaddr;
+        break;
+    case 1:
+        SYSMAP->SYSMAPADDR1 = sysmapxaddr;
+        break;
+    case 2:
+        SYSMAP->SYSMAPADDR2 = sysmapxaddr;
+        break;
+    case 3:
+        SYSMAP->SYSMAPADDR3 = sysmapxaddr;
+        break;
+    case 4:
+        SYSMAP->SYSMAPADDR4 = sysmapxaddr;
+        break;
+    case 5:
+        SYSMAP->SYSMAPADDR5 = sysmapxaddr;
+        break;
+    case 6:
+        SYSMAP->SYSMAPADDR6 = sysmapxaddr;
+        break;
+    case 7:
+        SYSMAP->SYSMAPADDR7 = sysmapxaddr;
+        break;
+    default:
+        return;
     }
 }
 
@@ -977,21 +1029,32 @@ __STATIC_INLINE void csi_core_reset (void)
  */
 
 /**
+  \brief   whether I-Cache enable
+  */
+__STATIC_INLINE int csi_icache_is_enable()
+{
+    uint32_t cache = __get_MHCR();
+    return (cache & CACHE_MHCR_IE_Msk) >> CACHE_MHCR_IE_Pos;
+}
+
+/**
   \brief   Enable I-Cache
   \details Turns on I-Cache
   */
 __STATIC_INLINE void csi_icache_enable (void)
 {
 #if (__ICACHE_PRESENT == 1U)
-    uint32_t cache;
-    __DSB();
-    __ISB();
-    __ICACHE_IALL();
-    cache = __get_MHCR();
-    cache |= CACHE_MHCR_IE_Msk;
-    __set_MHCR(cache);
-    __DSB();
-    __ISB();
+    if (!csi_icache_is_enable()) {
+        uint32_t cache;
+        __DSB();
+        __ISB();
+        __ICACHE_IALL();
+        cache = __get_MHCR();
+        cache |= CACHE_MHCR_IE_Msk;
+        __set_MHCR(cache);
+        __DSB();
+        __ISB();
+    }
 #endif
 }
 
@@ -1003,15 +1066,17 @@ __STATIC_INLINE void csi_icache_enable (void)
 __STATIC_INLINE void csi_icache_disable (void)
 {
 #if (__ICACHE_PRESENT == 1U)
-    uint32_t cache;
-    __DSB();
-    __ISB();
-    cache = __get_MHCR();
-    cache &= ~CACHE_MHCR_IE_Msk;            /* disable icache */
-    __set_MHCR(cache);
-    __ICACHE_IALL();                        /* invalidate all icache */
-    __DSB();
-    __ISB();
+    if (csi_icache_is_enable()) {
+        uint32_t cache;
+        __DSB();
+        __ISB();
+        cache = __get_MHCR();
+        cache &= ~CACHE_MHCR_IE_Msk;            /* disable icache */
+        __set_MHCR(cache);
+        __ICACHE_IALL();                        /* invalidate all icache */
+        __DSB();
+        __ISB();
+    }
 #endif
 }
 
@@ -1031,6 +1096,14 @@ __STATIC_INLINE void csi_icache_invalid (void)
 #endif
 }
 
+/**
+  \brief   whether D-Cache enable
+  */
+__STATIC_INLINE int csi_dcache_is_enable()
+{
+    uint32_t cache = __get_MHCR();
+    return (cache & CACHE_MHCR_DE_Msk) >> CACHE_MHCR_DE_Pos;
+}
 
 /**
   \brief   Enable D-Cache
@@ -1040,16 +1113,18 @@ __STATIC_INLINE void csi_icache_invalid (void)
 __STATIC_INLINE void csi_dcache_enable (void)
 {
 #if (__DCACHE_PRESENT == 1U)
-    uint32_t cache;
-    __DSB();
-    __ISB();
-    __DCACHE_IALL();                        /* invalidate all dcache */
-    cache = __get_MHCR();
-    cache |= (CACHE_MHCR_DE_Msk | CACHE_MHCR_WB_Msk | CACHE_MHCR_WA_Msk | CACHE_MHCR_RS_Msk | CACHE_MHCR_BPE_Msk | CACHE_MHCR_L0BTB_Msk);      /* enable all Cache */
-    __set_MHCR(cache);
+    if (!csi_dcache_is_enable()) {
+        uint32_t cache;
+        __DSB();
+        __ISB();
+        __DCACHE_IALL();                        /* invalidate all dcache */
+        cache = __get_MHCR();
+        cache |= (CACHE_MHCR_DE_Msk | CACHE_MHCR_WB_Msk | CACHE_MHCR_WA_Msk | CACHE_MHCR_RS_Msk | CACHE_MHCR_BPE_Msk | CACHE_MHCR_L0BTB_Msk);      /* enable all Cache */
+        __set_MHCR(cache);
 
-    __DSB();
-    __ISB();
+        __DSB();
+        __ISB();
+    }
 #endif
 }
 
@@ -1062,15 +1137,17 @@ __STATIC_INLINE void csi_dcache_enable (void)
 __STATIC_INLINE void csi_dcache_disable (void)
 {
 #if (__DCACHE_PRESENT == 1U)
-    uint32_t cache;
-    __DSB();
-    __ISB();
-    cache = __get_MHCR();
-    cache &= ~(uint32_t)CACHE_MHCR_DE_Msk; /* disable all Cache */
-    __set_MHCR(cache);
-    __DCACHE_IALL();                             /* invalidate all Cache */
-    __DSB();
-    __ISB();
+    if (csi_dcache_is_enable()) {
+        uint32_t cache;
+        __DSB();
+        __ISB();
+        cache = __get_MHCR();
+        cache &= ~(uint32_t)CACHE_MHCR_DE_Msk; /* disable all Cache */
+        __set_MHCR(cache);
+        __DCACHE_IALL();                             /* invalidate all Cache */
+        __DSB();
+        __ISB();
+    }
 #endif
 }
 

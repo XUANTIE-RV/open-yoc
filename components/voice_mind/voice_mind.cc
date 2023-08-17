@@ -123,7 +123,7 @@ static void plugin_task_entry(void *arg)
         "mind_process": {
           "device_id": "0",
           "plugin": "MindProcess",
-          "next": ["record_process#1", "dispatch_process", "lyeva_asr_process"],
+          "next": [ "lyeva_asr_process","dispatch_process","record_process#1"],
           "thread": {
             "priority": "28",
             "stack_size": "16384"
@@ -137,6 +137,45 @@ static void plugin_task_entry(void *arg)
             "priority": "28",
             "stack_size": "16384"
           }
+        }
+      }
+    })";
+#elif defined(CONFIG_ALG_US) && CONFIG_ALG_US
+    static const std::string json_str = R"({
+      "pipeline_0": {
+        "data_input": {
+          "plugin": "DataInput",
+          "props": {
+              "chn_num": "3",
+              "interleaved": "0",
+              "pcm_bits": "16",
+              "sample_rate": "16000",
+              "frame_ms": "20"
+          },
+          "next": ["audio_example_process0", "record_process#0"]
+        },
+        "record_process": {
+          "plugin": "RecordProc"
+        },
+        "audio_example_process0": {
+          "device_id": "0",
+          "plugin": "AudioExampleProcess0",
+          "next": ["audio_example_process1", "record_process#1", "dispatch_process"],
+          "thread": {
+            "priority": "29",
+            "stack_size": "40960"
+          }
+        },
+        "audio_example_process1": {
+          "device_id": "0",
+          "plugin": "AudioExampleProcess1",
+          "thread": {
+            "priority": "29",
+            "stack_size": "40960"
+          }
+        },
+        "dispatch_process": {
+          "plugin": "DispatchProc"
         }
       }
     })";
@@ -193,6 +232,9 @@ static void plugin_task_entry(void *arg)
     /* publish to kws about control cmd (such as play_state, push2talk) */
     algcmd_writer_ = participant_->CreateWriter<AlgCmdMessageT>("AlgCmdMsg");
 
+    /* mic_adaptor_start wait thsi signal */
+    aos_sem_signal(&g_voice_priv.start_sem);
+
     char *pcm_data  = (char *)aos_malloc_check(FRAME_SIZE);
     int   data_size = 0;
 
@@ -223,10 +265,8 @@ static int mic_adaptor_init(mic_t *mic, mic_event_t event)
     g_voice_priv.mic           = mic;
     g_voice_priv.pcm_output_en = 0;
 
-    int ret = aos_sem_new(&g_voice_priv.pcm_sem, 0);
-    if (ret < 0) {
-        return -1;
-    }
+    aos_sem_new(&g_voice_priv.pcm_sem, 0);
+    aos_sem_new(&g_voice_priv.start_sem, 0);
 
     return 0;
 }
@@ -250,8 +290,11 @@ static int mic_adaptor_start(mic_t *mic)
 
     g_voice_priv.task_running = 1;
     g_voice_priv.task_exit    = 0;
+    g_voice_priv.task_start   = 0;
 
     aos_task_new_ext(&g_voice_priv.plugin_task, "voice_mind", &plugin_task_entry, NULL, 2 * 1024 * 8, 11);
+    aos_sem_wait(&g_voice_priv.start_sem, AOS_WAIT_FOREVER);
+    g_voice_priv.task_start   = 1;
 
     return 0;
 }
@@ -288,6 +331,10 @@ static int mic_adaptor_pcm_data_control(mic_t *mic, int enable)
 
 static int mic_adaptor_set_push2talk(mic_t *mic, int mode)
 {
+    if (g_voice_priv.task_start == 0) {
+        return -1;
+    }
+
     auto msg = std::make_shared<AlgCmdMessageT>();
 
     msg->body().set_cmd(thead::voice::proto::PUSH2TALK_CMD);
@@ -300,6 +347,10 @@ static int mic_adaptor_set_push2talk(mic_t *mic, int mode)
 
 static int mic_adaptor_wakeup_notify_play_status(mic_t *mic, int play_status, int timeout)
 {
+    if (g_voice_priv.task_start == 0) {
+        return -1;
+    }
+
     auto msg = std::make_shared<AlgCmdMessageT>();
 
     msg->body().set_cmd(thead::voice::proto::PLAYSTATE_CMD);
@@ -313,6 +364,10 @@ static int mic_adaptor_wakeup_notify_play_status(mic_t *mic, int play_status, in
 
 static int mic_adaptor_set_wakup_level(mic_t *mic, char *wakeup_word, int level)
 {
+    if (g_voice_priv.task_start == 0) {
+        return -1;
+    }
+
     auto msg = std::make_shared<AlgCmdMessageT>();
 
     msg->body().set_cmd(thead::voice::proto::WAKEUP_LEVEL_CMD);
@@ -326,6 +381,10 @@ static int mic_adaptor_set_wakup_level(mic_t *mic, char *wakeup_word, int level)
 
 static int mic_adaptor_start_doa(mic_t *mic)
 {
+    if (g_voice_priv.task_start == 0) {
+        return -1;
+    }
+
     auto msg = std::make_shared<AlgCmdMessageT>();
 
     msg->body().set_cmd(thead::voice::proto::START_DOA_CMD);
@@ -336,6 +395,10 @@ static int mic_adaptor_start_doa(mic_t *mic)
 
 static int mic_adaptor_enable_linear_aec_data(mic_t *mic, int enable)
 {
+    if (g_voice_priv.task_start == 0) {
+        return -1;
+    }
+
     auto msg = std::make_shared<AlgCmdMessageT>();
 
     msg->body().set_cmd(thead::voice::proto::ENABLE_LINEAR_AEC_DATA_CMD);
@@ -347,6 +410,10 @@ static int mic_adaptor_enable_linear_aec_data(mic_t *mic, int enable)
 
 static int mic_adaptor_asr(mic_t *mic, int enable)
 {
+    if (g_voice_priv.task_start == 0) {
+        return -1;
+    }
+
     auto msg = std::make_shared<AlgCmdMessageT>();
 
     msg->body().set_cmd(thead::voice::proto::ENABLE_ASR);

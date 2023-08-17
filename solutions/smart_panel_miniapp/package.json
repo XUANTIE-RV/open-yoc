@@ -1,0 +1,36 @@
+{
+  "name": "smart_panel",
+  "appid": "8001675216031193",
+  "version": "1.0.0",
+  "description": "hello",
+  "quickjs": {
+    "version": "20200705",
+    "bigNum": false
+  },
+  "simulator": {
+    "path": "/home/houge/simulator_miniapp/usr/bin",
+    "page": ""
+  },
+  "single-js-bundle": false,
+  "scripts": {
+    "start": "aiot-cli preview",
+    "build": "aiot-cli -p",
+    "build:dev": "aiot-cli",
+    "build:bin": "aiot-cli -q -p",
+    "build:prod": "aiot-cli -c -q -p",
+    "build:bin-nopack": "aiot-cli -q",
+    "build:web": "aiot-cli build-web",
+    "build:simulator": "aiot-cli simulator ./",
+    "upload": "aiot-cli upload -n",
+    "check": "aiot-cli check",
+    "check:beta": "aiot-cli check -b"
+  },
+  "keywords": [
+    "iot",
+    "miniapp"
+  ],
+  "devDependencies": {},
+  "dependencies": {
+    "falcon-ui": "^1.0.3"
+  }
+}

@@ -1,6 +1,8 @@
 {
 	"debugger": {
-		"enable": true
+		"enable": true,
+		"port_devtool": 9307,
+		"port_httpd": 5556
 	},
 	"linksdk": {
 		"one_device_one_secret": false,

@@ -19,6 +19,8 @@
 #include "app_net.h"
 #include "app_main.h"
 
+#define APP_ENABLE_WIFI_PROV 1
+
 #if defined(EN_COMBO_NET) && EN_COMBO_NET
 #include "combo_net.h"
 #endif
@@ -82,6 +84,9 @@ static void network_reset_handle(uint32_t event_id, int reason)
                     LOGD(TAG, "AP not found");
                 } else if (reason == NET_DISCON_REASON_WIFI_PSK_ERR) {
                     LOGD(TAG, "password error");
+                } else if (reason == NET_DISCON_REASON_NORMAL){
+                    LOGD(TAG, "normal decon sussec!!!");
+                    break;
                 }
 
                 if (!wifi_is_pairing()) {
@@ -164,10 +169,6 @@ static void network_normal_handle(uint32_t event_id, const void *param)
                     app_network_internet_set_connected(1);
                     app_wifi_config_save();
                     app_event_update(EVENT_STATUS_NTP_SUCCESS);
-
-#if defined(APP_FOTA_EN) && APP_FOTA_EN
-                    app_fota_start();
-#endif
             }
         } else {
             /* 同步时间失败重试 如果wifi没有连接 不需要重试NTP */
@@ -242,6 +243,8 @@ static wifi_mode_e network_event_init(void)
     event_subscribe(EVENT_NET_CHECK_TIMER, user_local_event_cb, NULL);
     event_subscribe(EVENT_NET_LPM_RECONNECT, user_local_event_cb, NULL);
 
+    /* 进入配网模式 */
+#if APP_ENABLE_WIFI_PROV
     if (app_wifi_config_is_empty() || app_sys_get_boot_reason() == BOOT_REASON_WIFI_CONFIG) {
         if (app_sys_get_boot_reason() == BOOT_REASON_WIFI_CONFIG) {
             int last_method = 0;
@@ -255,13 +258,11 @@ static wifi_mode_e network_event_init(void)
         /* 配网组件会调用系统的重启，启动配网先把重启原因设置为软重启 */
         app_sys_set_boot_reason(BOOT_REASON_SOFT_RESET);
         return MODE_WIFI_PAIRING;
-    } else {
-#if defined(CONFIG_BOARD_ETH) && CONFIG_BOARD_ETH
-        netmgr_start(app_netmgr_hdl);
-#else
-        app_wifi_network_init_list();
-#endif
     }
+#endif
+
+    /* 正常联网 */
+    app_wifi_network_init_list();
 
     return MODE_WIFI_NORMAL;
 }
@@ -295,7 +296,7 @@ static wifi_mode_e app_network_start(void)
 
     utask_t *task = utask_new("netmgr", 10 * 1024, QUEUE_MSG_COUNT, AOS_DEFAULT_APP_PRI);
 
-#if defined(CONFIG_BOARD_ETH) && CONFIG_BOARD_ETH
+#if defined(BOARD_ETH_SUPPORT) && BOARD_ETH_SUPPORT
     app_netmgr_hdl = netmgr_dev_eth_init();
 #else
     app_netmgr_hdl = netmgr_dev_wifi_init();
@@ -322,9 +323,11 @@ static wifi_mode_e app_network_check(void)
     }
 
     app_wifi_config_init();
+#if APP_ENABLE_WIFI_PROV
     if (app_wifi_config_is_empty() || app_sys_get_boot_reason() == BOOT_REASON_WIFI_CONFIG) {
         return MODE_WIFI_PAIRING;
     }
+#endif
     return MODE_WIFI_NORMAL;
 }
 

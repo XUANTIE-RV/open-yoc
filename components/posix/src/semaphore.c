@@ -123,7 +123,7 @@ int sem_timedwait(sem_t *sem, const struct timespec *abs_timeout)
 
     ret = aos_sem_wait((aos_sem_t *)&(sem->aos_sem), timeout_ms);
     if (ret != 0) {
-        errno = -ret;
+        errno = -ret == EBUSY ? ETIMEDOUT : -ret;
         return -1;
     }
 

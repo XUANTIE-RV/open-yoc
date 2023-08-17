@@ -3,7 +3,7 @@
  */
 #include <board.h>
 
-#if defined(CONFIG_BOARD_AUDIO) && CONFIG_BOARD_AUDIO > 0
+#if defined(BOARD_AUDIO_SUPPORT) && BOARD_AUDIO_SUPPORT
 
 #include <stdio.h>
 #include <time.h>
@@ -55,6 +55,21 @@ int local_wakeup_audio_play(const char *name)
  *************************************************/
 static void media_evt(int type, smtaudio_player_evtid_t evt_id)
 {
+    if(type == SMTAUDIO_ONLINE_MUSIC){
+        LOGD(TAG, "update music page by reason %d", evt_id);
+        if(evt_id==SMTAUDIO_PLAYER_EVENT_START){
+            app_event_update(EVENT_GUI_USER_MUSIC_START);
+        }
+        else if(evt_id==SMTAUDIO_PLAYER_EVENT_PAUSE){
+            app_event_update(EVENT_GUI_USER_MUSIC_PAUSE);
+        }
+        else if(evt_id==SMTAUDIO_PLAYER_EVENT_RESUME){
+            app_event_update(EVENT_GUI_USER_MUSIC_RESUME);
+        }
+        else if(evt_id==SMTAUDIO_PLAYER_EVENT_STOP){
+            app_event_update(EVENT_GUI_USER_MUSIC_STOP);
+        }
+    }
     // LOGD(TAG, "media_evt type %d,evt_id %d", type, evt_id);
     if ((type == SMTAUDIO_ONLINE_MUSIC) || (type == SMTAUDIO_LOCAL_PLAY)) {
         switch (evt_id) {
@@ -205,7 +220,7 @@ void ao_event_hook(int ao_evt)
 
 void app_speaker_init(void)
 {
-#if defined(CONFIG_BOARD_AUDIO_AMP) && CONFIG_BOARD_AUDIO_AMP
+#if defined(BOARD_AUDIO_SUPPORT_AMP) && BOARD_AUDIO_SUPPORT_AMP
     board_audio_amplifier_onoff(0);
 #else
     int pa_pin = board_audio_get_pa_mute_pin();
@@ -214,6 +229,9 @@ void app_speaker_init(void)
 
     if (pa_pin >= 0 ) {
         amplifier_init(AMP_TYPE_GPIO, pa_pin, -1, AMP_MODE_DEF);
+#ifdef BOARD_AUDIO_SUPPORT_AMP_GPIO_FLIP
+        amplifier_config(-1, -1, 1);
+#endif
         amplifier_onoff(1);
     }
 #endif
@@ -224,10 +242,10 @@ void app_speaker_mute(int mute)
     if (smtaudio_get_state() == SMTAUDIO_STATE_MUTE)
         mute = 1;
 
-#if defined(CONFIG_BOARD_AUDIO_AMP) && CONFIG_BOARD_AUDIO_AMP
+#if defined(BOARD_AUDIO_SUPPORT_AMP) && BOARD_AUDIO_SUPPORT_AMP
     board_audio_amplifier_onoff(mute ? 0 : 1);
 #else
     amplifier_onoff(mute ? 0 : 1);
 #endif
 }
-#endif /*CONFIG_BOARD_AUDIO*/
+#endif /*BOARD_AUDIO_SUPPORT*/

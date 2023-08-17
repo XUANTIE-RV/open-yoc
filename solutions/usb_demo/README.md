@@ -153,6 +153,8 @@ CLOSE
 
 设备会发送一张特定的图片
 
+通过增加宏 CONFIG_VUC_H264 可以将编码换成H264编码，默认是mjpeg编码
+
 
 #### RNDIS Device
 

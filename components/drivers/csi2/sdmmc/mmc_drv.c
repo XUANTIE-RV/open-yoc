@@ -60,6 +60,16 @@ static int _mmc_open(rvm_dev_t *dev)
     if (mmc->info.erase_blks != 1024) {
         LOGW(TAG, "mmc erase_blks is %d", mmc->info.erase_blks);
     }
+#if defined(CONFIG_DEBUG) && CONFIG_DEBUG > 2
+    static int iprintflag = 0;
+    if (!iprintflag) {
+        LOGD(TAG, "info->block_size:%d", mmc->info.block_size);
+        LOGD(TAG, "info->erase_blks:%d", mmc->info.erase_blks);
+        LOGD(TAG, "info->boot_area_blks:%d", mmc->info.boot_area_blks);
+        LOGD(TAG, "info->user_area_blks:%d", mmc->info.user_area_blks);
+        iprintflag = 1;
+    }
+#endif
     return 0;
 }
 
@@ -80,9 +90,12 @@ static int _mmc_read(rvm_dev_t *dev, void *buffer, uint32_t start_block, uint32_
 
     if (!mmc || !buffer)
         return -EINVAL;
+    if (block_cnt == 0)
+        return 0;
     // LOGD(TAG, "start_block:%d, block_cnt:%d", start_block, block_cnt);
-    if (kStatus_Success != MMC_ReadBlocks(&mmc->SDIO_MMCCard, buffer, start_block, block_cnt)) {
-        LOGE(TAG, "start_block:%d, block_cnt:%d", start_block, block_cnt);
+    int32_t ret = MMC_ReadBlocks(&mmc->SDIO_MMCCard, buffer, start_block, block_cnt);
+    if (kStatus_Success != ret) {
+        LOGE(TAG, "read start_block:%d, block_cnt:%d, ret:%d", start_block, block_cnt, ret);
         return -EIO;
     }
 
@@ -95,9 +108,12 @@ static int _mmc_write(rvm_dev_t *dev, void *buffer, uint32_t start_block, uint32
 
     if (!mmc || !buffer)
         return -EINVAL;
+    if (block_cnt == 0)
+        return 0;
     // LOGD(TAG, "start_block:%d, block_cnt:%d", start_block, block_cnt);
-    if (kStatus_Success != MMC_WriteBlocks(&mmc->SDIO_MMCCard, buffer, start_block, block_cnt)) {
-        LOGE(TAG, "start_block:%d, block_cnt:%d", start_block, block_cnt);
+    int32_t ret = MMC_WriteBlocks(&mmc->SDIO_MMCCard, buffer, start_block, block_cnt);
+    if (kStatus_Success != ret) {
+        LOGE(TAG, "write start_block:%d, block_cnt:%d, ret:%d", start_block, block_cnt, ret);
         return -EIO;
     }
 
@@ -110,6 +126,8 @@ static int _mmc_erase(rvm_dev_t *dev, uint32_t start_block, uint32_t block_cnt)
 
     if (!mmc)
         return -EINVAL;
+    if (block_cnt == 0)
+        return 0;
 
     uint32_t startGroup, endGroup;
     if (start_block % mmc->SDIO_MMCCard.eraseGroupBlocks) {
@@ -123,8 +141,9 @@ static int _mmc_erase(rvm_dev_t *dev, uint32_t start_block, uint32_t block_cnt)
     startGroup = start_block / mmc->SDIO_MMCCard.eraseGroupBlocks;
     endGroup = startGroup + block_cnt / mmc->SDIO_MMCCard.eraseGroupBlocks - 1;
     // LOGD(TAG, "startGroup:%d, endGroup:%d", startGroup, endGroup);
-    if (kStatus_Success != MMC_EraseGroups(&mmc->SDIO_MMCCard, startGroup, endGroup)) {
-        LOGE(TAG, "startGroup:%d, endGroup:%d", startGroup, endGroup);
+    int32_t ret = MMC_EraseGroups(&mmc->SDIO_MMCCard, startGroup, endGroup);
+    if (kStatus_Success != ret) {
+        LOGE(TAG, "erase startGroup:%d, endGroup:%d, ret:%d", startGroup, endGroup, ret);
         return -EIO;
     }
     return 0;

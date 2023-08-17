@@ -1,7 +1,7 @@
 
 ## 第一部分： 基础信息
 name: f133_evb                                # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
-version: v7.7.0                                    # <必选项> 组件版本号
+version: v7.8.0                                    # <必选项> 组件版本号
 description: f133 panel board configure             # <必选项> 建议至少20字以上
 type: board                                         # <必选项> 组件类型，为：solution, chip, board, common, sdk
 license: Apache license v2.0                        # <可选项> 源代码的许可证，要确保所有代码、文件的许可证不冲突。如：MIT，Apache license v2.0，BSD
@@ -120,7 +120,6 @@ def_config:
   FD_SETSIZE: 128
   CONFIG_USERVICE_EVENT_TASK_STACK_SIZE: 8192
   SYSINFO_DEVICE_NAME: "d1_dockpro_evb"
-  OSAL_RHINO: 1
   CONFIG_OTA_AB: 0
   CONFIG_AOS_AUDIO_PCM: y
   CONFIG_PARITION_NO_VERIFY: 0
@@ -135,7 +134,8 @@ def_config:
   CONFIG_SEC_CRYPTO_RNG_SW: 1
   HAVE_MBEDTLS_USER_CONFIG: 1
   #app define
-  CONFIG_BLUETOOTH_WORK_QUEUE_STACK_SIZE: 3072
+  CONFIG_GW_MGMT_EVENT_PROCESS_TASK: 16384 #16K
+  CONFIG_BLUETOOTH_WORK_QUEUE_STACK_SIZE: 10240 #10K 6144
   CONFIG_BT_AUTO_DATA_LEN_UPDATE: 1
   CONFIG_BT_CENTRAL: 1
   CONFIG_BT_CONN_TX_MAX: 3
@@ -148,7 +148,7 @@ def_config:
   CONFIG_BT_PERIPHERAL: 1
   CONFIG_BT_RX_BUF_COUNT: 4
   CONFIG_BT_RX_BUF_LEN: 512
-  CONFIG_BT_RX_STACK_SIZE: 8192
+  CONFIG_BT_RX_STACK_SIZE: 12288 #12K 8192
   CONFIG_BT_ADV_STACK_SIZE: 8192
   CONFIG_BT_SHELL: 1
   CONFIG_BT_SMP: 1
@@ -165,13 +165,14 @@ def_config:
   CONFIG_BT_HFP: 0  
   CONFIG_BT_HFP_AUDIO_I2S: 0
   CONFIG_BT_A2DP: 1
-  CONFIG_DRV_BT_AOS_HAL: 1
   CONFIG_BT_DRV_NO_ONESHOT: 1
   CONFIG_BT_ADV_SCAN_SCHEDULE_IN_HOST: 1
   CONFIG_HAL_UART_RINGBUF_LEN: 8192
   CONFIG_BT_A2DP_AUDIO_OUTPUT_INSIDE: 1
   CONFIG_BT_MAX_PAIRED: 5
   CONFIG_FOTA_BUFFER_SIZE: 16384
+  # filesystem
+  CONFIG_FS_LFS: y
 
 ## 第六部分：安装信息
 # install:

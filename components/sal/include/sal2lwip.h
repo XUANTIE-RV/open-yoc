@@ -5,6 +5,8 @@
 #ifndef __SAL2LWIP_H__
 #define __SAL2LWIP_H__
 
+#include "lwip/opt.h"
+
 #define sal_mutex_t sys_mutex_t
 #define sal_mutex_new sys_mutex_new
 #define sal_mutex_lock sys_mutex_lock

@@ -6,11 +6,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <aos/hal/gpio.h>
-#include <aos/hal/pwm.h>
+#include <devices/pwm.h>
+#include <devices/devicelist.h>
 #include <drv_light.h>
 
-pwm_dev_t *io_config = NULL;
+pwm_dev_res_t *pwm_devs = NULL;
 
 #define LIGHT_PERIOD       500
 #define LIGHT_CTL_TEMP_MIN (0x0320) // 800
@@ -39,8 +39,9 @@ light_info_func_t light_info;
  */
 static void _led_init(led_light_cfg_t *data_cfg)
 {
+    char name[12];
     pwm_port_func_t *io_port = (pwm_port_func_t *)data_cfg->pwm_port;
-    io_config                = (pwm_dev_t *)data_cfg->io_config;
+    pwm_devs                 = data_cfg->pwm_devs;
     light_info.light_mode    = data_cfg->show_mode;
     light_info.pin_mode      = data_cfg->pin_mode;
 
@@ -49,15 +50,20 @@ static void _led_init(led_light_cfg_t *data_cfg)
         return;
     }
     for (int i = 0; i < arr_size; i++) {
-        io_config[i].port = io_port[i].port;
+        pwm_devs[i].port = io_port[i].port;
+        pwm_devs[i].channel = io_port[i].channel;
         if (data_cfg->show_mode == HIGH_LIGHT) {
-            io_config[i].config.duty_cycle = 0.5;
+            pwm_devs[i].config.duty_cycle = 0.5;
         } else {
-            io_config[i].config.duty_cycle = 0.8;
+            pwm_devs[i].config.duty_cycle = 0.8;
         }
-        io_config[i].config.freq = LIGHT_PERIOD;
-        hal_pwm_init(&io_config[i]);
-        hal_pwm_start(&io_config[i]);
+        pwm_devs[i].config.freq = LIGHT_PERIOD;
+        pwm_devs[i].config.polarity = RVM_HAL_PWM_POLARITY_NORMAL;
+        rvm_pwm_drv_register(pwm_devs[i].port);
+        snprintf(name, sizeof(name), "pwm%d", pwm_devs[i].port);
+        pwm_devs[i].dev = rvm_hal_pwm_open(name);
+        rvm_hal_pwm_config(pwm_devs[i].dev, &pwm_devs[i].config, pwm_devs[i].channel);
+        rvm_hal_pwm_start(pwm_devs[i].dev, pwm_devs[i].channel);
     }
 }
 
@@ -92,8 +98,8 @@ static void _get_led_duty(uint8_t *p_duty, uint16_t actual, uint16_t temperature
 static int _set_pwm_duty(uint8_t channel, uint8_t duty)
 {
     int          err = -1;
-    pwm_config_t pwm_cfg;
-    pwm_dev_t *  pwm_dev = NULL;
+    rvm_hal_pwm_config_t pwm_cfg;
+    pwm_dev_res_t *  pwm_dev = NULL;
 
     if (duty > 100) {
         printf(">>duty invaild\r\n");
@@ -107,16 +113,17 @@ static int _set_pwm_duty(uint8_t channel, uint8_t duty)
     } else {
         pwm_cfg.duty_cycle = 1.0 - (float)(duty_list[duty] * 0.001);
     }
+    pwm_cfg.polarity = RVM_HAL_PWM_POLARITY_NORMAL;
 
     if (channel == LED_COLD_CHANNEL) {
-        pwm_dev = &io_config[0];
+        pwm_dev = &pwm_devs[0];
     } else if (channel == LED_WARM_CHANNEL) {
-        pwm_dev = &io_config[1];
+        pwm_dev = &pwm_devs[1];
     } else {
         return -1;
     }
 
-    err = hal_pwm_para_chg(pwm_dev, pwm_cfg);
+    err = rvm_hal_pwm_config(pwm_dev->dev, &pwm_cfg, pwm_dev->channel);
     if (err) {
         printf("pwm err %d\n", err);
         return -1;
@@ -157,7 +164,7 @@ int led_light_init(led_light_cfg_t *para_cfg)
 
 int led_light_control(void *config)
 {
-    if (io_config == NULL) {
+    if (pwm_devs == NULL) {
         printf("led light init err or not init\n");
         return -1;
     }
@@ -166,8 +173,8 @@ int led_light_control(void *config)
         _led_set_cw(led_config->power_switch, led_config->actual, led_config->temperature);
     } else if (ON_OFF_LIGHT == light_info.pin_mode) {
         struct genie_on_off_op *on_off_config = config;
-        pwm_config_t            pwm_cfg;
-        pwm_dev_t *             pwm_dev = NULL;
+        rvm_hal_pwm_config_t            pwm_cfg;
+        pwm_dev_res_t *                 pwm_dev = NULL;
         pwm_cfg.freq                    = LIGHT_PERIOD;
         if ((light_info.light_mode == HIGH_LIGHT && on_off_config->power_switch == 1)
             || (light_info.light_mode == LOW_LIGHT && on_off_config->power_switch == 0))
@@ -176,9 +183,9 @@ int led_light_control(void *config)
         } else {
             pwm_cfg.duty_cycle = 0.0;
         }
-        pwm_dev = &io_config[0];
+        pwm_dev = &pwm_devs[0];
 
-        int err = hal_pwm_para_chg(pwm_dev, pwm_cfg);
+        int err = rvm_hal_pwm_config(pwm_dev->dev, &pwm_cfg, pwm_dev->channel);
         if (err) {
             printf("pwm err %d\n", err);
             return -1;
@@ -186,8 +193,8 @@ int led_light_control(void *config)
     } else if (RGB_LIGHT == light_info.pin_mode) {
         static uint8_t       last_rgb_actual[LED_RGB_CHANNEL_MAX] = { 0xFF, 0xFF, 0xFF };
         struct genie_rgb_op *rgb_read                             = config;
-        pwm_config_t         pwm_cfg;
-        pwm_dev_t *          pwm_dev = NULL;
+        rvm_hal_pwm_config_t         pwm_cfg;
+        pwm_dev_res_t *              pwm_dev = NULL;
         pwm_cfg.freq                 = LIGHT_PERIOD;
 
         for (int i = 0; i < LED_RGB_CHANNEL_MAX; i++) {
@@ -203,9 +210,10 @@ int led_light_control(void *config)
             } else {
                 pwm_cfg.duty_cycle = 1.0 - rgb_read->rgb_config[i].led_actual / 255.0;
             }
-            pwm_dev = &io_config[i];
+            pwm_cfg.polarity = RVM_HAL_PWM_POLARITY_NORMAL;
+            pwm_dev = &pwm_devs[i];
 
-            int err = hal_pwm_para_chg(pwm_dev, pwm_cfg);
+            int err = rvm_hal_pwm_config(pwm_dev->dev, &pwm_cfg, pwm_dev->channel);
             if (err) {
                 printf("pwm err %d\n", err);
                 return -1;
@@ -213,7 +221,7 @@ int led_light_control(void *config)
             // printf("%f, \r\n",pwm_cfg.duty_cycle);
             last_rgb_actual[i] = rgb_read->rgb_config[i].led_actual;
 
-            hal_pwm_start(pwm_dev);
+            rvm_hal_pwm_start(pwm_dev->dev, pwm_dev->channel);
         }
     } else {
         printf("not support led type \n");

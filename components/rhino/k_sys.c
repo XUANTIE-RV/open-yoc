@@ -134,10 +134,41 @@ void krhino_intrpt_stack_ovf_check(void)
 #endif
 #endif /* RHINO_CONFIG_INTRPT_STACK_OVF_CHECK */
 
+kstat_t krhino_pagefault_enter(void)
+{
+    CPSR_ALLOC();
+
+#if (RHINO_CONFIG_INTRPT_STACK_OVF_CHECK > 0)
+    krhino_intrpt_stack_ovf_check();
+#endif
+
+    RHINO_CPU_INTRPT_DISABLE();
+    g_intrpt_nested_level[cpu_cur_get()]++;
+    RHINO_CPU_INTRPT_ENABLE();
+
+    return RHINO_SUCCESS;
+}
+
+kstat_t krhino_pagefault_exit(void)
+{
+    CPSR_ALLOC();
+
+#if (RHINO_CONFIG_INTRPT_STACK_OVF_CHECK > 0)
+    krhino_intrpt_stack_ovf_check();
+#endif
+
+    RHINO_CPU_INTRPT_DISABLE();
+    g_intrpt_nested_level[cpu_cur_get()]--;
+    RHINO_CPU_INTRPT_ENABLE();
+
+    return RHINO_SUCCESS;
+}
 kstat_t krhino_intrpt_enter(void)
 {
     CPSR_ALLOC();
 
+    if (g_sys_stat != RHINO_RUNNING)
+        return RHINO_SUCCESS;
     TRACE_INTRPT_ENTETR();
 
 #if (RHINO_CONFIG_INTRPT_STACK_OVF_CHECK > 0)
@@ -164,6 +195,8 @@ void krhino_intrpt_exit(void)
     lr_timer_t cur_task_exec_time;
 #endif
 
+    if (g_sys_stat != RHINO_RUNNING)
+        return;
     TRACE_INTRPT_EXIT();
 
 #if (RHINO_CONFIG_INTRPT_STACK_OVF_CHECK > 0)

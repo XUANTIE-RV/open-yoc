@@ -1,26 +1,8 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
-INCLUDE(../../cmake/toolchain.cmake)
-
-# include
-INCLUDE_DIRECTORIES(./include)
-INCLUDE_DIRECTORIES(../aos_port/include)
-INCLUDE_DIRECTORIES(../ulog/include)
-
-ADD_DEFINITIONS(
-	-DCONFIG_USERVICE_EVENT_TASK_STACK_SIZE=2048
+FILE(GLOB SOURCE_FILES
+    ${COMPONENTS_DIR}/uservice/src/*.c
 )
 
-SET(LIBSOURCE 
-	src/event.c
-	src/event_svr.c
-	src/rpc.c
-	src/uservice.c
-	src/utask.c
-)
+include_directories(${COMPONENTS_DIR}/uservice/include)
 
-ADD_LIBRARY(uservice ${LIBSOURCE})
-
-INSTALL(TARGETS uservice DESTINATION ${INSTALL_PATH}/lib)
-INSTALL(DIRECTORY ./include DESTINATION ${INSTALL_PATH}/include)
-
+add_library(uservice STATIC ${SOURCE_FILES})
 

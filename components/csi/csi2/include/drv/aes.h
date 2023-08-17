@@ -22,9 +22,9 @@ extern "C" {
 
 /*----- Encrypt & Decrypt: Config key length -----*/
 typedef enum {
-    AES_KEY_LEN_BITS_128        = 0,       ///< 128 Data bits
-    AES_KEY_LEN_BITS_192,                  ///< 192 Data bits
-    AES_KEY_LEN_BITS_256                   ///< 256 Data bits
+    AES_KEY_LEN_BITS_128        = 0,       /* 128 Data bits */
+    AES_KEY_LEN_BITS_192,                  /* 192 Data bits */
+    AES_KEY_LEN_BITS_256                   /* 256 Data bits */
 } csi_aes_key_bits_t;
 
 /**
@@ -67,6 +67,25 @@ csi_error_t csi_aes_set_encrypt_key(csi_aes_t *aes, void *key, csi_aes_key_bits_
   \return      Error code \ref Csi_error_t
 */
 csi_error_t csi_aes_set_decrypt_key(csi_aes_t *aes, void *key, csi_aes_key_bits_t key_len);
+/**
+  \brief       Set encrypt key2. This API is used for the algorithm which has two keys,
+				such as xts, used for the key of tweak
+  \param[in]   aes        Handle to operate
+  \param[in]   key        Pointer to the key buf
+  \param[in]   key_len    Pointer to \ref csi_aes_key_bits_t
+  \return      Error code \ref Csi_error_t
+*/
+csi_error_t csi_aes_set_encrypt_key2(csi_aes_t *aes, void *key, csi_aes_key_bits_t key_len);
+
+/**
+  \brief       Set decrypt key2. This API is used for the algorithm which has two keys,
+				such as xts, used for the key of tweak
+  \param[in]   aes        Handle to operate
+  \param[in]   key        Pointer to the key buf
+  \param[in]   key_len    Pointer to \ref csi_aes_key_bits_t
+  \return      Error code \ref Csi_error_t
+*/
+csi_error_t csi_aes_set_decrypt_key2(csi_aes_t *aes, void *key, csi_aes_key_bits_t key_len);
 
 /**
   \brief       AES ecb encrypt
@@ -208,20 +227,10 @@ csi_error_t csi_aes_ofb_decrypt(csi_aes_t *aes, void *in, void *out, uint32_t si
   \param[in]   in               Pointer to the source data
   \param[out]  out              Pointer to the result data
   \param[in]   size             The source data size
-  \param[in]   nonce_counter    Pointer to the 128-bit nonce and counter
-  \param[in]   stream_block     Pointer to the saved stream-block for resuming
   \param[in]   iv               Init vector
-  \param[out]  num              The number of the 128-bit block we have used
   \return      Error code \ref csi_error_t
 */
-csi_error_t csi_aes_ctr_encrypt(csi_aes_t *aes,
-                                void *in,
-                                void *out,
-                                uint32_t size,
-                                uint8_t nonce_counter[16],
-                                uint8_t stream_block[16],
-                                void *iv,
-                                uint32_t *num);
+csi_error_t csi_aes_ctr_encrypt(csi_aes_t *aes, void *in,void *out, uint32_t size, void *iv);
 
 /**
   \brief       AES ctr decrypt
@@ -229,34 +238,55 @@ csi_error_t csi_aes_ctr_encrypt(csi_aes_t *aes,
   \param[in]   in               Pointer to the source data
   \param[out]  out              Pointer to the result data
   \param[in]   size             The source data size
-  \param[in]   nonce_counter    Pointer to the 128-bit nonce and counter
-  \param[in]   stream_block     Pointer to the saved stream-block for resuming
   \param[in]   iv               Init vecotr
-  \param[out]  num              The number of the 128-bit block we have used
   \return      Error code \ref csi_error_t
 */
-csi_error_t csi_aes_ctr_decrypt(csi_aes_t *aes,
-                                void *in,
-                                void *out,
-                                uint32_t size,
-                                uint8_t nonce_counter[16],
-                                uint8_t stream_block[16],
-                                void *iv,
-                                uint32_t *num);
+csi_error_t csi_aes_ctr_decrypt(csi_aes_t *aes, void *in, void *out, uint32_t size, void *iv);
 
 /**
-  \brief       Enable AES power manage
-  \param[in]   aes    Handle to operate
+  \brief       AES cts encrypt
+  \param[in]   aes              Handle to operate
+  \param[in]   in               Pointer to the source data
+  \param[out]  out              Pointer to the result data
+  \param[in]   size             The source data size
+  \param[in]   iv               Init vector
   \return      Error code \ref csi_error_t
 */
-csi_error_t csi_aes_enable_pm(csi_aes_t *aes);
+csi_error_t csi_aes_cts_encrypt(csi_aes_t *aes, void *in,void *out, uint32_t size, void *iv);
 
 /**
-  \brief       Disable AES power manage
-  \param[in]   aes    Handle to operate
-  \return      None
+  \brief       AES cts decrypt
+  \param[in]   aes              Handle to operate
+  \param[in]   in               Pointer to the source data
+  \param[out]  out              Pointer to the result data
+  \param[in]   size             The source data size
+  \param[in]   iv               Init vecotr
+  \return      Error code \ref csi_error_t
 */
-void csi_aes_disable_pm(csi_aes_t *aes);
+csi_error_t csi_aes_cts_decrypt(csi_aes_t *aes, void *in, void *out, uint32_t size, void *iv);
+
+
+/**
+  \brief       AES xts encrypt
+  \param[in]   aes              Handle to operate
+  \param[in]   in               Pointer to the source data
+  \param[out]  out              Pointer to the result data
+  \param[in]   size             The source data size
+  \param[in]   iv               Init vector
+  \return      Error code \ref csi_error_t
+*/
+csi_error_t csi_aes_xts_encrypt(csi_aes_t *aes, void *in,void *out, uint32_t size, void *iv);
+
+/**
+  \brief       AES xts decrypt
+  \param[in]   aes              Handle to operate
+  \param[in]   in               Pointer to the source data
+  \param[out]  out              Pointer to the result data
+  \param[in]   size             The source data size
+  \param[in]   iv               Init vecotr
+  \return      Error code \ref csi_error_t
+*/
+csi_error_t csi_aes_xts_decrypt(csi_aes_t *aes, void *in, void *out, uint32_t size, void *iv);
 
 #ifdef __cplusplus
 }

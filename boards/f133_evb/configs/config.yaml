@@ -20,7 +20,7 @@ partitions:
   - { name: boot,     address: 0x010000, load_addr: 0x40000000, size: 0x030000 }
   - { name: imtb,     address: 0x040000, size: 0x002000 }
   - { name: prim,     address: 0x042000, load_addr: 0x40050000, size: 0x500000, verify: false, update: FULL, car: xz }
-  - { name: lfs,      address: 0x542000, size: 0x600000 }
+  - { name: lfs,      address: 0x542000, size: 0x600000, update: NONE } # NONE for ignore lfs ota
   - { name: misc,     address: 0xB42000, size: 0x410000 }
   - { name: kv,       address: 0xF52000, size: 0x004000 }
   - { name: kp,       address: 0xF56000, size: 0x001000 }

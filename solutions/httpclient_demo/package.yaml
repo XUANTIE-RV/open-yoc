@@ -1,6 +1,6 @@
 ## 第一部分： 基础信息
 name: httpclient_demo
-version: v7.7.0
+version: v7.8.0
 description: httpclient_demo
 type: solution
 ## 第二部分：依赖信息
@@ -13,18 +13,18 @@ type: solution
 #   - minilibc: v7.2.0
 #   - aos: >=v7.2.0
 sdk_chip:
-  - sdk_chip_bl606p_e907: v7.7.0
-  - sdk_chip_d1: v7.7.0
-  - sdk_chip_ch2601: v7.7.0
-  - sdk_chip_cv181xh: v7.7.0
-  - sdk_chip_f133: v7.7.0
+  - sdk_chip_bl606p_e907: v7.8.0
+  - sdk_chip_d1: v7.8.0
+  - sdk_chip_ch2601: v7.8.0
+  - sdk_chip_f133: v7.8.0
+  - sdk_chip_cv181xh_bga: v7.8.0
 depends:
-  - sdk_chip_bl606p_e907: v7.7.0
-  - netmgr: v7.7.0
-  - mbedtls: v7.7.0
-  - httpclient: v7.7.0
-  - transport: v7.7.0
-  - ntp: v7.7.0
+  - sdk_chip_bl606p_e907: v7.8.0
+  - netmgr: v7.8.0
+  - mbedtls: v7.8.0
+  - httpclient: v7.8.0
+  - transport: v7.8.0
+  - ntp: v7.8.0
 
 ## 第三部分：板级信息
 hw_info:

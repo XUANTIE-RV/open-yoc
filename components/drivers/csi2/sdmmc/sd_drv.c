@@ -56,7 +56,16 @@ static int _sd_open(rvm_dev_t *dev)
         LOGE(TAG, "sd block_size is %d", sd->info.block_size);
         return -1;
     }
-    LOGD(TAG, "sd erase_blks is %d", sd->info.erase_blks);
+#if defined(CONFIG_DEBUG) && CONFIG_DEBUG > 2
+    static int iprintflag = 0;
+    if (!iprintflag) {
+        LOGD(TAG, "info->block_size:%d", sd->info.block_size);
+        LOGD(TAG, "info->erase_blks:%d", sd->info.erase_blks);
+        LOGD(TAG, "info->boot_area_blks:%d", sd->info.boot_area_blks);
+        LOGD(TAG, "info->user_area_blks:%d", sd->info.user_area_blks);
+        iprintflag = 1;
+    }
+#endif
     return 0;
 }
 
@@ -77,9 +86,12 @@ static int _sd_read(rvm_dev_t *dev, void *buffer, uint32_t start_block, uint32_t
 
     if (!sd || !buffer)
         return -EINVAL;
+    if (block_cnt == 0)
+        return 0;
     // LOGD(TAG, "start_block:%d, block_cnt:%d", start_block, block_cnt);
-    if (kStatus_Success != SD_ReadBlocks(&sd->SDIO_SDCard, buffer, start_block, block_cnt)) {
-        LOGE(TAG, "start_block:%d, block_cnt:%d", start_block, block_cnt);
+    int32_t ret = SD_ReadBlocks(&sd->SDIO_SDCard, buffer, start_block, block_cnt);
+    if (kStatus_Success != ret) {
+        LOGE(TAG, "read start_block:%d, block_cnt:%d, ret:%d", start_block, block_cnt, ret);
         return -EIO;
     }
 
@@ -92,9 +104,12 @@ static int _sd_write(rvm_dev_t *dev, void *buffer, uint32_t start_block, uint32_
 
     if (!sd || !buffer)
         return -EINVAL;
+    if (block_cnt == 0)
+        return 0;
     // LOGD(TAG, "start_block:%d, block_cnt:%d", start_block, block_cnt);
-    if (kStatus_Success != SD_WriteBlocks(&sd->SDIO_SDCard, buffer, start_block, block_cnt)) {
-        LOGE(TAG, "start_block:%d, block_cnt:%d", start_block, block_cnt);
+    int32_t ret = SD_WriteBlocks(&sd->SDIO_SDCard, buffer, start_block, block_cnt);
+    if (kStatus_Success != ret) {
+        LOGE(TAG, "write start_block:%d, block_cnt:%d, ret:%d", start_block, block_cnt, ret);
         return -EIO;
     }
 
@@ -107,10 +122,12 @@ static int _sd_erase(rvm_dev_t *dev, uint32_t start_block, uint32_t block_cnt)
 
     if (!sd)
         return -EINVAL;
-
+    if (block_cnt == 0)
+        return 0;
     // LOGD(TAG, "start_block:%d, block_cnt:%d", start_block, block_cnt);
-    if (kStatus_Success != SD_EraseBlocks(&sd->SDIO_SDCard, start_block, block_cnt)) {
-        LOGE(TAG, "start_block:%d, block_cnt:%d", start_block, block_cnt);
+    int32_t ret = SD_EraseBlocks(&sd->SDIO_SDCard, start_block, block_cnt);
+    if (kStatus_Success != ret) {
+        LOGE(TAG, "erase start_block:%d, block_cnt:%d, ret:%d", start_block, block_cnt, ret);
         return -EIO;
     }
     return 0;

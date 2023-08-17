@@ -112,23 +112,6 @@ extern "C" {
 status_t SDIO_Init(sdio_card_t *card);
 
 /*!
- * @brief SDIO card init function with sdif index
- *
- * @param card Card descriptor.
- * @retval kStatus_SDMMC_GoIdleFailed
- * @retval kStatus_SDMMC_HandShakeOperationConditionFailed
- * @retval kStatus_SDMMC_SDIO_InvalidCard
- * @retval kStatus_SDMMC_SDIO_InvalidVoltage
- * @retval kStatus_SDMMC_SendRelativeAddressFailed
- * @retval kStatus_SDMMC_SelectCardFailed
- * @retval kStatus_SDMMC_SDIO_SwitchHighSpeedFail
- * @retval kStatus_SDMMC_SDIO_ReadCISFail
- * @retval kStatus_SDMMC_TransferFailed
- * @retval kStatus_Success
- */
-status_t SDIO_Init2(sdio_card_t *card, void *user_data, uint32_t sdif);
-
-/*!
  * @brief SDIO card deinit, include card and host deinit.
  *
  * @param card Card descriptor.
@@ -175,15 +158,6 @@ void SDIO_CardDeinit(sdio_card_t *card);
  * @param card Card descriptor.
  */
 status_t SDIO_HostInit(sdio_card_t *card);
-
-/*!
- * @brief initialize the host with sdif index
- *
- * This function deinitializes the specific host.
- *
- * @param card Card descriptor.
- */
-status_t SDIO_HostInit2(sdio_card_t *card, void *user_data, uint32_t sdif);
 
 /*!
  * @brief Deinitializes the host.

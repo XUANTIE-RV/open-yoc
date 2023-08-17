@@ -9,6 +9,7 @@
 #include <drv/wdt.h>
 #include <sys_clk.h>
 #include "bl606p_glb.h"
+#include <blyoc_flash.h>
 #include <hal_code/hal_board.h>
 
 #include <aos/yloop.h>
@@ -52,6 +53,8 @@ static void yloop_thread(void *arg)
 
 void board_init(void)
 {
+    GLB_Set_PSram_CLK(1,1,0,1); //set psram clock 240M Hz
+
     board_clock_config();
 
 #if defined(BOARD_GPIO_PIN_NUM) && BOARD_GPIO_PIN_NUM > 0
@@ -64,8 +67,10 @@ void board_init(void)
 #if defined(BOARD_UART_NUM) && BOARD_UART_NUM > 0
     board_uart_init();
 #endif
+	board_spi_init();
 
     board_flash_init();
+    bl_flash_clear_status_register_for_winbond();
     hal_board_cfg(0);
 
     /* start yloop, wifi driver deps */

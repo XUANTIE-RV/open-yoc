@@ -419,6 +419,10 @@ int rvm_hal_wifi_get_channel(rvm_dev_t *dev, uint8_t *primary, rvm_hal_wifi_seco
 int rvm_hal_wifi_set_smartcfg(rvm_dev_t *dev, int enable);
 
 
+#if defined(AOS_COMP_DEVFS) && AOS_COMP_DEVFS
+#include <devices/vfs_wifi.h>
+#endif
+
 #ifdef __cplusplus
 }
 #endif

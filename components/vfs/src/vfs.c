@@ -24,12 +24,14 @@
 #include "vfs_trap.h"
 #endif
 
+#include <devices/device.h>
+
 static uint8_t  g_vfs_init     = 0;
 static void    *g_vfs_lock_ptr = NULL;
 static void    *g_stdio_lock_ptr = NULL;
 static int32_t  stdio_redirect_fd[3] = {-1, -1, -1}; // 0: stdin, 1: stdout, 2: stderr
 
-int32_t vfs_inode_list(vfs_list_type_t type);
+int vfs_inode_list(vfs_list_type_t type);
 int vfs_inode_get_names(const char *path, char names[][64], uint32_t* size);
 
 #if (CURRENT_WORKING_DIRECTORY_ENABLE > 0)
@@ -45,12 +47,12 @@ static int32_t write_stdout(const void *buf, uint32_t nbytes)
     return nbytes;
 }
 
-static int is_stdio_fd(int32_t fd)
+static int is_stdio_fd(int fd)
 {
     return fd == STDIN_FILENO || fd == STDOUT_FILENO || fd == STDERR_FILENO? 1 : 0;
 }
 
-static int32_t find_stdio_redirect_fd(int32_t fd)
+static int32_t find_stdio_redirect_fd(int fd)
 {
     int32_t rfd = -1;
 
@@ -122,9 +124,9 @@ static int clear_stdio_redirect_fd(int fd)
     return ret;
 }
 
-static int32_t vfs_close_without_glock(int32_t fd)
+static int vfs_close_without_glock(int fd)
 {
-    int32_t ret = VFS_OK;
+    int ret = VFS_OK;
     vfs_file_t *f;
     vfs_inode_t *node;
 
@@ -197,7 +199,7 @@ end:
     return ret;
 }
 
-static int clear_normal_redirect_fd(int32_t fd)
+static int clear_normal_redirect_fd(int fd)
 {
     int ret = -1;
     vfs_file_t *f;
@@ -225,7 +227,7 @@ end:
     return ret;
 }
 
-int32_t vfs_init(void)
+int vfs_init(void)
 {
     if (g_vfs_init == 1) {
         return VFS_OK;
@@ -254,15 +256,27 @@ int32_t vfs_init(void)
 #endif
 #endif
 
+#if defined(AOS_COMP_DEVFS) && AOS_COMP_DEVFS
+    extern long __vfs_driver_start__;
+    extern long __vfs_driver_end__;
+    OS_DRIVER_ENTRY *drv_entry = NULL;
+    OS_DRIVER_ENTRY *s = (OS_DRIVER_ENTRY *)(&__vfs_driver_start__);
+    OS_DRIVER_ENTRY *e = (OS_DRIVER_ENTRY *)(&__vfs_driver_end__);
+    drv_entry = s;
+    while (drv_entry < e) {
+        (*((OS_DRIVER_ENTRY *)drv_entry))();
+        drv_entry++;
+    }
+#endif
     g_vfs_init = 1;
 
     return VFS_OK;
 }
 
-int32_t vfs_open(const char *path, int32_t flags)
+int vfs_open(const char *path, int32_t flags)
 {
     int32_t len = 0;
-    int32_t ret = VFS_OK;
+    int ret = VFS_OK;
 
     vfs_file_t  *f;
     vfs_inode_t *node;
@@ -352,9 +366,9 @@ end:
     return ret;
 }
 
-int32_t vfs_close(int32_t fd)
+int vfs_close(int fd)
 {
-    int32_t ret = VFS_OK;
+    int ret = VFS_OK;
 
     vfs_file_t *f;
     vfs_inode_t *node;
@@ -430,9 +444,9 @@ end:
     return ret;
 }
 
-int32_t vfs_read(int32_t fd, void *buf, uint32_t nbytes)
+ssize_t vfs_read(int fd, void *buf, size_t nbytes)
 {
-    int32_t nread = -1;
+    ssize_t nread = -1;
 
     vfs_file_t  *f;
     vfs_inode_t *node;
@@ -483,9 +497,10 @@ ret:
     return nread;
 }
 
-int32_t vfs_write(int32_t fd, const void *buf, uint32_t nbytes)
+ssize_t vfs_write(int fd, const void *buf, size_t nbytes)
 {
-    int32_t nwrite = -1, rfd = -1;
+    int rfd = -1;
+    ssize_t nwrite = -1;
 
     vfs_file_t  *f;
     vfs_inode_t *node;
@@ -549,9 +564,9 @@ ret:
     return nwrite;
 }
 
-int32_t vfs_ioctl(int32_t fd, int32_t cmd, uint32_t arg)
+int vfs_ioctl(int fd, int cmd, unsigned long arg)
 {
-    int32_t ret = VFS_ERR_NOSYS;
+    int ret = VFS_ERR_NOSYS;
 
     vfs_file_t  *f;
     vfs_inode_t *node;
@@ -601,10 +616,10 @@ ret:
     return ret;
 }
 
-int32_t vfs_do_pollfd(int32_t fd, int32_t flag, vfs_poll_notify_t notify,
+int vfs_do_pollfd(int fd, int flag, vfs_poll_notify_t notify,
                       void *fds, void *arg)
 {
-    int32_t ret = VFS_ERR_NOSYS;
+    int ret = VFS_ERR_NOSYS;
 
     vfs_file_t  *f;
     vfs_inode_t *node;
@@ -654,9 +669,9 @@ int32_t vfs_do_pollfd(int32_t fd, int32_t flag, vfs_poll_notify_t notify,
     return ret;
 }
 
-uint32_t vfs_lseek(int32_t fd, int64_t offset, int32_t whence)
+off_t vfs_lseek(int fd, off_t offset, int whence)
 {
-    int32_t ret = VFS_ERR_NOSYS;
+    int ret = VFS_ERR_NOSYS;
 
     vfs_file_t  *f;
     vfs_inode_t *node;
@@ -697,9 +712,9 @@ uint32_t vfs_lseek(int32_t fd, int64_t offset, int32_t whence)
     return ret;
 }
 
-static int32_t vfs_truncate_inode(vfs_inode_t *node, vfs_file_t *f, int64_t size)
+static int vfs_truncate_inode(vfs_inode_t *node, vfs_file_t *f, int64_t size)
 {
-    int32_t ret = VFS_ERR_NOSYS;
+    int ret = VFS_ERR_NOSYS;
 
     if (node->status != VFS_INODE_VALID) {
         vfs_unlock(node->lock);
@@ -716,9 +731,9 @@ static int32_t vfs_truncate_inode(vfs_inode_t *node, vfs_file_t *f, int64_t size
     return ret;
 }
 
-int32_t vfs_truncate(const char *path, int64_t size)
+int vfs_truncate(const char *path, int64_t size)
 {
-    int32_t ret = VFS_ERR_NOSYS;
+    int ret = VFS_ERR_NOSYS;
     vfs_file_t  *f;
     vfs_inode_t *node;
 
@@ -760,7 +775,7 @@ int32_t vfs_truncate(const char *path, int64_t size)
     return ret;
 }
 
-int32_t vfs_ftruncate(int32_t fd, int64_t size)
+int vfs_ftruncate(int fd, int64_t size)
 {
     int rc;
     vfs_file_t  *f = NULL;
@@ -783,9 +798,9 @@ int32_t vfs_ftruncate(int32_t fd, int64_t size)
     return rc;
 }
 
-int32_t vfs_sync(int32_t fd)
+int vfs_sync(int fd)
 {
-    int32_t ret = VFS_ERR_NOSYS;
+    int ret = VFS_ERR_NOSYS;
 
     vfs_file_t  *f;
     vfs_inode_t *node;
@@ -825,7 +840,7 @@ int32_t vfs_sync(int32_t fd)
 void vfs_allsync(void)
 {
     int i;
-    int32_t fd;
+    int fd;
 
     /**
      * prevent other threads from closing
@@ -844,9 +859,9 @@ void vfs_allsync(void)
     vfs_unlock(g_vfs_lock_ptr);
 }
 
-int32_t vfs_stat(const char *path, vfs_stat_t *st)
+int vfs_stat(const char *path, vfs_stat_t *st)
 {
-    int32_t ret = VFS_ERR_NOSYS;
+    int ret = VFS_ERR_NOSYS;
 
     vfs_file_t  *f;
     vfs_inode_t *node;
@@ -927,9 +942,9 @@ end:
     return ret;
 }
 
-int32_t vfs_fstat(int fd, vfs_stat_t *st)
+int vfs_fstat(int fd, vfs_stat_t *st)
 {
-    int32_t ret = VFS_ERR_NOSYS;
+    int ret = VFS_ERR_NOSYS;
 
     vfs_file_t  *f;
     vfs_inode_t *node;
@@ -1007,9 +1022,9 @@ void *vfs_mmap(void *start, size_t len, int prot, int flags, int fd, off_t offse
 }
 #endif
 
-int32_t vfs_link(const char *oldpath, const char *newpath)
+int vfs_link(const char *oldpath, const char *newpath)
 {
-    int32_t ret = VFS_ERR_NOSYS;
+    int ret = VFS_ERR_NOSYS;
 
     vfs_file_t  *f;
     vfs_inode_t *node;
@@ -1077,9 +1092,9 @@ end:
     return ret;
 }
 
-int32_t vfs_unlink(const char *path)
+int vfs_unlink(const char *path)
 {
-    int32_t ret = VFS_ERR_NOSYS;
+    int ret = VFS_ERR_NOSYS;
 
     vfs_file_t  *f;
     vfs_inode_t *node;
@@ -1147,9 +1162,9 @@ end:
     return ret;
 }
 
-int32_t vfs_remove(const char *path)
+int vfs_remove(const char *path)
 {
-    int32_t ret = VFS_ERR_NOSYS;
+    int ret = VFS_ERR_NOSYS;
 
     vfs_file_t  *f;
     vfs_inode_t *node;
@@ -1217,9 +1232,9 @@ end:
     return ret;
 }
 
-int32_t vfs_rename(const char *oldpath, const char *newpath)
+int vfs_rename(const char *oldpath, const char *newpath)
 {
-    int32_t ret = VFS_ERR_NOSYS;
+    int ret = VFS_ERR_NOSYS;
 
     vfs_file_t  *f;
     vfs_inode_t *node;
@@ -1368,9 +1383,9 @@ end:
     return dp;
 }
 
-int32_t vfs_closedir(vfs_dir_t *dir)
+int vfs_closedir(vfs_dir_t *dir)
 {
-    int32_t ret = VFS_ERR_NOSYS;
+    int ret = VFS_ERR_NOSYS;
 
     vfs_file_t  *f;
     vfs_inode_t *node;
@@ -1462,9 +1477,9 @@ vfs_dirent_t *vfs_readdir(vfs_dir_t *dir)
     return dirent;
 }
 
-int32_t vfs_mkdir(const char *path)
+int vfs_mkdir(const char *path)
 {
-    int32_t ret = VFS_ERR_NOSYS;
+    int ret = VFS_ERR_NOSYS;
 
     vfs_file_t  *f;
     vfs_inode_t *node;
@@ -1532,9 +1547,9 @@ end:
     return ret;
 }
 
-int32_t vfs_rmdir(const char *path)
+int vfs_rmdir(const char *path)
 {
-    int32_t ret = VFS_ERR_NOSYS;
+    int ret = VFS_ERR_NOSYS;
 
     vfs_file_t  *f;
     vfs_inode_t *node;
@@ -1642,12 +1657,12 @@ void vfs_rewinddir(vfs_dir_t *dir)
     return;
 }
 
-int32_t vfs_telldir(vfs_dir_t *dir)
+int vfs_telldir(vfs_dir_t *dir)
 {
     vfs_file_t  *f;
     vfs_inode_t *node;
 
-    int32_t ret = 0;
+    int ret = 0;
 
     if (dir == NULL) {
         return VFS_ERR_INVAL;
@@ -1685,7 +1700,7 @@ int32_t vfs_telldir(vfs_dir_t *dir)
     return ret;
 }
 
-void vfs_seekdir(vfs_dir_t *dir, int32_t loc)
+void vfs_seekdir(vfs_dir_t *dir, long loc)
 {
     vfs_file_t  *f;
     vfs_inode_t *node;
@@ -1725,9 +1740,9 @@ void vfs_seekdir(vfs_dir_t *dir, int32_t loc)
     return;
 }
 
-int32_t vfs_statfs(const char *path, vfs_statfs_t *buf)
+int vfs_statfs(const char *path, vfs_statfs_t *buf)
 {
-    int32_t ret = VFS_ERR_NOSYS;
+    int ret = VFS_ERR_NOSYS;
 
     vfs_file_t  *f;
     vfs_inode_t *node;
@@ -1795,9 +1810,9 @@ end:
     return ret;
 }
 
-int32_t vfs_access(const char *path, int32_t amode)
+int vfs_access(const char *path, int amode)
 {
-    int32_t ret = VFS_ERR_NOSYS;
+    int ret = VFS_ERR_NOSYS;
 
     vfs_file_t  *f;
     vfs_inode_t *node;
@@ -1911,9 +1926,9 @@ char *vfs_getcwd(char *buf, size_t size)
 }
 
 
-int32_t vfs_pathconf(const char *path, int name)
+int vfs_pathconf(const char *path, int name)
 {
-    int32_t ret = VFS_ERR_NOSYS;
+    int ret = VFS_ERR_NOSYS;
 
     vfs_file_t  *f;
     vfs_inode_t *node;
@@ -1981,9 +1996,9 @@ end:
     return ret;
 }
 
-int32_t vfs_fpathconf(int fd, int name)
+int vfs_fpathconf(int fd, int name)
 {
-    int32_t ret = VFS_ERR_NOSYS;
+    int ret = VFS_ERR_NOSYS;
 
     vfs_file_t  *file;
     vfs_inode_t *node;
@@ -2022,7 +2037,7 @@ int32_t vfs_fpathconf(int fd, int name)
 
 int vfs_utime(const char *path, const vfs_utimbuf_t *times)
 {
-    int32_t ret = VFS_ERR_NOSYS;
+    int ret = VFS_ERR_NOSYS;
 
     vfs_file_t  *f;
     vfs_inode_t *node;
@@ -2090,7 +2105,7 @@ end:
     return ret;
 }
 
-int32_t vfs_fd_offset_get(void)
+int vfs_fd_offset_get(void)
 {
     return VFS_FD_OFFSET;
 }
@@ -2112,9 +2127,9 @@ int vfs_fcntl(int fd, int cmd, int val)
     return 0;
 }
 
-int32_t vfs_register_driver(const char *path, vfs_file_ops_t *ops, void *arg)
+int vfs_register_driver(const char *path, vfs_file_ops_t *ops, void *arg)
 {
-    int32_t ret = VFS_ERR_NOSYS;
+    int ret = VFS_ERR_NOSYS;
 
     vfs_inode_t *node = NULL;
 
@@ -2149,9 +2164,9 @@ int32_t vfs_register_driver(const char *path, vfs_file_ops_t *ops, void *arg)
     return ret;
 }
 
-int32_t vfs_unregister_driver(const char *path)
+int vfs_unregister_driver(const char *path)
 {
-    int32_t ret;
+    int ret;
 
     if (vfs_lock(g_vfs_lock_ptr) != VFS_OK) {
         return VFS_ERR_LOCK;
@@ -2166,9 +2181,9 @@ int32_t vfs_unregister_driver(const char *path)
     return ret;
 }
 
-int32_t vfs_register_fs(const char *path, vfs_filesystem_ops_t* ops, void *arg)
+int vfs_register_fs(const char *path, const vfs_fs_ops_t* ops, void *arg)
 {
-    int32_t ret;
+    int ret;
 
     vfs_inode_t *node = NULL;
 
@@ -2203,9 +2218,9 @@ int32_t vfs_register_fs(const char *path, vfs_filesystem_ops_t* ops, void *arg)
     return ret;
 }
 
-int32_t vfs_unregister_fs(const char *path)
+int vfs_unregister_fs(const char *path)
 {
-    int32_t ret;
+    int ret;
 
     if (vfs_lock(g_vfs_lock_ptr) != VFS_OK) {
         return VFS_ERR_LOCK;
@@ -2220,8 +2235,6 @@ int32_t vfs_unregister_fs(const char *path)
     return ret;
 }
 
-
-
 #ifdef CONFIG_VFS_LSOPEN
 void vfs_dump_open()
 {
@@ -2231,15 +2244,16 @@ void vfs_dump_open()
 }
 #endif
 
-int32_t vfs_list(vfs_list_type_t t)
+int vfs_list(vfs_list_type_t t)
 {
     return vfs_inode_list(t);
 }
 
-int32_t vfs_get_node_name(const char *path, char names[][64], uint32_t* size)
+int vfs_get_node_name(const char *path, char names[][64], uint32_t* size)
 {
     return vfs_inode_get_names(path, names, size);
 }
+
 int vfs_dup(int oldfd)
 {
     int ret = VFS_ERR_GENERAL, realold = oldfd - VFS_FD_OFFSET;;

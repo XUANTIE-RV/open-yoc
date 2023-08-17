@@ -6,7 +6,6 @@
 #include <stdint.h>
 #include <aos/aos.h>
 #include <aos/ringbuffer.h>
-#include <k_api.h>
 #include <csi_core.h>
 #include "log_ipc.h"
 
@@ -66,7 +65,10 @@ static void console_ipc_process(ipc_t *ipc, message_t *m, void *priv)
 
         case IPC_CMD_DEBUG_EXCEPT_INFO:
             printk("!!!!CPU(%d): EXCEPT!!!!\r\n%s\r\nCPU(%d) END\r\n", log_ipc->cpu_id, (char *)ipc_data->data, log_ipc->cpu_id);
+#if defined(CONFIG_KERNEL_RHINO)
+            extern void k_err_proc_debug(int err, char *file, int line);
             k_err_proc_debug(0, (char *)__func__, __LINE__);
+#endif
         break;
 
         default:

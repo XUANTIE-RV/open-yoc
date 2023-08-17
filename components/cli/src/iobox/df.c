@@ -15,7 +15,7 @@ extern int32_t vfs_get_node_name(const char *path, char names[][64], uint32_t* s
 #define KB (1024ULL)
 static void df_do_dir(const char *dir)
 {
-    struct aos_statfs sfs;
+    aos_statfs_t sfs;
     unsigned long long total, used, free;
     char abspath[256] = {0}, *dir1;
 
@@ -30,6 +30,7 @@ static void df_do_dir(const char *dir)
         return;
     }
 
+    memset(&sfs, 0, sizeof(aos_statfs_t));
     if (aos_statfs(dir1, &sfs) < 0) {
         aos_cli_printf("statfs %s failed\n", dir);
         return;
@@ -40,15 +41,10 @@ static void df_do_dir(const char *dir)
         aos_cli_printf("total size error!\r\n");
         return;
     }
-    free = ((unsigned long long)sfs.f_bsize * (unsigned long long)sfs.f_bavail) >> 10;
+    free = ((unsigned long long)sfs.f_bsize * (unsigned long long)sfs.f_bfree) >> 10;
     used = total - free;
 
-    if (!strcmp(dir, "/")) {
-        aos_cli_printf("%10llu%10llu%10llu%6llu%%    %s\n", total, used, free,
-                used * 100 / total, dir);
-    } else {
-        aos_cli_printf("%10llu%10llu%10llu     0%%    %s\n", total, used, free, dir);
-    }
+    aos_cli_printf("%10llu%10llu%10llu%6llu%%    %s\n", total, used, free, used * 100 / total, dir);
 }
 
 static void print_help()
@@ -74,7 +70,7 @@ static int df_main(int argc, char **argv)
         return 0;
     }
 
-    aos_cli_printf("%10s%10s%10s%7s    %s\n", "Total", "Used", "Free", "Use%", "Mount");
+    aos_cli_printf("%10s%10s%10s%7s    %s\n", "Total(KB)", "Used(KB)", "Free(KB)", "Use%", "Mount");
 
     if (argc <= 1) {
         vfs_get_node_name("/", node_names, &count);

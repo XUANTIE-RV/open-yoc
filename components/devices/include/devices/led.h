@@ -37,8 +37,8 @@ extern "C" {
 /**
  * 打开设备
  * @param name 设备名称
- *             使用led_rgb_register接口注册YoC通用的LED设备名称前缀固定为"ledrgb"
- *             例如注册调用led_rgb_register(&led_config, 1)
+ *             使用rvm_led_rgb_drv_register接口注册YoC通用的LED设备名称前缀固定为"ledrgb"
+ *             例如注册调用rvm_led_rgb_drv_register(&led_config, 1)
  *             传入的name为 "ledrgb1"
  * @return 返回设备句柄dev_t
  */
@@ -62,6 +62,11 @@ extern "C" {
  * @param off_time 灭的持续时间(ms), <=0 闪烁功能无效
  */
 int rvm_hal_led_control(rvm_dev_t *dev, int color, int on_time, int off_time);
+
+
+#if defined(AOS_COMP_DEVFS) && AOS_COMP_DEVFS
+#include <devices/vfs_led.h>
+#endif
 
 #ifdef __cplusplus
 }

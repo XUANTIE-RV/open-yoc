@@ -6,8 +6,7 @@
 
 #include <stdlib.h>
 #include <unistd.h>
-
-#include "k_api.h"
+#include <string.h>
 #include "aos/cli.h"
 #include "aos/kernel.h"
 #include "debug_api.h"
@@ -18,62 +17,77 @@
     #define TOSTR
 #endif
 
-
+#ifdef CONFIG_KERNEL_RHINO
+static void debug_cmd(char *buf, int32_t len, int32_t argc, char **argv);
+static void debug_panic_runto_cli(char *buf, int32_t len, int32_t argc, char **argv);
+#endif
 static void version_cmd(char *buf, int32_t len, int32_t argc, char **argv);
 static void uptime_cmd(char *buf, int32_t len, int32_t argc, char **argv);
-static void debug_cmd(char *buf, int32_t len, int32_t argc, char **argv);
 static void msleep_cmd(char *buf, int32_t len, int32_t argc, char **argv);
-
 static void devname_cmd(char *buf, int32_t len, int32_t argc, char **argv);
 static void pmem_cmd(char *buf, int32_t len, int32_t argc, char **argv);
 static void mmem_cmd(char *buf, int32_t len, int32_t argc, char **argv);
 static void func_cmd(char *buf, int32_t len, int32_t argc, char **argv);
-static void debug_panic_runto_cli(char *buf, int32_t len, int32_t argc, char **argv);
 
 static const struct cli_command built_ins[] = {
+#ifdef CONFIG_KERNEL_RHINO
     { "debug", "show debug info", debug_cmd },
-    /*aos_rhino*/
+    { "err2cli", "set exec runto cli", debug_panic_runto_cli },
+#endif
+    /*aos*/
     { "sysver", "system version", version_cmd },
     { "time", "system time", uptime_cmd },
     { "msleep", "sleep miliseconds", msleep_cmd },
     { "p", "print memory", pmem_cmd },
     { "m", "modify memory", mmem_cmd },
     { "f", "run a function", func_cmd },
-    { "devname", "print device name", devname_cmd },
-    { "err2cli", "set exec runto cli", debug_panic_runto_cli },
+    { "devname", "print device name", devname_cmd }
 };
 
+#ifdef CONFIG_KERNEL_RHINO
 static void debug_cmd(char *buf, int32_t len, int32_t argc, char **argv)
 {
     debug_overview(aos_cli_printf);
 }
 
+static void debug_panic_runto_cli(char *buf, int32_t len, int32_t argc, char **argv)
+{
+    if (argc == 2) {
+        int32_t flag = strtoul(argv[1], NULL, 0);
+        if (flag == 1) {
+            g_crash_not_reboot = OS_PANIC_NOT_REBOOT;
+        } else {
+            g_crash_not_reboot = 0;
+        }
+        aos_cli_printf("set panic_runto_cli flag:0x%x\r\n", g_crash_not_reboot);
+    } else {
+        aos_cli_printf("usage: err2cli 0/1\r\n");
+    }
+}
+#endif
+
 static void version_cmd(char *buf, int32_t len, int32_t argc, char **argv)
 {
-#ifdef OSAL_RHINO
-    aos_cli_printf("kernel version :%d\r\n", (int32_t)krhino_version_get());
-#else
-    aos_cli_printf("kernel version :posix\r\n");
-#endif
+    aos_cli_printf("kernel version : %s\r\n", aos_kernel_version_get());
 }
 
 static void uptime_cmd(char *buf, int32_t len, int32_t argc, char **argv)
 {
-    aos_cli_printf("UP time %ld ms\r\n", (long)krhino_sys_time_get());
+    aos_cli_printf("UP time %ld ms\r\n", (long)aos_now_ms());
 }
 
 static void msleep_cmd(char *buf, int32_t len, int32_t argc, char **argv)
 {
-    int seconds;
+    int milliseconds;
 
     if (argc != 2) {
-        aos_cli_printf("Usage: msleep seconds\r\n");
+        aos_cli_printf("Usage: msleep milliseconds\r\n");
         return;
     }
 
-    seconds = atoi(argv[1]);
-    if (seconds > 0) {
-        krhino_task_sleep(krhino_ms_to_ticks(seconds));
+    milliseconds = atoi(argv[1]);
+    if (milliseconds > 0) {
+        aos_msleep(milliseconds);
     } else {
         aos_cli_printf("invalid param %s\r\n", argv[1]);
     }
@@ -241,22 +255,6 @@ static void func_cmd(char *buf, int32_t len, int32_t argc, char **argv)
     aos_cli_printf("function %p return 0x%x.\r\n", func_ptr, ret);
 }
 
-
-static void debug_panic_runto_cli(char *buf, int32_t len, int32_t argc, char **argv)
-{
-    if (argc == 2) {
-        int32_t flag = strtoul(argv[1], NULL, 0);
-        if (flag == 1) {
-            g_crash_not_reboot = OS_PANIC_NOT_REBOOT;
-        } else {
-            g_crash_not_reboot = 0;
-        }
-        aos_cli_printf("set panic_runto_cli flag:0x%x\r\n", g_crash_not_reboot);
-    } else {
-        aos_cli_printf("usage: err2cli 0/1\r\n");
-    }
-}
-
 static void debug_default_cmds_register(void)
 {
     int32_t ret;
@@ -270,9 +268,11 @@ static void debug_default_cmds_register(void)
 void debug_cli_cmd_init(void)
 {
     debug_default_cmds_register();
+#ifdef CONFIG_KERNEL_RHINO
     debug_dumpsys_cmds_register();
 #if (RHINO_CONFIG_SYS_STATS > 0)
     debug_cpuusage_cmds_register();
+#endif
 #endif
 }
 #endif /* #if AOS_COMP_CLI */

@@ -66,6 +66,11 @@ int rvm_hal_nbiot_get_cell_info(rvm_dev_t *dev, rvm_hal_nbiot_cell_info_t *celli
 int rvm_hal_nbiot_set_status_ind(rvm_dev_t *dev, int status);
 int rvm_hal_nbiot_set_signal_strength_ind(rvm_dev_t *dev, int status);
 
+
+#if defined(AOS_COMP_DEVFS) && AOS_COMP_DEVFS
+#include <devices/vfs_nbiot.h>
+#endif
+
 #ifdef __cplusplus
 }
 #endif

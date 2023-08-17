@@ -80,6 +80,9 @@ typedef struct service {
     char ser_name[SER_NAME_MAX_LEN];
     char que_buf[SERVER_QUEUE_SIZE];
     aos_queue_t queue;
+#if defined(CONFIG_IPC_RPMSG) && CONFIG_IPC_RPMSG
+    void* rp_ept;
+#endif
 } service_t;
 
 typedef struct _dispatch {

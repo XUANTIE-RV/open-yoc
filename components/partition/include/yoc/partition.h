@@ -70,6 +70,7 @@ typedef struct {
     uint64_t part_size;
     uint64_t load_addr;
     uint32_t image_size;
+    uint32_t preload_size;
 #if CONFIG_PARTITION_SUPPORT_BLOCK_OR_MULTI_DEV
     storage_info_t storage_info;
 #endif
@@ -90,6 +91,7 @@ typedef struct {
     uint32_t load_addr;                         // 加载地址，一般指在RAM中的运行地址
     uint32_t image_size;                        // 镜像实际大小
     storage_info_t storage_info;
+    uint32_t preload_size;
 #if CONFIG_PARTITION_SUPPORT_EMMC
     uint32_t boot_area_size;                    // for emmc boot area
 #endif
@@ -160,31 +162,31 @@ int partition_write(partition_t partition, off_t off_set, void *data, size_t siz
 /**
  * Erase an area on a Flash logical partition
  *
- * @note  Erase on an address will erase all data on a sector that the
+ * @note  Erase on an address will erase all data on a erase_size that the
  *        address is belonged to, this function does not save data that
- *        beyond the address area but in the affected sector, the data
+ *        beyond the address area but in the affected erase_size, the data
  *        will be lost.
  *
- * @param[in]  partition     The target flash logical partition which should be erased
- * @param[in]  off_set       Offset address relative to the partition start address
- * @param[in]  sector_count  sector_count of the erased flash area
+ * @param[in]  partition            The target flash logical partition which should be erased
+ * @param[in]  off_set              Offset address relative to the partition start address
+ * @param[in]  erase_unit_count     The count of erase_size with the device
  *
  * @return  0 : On success, <0 If an error occurred with any step
  */
-int partition_erase(partition_t partition, off_t off_set, uint32_t sector_count);
+int partition_erase(partition_t partition, off_t off_set, uint32_t erase_unit_count);
 
 /**
  * Erase an area on a Flash logical partition
  *
- * @note  Erase on an address will erase all data on a sector that the
+ * @note  Erase on an address will erase all data on a erase_size that the
  *        address is belonged to, this function does not save data that
- *        beyond the address area but in the affected sector, the data
+ *        beyond the address area but in the affected erase_size, the data
  *        will be lost.
  *
  * @param[in]  partition     The target flash logical partition which should be erased
  * @param[in]  off_set       Offset address relative to the partition start address
  * @param[in]  size          The erase size, must be erase_size align
- *                           It will erase more sector when the size is not erase_size align. 
+ *                           It will erase more erase_size when the size is not erase_size align.
  *
  * @return  0 : On success, <0 If an error occurred with any step
  */
@@ -218,13 +220,22 @@ int partition_all_verify(void);
 int partition_get_digest(partition_t partition, uint8_t *out_hash, uint32_t *out_len);
 
 /**
- * Set the specified partitoin for safe
+ * Set the specified partition for safe
  *
  * @param[in]  partition     The partition handle
  *
  * @return  0 : On success, <0 If an error occurred with any step
  */
 int partition_set_region_safe(partition_t partition);
+
+/**
+ * Check the partition firmware is packed
+ *
+ * @param[in]  partition     The partition handle
+ *
+ * @return  true : is packed, false: not packed
+ */
+bool partition_check_firmware_is_packed(partition_t partition);
 
 /**
  * Get the information from a combine image partition

@@ -1128,7 +1128,7 @@ struct sm_disconnect_ind
     bool_l ft_over_ds;
 };
 
-struct
+typedef struct
 {
     /// TASK 
     uint32_t task;

@@ -1,6 +1,6 @@
 ## 第一部分： 基础信息
 name: cvi_platform                                   # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
-version: v7.7.0                                     # <必选项> 组件版本号
+version: v7.8.0                                     # <必选项> 组件版本号
 description: cvi业务层                               # <必选项> 建议至少20字以上
 type: common                                         # <必选项> 组件类型，为：solution, chip, board, common, sdk
 tag: 第三方驱动                                      # <可选项> 组件分类，缺省值： ''
@@ -46,8 +46,14 @@ build_config:
     - netctrl/gprs/include
     - protocol/rtsp/include
     - protocol/uvc/include
+#    - protocol/uac/include
+    - protocol/av_composite/include
     - gui/littlevGL/include
     - ai/include
+  internal_include:
+  libs:
+
+  libpath:
 
 # source_file:                             # <可选项> 指定参与编译的源代码文件，支持通配符，采用相对路径
 #   - src/*.c                              # 例：组件 src 目录下所有的扩展名为 c 的源代码文件
@@ -62,22 +68,28 @@ source_file:
   - protocol/linkvisual/src/*.c
   - protocol/rtsp/src/*.c ? <CONFIG_APP_RTSP_SUPPORT>
   - protocol/uvc/src/*.c ? <CONFIG_APP_UVC_SUPPORT>
+  - protocol/uac/src/*.c ? <CONFIG_APP_UAC_SUPPORT>
+  - protocol/av_composite/src/*.c ? <CONFIG_APP_AV_COMP_SUPPORT>
   - util/src/*.c
   - gui/littlevGL/src/*.c ? <CONFIG_APP_GUI_SUPPORT>
   - ai/src/*.c ? <CONFIG_APP_AI_SUPPORT>
 
 # - ./hichannel_test/
 ## 第五部分：配置信息
-# def_config:                              # 组件的可配置项
+def_config:                              # 组件的可配置项
 #   CONFIG_DEBUG: y
 #   CONFIG_PARAM_NOT_CHECK: y
 #   CONFIG_CLI: y
+  CONFIG_APP_ISP_BYPASS: 1
 
 ## 第六部分：安装信息
 # install:
 #   - dest: include/                       # 安装的目的路径 dest是相对路径，通常是相对于YoC SDK 安装目录
 #     source:                              # 安装源列表
 #      - src/*.h                           # 支持通配符，相对路径
+install:
+  - dest: "include/devices"
+    source:
 
 ## 第七部分：导出部分
 # export:

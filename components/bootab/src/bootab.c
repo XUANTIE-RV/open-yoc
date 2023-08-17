@@ -514,7 +514,7 @@ const char *bootab_get_imgs_version(const char *ab)
     }
     printf("\n");
 #endif
-    if (boot_flag.img_version[0] == 0xFF) {
+    if (boot_flag.img_version[0] == 0xFF || boot_flag.img_version[0] == 0) {
         return BOOTAB_INIT_VER;
     }
     strlcpy(imgs_version, boot_flag.img_version, sizeof(boot_flag.img_version));

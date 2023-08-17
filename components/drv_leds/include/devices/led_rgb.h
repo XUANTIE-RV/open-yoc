@@ -11,7 +11,7 @@
 extern "C" {
 #endif
 
-void led_rgb_register(led_pin_config_t *config, int idx);
+void rvm_led_rgb_drv_register(led_pin_config_t *config, int idx);
 
 #ifdef __cplusplus
 }

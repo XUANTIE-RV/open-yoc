@@ -88,16 +88,6 @@ __attribute__((weak)) void krhino_idle_pre_hook(void)
     lpm_idle_pre_hook();
 }
 
-__attribute__((weak)) int32_t _sleep_tick_get()
-{
-    if (is_klist_empty(&g_tick_head)) {
-        return -1;
-    }
-
-    ktask_t * p_tcb  = krhino_list_entry(g_tick_head.next, ktask_t, tick_list);
-    return  p_tcb->tick_match > g_tick_count ?  p_tcb->tick_match - g_tick_count : 0;
-}
-
 __attribute__((weak)) void krhino_idle_hook(void)
 {
     extern void lpm_idle_hook(void);

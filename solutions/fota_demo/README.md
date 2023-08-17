@@ -96,21 +96,6 @@ make SDK=sdk_chip_ch2601
 make flashall SDK=sdk_chip_ch2601
 ```
 
-#### cv181x平台
-
-1. 编译
-
-```bash
-make clean
-make SDK=sdk_chip_cv181xh
-```
-
-2. 烧写
-
-```bash
-make flashall SDK=sdk_chip_cv181xh
-```
-
 #### f133平台
 
 1. 编译
@@ -124,6 +109,21 @@ make SDK=sdk_chip_f133
 
 ```bash
 make flashall SDK=sdk_chip_f133
+```
+
+#### cv181xh_huashanpi_evb平台
+
+1. 编译
+
+```bash
+make clean
+make SDK=sdk_chip_cv181xh_bga
+```
+
+2. 烧写
+
+```bash
+make flashall SDK=sdk_chip_cv181xh_bga
 ```
 
 ### FOTA基础版本烧录
@@ -159,12 +159,12 @@ product flash 20220907183302785_factory.zip -a -f ../../components/chip_ch2601/c
 
 20220907183302785_factory.zip为从OCC上下载过来的基础镜像包。
 
-#### cv181x平台
+#### cv181xh_huashanpi_evb平台
 
 直接烧录本地编译好的基础版本即可。
 
 ```bash
-make flashall SDK=sdk_chip_cv181xh
+make flashall SDK=sdk_chip_cv181xh_bga
 ```
 
 #### f133平台

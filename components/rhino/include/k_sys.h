@@ -73,6 +73,8 @@ kstat_t krhino_start(void);
  * @return the operation status, RHINO_SUCCESS is OK, others is error
  */
 kstat_t krhino_intrpt_enter(void);
+kstat_t krhino_pagefault_enter(void);
+kstat_t krhino_pagefault_exit(void);
 
 /**
  * Interrupt handler ends, called when exit interrupt.

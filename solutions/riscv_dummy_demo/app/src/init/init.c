@@ -6,6 +6,9 @@
 #include <yoc/yoc.h>
 #include "board.h"
 #include "app_init.h"
+#if defined(AOS_COMP_DEBUG) && (AOS_COMP_DEBUG > 0)
+#include <debug/dbg.h>
+#endif
 
 const char *TAG = "INIT";
 
@@ -19,9 +22,12 @@ void board_yoc_init()
 {
     board_init();
     stduart_init();
-    printf("\n###Welcom to YoC###\n[%s,%s]\n", __DATE__, __TIME__);
+    printf("\n###Welcome to YoC###\n[%s,%s]\n", __DATE__, __TIME__);
     ulog_init();
     aos_set_log_level(AOS_LL_DEBUG);
     LOGI(TAG, "Build:%s,%s",__DATE__, __TIME__);
     board_cli_init();
+#if defined(AOS_COMP_DEBUG) && (AOS_COMP_DEBUG > 0)
+    aos_debug_init();
+#endif
 }

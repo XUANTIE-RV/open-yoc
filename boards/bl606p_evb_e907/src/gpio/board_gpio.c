@@ -54,5 +54,16 @@ void board_gpio_pin_init(void)
     GLB_GPIO_Init(&gpio_cfg);
     gpio_cfg.gpioPin = GLB_GPIO_PIN_1;
     GLB_GPIO_Init(&gpio_cfg);
+
+	/* Config for spi */
+    gpio_cfg.gpioFun = GPIO_FUN_SPI0;
+    gpio_cfg.gpioPin = GLB_GPIO_PIN_25;
+    GLB_GPIO_Init(&gpio_cfg);
+    gpio_cfg.gpioPin = GLB_GPIO_PIN_26;
+    GLB_GPIO_Init(&gpio_cfg);
+    gpio_cfg.gpioPin = GLB_GPIO_PIN_27;
+    GLB_GPIO_Init(&gpio_cfg);
+    gpio_cfg.gpioPin = GLB_GPIO_PIN_28;
+    GLB_GPIO_Init(&gpio_cfg);
 }
 #endif

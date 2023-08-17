@@ -1,0 +1,10 @@
+fa=0.01,thresh=2.89
+fa=0.02,thresh=2.35
+fa=0.04,thresh=1.67
+fa=0.05,thresh=1.45
+fa=0.1,thresh=0.63
+fa=0.2,thresh=-0.08
+fa=0.3,thresh=-0.48
+fa=0.4,thresh=-0.86
+fa=0.5,thresh=-1.11
+fa=0.8,thresh=-1.68

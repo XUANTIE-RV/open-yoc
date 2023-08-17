@@ -8,8 +8,8 @@
 #include <gateway.h>
 #include <aos/cli.h>
 
-#include "app_sys.h"
-#include "app_fota.h"
+#include "sys/app_sys.h"
+#include "occ_fota/app_fota.h"
 #include "./linkkit_gateway/app_gateway_ut.h"
 
 #define TAG      "cli_cmd"
@@ -316,7 +316,11 @@ void app_cli_init(void)
     cli_reg_cmd_ping();
     cli_reg_cmd_iperf();
     cli_reg_cmd_ifconfig();
+
+#if defined(CONFIG_AUI_CLOUD) && CONFIG_AUI_CLOUD
     cli_reg_cmd_aui();
+#endif
+
     cli_reg_cmd_record();
     cli_reg_cmd_pcminput();
     cli_reg_cmd_appsys();
@@ -326,7 +330,7 @@ void app_cli_init(void)
     cli_reg_cmd_status_event();
     cli_reg_cmd_free();
     cli_reg_cmd_gateway();
-#if defined(CONFIG_BOARD_AUDIO) && CONFIG_BOARD_AUDIO
+#if defined(BOARD_AUDIO_SUPPORT) && BOARD_AUDIO_SUPPORT
     cli_reg_cmd_player();
     cli_reg_cmd_eqset();
 #endif

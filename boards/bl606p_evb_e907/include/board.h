@@ -420,6 +420,13 @@ void board_gpio_pin_init(void);
 void board_uart_init(void);
 
 /**
+ * @brief  init the board spi for default: pin mux, etc.
+ * re-implement if need.
+ * @return
+ */
+void board_spi_init(void);
+
+/**
  * @brief  init the board flash for default: pin mux, etc.
  * re-implement if need.
  * @return

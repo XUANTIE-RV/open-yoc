@@ -1,143 +1,172 @@
 /*
- * Copyright (C) 2018-2022 Alibaba Group Holding Limited
- */
+* Copyright (C) 2018-2023 Alibaba Group Holding Limited
+*/
 
 #ifndef __TS_DEMUXER_HPP__
 #define __TS_DEMUXER_HPP__
 
-#include <map>
 #include <mpegts/ts_typedef.h>
-#include <mpegts/bytes_io.hpp>
 #include <mpegts/ts_packet.hpp>
-#include <mpegts/ts_format.hpp>
+#include <cstdio>
+#include <map>
+#include <set>
+#include <cstdint>
+#include <iostream>
+#include <fstream>
+#include <vector>
+#include <string>
+using namespace std;
 
-#define TS_SYNC_HDR_MAX       (2*1024)
-
-class TsDemuxer final
+class Stream
 {
-    class TsFilter
-    {
-    public:
-        TsFilter(TsDemuxer *dmx);
-        virtual ~TsFilter() {};
-
-        virtual int parse(const uint8_t *buf, size_t size)
-        {
-            return 0;
-        };
-
-        /**
-         * @brief  collect sub pes or section data togethor for getting complete pes or section
-         * @param  [in] buf
-         * @param  [in] size
-         * @param  [in] is_start
-         * @return 0/-1
-         */
-        virtual int pushData(const uint8_t *buf, size_t size, int is_start)
-        {
-            return 0;
-        };
-
-    public:
-        tsf_type_t          mFilterType;
-        uint16_t            mPid;
-        uint16_t            mLastCC;
-        shared_ptr<BytesIO> mData;
-        TsDemuxer*          mDmx;
-    };
-
-    class TsFilterPes : public TsFilter
-    {
-    public:
-        TsFilterPes(TsDemuxer *dmx) : TsFilter(dmx)
-        {
-            mUnbound    = 0;
-            mPts        = 0;
-            mDts        = 0;
-            mType       = ES_TYPE_UNKNOWN;
-            mFilterType = TS_FILTER_TYPE_PES;
-        }
-
-        int parse(const uint8_t *buf, size_t size);
-        int pushData(const uint8_t *buf, size_t size, int is_start);
-
-    public:
-        uint64_t            mPts;
-        uint64_t            mDts;
-        es_type_t           mType;
-        uint8_t             mUnbound;
-    };
-
-
-    class TsFilterSection : public TsFilter
-    {
-    public:
-        TsFilterSection(TsDemuxer *dmx) : TsFilter(dmx)
-        {
-            mFilterType = TS_FILTER_TYPE_SECTION;
-        }
-
-        int  pushData(const uint8_t *buf, size_t size, int is_start);
-    };
-
-    class TsFilterSectionPat : public TsFilterSection
-    {
-    public:
-        TsFilterSectionPat(TsDemuxer *dmx) : TsFilterSection(dmx) {};
-
-        int parse(const uint8_t *buf, size_t size);
-    };
-
-    class TsFilterSectionPmt : public TsFilterSection
-    {
-    public:
-        TsFilterSectionPmt(TsDemuxer *dmx) : TsFilterSection(dmx) {};
-
-        int parse(const uint8_t *buf, size_t size);
-    };
-
 public:
-    TsDemuxer(BytesIO *io);
-    ~TsDemuxer();
+    Stream(const char *filename, uint16_t id, uint16_t pid);
+    Stream(const Stream &) = delete;
+    Stream &operator=(const Stream &) = delete;
+    ~Stream();
 
-public:
-    /**
-     * @brief  get one complete a/v packet
-     * @param  [in] packet
-     * @return -1: error, 0: sync ok, 1: need more data
-     */
-    int unpack(TsPacket *packet);
+    uint16_t GetId() const
+    {
+        return m_id;
+    }
+    uint16_t GetPId() const
+    {
+        return m_pid;
+    }
+    void SetPId(uint16_t id)
+    {
+        m_pid = id;
+    }
 
-    /**
-     * @brief  flush inner pes-data before seeking, etc
-     * @return
-     */
-    void flush();
+    /// Write data from packet to sink
+    void Write(Packet::const_iterator b, Packet::const_iterator e);
+    void Write_Vec(Packet::const_iterator b, Packet::const_iterator e, vector<uint8_t> &pes_data);
 
 private:
-    /**
-     * @brief  get one ts packet buffer(0x47-sync code)
-     * @param  [in] packet[TS_PACKET_SIZE]
-     * @return -1: error, 0: sync ok, 1: need more data
-     */
-    int _readSyncPacket(uint8_t packet[TS_PACKET_SIZE]);
-
-    /**
-     * @brief  parse the ts packet buffer
-     * @param  [in] buf[TS_PACKET_SIZE]
-     * @return  0/-1
-     */
-    int _parseOnePacket(const uint8_t buf[TS_PACKET_SIZE]);
-
-public:
-    map<uint16_t, vector<shared_ptr<PmtElement>>>    mPmtInfo;
-
-private:
-    TsPacket*                                        _mPacket;
-    uint8_t                                          _mStopParse;
-    BytesIO*                                         _mIO;
-    map<uint16_t, shared_ptr<TsFilter>>              _mFilters;
+    FILE *m_file;
+    string name;
+    uint16_t m_id; /// Packet identifier for this stream
+    uint16_t m_pid; /// Program id for this stream
 };
 
-#endif /* __TS_DEMUXER_HPP__ */
+struct Program
+{
+    uint16_t id; /// Program ID
+    uint16_t pid; /// Id of the PMT table for this program
 
+    bool operator==(const Program &p)
+    {
+        return id == p.id;
+    }
+    bool operator!=(const Program &p)
+    {
+        return id != p.id;
+    }
+    friend bool operator<(const Program &p1, const Program &p2);
+
+    Program() : id(PACKET_ID::NULL_PID), pid(PACKET_ID::NULL_PID)
+    {
+        // default to NULL packet
+    }
+};
+
+inline bool operator<(const Program &p1, const Program &p2)
+{
+    return p1.id < p2.id;
+}
+
+
+/// Type of packets Demuxer is listening to
+enum DemuxerEvents
+{
+    DEMUXER_EVENT_PCR,
+    DEMUXER_EVENT_PMT,
+    DEMUXER_EVENT_PES,
+    DEMUXER_EVENT_PAT,
+    DEMUXER_EVENT_NIL
+};
+
+class outPropty
+{
+public:
+    vector<uint8_t>  pes_data;
+    int              stream_id;
+    uint64_t         pts;
+    uint64_t         dts;
+    ES_TYPE_ID       estype;
+    void reset()
+    {
+        pes_data.clear();
+    }
+    void add_unknown()
+    {
+        stream_id = -1;
+        pts = 0;
+        dts = 0;
+        estype = ES_TYPE_ID::UNKNOWN;
+        pes_data.clear();
+        return;
+    }
+    void add_known(vector<uint8_t>part_data, int stream_id_in, uint64_t pts_in, uint64_t dts_in, ES_TYPE_ID mtype)
+    {
+        pes_data.clear();
+        pes_data.assign(part_data.begin(), part_data.end());
+        stream_id = stream_id_in;
+        pts = pts_in;
+        dts = dts_in;
+        estype = mtype;
+        return;
+    }
+};
+
+/// /////////////////////////////////////////////////////////////////////////////
+/// Demuxer Interface.
+/// Demuxer assumes all packets are related, it will keep list of streams
+/// as they appear in TS.
+class TsDemuxer
+{
+public:
+    using Programs = std::map<uint16_t, Program>;
+    using Streams = std::map<uint16_t, Stream *>;
+    using Filters = std::map<uint16_t, DemuxerEvents>;
+    using Typemaps = std::map<uint16_t, ES_TYPE_ID>;
+
+    TsDemuxer();
+    ~TsDemuxer();
+
+    bool demuxPacket(const Packet &packet);
+    vector<uint8_t>          part_data;
+    outPropty                mOutPropty;
+    void                     reset();
+protected:
+    /// Fills a header with data
+    bool readHeader(Packet::const_iterator &p, Packet::const_iterator e, PacketHeader &header);
+    /// Reads PAT packet
+    bool readPAT(Packet::const_iterator &p, Packet::const_iterator e);
+    /// Reads PMT packet
+    bool readPMT(Packet::const_iterator &p, Packet::const_iterator e);
+    /// Reads PES packet
+    bool readPES(Packet::const_iterator &p, Packet::const_iterator e, PacketHeader &header, uint16_t id);
+    bool checkPES(Packet::const_iterator &p, Packet::const_iterator e, PacketHeader &header);
+    /// Fills a section header info
+    bool readSection(Packet::const_iterator &p, Packet::const_iterator e, PacketSection &section);
+    /// Read PAT tables
+    bool readPrograms(Packet::const_iterator &p, Packet::const_iterator e);
+    /// Read Elementary stream data
+    bool readESD(Packet::const_iterator &p, Packet::const_iterator e, const Program &prog);
+
+    /// Add program if new
+    void registerProgram(uint16_t id, uint16_t pid);
+    bool registerStream(uint16_t id, const Program &prog, bool video);
+    bool registerTypemap(uint16_t id, ES_TYPE_ID mtype);
+private:
+    Programs m_programs; /// List of programs
+    Streams m_streams; /// List of streams
+    Filters m_filters;
+    Typemaps m_typemaps;
+    uint64_t m_pnum; /// Packet number
+    uint64_t mPts;
+    uint64_t mDts;
+};
+
+#endif

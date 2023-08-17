@@ -5,12 +5,7 @@
 #ifndef _DRIVERS_ETHDRV_H_
 #define _DRIVERS_ETHDRV_H_
 
-#include <stdio.h>
-#include <ctype.h>
-#include <stdlib.h>
-#include <string.h>
-
-#include <aos/aos.h>
+#include <devices/device.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -68,6 +63,11 @@ int rvm_hal_eth_mac_control(rvm_dev_t *dev, eth_config_t *config);
   \return      0 on success, else on fail.
 */
 int rvm_hal_eth_set_packet_filter(rvm_dev_t *dev, int type);
+
+
+#if defined(AOS_COMP_DEVFS) && AOS_COMP_DEVFS
+#include <devices/vfs_ethernet.h>
+#endif
 
 #ifdef __cplusplus
 }

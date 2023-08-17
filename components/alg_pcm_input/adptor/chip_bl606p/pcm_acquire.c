@@ -98,29 +98,26 @@ static int bl606p_voice_pcm_acquire(void *data, int len)
         return 0;
     }
 
-#if 0
-    ret = aos_pcm_wait(pcmC0_, AOS_WAIT_FOREVER);
-#else
+    //long long wait_start = aos_now_ms();
     while (aos_pcm_avail(pcmC0_) < aos_pcm_bytes_to_frames(pcmC0_, len)) {
-        ret = aos_pcm_wait(pcmC0_, AOS_WAIT_FOREVER);//
+        ret = aos_pcm_wait(pcmC0_, AOS_WAIT_FOREVER);
     }
-#endif
 
     if (ret < 0) {
-        // aos_pcm_recover(g_pcm, ret, 1);
-        static long long last_time = 0;
-
-        long long now = aos_now_ms();
-        if (now - last_time > 3000) {
-            LOGW(TAG, "pcm read XRUN\r\n");
-            last_time = now;
+        //LOGD(TAG, "pcm xrun: read %d, avail %d, ms=%lld", aos_pcm_bytes_to_frames(pcmC0_, len), 
+        //            aos_pcm_avail(pcmC0_), loop_time, aos_now_ms() - wait_start );
+        rlen = 0;
+        int i = 0;
+        for (i = 0; i < 64; i++) {
+            if (rlen >= 0) {
+                rlen += aos_pcm_readn(pcmC0_, (void **)data, aos_pcm_bytes_to_frames(pcmC0_, len));
+            } else {
+                break;
+            }
         }
-        return 0;
+        LOGD(TAG, "pcm xrun reset, resetlen=%d loop=%d", aos_pcm_frames_to_bytes(pcmC0_, rlen), i);
     }
 
-    if (aos_pcm_avail(pcmC0_) != aos_pcm_bytes_to_frames(pcmC0_, len)) {
-        //user_log("aos_pcm_avail:%d for acquire:%d\r\n", aos_pcm_avail(pcmC0_), aos_pcm_bytes_to_frames(pcmC0_, len));
-    }
     rlen = aos_pcm_readn(pcmC0_, (void**)data, aos_pcm_bytes_to_frames(pcmC0_, len));
     rlen = aos_pcm_frames_to_bytes(pcmC0_, rlen);
 

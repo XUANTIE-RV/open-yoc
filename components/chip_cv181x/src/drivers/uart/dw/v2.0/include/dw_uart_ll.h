@@ -274,7 +274,7 @@ typedef struct {
         __OM  uint32_t FCR;          /* Offset: 0x008 ( /W)  FIFO control register */
     };
     __IOM uint32_t LCR;              /* Offset: 0x00C (R/W)  Line control register */
-    __IOM uint32_t RESERVED0;              /* Offset: 0x010 (R/W)  Modem control register */
+    __IOM uint32_t MCR;              /* Offset: 0x010 (R/W)  Modem control register */
     __IM  uint32_t LSR;              /* Offset: 0x014 (R/ )  Line state register */
     __IM  uint32_t MSR;              /* Offset: 0x018 (R/ )  Modem state register */
     uint32_t RESERVED1[21];
@@ -381,6 +381,18 @@ static inline void dw_uart_set_intr_en_status(dw_uart_regs_t *uart_base, uint32_
 static inline void dw_uart_set_fcr_reg(dw_uart_regs_t *uart_base, uint32_t value)
 {
     uart_base->FCR = value;
+}
+
+static inline void dw_uart_enable_auto_flow_control(dw_uart_regs_t *uart_base)
+{
+    uart_base->MCR |= DW_UART_MCR_AFCE_EN;
+    uart_base->MCR |= DW_UART_MCR_RTS_EN;
+}
+
+static inline void dw_uart_disable_auto_flow_control(dw_uart_regs_t *uart_base)
+{
+    uart_base->MCR &= ~DW_UART_MCR_AFCE_EN;
+    uart_base->MCR &= ~DW_UART_MCR_RTS_EN;
 }
 
 int32_t  dw_uart_wait_timeout(dw_uart_regs_t *uart_base);

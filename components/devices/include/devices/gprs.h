@@ -93,6 +93,11 @@ int rvm_hal_gprs_get_imei(rvm_dev_t *dev, char *imei);
 int rvm_hal_gprs_get_csq(rvm_dev_t *dev, int *csq);
 int rvm_hal_gprs_get_simcard_info(rvm_dev_t *dev, char ccid[21], int *insert);
 
+
+#if defined(AOS_COMP_DEVFS) && AOS_COMP_DEVFS
+#include <devices/vfs_gprs.h>
+#endif
+
 #ifdef __cplusplus
 }
 #endif

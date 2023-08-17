@@ -34,14 +34,14 @@ static void lpm_handle(void)
 
     aos_kernel_sched_suspend();
 
-    g_pm_ctx.suspend_tick = aos_kernel_suspend();
+    g_pm_ctx.suspend_tick = aos_kernel_next_sleep_ticks_get();
 
     //how many pm_state is decided by SOC implement
     pm_state = sys_soc_suspend(&g_pm_ctx);
     ticks    = sys_soc_resume(&g_pm_ctx, pm_state);
 
     if (ticks) {
-        aos_kernel_resume(ticks);
+        aos_kernel_ticks_announce(ticks);
     }
 
     g_pm_ctx.agree_halt = 0;

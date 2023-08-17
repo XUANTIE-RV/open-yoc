@@ -314,6 +314,7 @@ static int usbd_video_control_unit_terminal_request_handler(struct usb_setup_pac
                             switch (setup->bRequest) {
                                 case VIDEO_REQUEST_SET_CUR: {
                                     uint16_t wBrightness = (uint16_t)(*data)[1] << 8 | (uint16_t)(*data)[0];
+                                    (void)wBrightness;
                                     USB_LOG_INFO("Video set brightness:%d\r\n", wBrightness);
                                 } break;
                                 case VIDEO_REQUEST_GET_CUR: {
@@ -592,8 +593,10 @@ static int usbd_video_stream_request_handler(struct usb_setup_packet *setup, uin
                 case VIDEO_REQUEST_SET_CUR:
                 {
                     uint32_t dwMaxPayloadTransferSize = usbd_video_cfg.probe.dwMaxPayloadTransferSize;
+                    uint32_t dwMaxVideoFrameSize = usbd_video_cfg.probe.dwMaxVideoFrameSize;
                     memcpy((uint8_t *)&usbd_video_cfg.probe, *data, setup->wLength);
                     usbd_video_cfg.probe.dwMaxPayloadTransferSize = dwMaxPayloadTransferSize;
+                    usbd_video_cfg.probe.dwMaxVideoFrameSize = dwMaxVideoFrameSize;
                     break;
                 }
                 case VIDEO_REQUEST_GET_CUR:
@@ -626,8 +629,12 @@ static int usbd_video_stream_request_handler(struct usb_setup_packet *setup, uin
         case VIDEO_VS_COMMIT_CONTROL:
             switch (setup->bRequest) {
                 case VIDEO_REQUEST_SET_CUR:
+                {
                     //memcpy((uint8_t *)usbd_video_cfg.commit, *data, setup->wLength);
+                    struct video_probe_and_commit_controls *commit = (struct video_probe_and_commit_controls *)*data;
+                    usbd_video_commit_set_cur(commit);
                     break;
+                }
                 case VIDEO_REQUEST_GET_CUR:
                     *data = (uint8_t *)&usbd_video_cfg.commit;
                     *len = sizeof(struct video_probe_and_commit_controls);
@@ -808,28 +815,38 @@ struct usbd_endpoint *usbd_video_init_ep(struct usbd_endpoint *ep,
     return ep;
 }
 
-uint32_t usbd_video_mjpeg_payload_fill(uint8_t *input, uint32_t input_len, uint8_t *output, uint32_t *out_len)
+uint32_t usbd_video_payload_fill(uint8_t *input, uint32_t input_len, uint8_t *output, uint32_t *out_len)
 {
     uint32_t packets;
     uint32_t last_packet_size;
     uint32_t picture_pos = 0;
     static uint8_t uvc_header[2] = { 0x02, 0x80 };
+    uint32_t size_uvc_header = sizeof(uvc_header);
+    uint32_t size_per_packet = usbd_video_cfg.probe.dwMaxPayloadTransferSize;
+    uint32_t size_payload = size_per_packet - size_uvc_header;
 
-    packets = input_len / usbd_video_cfg.probe.dwMaxPayloadTransferSize + 1;
-    last_packet_size = input_len - ((packets - 1) * (usbd_video_cfg.probe.dwMaxPayloadTransferSize - 2)) + 2;
+    if (size_payload > 10240) {
+        USB_LOG_ERR("the size of payload is too long!!!!\n");
+    }
+
+    // The following equals to packets = roundup(input_len / size_payload)
+    packets = (input_len + size_payload - 1) / (size_payload);
+    last_packet_size = input_len - ((packets - 1) * size_payload) + size_uvc_header;
 
     for (size_t i = 0; i < packets; i++) {
-        output[usbd_video_cfg.probe.dwMaxPayloadTransferSize * i] = uvc_header[0];
-        output[usbd_video_cfg.probe.dwMaxPayloadTransferSize * i + 1] = uvc_header[1];
+        output[size_per_packet* i] = uvc_header[0];
+        output[size_per_packet * i + 1] = uvc_header[1];
         if (i == (packets - 1)) {
-            memcpy(&output[2 + usbd_video_cfg.probe.dwMaxPayloadTransferSize * i], &input[picture_pos], last_packet_size - 2);
-            output[usbd_video_cfg.probe.dwMaxPayloadTransferSize * i + 1] |= (1 << 1);
+            memcpy(&output[size_uvc_header + size_per_packet * i],
+                &input[picture_pos], last_packet_size - size_uvc_header);
+            output[size_per_packet * i + 1] |= (1 << 1);
         } else {
-            memcpy(&output[2 + usbd_video_cfg.probe.dwMaxPayloadTransferSize * i], &input[picture_pos], usbd_video_cfg.probe.dwMaxPayloadTransferSize - 2);
-            picture_pos += usbd_video_cfg.probe.dwMaxPayloadTransferSize - 2;
+            memcpy(&output[size_uvc_header + size_per_packet * i],
+                &input[picture_pos], size_payload);
+            picture_pos += size_payload;
         }
     }
     uvc_header[1] ^= 1;
-    *out_len = (input_len + 2 * packets);
+    *out_len = (input_len + size_uvc_header * packets);
     return packets;
 }

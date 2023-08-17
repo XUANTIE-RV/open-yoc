@@ -15,7 +15,7 @@
 int statfs(const char *path, struct statfs *buf)
 {
     int ret;
-    struct aos_statfs statfs_temp;
+    aos_statfs_t statfs_temp;
 
     CHECK_POSIX_PARAM(path);
     CHECK_POSIX_PARAM(buf);
@@ -148,7 +148,7 @@ long fpathconf(int fd, int name)
 int utime(const char *path, const struct utimbuf *buf)
 {
     int ret;
-    struct aos_utimbuf utimbuf_temp;
+    aos_utimbuf_t utimbuf_temp;
 
     CHECK_POSIX_PARAM(path);
 

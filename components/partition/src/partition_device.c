@@ -38,8 +38,6 @@ int partition_device_register(partition_device_ops_t *dev_ops)
     for (int i = 0; i < g_part_dev_num; i++) {
         if (dev_ops->storage_info.type == g_part_dev_ops[i]->storage_info.type
             && dev_ops->storage_info.id == g_part_dev_ops[i]->storage_info.id) {
-            // printf("%s, %d, register type:%d,id:%d already\n", __func__, __LINE__,
-            //       dev_ops->storage_info.type, dev_ops->storage_info.id);
             return 0;
         }
     }
@@ -55,7 +53,6 @@ partition_device_ops_t *partition_device_find(storage_info_t *storage_info)
     if (!storage_info) {
         return NULL;
     }
-    // printf("%s, %d, %d, %d, %d\n", __func__, __LINE__, storage_info->type, storage_info->id, storage_info->area);
     for (int i = 0; i < g_part_dev_num; i++) {
         p = g_part_dev_ops[i];
         if (p && p->storage_info.type == storage_info->type && p->storage_info.id == storage_info->id) {
@@ -66,7 +63,6 @@ partition_device_ops_t *partition_device_find(storage_info_t *storage_info)
             }
         }
     }
-    // printf("%s, %d, %d, %d, find NULL.\n", __func__, __LINE__, storage_info->type, storage_info->id);
     return NULL;
 }
 
@@ -86,16 +82,14 @@ int partition_device_close(partition_device_ops_t *dev_ops)
 int partition_device_info_get(partition_device_ops_t *dev_ops, partition_device_info_t *info)
 {
     partition_device_ops_t *p = dev_ops;
-    // printf("%s, %d, 0x%x, 0x%x\n", __func__, __LINE__, handle, info);
+
     if (!(dev_ops && info)) {
         return -EINVAL;
     }
     if (p->info_get) {
         int ret = p->info_get(p->dev_hdl, info);
-        // printf("%s, %d, 0x%x, 0x%x\n", __func__, __LINE__, handle, ret);
         return ret;
     }
-    // printf("%s, %d, 0x%x, 0x%x\n", __func__, __LINE__, handle, info);
     return -1;
 }
 
@@ -116,14 +110,12 @@ int partition_device_read(partition_device_ops_t *dev_ops, off_t offset, void *d
 #if defined(CONFIG_COMP_SDMMC)
 #ifndef CONFIG_KERNEL_NONE
             if (rvm_hal_blockdev_mmc_select_area(p->dev_hdl, p->storage_info.area)) {
-                // printf("%s, %d, select area:%d failed.\n", __func__, __LINE__, p->storage_info.area);
                 return -1;
             }
 #else
             mmc_card_t *card = (mmc_card_t *)p->dev_hdl;
             if (card->currentPartition != p->storage_info.area) {
                 if (MMC_SelectPartition(p->dev_hdl, p->storage_info.area)) {
-                    // printf("%s, %d, select area:%d failed.\n", __func__, __LINE__, p->storage_info.area);
                     return -1;
                 }
             }
@@ -153,14 +145,12 @@ int partition_device_write(partition_device_ops_t *dev_ops, off_t offset, void *
 #if defined(CONFIG_COMP_SDMMC)
 #ifndef CONFIG_KERNEL_NONE
             if (rvm_hal_blockdev_mmc_select_area(p->dev_hdl, p->storage_info.area)) {
-                // printf("%s, %d, select area:%d failed.\n", __func__, __LINE__, p->storage_info.area);
                 return -1;
             }
 #else
             mmc_card_t *card = (mmc_card_t *)p->dev_hdl;
             if (card->currentPartition != p->storage_info.area) {
                 if (MMC_SelectPartition(p->dev_hdl, p->storage_info.area)) {
-                    // printf("%s, %d, select area:%d failed.\n", __func__, __LINE__, p->storage_info.area);
                     return -1;
                 }
             }
@@ -190,14 +180,12 @@ int partition_device_erase(partition_device_ops_t *dev_ops, off_t offset, size_t
 #if defined(CONFIG_COMP_SDMMC)
 #ifndef CONFIG_KERNEL_NONE
             if (rvm_hal_blockdev_mmc_select_area(p->dev_hdl, p->storage_info.area)) {
-                // printf("%s, %d, select area:%d failed.\n", __func__, __LINE__, p->storage_info.area);
                 return -1;
             }
 #else
             mmc_card_t *card = (mmc_card_t *)p->dev_hdl;
             if (card->currentPartition != p->storage_info.area) {
                 if (MMC_SelectPartition(p->dev_hdl, p->storage_info.area)) {
-                    // printf("%s, %d, select area:%d failed.\n", __func__, __LINE__, p->storage_info.area);
                     return -1;
                 }
             }

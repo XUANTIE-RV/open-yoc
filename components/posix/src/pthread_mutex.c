@@ -132,7 +132,7 @@ int pthread_mutex_timedlock(pthread_mutex_t *mutex, const struct timespec *at)
 {
     int ret = 0;
 
-    if (mutex == NULL) {
+    if (!(mutex && at)) {
         return EINVAL;
     }
 
@@ -142,11 +142,6 @@ int pthread_mutex_timedlock(pthread_mutex_t *mutex, const struct timespec *at)
         if (ret != 0) {
             return -1;
         }
-    }
-
-    ret = pthread_mutex_trylock(mutex);
-    if (ret != EBUSY) {
-        return ret;
     }
 
     unsigned int timeout = at->tv_sec * 1000 +  at->tv_nsec / 1000;

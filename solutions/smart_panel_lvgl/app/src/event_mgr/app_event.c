@@ -9,15 +9,14 @@
 #include <yoc/mic.h>
 #include <aos/kernel.h>
 #include <ulog/ulog.h>
+#include <devices/wifi.h>
 
-#include "app_player.h"
+#include "player/app_player.h"
 #include "display/app_disp.h"
 #include "bt/app_bt.h"
-#include "app_event.h"
-
-#include "app_wifi.h"
-#include <devices/wifi.h>
-#include "ui_entry.h"
+#include "event_mgr/app_event.h"
+#include "wifi/app_wifi.h"
+#include "ui/ui_entry.h"
 
 #define TAG "UI"
 

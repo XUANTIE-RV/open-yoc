@@ -37,7 +37,7 @@ int rvm_hal_eth_start(rvm_dev_t *dev)
     ETH_VALID(dev);
 
     device_lock(dev);
-    ret = ETH_DRIVER(dev)->reset(dev);
+    ret = ETH_DRIVER(dev)->start(dev);
     device_unlock(dev);
 
     return ret;

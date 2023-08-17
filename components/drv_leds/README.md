@@ -13,7 +13,7 @@
 | rvm_hal_led_open             | 打开led     |
 | rvm_hal_led_close            | 关闭led     |
 | rvm_hal_led_control          | 控制led     |
-| led_rgb_register             | 注册led设备 |
+| rvm_led_rgb_drv_register             | 注册led设备 |
 
 ## 接口详细说明
 
@@ -56,9 +56,9 @@
   - 0: 控制成功。
   - -1: 控制失败
 
-### led_rgb_register
+### rvm_led_rgb_drv_register
 
-`void led_rgb_register(led_pin_config_t *config, int idx)`
+`void rvm_led_rgb_drv_register(led_pin_config_t *config, int idx)`
 
 - 功能描述:
   - led设备注册。
@@ -78,7 +78,7 @@ static led_pin_config_t led_config = {EXAMPLE_LED_R_PIN, EXAMPLE_LED_G_PIN, EXAM
 void board_init(void)
 {
     ......
-    led_rgb_register(&led_config, 1);
+    rvm_led_rgb_drv_register(&led_config, 1);
     ......
 }
 ```

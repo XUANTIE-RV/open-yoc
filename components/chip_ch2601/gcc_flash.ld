@@ -22,7 +22,8 @@ PROVIDE (__heap_end = __ram_end);
 REGION_ALIAS("REGION_TEXT",    SPIFLASH);
 REGION_ALIAS("REGION_RODATA",  SPIFLASH);
 REGION_ALIAS("REGION_DATA",    SRAM);
-REGION_ALIAS("REGION_BSS",     DSRAM);
+REGION_ALIAS("REGION_BSS",     SRAM);
+REGION_ALIAS("REGION_HEAP",    DSRAM);
 
 ENTRY(Reset_Handler)
 SECTIONS
@@ -49,12 +50,6 @@ SECTIONS
   . = ALIGN(0x10) ;
   __etext = . ;
  } > REGION_TEXT
- .eh_frame_hdr : {
-  *(.eh_frame_hdr)
- } > REGION_TEXT
- .eh_frame : ONLY_IF_RO {
-  KEEP (*(.eh_frame))
- } > REGION_TEXT
  .gcc_except_table : ONLY_IF_RO {
   *(.gcc_except_table .gcc_except_table.*)
  } > REGION_TEXT
@@ -72,6 +67,20 @@ SECTIONS
   *(.rodata.str1.4)
   *(.srodata*)
   . = ALIGN(0x4) ;
+  __init_array_start = .;
+  __ctors_start__ = .;
+  KEEP (*(SORT(.init_array.*)))
+  KEEP (*(.init_array))
+  __init_array_end = .;
+  __ctors_end__ = .;
+
+  __fini_array_start = .;
+  __dtors_start__ = .;
+  KEEP (*(SORT(.fini_array.*)))
+  KEEP (*(.fini_array))
+  __fini_array_end = .;
+  __dtors_end__ = .;
+
   __ctor_start__ = .;
   KEEP (*(SORT(.ctors.*)))
   KEEP (*(.ctors))
@@ -165,9 +174,6 @@ SECTIONS
   __data_end__ = .;
   . = ALIGN(0x4) ;
  } > REGION_DATA AT > REGION_RODATA
- .eh_frame : ONLY_IF_RW {
-  KEEP (*(.eh_frame))
- } > REGION_DATA AT > REGION_RODATA
  .gcc_except_table : ONLY_IF_RW {
   *(.gcc_except_table .gcc_except_table.*)
   __edata = .;
@@ -205,5 +211,5 @@ SECTIONS
   __heap_start = .;
   . += __min_heap_size;
   . = ALIGN(0x4) ;
- } > REGION_BSS
+ } > REGION_HEAP
 }

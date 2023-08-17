@@ -158,7 +158,7 @@ static void *get_mailbox()
             printf("ERR->csi_mbox_attach_callback failed\n");
         }
 
-        aos_check(ret == CSI_OK, NULL);
+        aos_check_return_val(ret == CSI_OK, NULL);
     }
     return &handle;
 
@@ -167,7 +167,7 @@ static void *get_mailbox()
 
     if (handle == NULL) {
         handle = csi_mailbox_initialize(mailbox_event_cb);
-        aos_check(handle, NULL);
+        aos_check_return_val(handle, NULL);
     }
     return handle;
 #endif

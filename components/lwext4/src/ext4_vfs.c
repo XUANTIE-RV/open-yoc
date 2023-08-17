@@ -16,27 +16,71 @@ static char *ext4_mnt_path = EXT4_MOUNTPOINT;
 typedef struct {
     int dd_vfs_fd;
     int dd_rsv;
-    aos_dirent_t *dir;
+    vfs_dirent_t *dir;
 } ext4_dir_t;
 
-static int _ext4_open(file_t *fp, const char *path, int flags)
+/* path convert */
+static char *path_convert(const char *path)
+{
+    int len;
+    char *target_path, *p;
+
+    if (path == NULL) {
+        return NULL;
+    }
+
+    len = strlen(path);
+    target_path =(char *)aos_zalloc(len + 1);
+    if (target_path == NULL) {
+        return NULL;
+    }
+    if (strcmp(path, ext4_mnt_path) == 0) {
+        strcpy(target_path, path);
+        return target_path;
+    }
+    p = (char *)path;
+    int count = 0;
+    for (int i = 0; i < len; i++) {
+        if (*p == '/' && *(p + 1) == '/' && i < len - 1) {
+            target_path[count++] = '/';
+            p++;
+            ++i;
+        } else {
+            target_path[count++] = *p;
+        }
+        p++;
+    }
+    if (target_path[len - 1] == '/') {
+        target_path[len - 1] = 0;
+    }
+
+    return target_path;
+}
+
+static int _ext4_open(vfs_file_t *fp, const char *path, int flags)
 {
     int rc;
     ext4_file *file;
 
+    char *target_path = path_convert(path);
+    if (target_path == NULL) {
+        return -EINVAL;
+    }
+
     file = aos_malloc(sizeof(ext4_file));
-    rc = ext4_fopen2(file, path, flags);
+    rc = ext4_fopen2(file, target_path, flags);
     if (rc != 0) {
         aos_free(file);
+        aos_free(target_path);
         return -rc;
     }
 
     fp->f_arg = file;
-
+    aos_free(target_path);
     return rc;
 }
 
-static int _ext4_close(file_t *fp)
+static int _ext4_close(vfs_file_t *fp)
 {
     int rc;
     ext4_file *file;
@@ -48,7 +92,7 @@ static int _ext4_close(file_t *fp)
     return -rc;
 }
 
-static ssize_t _ext4_read(file_t *fp, char *buf, size_t len)
+static ssize_t _ext4_read(vfs_file_t *fp, char *buf, size_t len)
 {
     int rc;
     ext4_file *file;
@@ -60,7 +104,7 @@ static ssize_t _ext4_read(file_t *fp, char *buf, size_t len)
     return rc == 0 ? read_bytes : -rc;
 }
 
-static ssize_t _ext4_write(file_t *fp, const char *buf, size_t len)
+static ssize_t _ext4_write(vfs_file_t *fp, const char *buf, size_t len)
 {
     int rc;
     ext4_file *file;
@@ -73,7 +117,7 @@ static ssize_t _ext4_write(file_t *fp, const char *buf, size_t len)
 }
 
 #if 0
-static long int _ext4_tell(file_t *fp)
+static long int _ext4_tell(vfs_file_t *fp)
 {
     int rc;
     FIL *file;
@@ -85,21 +129,29 @@ static long int _ext4_tell(file_t *fp)
 }
 #endif
 
-static int _ext4_access(file_t *fp, const char *path, int amode)
+static int _ext4_access(vfs_file_t *fp, const char *path, int amode)
 {
     int rc;
     ext4_file file;
 
-    rc = ext4_fopen(&file, path, "rb");
+    char *target_path = path_convert(path);
+    if (target_path == NULL) {
+        return -EINVAL;
+    }
+
+    rc = ext4_fopen(&file, target_path, "rb");
     if (rc == 0) {
         ext4_fclose(&file);
+        aos_free(target_path);
         return 0;
     }
+
+    aos_free(target_path);
 
     return -rc;
 }
 
-static off_t _ext4_lseek(file_t *fp, off_t off, int whence)
+static off_t _ext4_lseek(vfs_file_t *fp, off_t off, int whence)
 {
     int rc;
     ext4_file *file;
@@ -124,7 +176,7 @@ static off_t _ext4_lseek(file_t *fp, off_t off, int whence)
     return rc == 0 ? new_pos : -rc;
 }
 
-static int _ext4_sync(file_t *fp)
+static int _ext4_sync(vfs_file_t *fp)
 {
 #if 0
     int rc;
@@ -140,73 +192,109 @@ static int _ext4_sync(file_t *fp)
 #endif
 }
 
-static int _ext4_stat(file_t *fp, const char *path, struct aos_stat *st)
+static int _ext4_stat(vfs_file_t *fp, const char *path, vfs_stat_t *st)
 {
     int rc;
     ext4_file file;
 
-    rc = ext4_fopen(&file, path, "rb");
+    char *target_path = path_convert(path);
+    if (target_path == NULL) {
+        return -EINVAL;
+    }
+
+    rc = ext4_fopen(&file, target_path, "rb");
     if (rc == 0) {
         //FIXME:
         st->st_size = ext4_fsize(&file);
         uint32_t mode;
-        ext4_mode_get(path, &mode);
+        ext4_mode_get(target_path, &mode);
         st->st_mode = mode;
         ext4_fclose(&file);
+        aos_free(target_path);
         return 0;
     }
+
+    aos_free(target_path);
 
     return -rc;
 }
 
-static int _ext4_unlink(file_t *fp, const char *path)
+static int _ext4_unlink(vfs_file_t *fp, const char *path)
 {
     int rc;
 
-    rc = ext4_fremove(path);
+    char *target_path = path_convert(path);
+    if (target_path == NULL) {
+        return -EINVAL;
+    }
+
+    rc = ext4_fremove(target_path);
+
+    aos_free(target_path);
 
     return rc ? -rc : 0;
 }
 
-static int _ext4_rename(file_t *fp, const char *oldpath, const char *newpath)
+static int _ext4_rename(vfs_file_t *fp, const char *oldpath, const char *newpath)
 {
     int rc;
 
-    rc = ext4_frename(oldpath, newpath);
+    char *oldname = path_convert(oldpath);
+    if (!oldname) {
+        return -EINVAL;
+    }
+
+    char *newname = path_convert(newpath);
+    if (!newname) {
+        aos_free(oldname);
+        return -EINVAL;
+    }
+
+    rc = ext4_frename(oldname, newname);
+
+    aos_free(oldname);
+    aos_free(newname);
 
     return rc ? -rc : 0;
 }
 
-static aos_dir_t *_ext4_opendir(file_t *fp, const char *path)
+static vfs_dir_t *_ext4_opendir(vfs_file_t *fp, const char *path)
 {
     int rc;
     ext4_dir *dir;
     ext4_dir_t *ret_dir;
-    aos_dirent_t *dirent;
+    vfs_dirent_t *dirent;
+
+    char *relpath = path_convert(path);
+    if (!relpath) {
+        return NULL;
+    }
 
     dir     = aos_calloc(1, sizeof(ext4_dir));
-    dirent  = aos_calloc(1, sizeof(aos_dirent_t) + 256);
+    dirent  = aos_calloc(1, sizeof(vfs_dirent_t) + 256);
     ret_dir = aos_calloc(1, sizeof(ext4_dir_t));
 
     ret_dir->dir = dirent;
-    rc = ext4_dir_open(dir, path);
+    rc = ext4_dir_open(dir, relpath);
     if (rc == 0) {
         fp->f_arg = dir;
-        return (aos_dir_t*)ret_dir;
+        aos_free(relpath);
+        return (vfs_dir_t*)ret_dir;
     } else {
         aos_free(dir);
         aos_free(ret_dir);
         aos_free(dirent);
+        aos_free(relpath);
         return NULL;
     }
 }
 
-static aos_dirent_t *_ext4_readdir(file_t *fp, aos_dir_t *dir)
+static vfs_dirent_t *_ext4_readdir(vfs_file_t *fp, vfs_dir_t *dir)
 {
     const ext4_direntry *rentry;
     ext4_dir *dirp = (ext4_dir*)(fp->f_arg);
     ext4_dir_t *dp = (ext4_dir_t*)dir;
-    aos_dirent_t *dirent = dp->dir;
+    vfs_dirent_t *dirent = dp->dir;
 
     rentry = ext4_dir_entry_next(dirp);
     if (rentry && rentry->name[0] != 0) {
@@ -223,12 +311,12 @@ static aos_dirent_t *_ext4_readdir(file_t *fp, aos_dir_t *dir)
     return NULL;
 }
 
-static int _ext4_closedir(file_t *fp, aos_dir_t *dir)
+static int _ext4_closedir(vfs_file_t *fp, vfs_dir_t *dir)
 {
     int rc;
     ext4_dir *dirp;
     ext4_dir_t *dp = (ext4_dir_t*)dir;
-    aos_dirent_t *dirent = dp->dir;
+    vfs_dirent_t *dirent = dp->dir;
 
     dirp = (ext4_dir*)(fp->f_arg);
     rc = ext4_dir_close(dirp);
@@ -242,25 +330,39 @@ static int _ext4_closedir(file_t *fp, aos_dir_t *dir)
     return -rc;
 }
 
-static int _ext4_mkdir(file_t *fp, const char *path)
+static int _ext4_mkdir(vfs_file_t *fp, const char *path)
 {
     int rc;
 
-    rc = ext4_dir_mk(path);
+    char *pathname = path_convert(path);
+    if (!pathname) {
+        return -EINVAL;
+    }
+
+    rc = ext4_dir_mk(pathname);
+
+    aos_free(pathname);
 
     return rc == 0 ? rc : -rc;
 }
 
-static int _ext4_rmdir(file_t *fp, const char *path)
+static int _ext4_rmdir(vfs_file_t *fp, const char *path)
 {
     int rc;
 
-    rc = ext4_dir_rm(path);
+    char *pathname = path_convert(path);
+    if (!pathname) {
+        return -EINVAL;
+    }
+
+    rc = ext4_dir_rm(pathname);
+
+    aos_free(pathname);
 
     return rc == 0 ? rc : -rc;
 }
 
-static void _ext4_rewinddir(file_t *fp, aos_dir_t *dir)
+static void _ext4_rewinddir(vfs_file_t *fp, vfs_dir_t *dir)
 {
     ext4_dir *dirp;
     ext4_dir_t *dp = (ext4_dir_t *)dir;
@@ -273,7 +375,7 @@ static void _ext4_rewinddir(file_t *fp, aos_dir_t *dir)
     return;
 }
 
-static long _ext4_telldir(file_t *fp, aos_dir_t *dir)
+static long _ext4_telldir(vfs_file_t *fp, vfs_dir_t *dir)
 {
     ext4_dir *dirp;
     ext4_dir_t *dp = (ext4_dir_t *)dir;
@@ -287,7 +389,7 @@ static long _ext4_telldir(file_t *fp, aos_dir_t *dir)
     return -1;
 }
 
-static void _ext4_seekdir(file_t *fp, aos_dir_t *dir, long loc)
+static void _ext4_seekdir(vfs_file_t *fp, vfs_dir_t *dir, long loc)
 {
     ext4_dir *dirp;
     ext4_dir_t *dp = (ext4_dir_t *)dir;
@@ -300,7 +402,7 @@ static void _ext4_seekdir(file_t *fp, aos_dir_t *dir, long loc)
     return;
 }
 
-static int _ext4_statfs(file_t *fp, const char *path, struct aos_statfs *suf)
+static int _ext4_statfs(vfs_file_t *fp, const char *path, vfs_statfs_t *suf)
 {
     int rc;
     struct ext4_sblock *sb = NULL;
@@ -315,7 +417,7 @@ static int _ext4_statfs(file_t *fp, const char *path, struct aos_statfs *suf)
     return -rc;
 }
 
-static const fs_ops_t ext4_ops = {
+static const vfs_fs_ops_t ext4_ops = {
     .open       = &_ext4_open,
     .close      = &_ext4_close,
     .read       = &_ext4_read,
@@ -340,31 +442,31 @@ static const fs_ops_t ext4_ops = {
 };
 
 extern struct ext4_blockdev *ext4_blockdev_mmc_get(void);
+static const char *s_dev_name = "mmc";
 
 int vfs_ext4_register(void)
 {
     int rc;
-    char *dev_name = "mmc";
     struct ext4_blockdev *bd = NULL;
 
     bd = ext4_blockdev_mmc_get();
     if (!bd)
         printf("ext4 bd is NULL\n");
-    rc = ext4_device_register(bd, dev_name);
+    rc = ext4_device_register(bd, s_dev_name);
     if (rc != 0) {
         printf("ext4 dev register err, rc = %d\n", rc);
         return -1;
     } else {
-        rc = ext4_mount(dev_name, ext4_mnt_path, false);
+        rc = ext4_mount(s_dev_name, ext4_mnt_path, false);
         if (rc != 0) {
             printf("ext4 mount err, rc = %d\n", rc);
-            ext4_device_unregister(dev_name);
+            ext4_device_unregister(s_dev_name);
             return -1;
         } else {
             printf("ext4 mount success!!\n");
         }
     }
-    rc = aos_register_fs(ext4_mnt_path, &ext4_ops, bd);
+    rc = vfs_register_fs(ext4_mnt_path, &ext4_ops, bd);
     if (rc) {
         printf("aos register ext4 failed. ret:%d\n", rc);
     }
@@ -375,11 +477,12 @@ int vfs_ext4_unregister(void)
 {
     int rc;
 
+    ext4_device_unregister(s_dev_name);
     rc = ext4_umount(ext4_mnt_path);
     if (rc != 0) {
         printf("ext4 umount err, rc = %d\n", rc);
     }
 
-    return aos_unregister_fs(ext4_mnt_path);
+    return vfs_unregister_fs(ext4_mnt_path);
 }
 

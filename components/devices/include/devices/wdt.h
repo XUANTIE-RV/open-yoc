@@ -70,6 +70,11 @@ int rvm_hal_wdt_attach_callback(rvm_dev_t *dev, rvm_hal_wdt_callback callback, v
 */
 int rvm_hal_wdt_detach_callback(rvm_dev_t *dev);
 
+
+#if defined(AOS_COMP_DEVFS) && AOS_COMP_DEVFS
+#include <devices/vfs_wdt.h>
+#endif
+
 #ifdef __cplusplus
 }
 #endif

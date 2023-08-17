@@ -177,7 +177,7 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr,
 
     strncpy(ptcb->thread_name, "posix_thread", PTHREAD_NAME_MAX_LEN);
     kpolicy = aos_task_sched_policy_get_default();
-    kpriority = sched_priority_posix2rhino(kpolicy, ptcb->attr.sched_priority);
+    kpriority = sched_priority_posix2aos(kpolicy, ptcb->attr.sched_priority);
     if (kpriority < 0) {
         ret = -1;
         goto out2;
@@ -380,7 +380,7 @@ int pthread_getschedparam(pthread_t thread, int *policy, struct sched_param *par
     }
 
     *policy = sched_policy_aos2posix(kpolicy);
-    param->sched_priority = sched_priority_rhino2posix(kpolicy, priority);
+    param->sched_priority = sched_priority_aos2posix(kpolicy, priority);
     param->slice = slice;
 
     return 0;
@@ -408,7 +408,7 @@ int pthread_setschedparam(pthread_t thread, int policy, const struct sched_param
         return EINVAL;
     }
 
-    priority = sched_priority_posix2rhino(kpolicy, param->sched_priority);
+    priority = sched_priority_posix2aos(kpolicy, param->sched_priority);
 
     /* Change the policy and priority of the thread */
     ret = aos_task_sched_policy_set(&(ptcb->task), kpolicy, priority);
@@ -454,7 +454,7 @@ int pthread_setschedprio(pthread_t thread, int prio)
         return -1;
     }
 
-    kpriority = sched_priority_posix2rhino(kpolicy, prio);
+    kpriority = sched_priority_posix2aos(kpolicy, prio);
     if (kpriority < 0) {
         return -1;
     }

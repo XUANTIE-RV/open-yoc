@@ -447,6 +447,8 @@ int kv_reset(kv_t *kv)
         kvblock_reset(kv->blocks + i);
 #if CONFIG_KV_ENABLE_CACHE
     memset(kv->nodes, 0xff, kv->node_nb * sizeof(cache_node_t));
+    hash_uninit(&kv->map);
+    hash_init(&kv->map, CONFIG_KV_HASH_BUCKET);
 #endif
 
     return 0;

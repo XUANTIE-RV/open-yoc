@@ -1,7 +1,7 @@
 
 ## 第一部分： 基础信息
 name: sdk_chip_bl606p_e907                           # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
-version: v7.7.0                                     # <必选项> 组件版本号
+version: v7.8.0                                     # <必选项> 组件版本号
 description: chip sdk for bl606p e907                # <必选项> 建议至少20字以上
 type: sdk                                            # <必选项> 组件类型，为：solution, chip, board, common, sdk
 
@@ -15,28 +15,32 @@ license: Apache license v2.0                         # <可选项> 源代码的�
 #   - minilibc: v7.2.0
 #   - aos: >=v7.2.0
 depends:
-  - yoc_kernel: v7.7.0
-  - bl606p_evb_e907: v7.7.0
-  - chip_bl606p: v7.7.0
-  - libc_stub: v7.7.0
-  - posix: v7.7.0
-  - vfs: v7.7.0
-  - minialsa: v7.7.0
-  - drv_snd_bl606p: v7.7.0
-  - drv_wifi_bl606p: v7.7.0
-  - bl606p_wifimgmr: v7.7.0
-  - bl606p_firmware: v7.7.0
-  - bl606p_phyrf: v7.7.0
-  - bl606p_bthost: v7.7.0
-  - bl606p_blimpls: v7.7.0
-  - bl606p_btprofile: v7.7.0
-  - bl606p_btcontroller: v7.7.0
-  - bl606p_player: v7.7.0
-  - lwip: v7.7.0
-  - mbedtls: v7.7.0
-  - ipc: v7.7.0
-  - log_ipc: v7.7.0
-  - bootab: v7.7.0
-  - key_mgr: v7.7.0
-  - sec_crypto: v7.7.0
+  - yoc_base: v7.8.0
+  - rhino: v7.8.0
+  - rhino_arch: v7.8.0
+  - rhino_pwrmgmt: v7.8.0
+  # - freertos: v7.8.0
+  - bl606p_evb_e907: v7.8.0
+  - chip_bl606p: v7.8.0
+  - libc_stub: v7.8.0
+  - posix: v7.8.0
+  - vfs: v7.8.0
+  - minialsa: v7.8.0
+  - drv_snd_bl606p: v7.8.0
+  - drv_wifi_bl606p: v7.8.0
+  - bl606p_wifimgmr: v7.8.0
+  - bl606p_firmware: v7.8.0
+  - bl606p_phyrf: v7.8.0
+  - bl606p_bthost: v7.8.0
+  - bl606p_blimpls: v7.8.0
+  - bl606p_btprofile: v7.8.0
+  - bl606p_btcontroller: v7.8.0
+  - bl606p_player: v7.8.0
+  - lwip: v7.8.0
+  - mbedtls: v7.8.0
+  - ipc: v7.8.0
+  - log_ipc: v7.8.0
+  - bootab: v7.8.0
+  - key_mgr: v7.8.0
+  - sec_crypto: v7.8.0
  

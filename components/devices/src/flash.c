@@ -5,12 +5,13 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include <inttypes.h>
 #include <dev_internal.h>
 #include <devices/impl/flash_impl.h>
 
 #define FLASH_DRIVER(dev)  ((flash_driver_t*)(dev->drv))
 #define FLASH_VAILD(dev) do { \
-    if (device_valid(dev, "flash") != 0) \
+    if (device_valid(dev, "flash") != 0 && device_valid(dev, "eflash") != 0 && device_valid(dev, "spinand") != 0) \
         return -1; \
 } while(0)
 
@@ -94,4 +95,3 @@ int rvm_hal_flash_get_info(rvm_dev_t *dev, rvm_hal_flash_dev_info_t *info)
 
     return ret < 0 ? -EIO : 0;
 }
-

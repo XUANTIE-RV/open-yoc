@@ -131,7 +131,7 @@ static blockdev_driver_t usb_driver = {
     .get_info = _usb_get_info,
 };
 
-void rvm_usb_drv_register(int idx)
+void rvm_usb_msc_drv_register(int idx)
 {
     rvm_driver_register(&usb_driver.drv, NULL, idx);
 }

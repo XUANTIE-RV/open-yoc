@@ -230,6 +230,8 @@ void usbh_video_list_info(struct usbh_video *video_class)
     struct usb_endpoint_descriptor *ep_desc;
     uint8_t mult;
     uint16_t mps;
+    (void)mps;
+    (void)mult;
 
     USB_LOG_INFO("============= Video device information ===================\r\n");
     USB_LOG_INFO("bcdVDC:%04x\r\n", video_class->bcdVDC);
@@ -254,6 +256,7 @@ void usbh_video_list_info(struct usbh_video *video_class)
 
     USB_LOG_INFO("bNumFormats:%u\r\n", video_class->num_of_formats);
     for (uint8_t i = 0; i < video_class->num_of_formats; i++) {
+        (void)format_type;
         USB_LOG_INFO("  FormatIndex:%u\r\n", i + 1);
         USB_LOG_INFO("  FormatType:%s\r\n", format_type[video_class->format[i].format_type]);
         USB_LOG_INFO("  bNumFrames:%u\r\n", video_class->format[i].num_of_frames);

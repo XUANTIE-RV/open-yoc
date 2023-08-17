@@ -1,0 +1,4 @@
+
+download ihex verify=no  flashIndex=1 $(ProjectPath)/generated/boot0.hex
+download ihex verify=no  flashIndex=2 $(ProjectPath)/generated/boot.hex
+download ihex verify=no  flashIndex=0 $(ProjectPath)/generated/total_image.hex

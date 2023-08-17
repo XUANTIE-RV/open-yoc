@@ -7,12 +7,12 @@
 
 #include <stdint.h>
 #include <uservice/uservice.h>
-#ifdef __linux__
-#include "aos_port/common.h"
 #include "ulog/ulog.h"
-#else
-#include <aos/kernel.h>
 #include <aos/list.h>
+#include <aos/kernel.h>
+#include <aos/debug.h>
+#ifdef __linux__
+#include <mqueue.h>
 #endif
 
 #ifdef __cplusplus

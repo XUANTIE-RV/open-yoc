@@ -6,7 +6,9 @@
 
 #include <uservice/eventid.h>
 #include <uservice/uservice.h>
+#if defined(CONFIG_COMP_VOICE_WRAPPER) && CONFIG_COMP_VOICE_WRAPPER
 #include <yoc/mic.h>
+#endif
 #include <aos/kernel.h>
 #include <ulog/ulog.h>
 
@@ -61,7 +63,9 @@ status_event_t g_status_event_list[] = {
 
 int g_status_event_list_count = sizeof(g_status_event_list) / sizeof(status_event_t);
 
+#if defined(CONFIG_COMP_VOICE_WRAPPER) && CONFIG_COMP_VOICE_WRAPPER
 static long long g_notify_play_status = 0;
+#endif
 
 static void app_event_mgr(uint32_t event_id, const void *data, void *context)
 {
@@ -102,7 +106,7 @@ static void app_event_mgr(uint32_t event_id, const void *data, void *context)
             local_audio_play("wifi_conn_fail.mp3");
             break;
         case EVENT_STATUS_NTP_SUCCESS:
-            local_audio_play("wifi_conn_succ.mp3");
+            //local_audio_play("wifi_conn_succ.mp3");
             break;
 
             /*蓝牙*/
@@ -114,16 +118,17 @@ static void app_event_mgr(uint32_t event_id, const void *data, void *context)
         case EVENT_STATUS_BT_DISCONNECTED:
             local_audio_play("bt_disconnected.mp3");
             break;
-
+#if defined(CONFIG_COMP_VOICE_WRAPPER) && CONFIG_COMP_VOICE_WRAPPER
             /*唤醒*/
         case EVENT_STATUS_SESSION_START:
             g_notify_play_status = aos_now_ms();
             aui_mic_control(MIC_CTRL_NOTIFY_PLAYER_STATUS, 1, 200);
-            local_wakeup_audio_play("wakeup.wav");
+            //用户自行决定放什么：我在，在的，may i help you
+            //local_wakeup_audio_play("wakeup.wav");
             break;
         case EVENT_STATUS_SESSION_STOP:
             break;
-
+#endif
             /*交互*/
         case EVENT_STATUS_NLP_NOTHING:
             local_audio_play("npl_nothing.mp3");
@@ -141,11 +146,13 @@ static void app_event_mgr(uint32_t event_id, const void *data, void *context)
             event_publish_delay(EVENT_PLAYER_CHANGE, NULL, 500);
             break;
         case EVENT_MEDIA_SYSTEM_FINISH:
+#if defined(CONFIG_COMP_VOICE_WRAPPER) && CONFIG_COMP_VOICE_WRAPPER
             if (g_notify_play_status) {
                 LOGD(TAG, "play time %d ms", (int)(aos_now_ms() - g_notify_play_status));
                 aui_mic_control(MIC_CTRL_NOTIFY_PLAYER_STATUS, 0, 200);
                 g_notify_play_status = 0;
             }
+#endif
             event_publish_delay(EVENT_PLAYER_CHANGE, NULL, 500);
             break;
         case EVENT_MEDIA_MUSIC_ERROR:

@@ -77,14 +77,14 @@ static int _get_info(rvm_dev_t *dev, rvm_hal_display_info_t *info)
     return 0;
 }
 
-static int _get_framebuffer(rvm_dev_t *dev, void **smem_start, size_t *smem_len)
+static int _get_framebuffer(rvm_dev_t *dev, void ***smem_start, size_t *smem_len)
 {
-    for (int i =0 ; i < CVI_DISPLAY_CANVAS_NUM; i++) {
-        *smem_start = g_CanvasBuf[g_CanvasUpdate % CVI_DISPLAY_CANVAS_NUM];
-    }
+    *smem_start = (void **)g_CanvasBuf;
+
     if (g_stCanvasInfo.enPixelFormat == PIXEL_FORMAT_ARGB_8888) {
         *smem_len = g_stCanvasInfo.stSize.u32Width * g_stCanvasInfo.stSize.u32Height * 4;
     }
+
     return 0;
 }
 
@@ -121,13 +121,16 @@ static int _write_area(rvm_dev_t *dev, rvm_hal_display_area_t *area, void *data)
         printf("CVI_RGN_GetCanvasInfo failed \n");
         return -1;
     }
+
+    uint32_t area_width = (area->x_leght - area->x_start + 1);
     if (g_stCanvasInfo.enPixelFormat == PIXEL_FORMAT_ARGB_8888) {
         for (uint32_t i = area->y_start; i < area->y_leght; i++) {
             unsigned char * tmp = g_CanvasBuf[g_CanvasUpdate % CVI_DISPLAY_CANVAS_NUM];
-            memcpy(tmp + ((i + area->y_start) * g_stCanvasInfo.stSize.u32Width * 4 + area->x_start * 4)
-                  , data + (i * area->x_leght * 4), area->x_leght * 4);
+            memcpy(tmp + (i * g_stCanvasInfo.stSize.u32Width * 4 + area->x_start * 4)
+                  , data + ((i - area->y_start) * area_width * 4), area_width * 4);
         }
     }
+
     CVI_VO_GetWaitVSync(0);
     CVI_RGN_UpdateCanvas(CVI_OSD_HANDLE);
     g_CanvasUpdate ++;
@@ -149,11 +152,13 @@ static int _write_area_async(rvm_dev_t *dev, rvm_hal_display_area_t *area, void 
         printf("CVI_RGN_GetCanvasInfo failed \n");
         return -1;
     }
+
+    uint32_t area_width = (area->x_leght - area->x_start + 1);
     if (g_stCanvasInfo.enPixelFormat == PIXEL_FORMAT_ARGB_8888) {
         for (uint32_t i = area->y_start; i < area->y_leght; i++) {
             unsigned char * tmp = g_CanvasBuf[g_CanvasUpdate % CVI_DISPLAY_CANVAS_NUM];
-            memcpy(tmp + ((i + area->y_start) * g_stCanvasInfo.stSize.u32Width * 4 + area->x_start * 4)
-                  , data + (i * area->x_leght * 4), area->x_leght * 4);
+            memcpy(tmp + (i * g_stCanvasInfo.stSize.u32Width * 4 + area->x_start * 4)
+                  , data + ((i - area->y_start) * area_width * 4), area_width * 4);
         }
     }
     CVI_RGN_UpdateCanvas(CVI_OSD_HANDLE);
@@ -188,7 +193,7 @@ static int _pan_display(rvm_dev_t *dev)
         memcpy(g_CanvasBuf[g_CanvasUpdate % CVI_DISPLAY_CANVAS_NUM], g_CanvstmpBuf, g_stCanvasInfo.stSize.u32Width * g_stCanvasInfo.stSize.u32Height* 4);
     }
 #endif
-    CVI_VO_GetWaitVSync(0);
+    // CVI_VO_GetWaitVSync(0);
     CVI_RGN_UpdateCanvas(CVI_OSD_HANDLE);
     _event = _display_event;
     return 0;

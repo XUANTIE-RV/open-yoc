@@ -1,0 +1,330 @@
+## 第一部分： 基础信息
+name: smart_panel_lvgl
+version: v7.8.0
+description: smart panel solution with UI(lvgl) + gateway + Voice
+type: solution
+## 第二部分：依赖信息
+#           指定该组件依赖的组件及版本，版本支持条件比较，支持：>=v1.0, >v1.0, ==v1.0, <=v1.0, <v1.0, v1.0
+#           未指定条件时，默认为 ==，如 v1.0 与 ==v1.0
+# depends:                                 # <可选项> 该组件依赖其他的组件，合理的依赖才能保证组件能编译、使用
+#   - minilibc: v7.2.0
+#   - aos: >=v7.2.0
+sdk_chip:
+  - sdk_chip_d1: v7.8.0
+  - sdk_chip_f133: v7.8.0
+  - sdk_chip_cv181xh_bga: v7.8.0
+
+mkflash_script: mkflash.sh
+
+depends:
+  - sdk_chip_d1: v7.8.0
+  - tsl_engine: v7.8.0
+  - duktape: v7.8.0
+  - dut_service: v7.8.0
+  - smartliving: v7.8.0
+  - fota: v7.8.0
+  - lvgl: v7.8.0
+  - breeze: v7.8.0
+  - av: v7.8.0
+  - amrnb: v7.8.0
+  - amrwb: v7.8.0
+  - flac: v7.8.0
+  - ogg: v7.8.0
+  - opus: v7.8.0
+  - pvmp3dec: v7.8.0
+  - sonic: v7.8.0
+  - speex: v7.8.0
+  - speexdsp: v7.8.0
+  - netmgr: v7.8.0
+  - littlefs: v7.8.0
+  - zlib: v7.8.0
+  - ntp: v7.8.0
+  - smart_audio: v7.8.0
+  - drv_amplifier: v7.8.0
+  - wifi_provisioning: v7.8.0
+  - aui_cloud_mind: v7.8.0
+  - cjson: v7.8.0
+  - alg_pcm_input: v7.8.0
+  - alg_record: v7.8.0
+  - record: v7.8.0
+  - websocket: v7.8.0
+  - posto: v7.8.0
+  - cxvision: v7.8.0
+  - voice_wrapper: v7.8.0
+  - httpclient: v7.8.0
+  - transport: v7.8.0
+  - button: v7.8.0
+  - alg_dispatch: v7.8.0         # alg: mind & thead
+  - alg_kws_lyeva: v7.8.0        # alg: thead
+  - voice_lyeva: v7.8.0          # alg: thead
+  - adb: v7.8.0
+  - clock_alarm: v7.8.0
+  - at: v7.8.0
+  - ers: v7.8.0
+  - ota_module: v7.8.0
+  - gateway_mgmt: v7.8.0
+  - ble_mesh: v7.8.0
+## 第三部分：板级信息
+# hw_info:                                 # 对 solution、board、chip 三个字段的改进，统称为 hw_info 字段
+#   cpu_id: cpu0
+#   cpu_name: CK804EF
+#   vendor_name: t-head
+#   chip_name: chip_pangu                  # <可选项> 指定芯片组件名,未设置时，使用depends中 chip 第一个组件
+#   board_name: pangu_cpu0_evb             # <可选项> 指定开发板组件名，未设置时，使用depends中 board 第一个组件
+#   ld_script: configs/gcc_eflash.ld       # <可选项> 连接时使用 LD 脚本，当选把未设置时，使用对应的 board 的 LD 脚本
+#   flash_program: bin/flash_program.elf   # <可选项> 芯片全局烧写程序
+#   toolchain_prefix: csky-abiv2-elf       # <可选项> 编译器前缀
+#   cpu0:
+#     cpu_name: CK804EF                    # <必选项> 该芯片使用的 CPU 型号
+#     ld_script: configs/gcc_eflash.ld     # <必选项> 连接时使用 LD 脚本
+#     flash_program: bin/flash_program.elf # <可选项> 该CPU对应烧写程序，未指定时使用全局烧写程序
+#     toolchain_prefix: csky-abiv2-elf     # <可选项> 编译器前缀
+#   cpu1:
+#     cpu_name: CK804EF                    # <必选项> 该芯片使用的 CPU 型号
+#     ld_script: configs/gcc_eflash.ld     # <可选项> 连接时使用 LD 脚本
+#     flash_program: bin/flash_program.elf # <可选项> 该CPU对应烧写程序，未指定时使用全局烧写程序
+#     toolchain_prefix: csky-abiv2-elf     # <可选项> 编译器前缀
+## solution component
+# hw_info:
+#   cpu_id: cpu0
+#   board_name: pangu_cpu0_evb
+#   cpu_name: CK805EF
+#   vendor_name: thead
+#   chip_name: 'chip_pangu'
+#   ld_script: configs/gcc_eflash.ld.S
+
+## board component
+# hw_info:
+#   chip_name: chip_pangu
+#   ld_script: configs/gcc_eflash.ld
+
+## chip component (单处理器)
+# hw_info:
+#   cpu_name: CK804EF
+#   ld_script: configs/gcc_eflash.ld
+#   toolchain_prefix: csky-abiv2-elf
+#   flash_program: bin/flash_program.elf
+
+## chip component(多处理器)
+# hw_info:
+#   cpu0:
+#     cpu_name: CK804EF                    # <必选项> 该芯片使用的 CPU 型号
+#     ld_script: configs/gcc_eflash.ld     # <必选项> 连接时使用 LD 脚本
+#     flash_program: bin/flash_program.elf # <可选项> 该CPU对应烧写程序，未指定时使用全局烧写程序
+#     toolchain_prefix: csky-abiv2-elf     # <可选项> 编译器前缀
+#   cpu1:
+#     cpu_name: CK804EF                    # <必选项> 该芯片使用的 CPU 型号
+#     ld_script: configs/gcc_eflash.ld     # <必选项> 连接时使用 LD 脚本
+#     flash_program: bin/flash_program.elf # <可选项> 该CPU对应烧写程序，未指定时使用全局烧写程序
+#     toolchain_prefix: csky-abiv2-elf     # <可选项> 编译器前缀
+
+hw_info:
+  cpu_id: cpu1
+  board_name: ""
+
+## 第四部分：编译连接信息
+# build_config:                            # <可选项> 编译配置项
+#   include:                               # <可选项> 编译时，影响编译器的-I 参数 ,全局有效
+#     - src                                #        include 只能是该软件包下的目录，不能使用外部目录
+#   internal_include:                      # <可选项> 编译时，影响编译器的-I 参数 ,组件内有效
+#     - include
+#   cflag: ''                              # <可选项> C 编译器所需要要的编译参数
+#   cxxflag: ''                            # <可选项> CXX 编译器所需要要的编译参数
+#   asmflag: ''                            # <可选项> 汇编器所需要要参数
+#   define:                                # <可选项> 宏定义, 增加编译器的-D 选项,如：
+#     XXX: 1                               #   -DXXX=1
+#     AAA: 1                               #   -DAAA
+#     STR: "abc"                           #   -DSTR="abc"
+#   libs:                                  # 该组件中支持的二进制静态库,如：libxxx.a, libyyy.a
+#     - xxx                                #   -lxxx
+#     - yyy                                #   -lyyy
+#   libpath:                               # 指定静态库所在的路径（相对于该组件路径）
+#     - libs                               #   -Llibs
+build_config:
+  cflag: -Os
+  cxxflag: -Os -fexceptions
+  include:
+    - app/include
+    - app/src
+  ldflag: '-Wl,-zmax-page-size=1024 -Wl,-Map=yoc.map'
+# source_file:                             # <可选项> 指定参与编译的源代码文件，支持通配符，采用相对路径
+#   - src/*.c                              # 例：组件 src 目录下所有的扩展名为 c 的源代码文件
+source_file:
+  - app/src/*.c
+  - app/src/cli/*.c
+  - app/src/ui/*.c
+  - app/src/ui/resource/img/*.c
+  - app/src/ui/resource/img/voiceimg/*.c
+  - app/src/ui/resource/font/*.c
+  - app/src/aui_action/*.c
+  - app/src/aui_cloud/*.c
+  - app/src/aui_cloud/aliyunnls/*.c
+  - app/src/player/*.c
+  - app/src/voice/*.c
+  - app/src/sys/*.c
+  - app/src/at_cmd/*.c ? <CONFIG_SMART_SPEAKER_AT>
+  - app/src/wifi/*.c
+  - app/src/bt/*.c
+  - app/src/wifi/multi_ssid/*.c
+  - app/src/wifi/wifi_prov/*.c
+  - app/src/key_msg/*.c
+  - app/src/event_mgr/*.c
+  - app/src/linkkit_gateway/*.c
+  - app/src/occ_fota/*.c
+  - app/src/display/*.c
+  - app/src/display/pwm_led/*.c
+  - app/src/factory/*.c
+  - app/src/alarms/*.c
+  - app/src/button/*.c
+
+## 第五部分：配置信息
+def_config:                              # 组件的可配置项
+    CONFIG_DEBUG_MM: 1
+  # Kernel Config
+    CONFIG_SOFTWDT_TASK_STACK_SIZE: 2048
+    CLI_CONFIG_STACK_SIZE: 32768
+    CLI_TASK_PRIORITY: 5
+    CONFIG_USERVICE_EVENT_TASK_STACK_SIZE: 4096
+    CONFIG_IPC_RECV_TASK_STACK_SIZE: 4096
+    CONFIG_IPC_SERVICE_TASK_STACK_SIZE: 6144
+    CONFIG_ARCH_INTERRUPTSTACK: 8192
+    CONFIG_SMART_AUDIO_STACK_SIZE: 3072
+    ULOG_CONFIG_ASYNC: 1   # ulog异步配置项，1表示开启异步打印，0表示同步打印
+    ULOG_CONFIG_SYNC_LOG_DETAILS: 1
+    ULOG_CONFIG_DEFAULT_DIR_ASYNC: 1
+    ULOG_CONFIG_ASYNC_BUF_SIZE: 81920
+    ULOG_CONFIG_LOG_SIZE: 2048
+  # CONFIG_STANDALONE_NVRAM: 1
+    CONFIG_HAL_UART_RINGBUF_LEN: 2048
+    CONFIG_DYN_TASK_STACK_SIZE: 256
+    CONFIG_INIT_TASK_STACK_SIZE: 8192
+    CONFIG_KERNEL_TIMER_MSG_NUM: 40
+    CONFIG_KERNEL_TIMER_STACK_SIZE: 4096
+    CONFIG_IDLE_TASK_STACK_SIZE: 4096
+
+  # KV Confing
+    CONFIG_KV_SMART: 1
+    CONFIG_KV_ENABLE_CACHE: 1
+
+  # Breeze Config
+    BLE_4_2: 1
+    EN_COMBO_NET: 1
+    EN_LONG_MTU: 1
+
+  # BLE HOST Config
+    CONFIG_BT_HCI_ACL_FLOW_CONTROL: 1
+    CONFIG_BT_AUTO_DATA_LEN_UPDATE: 1
+    #CONFIG_BT_EXT_ADV: 1
+    #CONFIG_BT_EXT_ADV_MAX_ADV_SET: 1
+
+  # CLI Config
+    CONFIG_CLI: 1
+    CLI_CONFIG_MAX_ONCECMD_NUM: 13
+
+  # Fota Config
+    CONFIG_FOTA_DATA_IN_RAM: 0
+    CONFIG_FOTA_USE_HTTPC: 1
+    CONFIG_OTA_GATEWAY_IMG_SIZE: 819200
+
+  # Chip Config
+    #CONFIG_HAL_UART_DISABLED: 1
+
+  # OTA Config
+    CONFIG_SUPPORT_YMODEM: 1
+
+  # Lwip Config
+    CONFIG_TCPIP: 1
+
+  # Mbedtls Config
+    MBEDTLS_SSL_MAX_CONTENT_LEN: 16384
+    CONFIG_USING_TLS: 1
+
+  # Duktape Config
+    # CONFIG_XIP: 1
+
+  # Smartliving Config
+    CONFIG_MQTT_RX_MAXLEN: 30720
+    OTA_ENABLED: 1
+    CONFIG_WIFI_PROV_BLE: 1
+    DEVICE_MODEL_GATEWAY: 1
+    DM_UNIFIED_SERVICE_POST: 1
+
+  # Security Config
+    CONFIG_KEY_MGR_KP_PROTECT: 1
+    CONFIG_KEY_MGR_NO_PUB_PARTITION: 1
+    CONFIG_MTB_NAME_KP: fcds
+    CONFIG_SEC_CRYPTO_AES_SW: 1
+    CONFIG_SEC_CRYPTO_SHA_SW: 1
+
+  # Gateway Config
+    CONFIG_SDK_VERSION: ble_mesh_gateway_1.0.0
+    CONFIG_GATEWAY_SUBDEV_OFFLINE_CHECK: 1
+    CONFIG_GW_MAX_DEVICES_META_NUM: 256
+    CONFIG_ERS_CONNECTIVITY: 0
+
+  # TSL Model Config
+    CONFIG_TSL_DEVICER_MESH: 0
+    CONFIG_SAVE_JS_TO_RAM: 0
+
+  # OCC Auth Config
+    CONFIG_TB_KP: 0
+    CONFIG_OCC_AUTH: 0
+
+  # Solution Config
+    CONFIG_GW_AT_EN: 0
+    CONFIG_GW_FOTA_EN: 1
+    CONFIG_GW_SMARTLIVING_SUPPORT: 1
+    CONFIG_GW_NETWORK_SUPPORT: 1
+
+  # APP Version Config
+    CONFIG_APP_VERSION: v1.0.0
+
+  # Debug
+    CONFIG_DEBUG: 1
+    #CONFIG_BTSOOP: 1
+    #CONFIG_BTSOOP_FILE_SIZE: 8192
+    #CONFIG_BTSOOP_MBEDTLS_BASE64_FORMATE: 1
+    MESH_DEBUG_RX: 0
+    MESH_DEBUG_TX: 0
+    #CONFIG_CLI_CMD_DEBUG: 1
+    #CONFIG_AT_MESH_TRS_TEST: 1
+    CONFIG_BT_HCI_TX_STACK_SIZE: 4096
+    MESH_DEBUG_PROV: 1
+    CONFIG_BT_DEBUG: 1
+    CONFIG_NSP_VOICE: 0
+    DEBUG_ULOG_FLUSH: 1
+#board config
+    CONFIG_BOARD_DISPLAY: 1
+    CONFIG_BOARD_VO_OSD: 1
+    CONFIG_BOARD_BT: 1
+    CONFIG_BOARD_AUDIO: 1
+    CONFIG_BOARD_ADC: 1
+    CONFIG_BOARD_BUTTON: 1
+    CONFIG_BOARD_WIFI: 1
+#av decode
+    CONFIG_DECODER_PVMP3: 1
+    CONFIG_DECODER_ALAW: 1
+    CONFIG_DECODER_AMRNB: 1
+    CONFIG_DECODER_AMRWB: 1
+    CONFIG_DECODER_OPUS: 1
+    CONFIG_DECODER_MULAW: 1
+    CONFIG_DECODER_SPEEX: 1
+    CONFIG_DECODER_ADPCM_MS: 1
+    CONFIG_DECODER_FLAC: 1
+#alg config
+    CONFIG_AUI_CLOUD: 1
+
+## 第六部分：安装信息
+# install:
+#   - dest: include/                       # 安装的目的路径 dest是相当路径，通常是相对于YoC SDK 安装目录
+#     source:                              # 安装源列表
+#      - src/*.h                           # 支持通配符，相对路径
+
+## 第七部分：导出部分
+# export:
+#   - dest: "<SOLUTION_PATH>/generated/data" # 安装的目的路径 dest是相当路径
+#     source:                                # 安装源列表
+#       - "bootimgs/boot"
+#       - "bootimgs/tee"
+#       - "bootimgs/mtb"
+#       - "configs/config.yaml"

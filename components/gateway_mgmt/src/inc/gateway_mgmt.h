@@ -198,7 +198,8 @@ typedef struct {
     gw_subdev_t      subdev;
     gw_subdev_type_t dev_type;
     gw_subdev_info_t info;
-    const char *     name;
+    // const char *     name;
+    char             name[GW_DEV_NAME_LEN_MAX];
     uint32_t         version;
     uint8_t          support_ota_protocol;
     uint16_t         period;

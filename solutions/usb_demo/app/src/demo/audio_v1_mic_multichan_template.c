@@ -194,9 +194,9 @@ void audio_test()
 {
     while (1) {
         if (tx_flag) {
-            memset(write_buffer, 'a', 2048);
+            memset(write_buffer, 'a', AUDIO_IN_PACKET);
             ep_tx_busy_flag = true;
-            usbd_ep_start_write(AUDIO_IN_EP, write_buffer, 2048);
+            usbd_ep_start_write(AUDIO_IN_EP, write_buffer, AUDIO_IN_PACKET);
             while (ep_tx_busy_flag) {
             }
         }

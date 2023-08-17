@@ -8,30 +8,28 @@
 #include <string.h>
 #include <aos/aos.h>
 #include <aos/cli.h>
-#include <aos/hal/adc.h>
-#include <drv/pin.h>
+#include <devices/adc.h>
+#include <devices/devicelist.h>
 
 static void adc_app_out(uint8_t port)
 {
     uint32_t  val[64];
-    adc_dev_t adc_dev;
+    rvm_dev_t *adc_dev;
     int       ret;
     int       avr_count = 2;
 
     printf("adc_app_out on port %d start\r\n", port);
 
-    adc_dev.port = port;
-
-    ret = hal_adc_init(&adc_dev);
-
-    if (ret != 0) {
+    rvm_adc_drv_register(0);
+    adc_dev = rvm_hal_adc_open("adc0");
+    if (adc_dev == 0) {
         printf("hal_adc_init error\n");
         goto out;
     }
 
     memset(val, 0, sizeof(val));
     //ret = hal_adc_value_get(&adc_dev, val, 1000);
-    ret = hal_adc_value_multiple_get(&adc_dev, val, avr_count, 1000);
+    ret = rvm_hal_adc_read_multiple(adc_dev, port, val, avr_count, 1000);
     if (ret == 0) {
         uint32_t avr_val = 0;
         for (int i = 0; i < avr_count; i++) {
@@ -39,14 +37,14 @@ static void adc_app_out(uint8_t port)
             avr_val += val[i];
         }
         avr_val /= avr_count;
-        printf("adc port %d value %d\r\n", adc_dev.port, avr_val);
+        printf("adc port %d value %d\r\n", port, avr_val);
     } else {
         printf("%s: get value error, ret %d\r\n", __func__, ret);
         goto out;
     }
 
 out:
-    hal_adc_finalize(&adc_dev);
+    rvm_hal_adc_close(adc_dev);
     printf("\r\n");
 }
 

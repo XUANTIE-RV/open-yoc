@@ -6,26 +6,24 @@
 #include <string.h>
 
 #include <aos/cli.h>
-#include <aos/hal/gpio.h>
+#include <devices/gpiopin.h>
+#include <devices/devicelist.h>
 
 int32_t gpio_output_set(int port, int val)
 {
     int32_t    ret  = -1;
-    gpio_dev_t gpio = { 0, OUTPUT_PUSH_PULL, NULL };
-
-    gpio.port = port;
-
-    ret = hal_gpio_init(&gpio);
-
-    if (ret == 0) {
+    rvm_dev_t *gpio_pin;
+    rvm_gpio_pin_drv_register(port);
+    gpio_pin = rvm_hal_gpio_pin_open_by_pin_name("gpio_pin", port);
+    if (gpio_pin) {
+        rvm_hal_gpio_pin_set_mode(gpio_pin, RVM_GPIO_MODE_PUSH_PULL);
         if (val) {
-            ret = hal_gpio_output_high(&gpio);
+            ret = rvm_hal_gpio_pin_write(gpio_pin, RVM_GPIO_PIN_HIGH);
         } else {
-            ret = hal_gpio_output_low(&gpio);
+            ret = rvm_hal_gpio_pin_write(gpio_pin, RVM_GPIO_PIN_LOW);
         }
+        rvm_hal_gpio_pin_close(gpio_pin);
     }
-
-    hal_gpio_finalize(&gpio);
 
     return ret;
 }
@@ -33,17 +31,15 @@ int32_t gpio_output_set(int port, int val)
 int32_t gpio_input_get(int port)
 {
     int32_t    ret   = -1;
-    gpio_dev_t gpio  = { 0, INPUT_PULL_DOWN, NULL };
     uint32_t   value = 0;
-
-    gpio.port = port;
-
-    ret = hal_gpio_init(&gpio);
-    if (ret == 0) {
-        ret = hal_gpio_input_get(&gpio, &value);
+    rvm_dev_t *gpio_pin;
+    rvm_gpio_pin_drv_register(port);
+    gpio_pin = rvm_hal_gpio_pin_open_by_pin_name("gpio_pin", port);
+    if (gpio_pin) {
+        rvm_hal_gpio_pin_set_mode(gpio_pin, RVM_GPIO_MODE_PULLDOWN);
+        ret = rvm_hal_gpio_pin_read(gpio_pin, (rvm_hal_gpio_pin_data_t *)&value);
+        rvm_hal_gpio_pin_close(gpio_pin);
     }
-
-    hal_gpio_finalize(&gpio);
 
     return (ret == 0) ? (int32_t)value : -1;
 }

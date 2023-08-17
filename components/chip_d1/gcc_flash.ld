@@ -202,7 +202,7 @@ SECTIONS
   __end = . ;
   end = . ;
  } > REGION_BSS 
- ._user_heap : {
+ ._user_heap (NOLOAD) : {
   . = ALIGN(0x8) ;
   KEEP(*(.stack*))
   . = ALIGN(0x8) ;

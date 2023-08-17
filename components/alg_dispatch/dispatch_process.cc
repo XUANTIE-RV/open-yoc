@@ -4,7 +4,6 @@
 
 #include <memory>
 
-#include <aos/kv.h>
 #include <cxvision/cxvision.h>
 #include <ulog/ulog.h>
 #include <aos/ringbuffer.h>

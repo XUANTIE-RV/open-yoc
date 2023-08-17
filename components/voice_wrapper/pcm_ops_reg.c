@@ -1,7 +1,10 @@
 /*
  * Copyright (C) 2019-2022 Alibaba Group Holding Limited
  */
-
+#include <aos/kernel.h>
+#include <aos/list.h>
+#include <ulog/ulog.h>
+#include <aos/debug.h>
 #include "yoc/pcm_input_port.h"
 
 #ifndef CONFIG_PCM_INPUT_TASK_SIZE
@@ -21,6 +24,7 @@ typedef struct {
     slist_t          mic_cb_head;
     aos_mutex_t      cb_mutex;
     aos_task_t       pcm_task;
+    int              cb_enable;
 } _pcm_input_ctx;
 
 _pcm_input_ctx g_pcm_ctx = { 0x0 };
@@ -55,12 +59,14 @@ static void _pcm_data_input(void *arg)
             goto exit;
         }
 
-        aos_mutex_lock(&g_pcm_ctx.cb_mutex, AOS_WAIT_FOREVER);
-        slist_for_each_entry_safe(&g_pcm_ctx.mic_cb_head, tmp, pcm_iter_temp, _pcm_cb, _next)
-        {
-            pcm_iter_temp->cb(capture_buffer, rlen, pcm_iter_temp->arg);
+        if (g_pcm_ctx.cb_enable) {
+            aos_mutex_lock(&g_pcm_ctx.cb_mutex, AOS_WAIT_FOREVER);
+            slist_for_each_entry_safe(&g_pcm_ctx.mic_cb_head, tmp, pcm_iter_temp, _pcm_cb, _next)
+            {
+                pcm_iter_temp->cb(capture_buffer, rlen, pcm_iter_temp->arg);
+            }
+            aos_mutex_unlock(&g_pcm_ctx.cb_mutex);
         }
-        aos_mutex_unlock(&g_pcm_ctx.cb_mutex);
     }
 
 exit:
@@ -208,6 +214,7 @@ int pcm_input_init(int bit_format, int sample_rate, int frame_ms, int chn_num)
     }
 
     g_pcm_ctx.input_init_flag = 1;
+    g_pcm_ctx.cb_enable = 1;
 
     return capture_byte;
 }
@@ -246,4 +253,9 @@ int pcm_input_cb_unregister(mic_data_cb cb)
         return _pcm_cb_unregister(cb);
     }
     return 0;
+}
+
+void pcm_acquire_set_enable(int en)
+{
+    g_pcm_ctx.cb_enable = en;
 }

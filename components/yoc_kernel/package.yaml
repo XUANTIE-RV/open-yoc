@@ -1,7 +1,7 @@
 
 ## 第一部分： 基础信息
 name: yoc_kernel                                    # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
-version: v7.7.0                                    # <必选项> 组件版本号
+version: v7.8.0                                    # <必选项> 组件版本号
 description: The most basic components for YoC      # <必选项> 建议至少20字以上
 type: common                                        # <必选项> 组件类型，为：solution, chip, board, common, sdk
 
@@ -12,17 +12,16 @@ type: common                                        # <必选项> 组件类型�
 #   - minilibc: v7.2.0
 #   - aos: >=v7.2.0
 depends:
-  - rhino: v7.7.0
-  - rhino_arch: v7.7.0
-  - rhino_pwrmgmt: v7.7.0
-  - aos: v7.7.0
-  - cli: v7.7.0
-  - kv: v7.7.0
-  - ulog: v7.7.0
-  - devices: v7.7.0
-  - drivers: v7.7.0
-  - csi: v7.7.0
-  - debug: v7.7.0
-  - aoshal: v7.7.0
-  - uservice: v7.7.0
-  - partition: v7.7.0
+  - rhino: v7.8.0
+  - rhino_arch: v7.8.0
+  - rhino_pwrmgmt: v7.8.0
+  - aos: v7.8.0
+  - cli: v7.8.0
+  - kv: v7.8.0
+  - ulog: v7.8.0
+  - devices: v7.8.0
+  - drivers: v7.8.0
+  - csi: v7.8.0
+  - debug: v7.8.0
+  - uservice: v7.8.0
+  - partition: v7.8.0

@@ -97,7 +97,7 @@ void aos_debug_total_cpu_usage_show(void)
 }
 #endif
 
-void aos_debug_fatal_error(kstat_t err, char *file, int32_t line)
+void aos_debug_fatal_error(int err, char *file, int32_t line)
 {
     debug_fatal_error(err, file, line);
 }

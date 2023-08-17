@@ -3,7 +3,7 @@
 #include <aos/kernel.h>
 #include <cli_console.h>
 #include <aos/console_uart.h>
-#include <aos/hal/uart.h>
+#include <devices/uart.h>
 
 int32_t g_cli_direct_read = 0;
 
@@ -37,8 +37,7 @@ int uart_console_write(const void *buf, size_t len, void *privata_data)
         return 0;
     }
 
-    hal_uart_send(console_get_uart(), (void *)buf, len, AOS_WAIT_FOREVER);
-
+    rvm_hal_uart_send(console_get_uart(), buf, len, AOS_WAIT_FOREVER);
     return len;
 }
 
@@ -59,7 +58,11 @@ int uart_console_read(void *buf, size_t len, void *privata_data)
     }
 
     if ( g_cli_direct_read == 0 ) {
-        ret = hal_uart_recv_II(console_get_uart(), inbuf, 1, &recv_size, HAL_WAIT_FOREVER);
+        ret = rvm_hal_uart_recv(console_get_uart(), inbuf, 1, AOS_WAIT_FOREVER);
+        if (ret == 1) {
+            recv_size = 1;
+            ret = 0;
+        }
         if ((ret == 0) && (recv_size == 1)) {
             return recv_size;
         } else {

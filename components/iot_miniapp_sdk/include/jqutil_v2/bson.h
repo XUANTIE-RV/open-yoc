@@ -83,7 +83,9 @@ public:
     // Types
     enum Type {
         NUL,
-        NUMBER,
+        // NUMBER,
+        DOUBLE,
+        INT,
         BOOL,
         STRING,
         ARRAY,
@@ -98,8 +100,8 @@ public:
 
     // Constructors for the various types of JSON value.
     Bson();                          // NUL
-    Bson(double value);              // NUMBER
-    Bson(int value);                 // NUMBER
+    Bson(double value);              // NUMBER DOUBLE
+    Bson(int value);                 // NUMBER INT
     Bson(bool value);                // BOOL
     Bson(const std::string& value);  // STRING
     Bson(const char* value);         // STRING
@@ -145,7 +147,15 @@ public:
     }
     bool is_number() const
     {
-        return type() == NUMBER;
+        return type() == DOUBLE || type() == INT;
+    }
+    bool is_double() const
+    {
+        return type() == DOUBLE;
+    }
+    bool is_int() const
+    {
+        return type() == INT;
     }
     bool is_bool() const
     {
@@ -172,6 +182,7 @@ public:
     // distinguish between integer and non-integer numbers - number_value() and int_value()
     // can both be applied to a NUMBER-typed object.
     double number_value() const;
+    double double_value() const;
     int int_value() const;
 
     // Return the enclosed value if this is a boolean, false otherwise.
@@ -272,6 +283,7 @@ protected:
     virtual bool less(const BsonValue* other) const = 0;
     virtual void dump(std::string& out) const = 0;
     virtual double number_value() const;
+    virtual double double_value() const;
     virtual int int_value() const;
     virtual bool bool_value() const;
     virtual const std::string& string_value() const;

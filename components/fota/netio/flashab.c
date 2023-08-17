@@ -86,6 +86,7 @@ int images_info_init(uint8_t *header_buffer, download_img_info_t *dl_img_info)
         LOGD(TAG, "-------> %s", imginfo->img_name);
         LOGD(TAG, "offset:%d", imginfo->offset);
         LOGD(TAG, "size:%d", imginfo->size);
+        LOGD(TAG, "preload_size:%d", imginfo->preload_size);
         // snprintf(dl_img_info->img_info[i].partition_name, sizeof(dl_img_info->img_info[i].partition_name), "%s%s", imginfo->img_name, otaab_get_next_ab());
         strlcpy(dl_img_info->img_info[i].partition_name, imginfo->img_name, sizeof(dl_img_info->img_info[i].partition_name) - 1);
         strcat(dl_img_info->img_info[i].partition_name, otaab_get_next_ab());
@@ -110,6 +111,7 @@ int images_info_init(uint8_t *header_buffer, download_img_info_t *dl_img_info)
         dl_img_info->img_info[i].read_size = 0;
         dl_img_info->img_info[i].img_offset = imginfo->offset;
         dl_img_info->img_info[i].img_size = imginfo->size;
+        dl_img_info->img_info[i].preload_size = imginfo->preload_size;
         partition_close(hdl);
         imginfo++;
     }

@@ -61,6 +61,10 @@ int rvm_hal_rtc_set_alarm(rvm_dev_t *dev, const struct tm *time, rvm_hal_rtc_cal
 int rvm_hal_rtc_cancel_alarm(rvm_dev_t *dev);
 
 
+#if defined(AOS_COMP_DEVFS) && AOS_COMP_DEVFS
+#include <devices/vfs_rtc.h>
+#endif
+
 #ifdef __cplusplus
 }
 #endif

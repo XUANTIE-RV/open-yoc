@@ -426,7 +426,6 @@ int aos_pcm_wait(aos_pcm_t *pcm, int timeout)
 {
     aos_check_return_einval(pcm);
     unsigned int actl_flags = 0;
-    int i = 0;
 
     do {
         PCM_LOCK(pcm);
@@ -437,23 +436,16 @@ int aos_pcm_wait(aos_pcm_t *pcm, int timeout)
 
             if (ret >= (hw_params(pcm)->period_bytes) ) {
                 PCM_UNLOCK(pcm);
-                //aos_event_set(&pcm->evt, 0, AOS_EVENT_AND);
                 return 0;
             }
         }
 
-        if (i > 0) {
-            LOGW(TAG, "pcm wait(%d) size(%d)<%d,wait again\r\n", i, ret, hw_params(pcm)->period_bytes);
-        }
-        i++;
 
         aos_event_get(&pcm->evt, PCM_EVT_READ | PCM_EVT_XRUN, AOS_EVENT_OR_CLEAR, &actl_flags, timeout);
 
         PCM_UNLOCK(pcm);
 
         if (actl_flags & PCM_EVT_XRUN) {
-            LOGW(TAG,"pcm read PCM_EVT_XRUN\r\n");
-            //aos_event_set(&pcm->evt, 0, AOS_EVENT_AND);
             return -EPIPE;
         }
     } while(1);

@@ -27,6 +27,19 @@ int rvm_hal_input_set_event(rvm_dev_t *dev, rvm_hal_input_event event_cb, void *
     return ret;
 }
 
+int rvm_hal_input_unset_event(rvm_dev_t *dev, rvm_hal_input_event event_cb)
+{
+    int ret;
+
+    INPUT_VAILD(dev);
+
+    device_lock(dev);
+    ret = INPUT_DRIVER(dev)->unset_event(dev, event_cb);
+    device_unlock(dev);
+
+    return ret;
+}
+
 int rvm_hal_input_read(rvm_dev_t *dev, void *data, uint32_t size, unsigned int timeout_ms)
 {
     int ret;

@@ -4,7 +4,8 @@ CPRE :=
 VERB := --verbose
 endif
 
-BOARD_PATH:=../../boards/cv181xh_evb
+#BOARD_PATH:=../../boards/cv181xh_evb
+BOARD_PATH:=../../boards/cv181xh_huashanpi_evb
 
 .PHONY:startup
 startup: all

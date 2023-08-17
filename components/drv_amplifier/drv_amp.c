@@ -114,7 +114,8 @@ int amplifier_onoff(int onoff)
     }
 
     int amp_mode     = g_pa_priv.pa_config & 0x0000FFFF;
-    int pa_lock_open = g_pa_priv.pa_config & 0xFFFF0000;
+    int pa_lock_open = g_pa_priv.pa_config & 0x000F0000;
+    int gpio_flip    = g_pa_priv.pa_config & 0x00F00000;
 
     /* 状态相同不处理 */
     if (g_pa_priv.pa_onoff == onoff) {
@@ -127,6 +128,10 @@ int amplifier_onoff(int onoff)
     }
 
     g_pa_priv.pa_onoff = onoff;
+
+    if (gpio_flip) {
+        onoff = !onoff;
+    }
 
     return pa_ops[g_pa_priv.active_pa_id]->onoff(&g_pa_priv, onoff, amp_mode);
 }
@@ -157,14 +162,18 @@ int amplifier_reset(void)
     return pa_ops[g_pa_priv.active_pa_id]->reset(&g_pa_priv);
 }
 
-int amplifier_config(int amp_mode, int lock_on)
+int amplifier_config(int amp_mode, int lock_on, int gpio_flip)
 {
     if (amp_mode >= 0) {
         g_pa_priv.pa_config = amp_mode;
     }
 
-    if (lock_on) {
+    if (lock_on > 0) {
         g_pa_priv.pa_config |= AMP_MODE_LOCK_ON;
+    }
+
+    if (gpio_flip > 0) {
+        g_pa_priv.pa_config |= AMP_MODE_GPIO_FLIP;
     }
 
     g_pa_priv.pa_onoff = 0; /* 设置未关闭,下次开启PA重新配置 */

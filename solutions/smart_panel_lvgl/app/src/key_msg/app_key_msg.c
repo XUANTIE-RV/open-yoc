@@ -10,11 +10,12 @@
 #include <smart_audio.h>
 #include <bt/yoc_app_bt.h>
 
-#include "wifi_prov.h"
-#include "app_key_msg.h"
-#include "app_sys.h"
+#include "wifi/app_wifi.h"
+#include "sys/app_sys.h"
 #include "event_mgr/app_event.h"
 #include "bt/app_bt.h"
+
+#include "app_key_msg.h"
 
 #define TAG "keymsg"
 
@@ -46,12 +47,16 @@ static void key_msg_proc_task(void *arg)
                 smtaudio_vol_up(10);
                 break;
 
-            case KEY_MSG_VOL_DONW:
+            case KEY_MSG_VOL_DOWN:
                 smtaudio_vol_down(10);
                 break;
 
             case KEY_MSG_MUTE:
-                smtaudio_mute();
+                if (smtaudio_get_state() == SMTAUDIO_STATE_MUTE) {
+                    smtaudio_unmute();
+                } else {
+                    smtaudio_mute();
+                }
                 app_event_update(EVENT_PLAYER_CHANGE);
                 break;
 

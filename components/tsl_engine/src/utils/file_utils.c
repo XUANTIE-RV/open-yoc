@@ -113,7 +113,7 @@ int is_js_already_existed(const char *js_name)
 char *get_file_content(const char *path, size_t *osize)
 {
 #if defined (AOS_COMP_VFS) && AOS_COMP_VFS
-    struct aos_stat st;
+    aos_stat_t st;
 #else
     struct stat st;
 #endif

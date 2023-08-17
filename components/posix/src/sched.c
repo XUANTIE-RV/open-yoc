@@ -68,7 +68,7 @@ int sched_setscheduler(pid_t pid, int policy, const struct sched_param *param)
         return -1;
     }
 
-    priority = sched_priority_posix2rhino(kpolicy, param->sched_priority);
+    priority = sched_priority_posix2aos(kpolicy, param->sched_priority);
 
     ret = aos_task_sched_policy_get(&(ptcb->task), &old_policy);
     if (ret != 0) {
@@ -137,7 +137,7 @@ int sched_setparam(pid_t pid, const struct sched_param *param)
         return -1;
     }
 
-    priority = sched_priority_posix2rhino(kpolicy, param->sched_priority);
+    priority = sched_priority_posix2aos(kpolicy, param->sched_priority);
 
     /* Change the priority of the thread. */
     ret = aos_task_pri_change(&(ptcb->task), priority, &old_priority);
@@ -184,7 +184,7 @@ int sched_getparam(pid_t pid, struct sched_param *param)
     if (ret != 0) {
         return -1;
     }
-    param->sched_priority = sched_priority_rhino2posix(kpolicy, param->sched_priority);
+    param->sched_priority = sched_priority_aos2posix(kpolicy, param->sched_priority);
 
     /* Slice should be 0 if that is not RR policy. */
     ret = aos_task_time_slice_get(&(ptcb->task), (uint32_t *)&param->slice);

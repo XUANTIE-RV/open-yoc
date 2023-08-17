@@ -2,8 +2,8 @@
  * Copyright (C) 2019-2020 Alibaba Group Holding Limited
  */
 
-#ifndef HAL_FLASH_H
-#define HAL_FLASH_H
+#ifndef __FLASH_IMPL_H__
+#define __FLASH_IMPL_H__
 
 #include <stdint.h>
 

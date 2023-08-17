@@ -16,7 +16,6 @@ extern "C" {
 
 typedef struct blockdev_driver {
     driver_t drv;
-    aos_mutex_t dev_mtx;
     int (*read_blks)(rvm_dev_t *dev, void *buffer, uint32_t start_block, uint32_t block_cnt);
     int (*write_blks)(rvm_dev_t *dev, void *buffer, uint32_t start_block, uint32_t block_cnt);
     int (*erase_blks)(rvm_dev_t *dev, uint32_t start_block, uint32_t block_cnt);

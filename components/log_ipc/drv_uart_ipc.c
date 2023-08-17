@@ -4,12 +4,12 @@
 #if defined(CONFIG_LOG_IPC_CP) && CONFIG_LOG_IPC_CP
 #include <stdio.h>
 #include <aos/aos.h>
-#include "hal/uart_impl.h"
+#include "devices/impl/uart_impl.h"
 
 #define TAG "uart_drv_ipc"
 
-#define EVENT_WRITE 0x0F0F0000
-#define EVENT_READ  0x00000F0F
+#define EVENT_WRITE 0x000000F0
+#define EVENT_READ  0x0000000F
 
 typedef struct {
     rvm_dev_t      device;
@@ -74,7 +74,7 @@ static int ipc_uart_csky_set_buffer_size(rvm_dev_t *dev, uint32_t size)
     return 0;
 }
 
-static int ipc_uart_csky_send(rvm_dev_t *dev, const void *data, uint32_t size)
+static int ipc_uart_csky_send(rvm_dev_t *dev, const void *data, uint32_t size, uint32_t timeout_ms)
 {
     ipc_uart(dev)->tx_write((const uint8_t *)data, size);
     return 0;

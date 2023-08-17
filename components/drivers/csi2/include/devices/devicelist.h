@@ -73,6 +73,41 @@ extern void rvm_gpio_pin_drv_register(int pin_name);
  */
 extern void rvm_clk_drv_register(void);
 
+/**
+ * @brief  register driver of timer
+ * @param  [in] idx : index of the timer
+ * @return None
+ */
+extern void rvm_timer_drv_register(int idx);
+
+/**
+ * @brief  register driver of i2s
+ * @param  [in] idx : index of the i2s
+ * @return None
+ */
+extern void rvm_i2s_drv_register(int idx);
+
+/**
+ * @brief  register driver of pwm
+ * @param  [in] idx : index of the pwm
+ * @return None
+ */
+extern void rvm_pwm_drv_register(int idx);
+
+/**
+ * @brief  register driver of spi
+ * @param  [in] idx : index of the spi
+ * @return None
+ */
+extern void rvm_spi_drv_register(int idx);
+
+/**
+ * @brief  register driver of qspi
+ * @param  [in] idx : index of the qspi
+ * @return None
+ */
+extern void rvm_qspi_drv_register(int idx);
+
 #if defined(CONFIG_COMP_SDMMC)
 #include <devices/blockdev.h>
 /**

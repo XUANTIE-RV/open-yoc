@@ -30,9 +30,7 @@
 #ifndef _KERNEL_OS_OS_THREAD_H_
 #define _KERNEL_OS_OS_THREAD_H_
 
-#if defined(CONFIG_KERNEL_FREERTOS)
-#include "FreeRTOS/_os_thread.h"
-#elif defined(CONFIG_RTTKERNEL)
+#if defined(CONFIG_RTTKERNEL)
 #include "RT-Thread/_os_thread.h"
 #elif defined(CONFIG_AOS)
 #include "aos/_os_thread.h"

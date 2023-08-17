@@ -71,6 +71,7 @@
 #include "FreeRTOS.h"
 #include "task.h"
 
+extern void aos_task_exit(int code);
 extern void vPortStartTask(void);
 
 /* Used to keep track of the number of nested calls to taskENTER_CRITICAL().  This
@@ -81,7 +82,11 @@ portLONG ulCriticalNesting = 0x9999UL;
  * and implement task switch after exit critical area */
 portLONG pendsvflag = 0;
 
-StackType_t *pxPortInitialiseStack( StackType_t * pxTopOfStack, TaskFunction_t pxCode, void *pvParameters )
+#if( portHAS_STACK_OVERFLOW_CHECKING == 1 )
+StackType_t *pxPortInitialiseStack( StackType_t *pxTopOfStack, StackType_t *pxEndOfStack, TaskFunction_t pxCode, void *pvParameters )
+#else
+StackType_t *pxPortInitialiseStack( StackType_t *pxTopOfStack, TaskFunction_t pxCode, void *pvParameters )
+#endif
 {
     StackType_t *stk  = NULL;
     register int *gp asm("x3");
@@ -152,8 +157,15 @@ StackType_t *pxPortInitialiseStack( StackType_t * pxTopOfStack, TaskFunction_t p
     *(--stk)  = (uint32_t)0x05050505L;       /* X5          */
     *(--stk)  = (uint32_t)0x04040404L;       /* X4          */
     *(--stk)  = (uint32_t)gp;                /* X3          */
-    *(--stk)  = (uint32_t)vTaskExit;         /* X1          */
-    
+    *(--stk)  = (uint32_t)aos_task_exit;     /* X1          */
+
+#if( portHAS_STACK_OVERFLOW_CHECKING == 1 )
+    if (stk <= pxEndOfStack) {
+        printk("pxTopOfStack: %p, pxEndOfStack: %p, stk: %p\r\n", pxTopOfStack, pxEndOfStack, stk);
+        configASSERT(pdFALSE);
+        return NULL;
+    }
+#endif
     return stk;
 }
 
@@ -236,6 +248,8 @@ void vPortYieldHandler( void )
 
 __attribute__((weak)) void vApplicationStackOverflowHook( xTaskHandle *pxTask, signed portCHAR *pcTaskName )
 {
+    void *pxTopOfStack = (void *)(*(unsigned long *)pxTask);
+    printk("!!! task [%s] statck overflow. pxTop: %p\r\n", pcTaskName, pxTopOfStack);
     for(;;);
 }
 

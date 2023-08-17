@@ -63,6 +63,7 @@ typedef enum _Cmdbuf_Head_Magic {
   CMDBUF_HDR_MAGIC_1880v2   = 0xA5,
   CMDBUF_HDR_MAGIC_1822     = 0xA6,
   CMDBUF_HDR_MAGIC_MARS     = 0xA7,
+  CMDBUF_HDR_MAGIC_180X     = 0xA8,
 } Cmdbuf_Head_Magic;
 
 #define BM_CMB_HDR_FLAG_NEURON    (0x1)

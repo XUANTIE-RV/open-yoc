@@ -21,4 +21,6 @@
 void board_yoc_init(void);
 void app_cli_init(void);
 
+#define MAX_DEVICES_META_NUM CONFIG_GW_MAX_DEVICES_META_NUM
+
 #endif

@@ -1,7 +1,7 @@
 
 ## 第一部分： 基础信息
 name: cxvision                                      # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
-version: v7.7.0                                    # <必选项> 组件版本号
+version: v7.8.0                                    # <必选项> 组件版本号
 description: ChiXiao Vision Platform                # <必选项> 建议至少20字以上
 type: common                                        # <必选项> 组件类型，为：solution, chip, board, common, sdk
 
@@ -38,11 +38,12 @@ depends:                                 # <可选项> 该组件依赖其他的�
 #   libpath:                               # 指定静态库所在的路径（相对于该组件路径）
 #     - libs                               #   -Llibs
 build_config:
-  cflag: '-Wno-nonnull-compare'
+  cflag: '-Wno-nonnull-compare -Wno-unused-function -Wno-unused-variable'
+  cxxflag: '-Wno-nonnull-compare -Wno-unused-function -Wno-unused-variable'
   include:
     - .
   libs:
-    - cxvision_v2.0
+    - cxvision_prebuild
   libpath:
     - libs/<chip>/<cpu>
 # source_file:                             # <可选项> 指定参与编译的源代码文件，支持通配符，采用相对路径

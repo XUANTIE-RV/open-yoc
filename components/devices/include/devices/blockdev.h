@@ -53,6 +53,11 @@ int rvm_hal_blockdev_write_blks(rvm_dev_t *dev, void *buffer, uint32_t start_blo
 int rvm_hal_blockdev_erase_blks(rvm_dev_t *dev, uint32_t start_block, uint32_t block_cnt);
 int rvm_hal_blockdev_get_info(rvm_dev_t *dev, rvm_hal_blockdev_info_t *info);
 
+
+#if defined(AOS_COMP_DEVFS) && AOS_COMP_DEVFS
+#include <devices/vfs_blockdev.h>
+#endif
+
 #ifdef __cplusplus
 }
 #endif

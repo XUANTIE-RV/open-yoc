@@ -1,28 +1,16 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
-INCLUDE(../../cmake/toolchain.cmake)
-
-# include
+# Build a test common function lib
 INCLUDE_DIRECTORIES(./include)
-INCLUDE_DIRECTORIES(../aos_port/include)
-INCLUDE_DIRECTORIES(../ulog/include)
 
-ADD_DEFINITIONS(
-	-DCONFIG_USERVICE_EVENT_TASK_STACK_SIZE=2048
+set(mpegts_srcs 
+    src/bytes_io.cpp
+    src/ts_demuxer.cpp
+    src/ts_format.cpp
+    src/ts_frame.cpp
+    src/ts_misc.c
+    src/ts_muxer.cpp
 )
+add_library(mpegts STATIC ${mpegts_srcs})
 
-SET(LIBSOURCE 
-	src/ts_misc.c
-	src/bytes_io.cpp
-	src/ts_format.cpp
-	src/ts_frame.cpp
-	src/ts_packet.cpp
-	src/ts_muxer.cpp
-	src/ts_demuxer.cpp
-)
-
-ADD_LIBRARY(mpegts ${LIBSOURCE})
-
-INSTALL(TARGETS mpegts DESTINATION ${INSTALL_PATH}/lib)
-INSTALL(DIRECTORY ./include DESTINATION ${INSTALL_PATH}/include)
-
+# Config all parameters for test cases below
+#set(linkLibs tmedia_core)
 

@@ -1,6 +1,6 @@
 ## 第一部分： 基础信息
 name: gprs_demo
-version: v7.7.0
+version: v7.8.0
 description: gprs demo
 type: solution
 ## 第二部分：依赖信息
@@ -10,16 +10,16 @@ type: solution
 #   - minilibc: v7.2.0
 #   - aos: >=v7.2.0
 sdk_chip:
-  - sdk_chip_cv181xh: v7.7.0
+  - sdk_chip_cv181xh_bga: v7.8.0
 
 mkflash_script: mkflash.sh
 
 depends:
-  - sdk_chip_cv181xh: v7.7.0
-  - littlefs: v7.7.0
-  - cherryusb: v7.7.0
-  - drv_usbh_class: v7.7.0
-  - ulog: v7.7.0
+  - sdk_chip_cv181xh_bga: v7.8.0
+  - littlefs: v7.8.0
+  - cherryusb: v7.8.0
+  - drv_usbh_class: v7.8.0
+  - ulog: v7.8.0
 ## 第三部分：板级信息
 # hw_info:                                 # 对 solution、board、chip 三个字段的改进，统称为 hw_info 字段
 #   cpu_id: cpu0
@@ -118,3 +118,4 @@ def_config:
   ULOG_CONFIG_ASYNC_BUF_SIZE: 8192
   ULOG_CONFIG_LOG_SIZE: 512
   ULOG_CONFIG_SYNC_LOG_DETAILS: 1
+  CONFIG_RNDIS_DEVICE_ETH: 1

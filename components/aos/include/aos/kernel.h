@@ -21,6 +21,7 @@ extern "C" {
 #define AOS_DEFAULT_APP_PRI 32
 #endif
 
+/// AOS优先级数值越大，优先级等级越小
 #ifndef AOS_MAX_APP_PRI
 #define AOS_MAX_APP_PRI     60
 #endif
@@ -30,15 +31,13 @@ extern "C" {
 #define AOS_EVENT_OR               0x00u
 #define AOS_EVENT_OR_CLEAR         0x01u
 
-/** @addtogroup aos sched
- *  Task schedule.
- *
- *  @{
+/*
+ * Scheduling policies
  */
-#define AOS_KSCHED_FIFO          0u
-#define AOS_KSCHED_RR            1u
-#define AOS_KSCHED_CFS           2u
-#define AOS_KSCHED_OTHER         3u /* no meanings, just for compile ok sometimes */
+#define AOS_KSCHED_OTHER        0u
+#define AOS_KSCHED_FIFO         1u
+#define AOS_KSCHED_RR           2u
+#define AOS_KSCHED_CFS          0u /* Alias to SCHED_OTHER */
 
 /**
  * @addtogroup aos_kernel_task
@@ -81,32 +80,6 @@ typedef unsigned int aos_task_key_t;
 /* Define the data type for function return */
 typedef int32_t aos_status_t; /**< AOS返回值状态类型 */
 
-#define MS2TICK(ms) krhino_ms_to_ticks(ms)
-int aos_irq_context(void);
-
-int aos_is_sched_disable(void);
-
-int aos_is_irq_disable(void);
-
-/**
- * Reboot AliOS.
- */
-void aos_reboot(void);
-
-/**
- * Get HZ(ticks per second).
- *
- * @return  RHINO_CONFIG_TICKS_PER_SECOND.
- */
-int aos_get_hz(void);
-
-/**
- * Get kernel version.
- *
- * @return  SYSINFO_KERNEL_VERSION.
- */
-const char *aos_version_get(void);
-
 /**
  * 创建任务，该接口为创建任务分配TCB（任务控制块）并且根据指定的执行体、任务名称、栈大小来初始化对应成员.
  * 该接口任务栈是由内核分配的。
@@ -125,7 +98,7 @@ const char *aos_version_get(void);
  * @param[in]  arg         任务执行体入口函数的参数。
  * @param[in]  stack_buf   栈空间地址，如果地址为空则内核根据stack_size为任务分配栈空间.
  * @param[in]  stack_size  栈大小（字节为单位）。
- * @param[in]  prio        任务优先级，最大指由配置参数RHINO_CONFIG_USER_PRI_MAX(默认为60)决定.
+ * @param[in]  prio        任务优先级，最大指由配置参数AOS_MAX_APP_PRI(默认为60)决定.
  * @param[in]  options     任务创建选项,当前支持选项：\n
  *                         @ref AOS_TASK_AUTORUN 任务创建后自动加入就绪队列，可被调度器调度执行. \n
  *
@@ -218,7 +191,7 @@ int aos_task_new(const char *name, void (*fn)(void *), void *arg, int stack_size
  * @param[in]  arg         argument of the function..
  * @param[in]  stack_buf   stack-buf: if stack_buf==NULL, provided by kernel.
  * @param[in]  stack_size  stack-size in bytes.
- * @param[in]  prio        priority value, the max is RHINO_CONFIG_USER_PRI_MAX(default 60).
+ * @param[in]  prio        priority value, the max is AOS_MAX_APP_PRI(default 60).
  *
  * @return  0: success.
  */
@@ -231,6 +204,9 @@ int aos_task_new_ext(aos_task_t *task, const char *name, void (*fn)(void *), voi
  */
 void aos_task_show_info(void);
 
+/**
+ * Yield a task.
+ */
 void aos_task_yield();
 
 /**
@@ -240,22 +216,32 @@ void aos_task_yield();
  */
 void aos_task_exit(int code);
 
-
-void aos_task_wdt_attach(void (*will)(void *), void *args);
-void aos_task_wdt_detach();
-void aos_task_wdt_feed(int time);
-
+/**
+ * Get the current task handle
+ *
+ * @return  the task handle
+ */
 aos_task_t aos_task_self();
+
+/**
+ * Find the task handle with task name
+ *
+ * @return  the task handle
+ */
 aos_task_t aos_task_find(char *name);
 
 /**
- * Get task name.
+ * Get current task name
  *
- * @return  the name of the task
+ * @return  the name of the current task
  */
 const char *aos_task_name(void);
 
-
+/**
+ * Get task name with task handle
+ *
+ * @return  the name of the task
+ */
 const char *aos_task_get_name(aos_task_t *task);
 
 /**
@@ -276,7 +262,6 @@ void aos_task_key_delete(aos_task_key_t key);
 
 /**
  * Associate a task-specific value with a key.
- * Support this functiong need set RHINO_CONFIG_TASK_INFO 1 at k_config.h
  *
  * @param[in]  key  key object.
  * @param[in]  vp   pointer of a task-specific value.
@@ -287,11 +272,113 @@ int aos_task_setspecific(aos_task_key_t key, void *vp);
 
 /**
  * Get the value currently bound to the specified key.
- * Support this functiong need set RHINO_CONFIG_TASK_INFO 1 at k_config.h
  *
  * @param[in]  key  key object.
  */
 void *aos_task_getspecific(aos_task_key_t key);
+
+/**
+ * Get a task pthread control block.
+ *
+ * @param[in]   task        task handle
+ * @param[out]  ptcb        the returned ptcb handle
+ *
+ * @return  0:  success     otherwise failed
+ */
+aos_status_t aos_task_ptcb_get(aos_task_t *task, void **ptcb);
+
+/**
+ * Set a task pthread control block.
+ *
+ * @param[in]   task        task handle
+ * @param[in]   ptcb        the ptcb handle
+ *
+ * @return  0:  success     otherwise failed
+ */
+aos_status_t aos_task_ptcb_set(aos_task_t *task, void *ptcb);
+
+/**
+ * Change a task's schedule priority
+ *
+ * @param[in]   task        task handle
+ * @param[in]   pri         the new task priority
+ * @param[out]  old_pri     the returned old task priority
+ *
+ * @return  0:  success     otherwise failed
+ */
+aos_status_t aos_task_pri_change(aos_task_t *task, uint8_t pri, uint8_t *old_pri);
+
+/**
+ * Get a task's schedule priority
+ *
+ * @param[in]   task        task handle
+ * @param[out]  priority    the returned old task priority
+ *
+ * @return  0:  success     otherwise failed
+ */
+aos_status_t aos_task_pri_get(aos_task_t *task, uint8_t *priority);
+
+/**
+ * Set a task's schedule policy
+ *
+ * @param[in]   task        task handle
+ * @param[in]   policy      the new task's policy
+ * @param[in]   pri         the new task's priority
+ *
+ * @return  0:  success     otherwise failed
+ */
+aos_status_t aos_task_sched_policy_set(aos_task_t *task, uint8_t policy, uint8_t pri);
+
+/**
+ * Get a task's schedule policy
+ *
+ * @param[in]   task        task handle
+ * @param[out]  policy      the returned task's policy
+ *
+ * @return  0:  success     otherwise failed
+ */
+aos_status_t aos_task_sched_policy_get(aos_task_t *task, uint8_t *policy);
+
+/**
+ * Get a task's default schedule policy
+ *
+ * @return  AOS_KSCHED_CFS or AOS_KSCHED_RR
+ */
+uint32_t aos_task_sched_policy_get_default(void);
+
+/**
+ * Msleep.
+ *
+ * @param[in]  ms  sleep time in milliseconds.
+ */
+void aos_msleep(int ms);
+
+/**
+ * aos task software watchdog
+ */
+void aos_task_wdt_attach(void (*will)(void *), void *args);
+void aos_task_wdt_detach();
+void aos_task_wdt_feed(int time);
+
+/**
+ * Set a task's schedule time slice
+ *
+ * @param[in]   task        task handle
+ * @param[in]   slice       the new schedule time slice, time slice in AOS_KSCHED_RR mode (ms)
+ *
+ * @return  0:  success     otherwise failed
+ */
+aos_status_t aos_task_time_slice_set(aos_task_t *task, uint32_t slice);
+
+/**
+ * Get a task's schedule time slice
+ *
+ * @param[in]   task        task handle
+ * @param[out]  slice       the returned task's time slice, time slice in AOS_KSCHED_RR mode (ms)
+ *
+ * @return  0:  success     otherwise failed
+ */
+aos_status_t aos_task_time_slice_get(aos_task_t *task, uint32_t *slice);
 
 /**
  * Alloc a mutex.
@@ -338,15 +425,6 @@ int aos_mutex_unlock(aos_mutex_t *mutex);
  * @return  0: invalid, 1: valid.
  */
 int aos_mutex_is_valid(aos_mutex_t *mutex);
-
-/**
- * This function will check if mutex is locked.
- *
- * @param[in]  mutex  pointer to the mutex.
- *
- * @return  0: no lock, 1: locked.
- */
-int aos_mutex_is_locked(aos_mutex_t *mutex);
 
 /**
  * Alloc a semaphore.
@@ -484,7 +562,6 @@ int aos_task_sem_count_get(aos_task_t *task, int *count);
  *
  * @return  0: success.
  */
-
 int aos_event_new(aos_event_t *event, unsigned int flags);
 
 /**
@@ -495,15 +572,14 @@ int aos_event_new(aos_event_t *event, unsigned int flags);
  *
  * @return  N/A.
  */
-
 void aos_event_free(aos_event_t *event);
 
 /**
  * This function will try to get flag set from given event, if the request flag
  * set is satisfied, it will return immediately, if the request flag set is not
- * satisfied with timeout(RHINO_WAIT_FOREVER,0xFFFFFFFF), the caller task will be
+ * satisfied with timeout(AOS_WAIT_FOREVER,0xFFFFFFFF), the caller task will be
  * pended on event until the flag is satisfied, if the request flag is not
- * satisfied with timeout(RHINO_NO_WAIT, 0x0), it will also return immediately.
+ * satisfied with timeout(AOS_NO_WAIT, 0x0), it will also return immediately.
  * Note, this function should not be called from interrupt context because it has
  * possible to lead context switch and an interrupt has no TCB to save context.
  *
@@ -516,7 +592,6 @@ void aos_event_free(aos_event_t *event);
  *
  * @return  0: success.
  */
-
 int aos_event_get(aos_event_t *event, unsigned int flags, unsigned char opt,
                   unsigned int *actl_flags, unsigned int timeout);
 
@@ -530,7 +605,6 @@ int aos_event_get(aos_event_t *event, unsigned int flags, unsigned char opt,
 *
 * @return  0: success.
 */
-
 int aos_event_set(aos_event_t *event, unsigned int flags, unsigned char opt);
 
 /**
@@ -547,11 +621,11 @@ int aos_event_is_valid(aos_event_t *event);
  *
  * @param[in]  queue    pointer to the queue(the space is provided by user).
  * @param[in]  size     the bytes of the buf.
- * @param[in]  max_msg  the max size of the msg.
+ * @param[in]  max_msg  the max size of one msg.
  * @param[in]  options    reserved.
  * @return  0: success.
  */
-aos_status_t aos_queue_create(aos_queue_t *queue, size_t size, size_t max_msg, uint32_t options);
+aos_status_t aos_queue_create(aos_queue_t *queue, size_t size, size_t max_msgsize, uint32_t options);
 
 /**
  * This function will create a queue.
@@ -559,12 +633,11 @@ aos_status_t aos_queue_create(aos_queue_t *queue, size_t size, size_t max_msg, u
  * @param[in]  queue    pointer to the queue(the space is provided by user).
  * @param[in]  buf      buf of the queue(provided by user).
  * @param[in]  size     the bytes of the buf.
- * @param[in]  max_msg  the max size of the msg.
+ * @param[in]  max_msg  the max size of one msg.
  *
  * @return  0: success.
  */
-
-int aos_queue_new(aos_queue_t *queue, void *buf, size_t size, int max_msg);
+int aos_queue_new(aos_queue_t *queue, void *buf, size_t size, int max_msgsize);
 
 /**
  * This function will delete a queue.
@@ -705,6 +778,15 @@ int aos_timer_change_once(aos_timer_t *timer, int ms);
  * @return  0: success.
  */
 int aos_timer_is_valid(aos_timer_t *timer);
+
+/**
+ * This function will check if timer is active.
+ *
+ * @param[in]  timer  pointer to the timer.
+ *
+ * @return  1: active. 0: not active
+ */
+int aos_timer_is_active(aos_timer_t *timer);
 
 /**
  * This function will creat a workqueue.
@@ -858,6 +940,98 @@ void *aos_malloc_align(size_t alignment, size_t size);
  */
 void aos_free_align(void *ptr);
 
+
+//////////////////////////////////////////////////////////////////////////////////
+/**
+ * Reboot system.
+ */
+void aos_reboot(void);
+
+/**
+ * Get HZ(ticks per second).
+ *
+ * @return  ticks freq per second
+ */
+int aos_get_hz(void);
+
+/**
+ * Get YoC SDK version.
+ *
+ * @return  YoC SDK version.
+ */
+const char *aos_version_get(void);
+
+/**
+ * Get kernel version.
+ *
+ * @return  kernel version.
+ */
+const char *aos_kernel_version_get(void);
+
+#define AOS_SCHEDULER_NOT_STARTED   0
+#define AOS_SCHEDULER_RUNNING       1
+#define AOS_SCHEDULER_SUSPENDED     2
+/**
+ * Get the kernel status
+ *
+ * @return  the status of the kernel
+ *          AOS_SCHEDULER_NOT_STARTED
+ *          AOS_SCHEDULER_RUNNING
+ *          AOS_SCHEDULER_SUSPENDED
+ */
+int aos_kernel_status_get(void);
+
+/**
+ * System enter interrupt status.
+ *
+ * @return execution status code.
+ */
+int aos_kernel_intrpt_enter(void);
+
+/**
+ * System exit interrupt status.
+ *
+ * @return execution status code.
+ */
+int aos_kernel_intrpt_exit(void);
+
+/**
+ * Suspend the scheduler.
+ */
+void aos_kernel_sched_suspend(void);
+
+/**
+ * Resume the scheduler.
+ */
+void aos_kernel_sched_resume(void);
+
+/**
+ * Ticks to milliseconds
+ *
+ * @return  milliseconds
+ */
+uint64_t aos_kernel_tick2ms(uint64_t ticks);
+
+/**
+ * Milliseconds to ticks
+ *
+ * @return  ticks
+ */
+uint64_t aos_kernel_ms2tick(uint64_t ms);
+
+/**
+ * Get the number of ticks before next os tick event.
+ *
+ * @return  -1 or the number of ticks（time in ticks, for how long the system can sleep or power-down.）
+ */
+int32_t aos_kernel_next_sleep_ticks_get(void);
+
+/**
+ * Announces elapsed ticks to the kernel
+ * @param[in]  ticks   time in ticks for how long the system was in sleep or power-down mode.
+ */
+void aos_kernel_ticks_announce(int32_t ticks);
+
 /**
  * Get current time in nano seconds.
  *
@@ -874,8 +1048,6 @@ long long aos_now_ms(void);
 
 /**
  * Get the current time from system startup, in ticks.
- *
- * @param[in]  NULL
  *
  * @return  system ticks
  */
@@ -904,29 +1076,33 @@ uint64_t aos_calendar_time_get(void);
 uint64_t aos_calendar_localtime_get(void);
 
 /**
- * Msleep.
+ * Get the timer's time vaule.
  *
- * @param[in]  ms  sleep time in milliseconds.
+ * @param[in]  timer  pointer to the timer.
+ * @param[out] value  store the returned time. 
+ *                       struct itimerspec {
+ *                           struct timespec  it_interval;  // the spacing time
+ *                           struct timespec  it_value;     // first delay start time
+ *                       };
+ *                       it_interval.tv_sec   = value[0];
+ *                       it_interval.tv_nsec  = value[1];
+ *                       it_value.tv_sec      = value[2];
+ *                       it_value.tv_nsec     = value[3];
+ * 
+ * 
+ * @return  0: success, otherwise error.
  */
-void aos_msleep(int ms);
+int aos_timer_gettime(aos_timer_t *timer, uint64_t value[4]);
 
 /**
- * Initialize system
+ * Initialize kernel
  */
 void aos_init(void);
 
 /**
- * Start system
+ * Start kernel
  */
 void aos_start(void);
-
-/// System enter interrupt status.
-/// \return execution status code.
-int aos_kernel_intrpt_enter(void);
-
-/// System exit interrupt status.
-/// \return execution status code.
-int aos_kernel_intrpt_exit(void);
 
 /**
  * The sys tick handler for OS
@@ -952,114 +1128,6 @@ int aos_get_mminfo(int32_t *total, int32_t *used, int32_t *mfree, int32_t *peak)
  */
 int aos_mm_dump(void);
 
-/// Suspend the scheduler.
-void aos_kernel_sched_suspend(void);
-
-/// Resume the scheduler.
-void aos_kernel_sched_resume(void);
-
-uint64_t aos_kernel_tick2ms(uint32_t ticks);
-
-uint64_t aos_kernel_ms2tick(uint32_t ms);
-
-int32_t aos_kernel_suspend(void);
-
-void aos_kernel_resume(int32_t ticks);
-
-typedef void (*except_process_t)(int errno, const char *file, int line, const char *func_name, void *caller);
-void aos_set_except_callback(except_process_t except);
-void aos_set_except_default();
-uint64_t aos_calendar_localtime_get(void);
-
-/**
- * Get a task pthread control block.
- *
- * @param[in]   task        task handle
- * @param[out]  ptcb        the returned ptcb handle
- *
- * @return  0:  success     otherwise failed
- */
-aos_status_t aos_task_ptcb_get(aos_task_t *task, void **ptcb);
-
-/**
- * Set a task pthread control block.
- *
- * @param[in]   task        task handle
- * @param[in]   ptcb        the ptcb handle
- *
- * @return  0:  success     otherwise failed
- */
-aos_status_t aos_task_ptcb_set(aos_task_t *task, void *ptcb);
-
-/**
- * Change a task's schedule priority
- *
- * @param[in]   task        task handle
- * @param[in]   pri         the new task priority
- * @param[out]  old_pri     the returned old task priority
- *
- * @return  0:  success     otherwise failed
- */
-aos_status_t aos_task_pri_change(aos_task_t *task, uint8_t pri, uint8_t *old_pri);
-
-/**
- * Get a task's schedule priority
- *
- * @param[in]   task        task handle
- * @param[out]  priority    the returned old task priority
- *
- * @return  0:  success     otherwise failed
- */
-aos_status_t aos_task_pri_get(aos_task_t *task, uint8_t *priority);
-
-/**
- * Set a task's schedule policy
- *
- * @param[in]   task        task handle
- * @param[in]   policy      the new task's policy
- * @param[in]   pri         the new task's priority
- *
- * @return  0:  success     otherwise failed
- */
-aos_status_t aos_task_sched_policy_set(aos_task_t *task, uint8_t policy, uint8_t pri);
-
-/**
- * Get a task's schedule policy
- *
- * @param[in]   task        task handle
- * @param[out]  policy      the returned task's policy
- *
- * @return  0:  success     otherwise failed
- */
-aos_status_t aos_task_sched_policy_get(aos_task_t *task, uint8_t *policy);
-
-/**
- * Get a task's default schedule policy
- *
- * @return  KSCHED_CFS or KSCHED_RR
- */
-uint32_t aos_task_sched_policy_get_default(void);
-
-/**
- * Set a task's schedule time slice
- *
- * @param[in]   task        task handle
- * @param[in]   slice       the new schedule time slice
- *
- * @return  0:  success     otherwise failed
- */
-aos_status_t aos_task_time_slice_set(aos_task_t *task, uint32_t slice);
-
-/**
- * Get a task's schedule time slice
- *
- * @param[in]   task        task handle
- * @param[out]  slice       the returned task's time slice
- *
- * @return  0:  success     otherwise failed
- */
-aos_status_t aos_task_time_slice_get(aos_task_t *task, uint32_t *slice);
-
 /**
  * Get the maximum number of system's schedule priority
  *
@@ -1084,15 +1152,32 @@ static inline uint32_t aos_sched_get_priority_min(uint32_t policy)
 }
 
 /**
- * Get the timer's time vaule.
+ * Whether is in the interrupted context
  *
- * @param[in]  timer  pointer to the timer.
- * @param[out] value  store the returned time.
- *
- * @return  0: success, otherwise error.
+ * @return    1 is in interrupted context, 0 is not in interrupted context
  */
-int aos_timer_gettime(aos_timer_t *timer, uint64_t value[]);
+int aos_irq_context(void);
 
+/**
+ * Whether the kernel schedule is disabled
+ *
+ * @return    1 is disabled, 0 is enable
+ */
+int aos_is_sched_disable(void);
+
+/**
+ * Whether the cpu irq is disabled
+ *
+ * @return    1 is disabled, 0 is enable
+ */
+int aos_is_irq_disable(void);
+
+/**
+ * The exception callback function set
+ */
+typedef void (*except_process_t)(int errno, const char *file, int line, const char *func_name, void *caller);
+void aos_set_except_callback(except_process_t except);
+void aos_set_except_default();
 
 #ifdef __cplusplus
 }

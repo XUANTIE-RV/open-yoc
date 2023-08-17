@@ -151,6 +151,11 @@ int rvm_hal_gpio_pin_read(rvm_dev_t *dev, rvm_hal_gpio_pin_data_t *value);
 */
 int rvm_hal_gpio_pin_output_toggle(rvm_dev_t *dev);
 
+
+#if defined(AOS_COMP_DEVFS) && AOS_COMP_DEVFS
+#include <devices/vfs_gpiopin.h>
+#endif
+
 #ifdef __cplusplus
 }
 #endif

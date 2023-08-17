@@ -1,6 +1,8 @@
 {
 	"debugger": {
 		"enable": true,
+		"port_devtool": 9307,
+		"port_httpd": 5556,
 		"render_continuously": true
 	},
 	"linksdk": {

@@ -13,16 +13,15 @@
 
 #define b_adc_param(b) ((adc_button_param_t *)(b->param))
 
-static adc_dev_t *button_adc_find(uint8_t port)
+static void *button_adc_find(uint8_t port)
 {
     button_t *b = NULL;
 
     slist_for_each_entry(&g_button_srv.button_head, b, button_t, next)
     {
         button_ops_t *ops = &adc_ops;
-        adc_dev_t    *adc = b_adc_param(b)->adc_hdl;
-
-        if ((b->ops == ops) && adc && (adc->port == port)) {
+        void *adc = b_adc_param(b)->adc_hdl;
+        if ((b->ops == ops) && adc && (b_adc_param(b)->channel == port)) {
             return adc;
         }
     }
@@ -30,7 +29,7 @@ static adc_dev_t *button_adc_find(uint8_t port)
     return NULL;
 }
 
-static uint32_t button_adc_get_value(adc_dev_t *adc_dev)
+static uint32_t button_adc_get_value(button_t *button)
 {
     /* fixme: why 64?workaround hal or csi driver Cross-border access */
     uint32_t val[64];
@@ -41,7 +40,7 @@ static uint32_t button_adc_get_value(adc_dev_t *adc_dev)
 
     memset(val, 0, sizeof(val));
 
-    ret = hal_adc_value_multiple_get(adc_dev, val, avr_count, 1000);
+    ret = rvm_hal_adc_read_multiple(b_adc_param(button)->adc_hdl, b_adc_param(button)->channel, val, avr_count, 1000);
     if (ret == 0) {
         for (int i = 0; i < avr_count; i++) {
             avr_val += val[i];
@@ -68,12 +67,14 @@ static int button_adc_init(button_t *button)
 {
     uint8_t port = b_adc_param(button)->channel;
 
-    adc_dev_t *adc = button_adc_find(port);
+    void *adc = button_adc_find(port);
 
     if (adc == NULL) {
-        adc       = (adc_dev_t *)aos_malloc_check(sizeof(adc_dev_t));
-        adc->port = port;
-        hal_adc_init(adc);
+        rvm_adc_drv_register(0);
+        adc = rvm_hal_adc_open("adc");
+        rvm_hal_adc_config_t config;
+        rvm_hal_adc_config_default(&config);
+        rvm_hal_adc_config(adc, &config);
     }
 
     b_adc_param(button)->adc_hdl = adc;
@@ -83,11 +84,10 @@ static int button_adc_init(button_t *button)
 
 static int button_adc_deinit(button_t *button)
 {
-    adc_dev_t *adc = b_adc_param(button)->adc_hdl;
+    void *adc = b_adc_param(button)->adc_hdl;
 
     if (adc) {
-        hal_adc_finalize(adc);
-        aos_free(adc);
+        rvm_hal_adc_close(adc);
         b_adc_param(button)->adc_hdl = NULL;
     }
 
@@ -108,7 +108,7 @@ static int button_adc_read(button_t *button)
     uint32_t value = 0;
 
     if (g_adc_start_read == 1) {
-        g_adc_value      = button_adc_get_value(b_adc_param(button)->adc_hdl);
+        g_adc_value      = button_adc_get_value(button);
         g_adc_start_read = 0;
     }
 

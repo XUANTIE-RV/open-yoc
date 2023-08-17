@@ -7,8 +7,9 @@
 
 #include <aos/aos.h>
 #include <aos/list.h>
-#include <aos/hal/gpio.h>
-#include <aos/hal/adc.h>
+#include <devices/gpiopin.h>
+#include <devices/adc.h>
+#include <devices/devicelist.h>
 
 #define ADC_NAME_MAX (10)
 typedef struct button_ops {
@@ -21,13 +22,13 @@ typedef struct button_ops {
 
 typedef struct gpio_button_param {
     int                 pin_id;
-    gpio_dev_t         *pin_hdl;
+    void                *pin_hdl;
     button_gpio_level_t active_level;
 } gpio_button_param_t;
 
 typedef struct adc_button_param {
     char    adc_name[ADC_NAME_MAX];
-    adc_dev_t *adc_hdl;
+    void    *adc_hdl;
     int     channel;
     int     range;
     int     vref;

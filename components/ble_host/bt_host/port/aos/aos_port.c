@@ -15,11 +15,8 @@
 #include <stdint.h>
 #include <string.h>
 #include "atomic.h"
-#ifndef OSAL_RHINO
-#define OSAL_RHINO
-#endif
 
-#ifdef OSAL_RHINO
+#ifdef CONFIG_KERNEL_RHINO
 #include <k_default_config.h>
 #include <k_types.h>
 #include <k_err.h>
@@ -284,7 +281,7 @@ int k_sem_delete(struct k_sem *sem)
 
 unsigned int k_sem_count_get(struct k_sem *sem)
 {
-#ifdef OSAL_RHINO
+#ifdef CONFIG_KERNEL_RHINO
     sem_count_t count;
 
     krhino_sem_count_get(&sem->sem, &count);

@@ -32,7 +32,11 @@ struct kvblock {
     uint8_t      *mem_cache;
     uint8_t      mem_cache_ref;
     uint32_t     size;
+#if CONFIG_KV_LARGE_NODE
+    uint32_t     write_offset;
+#else
     uint16_t     write_offset;
+#endif
     uint16_t     kv_size;
     uint16_t     dirty_size;
     uint16_t     count;

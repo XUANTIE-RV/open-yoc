@@ -92,7 +92,7 @@ static int part_blockdev_read(void *handle, off_t offset, void *data, size_t dat
         block_cnt = data_len / mmc_info.block_size;
         // MTB_LOGD("read startblk:%d, blkcount:%d, left_size:0x%x", start_block, block_cnt, (uint32_t)left_size);
         if (block_cnt > 0) {
-            if (rvm_hal_blockdev_read_blks(handle, data, start_block, block_cnt)) {
+            if (rvm_hal_blockdev_read_blks(handle, (void *)((unsigned long)data + offt_data_left), start_block, block_cnt)) {
                 MTB_LOGE("read blks e");
                 return -1;
             }
@@ -102,14 +102,14 @@ static int part_blockdev_read(void *handle, off_t offset, void *data, size_t dat
                     MTB_LOGE("read 1 blk e");
                     return -1;
                 }
-                memcpy((void *)((unsigned long)data + block_cnt * mmc_info.block_size), tmpbuf, left_size);
+                memcpy((void *)((unsigned long)data + offt_data_left + block_cnt * mmc_info.block_size), tmpbuf, left_size);
             }
         } else {
             if (rvm_hal_blockdev_read_blks(handle, tmpbuf, start_block, 1)) {
                 MTB_LOGE("read 1 blk e");
                 return -1;
             }
-            memcpy(data, tmpbuf, left_size);
+            memcpy((void *)((unsigned long)data + offt_data_left), tmpbuf, left_size);
         }
         return 0;
     }

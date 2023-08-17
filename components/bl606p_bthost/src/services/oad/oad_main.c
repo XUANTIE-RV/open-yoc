@@ -183,7 +183,8 @@ void ota_finish(struct k_work *work)
     #if defined(CONFIG_BL_MCU_SDK)
     GLB_SW_POR_Reset();
     #else
-    hal_reboot();
+    extern void aos_reboot(void);
+    aos_reboot();
     #endif
 }
 

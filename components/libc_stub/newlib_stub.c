@@ -13,10 +13,10 @@
 #include <string.h>
 #include <malloc.h>
 #include <aos/kernel.h>
-#if defined(CONFIG_KERNEL_RHINO) && CONFIG_KERNEL_RHINO
+#if defined(CONFIG_KERNEL_RHINO)
 #include <k_api.h>
 #endif
-#ifdef CONFIG_AOS_LWIP
+#if defined(CONFIG_TCPIP) || defined(CONFIG_SAL)
 #include <sys/socket.h>
 #ifdef TELNETD_ENABLED
 #include "lwip/apps/telnetserver.h"
@@ -33,8 +33,7 @@ extern int aos_vfs_fcntl(int fd, int cmd, int val);
 #define FD_VFS_START VFS_FD_OFFSET
 #define FD_VFS_END   (FD_VFS_START + VFS_MAX_FILE_NUM - 1)
 
-#ifdef POSIX_DEVICE_IO_NEED
-#ifdef CONFIG_AOS_LWIP
+#if defined(CONFIG_TCPIP) || defined(CONFIG_SAL)
 #include "lwipopts.h"
 #define FD_AOS_SOCKET_OFFSET (LWIP_SOCKET_OFFSET)
 #define FD_AOS_NUM_SOCKETS (MEMP_NUM_NETCONN)
@@ -45,7 +44,6 @@ extern int aos_vfs_fcntl(int fd, int cmd, int val);
 #define FD_SOCKET_END   (FD_AOS_SOCKET_OFFSET + FD_AOS_NUM_SOCKETS - 1)
 #define FD_EVENT_START  FD_AOS_EVENT_OFFSET
 #define FD_EVENT_END    (FD_AOS_EVENT_OFFSET + FD_AOS_NUM_EVENTS - 1)
-#endif
 #endif
 
 #define LIBC_CHECK_AOS_RET(ret) do {if ((ret) < 0) {ptr->_errno = -(ret); return -1; } } while (0)
@@ -61,19 +59,23 @@ int _execve_r(struct _reent *ptr, const char *name, char *const *argv,
 
 int _fcntl_r(struct _reent *ptr, int fd, int cmd, int arg)
 {
+    int ret = -1;
+
     if ((fd >= FD_VFS_START) && (fd <= FD_VFS_END)) {
 #ifdef AOS_COMP_VFS
-        int ret = aos_fcntl(fd, cmd, arg);
+        ret = aos_fcntl(fd, cmd, arg);
         LIBC_CHECK_AOS_RET(ret);
+#endif
         return ret;
-#else
-        return -1;
-#endif
-#ifdef POSIX_DEVICE_IO_NEED
-#ifdef CONFIG_AOS_LWIP
+#if defined(CONFIG_TCPIP) || defined(CONFIG_SAL)
     } else if ((fd >= FD_SOCKET_START) && (fd <= FD_EVENT_END)) {
-        return lwip_fcntl(fd, cmd, arg);
+#if defined(CONFIG_SAL)
+        extern int sal_fcntl(int s, int cmd, ...);
+        ret = sal_fcntl(fd, cmd, arg);
+#else
+        ret = lwip_fcntl(fd, cmd, arg);
 #endif
+        return ret;
 #endif
     } else {
         ptr->_errno = EBADF;
@@ -156,11 +158,9 @@ int _close_r(struct _reent *ptr, int fd)
 #else
         return -1;
 #endif
-#ifdef POSIX_DEVICE_IO_NEED
-#ifdef CONFIG_AOS_LWIP
+#if defined(CONFIG_TCPIP) || defined(CONFIG_SAL)
     } else if ((fd >= FD_SOCKET_START) && (fd <= FD_EVENT_END)) {
         return lwip_close(fd);
-#endif
 #endif
     } else {
         ptr->_errno = EBADF;
@@ -176,9 +176,11 @@ _ssize_t _read_r(struct _reent *ptr, int fd, void *buf, size_t nbytes)
 #else
         return -1;
 #endif
-#ifdef POSIX_DEVICE_IO_NEED
-#ifdef CONFIG_AOS_LWIP
+#if defined(CONFIG_TCPIP) || defined(CONFIG_SAL)
     } else if ((fd >= FD_SOCKET_START) && (fd <= FD_EVENT_END)) {
+#if defined(CONFIG_SAL)
+        return recv(fd, buf, nbytes, 0);
+#else
         return lwip_read(fd, buf, nbytes);
 #endif
 #endif
@@ -204,9 +206,11 @@ _ssize_t _write_r(struct _reent *ptr, int fd, const void *buf, size_t nbytes)
             ret = -1;
         }
         return ret;
-#ifdef POSIX_DEVICE_IO_NEED
-#ifdef CONFIG_TCPIP
+#if defined(CONFIG_TCPIP) || defined(CONFIG_SAL)
     } else if ((fd >= FD_SOCKET_START) && (fd <= FD_EVENT_END)) {
+#if defined(CONFIG_SAL)
+        return send(fd, buf, nbytes, 0);
+#else
         return lwip_write(fd, buf, nbytes);
 #endif
 #endif
@@ -226,25 +230,26 @@ int ioctl(int fildes, int request, ... /* arg */)
 
     va_start(args, request);
 
-    if ((fildes >= VFS_FD_OFFSET) &&
-        (fildes <= (VFS_FD_OFFSET + VFS_MAX_FILE_NUM - 1))) {
+    if ((fildes >= FD_VFS_START) && (fildes <= FD_VFS_END)) {
 #ifdef AOS_COMP_VFS
-        long arg  = 0;
-        arg = va_arg(args, int);
+        unsigned long arg = 0;
+        arg = va_arg(args, unsigned long);
         ret = aos_ioctl(fildes, request, arg);
         va_end(args);
 #endif
         return ret;
-#ifdef POSIX_DEVICE_IO_NEED
-#ifdef CONFIG_AOS_LWIP
+#if defined(CONFIG_TCPIP) || defined(CONFIG_SAL)
     } else if ((fildes >= FD_AOS_SOCKET_OFFSET) &&
                (fildes <= (FD_AOS_EVENT_OFFSET + FD_AOS_NUM_EVENTS - 1))) {
+#if defined(CONFIG_TCPIP)
         void *argp = NULL;
         argp = va_arg(args, void *);
         ret = lwip_ioctl(fildes, request, argp);
         va_end(args);
-        return ret;
+#else
+        ret = -1;
 #endif
+        return ret;
 #endif
     } else {
         va_end(args);
@@ -278,7 +283,7 @@ int _stat_r(struct _reent *ptr, const char *file, struct stat *pstat)
         return -1;
     }
 #ifdef AOS_COMP_VFS
-    struct aos_stat stat;
+    aos_stat_t stat;
     ret = aos_stat(file, &stat);
     LIBC_CHECK_AOS_RET(ret);
     pstat->st_mode  = stat.st_mode;
@@ -294,12 +299,12 @@ int _fstat_r(struct _reent *ptr, int fd, struct stat *buf)
 {
     int ret = -1;
 
-    if ((fd < 0) || (buf == NULL)) {
+    if ((fd < 3) || (buf == NULL)) {
         ptr->_errno = EINVAL;
         return -1;
     }
 #ifdef AOS_COMP_VFS
-    struct aos_stat stat_temp;
+    aos_stat_t stat_temp;
     ret = aos_fstat(fd, &stat_temp);
     LIBC_CHECK_AOS_RET(ret);
     buf->st_mode = stat_temp.st_mode;
@@ -552,7 +557,7 @@ void _system(const char *s)
 
 void abort(void)
 {
-#if defined(CONFIG_KERNEL_RHINO) && CONFIG_KERNEL_RHINO
+#if defined(CONFIG_KERNEL_RHINO)
     k_err_proc(RHINO_SYS_FATAL_ERR);
 #endif
     __builtin_unreachable(); // fix noreturn warning

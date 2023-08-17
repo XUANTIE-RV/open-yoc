@@ -1,21 +1,33 @@
 /*
  * Copyright (C) 2019-2020 Alibaba Group Holding Limited
  */
-
-#include <yoc/aui_cloud.h>
+#include <stdio.h>
 #include <string.h>
 #include <aos/aos.h>
 
+#include <yoc/aui_cloud.h>
+
 #define TAG "CLOUD"
+
+static aui_t *g_default_handle = NULL;
 
 aui_t *aui_cloud_init(void)
 {
     aui_t *aui = aos_zalloc_check(sizeof(aui_t));
+
+    if(g_default_handle == NULL) {
+        g_default_handle = aui;
+    }
+
     return aui;
 }
 
 int aui_cloud_deinit(aui_t *aui)
 {
+    if (aui == NULL) {
+        aui = g_default_handle;
+    }
+
     aos_check_return_einval(aui);
     
     aos_free(aui);
@@ -26,6 +38,10 @@ int aui_cloud_deinit(aui_t *aui)
 int aui_cloud_start_audio(aui_t *aui, aui_audio_req_type_e type)
 {
     int ret = -1;
+
+    if (aui == NULL) {
+        aui = g_default_handle;
+    }
 
     aos_check_return_einval(aui);
 
@@ -44,6 +60,10 @@ int aui_cloud_start_audio(aui_t *aui, aui_audio_req_type_e type)
 int aui_cloud_push_audio(aui_t *aui, void *data, size_t size)
 {
     int ret = -1;
+
+    if (aui == NULL) {
+        aui = g_default_handle;
+    }
 
     aos_check_return_einval(aui);
     aos_check_return_einval(data);
@@ -64,6 +84,10 @@ int aui_cloud_stop_audio(aui_t *aui)
 {
     int ret = -1;
 
+    if (aui == NULL) {
+        aui = g_default_handle;
+    }
+
     aos_check_return_einval(aui);
 
     if (aui->ops.nlp) {
@@ -77,6 +101,10 @@ int aui_cloud_stop_audio(aui_t *aui)
 int aui_cloud_stop(aui_t *aui)
 {
     int ret = -1;
+
+    if (aui == NULL) {
+        aui = g_default_handle;
+    }
 
     aos_check_return_einval(aui);
 
@@ -96,6 +124,10 @@ int aui_cloud_push_text(aui_t *aui, char *text)
 {
     int ret = 0;
 
+    if (aui == NULL) {
+        aui = g_default_handle;
+    }
+
     aos_check_return_einval(aui);
     aos_check_return_einval(text);
 
@@ -110,6 +142,10 @@ int aui_cloud_start_tts(aui_t *aui)
 {
     int ret = -1;
 
+    if (aui == NULL) {
+        aui = g_default_handle;
+    }
+
     aos_check_return_einval(aui);
 
     if (aui->ops.tts && aui->ops.tts->start)
@@ -121,7 +157,11 @@ int aui_cloud_start_tts(aui_t *aui)
 int aui_cloud_req_tts(aui_t *aui, const char *text)
 {
     int ret = -1;
-    
+
+    if (aui == NULL) {
+        aui = g_default_handle;
+    }
+
     aos_check_return_einval(aui);
     aos_check_return_einval(text);
 
@@ -136,6 +176,10 @@ int aui_cloud_stop_tts(aui_t *aui)
 {
     int ret = -1;
 
+    if (aui == NULL) {
+        aui = g_default_handle;
+    }
+
     aos_check_return_einval(aui);
 
     if (aui->ops.tts && aui->ops.tts->stop)
@@ -146,9 +190,13 @@ int aui_cloud_stop_tts(aui_t *aui)
 
 int aui_cloud_nlp_unregister(aui_t *aui)
 {
-    aos_check_return_einval(aui);
-
     int ret = 0;
+
+    if (aui == NULL) {
+        aui = g_default_handle;
+    }
+
+    aos_check_return_einval(aui);
 
     if (aui->ops.nlp && aui->ops.nlp->deinit) {
         ret = aui->ops.nlp->deinit(aui);
@@ -161,6 +209,10 @@ int aui_cloud_nlp_unregister(aui_t *aui)
 
 int aui_cloud_tts_unregister(aui_t *aui)
 {
+    if (aui == NULL) {
+        aui = g_default_handle;
+    }
+
     aos_check_return_einval(aui);
 
     int ret = 0;
@@ -176,6 +228,10 @@ int aui_cloud_tts_unregister(aui_t *aui)
 
 int aui_cloud_nlp_register(aui_t *aui, aui_nlp_cls_t *ops, aui_nlp_cb_t cb, void *priv)
 {
+    if (aui == NULL) {
+        aui = g_default_handle;
+    }
+
     aos_check_return_einval(aui && ops && cb);
 
     aui->ops.nlp = ops;
@@ -191,6 +247,10 @@ int aui_cloud_nlp_register(aui_t *aui, aui_nlp_cls_t *ops, aui_nlp_cb_t cb, void
 
 int aui_cloud_tts_register(aui_t *aui, aui_tts_cls_t *ops, aui_tts_cb_t cb, void *priv)
 {
+    if (aui == NULL) {
+        aui = g_default_handle;
+    }
+
     aos_check_return_einval(aui && ops && cb);
 
     aui->ops.tts = ops;

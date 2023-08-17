@@ -754,7 +754,7 @@ static void cmd_bt_stack_set_cod(char *wbuf, int wbuf_len, int argc, char **argv
         return;
     }
 
-    CLI_BT_PRINTF_I("set cod %s %s %s succcess\n", argv[1], argv[2], argv[3]);
+    CLI_BT_PRINTF_I("set cod %s %s %s success\n", argv[1], argv[2], argv[3]);
     return;
 }
 
@@ -769,7 +769,7 @@ static void cmd_bt_stack_get_cod(char *wbuf, int wbuf_len, int argc, char **argv
         return;
     }
 
-    CLI_BT_PRINTF_I("get cod service_class 0x%x major_class 0x%x, minor_class 0x%x succcess\n", cod.service, cod.major,
+    CLI_BT_PRINTF_I("get cod service_class 0x%x major_class 0x%x, minor_class 0x%x success\n", cod.service, cod.major,
                     cod.minor);
 }
 
@@ -795,7 +795,7 @@ static void cmd_bt_stack_pin_entry(char *wbuf, int wbuf_len, int argc, char **ar
         return;
     }
 
-    CLI_BT_PRINTF_I("pin entry succcess\n");
+    CLI_BT_PRINTF_I("pin entry success\n");
 }
 
 static void cmd_bt_stack_passky_entry(char *wbuf, int wbuf_len, int argc, char **argv)
@@ -827,7 +827,7 @@ static void cmd_bt_stack_passky_entry(char *wbuf, int wbuf_len, int argc, char *
         return;
     }
 
-    CLI_BT_PRINTF_I("passkey entry %d succcess\n", passkey);
+    CLI_BT_PRINTF_I("passkey entry %d success\n", passkey);
 }
 
 static void cmd_bt_stack_passkey_confirm(char *wbuf, int wbuf_len, int argc, char **argv)
@@ -852,7 +852,7 @@ static void cmd_bt_stack_passkey_confirm(char *wbuf, int wbuf_len, int argc, cha
         return;
     }
 
-    CLI_BT_PRINTF_I("passkey confirm succcess\n");
+    CLI_BT_PRINTF_I("passkey confirm success\n");
 }
 
 static void cmd_bt_stack_pairing_cancel(char *wbuf, int wbuf_len, int argc, char **argv)
@@ -877,7 +877,7 @@ static void cmd_bt_stack_pairing_cancel(char *wbuf, int wbuf_len, int argc, char
         return;
     }
 
-    CLI_BT_PRINTF_I("passkey cancel succcess\n");
+    CLI_BT_PRINTF_I("passkey cancel success\n");
 }
 
 #if (defined(CONFIG_BT_A2DP) && CONFIG_BT_A2DP)

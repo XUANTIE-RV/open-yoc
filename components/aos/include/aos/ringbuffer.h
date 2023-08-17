@@ -46,7 +46,7 @@ int ringbuffer_read(dev_ringbuf_t *buffer, uint8_t *target, uint32_t amount);
  * @param[in] buffer pointer to the ring buffer
  * @param[in] data pointer to buffer for data to write to ring buffer
  * @param[in] length length of data items to write
- * @return  0 for success
+ * @return  number of actual write data
  */
 int ringbuffer_write(dev_ringbuf_t *buffer, uint8_t *data, uint32_t length);
 

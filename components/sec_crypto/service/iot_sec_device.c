@@ -8,6 +8,11 @@
 #include "sec_crypto_common.h"
 #include "sec_crypto_platform.h"
 #include "sec_crypto_sha.h"
+#if defined(CONFIG_WITH_SE)
+#include <se_aes.h>
+#include <se_keystore.h>
+#include <se_storage.h>
+#endif
 
 #define CHECK_RETURN(ret)                                                      \
         do {                                                                   \
@@ -350,3 +355,206 @@ uint32_t sc_device_storage_decrypt(sc_dev_storage_t *sec_storage,
 
 	return ret;
 }
+
+#if defined(CONFIG_WITH_SE)
+/**
+  \brief       The interface of the initialization of secure storage with key storage
+  \param[in]   sec_storage  A pointer to the struct of secure storage infomation.
+  \return      0: successfull other: error code
+*/
+uint32_t sc_device_storage_init_with_ks(sc_dev_storage_t *sec_storage)
+{
+	int ret;
+    CHECK_PARAM(sec_storage, SC_PARAM_INV);
+
+	ret = se_aes_init(&sec_storage->aes.se_aes);
+	if (ret)
+		return SC_DRV_FAILED;
+
+	return SC_OK;
+}
+
+/**
+  \brief       The interface of the unnitialization of secure storage with key storage
+  \param[in]   sec_storage  A pointer to the struct of secure storage infomation.
+  \return      0: successfull other: error code
+*/
+void sc_device_storage_uninit_with_ks(sc_dev_storage_t *sec_storage)
+{
+	se_aes_uninit(&sec_storage->aes.se_aes);
+}
+
+/**
+  \brief       The interface of  encrypting secure storage data with key storage
+  \param[in]   sec_storage  A pointer to the struct of secure storage infomation.
+  \param[in]   data_info  A pointer to the struct of data infomation.
+  \return      0: successfull other: error code
+*/
+uint32_t sc_device_storage_encrypt_with_ks(sc_dev_storage_t *sec_storage, 
+                                  sc_dev_data_info_t *data_info)
+{
+	int ret;
+	uint8_t iv[16] = {0};
+
+    CHECK_PARAM(sec_storage, SC_PARAM_INV);
+    CHECK_PARAM(data_info, SC_PARAM_INV);
+
+    /* do encryption process */
+    ret = se_aes_cbc_encrypt(&sec_storage->aes.se_aes, (void *)data_info->data_in,
+							 (void *)data_info->data_out, data_info->data_size, iv,
+							 KEY_USAGE_SSTORAGE);
+	if (ret)
+		return SC_DRV_FAILED;
+
+	return SC_OK;
+}
+
+/**
+  \brief       The interface of decrypting secure storage data with key storage
+  \param[in]   sec_storage  A pointer to the struct of secure storage infomation.
+  \param[in]   data_info  A pointer to the struct of data infomation.
+  \return      0: successfull other: error code
+*/
+uint32_t sc_device_storage_decrypt_with_ks(sc_dev_storage_t *sec_storage, 
+                                  sc_dev_data_info_t *data_info)
+{
+	uint32_t ret;
+	uint8_t iv[16] = {0};
+
+    CHECK_PARAM(sec_storage, SC_PARAM_INV);
+    CHECK_PARAM(data_info, SC_PARAM_INV);
+
+    /* do encryption process */
+    ret = se_aes_cbc_decrypt(&sec_storage->aes.se_aes, (void *)data_info->data_in,
+							 (void *)data_info->data_out, data_info->data_size, iv,
+							 KEY_USAGE_SSTORAGE);
+	if (ret)
+		return SC_DRV_FAILED;
+
+	return SC_OK;
+}
+/**
+  \brief       Get the capacity the secure storage
+  \param[out]   size  A pointer to the buffer which will be stored the size of storage.
+  \return      0 success, Non-zero failure
+*/
+uint32_t sc_get_avail_storage_capacity(uint32_t *size)
+{
+	int ret;
+
+	ret = se_get_avail_storage_capacity(size);
+	if (ret)
+		return SC_DRV_FAILED;
+	return SC_OK;
+}
+
+/**
+  \brief       Get the capacity the secure storage
+  \param[in]   data  A pointer to the buffer which stores the data need to be written.
+  \param[in]   size  The size of data which will be written.
+  \param[in]   pos  The position which the data will be written to.
+  \return      0 success, Non-zero failure
+*/
+uint32_t sc_write_storage_data(const uint8_t *data, uint32_t size, uint32_t pos)
+{
+	int ret;
+
+	ret = se_write_storage_data(data, size, pos);
+	if (ret)
+		return SC_DRV_FAILED;
+	return SC_OK;
+}
+
+/**
+  \brief       Get the capacity the secure storage
+  \param[out]   data  A pointer to the buffer which stores the data read out.
+  \param[in]   size  The size of data which will be read.
+  \param[in]   pos  The position which the data will be read.
+  \return      0 success, Non-zero failure
+*/
+uint32_t  sc_read_storage_data(uint8_t *data , uint32_t size, uint32_t pos)
+{
+	int ret;
+
+	ret = se_read_storage_data(data, size, pos);
+	if (ret)
+		return SC_DRV_FAILED;
+	return SC_OK;
+}
+#else
+/**
+  \brief       The interface of the initialization of secure storage with key storage
+  \param[in]   sec_storage  A pointer to the struct of secure storage infomation.
+  \return      0: successfull other: error code
+*/
+uint32_t sc_device_storage_init_with_ks(sc_dev_storage_t *sec_storage)
+{
+	return SC_NOT_SUPPORT;
+}
+
+/**
+  \brief       The interface of the unnitialization of secure storage with key storage
+  \param[in]   sec_storage  A pointer to the struct of secure storage infomation.
+  \return      0: successfull other: error code
+*/
+void sc_device_storage_uninit_with_ks(sc_dev_storage_t *sec_storage)
+{
+}
+
+/**
+  \brief       The interface of  encrypting secure storage data with key storage
+  \param[in]   sec_storage  A pointer to the struct of secure storage infomation.
+  \param[in]   data_info  A pointer to the struct of data infomation.
+  \return      0: successfull other: error code
+*/
+uint32_t sc_device_storage_encrypt_with_ks(sc_dev_storage_t *sec_storage, 
+                                  sc_dev_data_info_t *data_info)
+{
+	return SC_NOT_SUPPORT;
+}
+
+/**
+  \brief       The interface of decrypting secure storage data with key storage
+  \param[in]   sec_storage  A pointer to the struct of secure storage infomation.
+  \param[in]   data_info  A pointer to the struct of data infomation.
+  \return      0: successfull other: error code
+*/
+uint32_t sc_device_storage_decrypt_with_ks(sc_dev_storage_t *sec_storage, 
+                                  sc_dev_data_info_t *data_info)
+{
+	return SC_NOT_SUPPORT;
+}
+/**
+  \brief       Get the capacity the secure storage
+  \param[out]   size  A pointer to the buffer which will be stored the size of storage.
+  \return      0 success, Non-zero failure
+*/
+uint32_t sc_get_avail_storage_capacity(uint32_t *size)
+{
+	return SC_NOT_SUPPORT;
+}
+
+/**
+  \brief       Get the capacity the secure storage
+  \param[in]   data  A pointer to the buffer which stores the data need to be written.
+  \param[in]   size  The size of data which will be written.
+  \param[in]   pos  The position which the data will be written to.
+  \return      0 success, Non-zero failure
+*/
+uint32_t sc_write_storage_data(const uint8_t *data, uint32_t size, uint32_t pos)
+{
+	return SC_NOT_SUPPORT;
+}
+
+/**
+  \brief       Get the capacity the secure storage
+  \param[out]   data  A pointer to the buffer which stores the data read out.
+  \param[in]   size  The size of data which will be read.
+  \param[in]   pos  The position which the data will be read.
+  \return      0 success, Non-zero failure
+*/
+uint32_t  sc_read_storage_data(uint8_t *data , uint32_t size, uint32_t pos)
+{
+	return SC_NOT_SUPPORT;
+}
+#endif

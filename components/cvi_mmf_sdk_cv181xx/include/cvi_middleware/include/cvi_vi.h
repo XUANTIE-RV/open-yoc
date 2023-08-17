@@ -165,6 +165,8 @@ CVI_S32 CVI_VI_SetChnEarlyInterrupt(VI_PIPE ViPipe, VI_CHN ViChn, const VI_EARLY
 CVI_S32 CVI_VI_GetChnEarlyInterrupt(VI_PIPE ViPipe, VI_CHN ViChn, VI_EARLY_INTERRUPT_S *pstEarlyInterrupt);
 CVI_S32 CVI_VI_RegPmCallBack(VI_DEV ViDev, VI_PM_OPS_S *pstPmOps, void *pvData);
 CVI_S32 CVI_VI_UnRegPmCallBack(VI_DEV ViDev);
+CVI_S32 CVI_VI_RegSyncTask(VI_PIPE ViPipe, VI_SYNC_TASK_NODE_S *pstSyncTask);
+CVI_S32 CVI_VI_UnRegSyncTask(VI_PIPE ViPipe, VI_SYNC_TASK_NODE_S *pstSyncTask);
 
 // for fpga test
 CVI_S32 _CVI_VI_CFG_CTRL_TEST(void);

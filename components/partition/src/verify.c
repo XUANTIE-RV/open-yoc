@@ -10,6 +10,10 @@
 #include <string.h>
 #include <stdio.h>
 #include "mtb_log.h"
+#if defined(CONFIG_WITH_SE)
+#include <se_rsa.h>
+#include <se_keystore.h>
+#endif
 
 //#define DEBUG_WITH_MBEDTLS
 
@@ -360,6 +364,8 @@ typedef struct {
     sc_rsa_context_t sc_ctx;
 } rsa_context_t;
 
+#if defined(CONFIG_WITH_SE)
+#else
 static uint8_t g_key_module_trustboot[] = {
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -378,12 +384,69 @@ static uint8_t g_key_module_trustboot[] = {
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x01,
 };
+#endif
 
 __attribute__((weak)) int signature_verify_start(digest_sch_e ds, signature_sch_e ss,
                                                 uint8_t *key_buf, int key_size,
                                                 const uint8_t *src, int src_size,
                                                 const uint8_t *signature, int sig_size)
 {
+#if defined(CONFIG_WITH_SE)
+    int ret = 0;
+    se_rsa_t rsa;
+    se_rsa_context_t context;
+	se_rsa_hash_type_t hash_type;
+	uint32_t key_index;
+
+    MTB_LOGD("ds:%d, ss:%d, src_size:%d, sig_size:%d", ds, ss, src_size, sig_size);
+    if (ds >= DIGEST_HASH_MAX || ss >= SIGNATURE_MAX || !(key_buf && key_size > 0 && src && src_size > 0 && signature && sig_size > 0)) {
+        MTB_LOGE("signature verify val e.");
+        return -EINVAL;
+    }
+
+    switch (ds)
+    {
+    default:
+    case DIGEST_HASH_NONE:
+        return 0;
+    case DIGEST_HASH_SHA1:
+        hash_type = SE_RSA_HASH_TYPE_SHA1;
+        break;
+    case DIGEST_HASH_SHA256:
+        hash_type = SE_RSA_HASH_TYPE_SHA256;
+        break;
+    }
+
+    switch (ss)
+    {
+    default:
+    case SIGNATURE_NONE:
+        return 0;
+    case SIGNATURE_RSA_1024:
+        context.key_bits = SE_RSA_KEY_BITS_1024;
+		key_index = SE_RSA_1024_KEY_SBOOT;
+        break;
+    case SIGNATURE_RSA_2048:
+        context.key_bits = SE_RSA_KEY_BITS_2048;
+		key_index = SE_RSA_2048_KEY_SBOOT;
+        break;
+    }
+	context.key_bits = SE_RSA_KEY_BITS_1024;
+	context.padding_type = SE_RSA_PADDING_MODE_PKCS1;
+
+    ret = se_rsa_init(&rsa);
+	if (ret)
+		return -1;
+    if (se_rsa_verify(&rsa, &context, (void*)src, src_size, (void *)signature, hash_type, key_index)) {
+        MTB_LOGD("sc verify ok..");
+        ret = 0;
+    } else {
+        MTB_LOGE("rsa verify failed..");
+        ret = -1;
+    }
+
+    se_rsa_uninit(&rsa);
+#else
     int      ret;
     uint8_t *key_n = key_buf;
     uint8_t *key_e;
@@ -449,6 +512,7 @@ __attribute__((weak)) int signature_verify_start(digest_sch_e ds, signature_sch_
     }
 
     sc_rsa_uninit(&ctx.sc_rsa);
+#endif
     return ret;
 }
 

@@ -37,7 +37,7 @@
 #endif
 
 #ifndef CONFIG_DRV_BT_AOS_HAL
-#define CONFIG_DRV_BT_AOS_HAL 1
+#define CONFIG_DRV_BT_AOS_HAL 0
 #endif
 #if CONFIG_DRV_BT_AOS_HAL
 #include "aos/hal/uart.h"
@@ -248,18 +248,19 @@ int userial_vendor_open(tUSERIAL_CFG *p_cfg, void *uart_event)
 #else
     char devname[32] = {0};
     snprintf(devname, sizeof(devname), "uart%d", p_cfg->uart_id);
-    vnd_userial.uart_dev = rvm_hal_device_open(devname);
+    vnd_userial.uart_dev = rvm_hal_uart_open(devname);
 
     if (vnd_userial.uart_dev == NULL) {
         return -1;
     }
 
     rvm_hal_uart_config_default(&vnd_userial.config);
-    vnd_userial.config.baud_rate = 115200;
-    vnd_userial.config.parity = parity;
-    vnd_userial.config.data_width = data_bits;
-    vnd_userial.config.stop_bits = stop_bits;
+    vnd_userial.config.baud_rate    = 115200;
+    vnd_userial.config.mode         = MODE_TX_RX;
     vnd_userial.config.flow_control = fc;
+    vnd_userial.config.stop_bits    = stop_bits;
+    vnd_userial.config.parity       = parity;
+    vnd_userial.config.data_width   = data_bits;
     rvm_hal_uart_config(vnd_userial.uart_dev, &vnd_userial.config);
 
     rvm_hal_uart_set_event(vnd_userial.uart_dev, uart_event, NULL);

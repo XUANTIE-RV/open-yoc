@@ -9,8 +9,7 @@ extern "C" {
 
 static struct combo_dev_cfg_s dev_cfg_st7701s_480x480 = {
 	.devno = 0,
-	.lane_id = {MIPI_TX_LANE_0, MIPI_TX_LANE_CLK, MIPI_TX_LANE_1, -1, -1},
-	.lane_pn_swap = {false, false, false, false, false},
+	.lane_id = {MIPI_TX_LANE_0, MIPI_TX_LANE_CLK, MIPI_TX_LANE_1, (enum mipi_tx_lane_id)-1, (enum mipi_tx_lane_id)-1},
 	.output_mode = OUTPUT_MODE_DSI_VIDEO,
 	.video_mode = BURST_MODE,
 	.output_format = OUT_FORMAT_RGB_24_BIT,
@@ -26,17 +25,18 @@ static struct combo_dev_cfg_s dev_cfg_st7701s_480x480 = {
 		.vid_vsa_pos_polarity = false,
 		.vid_hsa_pos_polarity = true,
 	},
-	.pixel_clk = 20606,
+	.pixel_clk = 26993,
+	.lane_pn_swap = {false, false, false, false, false},
 	.reset_pin = {
 		.gpio_num = CVI_GPIOE_12,
 		.active = 0
 	},
-	.power_ct_pin = {
-		.gpio_num = -1,
+	.pwm_pin = {
+		.gpio_num = (enum CVI_GPIO_NUM_E)-1,
 		.active = 1
 	},
-	.pwm_pin = {
-		.gpio_num = -1,
+	.power_ct_pin = {
+		.gpio_num = (enum CVI_GPIO_NUM_E)-1,
 		.active = 1
 	}
 };

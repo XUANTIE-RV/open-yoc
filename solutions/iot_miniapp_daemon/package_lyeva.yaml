@@ -1,8 +1,8 @@
 
 ## 第一部分： 基础信息
 name: iot_miniapp_daemon                            # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
-version: v7.7.0                                    # <必选项> 组件版本号
-description: IoT小程序服务程序                       # <必选项> 建议至少20字以上
+version: v7.8.0                                     # <必选项> 组件版本号
+description: IoT小程序服务程序，KWS评估算法           # <必选项> 建议至少20字以上
 type: solution                                      # <必选项> 组件类型，为：solution, chip, board, common, sdk
 
 ## 第二部分：依赖信息
@@ -12,54 +12,63 @@ type: solution                                      # <必选项> 组件类型�
 #   - minilibc: v7.2.0
 #   - aos: >=v7.2.0
 sdk_chip:
-  - sdk_chip_d1: v7.7.0
-  - sdk_chip_f133: v7.7.0
-  - sdk_chip_cv181xh: v7.7.0
+  - sdk_chip_d1: v7.8.0
+  - sdk_chip_f133: v7.8.0
+  - sdk_chip_cv181xh_bga: v7.8.0
 
 mkflash_script: mkflash.sh
 
 depends:
-  - sdk_chip_f133: v7.7.0
-  - iot_miniapp_sdk: v7.7.0
-  - av: v7.7.0
-  - amrnb: v7.7.0
-  - amrwb: v7.7.0
-  - flac: v7.7.0
-  - ogg: v7.7.0
-  - opus: v7.7.0
-  - pvmp3dec: v7.7.0
-  - sonic: v7.7.0
-  - speex: v7.7.0
-  - speexdsp: v7.7.0
-  - netmgr: v7.7.0
-  - littlefs: v7.7.0
-  - zlib: v7.7.0
-  - ntp: v7.7.0
-  - smart_audio: v7.7.0
-  - drv_amplifier: v7.7.0
-  - wifi_provisioning: v7.7.0
-  - aui_cloud_mind: v7.7.0
-  - cjson: v7.7.0
-  - alg_pcm_input: v7.7.0
-  - alg_record: v7.7.0
-  - record: v7.7.0
-  - websocket: v7.7.0
-  - posto: v7.7.0
-  - cxvision: v7.7.0
-  - voice_wrapper: v7.7.0
-  - httpclient: v7.7.0
-  - transport: v7.7.0
-  - button: v7.7.0
-  - alg_dispatch: v7.7.0         # alg: mind & thead
-  - alg_kws_lyeva: v7.7.0        # alg: thead
-  - voice_lyeva: v7.7.0          # alg: thead
-  - adb: v7.7.0
-  - clock_alarm: v7.7.0
-  - at: v7.7.0
-  - ers: v7.7.0
-  - ota_module: v7.7.0
-  - drv_ethernet: v7.7.0
+  - sdk_chip_cv181xh_bga: v7.8.0
+  - iot_miniapp_sdk: v7.8.0
+  - av: v7.8.0
+  - amrnb: v7.8.0
+  - amrwb: v7.8.0
+  - flac: v7.8.0
+  - ogg: v7.8.0
+  - opus: v7.8.0
+  - pvmp3dec: v7.8.0
+  - sonic: v7.8.0
+  - speex: v7.8.0
+  - speexdsp: v7.8.0
+  - netmgr: v7.8.0
+  - littlefs: v7.8.0
+  - zlib: v7.8.0
+  - ntp: v7.8.0
+  - smart_audio: v7.8.0
+  - drv_amplifier: v7.8.0
+  - wifi_provisioning: v7.8.0
+  - aui_cloud_mind: v7.8.0
+  - cjson: v7.8.0
+  - alg_pcm_input: v7.8.0
+  - alg_record: v7.8.0
+  - record: v7.8.0
+  - websocket: v7.8.0
+  - posto: v7.8.0
+  - cxvision: v7.8.0
+  - voice_wrapper: v7.8.0
+  - httpclient: v7.8.0
+  - transport: v7.8.0
+  - button: v7.8.0
+  - alg_dispatch: v7.8.0         # alg: mind & thead
+  - alg_kws_lyeva: v7.8.0        # alg: thead
+  - voice_lyeva: v7.8.0          # alg: thead
+  - adb: v7.8.0
+  - clock_alarm: v7.8.0
+  - at: v7.8.0
+  - ers: v7.8.0
+  - ota_module: v7.8.0
+  - drv_ethernet: v7.8.0
+  - fota: v7.8.0
 
+  - ble_mesh: v7.8.0
+  - gateway_mgmt: v7.8.0
+  - smartliving: v7.8.0
+  - tsl_engine: v7.8.0
+  - duktape: v7.8.0
+  - dut_service: v7.8.0
+  - csi2d: v7.8.0
+  
 ## 第三部分：板级信息
 # hw_info:                                 # 对 solution、board、chip 三个字段的改进，统称为 hw_info 字段
 #   cpu_id: cpu0
@@ -137,8 +146,8 @@ hw_info:
 #   libpath:                               # 指定静态库所在的路径（相对于该组件路径）
 #     - libs                               #   -Llibs
 build_config:
-  cflag: -O2
-  cxxflag: -O2 -fexceptions
+  cflag: -Os
+  cxxflag: -Os -fexceptions
   include:
     - app/src
   ldflag: '-Wl,-zmax-page-size=1024 -Wl,-Map=yoc.map'
@@ -165,39 +174,50 @@ source_file:
   - app/src/alarms/*.c
   - app/src/button/*.c
   - app/src/miniapp/*.c
+  - app/src/linkkit_gateway/*.c
+  - app/src/linkkit_gateway/app_gateway_opt/*.c
 
 ## 第五部分：配置信息
 def_config:                              # 组件的可配置项
     CONFIG_DEBUG: 1
-    CONFIG_DEBUG_MM: 1
+    # CONFIG_DEBUG_MM: 1
     CONFIG_SOFTWDT: 1
     # CONFIG_DEBUG_UTASK: 1
+    CONFIG_PTHREAD_DEFAULT_STACK_SIZE: 8192
     CONFIG_SOFTWDT_TASK_STACK_SIZE: 2048
     CLI_CONFIG_STACK_SIZE: 32768
     CLI_TASK_PRIORITY: 5
-    CONFIG_USERVICE_EVENT_TASK_STACK_SIZE: 4096
+    CONFIG_USERVICE_EVENT_TASK_STACK_SIZE: 16384
     CONFIG_IPC_RECV_TASK_STACK_SIZE: 4096
     CONFIG_IPC_SERVICE_TASK_STACK_SIZE: 6144
     CONFIG_ARCH_INTERRUPTSTACK: 8192
-    CONFIG_SMART_AUDIO_STACK_SIZE: 3072
+    CONFIG_SMART_AUDIO_STACK_SIZE: 16384
+    CONFIG_SMART_AUDIO_MEDIA_STACK_SIZE: 16384
     ULOG_CONFIG_ASYNC: 1   # ulog异步配置项，1表示开启异步打印，0表示同步打印
     ULOG_CONFIG_SYNC_LOG_DETAILS: 1
     ULOG_CONFIG_DEFAULT_DIR_ASYNC: 1
     ULOG_CONFIG_ASYNC_BUF_SIZE: 81920
     ULOG_CONFIG_LOG_SIZE: 2048
-    CONFIG_STANDALONE_NVRAM: 1
+  #  CONFIG_STANDALONE_NVRAM: 1
+    CONFIG_FOTA_DATA_IN_RAM: 0
+    CONFIG_FOTA_USE_HTTPC: 1
+    CONFIG_OTA_GATEWAY_IMG_SIZE: 819200
     CONFIG_HAL_UART_RINGBUF_LEN: 2048
-    CONFIG_KERNEL_TIMER_STACK_SIZE: 4096
+    CONFIG_KERNEL_TIMER_MSG_NUM: 40
+    CONFIG_KERNEL_TIMER_STACK_SIZE: 16384
     CONFIG_SMART_SPEAKER_AT: 0
+    CONFIG_TOUCH_TASK_STACK_SIZE: 16384
+# KV Confing
+    CONFIG_KV_SMART: 1
+    CONFIG_KV_ENABLE_CACHE: 1
 #board config
+    CONFIG_BOARD_DISPLAY: 1
+    CONFIG_BOARD_VO_OSD: 1
     CONFIG_BOARD_BT: 1
     CONFIG_BOARD_AUDIO: 1
-    CONFIG_BOARD_PWM: 1
     CONFIG_BOARD_ADC: 1
     CONFIG_BOARD_BUTTON: 1
     CONFIG_BOARD_WIFI: 1
-    CONFIG_BOARD_ETH: 0
-    CONFIG_BOARD_DISPLAY: 1
 #av decode
     CONFIG_DECODER_PVMP3: 1
     CONFIG_DECODER_ALAW: 1
@@ -208,6 +228,32 @@ def_config:                              # 组件的可配置项
     CONFIG_DECODER_SPEEX: 1
     CONFIG_DECODER_ADPCM_MS: 1
     CONFIG_DECODER_FLAC: 1
+#alg config
+    CONFIG_AUI_CLOUD: 1
+#UI
+    CONFIG_D1_DISP_FORMAT_ARGB8888: 1
+# Smartliving Config
+    CONFIG_MQTT_RX_MAXLEN: 30720
+    OTA_ENABLED: 1
+    CONFIG_WIFI_PROV_BLE: 1
+    DEVICE_MODEL_GATEWAY: 1
+    DM_UNIFIED_SERVICE_POST: 1
+    CONFIG_SMARTLIVING_OTA:  1
+# Gateway Config
+    CONFIG_SDK_VERSION: ble_mesh_gateway_1.0.0
+    CONFIG_GATEWAY_SUBDEV_OFFLINE_CHECK: 1
+    CONFIG_GW_MAX_DEVICES_META_NUM: 256
+    CONFIG_ERS_CONNECTIVITY: 0
+# TSL Model Config
+    CONFIG_TSL_DEVICER_MESH: 0
+    CONFIG_SAVE_JS_TO_RAM: 0
+# BLE HOST Config
+    CONFIG_BT_HCI_ACL_FLOW_CONTROL: 1
+    CONFIG_BT_AUTO_DATA_LEN_UPDATE: 1
+# Debug config
+    CONFIG_BT_DEBUG_LOG: 1
+    MESH_DEBUG_TX: 1
+    MESH_DEBUG_RX: 1
 
 ## 第六部分：安装信息
 # install:

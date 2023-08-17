@@ -382,6 +382,9 @@ static int cop_version_check(fota_info_t *info) {
     info->new_version = strdup(version->valuestring);
     LOGD(TAG, "get url: %s", info->fota_url);
     LOGD(TAG, "get changelog: %s", info->changelog);
+
+    info->cur_version = strdup(app_ver ? app_ver : "null");
+    info->local_changelog = strdup("null");
 out:
     if (ret < 0) {
         LOGE(TAG, "fota cop version check failed.");
@@ -583,16 +586,6 @@ static int cop_version_check(fota_info_t *info) {
     info->fota_url = strdup(http->url);
     LOGD(TAG, "get url: %s", info->fota_url);
     http_deinit(http);
-    return 0;
-}
-
-static int cop_init(fota_info_t *info)
-{
-    return 0;
-}
-
-static int restart(void)
-{
     return 0;
 }
 #endif /* CONFIG_FOTA_USE_HTTPC */

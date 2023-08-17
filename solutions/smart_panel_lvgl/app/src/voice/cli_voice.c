@@ -68,7 +68,11 @@ static int cli_voice_proc(int argc, char **argv)
         int enable = atoi(argv[2]);
         aui_mic_control(MIC_CTRL_ENABLE_LINEAR_AEC_DATA, enable);
         printf("start laec ctrl en=%d\r\n", enable);
-#ifdef CONFIG_BOARD_AUDIO
+    } else if (strcmp(argv[1], "asr") == 0) {
+        int enable = atoi(argv[2]);
+        aui_mic_control(MIC_CTRL_ENABLE_ASR, enable);
+        printf("start asr ctrl en=%d\r\n", enable);
+#ifdef BOARD_AUDIO_SUPPORT
     } else if (strcmp(argv[1], "gain") == 0) {
         if (argc == 4) {
             int id   = atoi(argv[2]);

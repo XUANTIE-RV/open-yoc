@@ -1,1 +1,0 @@
-download ihex verify=no $(ProjectPath)/generated/total_image.hex

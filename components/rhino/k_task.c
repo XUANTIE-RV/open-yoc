@@ -461,6 +461,72 @@ kstat_t task_suspend(ktask_t *task)
     return RHINO_SUCCESS;
 }
 
+kstat_t krhino_task_suspend_with_intrpt(ktask_t *task)
+{
+    CPSR_ALLOC();
+    RHINO_CRITICAL_ENTER();
+
+    switch (task->task_state) {
+        case K_RDY:
+            task->suspend_count = 1u;
+            task->task_state    = K_SUSPENDED;
+            ready_list_rm(&g_ready_queue, task);
+            break;
+        case K_SLEEP:
+            task->suspend_count = 1u;
+            task->task_state    = K_SLEEP_SUSPENDED;
+            break;
+        case K_PEND:
+            task->suspend_count = 1u;
+            task->task_state    = K_PEND_SUSPENDED;
+            break;
+        case K_SUSPENDED:
+        case K_SLEEP_SUSPENDED:
+        case K_PEND_SUSPENDED:
+            if (task->suspend_count == (suspend_nested_t) - 1) {
+                RHINO_CRITICAL_EXIT();
+                return RHINO_SUSPENDED_COUNT_OVF;
+            }
+
+            task->suspend_count++;
+            break;
+        case K_SEED:
+        default:
+            RHINO_CRITICAL_EXIT();
+            return RHINO_INV_TASK_STATE;
+    }
+
+    RHINO_CRITICAL_EXIT();
+    return RHINO_SUCCESS;
+}
+
+void krhino_task_yield_with_intrpt(void)
+{
+    ktask_t *preferred_task;
+    uint8_t cur_cpu_num;
+
+    CPSR_ALLOC();
+    RHINO_CPU_INTRPT_DISABLE();
+
+    cur_cpu_num = cpu_cur_get();
+
+    preferred_task = preferred_cpu_ready_task_get(&g_ready_queue, cur_cpu_num);
+#if (RHINO_CONFIG_SCHED_CFS > 0)
+    preferred_task = preferred_cfs_ready_task_get(preferred_task, cur_cpu_num);
+#endif
+
+    if (preferred_task == NULL) {
+        RHINO_CPU_INTRPT_ENABLE();
+        return;
+    }
+
+    g_preferred_ready_task[cur_cpu_num] = preferred_task;
+
+    cpu_intrpt_switch();
+
+    RHINO_CPU_INTRPT_ENABLE();
+}
+
 kstat_t krhino_task_suspend(ktask_t *task)
 {
     if (task == NULL) {

@@ -1,7 +1,7 @@
 
 ## 第一部分： 基础信息
 name: iot_miniapp_sdk                                 # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
-version: v7.7.0                                 # <必选项> 组件版本号
+version: v7.8.0                                 # <必选项> 组件版本号
 description: the libs and resources for iotminiapp # <必选项> 建议至少20字以上
 type: common                                     # <必选项> 组件类型，为：solution, chip, board, common, sdk
 
@@ -28,6 +28,7 @@ build_config:
   include:
     - include
     - include/jqutil_v2
+    - jsapi/include
   libs:                                  # 该组件中支持的二进制静态库,如：libxxx.a, libyyy.a
     - falcon_entry
     - jquick_falcon                            #   -lxxx
@@ -54,6 +55,7 @@ build_config:
     - jsapi_proxy
     - jquick_debug
     - pms
+    - systemui
      #- message_knife                                 # 该组件中支持的二进制静态库,如：libxxx.a, libyyy.a
   libpath:                               # 指定静态库所在的路径（相对于该组件路径）
     - lib/<cpu>
@@ -61,8 +63,17 @@ build_config:
 # source_file:                             # <可选项> 指定参与编译的源代码文件，支持通配符，采用相对路径
 #   - src/*.c                              # 例：组件 src 目录下所有的扩展名为 c 的源代码文件
 source_file:
-  - src/*.c
-  - src/jsapi_hello/*.cpp
+  - src/*.c 
+  - jsapi/jsapi_wifi/*.cpp
+  - jsapi/jsapi_hello/*.cpp
+  - jsapi/jsapi_http/*.cpp
+  - jsapi/jsapi_power/*.cpp
+  - jsapi/jsapi_screen/*.cpp
+  - jsapi/jsapi_system_kv/*.cpp
+  - jsapi/jsapi_voice/*.cpp ? <CONFIG_COMP_VOICE_WRAPPER>
+  - jsapi/jsapi_smartaudio/*.cpp
+  - jsapi/jsapi_fota/*.cpp
+  - jsapi/jsapi_gateway/*.cpp ? <CONFIG_BT_MESH>
 
 def_config:
   CONFIG_IOT_MINIAPP_SDK: 1

@@ -40,7 +40,7 @@ static int32_t driver_vfs_write(vfs_file_t *fp, const char *buf, uint32_t len)
     return 0;
 }
 
-static int32_t driver_vfs_ioctl(vfs_file_t *fp, int32_t cmd, uint32_t arg)
+static int32_t driver_vfs_ioctl(vfs_file_t *fp, int32_t cmd, unsigned long arg)
 {
     printf("%s\n", __func__);
     return 0;
@@ -117,7 +117,7 @@ static int32_t fs_vfs_write(vfs_file_t *fp, const char *buf, uint32_t len)
     printf("%s\n", __func__);
     return 0;
 }
-vfs_filesystem_ops_t fs_ops = {
+vfs_fs_ops_t fs_ops = {
     .open      = &fs_vfs_open,
     .close     = &fs_vfs_close,
     .read      = &fs_vfs_read,

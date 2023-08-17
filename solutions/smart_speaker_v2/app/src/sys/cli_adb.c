@@ -1,8 +1,10 @@
+#include <board.h>
+
 #include <string.h>
 #include <aos/cli.h>
 #include <yoc/adb_server.h>
 #include <yoc/adb.h>
-#include <board.h>
+#include <yoc/pcm_input_port.h>
 
 static int g_adb_inited = 0;
 
@@ -12,6 +14,21 @@ static const adbserver_cmd_t adb_cmd[] = {
     AT_ADBSTART,   AT_ADBSTOP,   AT_ADBEXIT,    AT_RECORDSTART, AT_RECORDSTOP, AT_NULL,
 };
 
+static void adb_event_cb(adb_event_t event)
+{
+    switch(event) {
+        case ADB_PUSH_START:
+        case ADB_PULL_START:
+            pcm_acquire_set_enable(0);
+            break;
+        case ADB_PUSH_FINISH:
+        case ADB_PULL_FINISH:
+            pcm_acquire_set_enable(1);
+            break;
+        default:;
+    }
+}
+
 static void adb_init(void)
 {
     utask_t *task = utask_new("adb_srv", 8192, QUEUE_MSG_COUNT, 50);
@@ -20,6 +37,7 @@ static void adb_init(void)
     adbserver_set_output_terminator("");
     adbserver_add_command(adb_cmd);
     adb_start();
+    adb_event_register(adb_event_cb);
 }
 
 static void cmd_adb_start(char *wbuf, int wbuf_len, int argc, char **argv)

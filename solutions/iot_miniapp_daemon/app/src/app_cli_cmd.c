@@ -5,6 +5,10 @@
 
 #include <aos/cli.h>
 
+#if defined(CONFIG_BT_MESH) && CONFIG_BT_MESH
+#include "linkkit_gateway/app_gateway_ut.h"
+#endif
+
 extern void cli_reg_cmd_kvtool(void);
 extern void cli_reg_cmd_ping(void);
 extern void cli_reg_cmd_iperf(void);
@@ -32,6 +36,7 @@ extern void cli_reg_cmd_clock(void);
 extern void cli_reg_cmd_kwstest(void);
 extern void cli_reg_cmd_free(void);
 extern void cli_reg_cmd_miniapp(void);
+extern void cli_reg_cmd_gateway(void);
 
 void app_cli_init(void)
 {
@@ -39,17 +44,23 @@ void app_cli_init(void)
     cli_reg_cmd_ping();
     cli_reg_cmd_iperf();
     cli_reg_cmd_ifconfig();
+
+#if defined(CONFIG_AUI_CLOUD) && CONFIG_AUI_CLOUD
     cli_reg_cmd_aui();
+#endif
+
+#if defined(CONFIG_COMP_VOICE_WRAPPER) && CONFIG_COMP_VOICE_WRAPPER
     cli_reg_cmd_record();
     cli_reg_cmd_pcminput();
-    cli_reg_cmd_appsys();
     cli_reg_cmd_voice();
+#endif
+    cli_reg_cmd_appsys();
     cli_reg_cmd_keymsg();
     cli_reg_cmd_display();
     cli_reg_cmd_status_event();
     cli_reg_cmd_free();
 
-#if defined(CONFIG_BOARD_AUDIO) && CONFIG_BOARD_AUDIO > 0
+#if defined(BOARD_AUDIO_SUPPORT) && BOARD_AUDIO_SUPPORT
     cli_reg_cmd_player();
     cli_reg_cmd_eqset();
 #endif
@@ -84,4 +95,8 @@ void app_cli_init(void)
 #endif
 
     cli_reg_cmd_miniapp();
+
+#if defined(CONFIG_BT_MESH) && CONFIG_BT_MESH
+    cli_reg_cmd_gateway();
+#endif
 }

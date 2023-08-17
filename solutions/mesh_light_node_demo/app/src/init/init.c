@@ -7,7 +7,6 @@
 #include <aos/kv.h>
 #include <yoc/yoc.h>
 #include <yoc/partition.h>
-#include <aos/hal/pwm.h>
 #include <board.h>
 #include "app_init.h"
 #include "app_main.h"

@@ -117,3 +117,16 @@ int rvm_hal_iic_mem_read(rvm_dev_t *dev, uint16_t dev_addr, uint16_t mem_addr, u
 
     return ret;
 }
+
+int rvm_hal_iic_trans_dma_enable(rvm_dev_t *dev, bool enable)
+{
+    int ret;
+
+    IIC_VAILD(dev);
+
+    device_lock(dev);
+    ret = IIC_DRIVER(dev)->trans_dma_enable(dev, enable);
+    device_unlock(dev);
+
+    return ret;
+}

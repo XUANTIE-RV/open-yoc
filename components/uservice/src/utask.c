@@ -4,6 +4,7 @@
 
 #include <stdint.h>
 #include <string.h>
+#include <sys/time.h>
 #include <uservice/uservice.h>
 
 #ifdef __linux__

@@ -19,14 +19,12 @@ static inline int sched_policy_posix2aos(int policy)
             return AOS_KSCHED_FIFO;
         case SCHED_RR:
             return AOS_KSCHED_RR;
-        case SCHED_CFS:
-            return AOS_KSCHED_CFS;
         default:
             return -1;
     }
 }
 
-/* Convert the schedule policy of rhino to posix. */
+/* Convert the schedule policy of aos to posix. */
 static inline int sched_policy_aos2posix(int policy)
 {
     switch (policy) {
@@ -36,21 +34,20 @@ static inline int sched_policy_aos2posix(int policy)
             return SCHED_FIFO;
         case AOS_KSCHED_RR:
             return SCHED_RR;
-        case AOS_KSCHED_CFS:
-            return SCHED_CFS;
         default:
             return -1;
     }
 }
 
-/* In rhino: lower priority value means higher priority.
+/* In aos: lower priority value means higher priority.
  * In posix standard: higher priority value means higher priority.
  */
-static inline int sched_priority_posix2rhino(int policy, int priority)
+static inline int sched_priority_posix2aos(int policy, int priority)
 {
-    return aos_sched_get_priority_max(policy) - priority;
+    int pri = aos_sched_get_priority_max(policy) - priority;
+    return pri < 0 ? 0 : pri;
 }
 
-#define sched_priority_rhino2posix sched_priority_posix2rhino
+#define sched_priority_aos2posix sched_priority_posix2aos
 
 #endif /*__POSIX_INTERNAL_SCHED_H*/

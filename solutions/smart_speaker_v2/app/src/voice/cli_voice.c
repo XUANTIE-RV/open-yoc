@@ -1,10 +1,11 @@
 /*
  * Copyright (C) 2019-2022 Alibaba Group Holding Limited
  */
+#include <board.h>
 
 #include <aos/cli.h>
 #include <yoc/mic.h>
-#include <board.h>
+#include <yoc/pcm_input_port.h>
 
 #include <sys/stat.h>
 #include <vfs.h>
@@ -72,7 +73,7 @@ static int cli_voice_proc(int argc, char **argv)
         int enable = atoi(argv[2]);
         aui_mic_control(MIC_CTRL_ENABLE_ASR, enable);
         printf("start asr ctrl en=%d\r\n", enable);
-#ifdef CONFIG_BOARD_AUDIO
+#ifdef BOARD_AUDIO_SUPPORT
     } else if (strcmp(argv[1], "gain") == 0) {
         if (argc == 4) {
             int id   = atoi(argv[2]);
@@ -89,6 +90,10 @@ static int cli_voice_proc(int argc, char **argv)
                    board_audio_in_get_gain(2));
         }
 #endif
+    } else if (strcmp(argv[1], "acq") == 0) {
+        int enable = atoi(argv[2]);
+        pcm_acquire_set_enable(enable);
+        printf("set pcm acq en=%d\r\n", enable);
     } else {
         return -1;
     }
@@ -105,8 +110,7 @@ static void cmd_voice_func(char *wbuf, int wbuf_len, int argc, char **argv)
     } else {
         printf("\tvoice p2t 1\n");
         printf("\tvoice mute 1\n");
-        printf("\tvoice doa\n");
-        printf("\tvoice laec 0|1\n");
+        printf("\tvoice acq 0\n");
     }
 }
 

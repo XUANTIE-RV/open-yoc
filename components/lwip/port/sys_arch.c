@@ -45,7 +45,6 @@
 #include "lwip/mem.h"
 #include "arch/sys_arch.h"
 #include <aos/aos.h>
-#include <k_api.h>
 
 static aos_mutex_t sys_arch_mutex;
 

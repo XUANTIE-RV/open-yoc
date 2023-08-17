@@ -10,6 +10,8 @@ typedef struct gsl1680_gpio_pin_t {
     int reset_gpio_chn;
     int interrupt_gpio_group;
     int interrupt_gpio_chn;
+    int rotation_angle; /* 0 90 180 270 */
+    int mirror_type;    /* 0: none 1: x mirror 2: y mirror*/
 } gsl1680_gpio_pin;
 
 

@@ -26,6 +26,10 @@ erasechip:
 flash:
 	$(CPRE) scons --flash=prim --board=$(BOARD) --sdk=$(SDK)
 
+.PHONY:flashboot
+flashboot:
+	$(CPRE) scons --flash=boot --board=$(BOARD) --sdk=$(SDK)
+
 .PHONY:clean
 clean:
 	$(CPRE) rm -rf yoc_sdk binary out yoc.* generated

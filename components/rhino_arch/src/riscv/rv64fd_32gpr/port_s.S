@@ -22,25 +22,18 @@
 .global Mtspend_Handler
 .global Stspend_Handler
 
-#if __riscv_xlen == 64
-	#define portWORD_SIZE 8
-	#define store_x sd
-	#define load_x ld
-#elif __riscv_xlen == 32
-	#define store_x sw
-	#define load_x lw
-	#define portWORD_SIZE 4
-#else
-	#error Assembler did not define __riscv_xlen
-#endif
-
-#define MSTATUS_PRV1 0x1880
-
 .extern task_restore
 /******************************************************************************
 @                                 EQUATES
 @******************************************************************************/
 .equ RISCV_MSTATUS_MIE,        (1<<3)       /*machine-level interrupt bit*/
+.equ RISCV_SSTATUS_SIE,        (1<<1)       /*machine-level interrupt bit*/
+
+#if defined(CONFIG_RISCV_SMODE) && CONFIG_RISCV_SMODE
+.equ RISCV_VIC_TSPDR,          (VIC_TSPDR + 0xC000)       /*soft irq register*/
+#else
+.equ RISCV_VIC_TSPDR,          (VIC_TSPDR)                /*soft irq register*/
+#endif
 
 /******************************************************************************
 @                        CODE GENERATION DIRECTIVES
@@ -53,18 +46,30 @@
 @     size_t cpu_intrpt_save(void);
 @     void cpu_intrpt_restore(size_t cpsr);
 @******************************************************************************/
+#if defined(CONFIG_RISCV_SMODE) && CONFIG_RISCV_SMODE
 cpu_intrpt_save:
-    csrrci a0, mstatus, RISCV_MSTATUS_MIE
-    ret
-
-cpu_intrpt_restore:
-    csrw mstatus, a0
+    csrrci a0, MODE_PREFIX(status), RISCV_SSTATUS_SIE
     ret
 
 cpu_is_irq_enable:
-    csrr a0, mstatus
+    csrr a0, MODE_PREFIX(status)
+    andi a0, a0, RISCV_SSTATUS_SIE
+    ret
+#else
+cpu_intrpt_save:
+    csrrci a0, MODE_PREFIX(status), RISCV_MSTATUS_MIE
+    ret
+
+cpu_is_irq_enable:
+    csrr a0, MODE_PREFIX(status)
     andi a0, a0, RISCV_MSTATUS_MIE
     ret
+#endif
+
+cpu_intrpt_restore:
+    csrw MODE_PREFIX(status), a0
+    ret
+
 
 /******************************************************************************
 @ Functions:
@@ -72,9 +77,23 @@ cpu_is_irq_enable:
 @     void cpu_task_switch(void);
 @******************************************************************************/
 cpu_task_switch:
-    li      t0, VIC_TSPDR
-    li      t2, 0x1    
+    li      t0, RISCV_VIC_TSPDR
+    li      t2, 0x1
     sw      t2, 0(t0)
+
+__loop:
+    lw      t2, 0(t0)
+    seqz    t1, t2
+#if defined(CONFIG_RISCV_SMODE) && CONFIG_RISCV_SMODE
+    csrr    t2, sip
+    andi    t2, t2, 0x2
+#else
+    csrr    t2, mip
+    andi    t2, t2, 0x8
+#endif
+    snez    t3, t2
+    add     t2, t3, t1
+    beqz    t2, __loop
     ret
 
 cpu_intrpt_switch:
@@ -86,7 +105,8 @@ cpu_intrpt_switch:
 @******************************************************************************/
 .align 8
 cpu_first_task_start:
-    j __task_switch_nosave
+    j       __task_switch_nosave
+
 /*-----------------------------------------------------------*/
 
 /*
@@ -119,7 +139,7 @@ cpu_first_task_start:
  * where the global and thread pointers are currently assumed to be constant so
  * are not saved:
  *
- * mstatus
+ * MODE_PREFIX(status)
  * x31
  * x30
  * x29
@@ -155,8 +175,8 @@ cpu_first_task_start:
 /*-----------------------------------------------------------*/
 
 .align 8
-Stspend_Handler:
 Mtspend_Handler:
+Stspend_Handler:
     addi     sp, sp, -(128+128)
     fsd      f31, (0  +0  )(sp)
     fsd      f30, (4  +4  )(sp)
@@ -224,10 +244,11 @@ Mtspend_Handler:
     sd      x30, (112+112)(sp)
     sd      x31, (116+116)(sp)
 
-    csrr    t0, mepc
+    csrr    t0, MODE_PREFIX(epc)
     sd      t0, (120+120)(sp)
-    csrr    t0, mstatus
+    csrr    t0, MODE_PREFIX(status)
     sd      t0, (124+124)(sp)
+
 #ifdef __riscv_vector
     addi    sp, sp, -(20+20)
     csrr    t0, vl
@@ -241,17 +262,32 @@ Mtspend_Handler:
     csrr    t0, vxrm
     sd      t0,  (16 +16 )(sp)
 
-    addi     sp, sp, -(256+256)
+    csrr     t0, vlenb
+    slli     t0, t0, 3
+    slli     t1, t0, 2
+    sub      sp, sp, t1
     vsetvli  zero, zero, e8, m8
+#if (__riscv_v == 7000)
     vsb.v    v0, (sp)
-    addi     sp, sp, 128
+    add      sp, sp, t0
     vsb.v    v8, (sp)
-    addi     sp, sp, 128
+    add      sp, sp, t0
     vsb.v    v16, (sp)
-    addi     sp, sp, 128
+    add      sp, sp, t0
     vsb.v    v24, (sp)
-    addi     sp, sp, -(256+256-128)
+#elif (__riscv_v == 1000000)
+    vs8r.v   v0, (sp)
+    add      sp, sp, t0
+    vs8r.v   v8, (sp)
+    add      sp, sp, t0
+    vs8r.v   v16, (sp)
+    add      sp, sp, t0
+    vs8r.v   v24, (sp)
 #endif
+    sub      t0, t1, t0
+    sub      sp, sp, t0
+#endif /*__riscv_vector*/
+
     la      a1, g_active_task
     lwu     a1, (a1)
     sw      sp, (a1)
@@ -272,20 +308,33 @@ __task_switch_nosave:
 
     lwu     sp, (a2)
 
-    li      t0, VIC_TSPDR
-    li      t2, 0x0    
+    li      t0, RISCV_VIC_TSPDR
+    li      t2, 0x0
     sw      t2, 0(t0)
-#ifdef __riscv_vector
-    vsetvli  zero, zero, e8, m8
-    vlb.v    v0, (sp)
-    addi     sp, sp, 128
-    vlb.v    v8, (sp)
-    addi     sp, sp, 128
-    vlb.v    v16, (sp)
-    addi     sp, sp, 128
-    vlb.v    v24, (sp)
-    addi     sp, sp, 128
 
+#ifdef __riscv_vector
+    csrr     t0, vlenb
+    slli     t0, t0, 3
+    vsetvli  zero, zero, e8, m8
+#if (__riscv_v == 7000)
+    vlb.v    v0, (sp)
+    add      sp, sp, t0
+    vlb.v    v8, (sp)
+    add      sp, sp, t0
+    vlb.v    v16, (sp)
+    add      sp, sp, t0
+    vlb.v    v24, (sp)
+    add      sp, sp, t0
+#elif (__riscv_v == 1000000)
+    vl8r.v   v0, (sp)
+    add      sp, sp, t0
+    vl8r.v   v8, (sp)
+    add      sp, sp, t0
+    vl8r.v   v16, (sp)
+    add      sp, sp, t0
+    vl8r.v   v24, (sp)
+    add      sp, sp, t0
+#endif
     lwu     t0, (0 +0)(sp)
     lwu     t1, (4 +4)(sp)
     lwu     t2, (8 +8)(sp)
@@ -296,12 +345,13 @@ __task_switch_nosave:
     lwu     t2, (16 +16)(sp)
     csrw    vxrm, t2
     addi    sp, sp, (20+20)
-#endif
+#endif /*__riscv_vector*/
+
     lwu     t0, (124 +124)(sp)
-    csrs    mstatus, t0
+    csrs    MODE_PREFIX(status), t0
 
     lwu     t0, (120 +120)(sp)
-    csrw    mepc, t0
+    csrw    MODE_PREFIX(epc), t0
 
     ld     x1,  (0  +0  )(sp)
     ld     x3,  (4  +4  )(sp)
@@ -371,4 +421,4 @@ __task_switch_nosave:
 
     addi    sp, sp, (128+128)
 
-    mret
+    MODE_PREFIX(ret)

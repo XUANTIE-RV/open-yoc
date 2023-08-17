@@ -10,10 +10,11 @@
 #include <yoc/aui_cloud.h>
 #include <yoc/mic.h>
 
-#include "ex_cjson.h"
+#include "aui_cloud/app_aui_cloud.h"
+#include "aui_cloud/ex_cjson.h"
+#include "aui_action/aui_action.h"
 #include "player/app_player.h"
 #include "event_mgr/app_event.h"
-#include "aui_nlp.h"
 
 #define TAG "auinlp"
 
@@ -37,38 +38,16 @@ static void nlp_handle(void *data, int len, void *priv)
     } else if (req_ack_info->data_type == AUI_AUDIO_REQ_TYPE_NLP) {
         LOGD(TAG, "JSON=%s\n", req_ack_info->data);
         cJSON *js = cJSON_Parse(req_ack_info->data);
-
-        int ret = aui_nlp_proc_mit(js, req_ack_info->data);
-        if (ret == AUI_CMD_PROC_NOMATCH) {
-            app_event_update(EVENT_STATUS_NLP_NOTHING); /* 没听清楚 */
-        } else if (ret == AUI_CMD_PROC_MATCH_NOACTION) {
-            app_event_update(EVENT_STATUS_NLP_UNKNOWN); /* 不懂 */
-        } else if (ret == AUI_CMD_PROC_NET_ABNORMAL) {
-            app_event_update(EVENT_STATUS_NLP_NOTHING); /* 没听清楚 */
-        } else if (ret == AUI_CMD_PROC_ERROR) {
-            app_event_update(EVENT_STATUS_NLP_NOTHING); /* 没听清楚 */
-        } else {
-            ;
+        cJSON *name = cJSON_GetObjectItemByPath(js, "header.name");
+        //nlp only
+        if( cJSON_IsString(name) && strcmp(name->valuestring, "DialogResultGenerated") == 0 ){
+            app_aui_nlpEnd(req_ack_info->data);
         }
-
-        /* 识别返回，云端断句 */
-        if (ret == AUI_CMD_PROC_NOMATCH || ret == AUI_CMD_PROC_NET_ABNORMAL) {
-            //云端识别错误，断句
-            aui_mic_control(MIC_CTRL_START_SESSION, 0);
-        } else {
-            //识别完成，断句
-            cJSON *name = cJSON_GetObjectItemByPath(js, "header.name");
-            if (name) {
-                if (strcmp(name->valuestring, "RecognitionCompleted") == 0) {
-                    aui_mic_control(MIC_CTRL_START_SESSION, 0);
-                } else {
-                    LOGE(TAG, "unknown nlp error");
-                }
-            }
+        //asr + 异常处理
+        else{
+            app_aui_shortcutCMD(js , req_ack_info->data);
         }
-
         cJSON_Delete(js);
-
     } else {
         LOGE(TAG, "unknown type %d", req_ack_info->data_type);
     }
@@ -89,6 +68,7 @@ int app_aui_cloud_init(void)
 
     aui_nlp_register(g_aui_handler, nlp_handle, g_aui_handler);
     aui_tts_register(g_aui_handler, tts_handle, g_aui_handler);
+
     g_initialized = 1;
 
     return 0;

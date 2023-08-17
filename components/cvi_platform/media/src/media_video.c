@@ -215,6 +215,10 @@ static int start_isp(ISP_PUB_ATTR_S stPubAttr, VI_PIPE ViPipe)
 		return s32Ret;
 	}
 
+#if(CONFIG_APP_ISP_BYPASS == 0)
+    CVI_ISP_SetBypassFrm(0, 0);
+#endif
+
 	s32Ret = CVI_ISP_Init(ViPipe);
 	if (s32Ret != CVI_SUCCESS) {
 		MEDIABUG_PRINTF("ISP Init failed with %#x!\n", s32Ret);
@@ -345,6 +349,7 @@ static int _meida_sensor_init(PARAM_VI_CFG_S * pstViCtx,CVI_U8 *devNum)
             devAttr.mipi_attr.wdr_mode = pstViCtx->pstSensorCfg[i].s32WDRMode;
         }
         if(pstViCtx->pstSensorCfg[i].bSetDevAttr != 0) {
+            devAttr.devno = i;
             devAttr.mac_clk = pstViCtx->pstSensorCfg[i].s16MacClk;
             devAttr.mclk.cam = pstViCtx->pstSensorCfg[i].u8MclkCam;
             devAttr.mclk.freq = pstViCtx->pstSensorCfg[i].u8MclkFreq;
@@ -382,8 +387,15 @@ static  int _media_sensor_deinit()
 //设置开机快速收敛参数 5 个节点，Luma 和Bv 一一对应
 static int setFastConvergeAttr(VI_PIPE ViPipe, CVI_BOOL en)
 {
-    CVI_S16 firstFrLuma[5] = {62, 77, 173, 343, 724};
-	CVI_S16 targetBv[5] = {89, 194, 479, 533, 721};
+    CVI_S16 firstFrLuma[5] = {68, 80, 127, 349, 538};
+    CVI_S16 targetBv[5] = {-100, 105, 232, 878, 933};
+    if(ViPipe == 1)
+    {
+        CVI_S16 Luma[5] = {63, 109, 374, 774, 1023};
+        CVI_S16 Bv[5] = {269, 702, 970, 1077, 1160};
+        memcpy(firstFrLuma, Luma, sizeof(Luma));
+        memcpy(targetBv, Bv, sizeof(Bv));
+    }
     ISP_AE_BOOT_FAST_CONVERGE_S stConvergeAttr;
 
     stConvergeAttr.bEnable = en;
@@ -426,7 +438,7 @@ int MEDIA_VIDEO_ViInit(PARAM_VI_CFG_S * pstViCfg)
 
     MEDIA_CHECK_RET(_meida_sensor_init(pstViCfg,&devNum),"_meida_sensor_init fail");
 
-    CVI_VI_SetDevNum(devNum);
+    // CVI_VI_SetDevNum(devNum);
 
     for (int i = 0; i < devNum; i++) {
         ViDev = i;
@@ -647,7 +659,7 @@ int MEDIA_VIDEO_VpssInit(PARAM_VPSS_CFG_S * pstVpssCtx)
         pstVpssGrp = &pstVpssCtx->pstVpssGrpCfg[i].stVpssGrpAttr;
         VpssGrp = pstVpssCtx->pstVpssGrpCfg[i].VpssGrp;
         if(pstVpssCtx->pstVpssGrpCfg[i].s32BindVidev != -1) {
-            MEDIA_CHECK_RET(getDevAttr(0, &stViDevAttr), "getDevAttr fail");
+            MEDIA_CHECK_RET(getDevAttr(i, &stViDevAttr), "getDevAttr fail");
             if(pstVpssCtx->pstVpssGrpCfg[i].u8ViRotation == 90) {
                 pstVpssGrp->u32MaxW = stViDevAttr.stSize.u32Height;
                 pstVpssGrp->u32MaxH = stViDevAttr.stSize.u32Width;
@@ -720,12 +732,134 @@ static int _MEDIA_VIDEO_VpssDeinit()
     return MEDIA_VIDEO_VpssDeinit(pstVpssCtx);
 }
 
+
+int _MEDIA_VIDEO_DSIInit(int devno, const struct dsc_instr *cmds, int size)
+{
+    CVI_S32 s32Ret = CVI_SUCCESS;
+
+    for (int i = 0; i < size; i++) {
+        const struct dsc_instr *instr = &cmds[i];
+        struct cmd_info_s cmd_info = {
+            .devno = (unsigned int)devno,
+            .data_type = instr->data_type,
+            .cmd_size = instr->size,
+            .cmd = (unsigned char *)instr->data
+        };
+
+        s32Ret = mipi_tx_send_cmd(0, &cmd_info);
+        if (s32Ret != CVI_SUCCESS) {
+            MEDIABUG_PRINTF("dsi init failed at %d instr.\n", i);
+            return CVI_FAILURE;
+        }
+        if (instr->delay) {
+            udelay(instr->delay * 1000);
+        }
+    }
+
+    return 0;
+}
+
+void *_MEDIA_VIDEO_PanelInit(void *data)
+{
+    int fd = 0;
+    CVI_S32 s32Ret = CVI_SUCCESS;
+    struct panel_desc_s *panel_desc = (struct panel_desc_s *)data;
+
+    s32Ret = mipi_tx_rstpin(0);
+    if (s32Ret != CVI_SUCCESS) {
+        MEDIABUG_PRINTF("mipi_tx_rstpin failed with %#x\n", s32Ret);
+        return NULL;
+    }
+
+#if (CONFIG_PANEL_READID == 1)
+    CVI_U32 panelid[3] = {0}, param[3] = {0xDA, 0xDB, 0xDC};
+    CVI_U8 buf[4], i;
+
+    for (i = 0; i < 3; ++i) {
+        struct get_cmd_info_s get_cmd_info = {
+            .devno = 0,
+            .data_type = 0x06,
+            .data_param = param[i],
+            .get_data_size = 0x01,
+            .get_data = buf
+        };
+
+        memset(buf, 0, sizeof(buf));
+        if (mipi_tx_recv_cmd(0, &get_cmd_info)) {
+            MEDIABUG_PRINTF("%s get panel id fialed!\n", __func__);
+            return NULL;
+        }
+        panelid[i] = buf[0];
+    }
+    printf("%s panel id (0x%02x 0x%02x 0x%02x)!\n", __func__, panelid[0], panelid[1], panelid[2]);
+
+    // modify panel_desc accord to panel id.
+    s32Ret = mipi_tx_cfg(0, panel_desc->dev_cfg);
+    if (s32Ret != CVI_SUCCESS) {
+        MEDIABUG_PRINTF("mipi_tx_cfg failed with %#x\n", s32Ret);
+        return NULL;
+    }
+#endif
+
+    s32Ret = _MEDIA_VIDEO_DSIInit(0, panel_desc->dsi_init_cmds, panel_desc->dsi_init_cmds_size);
+    if (s32Ret != CVI_SUCCESS) {
+        MEDIABUG_PRINTF("dsi_init failed with %#x\n", s32Ret);
+        return NULL;
+    }
+    s32Ret = mipi_tx_set_hs_settle(fd, panel_desc->hs_timing_cfg);
+    if (s32Ret != CVI_SUCCESS) {
+        MEDIABUG_PRINTF("mipi_tx_set_hs_settle failed with %#x\n", s32Ret);
+        return NULL;
+    }
+    s32Ret = mipi_tx_enable(fd);
+    if (s32Ret != CVI_SUCCESS) {
+        MEDIABUG_PRINTF("mipi_tx_enable failed with %#x\n", s32Ret);
+        return NULL;
+    }
+    MEDIABUG_PRINTF("Init for MIPI-Driver-%s\n", panel_desc->panel_name);
+
+    pthread_exit(NULL);
+    return NULL;
+}
+
 int MEDIA_VIDEO_PanelInit(void)
 {
     static int initstatus = 0;
-    if(initstatus ==0) {
+    CVI_S32 s32Ret = CVI_SUCCESS;
+
+    if (initstatus == 0) {
         initstatus = 1;
-        mipi_tx_init(&panel_desc);
+        s32Ret = mipi_tx_init(panel_desc.dev_cfg);
+        if (s32Ret != CVI_SUCCESS) {
+            MEDIABUG_PRINTF("mipi_tx_init failed with %#x\n", s32Ret);
+            return s32Ret;
+        }
+
+        s32Ret = mipi_tx_disable(0);
+        if (s32Ret != CVI_SUCCESS) {
+            MEDIABUG_PRINTF("mipi_tx_disable failed with %#x\n", s32Ret);
+            return s32Ret;
+        }
+        s32Ret = mipi_tx_cfg(0, panel_desc.dev_cfg);
+        if (s32Ret != CVI_SUCCESS) {
+            MEDIABUG_PRINTF("mipi_tx_cfg failed with %#x\n", s32Ret);
+            return s32Ret;
+        }
+
+        struct sched_param param;
+        pthread_attr_t attr;
+        pthread_condattr_t cattr;
+        pthread_t thread;
+
+        param.sched_priority = MIPI_TX_RT_PRIO;
+        pthread_attr_init(&attr);
+        pthread_attr_setschedpolicy(&attr, SCHED_FIFO);
+        pthread_attr_setschedparam(&attr, &param);
+        pthread_attr_setinheritsched(&attr, PTHREAD_EXPLICIT_SCHED);
+        pthread_condattr_init(&cattr);
+        pthread_condattr_setclock(&cattr, CLOCK_MONOTONIC);
+        pthread_create(&thread, &attr, _MEDIA_VIDEO_PanelInit, (void *)&panel_desc);
+        pthread_setname_np(thread, "cvi_mipi_tx");
     }
     return 0;
 }
@@ -1367,3 +1501,39 @@ void testMedia_switch_pipeline(int32_t argc, char **argv)
 ALIOS_CLI_CMD_REGISTER(testMedia_video_init, testMedia_video_init, testMedia_video_init);
 ALIOS_CLI_CMD_REGISTER(testMedia_video_Deinit, testMedia_video_Deinit, testMedia_video_Deinit);
 ALIOS_CLI_CMD_REGISTER(testMedia_switch_pipeline, testMedia_switch_pipeline, testMedia_switch_pipeline);
+
+#if CONFIG_SENSOR_DUAL_SWITCH
+void testMedia_sensor_switch(int32_t argc, char **argv)
+{
+    CVI_S32 snsr_type;
+    CVI_U8 dev_num;
+    ISP_SNS_OBJ_S *pSnsObj;
+
+    if(argc < 2) {
+        printf("please input 0/1 chose sensor switch\n");
+        printf("testMedia_sensor_switch 0/1 \n");
+        return ;
+    }
+
+    int sns_idx = atoi(argv[1]);
+    if (sns_idx > 1 || sns_idx < 0){
+        printf("input illegal\n");
+        return ;
+    }
+
+    getSnsType(&snsr_type, &dev_num);
+    pSnsObj = getSnsObj(snsr_type);
+    if (!pSnsObj) {
+        printf("pSnsObj null, %d\n", snsr_type);
+        return;
+    }
+
+    if (pSnsObj->pfnSnsDualSwitch) {
+        pSnsObj->pfnSnsDualSwitch(sns_idx);
+    }
+    else {
+        printf("sns %d not support dual switch\n", snsr_type);
+    }
+}
+ALIOS_CLI_CMD_REGISTER(testMedia_sensor_switch, testMedia_sensor_switch, testMedia_sensor_switch);
+#endif

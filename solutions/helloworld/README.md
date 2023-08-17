@@ -69,21 +69,6 @@ make SDK=sdk_chip_ch2601
 make flashall SDK=sdk_chip_ch2601
 ```
 
-#### cv181平台
-
-1. 编译
-
-```bash
-make clean
-make SDK=sdk_chip_cv181xh
-```
-
-2. 烧写
-
-```bash
-make flashall SDK=sdk_chip_cv181xh
-```
-
 #### f133平台
 
 1. 编译
@@ -104,6 +89,21 @@ make flashall SDK=sdk_chip_f133
 ```bash
 riscv64-unknown-elf-gdb yoc.elf -x gdbinit
 ```
+
+#### cv181xh_huashanpi_evb 平台
+1. 编译
+
+```bash
+make clean
+make SDK=sdk_chip_cv181xh_bga
+```
+
+2. 烧写
+
+```bash
+make flashall SDK=sdk_chip_cv181xh_bga
+```
+
 
 # 运行
 烧录完成之后系统会自动启动，串口会有打印输出。
