@@ -40,6 +40,13 @@ BL606P-DVK专为用于评估音视频应用诞生，适用于智能面板、智�
 
 开发板快速上手手册请参考[BL606P 开发板上手手册](https://occ.t-head.cn/community/post/detail?spm=a2cl5.27438731.0.0.4e28180fT0sZG1&id=4106009187719385088)
 
+### 华山派开发板
+
+华山派 CV1812H开发板，是算能和生态伙伴硬件十万个为什么联合推出的开源生态开发板，为广大使用者提供基于RISC-V的开源开发环境，以视觉、AI场景开发为核心实现功能，芯片更集成第二代全自研深度学习张量处理器（TPU），全自研智能图像处理引擎（Smart ISP），硬件级别高度安全资料保护架构（Security），语音处理引擎及H.264/265智能编解码技术，同时还有配套的多媒体软件平台和IVE硬件加速接口，使AI部署与执行更加高效、快速、便捷。主流的深度学习框架，比如Caffe，Pytorch，ONNX ，MXNet和TensorFlow(Lite) 框架的主流网络可以轻松的移植。
+
+具体开发板硬件规格及信息请到[华山派开发板](https://xuantie.t-head.cn/product/board/4212612498014146560?spm=a2cl5.26076654.0.0.347f4aa84husd3).
+
+开发板快速上手手册请参考[华山派开发板上手手册](https://xuantie.t-head.cn/document?temp=huashan-school-development-board-handbook&slug=yocbook)
 
 ## 示例列表
 
