@@ -1,6 +1,6 @@
 ## 第一部分： 基础信息
 name: smart_panel_lvgl
-version: v7.8.0
+version: v7.9.0
 description: smart panel solution with UI(lvgl) + gateway + Voice
 type: solution
 ## 第二部分：依赖信息
@@ -10,60 +10,60 @@ type: solution
 #   - minilibc: v7.2.0
 #   - aos: >=v7.2.0
 sdk_chip:
-  - sdk_chip_d1: v7.8.0
-  - sdk_chip_f133: v7.8.0
-  - sdk_chip_cv181xh_bga: v7.8.0
+  - sdk_chip_d1: v7.9.0
+  - sdk_chip_f133: v7.9.0
+  - sdk_chip_cv181xh_bga: v7.9.0
 
 mkflash_script: mkflash.sh
 
 depends:
-  - sdk_chip_d1: v7.8.0
-  - tsl_engine: v7.8.0
-  - duktape: v7.8.0
-  - dut_service: v7.8.0
-  - smartliving: v7.8.0
-  - fota: v7.8.0
-  - lvgl: v7.8.0
-  - breeze: v7.8.0
-  - av: v7.8.0
-  - amrnb: v7.8.0
-  - amrwb: v7.8.0
-  - flac: v7.8.0
-  - ogg: v7.8.0
-  - opus: v7.8.0
-  - pvmp3dec: v7.8.0
-  - sonic: v7.8.0
-  - speex: v7.8.0
-  - speexdsp: v7.8.0
-  - netmgr: v7.8.0
-  - littlefs: v7.8.0
-  - zlib: v7.8.0
-  - ntp: v7.8.0
-  - smart_audio: v7.8.0
-  - drv_amplifier: v7.8.0
-  - wifi_provisioning: v7.8.0
-  - aui_cloud_mind: v7.8.0
-  - cjson: v7.8.0
-  - alg_pcm_input: v7.8.0
-  - alg_record: v7.8.0
-  - record: v7.8.0
-  - websocket: v7.8.0
-  - posto: v7.8.0
-  - cxvision: v7.8.0
-  - voice_wrapper: v7.8.0
-  - httpclient: v7.8.0
-  - transport: v7.8.0
-  - button: v7.8.0
-  - alg_dispatch: v7.8.0         # alg: mind & thead
-  - alg_kws_lyeva: v7.8.0        # alg: thead
-  - voice_lyeva: v7.8.0          # alg: thead
-  - adb: v7.8.0
-  - clock_alarm: v7.8.0
-  - at: v7.8.0
-  - ers: v7.8.0
-  - ota_module: v7.8.0
-  - gateway_mgmt: v7.8.0
-  - ble_mesh: v7.8.0
+  - sdk_chip_d1: v7.9.0
+  - tsl_engine: v7.9.0
+  - duktape: v7.9.0
+  - dut_service: v7.9.0
+  - smartliving: v7.9.0
+  - fota: v7.9.0
+  - lvgl: v7.9.0
+  - breeze: v7.9.0
+  - av: v7.9.0
+  - amrnb: v7.9.0
+  - amrwb: v7.9.0
+  - flac: v7.9.0
+  - ogg: v7.9.0
+  - opus: v7.9.0
+  - pvmp3dec: v7.9.0
+  - sonic: v7.9.0
+  - speex: v7.9.0
+  - speexdsp: v7.9.0
+  - netmgr: v7.9.0
+  - littlefs: v7.9.0
+  - zlib: v7.9.0
+  - ntp: v7.9.0
+  - smart_audio: v7.9.0
+  - drv_amplifier: v7.9.0
+  - wifi_provisioning: v7.9.0
+  - aui_cloud_mind: v7.9.0
+  - cjson: v7.9.0
+  - alg_pcm_input: v7.9.0
+  - alg_record: v7.9.0
+  - record: v7.9.0
+  - websocket: v7.9.0
+  - posto: v7.9.0
+  - cxvision: v7.9.0
+  - voice_wrapper: v7.9.0
+  - httpclient: v7.9.0
+  - transport: v7.9.0
+  - button: v7.9.0
+  - alg_dispatch: v7.9.0         # alg: mind & thead
+  - alg_kws_lyeva: v7.9.0        # alg: thead
+  - voice_lyeva: v7.9.0          # alg: thead
+  - adb: v7.9.0
+  - clock_alarm: v7.9.0
+  - at: v7.9.0
+  - ers: v7.9.0
+  - ota_module: v7.9.0
+  - gateway_mgmt: v7.9.0
+  - ble_mesh: v7.9.0
 ## 第三部分：板级信息
 # hw_info:                                 # 对 solution、board、chip 三个字段的改进，统称为 hw_info 字段
 #   cpu_id: cpu0

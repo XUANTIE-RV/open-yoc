@@ -1,0 +1,54 @@
+BasedOnStyle: Google
+ 
+BraceWrapping:
+  AfterClass: true
+  AfterControlStatement: true
+  AfterEnum: true
+  AfterFunction: true
+  AfterNamespace: true
+  AfterObjCDeclaration: false
+  AfterStruct: true
+  AfterUnion: true
+  BeforeCatch: false
+  BeforeElse: false
+  IndentBraces: false
+  BeforeElse: true
+ 
+PointerAlignment: Right
+IndentCaseLabels: false
+ 
+AllowShortIfStatementsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: false
+ 
+ 
+SortIncludes: false
+ 
+#IncludeCategories:
+#  - Regex: '^<.*>'
+#    Priority: 1
+ 
+BreakBeforeBraces: Custom
+ColumnLimit: 120
+DisableFormat: false
+IndentWidth: 4
+ContinuationIndentWidth: 4
+TabWidth: 4
+UseTab: Never
+BasedOnStyle: LLVM
+BinPackArguments: false
+ 
+ConstructorInitializerIndentWidth: 4
+ 
+#AlignEscapedNewlinesRight: true
+AlignConsecutiveMacros: true
+AlignOperands: false
+#AlignConsecutiveDeclarations: true
+#AlignConsecutiveAssignments: true
+ 
+KeepEmptyLinesAtTheStartOfBlocks: true
+ 
+SpacesInAngles:  false
+SpacesInContainerLiterals: false
+SpacesInCStyleCastParentheses: false
+SpacesInParentheses: false
+SpacesInSquareBrackets: false

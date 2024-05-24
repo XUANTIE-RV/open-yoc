@@ -60,11 +60,32 @@ static char *path_convert(const char *path)
 static int _ext4_open(vfs_file_t *fp, const char *path, int flags)
 {
     int rc;
+    uint32_t mode;
     ext4_file *file;
 
     char *target_path = path_convert(path);
     if (target_path == NULL) {
         return -EINVAL;
+    }
+
+    rc = ext4_mode_get(target_path, &mode);
+    if ((rc != ENOENT) && (flags & O_CREAT) && (flags & O_EXCL)) {
+        aos_free(target_path);
+        return -EEXIST;
+    }
+    if (rc != 0 && rc != ENOENT) {
+        aos_free(target_path);
+        return -rc;
+    }
+    if (rc != ENOENT) {
+        if (!(mode & S_IRUSR) && ((flags & O_RDONLY) == O_RDONLY || (flags & O_RDWR) == O_RDWR)) {
+            aos_free(target_path);
+            return -EACCES;
+        }
+        if (!(mode & S_IWUSR) && ((flags & O_WRONLY) == O_WRONLY || (flags & O_RDWR) == O_RDWR)) {
+            aos_free(target_path);
+            return -EACCES;
+        }
     }
 
     file = aos_malloc(sizeof(ext4_file));
@@ -132,23 +153,37 @@ static long int _ext4_tell(vfs_file_t *fp)
 static int _ext4_access(vfs_file_t *fp, const char *path, int amode)
 {
     int rc;
-    ext4_file file;
+    uint32_t mode;
 
     char *target_path = path_convert(path);
     if (target_path == NULL) {
         return -EINVAL;
     }
 
-    rc = ext4_fopen(&file, target_path, "rb");
-    if (rc == 0) {
-        ext4_fclose(&file);
+    rc = ext4_mode_get(target_path, &mode);
+    if (rc != 0) {
         aos_free(target_path);
-        return 0;
+        return -rc;
+    } else {
+        switch(amode) {
+            default:
+            case F_OK:
+                rc = 0;
+                break;
+            case R_OK:
+                rc = mode & S_IRUSR ? 0 : 1;
+                break;
+            case W_OK:
+                rc = mode & S_IWUSR ? 0 : 1;
+                break;
+            case X_OK:
+                rc = mode & S_IXUSR ? 0 : 1;
+                break;
+        }
     }
-
     aos_free(target_path);
 
-    return -rc;
+    return rc;
 }
 
 static off_t _ext4_lseek(vfs_file_t *fp, off_t off, int whence)
@@ -441,13 +476,37 @@ static const vfs_fs_ops_t ext4_ops = {
     .ioctl      = NULL
 };
 
+static void ext4_lock(void);
+static void ext4_unlock(void);
 extern struct ext4_blockdev *ext4_blockdev_mmc_get(void);
 static const char *s_dev_name = "mmc";
+static aos_mutex_t ext4_mutex = NULL;
+
+static struct ext4_lock ext4_lock_ops = {
+    ext4_lock,
+    ext4_unlock
+};
+
+static void ext4_lock(void)
+{
+    aos_mutex_lock(&ext4_mutex, AOS_WAIT_FOREVER);
+}
+
+static void ext4_unlock(void)
+{
+    aos_mutex_unlock(&ext4_mutex);
+}
 
 int vfs_ext4_register(void)
 {
     int rc;
     struct ext4_blockdev *bd = NULL;
+
+    rc = aos_mutex_new(&ext4_mutex);
+    if (rc != 0) {
+        printf("create lwext mutex failed.\n");
+        return -1;
+    }
 
     bd = ext4_blockdev_mmc_get();
     if (!bd)
@@ -465,6 +524,27 @@ int vfs_ext4_register(void)
         } else {
             printf("ext4 mount success!!\n");
         }
+        rc = ext4_mount_setup_locks(ext4_mnt_path, &ext4_lock_ops);
+        if (rc != EOK) {
+            printf("ext4_mount_setup_locks err, rc = %d\n", rc);
+            return -1;
+        }
+        printf("start to recover........\n");
+        rc = ext4_recover(ext4_mnt_path);
+        if (rc != EOK && rc != ENOTSUP) {
+            printf("ext4 recover err, rc = %d\n", rc);
+            return -1;
+        } else {
+            printf("ext4 recover success!! rc:%d \n", rc);
+        }
+        printf("start to journal start........\n");
+        rc = ext4_journal_start(ext4_mnt_path);
+        if (rc != EOK) {
+            printf("ext4 journal start err, rc = %d\n", rc);
+            return -1;
+        } else {
+            printf("ext4 journal start success!!\n");
+        }
     }
     rc = vfs_register_fs(ext4_mnt_path, &ext4_ops, bd);
     if (rc) {
@@ -478,10 +558,15 @@ int vfs_ext4_unregister(void)
     int rc;
 
     ext4_device_unregister(s_dev_name);
+	rc = ext4_journal_stop(ext4_mnt_path);
+	if (rc != EOK) {
+        printf("ext4 journal stop err, rc = %d\n", rc);
+    }
     rc = ext4_umount(ext4_mnt_path);
     if (rc != 0) {
         printf("ext4 umount err, rc = %d\n", rc);
     }
+    aos_mutex_free(&ext4_mutex);
 
     return vfs_unregister_fs(ext4_mnt_path);
 }

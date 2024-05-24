@@ -181,10 +181,38 @@ ssize_t _devfs_uart_read(devfs_file_t *file, void *buf, size_t count)
     }
     return count;
 }
+static void event(rvm_dev_t *dev, int event_id, void *priv)
+{
+    if(!((devfs_node_t *)priv)->poll_notify ||  !((devfs_node_t *)priv)->poll_arg) {
+        return ;
+    }
+    vfs_poll_notify_t notify = ((devfs_node_t *)priv)->poll_notify;
+    void *args = ((devfs_node_t *)priv)->poll_arg;
+    notify(NULL, args);
+}
+
+int _devfs_uart_poll(file_t *file, devfs_poll_request_t* req)
+{
+    rvm_dev_t *dev = devfs_file2dev(file);
+    devfs_node_t *node = (devfs_node_t *)file->node->i_arg;
+    rvm_hal_uart_state_t state = 0;
+    rvm_hal_uart_get_state(dev, &state);
+    int revents = 0;
+    if (state & RVM_UART_STATE_READABLE){ revents |= POLLIN; }
+    if (state & RVM_UART_STATE_WRITABLE){ revents |= POLLOUT; }
+    if (state & RVM_UART_STATE_ERROR){ revents |= POLLERR; }
+    if (!node->poll_arg) {
+        rvm_hal_uart_set_event(dev, event, node);
+    } else {
+        rvm_hal_uart_set_event(dev, NULL, NULL);
+    }
+    
+    return revents;
+}
 
 static const devfs_file_ops_t devfs_uart_ops = {
     .ioctl      = _devfs_uart_ioctl,
-    .poll       = NULL,
+    .poll       = _devfs_uart_poll,
     .mmap       = NULL,
     .read       = _devfs_uart_read,
     .write      = _devfs_uart_write,

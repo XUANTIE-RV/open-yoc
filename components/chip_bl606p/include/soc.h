@@ -706,12 +706,6 @@ typedef enum {
 
 #define CONFIG_DW_AXI_DMA_32CH_NUM_CHANNELS
 
-#ifndef PLIC_BASE
-#define PLIC_BASE           (0xE0000000UL)
-#endif
-//#define CORET_BASE          (PLIC_BASE + 0x4000000UL)               /*!< CORET Base Address */
-#define PLIC                ((PLIC_Type *)PLIC_BASE)
-
 /* ================================================================================ */
 /* ================                  otp declaration               ================ */
 /* ================================================================================ */

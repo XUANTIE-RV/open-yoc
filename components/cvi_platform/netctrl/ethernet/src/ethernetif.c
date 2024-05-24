@@ -76,7 +76,7 @@ extern uint8_t g_phy_online_stat;
 #define PHY_ONLINE 1
 
 aos_sem_t eth_rx_sem;
-extern struct netif xnetif;
+extern struct netif eth_xnetif;
 
 extern void csi_eth_phy_update_link_task(void *arg);
 extern void csi_send_packet(uint8_t *buf, uint32_t len, uint32_t flags);
@@ -105,7 +105,7 @@ void eth_rx(void *arg)
     while(1) {
       aos_sem_wait(&eth_rx_sem, AOS_WAIT_FOREVER);
       while(1) {
-        ret = ethernetif_input(&xnetif);
+        ret = ethernetif_input(&eth_xnetif);
         if(ret == 0) {
           break;
         }

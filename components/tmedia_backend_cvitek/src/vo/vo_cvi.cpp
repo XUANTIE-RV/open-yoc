@@ -25,19 +25,19 @@ TMVideoOutputCvi::TMVideoOutputCvi()
 	InitDefaultPropertyList();
 	int outX, outY;
 	unsigned int outWidth, outHeight, outPixelFormat, outFrameRate;
-	mDefaultPropertyList.Get(TMVideoOutput::PropID::VIDEO_OUT_COORDINATE_X, &outX);
-	mDefaultPropertyList.Get(TMVideoOutput::PropID::VIDEO_OUT_COORDINATE_Y, &outY);
-	mDefaultPropertyList.Get(TMVideoOutput::PropID::VIDEO_OUT_PIXEL_WIDTH, &outWidth);
-	mDefaultPropertyList.Get(TMVideoOutput::PropID::VIDEO_OUT_PIXEL_HEIGHT, &outHeight);
-	mDefaultPropertyList.Get(TMVideoOutput::PropID::VIDEO_OUT_PIXEL_FORMAT, &outPixelFormat);
+	mDefaultPropertyList.Get(TMVideoOutput::PropID::VIDEO_OUT_SURFACE_COORDINATE_X, &outX);
+	mDefaultPropertyList.Get(TMVideoOutput::PropID::VIDEO_OUT_SURFACE_COORDINATE_Y, &outY);
+	mDefaultPropertyList.Get(TMVideoOutput::PropID::VIDEO_OUT_SURFACE_PIXEL_WIDTH, &outWidth);
+	mDefaultPropertyList.Get(TMVideoOutput::PropID::VIDEO_OUT_SURFACE_PIXEL_HEIGHT, &outHeight);
+	mDefaultPropertyList.Get(TMVideoOutput::PropID::VIDEO_OUT_PICTURE_PIXEL_FORMAT, &outPixelFormat);
 	mDefaultPropertyList.Get(TMVideoOutput::PropID::VIDEO_OUT_FRAME_RATE, &outFrameRate);
 
     mCurrentPropertyList.Reset();
-	mCurrentPropertyList.Assign(TMVideoOutput::PropID::VIDEO_OUT_COORDINATE_X, outX);
-    mCurrentPropertyList.Assign(TMVideoOutput::PropID::VIDEO_OUT_COORDINATE_Y, outY);
-    mCurrentPropertyList.Assign(TMVideoOutput::PropID::VIDEO_OUT_PIXEL_WIDTH, outWidth);
-    mCurrentPropertyList.Assign(TMVideoOutput::PropID::VIDEO_OUT_PIXEL_HEIGHT, outHeight);
-	mCurrentPropertyList.Assign(TMVideoOutput::PropID::VIDEO_OUT_PIXEL_FORMAT, outPixelFormat);
+	mCurrentPropertyList.Assign(TMVideoOutput::PropID::VIDEO_OUT_SURFACE_COORDINATE_X, outX);
+    mCurrentPropertyList.Assign(TMVideoOutput::PropID::VIDEO_OUT_SURFACE_COORDINATE_Y, outY);
+    mCurrentPropertyList.Assign(TMVideoOutput::PropID::VIDEO_OUT_SURFACE_PIXEL_WIDTH, outWidth);
+    mCurrentPropertyList.Assign(TMVideoOutput::PropID::VIDEO_OUT_SURFACE_PIXEL_HEIGHT, outHeight);
+	mCurrentPropertyList.Assign(TMVideoOutput::PropID::VIDEO_OUT_PICTURE_PIXEL_FORMAT, outPixelFormat);
     mCurrentPropertyList.Assign(TMVideoOutput::PropID::VIDEO_OUT_FRAME_RATE, outFrameRate);    
 }
 
@@ -91,31 +91,31 @@ int TMVideoOutputCvi::Open(string deviceName, TMPropertyList *propList)
 	if (propList != NULL)
     {
 		int ret = 0;
-		ret |= propList->Get(TMVideoOutput::PropID::VIDEO_OUT_COORDINATE_X, &outX);
-		ret |= propList->Get(TMVideoOutput::PropID::VIDEO_OUT_COORDINATE_Y, &outY);
-        ret |= propList->Get(TMVideoOutput::PropID::VIDEO_OUT_PIXEL_WIDTH, &outWidth);
-        ret |= propList->Get(TMVideoOutput::PropID::VIDEO_OUT_PIXEL_HEIGHT, &outHeight);
+		ret |= propList->Get(TMVideoOutput::PropID::VIDEO_OUT_SURFACE_COORDINATE_X, &outX);
+		ret |= propList->Get(TMVideoOutput::PropID::VIDEO_OUT_SURFACE_COORDINATE_Y, &outY);
+        ret |= propList->Get(TMVideoOutput::PropID::VIDEO_OUT_SURFACE_PIXEL_WIDTH, &outWidth);
+        ret |= propList->Get(TMVideoOutput::PropID::VIDEO_OUT_SURFACE_PIXEL_HEIGHT, &outHeight);
 		ret |= propList->Get(TMVideoOutput::PropID::VIDEO_OUT_FRAME_RATE, &outFrameRate);
 		if(ret != 0) {
 			TMEDIA_PRINTF("VO open err, param err\n");
 			return TMResult::TM_EINVAL;
 		}
-		ret = propList->Get(TMVideoOutput::PropID::VIDEO_OUT_PIXEL_FORMAT, &outPixelFormat);
+		ret = propList->Get(TMVideoOutput::PropID::VIDEO_OUT_PICTURE_PIXEL_FORMAT, &outPixelFormat);
 		if(ret != 0) {
-			mDefaultPropertyList.Get(TMVideoOutput::PropID::VIDEO_OUT_PIXEL_FORMAT, &outPixelFormat);
+			mDefaultPropertyList.Get(TMVideoOutput::PropID::VIDEO_OUT_PICTURE_PIXEL_FORMAT, &outPixelFormat);
 		}
-		mCurrentPropertyList.Assign(TMVideoOutput::PropID::VIDEO_OUT_COORDINATE_X, outX);
-		mCurrentPropertyList.Assign(TMVideoOutput::PropID::VIDEO_OUT_COORDINATE_Y, outY);
-		mCurrentPropertyList.Assign(TMVideoOutput::PropID::VIDEO_OUT_PIXEL_WIDTH, outWidth);
-		mCurrentPropertyList.Assign(TMVideoOutput::PropID::VIDEO_OUT_PIXEL_HEIGHT, outHeight);
-		mCurrentPropertyList.Assign(TMVideoOutput::PropID::VIDEO_OUT_PIXEL_FORMAT, outPixelFormat);
+		mCurrentPropertyList.Assign(TMVideoOutput::PropID::VIDEO_OUT_SURFACE_COORDINATE_X, outX);
+		mCurrentPropertyList.Assign(TMVideoOutput::PropID::VIDEO_OUT_SURFACE_COORDINATE_Y, outY);
+		mCurrentPropertyList.Assign(TMVideoOutput::PropID::VIDEO_OUT_SURFACE_PIXEL_WIDTH, outWidth);
+		mCurrentPropertyList.Assign(TMVideoOutput::PropID::VIDEO_OUT_SURFACE_PIXEL_HEIGHT, outHeight);
+		mCurrentPropertyList.Assign(TMVideoOutput::PropID::VIDEO_OUT_PICTURE_PIXEL_FORMAT, outPixelFormat);
 		mCurrentPropertyList.Assign(TMVideoOutput::PropID::VIDEO_OUT_FRAME_RATE, outFrameRate);  
     } else {
-		mCurrentPropertyList.Get(TMVideoOutput::PropID::VIDEO_OUT_COORDINATE_X, &outX);
-		mCurrentPropertyList.Get(TMVideoOutput::PropID::VIDEO_OUT_COORDINATE_Y, &outY);
-		mCurrentPropertyList.Get(TMVideoOutput::PropID::VIDEO_OUT_PIXEL_WIDTH, &outWidth);
-		mCurrentPropertyList.Get(TMVideoOutput::PropID::VIDEO_OUT_PIXEL_HEIGHT, &outHeight);
-		mCurrentPropertyList.Get(TMVideoOutput::PropID::VIDEO_OUT_PIXEL_FORMAT, &outPixelFormat);
+		mCurrentPropertyList.Get(TMVideoOutput::PropID::VIDEO_OUT_SURFACE_COORDINATE_X, &outX);
+		mCurrentPropertyList.Get(TMVideoOutput::PropID::VIDEO_OUT_SURFACE_COORDINATE_Y, &outY);
+		mCurrentPropertyList.Get(TMVideoOutput::PropID::VIDEO_OUT_SURFACE_PIXEL_WIDTH, &outWidth);
+		mCurrentPropertyList.Get(TMVideoOutput::PropID::VIDEO_OUT_SURFACE_PIXEL_HEIGHT, &outHeight);
+		mCurrentPropertyList.Get(TMVideoOutput::PropID::VIDEO_OUT_PICTURE_PIXEL_FORMAT, &outPixelFormat);
 		mCurrentPropertyList.Get(TMVideoOutput::PropID::VIDEO_OUT_FRAME_RATE, &outFrameRate);
 		TMEDIA_PRINTF("VO open param null, use default param\n");
 	}
@@ -189,22 +189,22 @@ int TMVideoOutputCvi::SetConfig(TMPropertyList &propList)
 	int outX, outY;
 	unsigned int outWidth, outHeight, outFrameRate, outPixelFormat;
 
-	ret |= propList.Get(TMVideoOutput::PropID::VIDEO_OUT_COORDINATE_X, &outX);
-	ret |= propList.Get(TMVideoOutput::PropID::VIDEO_OUT_COORDINATE_Y, &outY);
-	ret |= propList.Get(TMVideoOutput::PropID::VIDEO_OUT_PIXEL_WIDTH, &outWidth);
-	ret |= propList.Get(TMVideoOutput::PropID::VIDEO_OUT_PIXEL_HEIGHT, &outHeight);
-	ret |= propList.Get(TMVideoOutput::PropID::VIDEO_OUT_PIXEL_FORMAT, &outPixelFormat);
+	ret |= propList.Get(TMVideoOutput::PropID::VIDEO_OUT_SURFACE_COORDINATE_X, &outX);
+	ret |= propList.Get(TMVideoOutput::PropID::VIDEO_OUT_SURFACE_COORDINATE_Y, &outY);
+	ret |= propList.Get(TMVideoOutput::PropID::VIDEO_OUT_SURFACE_PIXEL_WIDTH, &outWidth);
+	ret |= propList.Get(TMVideoOutput::PropID::VIDEO_OUT_SURFACE_PIXEL_HEIGHT, &outHeight);
+	ret |= propList.Get(TMVideoOutput::PropID::VIDEO_OUT_PICTURE_PIXEL_FORMAT, &outPixelFormat);
 	ret |= propList.Get(TMVideoOutput::PropID::VIDEO_OUT_FRAME_RATE, &outFrameRate);
 	if(ret != 0) {
 		TMEDIA_PRINTF("VO SetConfig err, param err\n");
 		return TMResult::TM_EINVAL;
 	}
 
-	mCurrentPropertyList.Assign(TMVideoOutput::PropID::VIDEO_OUT_COORDINATE_X, outX);
-	mCurrentPropertyList.Assign(TMVideoOutput::PropID::VIDEO_OUT_COORDINATE_Y, outY);
-	mCurrentPropertyList.Assign(TMVideoOutput::PropID::VIDEO_OUT_PIXEL_WIDTH, outWidth);
-	mCurrentPropertyList.Assign(TMVideoOutput::PropID::VIDEO_OUT_PIXEL_HEIGHT, outHeight);
-	mCurrentPropertyList.Assign(TMVideoOutput::PropID::VIDEO_OUT_PIXEL_FORMAT, outPixelFormat);
+	mCurrentPropertyList.Assign(TMVideoOutput::PropID::VIDEO_OUT_SURFACE_COORDINATE_X, outX);
+	mCurrentPropertyList.Assign(TMVideoOutput::PropID::VIDEO_OUT_SURFACE_COORDINATE_Y, outY);
+	mCurrentPropertyList.Assign(TMVideoOutput::PropID::VIDEO_OUT_SURFACE_PIXEL_WIDTH, outWidth);
+	mCurrentPropertyList.Assign(TMVideoOutput::PropID::VIDEO_OUT_SURFACE_PIXEL_HEIGHT, outHeight);
+	mCurrentPropertyList.Assign(TMVideoOutput::PropID::VIDEO_OUT_PICTURE_PIXEL_FORMAT, outPixelFormat);
 	mCurrentPropertyList.Assign(TMVideoOutput::PropID::VIDEO_OUT_FRAME_RATE, outFrameRate);  
 
     return TMResult::TM_OK;

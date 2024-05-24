@@ -5,7 +5,7 @@
 - https://yuque.antfin.com/occ/rhi9ep/aws4zc
 
 # Description
-- Maintainer: Lu Chongzhi (chongzhi.lcz@alibaba-inc.com)
+- Maintainer: Lu Chongzhi
 
 # Code style
 - astyle --style=ansi --convert-tabs --align-pointer=name --max-code-length=120 --break-after-logical -p -H -U -n %f

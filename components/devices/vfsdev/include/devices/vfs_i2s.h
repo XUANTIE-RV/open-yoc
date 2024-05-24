@@ -16,6 +16,7 @@ extern "C" {
 #define I2S_IOC_PAUSE                         (DEV_I2S_IOCTL_CMD_BASE + 3)
 #define I2S_IOC_RESUME                        (DEV_I2S_IOCTL_CMD_BASE + 4)
 #define I2S_IOC_STOP                          (DEV_I2S_IOCTL_CMD_BASE + 5)
+#define I2S_IOC_TIMEOUT                       (DEV_I2S_IOCTL_CMD_BASE + 6)
 
 #endif
 #ifdef __cplusplus

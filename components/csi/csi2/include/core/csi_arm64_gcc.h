@@ -111,9 +111,9 @@ __ALWAYS_STATIC_INLINE void __disable_supervisor_irq(void)
   \details Returns the content of the MXSTATUS Register.
   \return               MXSTATUS Register value
  */
-__ALWAYS_STATIC_INLINE uint64_t __get_MXSTATUS(void)
+__ALWAYS_STATIC_INLINE unsigned long __get_MXSTATUS(void)
 {
-    uint64_t result;
+    unsigned long result;
 
     __ASM volatile("csrr %0, mxstatus" : "=r"(result));
     return (result);
@@ -124,9 +124,9 @@ __ALWAYS_STATIC_INLINE uint64_t __get_MXSTATUS(void)
   \details Returns the content of the SXSTATUS Register.
   \return               SXSTATUS Register value
  */
-__ALWAYS_STATIC_INLINE uint64_t __get_SXSTATUS(void)
+__ALWAYS_STATIC_INLINE unsigned long __get_SXSTATUS(void)
 {
-    uint64_t result;
+    unsigned long result;
 
     __ASM volatile("csrr %0, sxstatus" : "=r"(result));
     return (result);
@@ -137,9 +137,9 @@ __ALWAYS_STATIC_INLINE uint64_t __get_SXSTATUS(void)
   \details Returns CPU WORK MODE.
   \return  CPU WORK MODE
  */
-__ALWAYS_STATIC_INLINE uint64_t __get_CPU_WORK_MODE(void)
+__ALWAYS_STATIC_INLINE unsigned long __get_CPU_WORK_MODE(void)
 {
-    uint64_t result;
+    unsigned long result;
     __ASM volatile("csrr %0, sxstatus" : "=r"(result));
     return ((result >> 30U) & 0x3U);
 }
@@ -149,9 +149,9 @@ __ALWAYS_STATIC_INLINE uint64_t __get_CPU_WORK_MODE(void)
   \details Returns the content of the SATP Register.
   \return               SATP Register value
  */
-__ALWAYS_STATIC_INLINE uint64_t __get_SATP(void)
+__ALWAYS_STATIC_INLINE unsigned long __get_SATP(void)
 {
-    uint64_t result;
+    unsigned long result;
 
     __ASM volatile("csrr %0, satp" : "=r"(result));
     return (result);
@@ -162,7 +162,7 @@ __ALWAYS_STATIC_INLINE uint64_t __get_SATP(void)
   \details Writes the given value to the SATP Register.
   \param [in]    satp  SATP Register value to set
  */
-__ALWAYS_STATIC_INLINE void __set_SATP(uint64_t satp)
+__ALWAYS_STATIC_INLINE void __set_SATP(unsigned long satp)
 {
     __ASM volatile("csrw satp, %0" : : "r"(satp));
 }
@@ -172,7 +172,7 @@ __ALWAYS_STATIC_INLINE void __set_SATP(uint64_t satp)
   \details Writes the given value to the MEPC Register.
   \param [in]    mstatus  MEPC Register value to set
  */
-__ALWAYS_STATIC_INLINE void __set_MEPC(uint64_t mepc)
+__ALWAYS_STATIC_INLINE void __set_MEPC(unsigned long mepc)
 {
     __ASM volatile("csrw mepc, %0" : : "r"(mepc));
 }
@@ -183,7 +183,7 @@ __ALWAYS_STATIC_INLINE void __set_MEPC(uint64_t mepc)
   \details Writes the given value to the MXSTATUS Register.
   \param [in]    mxstatus  MXSTATUS Register value to set
  */
-__ALWAYS_STATIC_INLINE void __set_MXSTATUS(uint64_t mxstatus)
+__ALWAYS_STATIC_INLINE void __set_MXSTATUS(unsigned long mxstatus)
 {
     __ASM volatile("csrw mxstatus, %0" : : "r"(mxstatus));
 }
@@ -193,9 +193,9 @@ __ALWAYS_STATIC_INLINE void __set_MXSTATUS(uint64_t mxstatus)
   \details Returns the content of the MSTATUS Register.
   \return               MSTATUS Register value
  */
-__ALWAYS_STATIC_INLINE uint64_t __get_MSTATUS(void)
+__ALWAYS_STATIC_INLINE unsigned long __get_MSTATUS(void)
 {
-    uint64_t result;
+    unsigned long result;
 
     __ASM volatile("csrr %0, mstatus" : "=r"(result));
     return (result);
@@ -206,7 +206,7 @@ __ALWAYS_STATIC_INLINE uint64_t __get_MSTATUS(void)
   \details Writes the given value to the MSTATUS Register.
   \param [in]    mstatus  MSTATUS Register value to set
  */
-__ALWAYS_STATIC_INLINE void __set_MSTATUS(uint64_t mstatus)
+__ALWAYS_STATIC_INLINE void __set_MSTATUS(unsigned long mstatus)
 {
     __ASM volatile("csrw mstatus, %0" : : "r"(mstatus));
 }
@@ -216,9 +216,9 @@ __ALWAYS_STATIC_INLINE void __set_MSTATUS(uint64_t mstatus)
   \details Returns the content of the MCOR Register.
   \return               MCOR Register value
  */
-__ALWAYS_STATIC_INLINE uint64_t __get_MCOR(void)
+__ALWAYS_STATIC_INLINE unsigned long __get_MCOR(void)
 {
-    uint64_t result;
+    unsigned long result;
 
     __ASM volatile("csrr %0, mcor" : "=r"(result));
     return (result);
@@ -229,7 +229,7 @@ __ALWAYS_STATIC_INLINE uint64_t __get_MCOR(void)
   \details Writes the given value to the MCOR Register.
   \param [in]    mstatus  MCOR Register value to set
  */
-__ALWAYS_STATIC_INLINE void __set_MCOR(uint64_t mcor)
+__ALWAYS_STATIC_INLINE void __set_MCOR(unsigned long mcor)
 {
     __ASM volatile("csrw mcor, %0" : : "r"(mcor));
 }
@@ -239,9 +239,9 @@ __ALWAYS_STATIC_INLINE void __set_MCOR(uint64_t mcor)
   \details Returns the content of the MHCR Register.
   \return               MHCR Register value
  */
-__ALWAYS_STATIC_INLINE uint64_t __get_MHCR(void)
+__ALWAYS_STATIC_INLINE unsigned long __get_MHCR(void)
 {
-    uint64_t result;
+    unsigned long result;
 
     __ASM volatile("csrr %0, mhcr" : "=r"(result));
     return (result);
@@ -252,7 +252,7 @@ __ALWAYS_STATIC_INLINE uint64_t __get_MHCR(void)
   \details Writes the given value to the MHCR Register.
   \param [in]    mstatus  MHCR Register value to set
  */
-__ALWAYS_STATIC_INLINE void __set_MHCR(uint64_t mhcr)
+__ALWAYS_STATIC_INLINE void __set_MHCR(unsigned long mhcr)
 {
     __ASM volatile("csrw mhcr, %0" : : "r"(mhcr));
 }
@@ -262,9 +262,9 @@ __ALWAYS_STATIC_INLINE void __set_MHCR(uint64_t mhcr)
   \details Returns the content of the MHINT Register.
   \return               MHINT Register value
  */
-__ALWAYS_STATIC_INLINE uint64_t __get_MHINT(void)
+__ALWAYS_STATIC_INLINE unsigned long __get_MHINT(void)
 {
-    uint64_t result;
+    unsigned long result;
 
     __ASM volatile("csrr %0, mhint" : "=r"(result));
     return (result);
@@ -275,7 +275,7 @@ __ALWAYS_STATIC_INLINE uint64_t __get_MHINT(void)
   \details Writes the given value to the MHINT Register.
   \param [in]    mstatus  MHINT Register value to set
  */
-__ALWAYS_STATIC_INLINE void __set_MHINT(uint64_t mhint)
+__ALWAYS_STATIC_INLINE void __set_MHINT(unsigned long mhint)
 {
     __ASM volatile("csrw mhint, %0" : : "r"(mhint));
 }
@@ -285,9 +285,9 @@ __ALWAYS_STATIC_INLINE void __set_MHINT(uint64_t mhint)
   \details Returns the content of the MCCR2 Register.
   \return               MCCR2 Register value
  */
-__ALWAYS_STATIC_INLINE uint64_t __get_MCCR2(void)
+__ALWAYS_STATIC_INLINE unsigned long __get_MCCR2(void)
 {
-    uint64_t result;
+    unsigned long result;
 
     __ASM volatile("csrr %0, mccr2" : "=r"(result));
     return (result);
@@ -298,7 +298,7 @@ __ALWAYS_STATIC_INLINE uint64_t __get_MCCR2(void)
   \details Writes the given value to the MCCR2 Register.
   \param [in]    mstatus  MCCR2 Register value to set
  */
-__ALWAYS_STATIC_INLINE void __set_MCCR2(uint64_t mccr2)
+__ALWAYS_STATIC_INLINE void __set_MCCR2(unsigned long mccr2)
 {
     __ASM volatile("csrw mccr2, %0" : : "r"(mccr2));
 }
@@ -308,9 +308,9 @@ __ALWAYS_STATIC_INLINE void __set_MCCR2(uint64_t mccr2)
   \details Returns the content of the MISA Register.
   \return               MISA Register value
  */
-__ALWAYS_STATIC_INLINE uint64_t __get_MISA(void)
+__ALWAYS_STATIC_INLINE unsigned long __get_MISA(void)
 {
-    uint64_t result;
+    unsigned long result;
 
     __ASM volatile("csrr %0, misa" : "=r"(result));
     return (result);
@@ -321,7 +321,7 @@ __ALWAYS_STATIC_INLINE uint64_t __get_MISA(void)
   \details Writes the given value to the MISA Register.
   \param [in]    misa  MISA Register value to set
  */
-__ALWAYS_STATIC_INLINE void __set_MISA(uint64_t misa)
+__ALWAYS_STATIC_INLINE void __set_MISA(unsigned long misa)
 {
     __ASM volatile("csrw misa, %0" : : "r"(misa));
 }
@@ -331,9 +331,9 @@ __ALWAYS_STATIC_INLINE void __set_MISA(uint64_t misa)
   \details Returns the content of the MIE Register.
   \return               MIE Register value
  */
-__ALWAYS_STATIC_INLINE uint64_t __get_MIE(void)
+__ALWAYS_STATIC_INLINE unsigned long __get_MIE(void)
 {
-    uint64_t result;
+    unsigned long result;
 
     __ASM volatile("csrr %0, mie" : "=r"(result));
     return (result);
@@ -344,7 +344,7 @@ __ALWAYS_STATIC_INLINE uint64_t __get_MIE(void)
   \details Writes the given value to the MIE Register.
   \param [in]    mie  MIE Register value to set
  */
-__ALWAYS_STATIC_INLINE void __set_MIE(uint64_t mie)
+__ALWAYS_STATIC_INLINE void __set_MIE(unsigned long mie)
 {
     __ASM volatile("csrw mie, %0" : : "r"(mie));
 }
@@ -354,9 +354,9 @@ __ALWAYS_STATIC_INLINE void __set_MIE(uint64_t mie)
   \details Returns the content of the MTVEC Register.
   \return               MTVEC Register value
  */
-__ALWAYS_STATIC_INLINE uint64_t __get_MTVEC(void)
+__ALWAYS_STATIC_INLINE unsigned long __get_MTVEC(void)
 {
-    uint64_t result;
+    unsigned long result;
 
     __ASM volatile("csrr %0, mtvec" : "=r"(result));
     return (result);
@@ -367,7 +367,7 @@ __ALWAYS_STATIC_INLINE uint64_t __get_MTVEC(void)
   \details Writes the given value to the MTVEC Register.
   \param [in]    mtvec  MTVEC Register value to set
  */
-__ALWAYS_STATIC_INLINE void __set_MTVEC(uint64_t mtvec)
+__ALWAYS_STATIC_INLINE void __set_MTVEC(unsigned long mtvec)
 {
     __ASM volatile("csrw mtvec, %0" : : "r"(mtvec));
 }
@@ -377,7 +377,7 @@ __ALWAYS_STATIC_INLINE void __set_MTVEC(uint64_t mtvec)
   \details Writes the given value to the MTVT Register.
   \param [in]    mtvt  MTVT Register value to set
  */
-__ALWAYS_STATIC_INLINE void __set_MTVT(uint64_t mtvt)
+__ALWAYS_STATIC_INLINE void __set_MTVT(unsigned long mtvt)
 {
     __ASM volatile("csrw mtvt, %0" : : "r"(mtvt));
 }
@@ -387,9 +387,9 @@ __ALWAYS_STATIC_INLINE void __set_MTVT(uint64_t mtvt)
   \details Returns the content of the MTVT Register.
   \return               MTVT Register value
  */
-__ALWAYS_STATIC_INLINE uint64_t __get_MTVT(void)
+__ALWAYS_STATIC_INLINE unsigned long __get_MTVT(void)
 {
-    uint64_t result;
+    unsigned long result;
 
     __ASM volatile("csrr %0, mtvt" : "=r"(result));
     return (result);
@@ -400,9 +400,9 @@ __ALWAYS_STATIC_INLINE uint64_t __get_MTVT(void)
   \details Returns the content of the SP Register.
   \return               SP Register value
  */
-__ALWAYS_STATIC_INLINE uint64_t __get_SP(void)
+__ALWAYS_STATIC_INLINE unsigned long __get_SP(void)
 {
-    uint64_t result;
+    unsigned long result;
 
     __ASM volatile("mv %0, sp" : "=r"(result));
     return (result);
@@ -413,7 +413,7 @@ __ALWAYS_STATIC_INLINE uint64_t __get_SP(void)
   \details Writes the given value to the SP Register.
   \param [in]    sp  SP Register value to set
  */
-__ALWAYS_STATIC_INLINE void __set_SP(uint64_t sp)
+__ALWAYS_STATIC_INLINE void __set_SP(unsigned long sp)
 {
     __ASM volatile("mv sp, %0" : : "r"(sp): "sp");
 }
@@ -423,9 +423,9 @@ __ALWAYS_STATIC_INLINE void __set_SP(uint64_t sp)
   \details Returns the content of the MSCRATCH Register.
   \return               MSCRATCH Register value
  */
-__ALWAYS_STATIC_INLINE uint64_t __get_MSCRATCH(void)
+__ALWAYS_STATIC_INLINE unsigned long __get_MSCRATCH(void)
 {
-    uint64_t result;
+    unsigned long result;
 
     __ASM volatile("csrr %0, mscratch" : "=r"(result));
     return (result);
@@ -436,7 +436,7 @@ __ALWAYS_STATIC_INLINE uint64_t __get_MSCRATCH(void)
   \details Writes the given value to the MSCRATCH Register.
   \param [in]    mscratch  MSCRATCH Register value to set
  */
-__ALWAYS_STATIC_INLINE void __set_MSCRATCH(uint64_t mscratch)
+__ALWAYS_STATIC_INLINE void __set_MSCRATCH(unsigned long mscratch)
 {
     __ASM volatile("csrw mscratch, %0" : : "r"(mscratch));
 }
@@ -446,9 +446,9 @@ __ALWAYS_STATIC_INLINE void __set_MSCRATCH(uint64_t mscratch)
   \details Returns the content of the MCAUSE Register.
   \return               MCAUSE Register value
  */
-__ALWAYS_STATIC_INLINE uint64_t __get_MCAUSE(void)
+__ALWAYS_STATIC_INLINE unsigned long __get_MCAUSE(void)
 {
-    uint64_t result;
+    unsigned long result;
 
     __ASM volatile("csrr %0, mcause" : "=r"(result));
     return (result);
@@ -459,9 +459,9 @@ __ALWAYS_STATIC_INLINE uint64_t __get_MCAUSE(void)
   \details Returns the content of the SCAUSE Register.
   \return               SCAUSE Register value
  */
-__ALWAYS_STATIC_INLINE uint64_t __get_SCAUSE(void)
+__ALWAYS_STATIC_INLINE unsigned long __get_SCAUSE(void)
 {
-    uint64_t result;
+    unsigned long result;
 
     __ASM volatile("csrr %0, scause" : "=r"(result));
     return (result);
@@ -472,9 +472,9 @@ __ALWAYS_STATIC_INLINE uint64_t __get_SCAUSE(void)
   \details Returns the content of the MNXTI Register.
   \return               MNXTI Register value
  */
-__ALWAYS_STATIC_INLINE uint64_t __get_MNXTI(void)
+__ALWAYS_STATIC_INLINE unsigned long __get_MNXTI(void)
 {
-    uint64_t result;
+    unsigned long result;
 
     __ASM volatile("csrr %0, mnxti" : "=r"(result));
     return (result);
@@ -485,7 +485,7 @@ __ALWAYS_STATIC_INLINE uint64_t __get_MNXTI(void)
   \details Writes the given value to the MNXTI Register.
   \param [in]    mnxti  MNXTI Register value to set
  */
-__ALWAYS_STATIC_INLINE void __set_MNXTI(uint64_t mnxti)
+__ALWAYS_STATIC_INLINE void __set_MNXTI(unsigned long mnxti)
 {
     __ASM volatile("csrw mnxti, %0" : : "r"(mnxti));
 }
@@ -495,9 +495,9 @@ __ALWAYS_STATIC_INLINE void __set_MNXTI(uint64_t mnxti)
   \details Returns the content of the MINTSTATUS Register.
   \return               MINTSTATUS Register value
  */
-__ALWAYS_STATIC_INLINE uint64_t __get_MINTSTATUS(void)
+__ALWAYS_STATIC_INLINE unsigned long __get_MINTSTATUS(void)
 {
-    uint64_t result;
+    unsigned long result;
 
     __ASM volatile("csrr %0, mintstatus" : "=r"(result));
     return (result);
@@ -508,9 +508,9 @@ __ALWAYS_STATIC_INLINE uint64_t __get_MINTSTATUS(void)
   \details Returns the content of the MTVAL Register.
   \return               MTVAL Register value
  */
-__ALWAYS_STATIC_INLINE uint64_t __get_MTVAL(void)
+__ALWAYS_STATIC_INLINE unsigned long __get_MTVAL(void)
 {
-    uint64_t result;
+    unsigned long result;
 
     __ASM volatile("csrr %0, mtval" : "=r"(result));
     return (result);
@@ -521,9 +521,9 @@ __ALWAYS_STATIC_INLINE uint64_t __get_MTVAL(void)
   \details Returns the content of the MIP Register.
   \return               MIP Register value
  */
-__ALWAYS_STATIC_INLINE uint64_t __get_MIP(void)
+__ALWAYS_STATIC_INLINE unsigned long __get_MIP(void)
 {
-    uint64_t result;
+    unsigned long result;
 
     __ASM volatile("csrr %0, mip" : "=r"(result));
     return (result);
@@ -534,7 +534,7 @@ __ALWAYS_STATIC_INLINE uint64_t __get_MIP(void)
   \details Writes the given value to the MIP Register.
   \param [in]    mip  MIP Register value to set
  */
-__ALWAYS_STATIC_INLINE void __set_MIP(uint64_t mip)
+__ALWAYS_STATIC_INLINE void __set_MIP(unsigned long mip)
 {
     __ASM volatile("csrw mip, %0" : : "r"(mip));
 }
@@ -544,9 +544,9 @@ __ALWAYS_STATIC_INLINE void __set_MIP(uint64_t mip)
   \details Returns the content of the MCYCLEL Register.
   \return               MCYCLE Register value
  */
-__ALWAYS_STATIC_INLINE uint64_t __get_MCYCLE(void)
+__ALWAYS_STATIC_INLINE unsigned long __get_MCYCLE(void)
 {
-    uint64_t result;
+    unsigned long result;
 
     __ASM volatile("csrr %0, mcycle" : "=r"(result));
     return (result);
@@ -557,9 +557,9 @@ __ALWAYS_STATIC_INLINE uint64_t __get_MCYCLE(void)
   \details Returns the content of the MCYCLEH Register.
   \return               MCYCLEH Register value
  */
-__ALWAYS_STATIC_INLINE uint64_t __get_MCYCLEH(void)
+__ALWAYS_STATIC_INLINE unsigned long __get_MCYCLEH(void)
 {
-    uint64_t result;
+    unsigned long result;
 
     __ASM volatile("csrr %0, mcycleh" : "=r"(result));
     return (result);
@@ -570,9 +570,9 @@ __ALWAYS_STATIC_INLINE uint64_t __get_MCYCLEH(void)
   \details Returns the content of the MINSTRET Register.
   \return               MINSTRET Register value
  */
-__ALWAYS_STATIC_INLINE uint64_t __get_MINSTRET(void)
+__ALWAYS_STATIC_INLINE unsigned long __get_MINSTRET(void)
 {
-    uint64_t result;
+    unsigned long result;
 
     __ASM volatile("csrr %0, minstret" : "=r"(result));
     return (result);
@@ -583,9 +583,9 @@ __ALWAYS_STATIC_INLINE uint64_t __get_MINSTRET(void)
   \details Returns the content of the MINSTRETH Register.
   \return               MINSTRETH Register value
  */
-__ALWAYS_STATIC_INLINE uint64_t __get_MINSTRETH(void)
+__ALWAYS_STATIC_INLINE unsigned long __get_MINSTRETH(void)
 {
-    uint64_t result;
+    unsigned long result;
 
     __ASM volatile("csrr %0, minstreth" : "=r"(result));
     return (result);
@@ -596,9 +596,9 @@ __ALWAYS_STATIC_INLINE uint64_t __get_MINSTRETH(void)
   \details Returns the content of the MVENDROID Register.
   \return               MVENDORID Register value
  */
-__ALWAYS_STATIC_INLINE uint64_t __get_MVENDORID(void)
+__ALWAYS_STATIC_INLINE unsigned long __get_MVENDORID(void)
 {
-    uint64_t result;
+    unsigned long result;
 
     __ASM volatile("csrr %0, mvendorid" : "=r"(result));
     return (result);
@@ -609,9 +609,9 @@ __ALWAYS_STATIC_INLINE uint64_t __get_MVENDORID(void)
   \details Returns the content of the MARCHID Register.
   \return               MARCHID Register value
  */
-__ALWAYS_STATIC_INLINE uint64_t __get_MARCHID(void)
+__ALWAYS_STATIC_INLINE unsigned long __get_MARCHID(void)
 {
-    uint64_t result;
+    unsigned long result;
 
     __ASM volatile("csrr %0, marchid" : "=r"(result));
     return (result);
@@ -622,9 +622,9 @@ __ALWAYS_STATIC_INLINE uint64_t __get_MARCHID(void)
   \details Returns the content of the MIMPID Register.
   \return               MIMPID Register value
  */
-__ALWAYS_STATIC_INLINE uint64_t __get_MIMPID(void)
+__ALWAYS_STATIC_INLINE unsigned long __get_MIMPID(void)
 {
-    uint64_t result;
+    unsigned long result;
 
     __ASM volatile("csrr %0, mimpid" : "=r"(result));
     return (result);
@@ -635,9 +635,9 @@ __ALWAYS_STATIC_INLINE uint64_t __get_MIMPID(void)
   \details Returns the content of the MHARTID Register.
   \return               MHARTID Register value
  */
-__ALWAYS_STATIC_INLINE uint64_t __get_MHARTID(void)
+__ALWAYS_STATIC_INLINE unsigned long __get_MHARTID(void)
 {
-    uint64_t result;
+    unsigned long result;
 
     __ASM volatile("csrr %0, mhartid" : "=r"(result));
     return (result);
@@ -648,33 +648,33 @@ __ALWAYS_STATIC_INLINE uint64_t __get_MHARTID(void)
   \details Returns the content of the PMPCFGx Register.
   \return               PMPCFGx Register value
  */
-__ALWAYS_STATIC_INLINE uint64_t __get_PMPCFG0(void)
+__ALWAYS_STATIC_INLINE unsigned long __get_PMPCFG0(void)
 {
-    uint64_t result;
+    unsigned long result;
 
     __ASM volatile("csrr %0, pmpcfg0" : "=r"(result));
     return (result);
 }
 
-__ALWAYS_STATIC_INLINE uint64_t __get_PMPCFG1(void)
+__ALWAYS_STATIC_INLINE unsigned long __get_PMPCFG1(void)
 {
-    uint64_t result;
+    unsigned long result;
 
     __ASM volatile("csrr %0, pmpcfg1" : "=r"(result));
     return (result);
 }
 
-__ALWAYS_STATIC_INLINE uint64_t __get_PMPCFG2(void)
+__ALWAYS_STATIC_INLINE unsigned long __get_PMPCFG2(void)
 {
-    uint64_t result;
+    unsigned long result;
 
     __ASM volatile("csrr %0, pmpcfg2" : "=r"(result));
     return (result);
 }
 
-__ALWAYS_STATIC_INLINE uint64_t __get_PMPCFG3(void)
+__ALWAYS_STATIC_INLINE unsigned long __get_PMPCFG3(void)
 {
-    uint64_t result;
+    unsigned long result;
 
     __ASM volatile("csrr %0, pmpcfg3" : "=r"(result));
     return (result);
@@ -686,9 +686,9 @@ __ALWAYS_STATIC_INLINE uint64_t __get_PMPCFG3(void)
   \param [in]    idx    PMP region index
   \return               PMPxCFG Register value
  */
-__STATIC_INLINE uint8_t __get_PMPxCFG(uint64_t idx)
+__STATIC_INLINE uint8_t __get_PMPxCFG(unsigned long idx)
 {
-    uint64_t pmpcfgx = 0;
+    unsigned long pmpcfgx = 0;
 
     if (idx < 4) {
         pmpcfgx = __get_PMPCFG0();
@@ -713,22 +713,22 @@ __STATIC_INLINE uint8_t __get_PMPxCFG(uint64_t idx)
   \details Writes the given value to the PMPCFGx Register.
   \param [in]    pmpcfg  PMPCFGx Register value to set
  */
-__ALWAYS_STATIC_INLINE void __set_PMPCFG0(uint64_t pmpcfg)
+__ALWAYS_STATIC_INLINE void __set_PMPCFG0(unsigned long pmpcfg)
 {
     __ASM volatile("csrw pmpcfg0, %0" : : "r"(pmpcfg));
 }
 
-__ALWAYS_STATIC_INLINE void __set_PMPCFG1(uint64_t pmpcfg)
+__ALWAYS_STATIC_INLINE void __set_PMPCFG1(unsigned long pmpcfg)
 {
     __ASM volatile("csrw pmpcfg1, %0" : : "r"(pmpcfg));
 }
 
-__ALWAYS_STATIC_INLINE void __set_PMPCFG2(uint64_t pmpcfg)
+__ALWAYS_STATIC_INLINE void __set_PMPCFG2(unsigned long pmpcfg)
 {
     __ASM volatile("csrw pmpcfg2, %0" : : "r"(pmpcfg));
 }
 
-__ALWAYS_STATIC_INLINE void __set_PMPCFG3(uint64_t pmpcfg)
+__ALWAYS_STATIC_INLINE void __set_PMPCFG3(unsigned long pmpcfg)
 {
     __ASM volatile("csrw pmpcfg3, %0" : : "r"(pmpcfg));
 }
@@ -739,28 +739,28 @@ __ALWAYS_STATIC_INLINE void __set_PMPCFG3(uint64_t pmpcfg)
   \param [in]    idx      PMPx region index
   \param [in]    pmpxcfg  PMPxCFG Register value to set
  */
-__STATIC_INLINE void __set_PMPxCFG(uint64_t idx, uint8_t pmpxcfg)
+__STATIC_INLINE void __set_PMPxCFG(unsigned long idx, uint8_t pmpxcfg)
 {
-    uint64_t pmpcfgx = 0;
+    unsigned long pmpcfgx = 0;
 
     if (idx < 4) {
         pmpcfgx = __get_PMPCFG0();
-        pmpcfgx = (pmpcfgx & ~(0xFF << (idx << 3))) | ((uint64_t)(pmpxcfg) << (idx << 3));
+        pmpcfgx = (pmpcfgx & ~(0xFF << (idx << 3))) | ((unsigned long)(pmpxcfg) << (idx << 3));
         __set_PMPCFG0(pmpcfgx);
     } else if (idx >= 4 && idx < 8) {
         idx -= 4;
         pmpcfgx = __get_PMPCFG1();
-        pmpcfgx = (pmpcfgx & ~(0xFF << (idx << 3))) | ((uint64_t)(pmpxcfg) << (idx << 3));
+        pmpcfgx = (pmpcfgx & ~(0xFF << (idx << 3))) | ((unsigned long)(pmpxcfg) << (idx << 3));
         __set_PMPCFG1(pmpcfgx);
     } else if (idx >= 8 && idx < 12) {
         idx -= 8;
         pmpcfgx = __get_PMPCFG2();
-        pmpcfgx = (pmpcfgx & ~(0xFF << (idx << 3))) | ((uint64_t)(pmpxcfg) << (idx << 3));
+        pmpcfgx = (pmpcfgx & ~(0xFF << (idx << 3))) | ((unsigned long)(pmpxcfg) << (idx << 3));
         __set_PMPCFG2(pmpcfgx);
     } else if (idx >= 12 && idx < 16) {
         idx -= 12;
         pmpcfgx = __get_PMPCFG3();
-        pmpcfgx = (pmpcfgx & ~(0xFF << (idx << 3))) | ((uint64_t)(pmpxcfg) << (idx << 3));
+        pmpcfgx = (pmpcfgx & ~(0xFF << (idx << 3))) | ((unsigned long)(pmpxcfg) << (idx << 3));
         __set_PMPCFG3(pmpcfgx);
     } else {
         return;
@@ -772,129 +772,129 @@ __STATIC_INLINE void __set_PMPxCFG(uint64_t idx, uint8_t pmpxcfg)
   \details Returns the content of the PMPADDRx Register.
   \return               PMPADDRx Register value
  */
-__ALWAYS_STATIC_INLINE uint64_t __get_PMPADDR0(void)
+__ALWAYS_STATIC_INLINE unsigned long __get_PMPADDR0(void)
 {
-    uint64_t result;
+    unsigned long result;
 
     __ASM volatile("csrr %0, pmpaddr0" : "=r"(result));
     return (result);
 }
 
-__ALWAYS_STATIC_INLINE uint64_t __get_PMPADDR1(void)
+__ALWAYS_STATIC_INLINE unsigned long __get_PMPADDR1(void)
 {
-    uint64_t result;
+    unsigned long result;
 
     __ASM volatile("csrr %0, pmpaddr1" : "=r"(result));
     return (result);
 }
 
-__ALWAYS_STATIC_INLINE uint64_t __get_PMPADDR2(void)
+__ALWAYS_STATIC_INLINE unsigned long __get_PMPADDR2(void)
 {
-    uint64_t result;
+    unsigned long result;
 
     __ASM volatile("csrr %0, pmpaddr2" : "=r"(result));
     return (result);
 }
 
-__ALWAYS_STATIC_INLINE uint64_t __get_PMPADDR3(void)
+__ALWAYS_STATIC_INLINE unsigned long __get_PMPADDR3(void)
 {
-    uint64_t result;
+    unsigned long result;
 
     __ASM volatile("csrr %0, pmpaddr3" : "=r"(result));
     return (result);
 }
 
-__ALWAYS_STATIC_INLINE uint64_t __get_PMPADDR4(void)
+__ALWAYS_STATIC_INLINE unsigned long __get_PMPADDR4(void)
 {
-    uint64_t result;
+    unsigned long result;
 
     __ASM volatile("csrr %0, pmpaddr4" : "=r"(result));
     return (result);
 }
 
-__ALWAYS_STATIC_INLINE uint64_t __get_PMPADDR5(void)
+__ALWAYS_STATIC_INLINE unsigned long __get_PMPADDR5(void)
 {
-    uint64_t result;
+    unsigned long result;
 
     __ASM volatile("csrr %0, pmpaddr5" : "=r"(result));
     return (result);
 }
 
-__ALWAYS_STATIC_INLINE uint64_t __get_PMPADDR6(void)
+__ALWAYS_STATIC_INLINE unsigned long __get_PMPADDR6(void)
 {
-    uint64_t result;
+    unsigned long result;
 
     __ASM volatile("csrr %0, pmpaddr6" : "=r"(result));
     return (result);
 }
 
-__ALWAYS_STATIC_INLINE uint64_t __get_PMPADDR7(void)
+__ALWAYS_STATIC_INLINE unsigned long __get_PMPADDR7(void)
 {
-    uint64_t result;
+    unsigned long result;
 
     __ASM volatile("csrr %0, pmpaddr7" : "=r"(result));
     return (result);
 }
 
-__ALWAYS_STATIC_INLINE uint64_t __get_PMPADDR8(void)
+__ALWAYS_STATIC_INLINE unsigned long __get_PMPADDR8(void)
 {
-    uint64_t result;
+    unsigned long result;
 
     __ASM volatile("csrr %0, pmpaddr8" : "=r"(result));
     return (result);
 }
 
-__ALWAYS_STATIC_INLINE uint64_t __get_PMPADDR9(void)
+__ALWAYS_STATIC_INLINE unsigned long __get_PMPADDR9(void)
 {
-    uint64_t result;
+    unsigned long result;
 
     __ASM volatile("csrr %0, pmpaddr9" : "=r"(result));
     return (result);
 }
 
-__ALWAYS_STATIC_INLINE uint64_t __get_PMPADDR10(void)
+__ALWAYS_STATIC_INLINE unsigned long __get_PMPADDR10(void)
 {
-    uint64_t result;
+    unsigned long result;
 
     __ASM volatile("csrr %0, pmpaddr10" : "=r"(result));
     return (result);
 }
 
-__ALWAYS_STATIC_INLINE uint64_t __get_PMPADDR11(void)
+__ALWAYS_STATIC_INLINE unsigned long __get_PMPADDR11(void)
 {
-    uint64_t result;
+    unsigned long result;
 
     __ASM volatile("csrr %0, pmpaddr11" : "=r"(result));
     return (result);
 }
 
-__ALWAYS_STATIC_INLINE uint64_t __get_PMPADDR12(void)
+__ALWAYS_STATIC_INLINE unsigned long __get_PMPADDR12(void)
 {
-    uint64_t result;
+    unsigned long result;
 
     __ASM volatile("csrr %0, pmpaddr12" : "=r"(result));
     return (result);
 }
 
-__ALWAYS_STATIC_INLINE uint64_t __get_PMPADDR13(void)
+__ALWAYS_STATIC_INLINE unsigned long __get_PMPADDR13(void)
 {
-    uint64_t result;
+    unsigned long result;
 
     __ASM volatile("csrr %0, pmpaddr13" : "=r"(result));
     return (result);
 }
 
-__ALWAYS_STATIC_INLINE uint64_t __get_PMPADDR14(void)
+__ALWAYS_STATIC_INLINE unsigned long __get_PMPADDR14(void)
 {
-    uint64_t result;
+    unsigned long result;
 
     __ASM volatile("csrr %0, pmpaddr14" : "=r"(result));
     return (result);
 }
 
-__ALWAYS_STATIC_INLINE uint64_t __get_PMPADDR15(void)
+__ALWAYS_STATIC_INLINE unsigned long __get_PMPADDR15(void)
 {
-    uint64_t result;
+    unsigned long result;
 
     __ASM volatile("csrr %0, pmpaddr15" : "=r"(result));
     return (result);
@@ -906,7 +906,7 @@ __ALWAYS_STATIC_INLINE uint64_t __get_PMPADDR15(void)
   \param [in]    idx    PMP region index
   \return               PMPADDRx Register value
  */
-__STATIC_INLINE uint64_t __get_PMPADDRx(uint64_t idx)
+__STATIC_INLINE unsigned long __get_PMPADDRx(unsigned long idx)
 {
     switch (idx) {
         case 0:
@@ -967,82 +967,82 @@ __STATIC_INLINE uint64_t __get_PMPADDRx(uint64_t idx)
   \details Writes the given value to the PMPADDRx Register.
   \param [in]    pmpaddr  PMPADDRx Register value to set
  */
-__ALWAYS_STATIC_INLINE void __set_PMPADDR0(uint64_t pmpaddr)
+__ALWAYS_STATIC_INLINE void __set_PMPADDR0(unsigned long pmpaddr)
 {
     __ASM volatile("csrw pmpaddr0, %0" : : "r"(pmpaddr));
 }
 
-__ALWAYS_STATIC_INLINE void __set_PMPADDR1(uint64_t pmpaddr)
+__ALWAYS_STATIC_INLINE void __set_PMPADDR1(unsigned long pmpaddr)
 {
     __ASM volatile("csrw pmpaddr1, %0" : : "r"(pmpaddr));
 }
 
-__ALWAYS_STATIC_INLINE void __set_PMPADDR2(uint64_t pmpaddr)
+__ALWAYS_STATIC_INLINE void __set_PMPADDR2(unsigned long pmpaddr)
 {
     __ASM volatile("csrw pmpaddr2, %0" : : "r"(pmpaddr));
 }
 
-__ALWAYS_STATIC_INLINE void __set_PMPADDR3(uint64_t pmpaddr)
+__ALWAYS_STATIC_INLINE void __set_PMPADDR3(unsigned long pmpaddr)
 {
     __ASM volatile("csrw pmpaddr3, %0" : : "r"(pmpaddr));
 }
 
-__ALWAYS_STATIC_INLINE void __set_PMPADDR4(uint64_t pmpaddr)
+__ALWAYS_STATIC_INLINE void __set_PMPADDR4(unsigned long pmpaddr)
 {
     __ASM volatile("csrw pmpaddr4, %0" : : "r"(pmpaddr));
 }
 
-__ALWAYS_STATIC_INLINE void __set_PMPADDR5(uint64_t pmpaddr)
+__ALWAYS_STATIC_INLINE void __set_PMPADDR5(unsigned long pmpaddr)
 {
     __ASM volatile("csrw pmpaddr5, %0" : : "r"(pmpaddr));
 }
 
-__ALWAYS_STATIC_INLINE void __set_PMPADDR6(uint64_t pmpaddr)
+__ALWAYS_STATIC_INLINE void __set_PMPADDR6(unsigned long pmpaddr)
 {
     __ASM volatile("csrw pmpaddr6, %0" : : "r"(pmpaddr));
 }
 
-__ALWAYS_STATIC_INLINE void __set_PMPADDR7(uint64_t pmpaddr)
+__ALWAYS_STATIC_INLINE void __set_PMPADDR7(unsigned long pmpaddr)
 {
     __ASM volatile("csrw pmpaddr7, %0" : : "r"(pmpaddr));
 }
 
-__ALWAYS_STATIC_INLINE void __set_PMPADDR8(uint64_t pmpaddr)
+__ALWAYS_STATIC_INLINE void __set_PMPADDR8(unsigned long pmpaddr)
 {
     __ASM volatile("csrw pmpaddr8, %0" : : "r"(pmpaddr));
 }
 
-__ALWAYS_STATIC_INLINE void __set_PMPADDR9(uint64_t pmpaddr)
+__ALWAYS_STATIC_INLINE void __set_PMPADDR9(unsigned long pmpaddr)
 {
     __ASM volatile("csrw pmpaddr9, %0" : : "r"(pmpaddr));
 }
 
-__ALWAYS_STATIC_INLINE void __set_PMPADDR10(uint64_t pmpaddr)
+__ALWAYS_STATIC_INLINE void __set_PMPADDR10(unsigned long pmpaddr)
 {
     __ASM volatile("csrw pmpaddr10, %0" : : "r"(pmpaddr));
 }
 
-__ALWAYS_STATIC_INLINE void __set_PMPADDR11(uint64_t pmpaddr)
+__ALWAYS_STATIC_INLINE void __set_PMPADDR11(unsigned long pmpaddr)
 {
     __ASM volatile("csrw pmpaddr11, %0" : : "r"(pmpaddr));
 }
 
-__ALWAYS_STATIC_INLINE void __set_PMPADDR12(uint64_t pmpaddr)
+__ALWAYS_STATIC_INLINE void __set_PMPADDR12(unsigned long pmpaddr)
 {
     __ASM volatile("csrw pmpaddr12, %0" : : "r"(pmpaddr));
 }
 
-__ALWAYS_STATIC_INLINE void __set_PMPADDR13(uint64_t pmpaddr)
+__ALWAYS_STATIC_INLINE void __set_PMPADDR13(unsigned long pmpaddr)
 {
     __ASM volatile("csrw pmpaddr13, %0" : : "r"(pmpaddr));
 }
 
-__ALWAYS_STATIC_INLINE void __set_PMPADDR14(uint64_t pmpaddr)
+__ALWAYS_STATIC_INLINE void __set_PMPADDR14(unsigned long pmpaddr)
 {
     __ASM volatile("csrw pmpaddr14, %0" : : "r"(pmpaddr));
 }
 
-__ALWAYS_STATIC_INLINE void __set_PMPADDR15(uint64_t pmpaddr)
+__ALWAYS_STATIC_INLINE void __set_PMPADDR15(unsigned long pmpaddr)
 {
     __ASM volatile("csrw pmpaddr15, %0" : : "r"(pmpaddr));
 }
@@ -1053,7 +1053,7 @@ __ALWAYS_STATIC_INLINE void __set_PMPADDR15(uint64_t pmpaddr)
   \param [in]    idx      PMP region index
   \param [in]    pmpaddr  PMPADDRx Register value to set
  */
-__STATIC_INLINE void __set_PMPADDRx(uint64_t idx, uint64_t pmpaddr)
+__STATIC_INLINE void __set_PMPADDRx(unsigned long idx, unsigned long pmpaddr)
 {
     switch (idx) {
         case 0:
@@ -1129,7 +1129,7 @@ __STATIC_INLINE void __set_PMPADDRx(uint64_t idx, uint64_t pmpaddr)
   \brief   Set MEDELEG Register
   \details Writes the given value to the MEDELEG Register.
  */
-__ALWAYS_STATIC_INLINE void __set_MEDELEG(uint64_t x)
+__ALWAYS_STATIC_INLINE void __set_MEDELEG(unsigned long x)
 {
     asm volatile("csrw medeleg, %0"::"r"(x));
 }
@@ -1138,9 +1138,9 @@ __ALWAYS_STATIC_INLINE void __set_MEDELEG(uint64_t x)
   \brief   Set MEDELEG Register
   \details Writes the given value to the MEDELEG Register.
  */
-__ALWAYS_STATIC_INLINE uint64_t __get_MEDELEG(void)
+__ALWAYS_STATIC_INLINE unsigned long __get_MEDELEG(void)
 {
-    uint64_t x;
+    unsigned long x;
     asm volatile("csrr %0, medeleg":"=r"(x));
     return x;
 }
@@ -1149,7 +1149,7 @@ __ALWAYS_STATIC_INLINE uint64_t __get_MEDELEG(void)
   \brief   Set MIDELEG Register
   \details Writes the given value to the MIDELEG Register.
  */
-__ALWAYS_STATIC_INLINE void __set_MIDELEG(uint64_t x)
+__ALWAYS_STATIC_INLINE void __set_MIDELEG(unsigned long x)
 {
     asm volatile("csrw mideleg, %0"::"r"(x));
 }
@@ -1159,9 +1159,9 @@ __ALWAYS_STATIC_INLINE void __set_MIDELEG(uint64_t x)
   \details Returns the content of the MIDELEG Register.
   \return               MIDELEG Register value
  */
-__ALWAYS_STATIC_INLINE uint64_t __get_MIDELEG(void)
+__ALWAYS_STATIC_INLINE unsigned long __get_MIDELEG(void)
 {
-    uint64_t x;
+    unsigned long x;
     asm volatile("csrr %0, mideleg":"=r"(x));
     return x;
 }
@@ -1170,7 +1170,7 @@ __ALWAYS_STATIC_INLINE uint64_t __get_MIDELEG(void)
   \brief   Set SSTATUS Register
   \details Writes the given value to the SSTATUS Register.
  */
-__ALWAYS_STATIC_INLINE void __set_SSTATUS(uint64_t x)
+__ALWAYS_STATIC_INLINE void __set_SSTATUS(unsigned long x)
 {
     asm volatile("csrw sstatus, %0"::"r"(x));
 }
@@ -1180,9 +1180,9 @@ __ALWAYS_STATIC_INLINE void __set_SSTATUS(uint64_t x)
   \details Returns the content of the SSTATUS Register.
   \return               SSTATUS Register value
  */
-__ALWAYS_STATIC_INLINE uint64_t __get_SSTATUS(void)
+__ALWAYS_STATIC_INLINE unsigned long __get_SSTATUS(void)
 {
-    uint64_t x;
+    unsigned long x;
     asm volatile("csrr %0, sstatus":"=r"(x));
     return x;
 }
@@ -1191,7 +1191,7 @@ __ALWAYS_STATIC_INLINE uint64_t __get_SSTATUS(void)
   \brief   Set SXSTATUS Register
   \details Writes the given value to the SXSTATUS Register.
  */
-__ALWAYS_STATIC_INLINE void __set_SXSTATUS(uint64_t x)
+__ALWAYS_STATIC_INLINE void __set_SXSTATUS(unsigned long x)
 {
     asm volatile("csrw sxstatus, %0"::"r"(x));
 }
@@ -1201,9 +1201,9 @@ __ALWAYS_STATIC_INLINE void __set_SXSTATUS(uint64_t x)
   \details Returns the content of the SXSTATUS Register.
   \return               SXSTATUS Register value
  */
-__ALWAYS_STATIC_INLINE uint64_t __get__SXSTATUS(void)
+__ALWAYS_STATIC_INLINE unsigned long __get__SXSTATUS(void)
 {
-    uint64_t x;
+    unsigned long x;
     asm volatile("csrr %0, sxstatus":"=r"(x));
     return x;
 }
@@ -1212,7 +1212,7 @@ __ALWAYS_STATIC_INLINE uint64_t __get__SXSTATUS(void)
   \brief   Set SIE Register
   \details Writes the given value to the SIE Register.
  */
-__ALWAYS_STATIC_INLINE void __set_SIE(uint64_t x)
+__ALWAYS_STATIC_INLINE void __set_SIE(unsigned long x)
 {
     asm volatile("csrw sie, %0"::"r"(x));
 }
@@ -1222,9 +1222,9 @@ __ALWAYS_STATIC_INLINE void __set_SIE(uint64_t x)
   \details Returns the content of the SIE Register.
   \return               SIE Register value
  */
-__ALWAYS_STATIC_INLINE uint64_t __get_SIE(void)
+__ALWAYS_STATIC_INLINE unsigned long __get_SIE(void)
 {
-    uint64_t x;
+    unsigned long x;
     asm volatile("csrr %0, sie":"=r"(x));
     return x;
 }
@@ -1233,7 +1233,7 @@ __ALWAYS_STATIC_INLINE uint64_t __get_SIE(void)
   \brief   Set STVAC Register
   \details Writes the given value to the STVEC Register.
  */
-__ALWAYS_STATIC_INLINE void __set_STVEC(uint64_t x)
+__ALWAYS_STATIC_INLINE void __set_STVEC(unsigned long x)
 {
     asm volatile("csrw stvec, %0"::"r"(x));
 }
@@ -1243,9 +1243,9 @@ __ALWAYS_STATIC_INLINE void __set_STVEC(uint64_t x)
   \details Returns the content of the STVAC Register.
   \return               STVAC Register value
  */
-__ALWAYS_STATIC_INLINE uint64_t __get_STVEC(void)
+__ALWAYS_STATIC_INLINE unsigned long __get_STVEC(void)
 {
-    uint64_t x;
+    unsigned long x;
     asm volatile("csrr %0, stvec":"=r"(x));
     return x;
 }
@@ -1392,7 +1392,7 @@ __ALWAYS_STATIC_INLINE void __ICACHE_IALLS(void)
   \details Invalid Icache by phy addr.
   \param [in] addr  operate addr
  */
-__ALWAYS_STATIC_INLINE void __ICACHE_IPA(uint64_t addr)
+__ALWAYS_STATIC_INLINE void __ICACHE_IPA(unsigned long addr)
 {
     __ASM volatile("icache.ipa %0" : : "r"(addr));
 }
@@ -1402,7 +1402,7 @@ __ALWAYS_STATIC_INLINE void __ICACHE_IPA(uint64_t addr)
   \details Invalid Icache by virt address
   \param [in] addr  operate addr
  */
-__ALWAYS_STATIC_INLINE void __ICACHE_IVA(uint64_t addr)
+__ALWAYS_STATIC_INLINE void __ICACHE_IVA(unsigned long addr)
 {
     __ASM volatile("icache.iva %0" : : "r"(addr));
 }
@@ -1469,7 +1469,7 @@ __ALWAYS_STATIC_INLINE void __L2CACHE_CIALL(void)
   \details Invalid Dcache by addr.
   \param [in] addr  operate addr
  */
-__ALWAYS_STATIC_INLINE void __DCACHE_IPA(uint64_t addr)
+__ALWAYS_STATIC_INLINE void __DCACHE_IPA(unsigned long addr)
 {
     __ASM volatile("dcache.ipa %0" : : "r"(addr));
 }
@@ -1479,7 +1479,7 @@ __ALWAYS_STATIC_INLINE void __DCACHE_IPA(uint64_t addr)
   \details Invalid Dcache by virt addr.
   \param [in] addr  operate addr
  */
-__ALWAYS_STATIC_INLINE void __DCACHE_IVA(uint64_t addr)
+__ALWAYS_STATIC_INLINE void __DCACHE_IVA(unsigned long addr)
 {
     __ASM volatile("dcache.iva %0" : : "r"(addr));
 }
@@ -1489,7 +1489,7 @@ __ALWAYS_STATIC_INLINE void __DCACHE_IVA(uint64_t addr)
   \details Clear Dcache by addr.
   \param [in] addr  operate addr
  */
-__ALWAYS_STATIC_INLINE void __DCACHE_CPA(uint64_t addr)
+__ALWAYS_STATIC_INLINE void __DCACHE_CPA(unsigned long addr)
 {
     __ASM volatile("dcache.cpa %0" : : "r"(addr));
 }
@@ -1499,7 +1499,7 @@ __ALWAYS_STATIC_INLINE void __DCACHE_CPA(uint64_t addr)
   \details Clear Dcache by virt addr.
   \param [in] addr  operate addr
  */
-__ALWAYS_STATIC_INLINE void __DCACHE_CVA(uint64_t addr)
+__ALWAYS_STATIC_INLINE void __DCACHE_CVA(unsigned long addr)
 {
     __ASM volatile("dcache.cva %0" : : "r"(addr));
 }
@@ -1509,7 +1509,7 @@ __ALWAYS_STATIC_INLINE void __DCACHE_CVA(uint64_t addr)
   \details Clear & Invalid Dcache by addr.
   \param [in] addr  operate addr
  */
-__ALWAYS_STATIC_INLINE void __DCACHE_CIPA(uint64_t addr)
+__ALWAYS_STATIC_INLINE void __DCACHE_CIPA(unsigned long addr)
 {
     __ASM volatile("dcache.cipa %0" : : "r"(addr));
 }
@@ -1519,7 +1519,7 @@ __ALWAYS_STATIC_INLINE void __DCACHE_CIPA(uint64_t addr)
   \details Clear & Invalid Dcache by virt addr.
   \param [in] addr  operate addr
  */
-__ALWAYS_STATIC_INLINE void __DCACHE_CIVA(uint64_t addr)
+__ALWAYS_STATIC_INLINE void __DCACHE_CIVA(unsigned long addr)
 {
     __ASM volatile("dcache.civa %0" : : "r"(addr));
 }
@@ -1541,7 +1541,7 @@ __ALWAYS_STATIC_INLINE void __DMB(void)
   \param [in]    value  Value to reverse
   \return               Reversed value
  */
-__ALWAYS_STATIC_INLINE uint64_t __REV(uint64_t value)
+__ALWAYS_STATIC_INLINE unsigned long __REV(unsigned long value)
 {
     return __builtin_bswap32(value);
 }
@@ -2957,10 +2957,10 @@ __ALWAYS_STATIC_INLINE int32_t __QADD(int32_t x, int32_t y)
  */
 __ALWAYS_STATIC_INLINE int32_t __QSUB(int32_t x, int32_t y)
 {
-    int64_t tmp;
+    long tmp;
     int32_t result;
 
-    tmp = (int64_t)x - (int64_t)y;
+    tmp = (long)x - (long)y;
 
     if (tmp > 0x7fffffff) {
         tmp = 0x7fffffff;
@@ -3070,11 +3070,11 @@ __ALWAYS_STATIC_INLINE uint32_t __SMLSDX(uint32_t x, uint32_t y, uint32_t sum)
                  res[63:32] = sum[63:32]            \n
                  res[31:0]  = sum[31:0]
  */
-__ALWAYS_STATIC_INLINE uint64_t __SMLALD(uint32_t x, uint32_t y, uint64_t sum)
+__ALWAYS_STATIC_INLINE unsigned long __SMLALD(uint32_t x, uint32_t y, unsigned long sum)
 {
-    return ((uint64_t)(((((int32_t)x << 16) >> 16) * (((int32_t)y << 16) >> 16)) +
+    return ((unsigned long)(((((int32_t)x << 16) >> 16) * (((int32_t)y << 16) >> 16)) +
                        ((((int32_t)x) >> 16) * (((int32_t)y) >> 16)) +
-                       (((uint64_t)sum))));
+                       (((unsigned long)sum))));
 }
 
 /**
@@ -3094,11 +3094,11 @@ __ALWAYS_STATIC_INLINE uint64_t __SMLALD(uint32_t x, uint32_t y, uint64_t sum)
                  res[63:32] = sum[63:32]            \n
                  res[31:0]  = sum[31:0]
  */
-__ALWAYS_STATIC_INLINE uint64_t __SMLALDX(uint32_t x, uint32_t y, uint64_t sum)
+__ALWAYS_STATIC_INLINE unsigned long __SMLALDX(uint32_t x, uint32_t y, unsigned long sum)
 {
-    return ((uint64_t)(((((int32_t)x << 16) >> 16) * (((int32_t)y) >> 16)) +
+    return ((unsigned long)(((((int32_t)x << 16) >> 16) * (((int32_t)y) >> 16)) +
                        ((((int32_t)x) >> 16) * (((int32_t)y << 16) >> 16)) +
-                       (((uint64_t)sum))));
+                       (((unsigned long)sum))));
 }
 
 /**
@@ -3117,11 +3117,11 @@ __ALWAYS_STATIC_INLINE uint64_t __SMLALDX(uint32_t x, uint32_t y, uint64_t sum)
                  p2 = val1[31:16] * val2[31:16]     \n
                  res[63:32][31:0] = p1 - p2 + val3[63:32][31:0]
  */
-__ALWAYS_STATIC_INLINE uint64_t __SMLSLD(uint32_t x, uint32_t y, uint64_t sum)
+__ALWAYS_STATIC_INLINE unsigned long __SMLSLD(uint32_t x, uint32_t y, unsigned long sum)
 {
-    return ((uint64_t)(((((int32_t)x << 16) >> 16) * (((int32_t)y << 16) >> 16)) -
+    return ((unsigned long)(((((int32_t)x << 16) >> 16) * (((int32_t)y << 16) >> 16)) -
                        ((((int32_t)x) >> 16) * (((int32_t)y) >> 16)) +
-                       (((uint64_t)sum))));
+                       (((unsigned long)sum))));
 }
 
 /**
@@ -3139,11 +3139,11 @@ __ALWAYS_STATIC_INLINE uint64_t __SMLSLD(uint32_t x, uint32_t y, uint64_t sum)
                  p2 = val1[31:16] * val2[15:0]       \n
                  res[63:32][31:0] = p1 - p2 + val3[63:32][31:0]
  */
-__ALWAYS_STATIC_INLINE uint64_t __SMLSLDX(uint32_t x, uint32_t y, uint64_t sum)
+__ALWAYS_STATIC_INLINE unsigned long __SMLSLDX(uint32_t x, uint32_t y, unsigned long sum)
 {
-    return ((uint64_t)(((((int32_t)x << 16) >> 16) * (((int32_t)y) >> 16)) -
+    return ((unsigned long)(((((int32_t)x << 16) >> 16) * (((int32_t)y) >> 16)) -
                        ((((int32_t)x) >> 16) * (((int32_t)y << 16) >> 16)) +
-                       (((uint64_t)sum))));
+                       (((unsigned long)sum))));
 }
 
 /**
@@ -3160,7 +3160,7 @@ __ALWAYS_STATIC_INLINE uint64_t __SMLSLDX(uint32_t x, uint32_t y, uint64_t sum)
  */
 __ALWAYS_STATIC_INLINE uint32_t __SMMLA(int32_t x, int32_t y, int32_t sum)
 {
-    return (uint32_t)((int32_t)((int64_t)((int64_t)x * (int64_t)y) >> 32) + sum);
+    return (uint32_t)((int32_t)((long)((long)x * (long)y) >> 32) + sum);
 }
 
 /**

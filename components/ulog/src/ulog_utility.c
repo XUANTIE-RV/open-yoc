@@ -64,8 +64,8 @@ char *ulog_format_time(char *buffer, const int len)
 
 char* trim_file_path(const char* path)
 {
-#if SYNC_ABS_PATH
-    return path;
+#if SYNC_ABS_PATH || ULOG_TAG_USE_SHORT_FILE
+    return (char *)path;
 #else
     char* filename = (char*)path;
     if (path != NULL) {

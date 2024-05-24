@@ -1,14 +1,13 @@
 /*
  * Copyright (C) 2021 Alibaba Group Holding Limited
  */
-
-#include <sys/select.h>
 #if defined(CONFIG_AOS_LWIP) || defined(CONFIG_SAL)
 #include <lwip/opt.h>
-#include <sys/socket.h>
+#else
+#undef LWIP_POSIX_SOCKETS_IO_NAMES
+#define LWIP_POSIX_SOCKETS_IO_NAMES 0
 #endif
-
-#if (!defined(CONFIG_AOS_LWIP) && !defined(CONFIG_SAL)) || (defined(CONFIG_AOS_LWIP) && !LWIP_SOCKET_POLL) || (defined(CONFIG_SAL) && !LWIP_SOCKET_POLL)
+#if !LWIP_POSIX_SOCKETS_IO_NAMES
 #include <stdio.h>
 #include <limits.h>
 #include <string.h>
@@ -18,18 +17,11 @@
 #include <aos/kernel.h>
 #include <vfs.h>
 
-#define WRITE_VAL 1
-
-#if !defined(CONFIG_AOS_LWIP) && !defined(CONFIG_SAL)
-#define CONFIG_NO_TCPIP
-#endif
-
 typedef struct poll_node {
     struct pollfd pfd;
     dlist_t next;
 } poll_node_t;
 
-#ifdef CONFIG_NO_TCPIP
 
 struct poll_arg {
     aos_sem_t sem;
@@ -60,70 +52,7 @@ static void deinit_parg(struct poll_arg *parg)
 {
     aos_sem_free(&parg->sem);
 }
-#else
-#include <sys/socket.h>
 
-extern ssize_t lwip_write(int s, const void *dataptr, size_t size);
-extern int lwip_select(int maxfdp1, fd_set *readset, fd_set *writeset, fd_set *exceptset,
-                       struct timeval *timeout);
-extern int lwip_eventfd(unsigned int initval, int flags);
-extern int lwip_close(int s);
-
-struct poll_arg {
-    int efd;
-};
-
-static void vfs_poll_notify(void *fd, void *arg)
-{
-    struct poll_arg *parg = arg;
-    uint64_t val = WRITE_VAL;
-    lwip_write(parg->efd, &val, sizeof val);
-}
-
-static int init_parg(struct poll_arg *parg)
-{
-    int efd;
-    efd = lwip_eventfd(0, 0);
-    if (efd < 0) {
-        errno = EINVAL;
-        return -1;
-    }
-
-    parg->efd = efd;
-
-    return 0;
-}
-
-static int wait_io(int maxfd, fd_set *readset, fd_set *writeset, fd_set *exceptset,
-                   struct poll_arg *parg, struct timeval *timeout)
-{
-    int ret = 0;
-    fd_set *real_rset = readset;
-    fd_set bk_rset;
-    if (readset == NULL) {
-        real_rset = &bk_rset;
-        memset(real_rset, 0, sizeof(fd_set));
-    }
-    FD_SET(parg->efd, real_rset);
-    maxfd = parg->efd > maxfd - 1 ? (parg->efd + 1) : maxfd;
-
-    ret = lwip_select(maxfd, real_rset, writeset, exceptset, timeout);
-    if (ret > 0) {
-        if (FD_ISSET(parg->efd, real_rset)) {
-            /*mask eventfd event to user*/
-            ret--;
-        }
-    }
-
-    FD_CLR(parg->efd, real_rset);
-    return ret;
-}
-
-static void deinit_parg(struct poll_arg *parg)
-{
-    lwip_close(parg->efd);
-}
-#endif
 static int pre_select(int fd, dlist_t *list, struct poll_arg *parg, fd_set *readset, fd_set *writeset,
                       fd_set *exceptset)
 {
@@ -281,6 +210,18 @@ err:
 int select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *errorfds,
                          struct timeval *timeout)
 {
+#if defined(CONFIG_AOS_LWIP)
+    extern int lwip_select(int maxfdp1, fd_set *readset, fd_set *writeset, fd_set *exceptset, struct timeval *timeout);
+    if (nfds < aos_vfs_fd_offset_get() + 1) {
+        return lwip_select(nfds, readfds, writefds, errorfds, timeout);
+    }
+#elif defined(CONFIG_SAL)
+    extern int sal_select(int maxfdp1, fd_set *readset, fd_set *writeset, fd_set *exceptset, struct timeval *timeout);
+    if (nfds < aos_vfs_fd_offset_get() + 1) {
+        return sal_select(nfds, readfds, writefds, errorfds, timeout);
+    }
+#endif
     return aos_select(nfds, readfds, writefds, errorfds, timeout);
 }
-#endif
+
+#endif /* !LWIP_POSIX_SOCKETS_IO_NAMES */

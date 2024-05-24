@@ -16,6 +16,7 @@ extern "C" {
 
 typedef struct i2s_driver {
     driver_t drv;
+    uint32_t timeout;
     int (*config)(rvm_dev_t *dev, rvm_hal_i2s_config_t *config);
     int (*config_get)(rvm_dev_t *dev, rvm_hal_i2s_config_t *config);
     int (*send)(rvm_dev_t *dev, const void *data, size_t size, uint32_t timeout);

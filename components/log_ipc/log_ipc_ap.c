@@ -56,7 +56,7 @@ static void console_ipc_process(ipc_t *ipc, message_t *m, void *priv)
 {
     log_ipc_t *log_ipc = (log_ipc_t *)priv;
     console_ipcdata_t *ipc_data = (console_ipcdata_t *)m->req_data; 
-    csi_dcache_invalid_range((size_t *)ipc_data->data, ipc_data->len);
+    csi_dcache_invalid_range((unsigned long *)ipc_data->data, ipc_data->len);
 
     switch (m->command) {
         case IPC_CMD_DEBUG_CONSOLE_INFO:

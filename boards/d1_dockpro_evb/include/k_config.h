@@ -25,7 +25,7 @@
 #elif defined(__I805__) || defined(CONFIG_CPU_E906) || defined(CONFIG_CPU_E906F) || defined(CONFIG_CPU_E906FD)
 #define CSK_CPU_STACK_EXTRAL    280
 #define RHINO_CONFIG_MM_MAXMSIZEBIT 28
-#elif defined(CONFIG_CPU_C906)
+#elif defined(CONFIG_CPU_C906FDV)
 #ifdef __riscv_vector
 #define CSK_CPU_STACK_EXTRAL    (280 + 512 + 40)
 #else

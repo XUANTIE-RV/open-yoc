@@ -183,7 +183,10 @@ bool LyevaASRProcess::ScoreAndSend()
     aos_mutex_lock(&asr_lock_, AOS_WAIT_FOREVER);
     int ret = aie_asr_search_and_rescoring(asr_handle_, &asr_text, &text_len);
     if (ret) {
+        aos_mutex_unlock(&asr_lock_);
         LOGE(TAG, "rescore failed! %d", ret);
+        free(asr_text);
+        free(nlu_result);
         return true;
     }
     aie_nnvad_reset(vad_);
@@ -271,12 +274,15 @@ void _asr_init(void *arg)
     agc_buf = (int16_t *)malloc(frame_buf_len * ASR_CHANNEL_NUM_ * sizeof(int16_t));
     if (agc_buf == NULL) {
         LOGE(TAG, "agc_buf alloc fail");
+        free(frame_buf);
         return;
     }
 
     vad_buff = (int16_t *)malloc(VAD_COUNT * sizeof(int16_t));
     if (vad_buff == NULL) {
         LOGE(TAG, "vad_buff alloc fail");
+        free(frame_buf);
+        free(agc_buf);
         return;
     }
     memset(vad_buff, 0, VAD_COUNT * sizeof(int16_t));
@@ -285,6 +291,9 @@ void _asr_init(void *arg)
     ret = asr_nlu_init();
     if (ret) {
         LOGE(TAG, "nlu init fail %d", ret);
+        free(frame_buf);
+        free(agc_buf);
+        free(vad_buff);
         return;
     }
 

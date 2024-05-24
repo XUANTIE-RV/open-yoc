@@ -1,6 +1,6 @@
 ## 第一部分： 基础信息
 name: tmedia_backend_seno                           # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
-version: v7.8.0                                    # <必选项> 组件版本号
+version: v7.9.0                                    # <必选项> 组件版本号
 description: 3rd of license friendly backend implement for tmedia-core          # <必选项> 建议至少20字以上
 type: common                                        # <必选项> 组件类型，为：solution, chip, board, common, sdk
 tag: 通用组件                                       # <可选项> 组件分类，缺省值： ''
@@ -45,20 +45,28 @@ build_config:
     - csi_cv
     - sailface-nano
     - shl_c906_rtos
-    - tmedia_backend_seno_prebuild
   libpath:
     - libs/<cpu>/ai/sailface_sdk
-    - libs/<cpu>
 # source_file:                             # <可选项> 指定参与编译的源代码文件，支持通配符，采用相对路径
 #   - src/*.c                              # 例：组件 src 目录下所有的扩展名为 c 的源代码文件
-# source_file:
-
+source_file:
+  - src/format/ts_muxer_seno.cpp
+  - src/format/ts_demuxer_seno.cpp
+  - src/codec/*.cpp
+  - src/codec/g711/*.c
+  - src/filesink/*.cpp
+  - src/filesrc/*.cpp
+  - src/parser/*.cpp
+  - src/ai/face_ai_damo.cpp
+  - src/aiengine/image_proc_dummy.cpp
+  - src/aiengine/fce_dummy.cpp
+  - src/*.cpp
 ## 第五部分：配置信息
 # def_config:                              # 组件的可配置项
 #   CONFIG_DEBUG: y
 #   CONFIG_PARAM_NOT_CHECK: y
 #   CONFIG_CLI: y
-# def_config:
+def_config:
 
 ## 第六部分：安装信息
 # install:

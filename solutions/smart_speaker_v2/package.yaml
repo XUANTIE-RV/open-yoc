@@ -1,7 +1,7 @@
 
 ## 第一部分： 基础信息
 name: smart_speaker_v2                              # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
-version: v7.8.0                                     # <必选项> 组件版本号
+version: v7.9.0                                    # <必选项> 组件版本号
 description: 智能语音终端，离线ASR，BL606P平台        # <必选项> 建议至少20字以上
 type: solution                                      # <必选项> 组件类型，为：solution, chip, board, common, sdk
 
@@ -12,49 +12,49 @@ type: solution                                      # <必选项> 组件类型�
 #   - minilibc: v7.2.0
 #   - aos: >=v7.2.0
 sdk_chip:
-  - sdk_chip_bl606p_e907: v7.8.0
+  - sdk_chip_bl606p_e907: v7.9.0
 
 mkflash_script: mkflash.sh
 
 depends:
-  - sdk_chip_bl606p_e907: v7.8.0
-  - av: v7.8.0
-  - amrnb: v7.8.0
-  - amrwb: v7.8.0
-  - flac: v7.8.0
-  - ogg: v7.8.0
-  - opus: v7.8.0
-  - pvmp3dec: v7.8.0
-  - sonic: v7.8.0
-  - speex: v7.8.0
-  - speexdsp: v7.8.0
-  - netmgr: v7.8.0
-  - littlefs: v7.8.0
-  - zlib: v7.8.0
-  - ntp: v7.8.0
-  - smart_audio: v7.8.0
-  - drv_amplifier: v7.8.0
-  - wifi_provisioning: v7.8.0
-  - cjson: v7.8.0
-  - alg_pcm_input: v7.8.0
-  - alg_record: v7.8.0
-  - record: v7.8.0
-  - websocket: v7.8.0
-  - posto: v7.8.0
-  - cxvision: v7.8.0
-  - voice_wrapper: v7.8.0
-  - httpclient: v7.8.0
-  - transport: v7.8.0
-  - button: v7.8.0
-  - alg_dispatch: v7.8.0         # alg: mind & thead
-  - voice_mind: v7.8.0           # alg: mind
-  - alg_kws_mind: v7.8.0         # alg: mind, not link, need by aft_build.sh
-  - alg_asr_lyeva: v7.8.0        # alg firmware
-  - adb: v7.8.0
-  - clock_alarm: v7.8.0
-  - at: v7.8.0
-  - ers: v7.8.0
-  - ota_module: v7.8.0
+  - sdk_chip_bl606p_e907: v7.9.0
+  - av: v7.9.0
+  - amrnb: v7.9.0
+  - amrwb: v7.9.0
+  - flac: v7.9.0
+  - ogg: v7.9.0
+  - opus: v7.9.0
+  - pvmp3dec: v7.9.0
+  - sonic: v7.9.0
+  - speex: v7.9.0
+  - speexdsp: v7.9.0
+  - netmgr: v7.9.0
+  - littlefs: v7.9.0
+  - zlib: v7.9.0
+  - ntp: v7.9.0
+  - smart_audio: v7.9.0
+  - drv_amplifier: v7.9.0
+  - wifi_provisioning: v7.9.0
+  - cjson: v7.9.0
+  - alg_pcm_input: v7.9.0
+  - alg_record: v7.9.0
+  - record: v7.9.0
+  - websocket: v7.9.0
+  - posto: v7.9.0
+  - cxvision: v7.9.0
+  - voice_wrapper: v7.9.0
+  - httpclient: v7.9.0
+  - transport: v7.9.0
+  - button: v7.9.0
+  - alg_dispatch: v7.9.0         # alg: mind & thead
+  - voice_mind: v7.9.0           # alg: mind
+  - alg_kws_mind: v7.9.0         # alg: mind, not link, need by aft_build.sh
+  - alg_asr_lyeva: v7.9.0        # alg firmware
+  - adb: v7.9.0
+  - clock_alarm: v7.9.0
+  - at: v7.9.0
+  - ers: v7.9.0
+  - ota_module: v7.9.0
 
 ## 第三部分：板级信息
 # hw_info:                                 # 对 solution、board、chip 三个字段的改进，统称为 hw_info 字段

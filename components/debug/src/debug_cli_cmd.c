@@ -268,11 +268,11 @@ static void debug_default_cmds_register(void)
 void debug_cli_cmd_init(void)
 {
     debug_default_cmds_register();
-#ifdef CONFIG_KERNEL_RHINO
     debug_dumpsys_cmds_register();
+#ifdef CONFIG_KERNEL_RHINO
 #if (RHINO_CONFIG_SYS_STATS > 0)
     debug_cpuusage_cmds_register();
 #endif
-#endif
+#endif /* CONFIG_KERNEL_RHINO */
 }
 #endif /* #if AOS_COMP_CLI */

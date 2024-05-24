@@ -1109,8 +1109,15 @@ struct usb_qualifier_descriptor {
 
 /*-------------------------------------------------------------------------*/
 
-#define MAX_PAYLOAD_SIZE  2048 // for high speed with three transcations every one micro frame
-#define VIDEO_PACKET_SIZE (unsigned int)(((MAX_PAYLOAD_SIZE / 2)) | (0x01 << 11))
+#ifdef CONFIG_USB_HS
+#define MAX_PAYLOAD_SIZE_PER_TRANSACTION (1024)
+#define TRANSACTION_PER_MICROFRAME (3)
+#else
+#define MAX_PAYLOAD_SIZE_PER_TRANSACTION (1023)
+#define TRANSACTION_PER_MICROFRAME (1)
+#endif
+#define MAX_PAYLOAD_SIZE  (MAX_PAYLOAD_SIZE_PER_TRANSACTION * TRANSACTION_PER_MICROFRAME) // for high speed with three transcations every one micro frame
+#define VIDEO_PACKET_SIZE (unsigned int)((MAX_PAYLOAD_SIZE_PER_TRANSACTION) | ((TRANSACTION_PER_MICROFRAME - 1) << 11))
 
 // Frame interval in 100 ns units.
 #define FRAME_INTERVAL_FPS(N)   (1000 * 1000 * 10 / N)

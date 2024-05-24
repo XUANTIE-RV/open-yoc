@@ -82,17 +82,9 @@ static aos_status_t _devfs_adc_ioctl(devfs_file_t *file, int cmd, uintptr_t arg)
 
         memcpy(&msg, (const void *)arg, sizeof(rvm_adc_dev_msg_t));
 
-#ifdef CONFIG_CSI_V2
         if (rvm_hal_adc_read(dev, msg.ch, msg.output, msg.timeout)) {
             return -EIO;
         }
-
-#else
-        if (rvm_hal_adc_read(dev, msg.output, msg.timeout)) {
-            return -EIO;
-        }
-
-#endif
         break;
     }
     case ADC_IOC_GET_MULTIPLE_VALUE:
@@ -108,13 +100,9 @@ static aos_status_t _devfs_adc_ioctl(devfs_file_t *file, int cmd, uintptr_t arg)
         rvm_adc_dev_msg_t msg;
 
         memcpy(&msg, (const void *)arg, sizeof(rvm_adc_dev_msg_t));
-
-#ifdef CONFIG_CSI_V2
         if (rvm_hal_adc_read_multiple(dev, msg.ch, msg.output, msg.num, msg.timeout)) {
             return -EIO;
         }
-
-#endif
         break;
     }
     default:

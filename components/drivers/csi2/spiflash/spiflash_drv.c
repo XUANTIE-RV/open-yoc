@@ -130,6 +130,11 @@ static int yoc_spiflash_get_info(rvm_dev_t *dev, rvm_hal_flash_dev_info_t *info)
     info->start_addr = flash_info.xip_addr;
     info->sector_size = flash_info.sector_size;
     info->sector_count = flash_info.flash_size / flash_info.sector_size;
+    info->block_size = 0; // FIXME:
+    info->page_size = 0;
+    info->oob_size = 0;
+    info->max_bad_blocks = 0;
+    info->total_blocks = 0;
 
     return 0;
 }

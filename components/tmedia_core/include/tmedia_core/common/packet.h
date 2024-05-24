@@ -39,6 +39,7 @@ public:
     virtual ~TMPacket();
 
     void Init();
+    void Init(TMClockType_e type, uint32_t time_base);
 
     int SetBuffer(TMBuffer *buffer);
     TMBuffer *GetBuffer() const;

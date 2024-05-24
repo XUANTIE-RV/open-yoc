@@ -1,7 +1,7 @@
 
 ## 第一部分： 基础信息
 name: sdk_chixiao_lite                                    # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
-version: v7.8.0                                    # <必选项> 组件版本号
+version: v7.9.0                                    # <必选项> 组件版本号
 description: the sdk for chixiao lite                 # <必选项> 建议至少20字以上
 type: common                                        # <必选项> 组件类型，为：solution, chip, board, common, sdk
 
@@ -13,12 +13,12 @@ type: common                                        # <必选项> 组件类型�
 #   - aos: >=v7.2.0
 depends:
 # FaceAI Demos
-  - face_recognition_demo: v7.8.0
+  - face_recognition_demo: v7.9.0
 
 # Recorder Demos
-  - live_recorder_demo: v7.8.0
+  - live_recorder_demo: v7.9.0
 
 # HAL Demos
 
 # solution
-  - flash_doorbell: v7.8.0
+  - flash_doorbell: v7.9.0

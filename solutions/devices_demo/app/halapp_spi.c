@@ -18,10 +18,25 @@
 #define SPI0_PORT_NUM       0
 #define SPI1_PORT_NUM       1
 #define SPI_DATA_NUM        10
-#define SPI_TX_TIMEOUT      2000
-#define SPI_RX_TIMEOUT      2000
+#define SPI_TX_TIMEOUT      20000
+#define SPI_RX_TIMEOUT      20000
 
 extern const csi_pinmap_t spi_pinmap[];
+
+static void dump_data(uint8_t *data, int32_t len)
+{
+    int32_t i;
+
+    for (i = 0; i < len; i++) {
+        if (i % 16 == 0) {
+            printf("\n");
+        }
+
+        printf("%02x ", data[i]);
+    }
+
+    printf("\n");
+}
 
 static uint32_t get_spi_pin_func(uint8_t gpio_pin, const csi_pinmap_t *pinmap)
 {
@@ -176,7 +191,7 @@ int hal_spi_demo(APP_TEST_SPI_FUNCTION function, uint32_t *gpio_pin)
     switch (function)
     {
     case APP_TEST_SPI_SLAVE_RECV_MASTER_SEND: // 注意：此 case 不支持 SYNC 同步模式
-        ret = rvm_hal_spi_recv(spi1_dev, spi_rx_data, SPI_DATA_NUM, SPI_RX_TIMEOUT);
+        ret = rvm_hal_spi_recv(spi1_dev, spi_rx_data, SPI_DATA_NUM, AOS_NO_WAIT);
 
         if (rvm_hal_spi_send(spi0_dev, spi_tx_data, SPI_DATA_NUM, SPI_TX_TIMEOUT)) {
             LOGE(TAG, "send error !");
@@ -213,6 +228,8 @@ int hal_spi_demo(APP_TEST_SPI_FUNCTION function, uint32_t *gpio_pin)
 
     if (check_recv) {
         if (memcmp(spi_tx_data, spi_rx_data, SPI_DATA_NUM)) {
+            printf("spi_rx_data:");
+            dump_data(spi_rx_data,SPI_DATA_NUM);
             LOGE(TAG, "transfer error !");
             goto fail;
         } else {
@@ -273,6 +290,7 @@ int devfs_spi_demo(APP_TEST_SPI_FUNCTION function, uint32_t *gpio_pin)
 
     int ret = -1;
     bool check_recv = true;
+    uint32_t timeout = 20000;
 
     /* 配置管脚复用 */
 #if !defined(CONFIG_CHIP_BL606P_E907)
@@ -326,6 +344,11 @@ int devfs_spi_demo(APP_TEST_SPI_FUNCTION function, uint32_t *gpio_pin)
             return -1;
         }
 
+       ret = ioctl(fd_spi0, SPI_IOC_TIMEOUT, &timeout);
+       if (ret) {
+            printf("SPI_IOC_TIMEOUT is error\n");
+       }
+
         ioctl(fd_spi0, SPI_IOC_GET_DEFAULT_CONFIG, &spi0_config);
         spi0_config.mode  = RVM_HAL_SPI_MODE_MASTER;
         spi0_config.freq = 500 * 1000; // 500KHz
@@ -345,6 +368,10 @@ int devfs_spi_demo(APP_TEST_SPI_FUNCTION function, uint32_t *gpio_pin)
             return -1;
         }
 
+       ret = ioctl(fd_spi1, SPI_IOC_TIMEOUT, &timeout);
+       if (ret) {
+            printf("SPI_IOC_TIMEOUT is error\n");
+       }
         ioctl(fd_spi1, SPI_IOC_GET_DEFAULT_CONFIG, &spi1_config);
         spi1_config.mode  = RVM_HAL_SPI_MODE_SLAVE;
         ret = ioctl(fd_spi1, SPI_IOC_CONFIG, &spi1_config);
@@ -363,7 +390,10 @@ int devfs_spi_demo(APP_TEST_SPI_FUNCTION function, uint32_t *gpio_pin)
             printf("open %s failed. fd:%d\n", spi2_filename, fd_spi2);
             return -1;
         }
-
+        ret = ioctl(fd_spi2, SPI_IOC_TIMEOUT, &timeout);
+        if (ret) {
+            printf("SPI_IOC_TIMEOUT is error\n");
+        }
         ioctl(fd_spi2, SPI_IOC_GET_DEFAULT_CONFIG, &spi2_config);
         if (function >= APP_TEST_SPI_MASTER_SEND) {
             spi2_config.mode = RVM_HAL_SPI_MODE_MASTER;
@@ -387,6 +417,9 @@ int devfs_spi_demo(APP_TEST_SPI_FUNCTION function, uint32_t *gpio_pin)
     rvm_spi_dev_msg_t msg_spi;
 
     /* 进行spi通信 */
+    if (function >= APP_TEST_SPI_MASTER_SEND) {
+        aos_msleep(1000);
+    }
     switch (function)
     {
     case APP_TEST_SPI_SLAVE_RECV_MASTER_SEND: // 注意：此 case 不支持 SYNC 同步模式
@@ -436,6 +469,8 @@ int devfs_spi_demo(APP_TEST_SPI_FUNCTION function, uint32_t *gpio_pin)
     if (check_recv) {
         if (memcmp(spi_tx_data, spi_rx_data, SPI_DATA_NUM)) {
             LOGE(TAG, "transfer error !");
+            printf("spi_rx_data:");
+            dump_data(spi_rx_data,SPI_DATA_NUM);
             goto failure;
         } else {
             LOGD(TAG, "transfer success !");

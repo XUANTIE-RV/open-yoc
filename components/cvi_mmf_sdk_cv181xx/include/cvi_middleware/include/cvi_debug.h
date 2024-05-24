@@ -11,7 +11,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <syslog.h>
 #include <string.h>
 #include <cvi_common.h>
 #include <debug/dbg.h>

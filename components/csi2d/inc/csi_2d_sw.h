@@ -41,6 +41,10 @@ void csi_2d_rgb32_memset32_sw(uint32_t *dst, uint32_t color, int count);
 void filter_and_scale_by_alpha(unsigned x, unsigned y, uint32_t a00, uint32_t a01, uint32_t a10, uint32_t a11,
                                       uint32_t *dstColor, unsigned alphaScale);
 
+void csi_2d_rgb32_to_argb4444_with_rotate_270_sw(uint16_t *dst, uint32_t *src, int dst_rb, int src_rb, int width, int height);
+
+void csi_2d_rgb32_rotate_90_sw(uint32_t *dst, uint32_t *src, int dst_rb, int src_rb, int width, int height);
+
 #ifdef __cplusplus
 }
 #endif

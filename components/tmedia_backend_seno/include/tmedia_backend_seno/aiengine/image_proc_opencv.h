@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Alibaba Group Holding Limited
+ * Copyright (C) 2022-2023 Alibaba Group Holding Limited
  */
 
 #ifndef TM_IMAGE_PROC_OPENCV_H
@@ -15,11 +15,11 @@
 
 using namespace std;
 
-class ImageProcOpenCV : public ImageProc
+class TMImageProcOpenCV : public TMImageProc
 {
 public:
-    ImageProcOpenCV();
-    ~ImageProcOpenCV();
+    TMImageProcOpenCV();
+    ~TMImageProcOpenCV();
 
     int Open(int idx);
     int Close();

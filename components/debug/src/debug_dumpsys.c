@@ -10,6 +10,7 @@
 #include "aos/cli.h"
 #include "debug_api.h"
 
+#ifdef CONFIG_KERNEL_RHINO
 typedef struct {
     char       task_name[32];
     uint32_t   task_id;
@@ -196,11 +197,6 @@ uint32_t dumpsys_task_func(char *buf, uint32_t len, int32_t detail)
 
     return RHINO_SUCCESS;
 }
-
-static void task_cmd(char *buf, int32_t len, int32_t argc, char **argv)
-{
-    dumpsys_task_func(NULL, 0, 1);
-}
 #endif
 
 static void dumpsys_cmd(char *buf, int len, int argc, char **argv)
@@ -223,7 +219,6 @@ static void dumpsys_cmd(char *buf, int len, int argc, char **argv)
     }
 #endif
 }
-
 
 static void task_bt(char *buf, int32_t len, int32_t argc, char **argv)
 {
@@ -285,17 +280,29 @@ static void mem_leak(char *buf, int32_t len, int32_t argc, char **argv)
     dumpsys_mm_leakcheck(call_cnt, query_index);
 }
 #endif
+#endif /* CONFIG_KERNEL_RHINO */
+
+static void task_cmd(char *buf, int32_t len, int32_t argc, char **argv)
+{
+#if (RHINO_CONFIG_KOBJ_LIST > 0)
+    // rhino
+    dumpsys_task_func(NULL, 0, 1);
+#else
+    extern void dumpsys_task_func(void);
+    dumpsys_task_func();
+#endif
+}
 
 static const struct cli_command dumpsys_cli_cmd[] = {
-#if (RHINO_CONFIG_KOBJ_LIST > 0)
     { "tasklist", "list all thread info", task_cmd },
-#endif
+#ifdef CONFIG_KERNEL_RHINO
     { "dumpsys", "dump system info", dumpsys_cmd },
     { "taskbt", "list thread backtrace", task_bt },
     { "taskbtn", "list thread backtrace by name", task_btn },
 #if (RHINO_CONFIG_MM_DEBUG > 0)
     { "mmlk", "memory leak info", mem_leak },
 #endif
+#endif /* CONFIG_KERNEL_RHINO */
 };
 
 

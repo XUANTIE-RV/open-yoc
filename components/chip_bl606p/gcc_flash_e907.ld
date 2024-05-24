@@ -143,7 +143,55 @@ SECTIONS
   KEEP (*(.dtors))
   __dtor_end__ = .;
   . = ALIGN(0x4) ;
+/*****************************************/
+  /* section information for finsh shell */
+  . = ALIGN(8);
+  __fsymtab_start = .;
+  KEEP(*(FSymTab))
+  __fsymtab_end = .;
+  . = ALIGN(8);
+  __vsymtab_start = .;
+  KEEP(*(VSymTab))
+  __vsymtab_end = .;
+  . = ALIGN(8);
 
+  /* section information for initial. */
+  __rt_init_start = .;
+  KEEP(*(SORT(.rti_fn*)))
+  __rt_init_end = .;
+  . = ALIGN(0x8) ;
+
+  /* section information for at utest */
+  __rt_utest_tc_tab_start = .;
+  KEEP(*(UtestTcTab))
+  __rt_utest_tc_tab_end = .;
+  . = ALIGN(0x8);
+
+  /* section information for at server */
+  . = ALIGN(8);
+  __rtatcmdtab_start = .;
+  KEEP(*(RtAtCmdTab))
+  __rtatcmdtab_end = .;
+  . = ALIGN(8);
+
+  /* section information for modules */
+  . = ALIGN(8);
+  __rtmsymtab_start = .;
+  KEEP(*(RTMSymTab))
+  __rtmsymtab_end = .;
+
+  /* section information for uPRC */
+  . = ALIGN(8);
+  __uRPCSvcTab_start = .;
+  KEEP(*(uRPCSvcTab))
+  __uRPCSvcTab_end = .;
+
+  /* section information for var export */
+  . = ALIGN(8);
+  __ve_table_start = .;
+  KEEP(*(SORT(*.VarExpTab.*)))
+  __ve_table_end = .;
+/*****************************************/
     /************** added drivers **************/
     _cli_region_begin = .;
     KEEP(*(CliRegion))

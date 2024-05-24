@@ -34,6 +34,19 @@ int rvm_hal_iic_config(rvm_dev_t *dev, rvm_hal_iic_config_t *config)
     return ret;
 }
 
+int rvm_hal_iic_config_get(rvm_dev_t *dev, rvm_hal_iic_config_t *config)
+{
+    int ret;
+
+    IIC_VAILD(dev);
+
+    device_lock(dev);
+    ret = IIC_DRIVER(dev)->config_get(dev, config);
+    device_unlock(dev);
+
+    return ret;
+}
+
 int rvm_hal_iic_master_send(rvm_dev_t *dev, uint16_t dev_addr, const void *data, uint32_t size, uint32_t timeout)
 {
     if (size == 0 || NULL == data) {

@@ -50,11 +50,7 @@ int rvm_hal_adc_pin2channel(rvm_dev_t *dev, int pin)
     return ret;
 }
 
-#ifdef CONFIG_CSI_V2
 int rvm_hal_adc_read(rvm_dev_t *dev, uint8_t ch, void *output, uint32_t timeout)
-#else
-int rvm_hal_adc_read(rvm_dev_t *dev, void *output, uint32_t timeout)
-#endif
 {
     if (output == 0) {
         return -EINVAL;
@@ -65,17 +61,12 @@ int rvm_hal_adc_read(rvm_dev_t *dev, void *output, uint32_t timeout)
     ADC_VAILD(dev);
 
     device_lock(dev);
-#ifdef CONFIG_CSI_V2
     ret = ADC_DRIVER(dev)->read(dev, ch, output, 1, timeout);
-#else
-    ret = ADC_DRIVER(dev)->read(dev, output, timeout);
-#endif
     device_unlock(dev);
 
     return ret;
 }
 
-#ifdef CONFIG_CSI_V2
 int rvm_hal_adc_read_multiple(rvm_dev_t *dev, uint8_t ch, void *output, size_t num, uint32_t timeout)
 {
     if (output == 0 && num < 1) {
@@ -92,7 +83,6 @@ int rvm_hal_adc_read_multiple(rvm_dev_t *dev, uint8_t ch, void *output, size_t n
 
     return ret;
 }
-#endif
 
 int rvm_hal_adc_trans_dma_enable(rvm_dev_t *dev, bool enable)
 {

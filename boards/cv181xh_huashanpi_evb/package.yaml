@@ -1,7 +1,7 @@
 
 ## 第一部分： 基础信息
 name: cv181xh_huashanpi_evb                          # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
-version: v7.8.0                                     # <必选项> 组件版本号
+version: v7.9.0                                     # <必选项> 组件版本号
 description: cv181xh huashanpi board configure       # <必选项> 建议至少20字以上
 type: board                                          # <必选项> 组件类型，为：solution, chip, board, common, sdk
 license: Apache license v2.0                         # <可选项> 源代码的许可证，要确保所有代码、文件的许可证不冲突。如：MIT，Apache license v2.0，BSD
@@ -84,7 +84,6 @@ build_config:
 source_file:
   - "src/*.c"
   - "src/audio/*.c ? <CONFIG_BOARD_AUDIO>"
-  - "adapter/*.c"
   - "src/flash/*.c"
   - "src/display/*.c"
   - "src/display/custom_vo_osd/*.c ? <CONFIG_BOARD_VO_OSD>"
@@ -131,6 +130,7 @@ def_config:
   CONFIG_PARTITION_SUPPORT_SD: 1
   CONFIG_PARTITION_SUPPORT_USB: 1
   CONFIG_PARTITION_SUPPORT_SPINORFLASH: 1
+  CONFIG_PARTITION_SUPPORT_SPINANDFLASH: 1
   CONFIG_NOT_USE_HC_ERASE_UNIT_SIZE: y
   CONFIG_KV_GET_ERASE_FLAG_AUTO: 1
   CONFIG_KV_LARGE_NODE: 1

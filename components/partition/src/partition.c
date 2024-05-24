@@ -61,6 +61,10 @@ int partition_init(void)
     partition_flash_register();
     storage_info.type = MEM_DEVICE_TYPE_SPI_NOR_FLASH;
 #endif
+#if CONFIG_PARTITION_SUPPORT_SPINANDFLASH
+    partition_spinandflash_register();
+    storage_info.type = MEM_DEVICE_TYPE_SPI_NAND_FLASH;
+#endif
 #if CONFIG_PARTITION_SUPPORT_EMMC
     partition_emmc_register();
     storage_info.type = MEM_DEVICE_TYPE_EMMC;

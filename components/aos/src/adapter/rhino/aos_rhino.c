@@ -1743,6 +1743,9 @@ aos_status_t aos_task_pri_change(aos_task_t *task, uint8_t pri, uint8_t *old_pri
     kstat_t ret;
 
     CHECK_HANDLE(task);
+    if (pri >= RHINO_IDLE_PRI) {
+        return -EINVAL;
+    }
 
     ret = krhino_task_pri_change((ktask_t *)*task, pri, old_pri);
 
@@ -1801,6 +1804,9 @@ aos_status_t aos_task_sched_policy_set(aos_task_t *task, uint8_t policy, uint8_t
     kstat_t ret;
 
     CHECK_HANDLE(task);
+    if (pri >= RHINO_IDLE_PRI) {
+        return -EINVAL;
+    }
 
     if (policy != AOS_KSCHED_FIFO && policy != AOS_KSCHED_RR && policy != AOS_KSCHED_CFS) {
         return -EINVAL;

@@ -2,7 +2,7 @@
 ## 第一部分： 基础信息
 name: smart_speaker_alg_bl606p_lyeva
 # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
-version: v7.8.0                                    # <必选项> 组件版本号
+version: v7.9.0                                    # <必选项> 组件版本号
 description:  bl606p cpu0 demo                            # <必选项> 建议至少20字以上
 type: solution                                      # <必选项> 组件类型，为：solution, chip, board, common, sdk
 
@@ -18,27 +18,27 @@ hw_info:
 #   - minilibc: v7.2.0
 #   - aos: >=v7.2.0
 depends:
-  # - sdk_chip_bl606p_c906: v7.8.0
-  - rhino: v7.8.0
-  - rhino_arch: v7.8.0
-  - aos: v7.8.0
-  - ulog: v7.8.0
-  - bl606p_evb_c906: v7.8.0
-  - chip_bl606p: v7.8.0
-  - csi: v7.8.0
-  - cli: v7.8.0
-  - debug: v7.8.0
-  - libc_stub: v7.8.0
-  - uservice: v7.8.0
-  - ipc: v7.8.0
-  - posto: v7.8.0
-  - cxvision: v7.8.0
-  - cjson: v7.8.0
-  - alg_kws_mind: v7.8.0
-  - log_ipc: v7.8.0
-  - devices: v7.8.0
-  - alg_asr_lyeva: v7.8.0
-  - alg_nlu_lyeva: v7.8.0
+  # - sdk_chip_bl606p_c906: v7.9.0
+  - rhino: v7.9.0
+  - rhino_arch: v7.9.0
+  - aos: v7.9.0
+  - ulog: v7.9.0
+  - bl606p_evb_c906: v7.9.0
+  - chip_bl606p: v7.9.0
+  - csi: v7.9.0
+  - cli: v7.9.0
+  - debug: v7.9.0
+  - libc_stub: v7.9.0
+  - uservice: v7.9.0
+  - ipc: v7.9.0
+  - posto: v7.9.0
+  - cxvision: v7.9.0
+  - cjson: v7.9.0
+  - alg_kws_mind: v7.9.0
+  - log_ipc: v7.9.0
+  - devices: v7.9.0
+  - alg_asr_lyeva: v7.9.0
+  - alg_nlu_lyeva: v7.9.0
 
 ## 第三部分：板级信息
 # hw_info:                                 # 对 solution、board、chip 三个字段的改进，统称为 hw_info 字段

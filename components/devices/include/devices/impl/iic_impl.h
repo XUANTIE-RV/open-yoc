@@ -16,7 +16,9 @@ extern "C" {
 
 typedef struct iic_driver {
     driver_t drv;
+    uint32_t timeout;
     int (*config)(rvm_dev_t *dev, rvm_hal_iic_config_t *config);
+    int (*config_get)(rvm_dev_t *dev, rvm_hal_iic_config_t *config);
     int (*master_send)(rvm_dev_t *dev, uint16_t dev_addr, const void *data, uint32_t size, uint32_t timeout);
     int (*master_recv)(rvm_dev_t *dev, uint16_t dev_addr, void *data, uint32_t size, uint32_t timeout);
     int (*slave_send)(rvm_dev_t *dev, const void *data, uint32_t size, uint32_t timeout);

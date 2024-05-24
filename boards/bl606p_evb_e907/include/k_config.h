@@ -17,12 +17,14 @@
 #ifndef K_CONFIG_H
 #define K_CONFIG_H
 
+#ifdef CONFIG_KERNEL_RHINO
+
 #include <csi_config.h>
 
 #if defined (__CSKY_DSP__) || defined(__CSKY_DSPV2__) || defined(__CSKY_VDSPV2__) || defined (__CSKY_HARD_FLOAT__) || defined(__C807__)
 #define CSK_CPU_STACK_EXTRAL    88
 #define RHINO_CONFIG_MM_MAXMSIZEBIT 27
-#elif defined(__I805__) || defined(CONFIG_CPU_E906) || defined(CONFIG_CPU_E906F) || defined(CONFIG_CPU_E906FD) || defined(CONFIG_CPU_C906) || defined(CONFIG_CPU_E907) || defined(CONFIG_CPU_E902)
+#elif defined(__I805__) || defined(CONFIG_CPU_E906) || defined(CONFIG_CPU_E906F) || defined(CONFIG_CPU_E906FD) || defined(CONFIG_CPU_C906FDV) || defined(CONFIG_CPU_E907FP) || defined(CONFIG_CPU_E902)
 #define CSK_CPU_STACK_EXTRAL    280
 #define RHINO_CONFIG_MM_MAXMSIZEBIT 28
 #else
@@ -185,6 +187,8 @@
 #ifndef CLI_CONSOLE_USER_INFO_POS
 #define CLI_CONSOLE_USER_INFO_POS            2
 #endif
+
+#endif /*CONFIG_KERNEL_RHINO*/
 
 #endif /* K_CONFIG_H */
 

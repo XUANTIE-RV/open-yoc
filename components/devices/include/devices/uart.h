@@ -19,6 +19,15 @@ extern "C" {
 #define RVM_HAL_SHADOW_PORT_MASK 0x80
 
 /*
+ * UART state
+ */
+typedef enum {
+   RVM_UART_STATE_READABLE = 1<<0,
+   RVM_UART_STATE_WRITABLE = 1<<1,
+   RVM_UART_STATE_ERROR = 1<<2
+} rvm_hal_uart_state_t;
+
+/*
  * UART data width
  */
 typedef enum {
@@ -81,6 +90,8 @@ enum rvm_hal_uart_type_t {
     UART_TYPE_ASYNC,
     UART_TYPE_SYNC
 };
+
+typedef void (*rvm_hal_uart_callback)(rvm_dev_t *dev, int event_id, void *arg);
 
 #define rvm_hal_uart_open(name) rvm_hal_device_open(name)
 #define rvm_hal_uart_close(dev) rvm_hal_device_close(dev)
@@ -163,7 +174,7 @@ int rvm_hal_uart_recv(rvm_dev_t *dev, void *data, uint32_t size, uint32_t timeou
  \param[in]   priv     the argument for the callback function
  \return      None
  */
-void rvm_hal_uart_set_event(rvm_dev_t *dev, void (*event)(rvm_dev_t *dev, int event_id, void *priv), void *priv);
+void rvm_hal_uart_set_event(rvm_dev_t *dev, rvm_hal_uart_callback callback, void *priv);
 
 /**
  \brief       Get a default config
@@ -179,6 +190,14 @@ void rvm_hal_uart_config_default(rvm_hal_uart_config_t *config);
  \return     0 : on success,  otherwise is error
  */
 int rvm_hal_uart_trans_dma_enable(rvm_dev_t *dev, bool enable);
+
+/**
+ \brief      Get state of UART
+ \param[in]  dev      Pointer to device object.
+ \param[in]  state   Pointer to the state enum.
+ \return     0 : on success,  otherwise is error
+ */
+int rvm_hal_uart_get_state(rvm_dev_t *dev, rvm_hal_uart_state_t* state);
 
 
 #if defined(AOS_COMP_DEVFS) && AOS_COMP_DEVFS

@@ -150,6 +150,7 @@ int       pthread_setconcurrency(int new_level);
 int       pthread_getconcurrency(void);
 int       pthread_setschedprio(pthread_t thread, int prio);
 int       pthread_setname_np(pthread_t thread, const char *name);
+int       pthread_getname_np(pthread_t thread, char *name, size_t len);
 int       pthread_timedjoin_np(pthread_t thread, void **retval, const struct timespec *abstime);
 
 int pthread_attr_init(pthread_attr_t *attr);

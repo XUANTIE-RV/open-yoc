@@ -308,6 +308,7 @@ static i2s_driver_t i2s_driver = {
         .clk_en = _i2s_clock,
         .lpm    = _i2s_lpm
     },
+    .timeout         = AOS_WAIT_FOREVER,
     .config          = _i2s_config,
     .config_get      = _i2s_config_get,
     .recv            = _i2s_recv,

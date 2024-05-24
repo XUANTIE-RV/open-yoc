@@ -125,6 +125,15 @@ static int iic_csky_config(rvm_dev_t *dev, rvm_hal_iic_config_t *config)
     return 0;
 }
 
+static int iic_csky_config_get(rvm_dev_t *dev, rvm_hal_iic_config_t* config)
+{
+    if (!config) {
+        return -EINVAL;
+    }
+    memcpy(config, &IIC(dev)->config, sizeof(IIC(dev)->config));
+    return 0;
+}
+
 static int iic_csky_master_send(rvm_dev_t *dev, uint16_t dev_addr, const void *data, uint32_t size, uint32_t timeout)
 {
     unsigned int flags = 0;
@@ -262,7 +271,9 @@ static iic_driver_t iic_driver = {
         .close  = iic_csky_close,
         .clk_en = iic_csky_clock
     },
+    .timeout         = AOS_WAIT_FOREVER,
     .config          = iic_csky_config,
+    .config_get      = iic_csky_config_get,
     .master_send     = iic_csky_master_send,
     .master_recv     = iic_csky_master_recv,
     .slave_send      = iic_csky_slave_send,

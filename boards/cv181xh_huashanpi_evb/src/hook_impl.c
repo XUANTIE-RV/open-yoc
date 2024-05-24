@@ -21,14 +21,6 @@ extern size_t __heap_start;
 extern size_t __heap_end;
 extern size_t __heap2_start;
 extern size_t __heap2_end;
-#if defined(CONFIG_CPU_E907)
-extern size_t __heap3_start;
-extern size_t __heap3_end;
-extern size_t __heap4_start;
-extern size_t __heap4_end;
-extern size_t __heap5_start;
-extern size_t __heap5_end;
-#endif
 extern k_mm_region_t   g_mm_region[];
 
 extern void soc_hw_timer_init(void);
@@ -52,46 +44,14 @@ void krhino_init_hook(void)
     return;
 
     /* heap2 */
-#if defined(CONFIG_CPU_E907) // E907 heap cache able
-    h_end = (size_t)(&__heap2_end) | 0x40000000;
-    h_start = (size_t)(&__heap2_start) | 0x40000000;
-    g_mm_region[1].start = (uint8_t *)h_start;
-#else
     h_end = (size_t)(&__heap2_end);
     h_start = (size_t)(&__heap2_start);
-#endif
 
     if (h_start > h_end) {
         k_err_proc(RHINO_MM_POOL_SIZE_ERR);
     }
     /* auto define heap size */
     g_mm_region[1].len = (size_t)(&__heap2_end) - (size_t)(&__heap2_start);
-
-#if defined(CONFIG_CPU_E907)
-    /* heap3 */
-    h_end = (size_t)(&__heap3_end);
-    h_start = (size_t)(&__heap3_start);
-    if (h_start > h_end) {
-        k_err_proc(RHINO_MM_POOL_SIZE_ERR);
-    }
-    g_mm_region[2].len = (size_t)(&__heap3_end) - (size_t)(&__heap3_start);
-
-    /* heap4 */
-    h_end = (size_t)(&__heap4_end);
-    h_start = (size_t)(&__heap4_start);
-    if (h_start > h_end) {
-        k_err_proc(RHINO_MM_POOL_SIZE_ERR);
-    }
-    g_mm_region[3].len = (size_t)(&__heap4_end) - (size_t)(&__heap4_start);
-
-    /* heap5 */
-    h_end = (size_t)(&__heap5_end);
-    h_start = (size_t)(&__heap5_start);
-    if (h_start > h_end) {
-        k_err_proc(RHINO_MM_POOL_SIZE_ERR);
-    }
-    g_mm_region[4].len = (size_t)(&__heap5_end) - (size_t)(&__heap5_start);
-#endif
 }
 
 __attribute__((weak)) void krhino_start_hook(void)
@@ -188,12 +148,6 @@ extern size_t __heap5_start;
 /* auto define heap size */
 k_mm_region_t g_mm_region[] = {
     {(uint8_t *)&__heap_start, (size_t)0},
-//     {(uint8_t *)&__heap2_start, (size_t)0},
-// #if defined(CONFIG_CPU_E907)
-//     {(uint8_t *)&__heap3_start, (size_t)0},
-//     {(uint8_t *)&__heap4_start, (size_t)0},
-//     {(uint8_t *)&__heap5_start, (size_t)0},
-// #endif
 };
 int g_region_num  = sizeof(g_mm_region)/sizeof(k_mm_region_t);
 

@@ -52,6 +52,7 @@ int main(int argc, char *argv[])
     ui_task_run();
     aos_msleep(2500); //wait ui init
 
+    LOGI("main", "event init");
     /* 应用事件 */
     app_sys_init();
     app_display_init();
@@ -76,18 +77,16 @@ int main(int argc, char *argv[])
     board_wifi_init();
 #endif
 
-    LOGI("main", "bt init");
-#if defined(CONFIG_BOARD_BT) && CONFIG_BOARD_BT
+#if defined(BOARD_BT_SUPPORT) && BOARD_BT_SUPPORT
     board_bt_init();
 #endif
 
-#if defined(CONFIG_BOARD_ETH) && CONFIG_BOARD_ETH
+#if defined(BOARD_ETH_SUPPORT) && BOARD_ETH_SUPPORT
     board_eth_init();
 #endif
 
     LOGI("main", "network init");
-#if (defined(BOARD_WIFI_SUPPORT) && BOARD_WIFI_SUPPORT) \
- || (defined(CONFIG_BOARD_ETH) && CONFIG_BOARD_ETH)
+#if (defined(BOARD_WIFI_SUPPORT) && BOARD_WIFI_SUPPORT) || (defined(BOARD_ETH_SUPPORT) && BOARD_ETH_SUPPORT)
     app_network_init();
 #endif
 

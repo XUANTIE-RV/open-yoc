@@ -11,41 +11,6 @@
 #include <tmedia_config.h>
 #endif
 
-#ifdef TEST_DETECT_MEMORY_LEAK
-#include <stdlib.h>
-#include <mcheck.h>
-
-#ifndef LOG_LEVEL
-#define LOG_LEVEL 3
-#endif
-
-#include <tmedia_core/common/syslog.h>
-#include <tmedia_core/util/util_inc.h>
-
-#define MEMORY_TRACE_FILE "mtrace.log"
-
-#define START_MEMORY_LEEK_DETECT()                                          \
-    do {                                                                    \
-        setenv("MALLOC_TRACE", MEMORY_TRACE_FILE, 0);                       \
-        cout << "MALLOC_TRACE log file:" << getenv("MALLOC_TRACE") << endl; \
-        mtrace();                                                           \
-    } while (0)
-
-#define STOP_MEMORY_LEEK_DETECT() \
-    do {                          \
-        muntrace();               \
-    } while (0)
-#define MEMORY_LEEK_USAGE()                         \
-    cout << "Memory leak test usage: mtrace " <<    \
-            TMUtilSystem::GetCurExeName() << " " << \
-            getenv("MALLOC_TRACE") <<               \
-            " | grep -v \"was never\"" << endl;
-#else
-#define START_MEMORY_LEEK_DETECT()
-#define STOP_MEMORY_LEEK_DETECT()
-#define MEMORY_LEEK_USAGE()
-#endif
-
 #define TEST_ASSERT(expr)                 \
     do {                                  \
         if (!(expr)) {                    \

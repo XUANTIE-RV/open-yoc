@@ -1,7 +1,7 @@
 
 ## 第一部分： 基础信息
 name: av                                            # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
-version: v7.8.0                                    # <必选项> 组件版本号
+version: v7.9.0                                    # <必选项> 组件版本号
 description: av是一个轻量级的多媒体组件，主要包含AV基础框架、播放器和音频服务三部分。 # <必选项> 建议至少20字以上
 type: common                                        # <必选项> 组件类型，为：solution, chip, board, common, sdk
 tag: 多媒体播放器                                   # <可选项> 组件分类，缺省值： ''
@@ -45,12 +45,138 @@ build_config:
     - include
   libpath:
     - libs/aef/<cpu>
-    - libs/<cpu>
-  libs:
-    - av_prebuild
 
 # source_file:                             # <可选项> 指定参与编译的源代码文件，支持通配符，采用相对路径
 #   - src/*.c                              # 例：组件 src 目录下所有的扩展名为 c 的源代码文件
+source_file:
+  - src/avutil/av_inner_config.c
+  - src/avutil/av_errno.c
+  - src/avutil/misc.c
+  - src/avutil/path.c
+  - src/avutil/sf.c
+  - src/avutil/named_sfifo_in.c
+  - src/avutil/named_sfifo_inter.c
+  - src/avutil/straight_fifo.c
+  - src/avutil/lc_fifo.c
+  - src/avutil/named_fifo.c
+  - src/avutil/named_straightfifo.c
+  - src/avutil/dict.c
+  - src/avutil/socket_rw.c
+  - src/avutil/url_parse.c
+  - src/avutil/url_encode.c
+  - src/avutil/byte_rw.c
+  - src/avutil/bio.c
+  - src/avutil/dync_buf.c
+  - src/avutil/mem_block.c
+  - src/avutil/vol_scale.c
+  - src/avutil/web.c
+  - src/avutil/web_url.c
+  - src/avutil/avframe.c
+  - src/avutil/avpacket.c
+  - src/avcodec/ad.c
+  - src/avcodec/ad_pvmp3.c
+  - src/avcodec/ad_pcm.c
+  - src/avcodec/ad_adpcm.c
+  - src/avcodec/ad_flac.c
+  - src/avcodec/ad_amrnb.c
+  - src/avcodec/ad_amrwb.c
+  - src/avcodec/ad_opus.c
+  - src/avcodec/ad_speex.c
+  - src/avcodec/ad_alaw.c
+  - src/avcodec/ad_mulaw.c
+  - src/avcodec/avcodec_all.c
+  - src/avcodec/ad_ipc.c
+  - src/avformat/demux.c
+  - src/avformat/demux_wav.c
+  - src/avformat/demux_mp3.c
+  - src/avformat/demux_mp4.c
+  - src/avformat/demux_ts.c
+  - src/avformat/demux_adts.c
+  - src/avformat/demux_flac.c
+  - src/avformat/demux_asf.c
+  - src/avformat/demux_amr.c
+  - src/avformat/demux_ogg.c
+  - src/avformat/demux_rawaudio.c
+  - src/avformat/avformat_utils.c
+  - src/avformat/m4a_rw.c
+  - src/avformat/mp3_rw.c
+  - src/avformat/ts_rw.c
+  - src/avformat/adts_rw.c
+  - src/avformat/flac_rw.c
+  - src/avformat/asf_rw.c
+  - src/avformat/riff_rw.c
+  - src/avformat/amr_rw.c
+  - src/avformat/ogg_rw.c
+  - src/avformat/avformat_all.c
+  - src/avformat/avparser.c
+  - src/avformat/avparser_mp3.c
+  - src/avformat/avparser_adts.c
+  - src/avformat/avparser_all.c
+  - src/output/mixer.c
+  - src/output/mixer_channel.c
+  - src/output/ao.c
+  - src/output/ao_dummy.c
+  - src/output/ao_alsa.c
+  - src/output/ao_alsa_standard.c
+  - src/output/output_all.c
+  - src/stream/stream.c
+  - src/stream/stream_mem.c
+  - src/stream/stream_file.c
+  - src/stream/stream_http.c
+  - src/stream/stream_fifo.c
+  - src/stream/stream_crypto.c
+  - src/stream/stream_hls.c
+  - src/stream/stream_all.c
+  - src/avfilter/avfilter.c
+  - src/avfilter/avfilter_eq.c
+  - src/avfilter/avfilter_swr.c
+  - src/avfilter/avfilter_aef.c
+  - src/avfilter/avfilter_vol.c
+  - src/avfilter/avfilter_atempo.c
+  - src/avfilter/avfilter_atempo2.c
+  - src/swresample/swresample.c
+  - src/swresample/aformat_conv.c
+  - src/swresample/pcm_convert.c
+  - src/swresample/resample.c
+  - src/swresample/resample_dummy.c
+  - src/swresample/resample_ipc.c
+  - src/swresample/resample_speex.c
+  - src/swresample/resample_all.c
+  - src/aef/eq.c
+  - src/aef/eq_ipc.c
+  - src/aef/eq_all.c
+  - src/aef/aef.c
+  - src/aef/aef_ipc.c
+  - src/aef/aef_sona.c
+  - src/aef/aef_all.c
+  - src/icore/icore_msg.c
+  - src/icore/aef_icore/aef_icore.c
+  - src/icore/fft_icore/fft_icore.c
+  - src/icore/res_icore/res_icore.c
+  - src/icore/eq_icore/eq_icore.c
+  - src/icore/ad_icore/ad_icore.c
+  - src/icore/mca_icore/mca_icore.c
+  - src/icore/atempo_icore/atempo_icore.c
+  - src/tfft/fft.c
+  - src/tfft/fft_ipc.c
+  - src/tfft/fft_speex.c
+  - src/tfft/fft_all.c
+  - src/mca/mca.c
+  - src/mca/cmca.c
+  - src/mca/mca_ipc.c
+  - src/mca/mca_local.c
+  - src/mca/mca_all.c
+  - src/atempo/atempo.c
+  - src/atempo/atempo_sonic.c
+  - src/atempo/atempo_dummy.c
+  - src/atempo/atempo_ipc.c
+  - src/atempo/atempo_all.c
+  - src/player/player.c
+  - src/media/media.c
+  - src/xplayer/xplayer.c
+  - src/xplayer/xplayer_yoc.c
+  - src/xplayer/xplayer_tplayer.c
+  - src/xplayer/xplayer_all.c
 
 ## 第五部分：配置信息
 # def_config:                              # 组件的可配置项
@@ -168,9 +294,6 @@ install:
     source:
       - "libs/aef/<cpu>/libSonaAef_c.a"
       - "libs/aef/<cpu>/libSonaAef_mca.a"
-  - dest: "lib"
-    source:
-      - "libs/<cpu>/*.a"
 
 ## 第七部分：导出部分
 # export:

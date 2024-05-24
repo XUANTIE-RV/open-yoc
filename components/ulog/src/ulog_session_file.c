@@ -772,3 +772,9 @@ int32_t ulog_fs_init()
     return rc;
 }
 
+int32_t ulog_fs_deinit(void)
+{
+    session_fs_init = 0;
+    operating_fd = -1;
+    return 0;
+}

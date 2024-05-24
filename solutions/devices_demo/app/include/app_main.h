@@ -59,6 +59,7 @@ int devfs_clk_demo(void);
 int devfs_gpio_out_demo(int port);
 int devfs_gpio_in_demo(int port, int trigger_method);
 int devfs_iic_demo(APP_TEST_IIC_FUNCTION function, uint8_t gpio_pin0, uint8_t gpio_pin1);
+int devfs_task_iic_demo(uint8_t is_master, uint8_t gpio_pin0, uint8_t gpio_pin1);
 int devfs_display_input_demo(void);
 int devfs_hci_demo(void);
 int devfs_wifi_demo(void);
@@ -66,6 +67,8 @@ int devfs_timer_demo(void);
 int devfs_pwm_out_demo(uint8_t gpio_pin, uint8_t pwm_id, uint32_t freq, float duty_cycle,
                        uint32_t freq_chg, float duty_cycle_chg);
 int devfs_spi_demo(APP_TEST_SPI_FUNCTION function, uint32_t *gpio_pin);
+int devfs_uart_poll_demo(uint32_t *gpio_pins);
+int hal_uart_poll_demo(uint32_t *gpio_pins);
 
 #define PORT_WDG_0 0
 

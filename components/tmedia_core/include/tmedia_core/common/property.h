@@ -23,7 +23,7 @@ class TMProperty
 public:
     int32_t        Id;
 
-    enum class PropertyType
+    enum class PropertyType : int32_t
     {
         UNKNOWN  = 0,
         INT32,

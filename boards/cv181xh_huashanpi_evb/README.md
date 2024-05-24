@@ -34,3 +34,13 @@ cp kp.bin bootimgs/kp
 ## FOTA镜像签名
 
 FOTA镜像签名已经在`script/aft_build.sh`脚本中默认集成，会使用`keystore/key.pem`文件进行签名。
+
+# 引导启动
+
+## SPI NAND Flash
+
+当需要使用 NAND Flash 作为固件存储介质时，需要将configs/config.yaml文件的内容替换为configs/config.yaml.nand文件的内容。
+
+## SPI NOR Flash
+
+当需要使用 NOR Flash 作为固件存储介质时，需要将configs/config.yaml文件的内容替换为configs/config.yaml.flash文件的内容。

@@ -1,2 +1,5 @@
 *.so
 *.o
+libcsi2d.a
+bench
+.vscode

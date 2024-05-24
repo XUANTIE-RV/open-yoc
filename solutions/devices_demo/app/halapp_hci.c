@@ -47,9 +47,9 @@ int devfs_hci_demo(void)
     printf("devfs_hci_demo start\n");
     
     int ret = -1;
-
+#if defined(CONFIG_BT) 
     board_bt_init();
-
+#endif
     char *hcidev = "/dev/hci0";
 
     fd_hci_demo = open(hcidev, O_RDWR);

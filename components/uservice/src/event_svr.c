@@ -133,7 +133,7 @@ int event_service_init(utask_t *task)
     aos_event_new(&ev_service.wait_event, 0);
 #endif
     aos_task_new_ext(&ev_service.select_task, "select", select_task_entry, NULL,
-                     1024*2, AOS_DEFAULT_APP_PRI);
+                     CONFIG_USERVICE_SELECT_TASK_STACK_SIZE, AOS_DEFAULT_APP_PRI);
     utask_add(task, ev_service.svr);
 
     return 0;
@@ -154,6 +154,7 @@ void event_publish_fd(uint32_t event_id, void *data, int sync)
 {
     struct event_param param;
 
+    memset(&param, 0, sizeof(param));
     param.event_id = event_id;
     param.data     = data;
     param.cb       = NULL;
@@ -165,6 +166,8 @@ void event_subscribe_fd(uint32_t fd, event_callback_t cb, void *context)
 {
     aos_assert(cb);
     struct event_param param;
+
+    memset(&param, 0, sizeof(param));
     param.event_id = fd;
     param.cb       = cb;
     param.data     = context;
@@ -175,6 +178,8 @@ void event_subscribe_fd(uint32_t fd, event_callback_t cb, void *context)
 void event_unsubscribe_fd(uint32_t event_id, event_callback_t cb, void *context)
 {
     struct event_param param;
+
+    memset(&param, 0, sizeof(param));
     param.event_id = event_id;
     param.cb       = cb;
     param.data     = context;
@@ -186,6 +191,7 @@ void event_publish(uint32_t event_id, void *data)
 {
     struct event_param param;
 
+    memset(&param, 0, sizeof(param));
     param.event_id = event_id;
     param.data     = data;
     param.timeout  = 0;
@@ -196,6 +202,8 @@ void event_publish(uint32_t event_id, void *data)
 void event_publish_delay(uint32_t event_id, void *data, int timeout)
 {
     struct event_param param;
+
+    memset(&param, 0, sizeof(param));
     param.event_id = event_id;
     param.data     = data;
     param.timeout  = timeout;
@@ -207,6 +215,8 @@ void event_subscribe(uint32_t event_id, event_callback_t cb, void *context)
 {
     aos_assert(cb);
     struct event_param param;
+
+    memset(&param, 0, sizeof(param));
     param.event_id = event_id;
     param.cb       = cb;
     param.data     = context;
@@ -219,6 +229,7 @@ void event_unsubscribe(uint32_t event_id, event_callback_t cb, void *context)
     aos_assert(cb);
     struct event_param param;
 
+    memset(&param, 0, sizeof(param));
     param.event_id = event_id;
     param.cb       = cb;
     param.data     = context;

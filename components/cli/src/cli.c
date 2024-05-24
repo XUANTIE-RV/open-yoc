@@ -1165,7 +1165,7 @@ static void help_cmd(char *buf, int len, int argc, char **argv)
 
     commands_num = cli_get_commands_num();
 
-    cli_printf("================ AliOS Things Command List ==============\r\n");
+    cli_printf("================ YoC Command List ==============\r\n");
 
     for (i = 0, n = 0; i < commands_num; i++) {
         cmd = cli_get_command(i);
@@ -1181,7 +1181,7 @@ static void help_cmd(char *buf, int len, int argc, char **argv)
     cli_printf(
         "****************** Commands Num : %d *******************\r\n\r\n", n);
     cli_printf(
-        "================ AliOS Things Command end ===============\r\n\r\n");
+        "================ YoC Command end ===============\r\n\r\n");
 }
 
 static void reboot_cmd(char *buf, int len, int argc, char **argv)

@@ -1,0 +1,28 @@
+mtb_version: 4
+chip: cv181x
+
+diff:
+  fota_version: 0
+  ram_buf: 50           #DEC     KB   ( max ram need)
+  flash_buf: 16         #DEC     KB   ( buffer size)
+  flash_sector: 4096    #DEC     byte ( flash sector)
+  diff_mode: 010        #BIN
+  double_control: 1
+
+storages:
+  - name: spinand           # eflash/spinor/spinand/emmc_boot1/emmc_boot2/emmc_user/emmc_rpmb/sd/usb
+    base_address: 0         # 存储基地址，比如FLASH的基地址
+    run_base_address: 0x80000000 # base address of Storage
+    block: 131072           # Bytes
+    size: 268435456         # Total Bytes
+
+partitions:
+  - { name: boot0,  address: 0x0000000, size: 0x020000, index: 0, file: boot0.nand }    # 128KB
+  - { name: boot,   address: 0x0280000, size: 0x020000, index: 0, file: boot.nand }     # 128KB
+  - { name: imtb,   address: 0x02C0000, size: 0x040000, index: 0, file: imtb }          # 128KB * 2
+  - { name: envab,  address: 0x0320000, size: 0x060000, index: 0 }                      # for ab switch, size must be 2*block+1024B at least, 128KB * 3
+  - { name: prima,  address: 0x0380000, size: 0xA00000, index: 0, file: prim, load_addr: 0x80040000, verify: false, update: AB }
+  - { name: primb,  address: 0x0D80000, size: 0xA00000, index: 0, load_addr: 0x80040000, verify: false }
+  - { name: lfs,    address: 0x1780000, size: 0x800000, index: 0 }                      # 8 MB
+  - { name: kv,     address: 0x2000000, size: 0x080000, index: 0 }                      # 128KB * 4
+  - { name: kp,     address: 0x2100000, size: 0x020000, index: 0 }                      # 128KB

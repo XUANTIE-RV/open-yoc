@@ -38,6 +38,12 @@ void csi_2d_rgb32_transform_nofliter_row(const uint8_t *s, const uint32_t *xy, i
 
 void csi_2d_rgb32_memset32(uint32_t *dst, uint32_t color, int count);
 
+void csi_2d_rgb32_to_argb4444_with_rotate_270(uint16_t *dst, uint32_t *src, int dst_rb, int src_rb, int width, int height);
+
+void csi_2d_rgb32_rotate_90(uint32_t *dst, uint32_t *src, int dst_rb, int src_rb, int width, int height);
+
+void csi_2d_rgb32_rotate_270(uint32_t *dst, uint32_t *src, int dst_rb, int src_rb, int width, int height);
+
 #ifdef __cplusplus
 }
 #endif

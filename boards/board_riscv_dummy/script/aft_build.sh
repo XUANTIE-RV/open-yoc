@@ -9,10 +9,13 @@ echo $BASE_PWD
 
 EXE_EXT=`which ls | grep -o .exe`
 if [ -n "$EXE_EXT" ]; then
-    echo "I am in CDK."
-    OBJCOPY=riscv64-unknown-elf-objcopy
-    ELF_NAME=`ls Obj/*.elf`
-    $OBJCOPY -O binary $ELF_NAME yoc.bin
+    if [ -z "$IS_IN_CDS" ]; then
+        echo "I am in CDK."
+        OBJCOPY=riscv64-unknown-elf-objcopy
+        ELF_NAME=`ls Obj/*.elf`
+        $OBJCOPY -O binary $ELF_NAME yoc.bin
+        cp $ELF_NAME yoc.elf
+    fi
     PRODUCT=$MK_BOARD_PATH/configs/product$EXE_EXT
 else
     echo "I am in Linux."

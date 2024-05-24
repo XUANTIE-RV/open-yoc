@@ -16,6 +16,7 @@ extern "C" {
 
 typedef struct spi_driver {
     driver_t drv;
+    uint32_t timeout;
     int (*config)(rvm_dev_t *dev, rvm_hal_spi_config_t *config);
     int (*config_get)(rvm_dev_t *dev, rvm_hal_spi_config_t *config);
     int (*send)(rvm_dev_t *dev, const uint8_t *data, size_t size, uint32_t timeout);

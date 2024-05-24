@@ -45,6 +45,7 @@ typedef struct {
 #define rvm_hal_iic_close(dev) rvm_hal_device_close(dev)
 
 int rvm_hal_iic_config(rvm_dev_t *dev, rvm_hal_iic_config_t *config);
+int rvm_hal_iic_config_get(rvm_dev_t *dev, rvm_hal_iic_config_t *config);
 int rvm_hal_iic_master_send(rvm_dev_t *dev, uint16_t dev_addr, const void *data, uint32_t size, uint32_t timeout);
 int rvm_hal_iic_master_recv(rvm_dev_t *dev, uint16_t dev_addr, void *data, uint32_t size, uint32_t timeout);
 int rvm_hal_iic_slave_send(rvm_dev_t *dev, const void *data, uint32_t size, uint32_t timeout);

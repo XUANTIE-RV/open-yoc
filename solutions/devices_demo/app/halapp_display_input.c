@@ -150,8 +150,9 @@ static void disp_cmd(char *buf, int len, int argc, char **argv)
             printf("%s\n", HELP_USAGE);
             return;
         }
-
+        uint8_t get_brightness = 0;
         int brightness = atoi(argv[2]);
+        msg_disp.brightness  = &get_brightness;
         ioctl(fd_disp, DISPLAY_IOC_SET_BRIGHTNESS, &brightness);
 
         ioctl(fd_disp, DISPLAY_IOC_GET_BRIGHTNESS, &msg_disp);

@@ -1,9 +1,8 @@
 <template>
-  <!-- box为组件外框 -->
   <div
     :class="{
       'switch-outer': true,
-      'switch-outer-active': isActive,
+      'switch-outer-active': this.status,
       'switch-outer-disable': disabled,
     }"
     @click="toggle()"
@@ -12,13 +11,13 @@
     <div class="desc" style="position: absolute; width: 100%; height: 100%; ">
       
       <image class="switch_icon" resize="contain" :src="
-        this.value ? require('../images/menu_icons/screen_on.png') 
+        this.status ? require('../images/menu_icons/screen_on.png') 
         : require('../images/menu_icons/screen_off.png')
         " />
       <text class="title">{{ title }}</text>
-      <text class="text">{{ isActive ? activeText : inactiveText }}</text>
+      <text class="text">{{ this.status ? activeText : inactiveText }}</text>
     </div>
-    <div :class="isActive ? 'ball-active' : 'ball-inactive'" style="position: absolute; top: 5%; left: 88%;"></div>
+    <div :class="this.status ? 'ball-active' : 'ball-inactive'" style="position: absolute; top: 5%; left: 88%;"></div>
   </div>
 </template>
 <script>
@@ -30,8 +29,13 @@ export default {
     event: "change",
   },
   props: {
+    //开关：toggle->watch value_screen1
     value: {
-      // 是否选中
+      type: [Boolean],
+      default: false,
+    },
+    //灯 : this.screen1_status=true -> watch status  
+    status: {
       type: [Boolean],
       default: false,
     },
@@ -71,9 +75,6 @@ export default {
     };
   },
   computed: {
-    isActive() {
-      return this.innerValue == true;
-    },
     switchStyle() {
       return {
         width: `${parseInt(this.width)}px`,
@@ -96,9 +97,11 @@ export default {
     },
   },
   watch: {
-    // 对value的值进行监听
-    value() {
-      this.innerValue = this.value;
+    value(){
+      this.innerValue=this.value;
+    },
+    status(){
+      this.innerValue=this.status;
     },
     // 监听innervalue的值，触发change事件，带有额外参数
     innerValue() {
@@ -107,6 +110,7 @@ export default {
   },
 };
 </script>
+
 <style lang="less" scoped>
 @import "base.less";
 
@@ -115,7 +119,6 @@ export default {
   color: @white;
   position: absolute;
   margin: 0 0 0 10px;
-
 }
 
 .text {
@@ -133,7 +136,7 @@ export default {
 }
 .switch-outer {
   // padding: 20px 20px 24px 24px;
-  background-color:  @btn-background-color;
+  background-color: @btn-background-color;
   border-radius: @border-radius-normal;
   flex-direction: row;
   &-active {

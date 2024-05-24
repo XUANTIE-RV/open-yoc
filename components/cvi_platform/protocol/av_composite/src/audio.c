@@ -120,19 +120,17 @@ int audio_get_pcm_len(int type)
 #define AUDIO_ADCR_VOL	3
 
 
-void audio_set_vol(void)
-{
-	struct cvi_vol_ctrl adcl_vol;
-	struct cvi_vol_ctrl adcr_vol;
+// void audio_set_vol(void)
+// {
+// 	u32 adcl_vol;
+// 	u32 adcr_vol;
 
-	adcl_vol.vol_ctrl = AUDIO_ADCL_VOL;
-	adcl_vol.vol_ctrl_mute = 0;
-	cv182xadc_ioctl(ACODEC_SET_ADCL_VOL, adcl_vol, AUDIO_ADCL_VOL);
+// 	adcl_vol = AUDIO_ADCL_VOL;
+// 	cv182xadc_ioctl(ACODEC_SET_ADCL_VOL, (u64)&adcl_vol);
 
-	adcr_vol.vol_ctrl = AUDIO_ADCR_VOL;
-	adcr_vol.vol_ctrl_mute = 0;
-	cv182xadc_ioctl(ACODEC_SET_ADCR_VOL, adcr_vol, AUDIO_ADCR_VOL);
-}
+// 	adcr_vol = AUDIO_ADCR_VOL;
+// 	cv182xadc_ioctl(ACODEC_SET_ADCR_VOL, (u64)&adcr_vol);
+// }
 
 int media_audio_init(void)
 {
@@ -142,7 +140,7 @@ int media_audio_init(void)
 #endif
     audio_play_init();
     PLATFORM_SpkMute(1);
-	audio_set_vol();
+	//audio_set_vol();
     printf("alios media audio init success\r\n");
     return 0;
 }

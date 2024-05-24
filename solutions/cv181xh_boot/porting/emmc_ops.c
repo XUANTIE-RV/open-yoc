@@ -1,10 +1,11 @@
 /*
  * Copyright (C) 2019-2020 Alibaba Group Holding Limited
  */
+#include <yoc/partition.h>
+#if CONFIG_PARTITION_SUPPORT_EMMC
 #include <mmc.h>
 #include <errno.h>
 #include <drv/sdif.h>
-#include <yoc/partition.h>
 #include <yoc/partition_device.h>
 
 #define DGB_PRINT(...) //printf(__VA_ARGS__)
@@ -254,3 +255,4 @@ int partition_emmc_register(void)
 {
     return partition_device_register(&boot_emmc_ops);
 }
+#endif

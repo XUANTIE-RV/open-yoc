@@ -41,7 +41,9 @@ static void eth_mac_signal_event(uint32_t idx, uint32_t event)
 {
     if(idx == 0) {
         if(event & CSI_ETH_MAC_EVENT_RX_FRAME) {
-            aos_sem_signal(&eth_rx_sem);
+            if (eth_rx_sem) {
+                aos_sem_signal(&eth_rx_sem);
+            }
         }
     }
 }

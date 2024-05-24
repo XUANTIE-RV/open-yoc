@@ -33,7 +33,7 @@ let cur_num=0;
 //fix me :nodeListGet如果能返回devtype，就不需要在页面判断了
 let subdevGrpMem={
     OBJ_LIGHT:["light1","light2"],
-    OBJ_SCREEN:["screen"],
+    OBJ_SCREEN:["screen1"],
 };
 
 let subdevMode={
@@ -50,7 +50,7 @@ let subdevMode={
             value: 1,
         },
         {
-            operands: "screen",
+            operands: "screen1",
             operator: "ACT_CLOSE",
             value: 1,
         },
@@ -68,7 +68,7 @@ let subdevMode={
             value: 1,
         },
         {
-            operands: "screen",
+            operands: "screen1",
             operator: "ACT_CLOSE",
             value: 1,
         },
@@ -96,7 +96,7 @@ let subdevMode={
             value: 20,
         },
         {
-            operands: "screen",
+            operands: "screen1",
             operator: "ACT_CLOSE",
             value: 1,
         },
@@ -114,7 +114,7 @@ let subdevMode={
             value: 1,
         },
         {
-            operands: "screen",
+            operands: "screen1",
             operator: "ACT_OPEN",
             value: 1,
         },
@@ -124,6 +124,12 @@ let subdevMode={
 /*-----------------------------------------------子设备控制-----------------------------------------------*/
 //控制单个子设备：devname是subdev_mgt设置的参数
 async function subdev_open(devname){
+    if(voiceParse==0){
+        voice.reqTTS("好的");
+    }
+    else if(voiceParse==1){
+        smta.play("file:///mnt/well.mp3", 1,1);
+    }
     console.log("subdev_open: "+devname);
     //检查设备是否入网
     //fix me：检查设备是否上电
@@ -146,6 +152,12 @@ async function subdev_open(devname){
 };
 
 async function subdev_close(devname){
+    if(voiceParse==0){
+        voice.reqTTS("好的");
+    }
+    else if(voiceParse==1){
+        smta.play("file:///mnt/well.mp3", 1,1);
+    }
     console.log("subdev_close: "+devname);
     //检查设备是否入网
     //fix me：检查设备是否上电
@@ -168,13 +180,29 @@ async function subdev_close(devname){
 };
 //控制多个子设备：roomtype、devtype是subdev_mgt设置的参数
 async function subdev_room_open(roomtype){
-
+    if(voiceParse==0){
+        voice.reqTTS("好的");
+    }
+    else if(voiceParse==1){
+        smta.play("file:///mnt/well.mp3", 1,1);
+    }
 }
 async function subdev_room_close(roomtype){
-
+    if(voiceParse==0){
+        voice.reqTTS("好的");
+    }
+    else if(voiceParse==1){
+        smta.play("file:///mnt/well.mp3", 1,1);
+    }
 }
 
 async function subdev_grp_open(devtype){
+    if(voiceParse==0){
+        voice.reqTTS("好的");
+    }
+    else if(voiceParse==1){
+        smta.play("file:///mnt/well.mp3", 1,1);
+    }
     console.log("subdev_grp_open: "+devtype);
     //检查组里是否存在入网的设备
     //fix me：检查设备是否上电
@@ -202,6 +230,12 @@ async function subdev_grp_open(devtype){
     }
 };
 async function subdev_grp_close(devtype){
+    if(voiceParse==0){
+        voice.reqTTS("好的");
+    }
+    else if(voiceParse==1){
+        smta.play("file:///mnt/well.mp3", 1,1);
+    }
     console.log("subdev_grp_close:"+devtype);
     //检查组里是否存在入网的设备
     //fix me：检查设备是否上电
@@ -229,7 +263,14 @@ async function subdev_grp_close(devtype){
     }
 
 };
-async function aui_action_obj_light_brightness_ctrl(brightness){
+async function aui_action_obj_light_brightness_ctrl(para){
+    if(voiceParse==0){
+        voice.reqTTS("好的");
+    }
+    else if(voiceParse==1){
+        smta.play("file:///mnt/well.mp3", 1,1);
+    }
+    let brightness=getNum(para);
     console.log("aui_action_obj_light_brightness_ctrl: "+brightness);
     //检查组里是否存在入网的设备
     //fix me：检查设备是否上电
@@ -258,6 +299,12 @@ async function aui_action_obj_light_brightness_ctrl(brightness){
 };
 //控制多个子设备：模式控制
 async function subdev_mode(mode){
+    if(voiceParse==0){
+        voice.reqTTS("好的");
+    }
+    else if(voiceParse==1){
+        smta.play("file:///mnt/well.mp3", 1,1);
+    }
     console.log("subdev_mode: "+mode);
     let flag=0;
     let props=await gw.nodeListGet();
@@ -346,8 +393,13 @@ async function aui_action_player_pause(){
     }
     else{
         await smta.resumeEnable(0);
+    }    
+    if(voiceParse==0){
+        voice.reqTTS("好的");
     }
-    voice.reqTTS("好的");//smtaudio_start(MEDIA_SYSTEM, data, 0, 1);
+    else if(voiceParse==1){
+        smta.play("file:///mnt/well.mp3", 1,1);
+    }
     ret.value=0;
     return ret;
 };
@@ -371,6 +423,12 @@ async function aui_action_player_resume(){
 async function aui_action_player_stop(){
     await smta.stop();
     $falcon.trigger("audio_stop");
+    if(voiceParse==0){
+        voice.reqTTS("好的");
+    }
+    else if(voiceParse==1){
+        smta.play("file:///mnt/well.mp3", 1,1);
+    }
     ret.value=0;
     return ret;
 };
@@ -455,12 +513,13 @@ function getNum(str){
     return ret;
 }
 
-
+var voiceParse= 1;//0:aliyun ,1:lyasr
 //fix me： ret 可以只是整数，0成功，-1-2-3代表不同的异常值；但是随着接口增多，异常值越来越多，不如增加message字段
 //返回0 :操作成功
 //返回-1：操作失败 ; 弹窗/界面显示失败原因。
 //发出控制命令后返回（页面注册事件） vs 等到结果之后再返回 (aui_action.js注册事件)
 export default {
+    voiceParse, 
     //asrAction不需要传递参数
     /*-----------------------------------------------子设备控制-----------------------------------------------*/
     //控制单个子设备
@@ -501,20 +560,20 @@ export default {
         return result;
     },
     async aui_action_open_screen(){
-        let result=await subdev_open("screen");
+        let result=await subdev_open("screen1");
         return result;
     },
     async aui_action_close_screen(){
-        let result=await subdev_close("screen");
+        let result=await subdev_close("screen1");
         return result;
     },
     async aui_action_screen_ctrl(para){
         let result=null;
         if(para=="on"){
-            result=await subdev_open("screen");
+            result=await subdev_open("screen1");
         }
         else{
-            result=await subdev_close("screen");
+            result=await subdev_close("screen1");
         }
         return result;
     },
@@ -613,6 +672,12 @@ export default {
         }
         await smta.setVol(volumn);
         console.log("aui_action_player_volume_change:"+"new volumn="+volumn);
+        if(voiceParse==0){
+            voice.reqTTS("好的");
+        }
+        else if(voiceParse==1){
+            smta.play("file:///mnt/well.mp3", 1,1);
+        }
         ret.value=0;
         return ret;
     },
@@ -623,6 +688,12 @@ export default {
         }
         await smta.setVol(volumn);
         console.log("aui_action_player_volumn_set:"+"new volumn="+volumn);
+        if(voiceParse==0){
+            voice.reqTTS("好的");
+        }
+        else if(voiceParse==1){
+            smta.play("file:///mnt/well.mp3", 1,1);
+        }
         ret.value=0;
         return ret;
     },
@@ -632,22 +703,26 @@ export default {
         }
         else{
             await smta.unmute();
+            if(voiceParse==0){
+                voice.reqTTS("好的");
+            }
+            else if(voiceParse==1){
+                smta.play("file:///mnt/well.mp3", 1,1);
+            }
         }
         console.log("aui_action_player_mute_ctrl:"+para);
         ret.value=0;
         return ret;
     },
     async  aui_action_player_play_ctrl(para){
+        let result=null;
         if(para=="pause"){
-            //底层应该允许重复触发暂停
-            await smta.pause();
+            result=await aui_action_player_pause();
         }
         else{
-            await smta.resume();
+            result=await aui_action_player_resume();
         }
-        console.log("aui_action_player_play_ctrl:"+para);
-        ret.value=0;
-        return ret;
+        return result;
     },
     async  aui_action_player_switch_song(para){
         let result=null;
@@ -657,9 +732,7 @@ export default {
         else{
             result=await aui_action_player_next();
         }
-        console.log("aui_action_player_switch_song:"+para);
-        ret.value=0;
-        return ret;
+        return result;
     },
 
 }

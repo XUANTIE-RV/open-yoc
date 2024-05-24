@@ -85,7 +85,7 @@ if [ -d data ]; then
     LFS_SIZE=$(cat $MK_BOARD_PATH/configs/config.yaml | grep ext4 | sed 's/[[:space:]\"]//g' | awk -F 'size:' '{print $2}' | awk -F '}' '{print strtonum($1)}')
     echo "ext4 size is ${LFS_SIZE}"
     dd if=/dev/zero of=${MK_GENERATED_PATH}/data/ext4.img bs=${LFS_SIZE} count=1
-    $PRODUCT ext4 -i ${MK_GENERATED_PATH}/data/ext4.img -e 4 -d data -m $MOUNT_POINT -p
+    $PRODUCT ext4 -i ${MK_GENERATED_PATH}/data/ext4.img -e 4 -d data -m $MOUNT_POINT -b 1024 -p
 fi
 
 if [ -d bin ]; then
@@ -94,9 +94,12 @@ fi
 
 [ -f "${MK_BOARD_PATH}/bootimgs/fip.bin" ] && cp -arf ${MK_BOARD_PATH}/bootimgs/fip.bin ${MK_GENERATED_PATH}/data/
 [ -f "${MK_BOARD_PATH}/bootimgs/fip_nor.bin" ] && cp -arf ${MK_BOARD_PATH}/bootimgs/fip_nor.bin ${MK_GENERATED_PATH}/data/
+[ -f "${MK_BOARD_PATH}/bootimgs/fip_nand.bin" ] && cp -arf ${MK_BOARD_PATH}/bootimgs/fip_nand.bin ${MK_GENERATED_PATH}/data/
 [ -f "${MK_BOARD_PATH}/bootimgs/boot" ] && cp -arf ${MK_BOARD_PATH}/bootimgs/boot ${MK_GENERATED_PATH}/data/
+[ -f "${MK_BOARD_PATH}/bootimgs/boot.nand" ] && cp -arf ${MK_BOARD_PATH}/bootimgs/boot.nand ${MK_GENERATED_PATH}/data/
 [ -f "${MK_BOARD_PATH}/bootimgs/boot0" ] && cp -arf ${MK_BOARD_PATH}/bootimgs/boot0 ${MK_GENERATED_PATH}/data/
 [ -f "${MK_BOARD_PATH}/bootimgs/boot0.emmc" ] && cp -arf ${MK_BOARD_PATH}/bootimgs/boot0.emmc ${MK_GENERATED_PATH}/data/
+[ -f "${MK_BOARD_PATH}/bootimgs/boot0.nand" ] && cp -arf ${MK_BOARD_PATH}/bootimgs/boot0.nand ${MK_GENERATED_PATH}/data/
 [ -f $MK_BOARD_PATH/bootimgs/kp ] && cp $MK_BOARD_PATH/bootimgs/kp ${MK_GENERATED_PATH}/data
 
 if [ -z "$EXE_EXT" ]; then

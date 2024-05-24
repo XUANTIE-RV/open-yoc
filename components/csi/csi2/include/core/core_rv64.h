@@ -42,6 +42,15 @@ extern "C" {
 #endif
 #endif
 
+#if defined(CONFIG_PLIC_BASE)
+#ifndef CORET_BASE
+#define CORET_BASE                 (CONFIG_PLIC_BASE + 0x4000000UL)               /*!< CORET Base Address */
+#endif
+#define PLIC                       ((PLIC_Type *)CONFIG_PLIC_BASE)
+#else
+#error "CONFIG_PLIC_BASE is not defined!"
+#endif /* end CONFIG_PLIC_BASE */
+
 #ifdef __cplusplus
 }
 #endif
@@ -110,7 +119,7 @@ extern "C" {
 #define     __OM     volatile             /*! Defines 'write only' structure member permissions */
 #define     __IOM    volatile             /*! Defines 'read / write' structure member permissions */
 
-/*@} end of group C906 */
+/*@} end of group C9xx/R9xx */
 
 /*******************************************************************************
  *                 Register Abstraction
@@ -267,8 +276,8 @@ typedef struct {
 #define CACHE_MHCR_IBPE_Pos                    7U                                            /*!< CACHE MHCR: IBPE Position */
 #define CACHE_MHCR_IBPE_Msk                    (0x1UL << CACHE_MHCR_IBPE_Pos)                /*!< CACHE MHCR: IBPE Mask */
 
-#define CACHE_MHCR_L0BTB_Pos                   6U                                            /*!< CACHE MHCR: L0BTB Position */
-#define CACHE_MHCR_L0BTB_Msk                   (0x1UL << CACHE_MHCR_L0BTB_Pos)               /*!< CACHE MHCR: BTB Mask */
+#define CACHE_MHCR_BTB_Pos                     6U                                            /*!< CACHE MHCR: BTB Position */
+#define CACHE_MHCR_BTB_Msk                     (0x1UL << CACHE_MHCR_BTB_Pos)                 /*!< CACHE MHCR: BTB Mask */
 
 #define CACHE_MHCR_BPE_Pos                     5U                                            /*!< CACHE MHCR: BPE Position */
 #define CACHE_MHCR_BPE_Msk                     (0x1UL << CACHE_MHCR_BPE_Pos)                 /*!< CACHE MHCR: BPE Mask */
@@ -310,6 +319,38 @@ typedef enum {
     SUPERVISOR_MODE  = 1,
     MACHINE_MODE     = 3,
 } cpu_work_mode_t;
+
+/**
+  \brief   Get CPU WORK MODE
+  \details Returns CPU WORK MODE.
+  \return  CPU WORK MODE
+ */
+__STATIC_INLINE int csi_get_cpu_work_mode(void)
+{
+    return (int)__get_CPU_WORK_MODE();
+}
+
+/**
+  \brief   Get current hartid
+  \return  hartid
+ */
+__STATIC_INLINE int csi_get_cpu_id(void)
+{
+    unsigned long result;
+    __ASM volatile("csrr %0, mhartid" : "=r"(result) : : "memory");
+    return result;
+}
+
+/**
+  \brief   Get cache line size
+  \return  cache line size
+ */
+__STATIC_INLINE int csi_get_cache_line_size(void)
+{
+    return 64;
+}
+
+
 /**
   \ingroup  CSI_core_register
   \defgroup CSI_CINT     Core Local Interrupt (CLINT)
@@ -349,6 +390,17 @@ typedef struct {
     __IOM uint32_t STIMECMPL3;
     __IOM uint32_t STIMECMPH3;
 } CLINT_Type;
+
+typedef struct {
+#ifdef CONFIG_RISCV_SMODE
+    __IOM uint32_t STIMECMPL0;
+    __IOM uint32_t STIMECMPH0;
+#else
+    __IOM uint32_t MTIMECMPL0;
+    __IOM uint32_t MTIMECMPH0;
+#endif
+} CLINT_CMP_Type;
+
 /*@} end of group CSI_SysTick */
 
 
@@ -410,70 +462,118 @@ typedef struct {
 #define _IP_IDX(IRQn)            (   (((uint32_t)(int32_t)(IRQn))                >>    5UL)      )
 #define _IP2_IDX(IRQn)            (   (((uint32_t)(int32_t)(IRQn))                >>    2UL)      )
 
+#define PLIC_Hn_MSIE_ADDR(msie_base, hartid)        ((unsigned long)(msie_base) + 0x100 * (hartid))
+#define PLIC_Hn_MSIE_VAL(msie_base, hartid)         (*(__IOM uint32_t *)(PLIC_Hn_MSIE_ADDR(msie_base, hartid)))
+#define PLIC_Hn_MSTH_ADDR(msth_base, hartid)        ((unsigned long)(msth_base) + 0x2000 * (hartid))
+#define PLIC_Hn_MSTH_VAL(msth_base, hartid)         (*(__IOM uint32_t *)(PLIC_Hn_MSTH_ADDR(msth_base, hartid)))
+#define PLIC_Hn_MSCLAIM_ADDR(msclaim_base, hartid)  ((unsigned long)(msclaim_base) + 0x2000 * (hartid))
+#define PLIC_Hn_MSCLAIM_VAL(msclaim_base, hartid)   (*(__IOM uint32_t *)(PLIC_Hn_MSCLAIM_ADDR(msclaim_base, hartid)))
+
 /**
-  \brief   Enable External Interrupt
-  \details Enable a device-specific interrupt in the VIC interrupt controller.
-  \param [in]      IRQn  External interrupt number. Value cannot be negative.
- */
-__STATIC_INLINE void csi_plic_enable_irq(uint64_t plic_base, int32_t IRQn)
+    \brief   Enable External Interrupt
+    \details Enable a device-specific interrupt in the VIC interrupt controller.
+    \param [in]      IRQn         External interrupt number. Value cannot be negative.
+    */
+__STATIC_INLINE void csi_vic_enable_irq(int32_t IRQn)
 {
-    PLIC_Type *plic = (PLIC_Type *)plic_base;
+    int hartid = csi_get_cpu_id();
+    PLIC_Type *plic = (PLIC_Type *)CONFIG_PLIC_BASE;
+
 #if defined(CONFIG_RISCV_SMODE) && CONFIG_RISCV_SMODE
-    plic->PLIC_H0_SIE[IRQn/32] = plic->PLIC_H0_SIE[IRQn/32] | (0x1 << (IRQn%32));
+    PLIC_Hn_MSIE_VAL(&plic->PLIC_H0_SIE[IRQn/32], hartid) = PLIC_Hn_MSIE_VAL(&plic->PLIC_H0_SIE[IRQn/32], hartid) | (0x1 << (IRQn%32));
 #else
-    plic->PLIC_H0_MIE[IRQn/32] = plic->PLIC_H0_MIE[IRQn/32] | (0x1 << (IRQn%32));
+    PLIC_Hn_MSIE_VAL(&plic->PLIC_H0_MIE[IRQn/32], hartid) = PLIC_Hn_MSIE_VAL(&plic->PLIC_H0_MIE[IRQn/32], hartid) | (0x1 << (IRQn%32));
+#endif
+}
+
+/**
+  \brief   Enable External Interrupt(deprecated)
+  \details Enable a device-specific interrupt in the VIC interrupt controller.
+  \param [in]      plic_base    PLIC base address
+  \param [in]      IRQn         External interrupt number. Value cannot be negative.
+ */
+__STATIC_INLINE void csi_plic_enable_irq(unsigned long plic_base, int32_t IRQn)
+{
+    int hartid = csi_get_cpu_id();
+    PLIC_Type *plic = (PLIC_Type *)plic_base;
+
+#if defined(CONFIG_RISCV_SMODE) && CONFIG_RISCV_SMODE
+    PLIC_Hn_MSIE_VAL(&plic->PLIC_H0_SIE[IRQn/32], hartid) = PLIC_Hn_MSIE_VAL(&plic->PLIC_H0_SIE[IRQn/32], hartid) | (0x1 << (IRQn%32));
+#else
+    PLIC_Hn_MSIE_VAL(&plic->PLIC_H0_MIE[IRQn/32], hartid) = PLIC_Hn_MSIE_VAL(&plic->PLIC_H0_MIE[IRQn/32], hartid) | (0x1 << (IRQn%32));
 #endif
 }
 
 /**
   \brief   Disable External Interrupt
   \details Disable a device-specific interrupt in the VIC interrupt controller.
-  \param [in]      IRQn  External interrupt number. Value cannot be negative.
+  \param [in]      IRQn         External interrupt number. Value cannot be negative.
  */
-__STATIC_INLINE void csi_plic_disable_irq(uint64_t plic_base, int32_t IRQn)
+__STATIC_INLINE void csi_vic_disable_irq(int32_t IRQn)
 {
-    PLIC_Type *plic = (PLIC_Type *)plic_base;
+    int hartid = csi_get_cpu_id();
+    PLIC_Type *plic = (PLIC_Type *)CONFIG_PLIC_BASE;
+
 #if defined(CONFIG_RISCV_SMODE) && CONFIG_RISCV_SMODE
-    plic->PLIC_H0_SIE[IRQn/32] = plic->PLIC_H0_SIE[IRQn/32] & (~(0x1 << (IRQn%32)));
+    PLIC_Hn_MSIE_VAL(&plic->PLIC_H0_SIE[IRQn/32], hartid) = PLIC_Hn_MSIE_VAL(&plic->PLIC_H0_SIE[IRQn/32], hartid) & (~(0x1 << (IRQn%32)));
 #else
-    plic->PLIC_H0_MIE[IRQn/32] = plic->PLIC_H0_MIE[IRQn/32] & (~(0x1 << (IRQn%32)));
+    PLIC_Hn_MSIE_VAL(&plic->PLIC_H0_MIE[IRQn/32], hartid) = PLIC_Hn_MSIE_VAL(&plic->PLIC_H0_MIE[IRQn/32], hartid) & (~(0x1 << (IRQn%32)));
 #endif
 }
 
 /**
-  \brief   Enable External Secure Interrupt
-  \details Enable a secure device-specific interrupt in the VIC interrupt controller.
-  \param [in]      IRQn  External interrupt number. Value cannot be negative.
+  \brief   Disable External Interrupt(deprecated)
+  \details Disable a device-specific interrupt in the VIC interrupt controller.
+  \param [in]      plic_base    PLIC base address
+  \param [in]      IRQn         External interrupt number. Value cannot be negative.
  */
-__STATIC_INLINE void csi_plic_enable_sirq(uint64_t plic_base, int32_t IRQn)
+__STATIC_INLINE void csi_plic_disable_irq(unsigned long plic_base, int32_t IRQn)
 {
-    csi_plic_enable_irq(plic_base, IRQn);
-}
+    int hartid = csi_get_cpu_id();
+    PLIC_Type *plic = (PLIC_Type *)plic_base;
 
-/**
-  \brief   Disable External Secure Interrupt
-  \details Disable a secure device-specific interrupt in the VIC interrupt controller.
-  \param [in]      IRQn  External interrupt number. Value cannot be negative.
- */
-__STATIC_INLINE void csi_plic_disable_sirq(uint64_t plic_base, int32_t IRQn)
-{
-    csi_plic_disable_irq(plic_base, IRQn);
+#if defined(CONFIG_RISCV_SMODE) && CONFIG_RISCV_SMODE
+    PLIC_Hn_MSIE_VAL(&plic->PLIC_H0_SIE[IRQn/32], hartid) = PLIC_Hn_MSIE_VAL(&plic->PLIC_H0_SIE[IRQn/32], hartid) & (~(0x1 << (IRQn%32)));
+#else
+    PLIC_Hn_MSIE_VAL(&plic->PLIC_H0_MIE[IRQn/32], hartid) = PLIC_Hn_MSIE_VAL(&plic->PLIC_H0_MIE[IRQn/32], hartid) & (~(0x1 << (IRQn%32)));
+#endif
 }
 
 /**
   \brief   Check Interrupt is Enabled or not
   \details Read the enabled register in the VIC and returns the pending bit for the specified interrupt.
+  \param [in]      IRQn         External interrupt number. Value cannot be negative.
+  \return             0  Interrupt status is not enabled.
+  \return             1  Interrupt status is enabled.
+ */
+__STATIC_INLINE uint32_t csi_vic_get_enabled_irq(int32_t IRQn)
+{
+    int hartid = csi_get_cpu_id();
+    PLIC_Type *plic = (PLIC_Type *)CONFIG_PLIC_BASE;
+
+#if defined(CONFIG_RISCV_SMODE) && CONFIG_RISCV_SMODE
+    return (uint32_t)((PLIC_Hn_MSIE_VAL(&plic->PLIC_H0_SIE[IRQn/32], hartid) >> IRQn%32) & 0x1);
+#else
+    return (uint32_t)((PLIC_Hn_MSIE_VAL(&plic->PLIC_H0_MIE[IRQn/32], hartid) >> IRQn%32) & 0x1);
+#endif
+}
+
+/**
+  \brief   Check Interrupt is Enabled or not(deprecated)
+  \details Read the enabled register in the VIC and returns the pending bit for the specified interrupt.
   \param [in]      IRQn  Interrupt number.
   \return             0  Interrupt status is not enabled.
   \return             1  Interrupt status is enabled.
  */
-__STATIC_INLINE uint32_t csi_plic_get_enabled_irq(uint64_t plic_base, int32_t IRQn)
+__STATIC_INLINE uint32_t csi_plic_get_enabled_irq(unsigned long plic_base, int32_t IRQn)
 {
+    int hartid = csi_get_cpu_id();
     PLIC_Type *plic = (PLIC_Type *)plic_base;
+
 #if defined(CONFIG_RISCV_SMODE) && CONFIG_RISCV_SMODE
-    return (uint32_t)((plic->PLIC_H0_SIE[IRQn/32] >> IRQn%32) & 0x1);
+    return (uint32_t)((PLIC_Hn_MSIE_VAL(&plic->PLIC_H0_SIE[IRQn/32], hartid) >> IRQn%32) & 0x1);
 #else
-    return (uint32_t)((plic->PLIC_H0_MIE[IRQn/32] >> IRQn%32) & 0x1);
+    return (uint32_t)((PLIC_Hn_MSIE_VAL(&plic->PLIC_H0_MIE[IRQn/32], hartid) >> IRQn%32) & 0x1);
 #endif
 }
 
@@ -484,9 +584,9 @@ __STATIC_INLINE uint32_t csi_plic_get_enabled_irq(uint64_t plic_base, int32_t IR
   \return             0  Interrupt status is not pending.
   \return             1  Interrupt status is pending.
  */
-__STATIC_INLINE uint32_t csi_plic_get_pending_irq(uint64_t plic_base, int32_t IRQn)
+__STATIC_INLINE uint32_t csi_vic_get_pending_irq(int32_t IRQn)
 {
-    PLIC_Type *plic = (PLIC_Type *)plic_base;
+    PLIC_Type *plic = (PLIC_Type *)CONFIG_PLIC_BASE;
     return (uint32_t)((plic->PLIC_IP[IRQn/32] >> IRQn%32) & 0x1);
 }
 
@@ -495,9 +595,9 @@ __STATIC_INLINE uint32_t csi_plic_get_pending_irq(uint64_t plic_base, int32_t IR
   \details Set the pending bit of an external interrupt.
   \param [in]      IRQn  Interrupt number. Value cannot be negative.
  */
-__STATIC_INLINE void csi_plic_set_pending_irq(uint64_t plic_base, int32_t IRQn)
+__STATIC_INLINE void csi_vic_set_pending_irq(int32_t IRQn)
 {
-    PLIC_Type *plic = (PLIC_Type *)plic_base;
+    PLIC_Type *plic = (PLIC_Type *)CONFIG_PLIC_BASE;
     plic->PLIC_IP[IRQn/32] = plic->PLIC_IP[IRQn/32] | (0x1 << (IRQn%32));
 }
 
@@ -506,7 +606,42 @@ __STATIC_INLINE void csi_plic_set_pending_irq(uint64_t plic_base, int32_t IRQn)
   \details Clear the pending bit of an external interrupt.
   \param [in]      IRQn  External interrupt number. Value cannot be negative.
  */
-__STATIC_INLINE void csi_plic_clear_pending_irq(uint64_t plic_base, int32_t IRQn)
+__STATIC_INLINE void csi_vic_clear_pending_irq(int32_t IRQn)
+{
+    PLIC_Type *plic = (PLIC_Type *)CONFIG_PLIC_BASE;
+    plic->PLIC_H0_SCLAIM = IRQn;
+}
+
+/**
+  \brief   Check Interrupt is Pending or not(deprecated)
+  \details Read the pending register in the VIC and returns the pending bit for the specified interrupt.
+  \param [in]      IRQn  Interrupt number.
+  \return             0  Interrupt status is not pending.
+  \return             1  Interrupt status is pending.
+ */
+__STATIC_INLINE uint32_t csi_plic_get_pending_irq(unsigned long plic_base, int32_t IRQn)
+{
+    PLIC_Type *plic = (PLIC_Type *)plic_base;
+    return (uint32_t)((plic->PLIC_IP[IRQn/32] >> IRQn%32) & 0x1);
+}
+
+/**
+  \brief   Set Pending Interrupt(deprecated)
+  \details Set the pending bit of an external interrupt.
+  \param [in]      IRQn  Interrupt number. Value cannot be negative.
+ */
+__STATIC_INLINE void csi_plic_set_pending_irq(unsigned long plic_base, int32_t IRQn)
+{
+    PLIC_Type *plic = (PLIC_Type *)plic_base;
+    plic->PLIC_IP[IRQn/32] = plic->PLIC_IP[IRQn/32] | (0x1 << (IRQn%32));
+}
+
+/**
+  \brief   Clear Pending Interrupt(deprecated)
+  \details Clear the pending bit of an external interrupt.
+  \param [in]      IRQn  External interrupt number. Value cannot be negative.
+ */
+__STATIC_INLINE void csi_plic_clear_pending_irq(unsigned long plic_base, int32_t IRQn)
 {
     PLIC_Type *plic = (PLIC_Type *)plic_base;
     plic->PLIC_H0_SCLAIM = IRQn;
@@ -519,10 +654,10 @@ __STATIC_INLINE void csi_plic_clear_pending_irq(uint64_t plic_base, int32_t IRQn
   \param [in]      IRQn  Interrupt number.
   \param [in]  priority  Priority to set.
  */
-__STATIC_INLINE void csi_plic_set_prio(uint64_t plic_base, int32_t IRQn, uint32_t priority)
+__STATIC_INLINE void csi_vic_set_prio(int32_t IRQn, uint32_t priority)
 {
-    PLIC_Type *plic = (PLIC_Type *)plic_base;
-    plic->PLIC_PRIO[IRQn] = priority;
+    PLIC_Type *plic = (PLIC_Type *)CONFIG_PLIC_BASE;
+    plic->PLIC_PRIO[IRQn - 1] = priority;
 }
 
 /**
@@ -534,40 +669,40 @@ __STATIC_INLINE void csi_plic_set_prio(uint64_t plic_base, int32_t IRQn, uint32_
   \return             Interrupt Priority.
                       Value is aligned automatically to the implemented priority bits of the microcontroller.
  */
-__STATIC_INLINE uint32_t csi_plic_get_prio(uint64_t plic_base, int32_t IRQn)
+__STATIC_INLINE uint32_t csi_vic_get_prio(int32_t IRQn)
 {
-    PLIC_Type *plic = (PLIC_Type *)plic_base;
-    uint32_t prio = plic->PLIC_PRIO[IRQn];
+    PLIC_Type *plic = (PLIC_Type *)CONFIG_PLIC_BASE;
+    uint32_t prio = plic->PLIC_PRIO[IRQn - 1];
     return prio;
 }
 
 /**
-  \brief   Set interrupt handler
-  \details Set the interrupt handler according to the interrupt num, the handler will be filled in irq vectors.
+  \brief   Set Interrupt Priority(deprecated)
+  \details Set the priority of an interrupt.
+  \note    The priority cannot be set for every core interrupt.
   \param [in]      IRQn  Interrupt number.
-  \param [in]   handler  Interrupt handler.
+  \param [in]  priority  Priority to set.
  */
-__STATIC_INLINE void csi_plic_set_vector(int32_t IRQn, uint64_t handler)
+__STATIC_INLINE void csi_plic_set_prio(unsigned long plic_base, int32_t IRQn, uint32_t priority)
 {
-    if (IRQn >= 0 && IRQn < 1024) {
-        uint64_t *vectors = (uint64_t *)__get_MTVT();
-        vectors[IRQn] = handler;
-    }
+    PLIC_Type *plic = (PLIC_Type *)plic_base;
+    plic->PLIC_PRIO[IRQn - 1] = priority;
 }
 
 /**
-  \brief   Get interrupt handler
-  \details Get the address of interrupt handler function.
-  \param [in]      IRQn  Interrupt number.
+  \brief   Get Interrupt Priority(deprecated)
+  \details Read the priority of an interrupt.
+           The interrupt number can be positive to specify an external (device specific) interrupt,
+           or negative to specify an internal (core) interrupt.
+  \param [in]   IRQn  Interrupt number.
+  \return             Interrupt Priority.
+                      Value is aligned automatically to the implemented priority bits of the microcontroller.
  */
-__STATIC_INLINE uint32_t csi_plic_get_vector(int32_t IRQn)
+__STATIC_INLINE uint32_t csi_plic_get_prio(unsigned long plic_base, int32_t IRQn)
 {
-    if (IRQn >= 0 && IRQn < 1024) {
-        uint64_t *vectors = (uint64_t *)__get_MTVT();
-        return (uint32_t)vectors[IRQn];
-    }
-
-    return 0;
+    PLIC_Type *plic = (PLIC_Type *)plic_base;
+    uint32_t prio = plic->PLIC_PRIO[IRQn - 1];
+    return prio;
 }
 
 /*@} end of CSI_Core_VICFunctions */
@@ -643,6 +778,141 @@ __STATIC_INLINE void csi_mpu_disable_region(uint32_t idx)
   @{
  */
 
+#define CLINT_TIMECMPn_ADDR(time_cmp_base, hartid)  ((unsigned long)(time_cmp_base) + 4 * (hartid))
+#define CLINT_TIMECMPn_VAL(time_cmp_base, hartid)   (*(__IOM uint32_t *)(CLINT_TIMECMPn_ADDR(time_cmp_base, hartid)))
+
+__STATIC_INLINE uint32_t _csi_clint_config2(unsigned long coret_base, uint16_t hartid, uint32_t ticks, int32_t IRQn)
+{
+    CLINT_Type *clint = (CLINT_Type *)coret_base;
+#if defined(CONFIG_RISCV_SMODE) && CONFIG_RISCV_SMODE
+    uint64_t value = (((uint64_t)(CLINT_TIMECMPn_VAL(&clint->STIMECMPH0, hartid))) << 32) + \
+                     (uint64_t)(CLINT_TIMECMPn_VAL(&clint->STIMECMPL0, hartid));
+
+    if ((value != 0) && (value != 0xffffffffffffffff)) {
+        value = value + (uint64_t)ticks;
+    } else {
+        value = __get_MTIME() + ticks;
+    }
+    CLINT_TIMECMPn_VAL(&clint->STIMECMPH0, hartid) = (uint32_t)(value >> 32);
+    CLINT_TIMECMPn_VAL(&clint->STIMECMPL0, hartid) = (uint32_t)value;
+#else
+    uint64_t value = (((uint64_t)(CLINT_TIMECMPn_VAL(&clint->MTIMECMPH0, hartid))) << 32) + \
+                     (uint64_t)(CLINT_TIMECMPn_VAL(&clint->MTIMECMPL0, hartid));
+
+    if ((value != 0) && (value != 0xffffffffffffffff)) {
+        value = value + (uint64_t)ticks;
+    } else {
+        value = __get_MTIME() + ticks;
+    }
+    CLINT_TIMECMPn_VAL(&clint->MTIMECMPH0, hartid) = (uint32_t)(value >> 32);
+    CLINT_TIMECMPn_VAL(&clint->MTIMECMPL0, hartid) = (uint32_t)value;
+#endif
+
+    return (0UL);
+}
+
+__STATIC_INLINE uint32_t csi_clint_config(unsigned long coret_base, uint32_t ticks, int32_t IRQn)
+{
+    return _csi_clint_config2(coret_base, 0, ticks, IRQn);
+}
+
+__STATIC_INLINE void csi_coret_reset_value2()
+{
+    uint32_t value = 0x0;
+    int hartid = csi_get_cpu_id();
+    CLINT_Type *clint = (CLINT_Type *)CORET_BASE;
+
+#if defined(CONFIG_RISCV_SMODE) && CONFIG_RISCV_SMODE
+    CLINT_TIMECMPn_VAL(&clint->STIMECMPH0, hartid) = (uint32_t)value;
+    CLINT_TIMECMPn_VAL(&clint->STIMECMPL0, hartid) = (uint32_t)value;
+#else
+    CLINT_TIMECMPn_VAL(&clint->MTIMECMPH0, hartid) = (uint32_t)value;
+    CLINT_TIMECMPn_VAL(&clint->MTIMECMPL0, hartid) = (uint32_t)value;
+#endif
+}
+
+__STATIC_INLINE void csi_coret_reset_value(unsigned long coret_base)
+{
+    uint32_t value = 0x0;
+    int hartid = csi_get_cpu_id();
+    CLINT_Type *clint = (CLINT_Type *)coret_base;
+
+#if defined(CONFIG_RISCV_SMODE) && CONFIG_RISCV_SMODE
+    CLINT_TIMECMPn_VAL(&clint->STIMECMPH0, hartid) = (uint32_t)value;
+    CLINT_TIMECMPn_VAL(&clint->STIMECMPL0, hartid) = (uint32_t)value;
+#else
+    CLINT_TIMECMPn_VAL(&clint->MTIMECMPH0, hartid) = (uint32_t)value;
+    CLINT_TIMECMPn_VAL(&clint->MTIMECMPL0, hartid) = (uint32_t)value;
+#endif
+}
+
+__STATIC_INLINE uint64_t _csi_clint_get_load2(unsigned long coret_base, uint16_t hartid)
+{
+    CLINT_Type *clint = (CLINT_Type *)coret_base;
+#if defined(CONFIG_RISCV_SMODE) && CONFIG_RISCV_SMODE
+    uint64_t value = (((uint64_t)CLINT_TIMECMPn_VAL(&clint->STIMECMPH0, hartid)) << 32) + \
+                     (uint64_t)CLINT_TIMECMPn_VAL(&clint->STIMECMPL0, hartid);
+#else
+    uint64_t value = (((uint64_t)CLINT_TIMECMPn_VAL(&clint->MTIMECMPH0, hartid)) << 32) + \
+                     (uint64_t)CLINT_TIMECMPn_VAL(&clint->MTIMECMPL0, hartid);
+#endif
+
+    return value;
+}
+
+/**
+  \brief   get CORE timer reload high value(deprecated)
+  \return          CORE timer counter value.
+ */
+__STATIC_INLINE uint64_t csi_clint_get_load(unsigned long coret_base)
+{
+    return _csi_clint_get_load2(coret_base, 0);
+}
+
+__STATIC_INLINE uint32_t _csi_clint_get_loadh2(unsigned long coret_base, uint16_t hartid)
+{
+    CLINT_Type *clint = (CLINT_Type *)coret_base;
+#if defined(CONFIG_RISCV_SMODE) && CONFIG_RISCV_SMODE
+    uint64_t value = (((uint64_t)CLINT_TIMECMPn_VAL(&clint->STIMECMPH0, hartid)) << 32) + \
+                     (uint64_t)CLINT_TIMECMPn_VAL(&clint->STIMECMPL0, hartid);
+#else
+    uint64_t value = (((uint64_t)CLINT_TIMECMPn_VAL(&clint->MTIMECMPH0, hartid)) << 32) + \
+                     (uint64_t)CLINT_TIMECMPn_VAL(&clint->MTIMECMPL0, hartid);
+#endif
+
+    return (value >> 32) & 0xFFFFFFFF;
+}
+
+/**
+  \brief   get CORE timer reload high value(deprecated)
+  \return          CORE timer counter value.
+ */
+__STATIC_INLINE uint32_t csi_clint_get_loadh(unsigned long coret_base)
+{
+    return _csi_clint_get_loadh2(coret_base, 0);
+}
+
+/**
+  \brief   get CORE timer counter value(deprecated)
+  \return          CORE timer counter value.
+ */
+__STATIC_INLINE unsigned long csi_clint_get_value(void)
+{
+    unsigned long result;
+    __ASM volatile("csrr %0, time" : "=r"(result));
+    return result;
+}
+
+/**
+  \brief   get CORE timer counter high value(deprecated)
+  \return          CORE timer counter value.
+ */
+__STATIC_INLINE uint32_t csi_clint_get_valueh(void)
+{
+    uint64_t result;
+    __ASM volatile("csrr %0, time" : "=r"(result));
+    return (result >> 32) & 0xFFFFFFFF;
+}
 
 /**
   \brief   CORE timer Configuration
@@ -656,109 +926,45 @@ __STATIC_INLINE void csi_mpu_disable_region(uint32_t idx)
            function <b>SysTick_Config</b> is not included. In this case, the file <b><i>device</i>.h</b>
            must contain a vendor-specific implementation of this function.
  */
-__STATIC_INLINE uint32_t csi_clint_config(uint64_t clint_base, uint32_t ticks, int32_t IRQn)
+__STATIC_INLINE uint32_t csi_coret_config(uint32_t ticks, int32_t IRQn)
 {
-    CLINT_Type *clint = (CLINT_Type *)clint_base;
-#ifdef __QEMU_RUN
-    uint64_t value = (((uint64_t)clint->MTIMECMPH0) << 32) + (uint64_t)clint->MTIMECMPL0;
-
-    value = value + (uint64_t)ticks;
-    clint->MTIMECMPH0 = (uint32_t)(value >> 32);
-    clint->MTIMECMPL0 = (uint32_t)value;
-#else
-#if defined(CONFIG_RISCV_SMODE) && CONFIG_RISCV_SMODE
-    uint64_t value = (((uint64_t)clint->STIMECMPH0) << 32) + (uint64_t)clint->STIMECMPL0;
-
-    if ((value != 0) && (value != 0xffffffffffffffff)) {
-        value = value + (uint64_t)ticks;
-    } else {
-        value = __get_MTIME() + ticks;
-    }
-    clint->STIMECMPH0 = (uint32_t)(value >> 32);
-    clint->STIMECMPL0 = (uint32_t)value;
-#else
-    uint64_t value = (((uint64_t)clint->MTIMECMPH0) << 32) + (uint64_t)clint->MTIMECMPL0;
-
-    if ((value != 0) && (value != 0xffffffffffffffff)) {
-        value = value + (uint64_t)ticks;
-    } else {
-        value = __get_MTIME() + ticks;
-    }
-    clint->MTIMECMPH0 = (uint32_t)(value >> 32);
-    clint->MTIMECMPL0 = (uint32_t)value;
-#endif
-#endif /*__QEMU_RUN*/
-
-    return (0UL);
-}
-
-__STATIC_INLINE void csi_coret_reset_value(uint64_t clint_base)
-{
-    uint32_t value = 0x0;
-    CLINT_Type *clint = (CLINT_Type *)clint_base;
-
-#if defined(CONFIG_RISCV_SMODE) && CONFIG_RISCV_SMODE
-    clint->STIMECMPH0 = (uint32_t)value;
-    clint->STIMECMPL0 = (uint32_t)value;
-#else
-    clint->MTIMECMPH0 = (uint32_t)value;
-    clint->MTIMECMPL0 = (uint32_t)value;
-#endif
+    return _csi_clint_config2(CORET_BASE, csi_get_cpu_id(), ticks, IRQn);
 }
 
 /**
   \brief   get CORE timer reload value
   \return          CORE timer counter value.
  */
-__STATIC_INLINE uint64_t csi_clint_get_load(uint64_t clint_base)
+__STATIC_INLINE uint64_t csi_coret_get_load2(void)
 {
-    CLINT_Type *clint = (CLINT_Type *)clint_base;
-#if defined(CONFIG_RISCV_SMODE) && CONFIG_RISCV_SMODE
-    uint64_t value = (((uint64_t)clint->STIMECMPH0) << 32) + (uint64_t)clint->STIMECMPL0;
-#else
-    uint64_t value = (((uint64_t)clint->MTIMECMPH0) << 32) + (uint64_t)clint->MTIMECMPL0;
-#endif
-
-    return value;
-}
-
-/**
-  \brief   get CORE timer reload high value
-  \return          CORE timer counter value.
- */
-__STATIC_INLINE uint32_t csi_clint_get_loadh(uint64_t clint_base)
-{
-    CLINT_Type *clint = (CLINT_Type *)clint_base;
-#if defined(CONFIG_RISCV_SMODE) && CONFIG_RISCV_SMODE
-    uint64_t value = (((uint64_t)clint->STIMECMPH0) << 32) + (uint64_t)clint->STIMECMPL0;
-#else
-    uint64_t value = (((uint64_t)clint->MTIMECMPH0) << 32) + (uint64_t)clint->MTIMECMPL0;
-#endif
-
-    return (value >> 32) & 0xFFFFFFFF;
+    return _csi_clint_get_load2(CORET_BASE, csi_get_cpu_id());
 }
 
 /**
   \brief   get CORE timer counter value
   \return          CORE timer counter value.
  */
-__STATIC_INLINE uint64_t csi_clint_get_value(void)
+__STATIC_INLINE uint64_t csi_coret_get_value2()
 {
-    uint64_t result;
-    __ASM volatile("csrr %0, 0xc01" : "=r"(result));
-    return result;
+    return csi_clint_get_value();
 }
 
 /**
-  \brief   get CORE timer counter high value
-  \return          CORE timer counter value.
+  \brief   Enable CoreTimer(within clint) Interrupts
  */
-__STATIC_INLINE uint32_t csi_clint_get_valueh(void)
+__ALWAYS_STATIC_INLINE void csi_coret_irq_enable(void)
 {
-    uint64_t result;
-    __ASM volatile("csrr %0, time" : "=r"(result));
-    return (result >> 32) & 0xFFFFFFFF;
+    return __enable_coret_irq();
 }
+
+/**
+  \brief   Disable CoreTimer(within clint) Interrupts
+ */
+__ALWAYS_STATIC_INLINE void csi_coret_irq_disable(void)
+{
+    return __disable_coret_irq();
+}
+
 
 /*@} end of CSI_core_DebugFunctions */
 
@@ -850,7 +1056,6 @@ __STATIC_INLINE int csi_dcache_is_enable()
 /**
   \brief   Enable D-Cache
   \details Turns on D-Cache
-  \note    I-Cache also turns on.
   */
 __STATIC_INLINE void csi_dcache_enable(void)
 {
@@ -861,7 +1066,7 @@ __STATIC_INLINE void csi_dcache_enable(void)
         __ISB();
         __DCACHE_IALL();                        /* invalidate all dcache */
         cache = __get_MHCR();
-        cache |= (CACHE_MHCR_DE_Msk | CACHE_MHCR_WB_Msk | CACHE_MHCR_WA_Msk | CACHE_MHCR_RS_Msk | CACHE_MHCR_BPE_Msk | CACHE_MHCR_L0BTB_Msk | CACHE_MHCR_IBPE_Msk | CACHE_MHCR_WBR_Msk);      /* enable all Cache */
+        cache |= (CACHE_MHCR_DE_Msk | CACHE_MHCR_WB_Msk | CACHE_MHCR_WA_Msk | CACHE_MHCR_RS_Msk | CACHE_MHCR_BPE_Msk | CACHE_MHCR_BTB_Msk | CACHE_MHCR_IBPE_Msk | CACHE_MHCR_WBR_Msk);      /* enable all Cache */
         __set_MHCR(cache);
 
         __DSB();
@@ -874,7 +1079,6 @@ __STATIC_INLINE void csi_dcache_enable(void)
 /**
   \brief   Disable D-Cache
   \details Turns off D-Cache
-  \note    I-Cache also turns off.
   */
 __STATIC_INLINE void csi_dcache_disable(void)
 {
@@ -896,7 +1100,6 @@ __STATIC_INLINE void csi_dcache_disable(void)
 /**
   \brief   Invalidate D-Cache
   \details Invalidates D-Cache
-  \note    I-Cache also invalid
   */
 __STATIC_INLINE void csi_dcache_invalid(void)
 {
@@ -913,7 +1116,6 @@ __STATIC_INLINE void csi_dcache_invalid(void)
 /**
   \brief   Clean D-Cache
   \details Cleans D-Cache
-  \note    I-Cache also cleans
   */
 __STATIC_INLINE void csi_dcache_clean(void)
 {
@@ -930,7 +1132,6 @@ __STATIC_INLINE void csi_dcache_clean(void)
 /**
   \brief   Clean & Invalidate D-Cache
   \details Cleans and Invalidates D-Cache
-  \note    I-Cache also flush.
   */
 __STATIC_INLINE void csi_dcache_clean_invalid(void)
 {
@@ -943,73 +1144,29 @@ __STATIC_INLINE void csi_dcache_clean_invalid(void)
 #endif
 }
 
-
-/**
-  \brief   Invalidate L2-Cache
-  \details Invalidates L2-Cache
-  \note
-  */
-__STATIC_INLINE void csi_l2cache_invalid(void)
-{
-#if (__L2CACHE_PRESENT == 1U)
-    __DSB();
-    __ISB();
-    __L2CACHE_IALL();                            /* invalidate l2 Cache */
-    __DSB();
-    __ISB();
-#endif
-}
-
-
-/**
-  \brief   Clean L2-Cache
-  \details Cleans L2-Cache
-  \note
-  */
-__STATIC_INLINE void csi_l2cache_clean(void)
-{
-#if (__L2CACHE_PRESENT == 1U)
-    __DSB();
-    __ISB();
-    __L2CACHE_CALL();                                     /* clean l2 Cache */
-    __DSB();
-    __ISB();
-#endif
-}
-
-
-/**
-  \brief   Clean & Invalidate L2-Cache
-  \details Cleans and Invalidates L2-Cache
-  \note
-  */
-__STATIC_INLINE void csi_l2cache_clean_invalid(void)
-{
-#if (__L2CACHE_PRESENT == 1U)
-    __DSB();
-    __ISB();
-    __L2CACHE_CIALL();                                   /* clean and inv l2 Cache */
-    __DSB();
-    __ISB();
-#endif
-}
-
 /**
   \brief   D-Cache Invalidate by address
   \details Invalidates D-Cache for the given address
   \param[in]   addr    address (aligned to 64-byte boundary)
   \param[in]   dsize   size of memory block (in number of bytes)
 */
-__STATIC_INLINE void csi_dcache_invalid_range(uint64_t *addr, int64_t dsize)
+__STATIC_INLINE void csi_dcache_invalid_range(unsigned long *addr, size_t dsize)
 {
 #if (__DCACHE_PRESENT == 1U)
-    int64_t op_size = dsize + (uint64_t)addr % 64;
-    uint64_t op_addr = (uint64_t)addr;
-    int64_t linesize = 64;
-    cpu_work_mode_t cpu_work_mode;
-    cpu_work_mode = (cpu_work_mode_t)__get_CPU_WORK_MODE();
+    int linesize = csi_get_cache_line_size();
+    long op_size = dsize + (unsigned long)addr % linesize;
+    unsigned long op_addr = (unsigned long)addr;
 
     __DSB();
+#if CBO_INSN_SUPPORT
+    while (op_size > 0) {
+        __CBO_INVAL(op_addr);
+        op_addr += linesize;
+        op_size -= linesize;
+    }
+#else
+    cpu_work_mode_t cpu_work_mode;
+    cpu_work_mode = (cpu_work_mode_t)__get_CPU_WORK_MODE();
 
     if (cpu_work_mode == MACHINE_MODE) {
         while (op_size > 0) {
@@ -1024,6 +1181,7 @@ __STATIC_INLINE void csi_dcache_invalid_range(uint64_t *addr, int64_t dsize)
             op_size -= linesize;
         }
     }
+#endif
 
     __SYNC_IS();
     __DSB();
@@ -1037,17 +1195,24 @@ __STATIC_INLINE void csi_dcache_invalid_range(uint64_t *addr, int64_t dsize)
   \param[in]   addr    address (aligned to 64-byte boundary)
   \param[in]   dsize   size of memory block (in number of bytes)
 */
-__STATIC_INLINE void csi_dcache_clean_range(uint64_t *addr, int64_t dsize)
+__STATIC_INLINE void csi_dcache_clean_range(unsigned long *addr, size_t dsize)
 {
 
 #if (__DCACHE_PRESENT == 1)
-    int64_t op_size = dsize + (uint64_t)addr % 64;
-    uint64_t op_addr = (uint64_t) addr & CACHE_INV_ADDR_Msk;
-    int64_t linesize = 64;
-    cpu_work_mode_t cpu_work_mode;
-    cpu_work_mode = (cpu_work_mode_t)__get_CPU_WORK_MODE();
+    int linesize = csi_get_cache_line_size();
+    long op_size = dsize + (unsigned long)addr % linesize;
+    unsigned long op_addr = (unsigned long) addr & CACHE_INV_ADDR_Msk;
 
     __DSB();
+#if CBO_INSN_SUPPORT
+    while (op_size > 0) {
+        __CBO_CLEAN(op_addr);
+        op_addr += linesize;
+        op_size -= linesize;
+    }
+#else
+    cpu_work_mode_t cpu_work_mode;
+    cpu_work_mode = (cpu_work_mode_t)__get_CPU_WORK_MODE();
 
     if (cpu_work_mode == MACHINE_MODE) {
         while (op_size > 0) {
@@ -1062,7 +1227,7 @@ __STATIC_INLINE void csi_dcache_clean_range(uint64_t *addr, int64_t dsize)
             op_size -= linesize;
         }
     }
-
+#endif
     __SYNC_IS();
     __DSB();
 #endif
@@ -1076,16 +1241,23 @@ __STATIC_INLINE void csi_dcache_clean_range(uint64_t *addr, int64_t dsize)
   \param[in]   addr    address (aligned to 64-byte boundary)
   \param[in]   dsize   size of memory block (aligned to 64-byte boundary)
 */
-__STATIC_INLINE void csi_dcache_clean_invalid_range(uint64_t *addr, int64_t dsize)
+__STATIC_INLINE void csi_dcache_clean_invalid_range(unsigned long *addr, size_t dsize)
 {
 #if (__DCACHE_PRESENT == 1U)
-    int64_t op_size = dsize + (uint64_t)addr % 64;
-    uint64_t op_addr = (uint64_t) addr;
-    int64_t linesize = 64;
-    cpu_work_mode_t cpu_work_mode;
-    cpu_work_mode = (cpu_work_mode_t)__get_CPU_WORK_MODE();
+    int linesize = csi_get_cache_line_size();
+    long op_size = dsize + (unsigned long)addr % linesize;
+    unsigned long op_addr = (unsigned long) addr;
 
     __DSB();
+#if CBO_INSN_SUPPORT
+    while (op_size > 0) {
+        __CBO_FLUSH(op_addr);
+        op_addr += linesize;
+        op_size -= linesize;
+    }
+#else
+    cpu_work_mode_t cpu_work_mode;
+    cpu_work_mode = (cpu_work_mode_t)__get_CPU_WORK_MODE();
 
     if (cpu_work_mode == MACHINE_MODE) {
         while (op_size > 0) {
@@ -1100,72 +1272,14 @@ __STATIC_INLINE void csi_dcache_clean_invalid_range(uint64_t *addr, int64_t dsiz
             op_size -= linesize;
         }
     }
+#endif
 
     __SYNC_IS();
     __DSB();
 #endif
 }
 
-/**
-  \brief   setup cacheable range Cache
-  \details setup Cache range
-  */
-__STATIC_INLINE void csi_cache_set_range (uint64_t index, uint64_t baseAddr, uint64_t size, uint64_t enable)
-{
-    ;
-}
-
-/**
-  \brief   Enable cache profile
-  \details Turns on Cache profile
-  */
-__STATIC_INLINE void csi_cache_enable_profile(void)
-{
-    ;
-}
-
-/**
-  \brief   Disable cache profile
-  \details Turns off Cache profile
-  */
-__STATIC_INLINE void csi_cache_disable_profile(void)
-{
-    ;
-}
-
-/**
-  \brief   Reset cache profile
-  \details Reset Cache profile
-  */
-__STATIC_INLINE void csi_cache_reset_profile(void)
-{
-    ;
-}
-
-/**
-  \brief   cache access times
-  \details Cache access times
-  \note    every 256 access add 1.
-  \return          cache access times, actual times should be multiplied by 256
-  */
-__STATIC_INLINE uint64_t csi_cache_get_access_time(void)
-{
-    return 0;
-}
-
-/**
-  \brief   cache miss times
-  \details Cache miss times
-  \note    every 256 miss add 1.
-  \return          cache miss times, actual times should be multiplied by 256
-  */
-__STATIC_INLINE uint64_t csi_cache_get_miss_time(void)
-{
-    return 0;
-}
-
 /*@} end of CSI_Core_CacheFunctions */
-
 
 /* ##########################  MMU functions  #################################### */
 /**
@@ -1181,21 +1295,35 @@ typedef enum {
     PAGE_SIZE_1GB   = 0x40000000,
 } page_size_e;
 
+#define MMU_MODE_32   (0x1)
+#define MMU_MODE_39   (0x8)
+#define MMU_MODE_48   (0x9)
+#define MMU_MODE_57   (0xa)
+#define MMU_MODE_64   (0xb)
 
-typedef enum {
-    MMU_MODE_39   = 0x8,
-    MMU_MODE_48   = 0x9,
-    MMU_MODE_57   = 0xa,
-    MMU_MODE_64   = 0xb,
-} mmu_mode_e;
+/**
+  \brief  set mmu mode(If there are multiple mmu modes)
+  \param[in]   mode    mode of the mmu
+  \details
+  */
+__STATIC_INLINE void csi_mmu_set_mode(int mode)
+{
+    extern int g_mmu_mode;
+    g_mmu_mode = mode;
+}
 
 /**
   \brief  enable mmu
   \details
   */
-__STATIC_INLINE void csi_mmu_enable(mmu_mode_e mode)
+__STATIC_INLINE void csi_mmu_enable()
 {
-    __set_SATP(__get_SATP() | ((uint64_t)mode << 60));
+    extern int g_mmu_mode;
+#if __riscv_xlen == 64
+    __set_SATP(__get_SATP() | ((unsigned long)g_mmu_mode << 60));
+#else
+    __set_SATP(__get_SATP() | ((unsigned long)g_mmu_mode << 31));
+#endif
 }
 
 /**
@@ -1204,7 +1332,11 @@ __STATIC_INLINE void csi_mmu_enable(mmu_mode_e mode)
   */
 __STATIC_INLINE void csi_mmu_disable(void)
 {
-    __set_SATP(__get_SATP() & (~((uint64_t)0xf << 60)));
+#if __riscv_xlen == 64
+    __set_SATP(__get_SATP() & (~((unsigned long)0xf << 60)));
+#else
+    __set_SATP(__get_SATP() & (~((unsigned long)0x1 << 31)));
+#endif
 }
 
 /**
@@ -1216,49 +1348,221 @@ __STATIC_INLINE void csi_mmu_invalid_tlb_all(void)
     __ASM volatile("sfence.vma" : : : "memory");
 }
 
-/**
-  \brief  flush mmu tlb by asid.
-  \details
-  */
-__STATIC_INLINE void csi_mmu_invalid_tlb_by_asid(unsigned long asid)
-{
-    __ASM volatile("sfence.vma zero, %0"
-                   :
-                   : "r"(asid)
-                   : "memory");
-}
-
-/**
-  \brief  flush mmu tlb by page.
-  \details
-  */
-__STATIC_INLINE void csi_mmu_invalid_tlb_by_page(unsigned long asid, unsigned long addr)
-{
-    __ASM volatile("sfence.vma %0, %1"
-                   :
-                   : "r"(addr), "r"(asid)
-                   : "memory");
-}
-
-/**
-  \brief  flush mmu tlb by range.
-  \details
-  */
-__STATIC_INLINE void csi_mmu_invalid_tlb_by_range(unsigned long asid, page_size_e page_size, unsigned long start_addr, unsigned long end_addr)
-{
-    start_addr &= ~(page_size - 1);
-    end_addr += page_size - 1;
-    end_addr &= ~(page_size - 1);
-
-    while(start_addr < end_addr) {
-        __ASM volatile("sfence.vma %0, %1"
-                       :
-                       : "r"(start_addr), "r"(asid)
-                       : "memory");
-    }
-}
-
 /*@} end of CSI_Core_MMUFunctions */
+
+/* ##########################  TCM functions  #################################### */
+/**
+  \ingroup  CSI_Core_FunctionInterface
+  \defgroup CSI_Core_TCMFunctions TCM Functions
+  \brief    Functions that configure TCM.
+  @{
+  */
+
+#if CONFIG_CPU_C907 || CONFIG_CPU_C907FD || CONFIG_CPU_C907FDV || CONFIG_CPU_C907FDVM \
+    || CONFIG_CPU_C908 || CONFIG_CPU_C908V || CONFIG_CPU_C908I \
+    || CONFIG_CPU_C910 || CONFIG_CPU_C920 || CONFIG_CPU_C910V2 || CONFIG_CPU_C920V2 \
+    || CONFIG_CPU_R910 || CONFIG_CPU_R920
+/**
+ \ingroup    CSI_tcm_register
+ \defgroup   CSI_TCM
+ \brief      Type definitions for the tcm Registers
+ @{
+ */
+
+/**
+ \brief  Consortium definition for accessing protection area selection register(MITCMCR, 0x7f9).
+ */
+typedef union {
+    struct {
+        unsigned long EN: 1;                             /*!< bit:     0  Instruction Tightly-Coupled Memory enable */
+        unsigned long ECC_EN: 1;                         /*!< bit:     1  ecc_en */
+        unsigned long Interleave: 1;                     /*!< bit:     2  Interleave */
+        unsigned long _reserved1: 1;                     /*!< bit:     3  Reserved */
+        unsigned long Size: 4;                           /*!< bit:  4..7  Size of ITCM */
+        unsigned long _reserved2: 4;                     /*!< bit:  8..11 Reserved */
+        unsigned long Base_Address: 52;                  /*!< bit: 12..63 Base address of DTCM */
+    } b;                                            /*!< Structure   Access by bit */
+    unsigned long w;                                     /*!< Type        Access by whole register */
+} MITCMCR_Type;
+
+#define MITCMCR_Base_Address_Pos             12U                                              /*!< MITCMCR: Base_Address Position */
+#define MITCMCR_Base_Address_Msk             (0xfffffffffffffULL << MITCMCR_Base_Address_Pos)  /*!< MITCMCR: Base_Address Mask */
+
+#define MITCMCR_Size_Pos                     4U                                               /*!< MITCMCR: Size Position */
+#define MITCMCR_Size_Msk                     (0xfULL << MITCMCR_Size_Pos)                      /*!< MITCMCR: Size Mask */
+
+#define MITCMCR_INTERLEAVE_Pos               2U                                               /*!< MITCMCR: Interleave Position */
+#define MITCMCR_INTERLEAVE_Msk               (0x1ULL << MITCMCR_SIF_Pos)                       /*!< MITCMCR: Interleave Mask */
+
+#define MITCMCR_ECC_EN_Pos                   1U                                               /*!< MITCMCR: ECC_EN Position */
+#define MITCMCR_ECC_EN_Msk                   (0x1ULL << MITCMCR_EN_Pos)                        /*!< MITCMCR: ECC_EN Mask */
+
+#define MITCMCR_EN_Pos                       0U                                               /*!< MITCMCR: EN Position */
+#define MITCMCR_EN_Msk                       (0x1ULL << MITCMCR_EN_Pos)                        /*!< MITCMCR: EN Mask */
+
+/**
+ \brief  Consortium definition for accessing protection area selection register(MDTCMCR, 0x7f8).
+ */
+typedef union {
+    struct {
+        unsigned long EN: 1;                             /*!< bit:     0  Data Tightly-Coupled Memory enable */
+        unsigned long ECC_EN: 1;                         /*!< bit:     1  ecc_en */
+        unsigned long Interleave: 1;                     /*!< bit:     2  Interleave */
+        unsigned long _reserved1: 1;                     /*!< bit:     3  Reserved */
+        unsigned long Size: 4;                           /*!< bit:  4..7  Size of ITCM */
+        unsigned long _reserved2: 4;                     /*!< bit:  8..11 Reserved */
+        unsigned long Base_Address: 52;                  /*!< bit: 12..63 Base address of DTCM */
+    } b;                                            /*!< Structure   Access by bit */
+    unsigned long w;                                     /*!< Type        Access by whole register */
+} MDTCMCR_Type;
+
+#define MDTCMCR_Base_Address_Pos             12U                                              /*!< MDTCMCR: Base_Address Position */
+#define MDTCMCR_Base_Address_Msk             (0xfffffffffffffULL << MDTCMCR_Base_Address_Pos)  /*!< MDTCMCR: Base_Address Mask */
+
+#define MDTCMCR_Size_Pos                     4U                                               /*!< MDTCMCR: Size Position */
+#define MDTCMCR_Size_Msk                     (0xfULL << MDTCMCR_Size_Pos)                      /*!< MDTCMCR: Size Mask */
+
+#define MDTCMCR_INTERLEAVE_Pos               2U                                               /*!< MDTCMCR: Interleave Position */
+#define MDTCMCR_INTERLEAVE_Msk               (0x1ULL << MDTCMCR_SIF_Pos)                       /*!< MDTCMCR: Interleave Mask */
+
+#define MDTCMCR_ECC_EN_Pos                   1U                                               /*!< MDTCMCR: ECC_EN Position */
+#define MDTCMCR_ECC_EN_Msk                   (0x1ULL << MDTCMCR_EN_Pos)                        /*!< MDTCMCR: ECC_EN Mask */
+
+#define MDTCMCR_EN_Pos                       0U                                               /*!< MDTCMCR: EN Position */
+#define MDTCMCR_EN_Msk                       (0x1ULL << MDTCMCR_EN_Pos)                        /*!< MDTCMCR: EN Mask */
+
+/*@} end of group CSI_TCM_bitfield */
+
+/**
+  \brief   Enable ITCM
+  \details Turns on ITCM
+  */
+__STATIC_INLINE void csi_itcm_enable (void)
+{
+    __set_MITCMCR(__get_MITCMCR() | MITCMCR_EN_Msk);
+}
+
+/**
+  \brief   Enable DTCM
+  \details Turns on DTCM
+  */
+__STATIC_INLINE void csi_dtcm_enable (void)
+{
+    __set_MDTCMCR(__get_MDTCMCR() | MDTCMCR_EN_Msk);
+}
+
+/**
+  \brief   Enable ITCM
+  \details Turns on ITCM
+  */
+__STATIC_INLINE void csi_itcm_disable (void)
+{
+    __set_MITCMCR(__get_MITCMCR() & (~MITCMCR_EN_Msk));
+}
+
+/**
+  \brief   Enable DTCM
+  \details Turns on DTCM
+  */
+__STATIC_INLINE void csi_dtcm_disable (void)
+{
+    __set_MDTCMCR(__get_MDTCMCR() & (~MDTCMCR_EN_Msk));
+}
+
+/**
+  \brief   Get ITCM Size
+  \details Get ITCM Size
+  \return         ITCM size (bytes).
+  */
+__STATIC_INLINE uint32_t csi_itcm_get_size(void)
+{
+    MITCMCR_Type sizemask;
+    uint32_t ret;
+
+    sizemask.w = __get_MITCMCR();
+    ret = sizemask.b.Size;
+
+    return (1 << ret) << 10;
+}
+
+/**
+  \brief   Get DTCM Size
+  \details Get DTCM Size
+  \return         DTCM size (bytes).
+  */
+__STATIC_INLINE uint32_t csi_dtcm_get_size(void)
+{
+    MDTCMCR_Type sizemask;
+    uint32_t ret;
+
+    sizemask.w = __get_MDTCMCR();
+    ret = sizemask.b.Size;
+
+    return (1 << ret) << 10;
+}
+
+/**
+  \brief   Set ITCM Base Address
+  \details Set ITCM Base Address
+  \param [in]  base_addr  itcm base address.
+  */
+__STATIC_INLINE void csi_itcm_set_base_addr(unsigned long base_addr)
+{
+    __set_MITCMCR((__get_MITCMCR() & (~MITCMCR_Base_Address_Msk)) | (base_addr & MITCMCR_Base_Address_Msk));
+}
+
+/**
+  \brief   Set DTCM Base Address
+  \details Set DTCM Base Address
+  \param [in]  base_addr  dtcm base address.
+  */
+__STATIC_INLINE void csi_dtcm_set_base_addr(unsigned long base_addr)
+{
+    __set_MDTCMCR((__get_MDTCMCR() & (~MDTCMCR_Base_Address_Msk)) | (base_addr & MDTCMCR_Base_Address_Msk));
+}
+
+/*@} end of CSI_Core_TCMFunctions */
+
+/* ##########################  ECC functions  #################################### */
+
+/**
+ *   \brief   Enable ITCM-ECC
+ *     \details Turns on ITCM-ECC
+ *       */
+__STATIC_INLINE void csi_itcm_ecc_enable (void)
+{
+    __set_MITCMCR(__get_MITCMCR() | MITCMCR_ECC_EN_Msk);
+}
+
+/**
+ *   \brief   Disable ITCM-ECC
+ *     \details Turns off ITCM-ECC
+ *       */
+__STATIC_INLINE void csi_itcm_ecc_disable (void)
+{
+    __set_MITCMCR(__get_MITCMCR() & (~MITCMCR_ECC_EN_Msk));
+}
+
+/**
+ *   \brief   Enable DTCM-ECC
+ *     \details Turns on DTCM-ECC
+ *       */
+__STATIC_INLINE void csi_dtcm_ecc_enable (void)
+{
+    __set_MDTCMCR(__get_MDTCMCR() | MDTCMCR_ECC_EN_Msk);
+}
+
+/**
+ *   \brief   Disable DTCM-ECC
+ *     \details Turns off DTCM-ECC
+ *       */
+__STATIC_INLINE void csi_dtcm_ecc_disable (void)
+{
+    __set_MDTCMCR(__get_MDTCMCR() & (~MDTCMCR_ECC_EN_Msk));
+}
+
+/*@} end of CSI_Core_ECCFunctions */
+#endif /* end ecc */
 
 /* ##################################    IRQ Functions  ############################################ */
 
@@ -1266,9 +1570,9 @@ __STATIC_INLINE void csi_mmu_invalid_tlb_by_range(unsigned long asid, page_size_
   \brief   Save the Irq context
   \details save the psr result before disable irq.
  */
-__STATIC_INLINE uint64_t csi_irq_save(void)
+__STATIC_INLINE unsigned long csi_irq_save(void)
 {
-    uint64_t result;
+    unsigned long result;
 #if defined(CONFIG_RISCV_SMODE) && CONFIG_RISCV_SMODE
     result = __get_SSTATUS();
 #else
@@ -1283,7 +1587,7 @@ __STATIC_INLINE uint64_t csi_irq_save(void)
   \details restore saved primask state.
   \param [in]      irq_state  psr irq state.
  */
-__STATIC_INLINE void csi_irq_restore(uint64_t irq_state)
+__STATIC_INLINE void csi_irq_restore(unsigned long irq_state)
 {
 #if defined(CONFIG_RISCV_SMODE) && CONFIG_RISCV_SMODE
     __set_SSTATUS(irq_state);
@@ -1304,6 +1608,19 @@ __STATIC_INLINE int csi_vlenb_get_value(void)
     __ASM volatile("csrr %0, vlenb" : "=r"(result) : : "memory");
     return result;
 }
+
+#if __riscv_matrix
+/**
+  \brief   Get the bytes of matrix per register
+  \return  the bytes of matrix per register
+ */
+__STATIC_INLINE int csi_xmlenb_get_value(void)
+{
+    int result;
+    __ASM volatile("csrr %0, xmlenb" : "=r"(result) : : "memory");
+    return result;
+}
+#endif /* __riscv_matrix */
 
 #ifdef __cplusplus
 }

@@ -1,7 +1,7 @@
 
 ## 第一部分： 基础信息
 name: ch2601_evb                                    # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
-version: v7.8.0                                    # <必选项> 组件版本号
+version: v7.9.0                                    # <必选项> 组件版本号
 description: ch2601 board configure                 # <必选项> 建议至少20字以上
 type: board                                         # <必选项> 组件类型，为：solution, chip, board, common, sdk
 license: Apache license v2.0                        # <可选项> 源代码的许可证，要确保所有代码、文件的许可证不冲突。如：MIT，Apache license v2.0，BSD
@@ -90,8 +90,9 @@ source_file:
 #   CONFIG_CLI: y
 def_config:
   CONFIG_BOARD_CH2601_EVB: 1
-  CONFIG_CPU_E906: y
+  CONFIG_CPU_E906: 1
   CONFIG_XIP: y
+  CONFIG_SYSTICK_HZ: 100
   CONFIG_ARCH_INTERRUPTSTACK: 4096
   CONFIG_OTA_AB: 0
   # player

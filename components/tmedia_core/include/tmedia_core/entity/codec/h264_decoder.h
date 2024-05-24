@@ -34,6 +34,7 @@ public:
         SCALE_ENABLE,           // bool,     scale from origin frame, default is disabled
         SCALE_RECT_W,           // int32_t, 0 ~ Origin picture width    default -1 means input's width
         SCALE_RECT_H,           // int32_t, 0 ~ Origin picture height   default -1 menas input's height
+        DECODE_MODE_ASYNC,      // bool,    decode use sync or async mode, default is disabled
     };
 
     TMH264Decoder()
@@ -79,7 +80,8 @@ protected:
 
             pList[i]->Add(TMProperty((int)PropID::SCALE_ENABLE, false, "scale enable"));
             pList[i]->Add(TMProperty((int)PropID::SCALE_RECT_W, -1, "scale_w"));
-            pList[i]->Add(TMProperty((int)PropID::SCALE_RECT_H, -1, "scale__h"));
+            pList[i]->Add(TMProperty((int)PropID::SCALE_RECT_H, -1, "scale_h"));
+            pList[i]->Add(TMProperty((int)PropID::DECODE_MODE_ASYNC, false, "decode_mode"));
         }
     }
 };

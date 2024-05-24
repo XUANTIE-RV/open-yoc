@@ -17,14 +17,14 @@ extern "C"
 {
 #include "csinn/csi_nn.h"
 #include "csinn/csinn_runtime.h"
-#include "csinn/shl_utils.h"
+#include "shl_utils.h"
 }
 
-class InterpreterCSINN: public Interpreter
+class TMInterpreterCSINN: public TMInterpreter
 {
 public:
-    InterpreterCSINN();
-    ~InterpreterCSINN();
+    TMInterpreterCSINN();
+    ~TMInterpreterCSINN();
 
     int Open(int idx);
     int Close();

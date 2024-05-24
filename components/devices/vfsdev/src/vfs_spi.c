@@ -4,6 +4,7 @@
 #if defined(AOS_COMP_DEVFS) && AOS_COMP_DEVFS
 #include <devices/spi.h>
 #include <string.h>
+#include <devices/impl/spi_impl.h>
 
 static aos_status_t _devfs_spi_ioctl(devfs_file_t *file, int cmd, uintptr_t arg)
 {
@@ -94,6 +95,17 @@ static aos_status_t _devfs_spi_ioctl(devfs_file_t *file, int cmd, uintptr_t arg)
         }
         break;
     }
+    case SPI_IOC_TIMEOUT:
+    {
+        if (!(void *)arg) {
+            ret = -EFAULT;
+            break;
+        }
+        uint32_t timeout;
+        timeout = *(uint32_t*)arg;
+        ((spi_driver_t*)(dev->drv))->timeout = timeout;
+        break;
+    }
     default:
         ret = -EINVAL;
         break;
@@ -112,8 +124,8 @@ ssize_t _devfs_spi_write(devfs_file_t *file, const void *buf, size_t count)
 
     if (!buf || count == 0)
         return -EFAULT;
-
-    if (rvm_hal_spi_send(dev, buf, count, (mode & O_NONBLOCK) ? AOS_NO_WAIT : AOS_WAIT_FOREVER) < 0) {
+    uint32_t timeout = ((spi_driver_t*)(dev->drv))->timeout;
+    if (rvm_hal_spi_send(dev, buf, count, (mode & O_NONBLOCK) ? AOS_NO_WAIT : timeout) < 0) {
         return -1;
     }
     return 0;
@@ -129,8 +141,8 @@ ssize_t _devfs_spi_read(devfs_file_t *file, void *buf, size_t count)
 
     if (!buf || count == 0)
         return -EFAULT;
-
-    if (rvm_hal_spi_recv(dev, buf, count, (mode & O_NONBLOCK) ? AOS_NO_WAIT : AOS_WAIT_FOREVER) < 0) {
+    uint32_t timeout = ((spi_driver_t*)(dev->drv))->timeout;
+    if (rvm_hal_spi_recv(dev, buf, count, (mode & O_NONBLOCK) ? AOS_NO_WAIT : timeout) < 0) {
         return -1;
     }
     return 0;

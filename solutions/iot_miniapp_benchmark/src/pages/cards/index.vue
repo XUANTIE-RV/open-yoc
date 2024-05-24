@@ -1,31 +1,62 @@
 <template>
   <div class="page" @click="back">
-    <div class="card" :style="style">
-      <text class="card_title">{{$page.loadOptions.text}}</text>
+    <div class="pagediv" :style="{left:x1+'px'}">
+      <div class="card" :style="style">
+        <text class="card_title">{{$page.loadOptions.text}}</text>
+      </div>
+      <div class="card" :style="style">
+        <text class="card_title">{{$page.loadOptions.text}}</text>
+      </div>
+      <div class="card" :style="style">
+        <text class="card_title">{{$page.loadOptions.text}}</text>
+      </div>
+      <div class="card" :style="style">
+        <text class="card_title">{{$page.loadOptions.text}}</text>
+      </div>
+      <div class="card" :style="style">
+        <text class="card_title">{{$page.loadOptions.text}}</text>
+      </div>
+      <div class="card" :style="style">
+        <text class="card_title">{{$page.loadOptions.text}}</text>
+      </div>
+      <div class="card" :style="style">
+        <text class="card_title">{{$page.loadOptions.text}}</text>
+      </div>
+      <div class="card" :style="style">
+        <text class="card_title">{{$page.loadOptions.text}}</text>
+      </div>
+      <div class="card" :style="style">
+        <text class="card_title">{{$page.loadOptions.text}}</text>
+      </div>
     </div>
-    <div class="card" :style="style">
-      <text class="card_title">{{$page.loadOptions.text}}</text>
-    </div>
-    <div class="card" :style="style">
-      <text class="card_title">{{$page.loadOptions.text}}</text>
-    </div>
-    <div class="card" :style="style">
-      <text class="card_title">{{$page.loadOptions.text}}</text>
-    </div>
-    <div class="card" :style="style">
-      <text class="card_title">{{$page.loadOptions.text}}</text>
-    </div>
-    <div class="card" :style="style">
-      <text class="card_title">{{$page.loadOptions.text}}</text>
-    </div>
-    <div class="card" :style="style">
-      <text class="card_title">{{$page.loadOptions.text}}</text>
-    </div>
-    <div class="card" :style="style">
-      <text class="card_title">{{$page.loadOptions.text}}</text>
-    </div>
-    <div class="card" :style="style">
-      <text class="card_title">{{$page.loadOptions.text}}</text>
+    <div class="pagediv" :style="{left:x2+'px'}">
+      <div class="card" :style="style">
+        <text class="card_title">{{$page.loadOptions.text}}</text>
+      </div>
+      <div class="card" :style="style">
+        <text class="card_title">{{$page.loadOptions.text}}</text>
+      </div>
+      <div class="card" :style="style">
+        <text class="card_title">{{$page.loadOptions.text}}</text>
+      </div>
+      <div class="card" :style="style">
+        <text class="card_title">{{$page.loadOptions.text}}</text>
+      </div>
+      <div class="card" :style="style">
+        <text class="card_title">{{$page.loadOptions.text}}</text>
+      </div>
+      <div class="card" :style="style">
+        <text class="card_title">{{$page.loadOptions.text}}</text>
+      </div>
+      <div class="card" :style="style">
+        <text class="card_title">{{$page.loadOptions.text}}</text>
+      </div>
+      <div class="card" :style="style">
+        <text class="card_title">{{$page.loadOptions.text}}</text>
+      </div>
+      <div class="card" :style="style">
+        <text class="card_title">{{$page.loadOptions.text}}</text>
+      </div>
     </div>
   </div>
 </template>
@@ -35,9 +66,25 @@
 export default {
   name: "index",
   data() {
-    return {}
+    return {
+      intervalId: null,
+      interval: 26,
+
+      x:0,//0->480 循环
+      x1:0,
+      x2:-480,
+      speed:3,
+    }
   },
   mounted() {
+    this.intervalId=setInterval(() => {
+      this.x+=this.speed;
+      if (this.x>=480) {
+        this.x = 0;
+      }
+      this.x1=this.x;
+      this.x2=this.x-480;
+    }, this.interval);
   },
   computed: {
     style() {
@@ -51,6 +98,9 @@ export default {
   },
   methods: {
     back(e) {
+      clearInterval(this.intervalId);
+      this.intervalId = null;
+
       this.$page.finish();
     }
   },
@@ -64,8 +114,17 @@ export default {
   width: 100%;
   height: 100%;
   background-color: black;
+  position: relative;
+  overflow: hidden;
+}
+
+.pagediv {
+  width: 100%;
+  height: 100%;
+  background-color: black;
   flex-direction: row;
   flex-wrap: wrap;
+  position: absolute;
 }
 
 .card {

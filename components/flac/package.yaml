@@ -1,7 +1,7 @@
 
 ## 第一部分： 基础信息
 name: flac                                          # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
-version: v7.8.0                                    # <必选项> 组件版本号
+version: v7.9.0                                    # <必选项> 组件版本号
 description: FLAC(FreeLossless Audio Codec)是一套自由的音频压缩编解码器.不同于其它有损音频压缩格式。 # <必选项> 建议至少20字以上
 type: common                                        # <必选项> 组件类型，为：solution, chip, board, common, sdk
 tag: 多媒体播放器                                   # <可选项> 组件分类，缺省值： ''
@@ -47,13 +47,31 @@ build_config:
     - _FORTIFY_SOURCE=2
   include:
     - include
-  libpath:
-    - libs/<cpu>
-  libs:
-    - flac_prebuild
+  internal_include:
+    - src
+    - src/libFLAC/include
 
 # source_file:                             # <可选项> 指定参与编译的源代码文件，支持通配符，采用相对路径
 #   - src/*.c                              # 例：组件 src 目录下所有的扩展名为 c 的源代码文件
+source_file:
+  - "src/libFLAC/bitmath.c"
+  - "src/libFLAC/bitreader.c"
+  - "src/libFLAC/bitwriter.c"
+  - "src/libFLAC/cpu.c"
+  - "src/libFLAC/crc.c"
+  - "src/libFLAC/fixed.c"
+  - "src/libFLAC/float.c"
+  - "src/libFLAC/format.c"
+  - "src/libFLAC/lpc.c"
+  - "src/libFLAC/md5.c"
+  - "src/libFLAC/memory.c"
+  - "src/libFLAC/stream_decoder.c"
+  - "src/libFLAC/stream_encoder.c"
+  - "src/libFLAC/stream_encoder_framing.c"
+  - "src/libFLAC/window.c"
+  - "src/libFLAC++/metadata.cpp"
+  - "src/libFLAC++/stream_decoder.cpp"
+  - "src/libFLAC++/stream_encoder.cpp"
 
 ## 第五部分：配置信息
 # def_config:                              # 组件的可配置项
@@ -76,9 +94,6 @@ install:
   - dest: "include/share"
     source:
       - "include/share/*.h"
-  - dest: "lib"
-    source:
-      - "libs/<cpu>/*.a"
 
 ## 第七部分：导出部分
 # export:

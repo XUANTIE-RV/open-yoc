@@ -31,6 +31,7 @@ typedef struct
     int64_t              mBitRate;
     int                  mWidth;
     int                  mHeight;
+    int                  mFPS;
 } TMStreamVideoInfo_t;
 
 typedef struct

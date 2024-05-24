@@ -492,6 +492,18 @@ static int uart_csky_trans_dma_enable(rvm_dev_t *dev, bool enable)
     return 0;
 }
 
+static int uart_csky_trans_get_state(rvm_dev_t *dev, rvm_hal_uart_state_t* state)
+{
+    if (!state)
+        return -EINVAL;
+
+    *state = RVM_UART_STATE_WRITABLE;
+    if (UART(dev)->read_buffer.widx != UART(dev)->read_buffer.ridx) {
+        *state |= RVM_UART_STATE_READABLE;
+    }
+    return 0;
+}
+
 static uart_driver_t uart_driver = {
     .drv = {
         .name   = "uart",
@@ -511,6 +523,7 @@ static uart_driver_t uart_driver = {
     .recv_poll       = uart_csky_recv_poll,
     .set_event       = uart_csky_event,
     .trans_dma_enable = uart_csky_trans_dma_enable,
+    .get_state        = uart_csky_trans_get_state
 };
 
 void rvm_uart_drv_register(int uart_idx)

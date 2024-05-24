@@ -2,8 +2,9 @@
  * Copyright (C) 2019-2020 Alibaba Group Holding Limited
  */
 #if defined(AOS_COMP_DEVFS) && AOS_COMP_DEVFS
-#include <devices/iic.h>
 #include <string.h>
+#include <devices/iic.h>
+#include <devices/impl/iic_impl.h>
 
 static aos_status_t _devfs_iic_ioctl(devfs_file_t *file, int cmd, uintptr_t arg)
 {
@@ -161,6 +162,17 @@ static aos_status_t _devfs_iic_ioctl(devfs_file_t *file, int cmd, uintptr_t arg)
         }
         break;
     }
+    case IIC_IOC_TIMEOUT:
+    {
+        if (!(void *)arg) {
+            ret = -EFAULT;
+            break;
+        }
+        uint32_t timeout;
+        timeout = *(uint32_t*)arg;
+        ((iic_driver_t*)(dev->drv))->timeout = timeout;
+        break;
+    }
     default:
         ret = -EINVAL;
         break;
@@ -169,12 +181,54 @@ static aos_status_t _devfs_iic_ioctl(devfs_file_t *file, int cmd, uintptr_t arg)
     return ret;
 }
 
+ssize_t _devfs_iic_read(devfs_file_t *file, void *buf, size_t count)
+{
+    rvm_dev_t *dev = devfs_file2dev(file);
+    mode_t mode = devfs_file_get_mode(file);
+    rvm_hal_iic_config_t config;
+
+    rvm_hal_iic_config_get(dev, &config);
+    int slave_addr = config.slave_addr;
+    if (!devfs_file_is_readable(file))
+        return -EPERM;
+
+    if (!buf || count == 0)
+        return -EFAULT;
+
+    uint32_t timeout = ((iic_driver_t*)(dev->drv))->timeout;
+    if (rvm_hal_iic_master_recv(dev, slave_addr, buf, count, (mode & O_NONBLOCK) ? AOS_NO_WAIT : timeout) < 0) {
+        return -1;
+    }
+    return count;
+}
+
+ssize_t _devfs_iic_write(devfs_file_t *file, const void *buf, size_t count)
+{
+    rvm_dev_t *dev = devfs_file2dev(file);
+    mode_t mode = devfs_file_get_mode(file);
+    rvm_hal_iic_config_t config;
+
+    rvm_hal_iic_config_get(dev, &config);
+    int slave_addr = config.slave_addr;
+    if (!devfs_file_is_writable(file))
+        return -EPERM;
+
+    if (!buf || count == 0)
+        return -EFAULT;
+
+    uint32_t timeout = ((iic_driver_t*)(dev->drv))->timeout;
+    if (rvm_hal_iic_master_send(dev, slave_addr, buf, count, (mode & O_NONBLOCK) ? AOS_NO_WAIT : timeout) < 0) {
+        return -1;
+    }
+    return count;
+}
+
 static const devfs_file_ops_t devfs_iic_ops = {
     .ioctl      = _devfs_iic_ioctl,
     .poll       = NULL,
     .mmap       = NULL,
-    .read       = NULL,
-    .write      = NULL,
+    .read       = _devfs_iic_read,
+    .write      = _devfs_iic_write,
     .lseek      = NULL,
 };
 

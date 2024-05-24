@@ -24,7 +24,7 @@ public:
 
     enum class Level : int32_t
     {
-        // Level                 ssuggest bitrete
+        // Level                 ssuggest bitrate
         LEVEL_UNKNOWN = -99,
         LEVEL_1       = 10,   /* QCIF  (176x144)   64k bps */
         LEVEL_1_1     = 11,
@@ -39,7 +39,7 @@ public:
         LEVEL_4       = 40,   /* 1080p (1920x1080) 8500k bps */
         LEVEL_4_1     = 41,
         LEVEL_4_2     = 42,
-        LEVEL_5       = 50,   /* 2k    (2560x1920) 168M bps */
+        LEVEL_5       = 50,   /* 2k    (2560x1920) 12M bps */
         LEVEL_5_1     = 51,
         LEVEL_5_2     = 52,
     };
@@ -84,6 +84,65 @@ public:
     virtual int SendFrame(TMVideoFrame &frame, int timeout) = 0;
     virtual int RecvPacket(TMVideoPacket &pkt, int timeout) = 0;
 
+    virtual int GetDefaultBitrate(int width, int height, Profile profile)
+    {
+        int pix_num = width*height;
+        int target_bitrate;
+        double profile_factor;
+
+        if(width <=0 || height <= 0 || width*height > 3840*2160 || profile == Profile::UNKNOWN || profile > Profile::HIGH_444)
+        {
+            return -1;
+        }
+
+        if(profile < Profile::HIGH)
+        {
+            profile_factor = 1.0f;
+        }
+        else if(profile == Profile::HIGH)
+        {
+            profile_factor = 1.25f;
+        }
+        else 
+        {
+            profile_factor = 3.0f;
+        }
+
+        if(pix_num <= 176*144)  //QCIF
+        {
+            target_bitrate = 64;
+        }
+        else if(pix_num <= 352*288) //CIF
+        {
+            target_bitrate = 576;
+        }
+        else if(pix_num <= 720*576) //SD
+        {
+            target_bitrate = 2000;
+        }
+        else if(pix_num <= 1280*720) //HD
+        {
+            target_bitrate = 4000;
+        }
+        else if(pix_num <= 1920*1080) //1080p
+        {
+            target_bitrate = 8500;
+        }
+        else if(pix_num <= 2560*1920) //2K
+        {
+            target_bitrate = 12000;
+        }
+        else if(pix_num <= 3840*2160) //4K
+        {
+            target_bitrate = 20000;
+        }
+        else 
+        {
+            return -1;
+        }
+        target_bitrate *= profile_factor;
+        return target_bitrate;
+    }
 protected:
     TMPropertyList mDefaultPropertyList;
     TMPropertyList mCurrentPropertyList;
@@ -99,7 +158,7 @@ protected:
                           (uint32_t)TMMediaInfo::PictureType::I |
                           (uint32_t)TMMediaInfo::PictureType::P, "picture type"));
             pList[i]->Add(TMProperty((int)PropID::OUTPUT_GOP_NUMBER, 25, "group of picture"));
-            pList[i]->Add(TMProperty((int)PropID::OUTPUT_TARGET_BITRATE, 8000, "bitrate"));
+            pList[i]->Add(TMProperty((int)PropID::OUTPUT_TARGET_BITRATE, -1, "bitrate"));
             pList[i]->Add(TMProperty((int)PropID::OUTPUT_RATE_CONTROL_MODE, (int)TMVideoEncoder::RateControlMode::CBR, "rate control mode"));
             pList[i]->Add(TMProperty((int)PropID::OUTPUT_FPS, 25, "frame per second"));
             pList[i]->Add(TMProperty((int)PropID::CROP_ENABLE,      false, "crop enable"));

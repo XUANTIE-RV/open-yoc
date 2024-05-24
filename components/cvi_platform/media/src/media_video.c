@@ -438,7 +438,7 @@ int MEDIA_VIDEO_ViInit(PARAM_VI_CFG_S * pstViCfg)
 
     MEDIA_CHECK_RET(_meida_sensor_init(pstViCfg,&devNum),"_meida_sensor_init fail");
 
-    // CVI_VI_SetDevNum(devNum);
+    CVI_VI_SetDevNum(devNum);
 
     for (int i = 0; i < devNum; i++) {
         ViDev = i;

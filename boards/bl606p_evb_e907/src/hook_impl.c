@@ -22,7 +22,7 @@ extern size_t __heap_start;
 extern size_t __heap_end;
 extern size_t __heap2_start;
 extern size_t __heap2_end;
-#if defined(CONFIG_CPU_E907)
+#if defined(CONFIG_CPU_E907FP)
 extern size_t __heap3_start;
 extern size_t __heap3_end;
 extern size_t __heap4_start;
@@ -53,7 +53,7 @@ void krhino_init_hook(void)
     return;
 
     /* heap2 */
-#if defined(CONFIG_CPU_E907) // E907 heap cache able
+#if defined(CONFIG_CPU_E907FP) // E907 heap cache able
     h_end = (size_t)(&__heap2_end) | 0x40000000;
     h_start = (size_t)(&__heap2_start) | 0x40000000;
     g_mm_region[1].start = (uint8_t *)h_start;
@@ -68,7 +68,7 @@ void krhino_init_hook(void)
     /* auto define heap size */
     g_mm_region[1].len = (size_t)(&__heap2_end) - (size_t)(&__heap2_start);
 
-#if defined(CONFIG_CPU_E907)
+#if defined(CONFIG_CPU_E907FP)
     /* heap3 */
     h_end = (size_t)(&__heap3_end);
     h_start = (size_t)(&__heap3_start);
@@ -180,7 +180,7 @@ extern size_t __heap5_start;
 k_mm_region_t g_mm_region[] = {
     {(uint8_t *)&__heap_start, (size_t)0},
 //     {(uint8_t *)&__heap2_start, (size_t)0},
-// #if defined(CONFIG_CPU_E907)
+// #if defined(CONFIG_CPU_E907FP)
 //     {(uint8_t *)&__heap3_start, (size_t)0},
 //     {(uint8_t *)&__heap4_start, (size_t)0},
 //     {(uint8_t *)&__heap5_start, (size_t)0},

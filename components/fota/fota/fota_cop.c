@@ -54,7 +54,7 @@ static int cop_get_ota_url(char *ota_url, int len)
 
     ret = aos_kv_getstring(KV_FOTA_FROM_URL, ota_url, len);
     if (ret < 0) {
-        strcpy(ota_url, "http://occ.t-head.cn/api/image/ota/pull");
+        strcpy(ota_url, "http://www.xrvm.cn/api/image/ota/pull");
     }
 
     return ret;
@@ -446,7 +446,7 @@ static int cop_get_ota_url(char *ota_url, int len)
 
     ret = aos_kv_getstring(KV_FOTA_FROM_URL, ota_url, len);
     if (ret < 0) {
-        strcpy(ota_url, "http://occ.t-head.cn/api/image/ota/pull");
+        strcpy(ota_url, "http://www.xrvm.cn/api/image/ota/pull");
     }
 
     return ret;

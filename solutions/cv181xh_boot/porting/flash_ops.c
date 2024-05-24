@@ -1,8 +1,9 @@
 /*
  * Copyright (C) 2019-2020 Alibaba Group Holding Limited
  */
-#include <drv/spiflash.h>
 #include <yoc/partition.h>
+#if CONFIG_PARTITION_SUPPORT_SPINORFLASH
+#include <drv/spiflash.h>
 #include <yoc/partition_device.h>
 
 #define DGB_PRINT(...) printf(__VA_ARGS__)
@@ -97,3 +98,4 @@ int partition_flash_register(void)
     DGB_PRINT("%s, %d\n", __func__, __LINE__);
     return partition_device_register(&boot_flash_ops);
 }
+#endif

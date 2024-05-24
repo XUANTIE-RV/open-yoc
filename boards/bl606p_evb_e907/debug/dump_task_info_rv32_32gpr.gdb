@@ -82,7 +82,7 @@ define paddr
 
   # get tcb addr
   set $gdb_tcb_addr = (ktask_t *)((int)(klist_t *)(&g_kobj_list.task_head)->next - $gdb_offset)
-  
+
   # get task name
   set $gdb_task_name = ((ktask_t *)($gdb_tcb_addr))->task_name
   set $gdb_i = 0
@@ -94,39 +94,39 @@ define paddr
     p $gdb_task_name
     p *$gdb_tcb_addr
 
-    # set register to restore the task 
-    set $x1  = *(int *)((int)$gdb_tcb_addr->task_stack + 0)
-    set $x3  = *(int *)((int)$gdb_tcb_addr->task_stack + 4)
-    set $x4  = *(int *)((int)$gdb_tcb_addr->task_stack + 8)
-    set $x5  = *(int *)((int)$gdb_tcb_addr->task_stack + 12)
-    set $x6  = *(int *)((int)$gdb_tcb_addr->task_stack + 16)
-    set $x7  = *(int *)((int)$gdb_tcb_addr->task_stack + 20)
-    set $x8  = *(int *)((int)$gdb_tcb_addr->task_stack + 24)
-    set $x9  = *(int *)((int)$gdb_tcb_addr->task_stack + 28)
-    set $x10 = *(int *)((int)$gdb_tcb_addr->task_stack + 32)
-    set $x11 = *(int *)((int)$gdb_tcb_addr->task_stack + 36)
-    set $x12 = *(int *)((int)$gdb_tcb_addr->task_stack + 40)
-    set $x13 = *(int *)((int)$gdb_tcb_addr->task_stack + 44)
-    set $x14 = *(int *)((int)$gdb_tcb_addr->task_stack + 48)
-    set $x15 = *(int *)((int)$gdb_tcb_addr->task_stack + 52)
-    set $x16 = *(int *)((int)$gdb_tcb_addr->task_stack + 56)
-    set $x17 = *(int *)((int)$gdb_tcb_addr->task_stack + 60)
-    set $x18 = *(int *)((int)$gdb_tcb_addr->task_stack + 64)
-    set $x19 = *(int *)((int)$gdb_tcb_addr->task_stack + 68)
-    set $x20 = *(int *)((int)$gdb_tcb_addr->task_stack + 72)
-    set $x21 = *(int *)((int)$gdb_tcb_addr->task_stack + 76)
-    set $x22 = *(int *)((int)$gdb_tcb_addr->task_stack + 80)
-    set $x23 = *(int *)((int)$gdb_tcb_addr->task_stack + 84)
-    set $x24 = *(int *)((int)$gdb_tcb_addr->task_stack + 88)
-    set $x25 = *(int *)((int)$gdb_tcb_addr->task_stack + 92)
-    set $x26 = *(int *)((int)$gdb_tcb_addr->task_stack + 96)
-    set $x27 = *(int *)((int)$gdb_tcb_addr->task_stack + 100)
-    set $x28 = *(int *)((int)$gdb_tcb_addr->task_stack + 104)
-    set $x29 = *(int *)((int)$gdb_tcb_addr->task_stack + 108)
-    set $x30 = *(int *)((int)$gdb_tcb_addr->task_stack + 112)
-    set $x31 = *(int *)((int)$gdb_tcb_addr->task_stack + 116)
-    set $pc  = *(int *)((int)$gdb_tcb_addr->task_stack + 120)
-    set $sp = (int)($gdb_tcb_addr->task_stack) + 124
+    # set register to restore the task
+    set $x1  = *(int *)((int)$gdb_tcb_addr->task_stack + (4 + 132) + 0)
+    set $x3  = *(int *)((int)$gdb_tcb_addr->task_stack + (4 + 132) + 4)
+    set $x4  = *(int *)((int)$gdb_tcb_addr->task_stack + (4 + 132) + 8)
+    set $x5  = *(int *)((int)$gdb_tcb_addr->task_stack + (4 + 132) + 12)
+    set $x6  = *(int *)((int)$gdb_tcb_addr->task_stack + (4 + 132) + 16)
+    set $x7  = *(int *)((int)$gdb_tcb_addr->task_stack + (4 + 132) + 20)
+    set $x8  = *(int *)((int)$gdb_tcb_addr->task_stack + (4 + 132) + 24)
+    set $x9  = *(int *)((int)$gdb_tcb_addr->task_stack + (4 + 132) + 28)
+    set $x10 = *(int *)((int)$gdb_tcb_addr->task_stack + (4 + 132) + 32)
+    set $x11 = *(int *)((int)$gdb_tcb_addr->task_stack + (4 + 132) + 36)
+    set $x12 = *(int *)((int)$gdb_tcb_addr->task_stack + (4 + 132) + 40)
+    set $x13 = *(int *)((int)$gdb_tcb_addr->task_stack + (4 + 132) + 44)
+    set $x14 = *(int *)((int)$gdb_tcb_addr->task_stack + (4 + 132) + 48)
+    set $x15 = *(int *)((int)$gdb_tcb_addr->task_stack + (4 + 132) + 52)
+    set $x16 = *(int *)((int)$gdb_tcb_addr->task_stack + (4 + 132) + 56)
+    set $x17 = *(int *)((int)$gdb_tcb_addr->task_stack + (4 + 132) + 60)
+    set $x18 = *(int *)((int)$gdb_tcb_addr->task_stack + (4 + 132) + 64)
+    set $x19 = *(int *)((int)$gdb_tcb_addr->task_stack + (4 + 132) + 68)
+    set $x20 = *(int *)((int)$gdb_tcb_addr->task_stack + (4 + 132) + 72)
+    set $x21 = *(int *)((int)$gdb_tcb_addr->task_stack + (4 + 132) + 76)
+    set $x22 = *(int *)((int)$gdb_tcb_addr->task_stack + (4 + 132) + 80)
+    set $x23 = *(int *)((int)$gdb_tcb_addr->task_stack + (4 + 132) + 84)
+    set $x24 = *(int *)((int)$gdb_tcb_addr->task_stack + (4 + 132) + 88)
+    set $x25 = *(int *)((int)$gdb_tcb_addr->task_stack + (4 + 132) + 92)
+    set $x26 = *(int *)((int)$gdb_tcb_addr->task_stack + (4 + 132) + 96)
+    set $x27 = *(int *)((int)$gdb_tcb_addr->task_stack + (4 + 132) + 100)
+    set $x28 = *(int *)((int)$gdb_tcb_addr->task_stack + (4 + 132) + 104)
+    set $x29 = *(int *)((int)$gdb_tcb_addr->task_stack + (4 + 132) + 108)
+    set $x30 = *(int *)((int)$gdb_tcb_addr->task_stack + (4 + 132) + 112)
+    set $x31 = *(int *)((int)$gdb_tcb_addr->task_stack + (4 + 132) + 116)
+    set $pc  = *(int *)((int)$gdb_tcb_addr->task_stack + (4 + 132) + 120)
+    set $sp = (int)($gdb_tcb_addr->task_stack) + (4 + 132) + 124
 
     # print the task stack backtrace
     bt
@@ -138,15 +138,15 @@ define paddr
   end
 
   # restore the register
-  set  $x0 = $gdb_x0 
-  set  $x1 = $gdb_x1 
-  set  $x3 = $gdb_x3 
-  set  $x4 = $gdb_x4 
-  set  $x5 = $gdb_x5 
-  set  $x6 = $gdb_x6 
-  set  $x7 = $gdb_x7 
-  set  $x8 = $gdb_x8 
-  set  $x9 = $gdb_x9 
+  set  $x0 =  $gdb_x0
+  set  $x1 =  $gdb_x1
+  set  $x3 =  $gdb_x3
+  set  $x4 =  $gdb_x4
+  set  $x5 =  $gdb_x5
+  set  $x6 =  $gdb_x6
+  set  $x7 =  $gdb_x7
+  set  $x8 =  $gdb_x8
+  set  $x9 =  $gdb_x9
   set  $x10 = $gdb_x10
   set  $x11 = $gdb_x11
   set  $x12 = $gdb_x12
@@ -170,7 +170,7 @@ define paddr
   set  $x30 = $gdb_x30
   set  $x31 = $gdb_x31
   set  $mcause = $gdb_mcause
-  set  $pc = $gdb_pc 
+  set  $pc = $gdb_pc
 end
 
 paddr

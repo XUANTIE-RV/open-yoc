@@ -40,6 +40,13 @@ extern void rvm_eflash_drv_register(int idx);
 extern void rvm_spiflash_drv_register(int idx);
 
 /**
+ * @brief  register driver of spinandflash
+ * @param  [in] idx : index of the spinandflash
+ * @return None
+ */
+extern void rvm_spinandflash_drv_register(int idx);
+
+/**
  * @brief  register driver of adc
  * @param  [in] idx : index of the adc
  * @return None

@@ -1,11 +1,12 @@
 /*
  * Copyright (C) 2019-2020 Alibaba Group Holding Limited
  */
+#include <yoc/partition.h>
+#if CONFIG_PARTITION_SUPPORT_SD
 #include <mmc.h>
 #include <sd.h>
 #include <errno.h>
 #include <drv/sdif.h>
-#include <yoc/partition.h>
 #include <yoc/partition_device.h>
 
 #define DGB_PRINT(...) //printf(__VA_ARGS__)
@@ -41,7 +42,6 @@ static void *_boot_sd_find(int id)
         else
             g_sd_info.erase_size = (SDIO_SDCard.csd.eraseSectorSize + 1) * SDIO_SDCard.block_size;
         g_sd_info.device_size = (uint64_t)SDIO_SDCard.block_count * SDIO_SDCard.block_size;
-        g_sd_info.boot_area_size = 0;
         if (g_sd_info.block_size != SD_BLOCK_SIZE) {
             DGB_PRINTE("sd block_size is %d\n", g_sd_info.block_size);
             return NULL;
@@ -50,7 +50,6 @@ static void *_boot_sd_find(int id)
         printf("g_sd_info.sector_size:%d\n", g_sd_info.sector_size);
         printf("g_sd_info.block_size:%d\n", g_sd_info.block_size);
         printf("g_sd_info.erase_size:%d\n", g_sd_info.erase_size);
-        printf("g_sd_info.boot_area_size:%d\n", g_sd_info.boot_area_size);
         printf("g_sd_info.user_area_size:%ld\n", g_sd_info.device_size);
         g_sd_init_ok = 1;
     }
@@ -62,7 +61,6 @@ static int _boot_sd_info_get(void *handle, partition_device_info_t *info)
     if (handle && info != NULL) {
         info->block_size = g_sd_info.block_size;
         info->erase_size = g_sd_info.erase_size;
-        info->boot_area_size = g_sd_info.boot_area_size;
         info->device_size = g_sd_info.device_size;
         info->base_addr = 0;
         info->sector_size = 0;
@@ -72,7 +70,6 @@ static int _boot_sd_info_get(void *handle, partition_device_info_t *info)
         DGB_PRINT("info->block_size:0x%x\n", info->block_size);
         DGB_PRINT("info->device_size:0x%lx\n", info->device_size);
         DGB_PRINT("info->erase_size:0x%x\n", info->erase_size);
-        DGB_PRINT("info->boot_area_size:0x%x\n", info->boot_area_size);
         return 0;
     }
     DGB_PRINTE("info get arg e.\n");
@@ -251,3 +248,4 @@ int partition_usb_register(void)
 {
     return 0;
 }
+#endif

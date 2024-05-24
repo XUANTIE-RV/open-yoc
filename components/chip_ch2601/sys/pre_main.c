@@ -72,12 +72,9 @@ void section_bss_clear(void)
 
 __attribute__((weak)) void pre_main(void)
 {
-#ifndef CONFIG_KERNEL_RHINO
-#ifndef CONFIG_NUTTXMM_NONE
-    extern void mm_heap_initialize();
+#if  (!defined(CONFIG_KERNEL_RHINO))  &&  (!defined(CONFIG_NUTTXMM_NONE))  &&  (!defined(CONFIG_KERNEL_FREERTOS)) && (!defined(CONFIG_KERNEL_RTTHREAD))
+    extern void mm_heap_initialize(void);
     mm_heap_initialize();
 #endif
-#endif
-
     main();
 }

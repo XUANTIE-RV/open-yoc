@@ -226,7 +226,7 @@ export default {
       radioDevType: "",
       devname: [
         { label: "客厅灯", value: "light1", macAdd: "" },
-        { label: "窗帘", value: "screen", macAdd: "" },
+        { label: "窗帘", value: "screen1", macAdd: "" },
         //底层不支持obj_switch，现在先把开关当成obj_light类型，后面再改
         { label: "开关", value: "switch1", macAdd: "" },
       ],
@@ -240,6 +240,7 @@ export default {
       devType: [
         { label: "照明灯", value: "OBJ_LIGHT" },
         { label: "窗帘", value: "OBJ_SCREEN" },
+        { label: "开关", value: "OBJ_SWITCH" },
       ],
       operatedMac: "",
     };
@@ -390,7 +391,7 @@ export default {
     getDeviceName(device) {
       const deviceMap = {
         light1: "客厅灯",
-        screen: "窗帘",
+        screen1: "窗帘",
         switch1: "开关",
       };
 

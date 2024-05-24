@@ -44,6 +44,11 @@
 #define READ_BUFFER_SIZE FRAME_SIZE * READ_TIME
 #endif
 
+typedef struct read_buffer_t {
+    uint8_t   *buffer;
+    uint32_t  buffer_size;
+} read_buffer_t;
+
 static csi_codec_t              g_codec;
 static csi_codec_input_t        g_input_hdl;
 static csi_dma_ch_t             dma_ch_input_handle;
@@ -53,7 +58,8 @@ static aos_sem_t                g_input_sem;
 static csi_ringbuf_t            input_ring_buffer;
 static uint8_t                  start_run;
 static uint8_t                  g_input_buf[INPUT_BUFFER_SIZE];
-static uint8_t                  *g_read_buffer;
+static read_buffer_t            g_read_buffer;
+
 
 static void codec_input_event_cb_fun(csi_codec_input_t *i2s, csi_codec_event_t event, void *arg)
 {
@@ -120,10 +126,10 @@ static void input_task(void *priv)
     while (1) {
         input_wait();
         r_size = (g_input_size + INPUT_PERIOD_SIZE) < READ_BUFFER_SIZE ? INPUT_PERIOD_SIZE : (READ_BUFFER_SIZE-g_input_size);
-        size = csi_codec_input_read_async(&g_input_hdl, g_read_buffer + g_input_size, r_size);
-        if (size != INPUT_PERIOD_SIZE || g_input_size >= sizeof(g_read_buffer)) {
+        size = csi_codec_input_read_async(&g_input_hdl, g_read_buffer.buffer + g_input_size, r_size);
+        if (size != INPUT_PERIOD_SIZE || g_input_size >= g_read_buffer.buffer_size) {
             // printf("input stop, get (%d)ms data (%lld)\n", READ_TIME, aos_now_ms());
-            if (g_input_size >= sizeof(g_read_buffer)) {
+            if (g_input_size >= g_read_buffer.buffer_size ) {
                 size = 0;
             }
             printf("read size err(%u)(%u)\n", size, r_size);
@@ -152,8 +158,9 @@ static void input_cmd(char *wbuf, int wbuf_len, int argc, char **argv)
 
 void codec_input_init(void)
 {
-    g_read_buffer = aos_malloc(READ_BUFFER_SIZE);
-    if (g_read_buffer == NULL) {
+    g_read_buffer.buffer_size =  READ_BUFFER_SIZE;
+    g_read_buffer.buffer = aos_malloc(g_read_buffer.buffer_size);
+    if (g_read_buffer.buffer == NULL) {
         LOG("codec_input malloc read buffer failed!");
         return;
     }

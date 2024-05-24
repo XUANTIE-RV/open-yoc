@@ -1,7 +1,7 @@
 
 ## 第一部分： 基础信息
 name: bl606p_evb_e907                               # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
-version: v7.8.0                                   # <必选项> 组件版本号
+version: v7.9.0                                   # <必选项> 组件版本号
 description: bl606 board configure                  # <必选项> 建议至少20字以上
 type: board                                         # <必选项> 组件类型，为：solution, chip, board, common, sdk
 license: Apache license v2.0                        # <可选项> 源代码的许可证，要确保所有代码、文件的许可证不冲突。如：MIT，Apache license v2.0，BSD
@@ -118,7 +118,7 @@ def_config:
   CLI_CONFIG_STACK_SIZE: 8192
   CONFIG_LFS_BLOCK_CYCLES: 500
   CONFIG_LFS_MOUNTPOINT: "/"
-  CONFIG_CPU_E907: y
+  CONFIG_CPU_E907FP: 1
   CONFIG_HAL_UART_FIFO_SIZE: 32
   HAVE_MBEDTLS_USER_CONFIG: 1
   CONFIG_KV_SMART: 1

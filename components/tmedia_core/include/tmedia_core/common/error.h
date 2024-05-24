@@ -67,6 +67,7 @@ public:
         TM_PROTOCOL_NOT_FOUND = MAKE_FOURCC('P','R','O','T'),   // Protocol not found or support
         TM_STATE_ERROR        = MAKE_FOURCC('S','T','A','T'),   // State error
         TM_TIMEOUT            = MAKE_FOURCC('T','O','U','T'),   // time out
+        TM_NO_NEW_FRAME       = MAKE_FOURCC('N','O','N','F'),   // No new frame
     };
 
     static const char* StrError(TMResult::ID result);

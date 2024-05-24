@@ -1,6 +1,6 @@
 ## 第一部分： 基础信息
 name: mpegts                                      # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
-version: v7.8.0                                    # <必选项> 组件版本号
+version: v7.9.0                                    # <必选项> 组件版本号
 description: mpegts是ts媒体文件格式的封装&解封装基础库 # <必选项> 建议至少20字以上
 type: common                                        # <必选项> 组件类型，为：solution, chip, board, common, sdk
 tag: 核心模块                                       # <可选项> 组件分类，缺省值： ''
@@ -39,13 +39,16 @@ license: Apache license v2.0                        # <可选项> 源代码的�
 build_config:
   include:
     - include
-  libpath:
-    - libs/<cpu>
-  libs:
-    - mpegts_prebuild
 
 # source_file:                             # <可选项> 指定参与编译的源代码文件，支持通配符，采用相对路径
 #   - src/*.c                              # 例：组件 src 目录下所有的扩展名为 c 的源代码文件
+source_file:
+  - src/ts_misc.c
+  - src/bytes_io.cpp
+  - src/ts_format.cpp
+  - src/ts_frame.cpp
+  - src/ts_muxer.cpp
+  - src/ts_demuxer.cpp
 
 ## 第五部分：配置信息
 # def_config:                              # 组件的可配置项
@@ -62,9 +65,6 @@ install:
   - dest: "include/mpegts"
     source:
       - "include/mpegts/*"
-  - dest: "lib"
-    source:
-      - "libs/<cpu>/*.a"
 
 ## 第七部分：导出部分
 # export:

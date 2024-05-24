@@ -38,11 +38,11 @@ private:
     virtual void InitDefaultPropertyList()
     {
         mDefaultPropertyList.Reset();
-        mDefaultPropertyList.Assign(TMVideoOutput::PropID::VIDEO_OUT_COORDINATE_X, 0);
-        mDefaultPropertyList.Assign(TMVideoOutput::PropID::VIDEO_OUT_COORDINATE_Y, 0);
-        mDefaultPropertyList.Assign(TMVideoOutput::PropID::VIDEO_OUT_PIXEL_WIDTH, 320);
-        mDefaultPropertyList.Assign(TMVideoOutput::PropID::VIDEO_OUT_PIXEL_HEIGHT, 480);
-        mDefaultPropertyList.Assign(TMVideoOutput::PropID::VIDEO_OUT_PIXEL_FORMAT, (int32_t)(TMImageInfo::PixelFormat::PIXEL_FORMAT_NV21));
+        mDefaultPropertyList.Assign(TMVideoOutput::PropID::VIDEO_OUT_SURFACE_COORDINATE_X, 0);
+        mDefaultPropertyList.Assign(TMVideoOutput::PropID::VIDEO_OUT_SURFACE_COORDINATE_Y, 0);
+        mDefaultPropertyList.Assign(TMVideoOutput::PropID::VIDEO_OUT_SURFACE_PIXEL_WIDTH, 320);
+        mDefaultPropertyList.Assign(TMVideoOutput::PropID::VIDEO_OUT_SURFACE_PIXEL_HEIGHT, 480);
+        mDefaultPropertyList.Assign(TMVideoOutput::PropID::VIDEO_OUT_PICTURE_PIXEL_FORMAT, (int32_t)(TMImageInfo::PixelFormat::PIXEL_FORMAT_NV21));
         mDefaultPropertyList.Assign(TMVideoOutput::PropID::VIDEO_OUT_FRAME_RATE, 60);
     }
 };

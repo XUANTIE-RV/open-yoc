@@ -1,7 +1,7 @@
 
 ## 第一部分： 基础信息
 name: libc_stub                                     # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
-version: v7.8.0                                    # <必选项> 组件版本号
+version: v7.9.0                                    # <必选项> 组件版本号
 description: c库扩展                                 # <必选项> 建议至少20字以上
 type: common                                        # <必选项> 组件类型，为：solution, chip, board, common, sdk
 tag: 核心模块                                        # <可选项> 组件分类，缺省值： ''
@@ -53,6 +53,7 @@ source_file:
 #   CONFIG_PARAM_NOT_CHECK: y
 #   CONFIG_CLI: y
 def_config:
+  CONFIG_LIBC_MINI_PRINTF_SUPPORT: 0       # use mini_printf.c
   CONFIG_MEMALIGN_SUPPORT: 1
   CONFIG_NEWLIB_REENTRY_SUPPORT: 1         # add multhread-protect for sdio/stream iface
 

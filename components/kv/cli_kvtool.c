@@ -34,6 +34,11 @@ static void cmd_kvfs_func(char *wbuf, int wbuf_len, int argc, char **argv)
             partition_info_t *info = partition_info_get(h);
             partition_erase_size(h, 0, info->length);
             partition_close(h);
+        } else if (strcmp(argv[1], "reset") == 0) {
+            ret = aos_kv_reset();
+            if (ret < 0) {
+                printf("kv reset failed\n");
+            }
         }
 
         return;

@@ -306,7 +306,7 @@ static wifi_mode_e app_network_start(void)
 
     utask_t *task = utask_new("netmgr", 10 * 1024, QUEUE_MSG_COUNT, AOS_DEFAULT_APP_PRI);
 
-#if defined(CONFIG_BOARD_ETH) && CONFIG_BOARD_ETH
+#if defined(BOARD_ETH_SUPPORT) && BOARD_ETH_SUPPORT
     app_netmgr_hdl = netmgr_dev_eth_init();
 #else
     app_netmgr_hdl = netmgr_dev_wifi_init();

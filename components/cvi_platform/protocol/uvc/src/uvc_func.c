@@ -9,6 +9,9 @@
 #include "cvi_vpss.h"
 #include "cvi_sys.h"
 
+
+
+
 #define VIDEO_IN_EP 0x81
 
 #define WIDTH  (unsigned int)(1600)
@@ -417,6 +420,7 @@ static void *send_to_uvc()
 	
     return 0;
 }
+
 
 static struct usbd_endpoint video_in_ep;
 static struct usbd_interface intf0;

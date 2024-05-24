@@ -39,7 +39,7 @@ int board_load_amp_fw(uint8_t cpuid, void * loaddr, const uint8_t * fw, uint32_t
 
     if (fw && size) {
         memcpy(loaddr, fw, size);
-        csi_dcache_clean_invalid_range((uint32_t *)CACHE_ALIGN_DOWN((uint32_t)loaddr), CACHE_ALIGN_UP(size));
+        csi_dcache_clean_invalid_range((unsigned long *)CACHE_ALIGN_DOWN((uint32_t)loaddr), CACHE_ALIGN_UP(size));
     }
 
     boot_c906((int)loaddr);

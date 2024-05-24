@@ -548,6 +548,11 @@ void lwip_socket_thread_cleanup(void); /* LWIP_NETCONN_SEM_PER_THREAD==1: destro
 #define lwip_sendmsg      sendmsg
 #define lwip_sendto       sendto
 #define lwip_socket       socket
+#define lwip_ioctl        ioctlsocket
+#define lwip_inet_ntop    inet_ntop
+#define lwip_inet_pton    inet_pton
+
+#if LWIP_POSIX_SOCKETS_IO_NAMES
 #if LWIP_SOCKET_SELECT
 #define lwip_select       select
 #define lwip_select2      select2
@@ -555,11 +560,6 @@ void lwip_socket_thread_cleanup(void); /* LWIP_NETCONN_SEM_PER_THREAD==1: destro
 #if LWIP_SOCKET_POLL
 #define lwip_poll         poll
 #endif
-#define lwip_ioctl        ioctlsocket
-#define lwip_inet_ntop    inet_ntop
-#define lwip_inet_pton    inet_pton
-
-#if LWIP_POSIX_SOCKETS_IO_NAMES
 #define lwip_read         read
 #define lwip_readv        readv
 #define lwip_write        write
@@ -645,14 +645,6 @@ int lwip_inet_pton(int af, const char *src, void *dst);
 #define sendto(s,dataptr,size,flags,to,tolen)     lwip_sendto(s,dataptr,size,flags,to,tolen)
 /** @ingroup socket */
 #define socket(domain,type,protocol)              lwip_socket(domain,type,protocol)
-#if LWIP_SOCKET_SELECT
-/** @ingroup socket */
-#define select(maxfdp1,readset,writeset,exceptset,timeout)     lwip_select(maxfdp1,readset,writeset,exceptset,timeout)
-#endif
-#if LWIP_SOCKET_POLL
-/** @ingroup socket */
-#define poll(fds,nfds,timeout)                    lwip_poll(fds,nfds,timeout)
-#endif
 /** @ingroup socket */
 #define ioctlsocket(s,cmd,argp)                   lwip_ioctl(s,cmd,argp)
 /** @ingroup socket */
@@ -661,6 +653,14 @@ int lwip_inet_pton(int af, const char *src, void *dst);
 #define inet_pton(af,src,dst)                     lwip_inet_pton(af,src,dst)
 
 #if LWIP_POSIX_SOCKETS_IO_NAMES
+#if LWIP_SOCKET_SELECT
+/** @ingroup socket */
+#define select(maxfdp1,readset,writeset,exceptset,timeout)     lwip_select(maxfdp1,readset,writeset,exceptset,timeout)
+#endif
+#if LWIP_SOCKET_POLL
+/** @ingroup socket */
+#define poll(fds,nfds,timeout)                    lwip_poll(fds,nfds,timeout)
+#endif
 /** @ingroup socket */
 #define read(s,mem,len)                           lwip_read(s,mem,len)
 /** @ingroup socket */

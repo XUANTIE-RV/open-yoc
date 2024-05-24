@@ -26,7 +26,7 @@ void operator delete[] (void *ptr)
     return aos_free(ptr);
 }
 
-void __cxa_pure_virtual(void)
+__attribute__((weak)) void __cxa_pure_virtual(void)
 {
     printf("Illegal to call a pure virtual function.\n");
 }

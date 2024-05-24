@@ -30,7 +30,7 @@
 #endif
 
 #ifndef CONFIG_PCM_DATA_INTERLEAVED
-#define CONFIG_PCM_DATA_INTERLEAVED   0
+#define CONFIG_PCM_DATA_INTERLEAVED   1
 #endif
 
 static snd_pcm_t *pcm_handle        = NULL;
@@ -170,7 +170,7 @@ static int voice_pcm_acquire(void *data, int len)
 #if defined(FULL_DTB) || defined(TDM2_DTB)
     /* 2路转3路，第2路置空 */
     for (int i = 0; i < g_hw_frames; i++) {
-#if defined(CONFIG_PCM_DATA_INTERLEAVED) && CONFIG_PCM_DATA_INTERLEAVED > 1
+#if defined(CONFIG_PCM_DATA_INTERLEAVED) && CONFIG_PCM_DATA_INTERLEAVED
         prt_dest[0] = ptr_src[0];
         prt_dest[1] = ptr_src[1];
         prt_dest[2] = 0;

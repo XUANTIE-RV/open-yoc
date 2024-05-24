@@ -43,6 +43,7 @@ uint32_t adc_pin = 0xffff, adc_pin0 = 0xffff, adc_pin1 = 0xffff;
 #endif
 uint8_t is_iic_master = false;
 uint8_t is_iic_task = false;
+uint8_t is_uart_task = false;
 
 uint32_t uart_pin[2] = {0};
 uint32_t uart_task1_pin[2] = {0}, uart_task2_pin[2] = {0};
@@ -153,7 +154,7 @@ static void appdemohal_cmd(char *wbuf, int wbuf_len, int argc, char **argv)
     else if (strcmp(argv[1], "uart")== 0) {
         sscanf(argv[2], "%u", &uart_pin[0]);
         sscanf(argv[3], "%u", &uart_pin[1]);
-        
+        is_uart_task = false;
         hal_uart_demo(uart_pin);
         devfs_uart_demo(uart_pin);
     } else if (strcmp(argv[1], "uart_multiple_task")== 0) {
@@ -162,9 +163,15 @@ static void appdemohal_cmd(char *wbuf, int wbuf_len, int argc, char **argv)
 
         sscanf(argv[4], "%u", &uart_task2_pin[0]);
         sscanf(argv[5], "%u", &uart_task2_pin[1]);
-
+        is_uart_task = true;
         hal_task_uart_demo(uart_task1_pin, uart_task2_pin);
         devfs_task_uart_demo(uart_task1_pin, uart_task2_pin);
+    } else if (strcmp(argv[1], "uart_poll")== 0) {
+        sscanf(argv[2], "%u", &uart_pin[0]);
+        sscanf(argv[3], "%u", &uart_pin[1]);
+        is_uart_task = false;
+        hal_uart_poll_demo(uart_pin);
+        devfs_uart_poll_demo(uart_pin);
     }
 #endif 
     else if (strcmp(argv[1], "iic")== 0) {
@@ -198,11 +205,13 @@ static void appdemohal_cmd(char *wbuf, int wbuf_len, int argc, char **argv)
                     sscanf(argv[3], "%u", &iic_pin0);
                     sscanf(argv[4], "%u", &iic_pin1);
                     hal_task_iic_demo(is_iic_master, iic_pin0, iic_pin1);
+                    devfs_task_iic_demo(is_iic_master, iic_pin0, iic_pin1);
                 } else if(strcmp(argv[2], "slave")== 0) {
                     is_iic_master = false;
                     sscanf(argv[3], "%u", &iic_pin0);
                     sscanf(argv[4], "%u", &iic_pin1);
                     hal_task_iic_demo(is_iic_master, iic_pin0, iic_pin1);
+                    devfs_task_iic_demo(is_iic_master, iic_pin0, iic_pin1);
                 }else {
                      goto help;
                 } 
@@ -335,4 +344,6 @@ int devfs_wifi_demo(void) {return 0;}
 int devfs_timer_demo(void) {return 0;}
 int devfs_pwm_out_demo(uint8_t gpio_pin, uint8_t pwm_id, uint32_t freq, float duty_cycle, uint32_t freq_chg, float duty_cycle_chg) {return 0;}
 int devfs_spi_demo(APP_TEST_SPI_FUNCTION function, uint32_t *gpio_pin) {return 0;}
+int devfs_uart_poll_demo(uint32_t *gpio_pins) {return 0;};
+int devfs_task_iic_demo(uint8_t is_master, uint8_t gpio_pin0, uint8_t gpio_pin1) {return 0;};
 #endif

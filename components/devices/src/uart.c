@@ -15,35 +15,47 @@
         return -1; \
 } while(0)
 
-#define UART_TX_LOCK(dev)                                                \
-    do                                                                   \
-    {                                                                    \
-        if (!aos_mutex_is_valid(&UART_DRIVER(dev)->tx_mtx))              \
-        {                                                                \
-            aos_mutex_new(&UART_DRIVER(dev)->tx_mtx);                    \
-            aos_mutex_lock(&UART_DRIVER(dev)->tx_mtx, AOS_WAIT_FOREVER); \
-        }                                                                \
+#define UART_TX_LOCK(dev)                                                                        \
+    do                                                                                           \
+    {                                                                                            \
+        if (((rvm_dev_t *)dev)->id < UART_DEV_MAX_NUM)                                           \
+        {                                                                                        \
+            if (!aos_mutex_is_valid(&UART_DRIVER(dev)->tx_mtx[((rvm_dev_t *)dev)->id]))          \
+            {                                                                                    \
+                aos_mutex_new(&UART_DRIVER(dev)->tx_mtx[((rvm_dev_t *)dev)->id]);                \
+            }                                                                                    \
+            aos_mutex_lock(&UART_DRIVER(dev)->tx_mtx[((rvm_dev_t *)dev)->id], AOS_WAIT_FOREVER); \
+        }                                                                                        \
     } while (0)
-#define UART_TX_UNLOCK(dev)                                \
-    do                                                     \
-    {                                                      \
-        if (aos_mutex_is_valid(&UART_DRIVER(dev)->tx_mtx)) \
-            aos_mutex_unlock(&UART_DRIVER(dev)->tx_mtx);   \
+#define UART_TX_UNLOCK(dev)                                                            \
+    do                                                                                 \
+    {                                                                                  \
+        if (((rvm_dev_t *)dev)->id < UART_DEV_MAX_NUM)                                 \
+        {                                                                              \
+            if (aos_mutex_is_valid(&UART_DRIVER(dev)->tx_mtx[((rvm_dev_t *)dev)->id])) \
+                aos_mutex_unlock(&UART_DRIVER(dev)->tx_mtx[((rvm_dev_t *)dev)->id]);   \
+        }                                                                              \
     } while (0)
-#define UART_RX_LOCK(dev)                                                \
-    do                                                                   \
-    {                                                                    \
-        if (!aos_mutex_is_valid(&UART_DRIVER(dev)->rx_mtx))              \
-        {                                                                \
-            aos_mutex_new(&UART_DRIVER(dev)->rx_mtx);                    \
-            aos_mutex_lock(&UART_DRIVER(dev)->rx_mtx, AOS_WAIT_FOREVER); \
-        }                                                                \
+#define UART_RX_LOCK(dev)                                                                        \
+    do                                                                                           \
+    {                                                                                            \
+        if (((rvm_dev_t *)dev)->id < UART_DEV_MAX_NUM)                                           \
+        {                                                                                        \
+            if (!aos_mutex_is_valid(&UART_DRIVER(dev)->rx_mtx[((rvm_dev_t *)dev)->id]))          \
+            {                                                                                    \
+                aos_mutex_new(&UART_DRIVER(dev)->rx_mtx[((rvm_dev_t *)dev)->id]);                \
+            }                                                                                    \
+            aos_mutex_lock(&UART_DRIVER(dev)->rx_mtx[((rvm_dev_t *)dev)->id], AOS_WAIT_FOREVER); \
+        }                                                                                        \
     } while (0)
-#define UART_RX_UNLOCK(dev)                                \
-    do                                                     \
-    {                                                      \
-        if (aos_mutex_is_valid(&UART_DRIVER(dev)->rx_mtx)) \
-            aos_mutex_unlock(&UART_DRIVER(dev)->rx_mtx);   \
+#define UART_RX_UNLOCK(dev)                                                            \
+    do                                                                                 \
+    {                                                                                  \
+        if (((rvm_dev_t *)dev)->id < UART_DEV_MAX_NUM)                                 \
+        {                                                                              \
+            if (aos_mutex_is_valid(&UART_DRIVER(dev)->rx_mtx[((rvm_dev_t *)dev)->id])) \
+                aos_mutex_unlock(&UART_DRIVER(dev)->rx_mtx[((rvm_dev_t *)dev)->id]);   \
+        }                                                                              \
     } while (0)
 
 void rvm_hal_uart_config_default(rvm_hal_uart_config_t *config)
@@ -170,14 +182,14 @@ int rvm_hal_uart_recv(rvm_dev_t *dev, void *data, uint32_t size, uint32_t timeou
     return ret;
 }
 
-void rvm_hal_uart_set_event(rvm_dev_t *dev, void (*event)(rvm_dev_t *dev, int event_id, void *priv), void *priv)
+void rvm_hal_uart_set_event(rvm_dev_t *dev, rvm_hal_uart_callback callback, void *priv)
 {
     aos_check_param(dev);
     if (device_valid(dev, "uart") != 0 && device_valid(dev, "usb_serial") != 0)
         return;
 
     device_lock(dev);
-    UART_DRIVER(dev)->set_event(dev, event, priv);
+    UART_DRIVER(dev)->set_event(dev, callback, priv);
     device_unlock(dev);
 }
 
@@ -189,6 +201,19 @@ int rvm_hal_uart_trans_dma_enable(rvm_dev_t *dev, bool enable)
 
     device_lock(dev);
     ret = UART_DRIVER(dev)->trans_dma_enable(dev, enable);
+    device_unlock(dev);
+
+    return ret;
+}
+
+int rvm_hal_uart_get_state(rvm_dev_t *dev, rvm_hal_uart_state_t* state)
+{
+    int ret;
+
+    UART_VAILD(dev);
+
+    device_lock(dev);
+    ret = UART_DRIVER(dev)->get_state(dev, state);
     device_unlock(dev);
 
     return ret;

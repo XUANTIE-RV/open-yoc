@@ -978,10 +978,6 @@ typedef struct {
 #define DW_SPI2_BASE                (DW_SPI0_BASE + 2 * DW_SPI_REG_SIZE)
 #define DW_SPI3_BASE                (DW_SPI0_BASE + 3 * DW_SPI_REG_SIZE)
 
-#define PLIC_BASE           (0x70000000UL)
-#define CORET_BASE          (PLIC_BASE + 0x4000000UL)               /*!< CORET Base Address */
-#define PLIC                ((PLIC_Type *)PLIC_BASE)
-
 #define DW_SDIO0_BASE               0x04320000  // SDIO
 #define DW_SDIO1_BASE               0x04310000  // SD
 #define DW_SDIO2_BASE               0x04300000  // MMC

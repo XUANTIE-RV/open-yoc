@@ -85,6 +85,66 @@ public:
     virtual int SendFrame(TMVideoFrame &frame, int timeout) = 0;
     virtual int RecvPacket(TMVideoPacket &pkt, int timeout) = 0;
 
+    virtual int GetDefaultBitrate(int width, int height, Tier tier)
+    {
+        int pix_num = width*height;
+        int target_bitrate;
+        double tier_factor;
+
+        if(width <=0 || height <= 0 || width*height > 7680*4320 || tier == Tier::UNKNOWN || tier > Tier::HIGH)
+        {
+            return -1;
+        }
+
+        if(tier < Tier::HIGH)
+        {
+            tier_factor = 1.0f;
+        }
+        else 
+        {
+            tier_factor = 3.0f;
+        }
+
+        if(pix_num <= 176*144)  //QCIF
+        {
+            target_bitrate = 64;
+        }
+        else if(pix_num <= 352*288) //CIF
+        {
+            target_bitrate = 576;
+        }
+        else if(pix_num <= 720*576) //SD
+        {
+            target_bitrate = 2000;
+        }
+        else if(pix_num <= 1280*720) //HD
+        {
+            target_bitrate = 2500;
+        }
+        else if(pix_num <= 1920*1080) //1080p
+        {
+            target_bitrate = 6000;
+        }
+        else if(pix_num <= 2560*1920) //2K
+        {
+            target_bitrate = 12000;
+        }
+        else if(pix_num <= 3840*2160) //4K
+        {
+            target_bitrate = 18000;
+        }
+        else if(pix_num <= 7680*4320) //8K
+        {
+            target_bitrate = 60000;
+        }
+        else 
+        {
+            return -1;
+        }
+        target_bitrate *= tier_factor;
+        return target_bitrate;
+    }
+
 protected:
     TMPropertyList mDefaultPropertyList;
     TMPropertyList mCurrentPropertyList;
@@ -101,7 +161,7 @@ protected:
                           (uint32_t)TMMediaInfo::PictureType::I |
                           (uint32_t)TMMediaInfo::PictureType::P, "picture type"));
             pList[i]->Add(TMProperty((int)PropID::OUTPUT_GOP_NUMBER, 25, "group of picture"));
-            pList[i]->Add(TMProperty((int)PropID::OUTPUT_TARGET_BITRATE, 2000, "bitrate"));
+            pList[i]->Add(TMProperty((int)PropID::OUTPUT_TARGET_BITRATE, -1, "bitrate"));
             pList[i]->Add(TMProperty((int)PropID::OUTPUT_RATE_CONTROL_MODE, (int)TMVideoEncoder::RateControlMode::CBR, "rate control mode"));
             pList[i]->Add(TMProperty((int)PropID::OUTPUT_FPS, 25, "frame per second"));
             pList[i]->Add(TMProperty((int)PropID::CROP_ENABLE,      false, "crop enable"));

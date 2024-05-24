@@ -113,7 +113,7 @@ output gain
 input
 ```
 
-在收到类似打印，表示录音5000ms数据已完成
+在收到类似打印，表示录音大约2000ms数据已完成
 
 ```
 read size err(0)(0)
@@ -122,7 +122,7 @@ read size err(0)(0)
 使用gdb挂入，dump出所需数据，使用相关音频软件查看rec.pcm的录音质量
 
 ```
-dump binary memory rec.pcm g_read_buffer g_read_buffer+g_input_size 
+dump binary memory rec.pcm g_read_buffer.buffer g_read_buffer.buffer+g_input_size 
 ```
 
 ## loop
@@ -132,6 +132,7 @@ dump binary memory rec.pcm g_read_buffer g_read_buffer+g_input_size
 ```cli
 loop
 ```
+注:播放音乐的时长是大约5000ms，录音的时长大约是2000ms。
 
 在收到类似打印，表示loop完成
 
@@ -143,6 +144,6 @@ audio tx stop
 使用gdb挂入，dump出所需数据，使用相关音频软件查看rec.pcm的录音质量
 
 ```
-dump binary memory rec.pcm g_read_buf g_read_buf+g_recv_size 
+dump binary memory rec.pcm g_read_buf.buffer g_read_buf.buffer+g_recv_size 
 ```
 

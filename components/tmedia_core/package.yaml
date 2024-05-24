@@ -1,6 +1,6 @@
 ## 第一部分： 基础信息
 name: tmedia_core                                   # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
-version: v7.8.0                                    # <必选项> 组件版本号
+version: v7.9.0                                    # <必选项> 组件版本号
 description: tmedia-core implement                  # <必选项> 建议至少20字以上
 type: common                                        # <必选项> 组件类型，为：solution, chip, board, common, sdk
 tag: 通用组件                                       # <可选项> 组件分类，缺省值： ''
@@ -31,18 +31,37 @@ license: Apache license v2.0                        # <可选项> 源代码的�
 #     XXX: 1                               #   -DXXX=1
 #     AAA: 1                               #   -DAAA
 #     STR: "abc"                           #   -DSTR="abc"
+#   libs:                                  # 该组件中支持的二进制静态库,如：libxxx.a, libyyy.a
+#     - xxx                                #   -lxxx
+#     - yyy                                #   -lyyy
+#   libpath:                               # 指定静态库所在的路径（相对于该组件路径）
+#     - libs                               #   -Llibs
 build_config:
+  internal_include:
+    - src/memory/src
   include:
     - include
-  libs:                                  # 该组件中支持的二进制静态库,如：libxxx.a, libyyy.a
-    - tmedia_core_prebuild               #   -lxxx
-  libpath:                               # 指定静态库所在的路径（相对于该组件路径）
-    - libs/<cpu>
 
 # source_file:                             # <可选项> 指定参与编译的源代码文件，支持通配符，采用相对路径
 #   - src/*.c                              # 例：组件 src 目录下所有的扩展名为 c 的源代码文件
-# source_file:
+source_file:
+  - src/util/src/*.cpp
+  - src/common/src/*.cpp
+  - src/bind/src/*.cpp
+  - src/memory/src/*.c
+  - src/entity/codec/src/codec.cpp
+  - src/entity/codec/src/codec_factory.cpp
+  - src/entity/codec/src/codec_params.cpp
+  - src/entity/codec/src/decoder.cpp
+  - src/entity/codec/src/encoder.cpp
+ #- src/entity/codec/src/mpeg4_decoder.cpp
 
+  - src/entity/format/src/*.cpp
+  - src/entity/parser/src/*.cpp
+  - src/entity/vpss/src/*.cpp
+  - src/entity/filesink/src/*.cpp
+  - src/entity/filesrc/src/*.cpp
+  - src/entity/entity.cpp
 
 ## 第五部分：配置信息
 # def_config:                              # 组件的可配置项

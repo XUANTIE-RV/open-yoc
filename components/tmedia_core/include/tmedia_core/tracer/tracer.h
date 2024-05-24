@@ -21,7 +21,7 @@
 #endif
 
 #define CAT_DEBUG "debug"
-#define CAT_AIE_IMAGEPROC "ImageProc"
+#define CAT_AIE_IMAGEPROC "TMImageProc"
 
 class TMTracer
 {
@@ -45,7 +45,7 @@ private:
 
 PERFETTO_DEFINE_CATEGORIES(
     perfetto::Category(CAT_AIE_IMAGEPROC)
-        .SetDescription("AIEngine-ImageProc"),
+        .SetDescription("TMAIEngine-TMImageProc"),
     perfetto::Category(CAT_DEBUG)
         .SetDescription("Verbose events"));
 

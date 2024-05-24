@@ -125,6 +125,8 @@ static int event_id_to_audio_id(int event_id)
 void aui_mic_send_wakeup_check(int checked)
 {
     evt_param_t param;
+
+    memset(&param, 0, sizeof(param));
     param.ival = checked;
     param.evt_id = MIC_EVENT_SESSION_WWV;
 

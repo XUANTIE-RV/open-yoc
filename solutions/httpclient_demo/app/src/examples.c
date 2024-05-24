@@ -231,7 +231,7 @@ static void https_async()
 void show_help(void)
 {
     aos_cli_printf("Usage: web http|https\n");
-    aos_cli_printf("     : web http get <url>, such as web http get http://occ.t-head.cn \n");
+    aos_cli_printf("     : web http get <url>, such as web http get http://www.xrvm.cn \n");
 }
 
 static void webclient_main(int argc, char **argv)

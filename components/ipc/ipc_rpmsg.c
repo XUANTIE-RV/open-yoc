@@ -22,7 +22,7 @@
 #define IPC_WRITE_EVENT CHANNEL_WRITE_EVENT
 #define IPC_READ_EVENT  CHANNEL_READ_EVENT
 
-#define RPMSG_LITE_SHMEM_BASE 0xB8000000
+#define RPMSG_LITE_SHMEM_BASE 0x1E000000
 #define RPMSG_LITE_LINK_ID    (0)
 
 #define RPMSG_LITE_NS_ANNOUNCE_STRING "rpmsg-virtual-char-channel-1"
@@ -54,27 +54,28 @@ static void ipc_service_entry(void *priv)
     rpmsg_queue_handle          rp_queue;
     message_t                   msg;
     int                         result = 0;
-    volatile unsigned long      remote_addr;
+    volatile uint32_t           remote_addr;
     void *                      rx_buf;
-    int                         len;
+    uint32_t                    len;
     int                         link_state = 0;
 
     memset(&msg, 0x00, sizeof(message_t));
+    struct rpmsg_lite_instance *dev = (struct rpmsg_lite_instance *)ipc->ch->context;
 
-    link_state = rpmsg_lite_wait_for_link_up(ipc->ch, RL_BLOCK);
+    link_state = rpmsg_lite_wait_for_link_up(dev, RL_BLOCK);
     if (link_state == 1) {
         printf("Link up!\r\n");
     }
 
-    rp_queue = rpmsg_queue_create(ipc->ch);
-    ept      = rpmsg_lite_create_ept(ipc->ch, ser->id, rpmsg_queue_rx_cb, &rp_queue);
-    rpmsg_ns_announce(ipc->ch, ept, RPMSG_LITE_NS_ANNOUNCE_STRING, RL_NS_CREATE);
+    rp_queue = rpmsg_queue_create(dev);
+    ept      = rpmsg_lite_create_ept(dev, ser->id, rpmsg_queue_rx_cb, &rp_queue);
+    rpmsg_ns_announce(dev, ept, RPMSG_LITE_NS_ANNOUNCE_STRING, RL_NS_CREATE);
     printf("\r\nNameservice sent, ready for incoming messages...\r\n");
     ser->rp_ept = ept;
     while (1) {
         /* Get RPMsg rx buffer with message */
-        result = rpmsg_queue_recv_nocopy(ser->ipc->ch, &rp_queue, (unsigned long *)&remote_addr, (char **)&rx_buf, &len,
-                                         RL_BLOCK);
+        result
+            = rpmsg_queue_recv_nocopy(dev, &rp_queue, (uint32_t *)&remote_addr, (char **)&rx_buf, &len, RL_BLOCK);
         if (result != 0) {
             aos_assert(false);
         }
@@ -85,7 +86,7 @@ static void ipc_service_entry(void *priv)
             ser->process(ipc, &msg, ser->priv);
         }
         /* Release held RPMsg rx buffer */
-        result = rpmsg_queue_nocopy_free(ser->ipc->ch, rx_buf);
+        result = rpmsg_queue_nocopy_free(dev, rx_buf);
         if (result != 0) {
             aos_assert(false);
         }
@@ -109,14 +110,17 @@ int ipc_message_send(ipc_t *ipc, message_t *m, int timeout_ms)
         return -1;
     }
 
-    return rpmsg_lite_send(ipc->ch, ser->rp_ept, m->service_id, m->req_data, m->req_len, timeout_ms);
+    struct rpmsg_lite_instance *dev = (struct rpmsg_lite_instance *)ipc->ch->context;
+
+    return rpmsg_lite_send(dev, ser->rp_ept, m->service_id, m->req_data, m->req_len, timeout_ms);
 }
 
 ipc_t *ipc_get(int cpu_id)
 {
 #define IPC_NAME_MAX_LEN 16
 
-    ipc_t *ipc;
+    ipc_t *    ipc;
+    channel_t *ch;
 
     slist_for_each_entry(&ipc_list, ipc, ipc_t, next)
     {
@@ -130,18 +134,19 @@ ipc_t *ipc_get(int cpu_id)
         return NULL;
     }
 
-    ipc->ch = (channel_t *)rpmsg_lite_remote_init((void *)RPMSG_LITE_SHMEM_BASE, RPMSG_LITE_LINK_ID, RL_NO_FLAGS);
-
-    if (ipc->ch != NULL) {
-        slist_add_tail(&ipc->next, &ipc_list);
-        ipc->des_cpu_id = cpu_id;
-        ipc->seq        = 1;
-        return ipc;
+    ch = calloc(1, sizeof(channel_t));
+    if (ch == NULL) {
+        free(ipc);
+        return NULL;
     }
 
-    free(ipc);
+    ch->context = (void *)rpmsg_lite_remote_init((void *)RPMSG_LITE_SHMEM_BASE, RPMSG_LITE_LINK_ID, RL_NO_FLAGS);
 
-    return NULL;
+    slist_add_tail(&ipc->next, &ipc_list);
+    ipc->ch         = ch;
+    ipc->des_cpu_id = cpu_id;
+    ipc->seq        = 1;
+    return ipc;
 }
 
 int ipc_add_service(ipc_t *ipc, int service_id, ipc_process_t cb, void *priv)

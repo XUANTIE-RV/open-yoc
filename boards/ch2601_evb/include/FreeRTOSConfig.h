@@ -68,12 +68,42 @@
  *
  * See http://www.freertos.org/a00110.html.
  *----------------------------------------------------------*/
+#ifndef __ASSEMBLY__
+/* define extra stack size */
+#if __riscv_matrix
+static inline int _csi_xmlenb_get_value(void)
+{
+    int result;
+    __asm volatile("csrr %0, xmlenb" : "=r"(result) : : "memory");
+    return result;
+}
+#define STACK_M_EXTRAL_SIZE     (_csi_xmlenb_get_value() * 8 + 24)
+#else
+#define STACK_M_EXTRAL_SIZE     0
+#endif
 
 #ifdef __riscv_vector
-#define CSK_CPU_STACK_EXTRAL    (256 + 512 + 512 + 40)    // float and vector registers additional
+static inline int _csi_vlenb_get_value(void)
+{
+    int result;
+    __asm volatile("csrr %0, vlenb" : "=r"(result) : : "memory");
+    return result;
+}
+
+#define STACK_V_EXTRAL_SIZE     (_csi_vlenb_get_value() * 32 + 40)
 #else
-#define CSK_CPU_STACK_EXTRAL    (256)               // float registers additional (32 * 8)
+#define STACK_V_EXTRAL_SIZE     0
 #endif
+
+#ifdef __riscv_flen
+#define STACK_F_EXTRAL_SIZE     (__riscv_flen / 8 * 32 + 8)
+#else
+#define STACK_F_EXTRAL_SIZE     0
+#endif /*__riscv_flen*/
+
+#define CSK_CPU_STACK_EXTRAL    (STACK_M_EXTRAL_SIZE + STACK_V_EXTRAL_SIZE + STACK_F_EXTRAL_SIZE)
+
+#endif /* __ASSEMBLY__ */
 
 #define configUSE_PREEMPTION        1
 #define configUSE_IDLE_HOOK         0
@@ -83,8 +113,7 @@
 #else
 #define configTICK_RATE_HZ          100
 #endif
-#define configMINIMAL_STACK_SIZE    ( ( unsigned short ) (256 + CSK_CPU_STACK_EXTRAL / 8) )
-// #define configTOTAL_HEAP_SIZE       ( ( size_t ) 40*1024 )
+#define configMINIMAL_STACK_SIZE    ( ( unsigned short ) (512 + CSK_CPU_STACK_EXTRAL / sizeof(long)) ) //stack depth
 #define configMAX_TASK_NAME_LEN     ( 32 )
 #define configUSE_TRACE_FACILITY    1
 #define configUSE_16_BIT_TICKS      0
@@ -99,7 +128,7 @@
 #define configUSE_TIMERS    1
 #define configTIMER_TASK_PRIORITY    1
 #define configTIMER_QUEUE_LENGTH    36
-#define configTIMER_TASK_STACK_DEPTH    (1024 + CSK_CPU_STACK_EXTRAL / 8)
+#define configTIMER_TASK_STACK_DEPTH    (1024 + (CSK_CPU_STACK_EXTRAL / sizeof(long)))
 #define configUSE_TIME_SLICING    1
 #define configUSE_COUNTING_SEMAPHORES    1
 #define configNUM_THREAD_LOCAL_STORAGE_POINTERS 2

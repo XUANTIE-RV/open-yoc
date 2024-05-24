@@ -1,7 +1,7 @@
 
 ## 第一部分： 基础信息
 name: sdk_chip_ch2601                               # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
-version: v7.8.0                                     # <必选项> 组件版本号
+version: v7.9.0                                     # <必选项> 组件版本号
 description: chip sdk for ch2601                    # <必选项> 建议至少20字以上
 type: sdk                                           # <必选项> 组件类型，为：solution, chip, board, common, sdk
 
@@ -15,22 +15,23 @@ license: Apache license v2.0                        # <可选项> 源代码的�
 #   - minilibc: v7.2.0
 #   - aos: >=v7.2.0
 depends:
-  - yoc_base: v7.8.0
-  - rhino: v7.8.0
-  - rhino_arch: v7.8.0
-  - rhino_pwrmgmt: v7.8.0
-  # - freertos: v7.8.0
-  - chip_ch2601: v7.8.0
-  - ch2601_evb: v7.8.0
-  - libc_stub: v7.8.0
-  - drivers: v7.8.0
-  - drv_snd_ch2601: v7.8.0
-  - minialsa: v7.8.0
-  - sal: v7.8.0
-  - netmgr: v7.8.0
-  - at: v7.8.0
-  - drv_wifi_at_w800: v7.8.0
-  - vfs: v7.8.0
-  - posix: v7.8.0
-  - key_mgr: v7.8.0
-  - sec_crypto: v7.8.0
+  - yoc_base: v7.9.0
+  - rhino: v7.9.0
+  - rhino_arch: v7.9.0
+  - rhino_pwrmgmt: v7.9.0
+  # - freertos: v7.9.0
+  # - rtthread: v7.9.0
+  - chip_ch2601: v7.9.0
+  - ch2601_evb: v7.9.0
+  - libc_stub: v7.9.0
+  - drivers: v7.9.0
+  - drv_snd_ch2601: v7.9.0
+  - minialsa: v7.9.0
+  - sal: v7.9.0
+  - netmgr: v7.9.0
+  - at: v7.9.0
+  - drv_wifi_at_w800: v7.9.0
+  - vfs: v7.9.0
+  - posix: v7.9.0
+  - key_mgr: v7.9.0
+  - sec_crypto: v7.9.0

@@ -1,24 +1,36 @@
 CSOURCE := $(wildcard src/vector/*.c)
 CSOURCE += $(wildcard src/sw/*.c)
+CSOURCE += $(wildcard test/*.c)
 
 # CSOURCE := $(wildcard src/*.S)
 
-CPPSOURCE := $(wildcard src/*.cpp)
+CPPSOURCE := $(wildcard test/*.cpp)
+CPPSOURCE += $(wildcard src/*.cpp)
 
 COBJS := $(patsubst %.c,%.c.o,$(CSOURCE))
 CPPOBJS := $(patsubst %.cpp,%.cpp.o,$(CPPSOURCE))
 OBJS := $(COBJS) $(CPPOBJS)
 INC := inc
 
-CC := /home/abing/Xuantie-900-gcc-linux-5.10.4-glibc-x86_64-V2.6.1/bin/riscv64-unknown-linux-gnu-gcc
-CXX := /home/abing/Xuantie-900-gcc-linux-5.10.4-glibc-x86_64-V2.6.1/bin/riscv64-unknown-linux-gnu-g++
+CROSS_COMPILE ?= /iothome/huanglb/work/light_yocto/riscv-toolchain/bin/riscv64-unknown-linux-gnu-
 
-CFLAGS := -g -I$(INC) -D_GNU_SOURCE -O3 -mcpu=c906fdv -fPIC 
-CPPFLAGS := -g -I$(INC) -D_GNU_SOURCE -O3 -mcpu=c906fdv -fPIC 
+CC := $(CROSS_COMPILE)gcc
+CXX := $(CROSS_COMPILE)g++
 
-LDFLAGS := -lpthread -std=gnu99
+# DEFINE := -DC910
 
-all:csi2d
+CFLAGS := -g -I$(INC) -D_GNU_SOURCE -O3 -fPIC -mcmodel=medany -mabi=lp64d -march=rv64gcv0p7_xtheadc
+CPPFLAGS := -g -I$(INC) -D_GNU_SOURCE -O3 -fPIC -mcmodel=medany -mabi=lp64d -march=rv64gcv0p7_xtheadc
+
+CFLAGS += $(DEFINE)
+CPPFLAGS += $(DEFINE)
+
+LDFLAGS := -std=gnu99
+
+all:csi2d bench
+
+bench:$(OBJS)
+	$(CXX) -static -o $@ $^ $(CFLAGS) $(LDFLAGS)
 
 csi2d:$(OBJS)
 	$(CC) -shared -o lib$@.so $^ $(LDFLAGS)

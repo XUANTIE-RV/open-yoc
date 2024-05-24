@@ -54,11 +54,12 @@ USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t write_pcm_buf[CAPTURE_SIZE];
 
 void usbd_audio_open(uint8_t intf)
 {
-    // aos_debug_printf("interface number:%u opened\r\n", intf);
+    USB_LOG_INFO("interface number:%u opened\r\n", intf);
 
     // FIXME: interface number is hard-coded
     if (intf == 3) {
         rx_flag = 1;
+        usbd_ep_start_read(AUDIO_OUT_EP, out_buffer, 16);
         ep_rx_busy_flag = false;
     } else {
         tx_flag = 1;
@@ -67,16 +68,16 @@ void usbd_audio_open(uint8_t intf)
 
     if (!g_utimer.StartFlag) {
         if (csi_timer_start(&g_utimer.tmr, 100)) {
-            aos_debug_printf("csi timer starting failed!\n");
+            USB_LOG_ERR("csi timer starting failed!\n");
         }
         g_utimer.StartFlag = true;
-        aos_debug_printf("start uac usb write/read timer\r\n");
+        USB_LOG_INFO("start uac usb write/read timer\r\n");
     }
 }
 
 void usbd_audio_close(uint8_t intf)
 {
-    // aos_debug_printf("interface number:%u closed\r\n", intf);
+    USB_LOG_INFO("interface number:%u closed\r\n", intf);
 
     // FIXME: interface number is hard-coded
     if (intf == 3) {
@@ -90,37 +91,34 @@ void usbd_audio_close(uint8_t intf)
     if (g_utimer.StartFlag && !rx_flag && !tx_flag) {
         g_utimer.StartFlag = false;
         csi_timer_stop(&g_utimer.tmr);
-        aos_debug_printf("stop uac usb write/read timer\r\n");
+        USB_LOG_INFO("stop uac usb write/read timer\r\n");
     }
 }
 
-//USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t write_buffer[2048];
-
-
 static volatile uint32_t total_len = 0;
 static volatile uint32_t offset = 0;
+uint8_t pcm_output[0x100000];
+uint32_t pcm_output_size =0;
+
+static aos_sem_t g_audio_write_sem;
 
 void usbd_audio_out_callback(uint8_t ep, uint32_t nbytes)
 {
-    // aos_debug_printf("actual out len:%d\r\n", nbytes);
+    USB_LOG_DBG("actual out len:%d\r\n", nbytes);
 
-    if (nbytes > 0) {
-        ring_buffer_put(g_ring_buf[UAC_SPEAKER_INDEX], (void *)out_buffer + offset, nbytes);
-        total_len -= nbytes;
-        offset += nbytes;
+    ring_buffer_put(g_ring_buf[UAC_SPEAKER_INDEX], (void *)out_buffer, nbytes);
+    if (ring_buffer_len(g_ring_buf[UAC_SPEAKER_INDEX]) >= 1024) {
+        aos_sem_signal(&g_audio_write_sem);
     }
 
-    if (total_len == 0) {
-        // notify that reading is done
-        ep_rx_busy_flag = false;
-    } else {
-        usbd_ep_start_read(AUDIO_OUT_EP, out_buffer + offset, AUDIO_OUT_PACKET);
-    }
+    usbd_ep_start_read(AUDIO_OUT_EP, out_buffer, nbytes);
+
+
 }
 
 void usbd_audio_in_callback(uint8_t ep, uint32_t nbytes)
 {
-    // aos_debug_printf("actual in len:%d\r\n", nbytes);
+    USB_LOG_DBG("actual in len:%d\r\n", nbytes);
     ep_tx_busy_flag = false;
 }
 
@@ -129,22 +127,22 @@ int uac_ringfifo_init(void)
     for (int i = 0; i<2; i++) {
         f_lock[i] = (pthread_mutex_t *)aos_malloc(sizeof(pthread_mutex_t));
         if (pthread_mutex_init(f_lock[i], NULL) != 0) {
-            aos_debug_printf("Failed init mutex\r\n");
+            USB_LOG_ERR("Failed init mutex\r\n");
             return -1;
         }
         g_buffer[i] = (void *)aos_malloc(UAC_RINGFIFO_SIZE);
         if (!g_buffer[i]) {
-            aos_debug_printf("Failed to malloc memory.\r\n");
+            USB_LOG_ERR("Failed to malloc memory.\r\n");
             return -1;
         }
 
         g_ring_buf[i] = ring_buffer_init(g_buffer[i], UAC_RINGFIFO_SIZE, f_lock[i]);
         if (!g_ring_buf[i]) {
-            aos_debug_printf("Failed to init ring buffer\r\n");
+            USB_LOG_ERR("Failed to init ring buffer\r\n");
             return -1;
         }
     }
-    aos_debug_printf("uac_ringfifo_init init success\r\n");
+    USB_LOG_INFO("uac_ringfifo_init init success\r\n");
     return 0;
 }
 
@@ -157,121 +155,17 @@ int uac_ringfifo_deinit(void)
 }
 
 /***************************************************************/
-#if 0
-static int uac_send_pcm_data2host(unsigned char *data,int len)
-{
-    int pack_len = AUDIO_IN_PACKET;
-    if (tx_flag) {
-        if (!ep_tx_busy_flag) {
-            //aos_debug_printf("ca = %d\r\n",len/AUDIO_IN_PACKET);
-            for(int x = 0; x < len/pack_len; x++) {
-                ep_tx_busy_flag = true;
-                usbd_ep_start_write(AUDIO_IN_EP, data+(x*pack_len), pack_len);
-                while(ep_tx_busy_flag) {
-                    //aos_msleep(1);
-                }
-            }
-        }
-    }
-    return 0;
-}
+uint64_t ep2_out_cnt;
+uint64_t ep3_in_cnt;
+uint64_t ep_all_cnt;
+uint64_t ep_out_cnt;
 
-static int uac_get_host_pcmdata(unsigned char* data,int get_len)
-{
-    int count = 0;
-    int pack_len = AUDIO_OUT_PACKET;
-
-    if (rx_flag) {
-        while(1) {
-            if (!ep_rx_busy_flag) {
-                // aos_debug_printf("start reading\n");
-                ep_rx_busy_flag = true;
-                //memset(out_buffer,0,AUDIO_OUT_PACKET);
-                usbd_ep_start_read(AUDIO_OUT_EP, out_buffer, pack_len);
-                memcpy(data+(count*pack_len),out_buffer,AUDIO_OUT_PACKET);
-                if (count*pack_len >= get_len) {
-                    //dump_mem(pstdata->buf,AUDIO_OUT_PACKET);
-                    //aos_debug_printf("get pc pcm_data len %d\r\n",pstdata->len);
-                    return 0;
-                }
-                count++;
-            }
-        }
-    }
-    return -1;
-}
-
-
-//USB 写线程
-static void uac_send_to_host(void *arg)
-{
-    int ret = 0;
-    unsigned char mic_index = UAC_MIC_INDEX;
-    int len = audio_get_pcm_len(mic_index);
-    int pack_len = AUDIO_IN_PACKET;
-    unsigned char send_state = 0;
-    unsigned int actl_flags = 0;
-
-	unsigned char* buf = aos_malloc(CAPTURE_SIZE);
-    if (buf == NULL) {
-        aos_debug_printf("aos_malloc buf fail\n");
-        return ;
-    }
-
-    aos_debug_printf("start uac_send_to_host thread\r\n");
-    while (uac_session_init_flag) {
-        //board mic --> PC
-        if(tx_flag) {
-            //aos_debug_printf("get ret %d\r\n",ret);
-            ret = ring_buffer_get(g_ring_buf[mic_index], (void *)buf, len);
-            if (ret == 0) {
-                aos_msleep(4);
-                continue;
-            }
-
-            if (!ep_tx_busy_flag) {
-                //aos_debug_printf("ca = %d\r\n",len/AUDIO_IN_PACKET);
-                for (int x = 0; x < len/pack_len; x++) {
-                    ep_tx_busy_flag = true;
-                    usbd_ep_start_write(AUDIO_IN_EP, buf+(x*pack_len), pack_len);
-                    g_event_flag[mic_index] = true;
-                    if(aos_event_get(&_gslEvent[mic_index] , 0x01, AOS_EVENT_OR_CLEAR,
-                        &actl_flags, AOS_WAIT_FOREVER) == 0) {
-                    }
-
-                    if (!tx_flag)
-                        break;
-                }
-            }
-
-            if(!send_state)
-                send_state = 1;
-        } else {    //close
-            if (send_state) {
-                ring_buffer_reset(g_ring_buf[mic_index]);
-                aos_debug_printf("ring_buffer_reset index[%d]\r\n",mic_index);
-                send_state = 0;
-            }
-            aos_msleep(10);
-        }
-
-        // if ((!tx_flag) || (tx_flag && ep_tx_busy_flag)) {
-        //     aos_msleep(1);
-        // }
-    }
-    aos_free(buf);
-    aos_debug_printf("exit uac_send_to_host thread\r\n");
-    return ;
-}
-#endif
+extern void usbd_dump_reg_info();
 
 static void uac_timer_send_data_cb(void *timer, void *arg)
 {
-//    uint32_t len = AUDIO_IN_PACKET;
     uint32_t ret = 0;
-    unsigned char index = UAC_SPEAKER_INDEX;
     unsigned char mic_idx = UAC_MIC_INDEX;
-    int play_len = audio_get_pcm_len(index);
 
     if (tx_flag && !ep_tx_busy_flag
         && ring_buffer_len(g_ring_buf[mic_idx]) >= AUDIO_IN_PACKET) {
@@ -282,28 +176,28 @@ static void uac_timer_send_data_cb(void *timer, void *arg)
         }
     }
 
-    if (rx_flag && !ep_rx_busy_flag) {
-        ep_rx_busy_flag = true;
-        offset = 0;
-        total_len = AUDIO_OUT_PACKET;
-        usbd_ep_start_read(AUDIO_OUT_EP, out_buffer, AUDIO_OUT_PACKET);
-    }
-
-    if (rx_flag && ring_buffer_len(g_ring_buf[index]) >= play_len) {
-        ret = ring_buffer_get(g_ring_buf[index], (void *)write_pcm_buf, play_len);
-        if (ret >= play_len) {
-            audio_pcm_write(write_pcm_buf, ret);
-        } else {
-            aos_debug_printf("pcm len is less than %d\n", play_len);
-        }
-    }
-
     if (g_utimer.StartFlag) {
         csi_timer_start(&g_utimer.tmr, UAC_CSI_TIMER_TIMEOUT);
     }
 }
 
 #define AUDIO_AEC_LENGTH 160
+
+static void audio_write(void *arg)
+{
+    int play_len = audio_get_pcm_len(UAC_SPEAKER_INDEX);
+
+    while (1) {
+        aos_sem_wait(&g_audio_write_sem, AOS_WAIT_FOREVER);
+
+        if (ring_buffer_len(g_ring_buf[UAC_SPEAKER_INDEX]) >= play_len) {
+            int ret = ring_buffer_get(g_ring_buf[UAC_SPEAKER_INDEX], (void *)write_pcm_buf, play_len);
+            if (ret > 0) {
+                audio_pcm_write(write_pcm_buf, play_len);
+            }
+        }
+    }
+}
 
 static void audio_read(void *arg)
 {
@@ -313,19 +207,19 @@ static void audio_read(void *arg)
 
 	unsigned char *buf = aos_malloc(CAPTURE_SIZE);
     if (buf == NULL) {
-        aos_debug_printf("aos_malloc buf fail\n");
+        USB_LOG_ERR("aos_malloc buf fail\n");
         return ;
     }
 #if(ENABLE_AUDALGO)
 	unsigned char *dataout = aos_malloc(CAPTURE_SIZE);
     if (dataout == NULL) {
-        aos_debug_printf("aos_malloc buf fail\n");
+        USB_LOG_ERR("aos_malloc buf fail\n");
         return ;
     }
 
 	extern void *pssp_handle;
 #endif
-	aos_debug_printf("start audio_read thread\r\n");
+	//USB_LOG_INFO("start audio_read thread\r\n");
     while (uac_session_init_flag) {
         if(tx_flag) {
 			ret = audio_pcm_read(buf);
@@ -351,7 +245,7 @@ static void audio_read(void *arg)
 #if(ENABLE_AUDALGO)
 	aos_free(dataout);
 #endif
-    aos_debug_printf("exit audio_read thread\r\n");
+
 }
 
 void uac_event_sem_init(void)
@@ -392,10 +286,16 @@ int MEDIA_UAC_Init(void)
 
     if(0 != aos_task_new_ext(&read_handle,"audio_read"
                     ,audio_read,NULL,6*1024,32)) {
-        aos_debug_printf("create audio_read thread fail\r\n");
+        USB_LOG_ERR("create audio_read thread fail\r\n");
         return -1;
     }
 
+   aos_sem_new(&g_audio_write_sem, 0);
+   if(0 != aos_task_new_ext(&read_handle,"audio_write"
+                    ,audio_write,NULL,6*1024,32)) {
+        aos_debug_printf("create audio_read thread fail\r\n");
+        return -1;
+    }
 	return 0;
 }
 

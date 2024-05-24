@@ -19,7 +19,9 @@
 #define   DOU       0x8
 #define   FIND      0x10
 
+#if !defined(ARRAY_SIZE)
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
+#endif
 #define AT_OUTPUT_TERMINATION  "\r\n"
 #define DUT_CMD_MAX_ARGS       15
 #define DUT_CMD_MAX_ARG_LEN    40

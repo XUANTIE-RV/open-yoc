@@ -1,7 +1,7 @@
 
 ## 第一部分： 基础信息
 name: freertos                                      # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
-version: v7.8.0                                    # <必选项> 组件版本号
+version: v7.9.0                                    # <必选项> 组件版本号
 description: freertos kernel.                       # <必选项> 建议至少20字以上
 type: common                                        # <可选项> 组件类型，为：solution, chip, board, common，缺省值 common
 tag: 核心模块                                        # <可选项> 组件分类，缺省值： ''
@@ -38,8 +38,8 @@ license: MIT                                        # <可选项> 源代码的�
 build_config:
   include:
     - FreeRTOS/Source/include
-    - FreeRTOS/Source/portable/GCC/<arch>/<cpu_num>
-    - FreeRTOS/Source/portable/GCC/<arch>/<cpu_num>/tspend/
+    - FreeRTOS/Source/portable/GCC/<arch>/<cpu>
+    - FreeRTOS/Source/portable/GCC/<arch>/<cpu>/tspend/
   cflag:   -Os
   cxxflag: -Os
 
@@ -52,8 +52,9 @@ source_file:
   - "FreeRTOS/Source/list.c"
   - "FreeRTOS/Source/event_groups.c"
   - "FreeRTOS/Source/portable/MemMang/heap_4.c"
-  - "FreeRTOS/Source/portable/GCC/<arch>/<cpu_num>/tspend/cpu_task_sw.S"
-  - "FreeRTOS/Source/portable/GCC/<arch>/<cpu_num>/port.c"
+  - "FreeRTOS/Source/portable/GCC/<arch>/<cpu>/tspend/cpu_task_sw.S"
+  - "FreeRTOS/Source/portable/GCC/<arch>/<cpu>/port.c"
+  - freertos_native.c
 
 ## 第五部分：配置信息
 # def_config:                              # 组件的可配置项

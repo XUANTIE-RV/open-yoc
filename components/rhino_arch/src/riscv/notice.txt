@@ -1,0 +1,4 @@
+attention(contact guicai.yin if having question please):
+1. the arch code of e902&e902m&e902t&e902mt should keep same/compatible
+2. the arch code of e906&e906f&e906fd&e906fdp&e906fp&e906p&e907&e907f&e907fd&e907fdp&e907fp&e907p should keep same/compatible
+3. the arch code of c906&c906fd&c906fdv&c908&c908v&c908i&c910&c910v2&c920&c920v2&r910&r920 should keep same/compatible

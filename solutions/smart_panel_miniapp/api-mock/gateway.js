@@ -37,7 +37,7 @@ let devList =
     },
     */
     //测试子设备控制
-   
+    
     {
       dev_addr: "00:00:00:00:00:00",
       isOpen: false,
@@ -54,7 +54,7 @@ let devList =
       brightness: 10,
       inNet: true,
       //subDevMgmt
-      dev_name: "screen",
+      dev_name: "screen1",
       roomType: "BED_ROOM",
       deviceType: "OBJ_SCREEN",
     },
@@ -66,7 +66,7 @@ let devList =
       //subDevMgmt
       dev_name: "switch1",
       roomType: "BED_ROOM",
-      deviceType: "OBJ_LIGHT",//底层不支持obj_switch，现在先把开关当成obj_light类型，后面再改
+      deviceType: "OBJ_SWITCH",
     },
     
     {

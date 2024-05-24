@@ -51,7 +51,7 @@ int voice_get_feaec_data(void *data, int len, int timeout)
     uint8_t     *temp       = (uint8_t *)data;
     int          read_len   = len;
 
-    if (!aos_event_is_valid(g_rbgroup[TYPE_FEAEC].event)) {
+    if (!aos_event_is_valid(&g_rbgroup[TYPE_FEAEC].event)) {
         return -1;
     }
 
@@ -87,7 +87,7 @@ int dispatch_ringbuffer_destory(data_type_e type)
 {
     if (g_rbgroup[type].buffer) {
         ringbuffer_destroy(&g_rbgroup[type].rb);
-        aos_event_free(g_rbgroup[type].event);
+        aos_event_free(&g_rbgroup[type].event);
     }
     return 0;
 }
@@ -100,7 +100,7 @@ int dispatch_ringbuffer_write(data_type_e type, void *data, int data_len)
     }
 
     int ret = ringbuffer_write(&g_rbgroup[type].rb, (uint8_t *)data, data_len);
-    aos_event_set(g_rbgroup[type].event, EVENT_CAN_READ, AOS_EVENT_OR);
+    aos_event_set(&g_rbgroup[type].event, EVENT_CAN_READ, AOS_EVENT_OR);
     return ret;
 }
 

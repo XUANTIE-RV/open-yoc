@@ -76,9 +76,12 @@
 #define sal_sendmsg      sendmsg
 #define sal_sendto       sendto
 #define sal_socket       socket
+#define sal_ioctlsocket  ioctl
+
+#if LWIP_POSIX_SOCKETS_IO_NAMES
 #define sal_select       select
 #define sal_select2      select2
-#define sal_ioctlsocket  ioctl
+#endif /* LWIP_POSIX_SOCKETS_IO_NAMES */
 
 // #define sal_fcntl        fcntl
 

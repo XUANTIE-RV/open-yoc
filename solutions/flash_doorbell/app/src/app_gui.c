@@ -22,6 +22,8 @@ lv_obj_t *g_GuiLableObj = NULL;
 static void gui_label_create(void)
 {
     static lv_style_t style;
+
+    aos_mutex_lock(&gui_lock, AOS_WAIT_FOREVER);
     lv_style_init(&style);
     lv_style_set_bg_opa(&style, LV_OPA_TRANSP);
     // lv_style_set_bg_color(&style, lv_palette_main(LV_PALETTE_YELLOW));
@@ -39,6 +41,7 @@ static void gui_label_create(void)
     lv_obj_set_style_text_align(g_GuiLableObj, LV_TEXT_ALIGN_CENTER, 0);
     // lv_obj_add_event_cb(g_GuiLableObj, lv_event_cb, LV_EVENT_ALL, NULL);
     lv_label_set_text(g_GuiLableObj, "");
+    aos_mutex_unlock(&gui_lock);
 }
 
 #ifdef CONFIG_RGBIR_SENSOR_SWITCH

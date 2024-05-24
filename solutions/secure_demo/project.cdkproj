@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Project Name="helloworld" Version="1" Language="CPP">
-  <Description>helloworld</Description>
+<Project Name="secure_demo" Version="1" Language="CPP">
+  <Description>secure_demo</Description>
   <MonitorProgress>
     <FlashOperate>217</FlashOperate>
     <DebugLaunch>118</DebugLaunch>

@@ -1,6 +1,6 @@
 ## 第一部分： 基础信息
 name: chip_cv181x                                   # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
-version: v7.8.0                                    # <必选项> 组件版本号
+version: v7.9.0                                    # <必选项> 组件版本号
 description: cv181x Chip CSI driver SDK.          # <必选项> 建议至少20字以上
 type: chip                                          # <必选项> 组件类型，为：solution, chip, board, common, sdk
 tag: 核心模块                                       # <可选项> 组件分类，缺省值： ''
@@ -64,6 +64,7 @@ hw_info:
   vendor_name: cvitek
   ld_script: gcc_flash.ld
   # flash_program: flash.elf
+  # flash_program: flash_nand.elf
   flash_program: flash_emmc.elf
 
 ## 第四部分：编译连接信息
@@ -99,6 +100,7 @@ build_config:
     - include/asm
     - src/drivers/pin/cvi/include
     - src/drivers/gpio/cvi/include
+    - src/drivers/gpio/dw/v1.0/
     - src/drivers/dma/cvi/include
 #   - src/drivers/timer/cvi/v1/include ? <CONFIG_KERNEL_NONE>
 #   - src/drivers/timer/cvi/v2/include ? <CONFIG_KERNEL_RHINO>
@@ -117,6 +119,7 @@ build_config:
 
     - src/hal/dma/cvi/include
     - src/drivers/spiflash/v2.0/include
+    - src/drivers/spinand/v2.0/include
     - src/drivers/spi/dw/v2.0/include
 
     - src/hal/pin/cvi/include
@@ -136,6 +139,7 @@ build_config:
 #   CONFIG_PARAM_NOT_CHECK: y
 #   CONFIG_CLI: y
 def_config:
+  CONFIG_PLIC_BASE: 0x70000000
   CONFIG_CVI_LIB_SUB_PATH: "/"
   CONFIG_RISCV_SMODE: 0
   CONFIG_VIC_TSPDR: 0x74000000
@@ -144,7 +148,7 @@ def_config:
   CONFIG_NON_ADDRESS_FLASH: y
   CONFIG_CSI_V2: 1
   CONFIG_CSI: "csi2"
-  CONFIG_CPU_C906: y
+  CONFIG_CPU_C906FDV: 1
   CONFIG_ARCH_INTERRUPTSTACK: 4096
   CONFIG_DRAM_CFG: "64m"
   CVI_SOC_NAME: "cv181x"

@@ -1159,12 +1159,12 @@ kstat_t krhino_sched_param_set(ktask_t *task, uint8_t policy, uint8_t pri)
 
     krhino_sched_disable();
     RHINO_CRITICAL_ENTER();
-    krhino_task_pri_change(task, pri, &old_pri);
+    ret = krhino_task_pri_change(task, pri, &old_pri);
     task->sched_policy = policy;
     RHINO_CRITICAL_EXIT();
     krhino_sched_enable();
 
-    return RHINO_SUCCESS;
+    return ret;
 }
 
 

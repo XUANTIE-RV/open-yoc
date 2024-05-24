@@ -91,7 +91,7 @@ CONFIG_ALG_ASR_LYEVA=$(echo $CONFIG_DEFINES | grep "CONFIG_ALG_ASR_LYEVA" | awk 
 #echo $CONFIG_DEFINES
 if [ -n "$EXE_EXT" ]; then
     # CDK
-    CONFIG_ALG_ASR_LYEVA=$CONFIG_ALG_ASR_LYEVA
+    CONFIG_ALG_ASR_LYEVA=$PATH_ALG_ASR_LYEVA
 fi
 
 # check components us_algo_c906
@@ -115,6 +115,7 @@ CONFIG_US_ALGO_C906=$(echo $CONFIG_DEFINES | grep "CONFIG_ALG_US" | awk -F ':' '
 #echo $CONFIG_DEFINES
 if [ -n "$EXE_EXT" ]; then
     # CDK
+    CONFIG_ALG_US=$(cat $MK_SOLUTION_PATH/package.yaml | grep "CONFIG_ALG_US" | awk -F ':' '{print $2}')
     CONFIG_US_ALGO_C906=$CONFIG_ALG_US
 fi
 

@@ -260,8 +260,8 @@ typedef struct
 /*@} end of group CSI_PMP */
 
 /* CACHE Register Definitions */
-#define CACHE_MHCR_L0BTB_Pos 6U /*!< CACHE MHCR: L0BTB Position */
-#define CACHE_MHCR_L0BTB_Msk (0x1UL << CACHE_MHCR_L0BTB_Pos) /*!< CACHE MHCR: WA Mask */
+#define CACHE_MHCR_BTB_Pos 6U /*!< CACHE MHCR: BTB Position */
+#define CACHE_MHCR_BTB_Msk (0x1UL << CACHE_MHCR_BTB_Pos) /*!< CACHE MHCR: WA Mask */
 
 #define CACHE_MHCR_BPE_Pos 5U /*!< CACHE MHCR: BPE Position */
 #define CACHE_MHCR_BPE_Msk (0x1UL << CACHE_MHCR_BPE_Pos) /*!< CACHE MHCR: BPE Mask */
@@ -359,13 +359,7 @@ typedef struct
   \brief      Definitions for base addresses, unions, and structures.
   @{
  */
-#define CORET_BASE (PLIC_BASE + 0x4000000UL) /*!< CORET Base Address */
-#define PLIC_BASE  (0x00E0000000UL) /*!< PLIC Base Address */
-//#define PLIC_BASE           (0x4000000000UL)                          /*!< PLIC Base Address */
 
-#define CORET ((CORET_Type *)CORET_BASE) /*!< SysTick configuration struct */
-#define CLINT ((CORET_Type *)CORET_BASE) /*!< CLINT configuration struct */
-#define PLIC  ((PLIC_Type *)PLIC_BASE) /*!< PLIC configuration struct */
 
 /*@} */
 
@@ -863,7 +857,7 @@ __STATIC_INLINE void csi_dcache_enable(void)
     __ISB();
     __DCACHE_IALL(); /* invalidate all dcache */
     cache = __get_MHCR();
-    cache |= (CACHE_MHCR_DE_Msk | CACHE_MHCR_WB_Msk | CACHE_MHCR_WA_Msk | CACHE_MHCR_RS_Msk | CACHE_MHCR_BPE_Msk | CACHE_MHCR_L0BTB_Msk); /* enable all Cache */
+    cache |= (CACHE_MHCR_DE_Msk | CACHE_MHCR_WB_Msk | CACHE_MHCR_WA_Msk | CACHE_MHCR_RS_Msk | CACHE_MHCR_BPE_Msk | CACHE_MHCR_BTB_Msk); /* enable all Cache */
     __set_MHCR(cache);
 
     __DSB();

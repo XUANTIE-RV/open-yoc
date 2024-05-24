@@ -27,6 +27,7 @@ uint8_t ulog_stop_filter_level(const ulog_session_type_t session);
 char* get_sync_stop_level();
 
 int32_t ulog_fs_init(void);
+int32_t ulog_fs_deinit(void);
 
 void on_filter_level_changes(const ulog_session_type_t session, const uint8_t level);
 

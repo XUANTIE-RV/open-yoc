@@ -20,6 +20,10 @@
 #include <drv/spiflash.h>
 #include <drv/pin.h>
 
+#if (defined(CONFIG_KERNEL_RHINO) || defined(CONFIG_KERNEL_FREERTOS) || defined(CONFIG_KERNEL_RTTHREAD)) && defined(CONFIG_KERNEL_NONE)
+#error "Please check the current system is baremetal or not!!!"
+#endif
+
 csi_dma_t g_dma;
 #ifdef CONFIG_XIP
 csi_spiflash_t g_spiflash;

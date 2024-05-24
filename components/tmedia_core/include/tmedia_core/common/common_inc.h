@@ -26,5 +26,6 @@
 #include <tmedia_core/common/property.h>
 #include <tmedia_core/common/array.h>
 #include <tmedia_core/common/debug.h>
+#include <tmedia_core/common/syslog.h>
 
 #endif  /* TM_COMMON_INC_H */

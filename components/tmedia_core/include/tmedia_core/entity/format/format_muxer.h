@@ -18,7 +18,7 @@
 using namespace std;
 
 
-class TMFormatMuxer : public TMFormat
+class TMFormatMuxer : public TMFormat, public TMSinkEntity
 {
 public:
     TMFormatMuxer();

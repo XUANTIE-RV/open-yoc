@@ -12,6 +12,22 @@ __attribute__((weak)) int select2(int maxfdp1, fd_set *readset, fd_set *writeset
 {
     uint32_t tomeout_ms;
 
+#if defined(CONFIG_AOS_LWIP)
+    extern int lwip_select2(int maxfdp1, fd_set *readset, fd_set *writeset, fd_set *exceptset, struct timeval *timeout, void *semaphore);
+#if defined(AOS_COMP_VFS) && AOS_COMP_VFS
+    extern int aos_vfs_fd_offset_get(void);
+    if (maxfdp1 < aos_vfs_fd_offset_get() + 1)
+#endif
+        return lwip_select2(maxfdp1, readset, writeset, exceptset, timeout, semaphore);
+#elif defined(CONFIG_SAL)
+    extern int sal_select2(int maxfdp1, fd_set *readset, fd_set *writeset, fd_set *exceptset, struct timeval *timeout, void *semaphore);
+#if defined(AOS_COMP_VFS) && AOS_COMP_VFS
+    extern int aos_vfs_fd_offset_get(void);
+    if (maxfdp1 < aos_vfs_fd_offset_get() + 1)
+#endif
+        return sal_select2(maxfdp1, readset, writeset, exceptset, timeout, semaphore);
+#endif
+
     if (timeout) {
         tomeout_ms = timeout->tv_sec * 1000 + timeout->tv_usec / 1000;
     } else {

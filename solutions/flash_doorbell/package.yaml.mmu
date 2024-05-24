@@ -1,6 +1,6 @@
 ## 第一部分： 基础信息
 name: flash_doorbell
-version: v7.8.0
+version: v7.9.0
 description: yoc doorbell solution
 type: solution
 ## 第二部分：依赖信息
@@ -10,24 +10,24 @@ type: solution
 #   - minilibc: v7.2.0
 #   - aos: >=v7.2.0
 sdk_chip:
-  - sdk_chip_cv181xh_bga: v7.8.0
+  - sdk_chip_cv181xh_bga: v7.9.0
 depends:
-  - sdk_chip_cv181xh_bga: v7.8.0
-  - fota: v7.8.0
-  - httpclient: v7.8.0
-  - transport: v7.8.0
-  - wifi_provisioning: v7.8.0
-  - lvgl: v7.8.0
-  - tmedia_core: v7.8.0
-  - tmedia_backend_seno: v7.8.0
-  - tmedia_backend_cvitek: v7.8.0
-  - cx_lite_base: v7.8.0
-  - cx_lite_record: v7.8.0
-  - cx_lite_linkvisual: v7.8.0
-  - cx_lite_faceai: v7.8.0
-  - cvi_sensor: v7.8.0
-  - cvi_platform: v7.8.0
-  - excore: v7.8.0
+  - sdk_chip_cv181xh_bga: v7.9.0
+  - fota: v7.9.0
+  - httpclient: v7.9.0
+  - transport: v7.9.0
+  - wifi_provisioning: v7.9.0
+  - lvgl: v7.9.0
+  - tmedia_core: v7.9.0
+  - tmedia_backend_seno: v7.9.0
+  - tmedia_backend_cvitek: v7.9.0
+  - cx_lite_base: v7.9.0
+  - cx_lite_record: v7.9.0
+  - cx_lite_linkvisual: v7.9.0
+  - cx_lite_faceai: v7.9.0
+  - cvi_sensor: v7.9.0
+  - cvi_platform: v7.9.0
+  - excore: v7.9.0
 
 ## 第三部分：板级信息
 # hw_info:                                 # 对 solution、board、chip 三个字段的改进，统称为 hw_info 字段

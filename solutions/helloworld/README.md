@@ -18,6 +18,83 @@ cd workspace
 yoc init
 yoc install helloworld
 ```
+### 切换系统内核
+
+#### 切换到RHINO
+
+默认支持RHINO 无需切换,如果需要从RT-Thread修改到RHINO，则根据下一节内容`切换到RT-Thread`下面的内容修改回去。
+
+#### 切换到RT-Thread
+
+##### D1平台
+
+比如在develop分支上面，需要修改`component/sdk_chip_d1/package.ymal`文件中的`depends`部分：
+将`rtthread`这个注释打开，需要注释掉这几个组件 `rhino`,`rhino_arch`,`rhino_pwrmgmt`,`ble_host`,`freertos` 最终如下所示:
+```yaml
+depends:
+  ......
+  #- rhino: develop
+  #- rhino_arch: develop
+  #- rhino_pwrmgmt: develop
+  #- freertos: develop
+  - rtthread: develop
+  ......
+  #- ble_host: develop
+```
+
+##### bl606P平台
+
+比如在develop分支上面，需要修改`component/sdk_chip_bl606p_e907/package.ymal`文件中的`depends`部分：
+将`rtthread`这个注释打开，需要注释掉这几个组件 `rhino`,`rhino_arch`,`rhino_pwrmgmt`,`bl606p_bthost`,`bl606p_blimpls`,`freertos`如下所示
+```yaml
+depends:
+  ......
+  #- rhino: develop
+  #- rhino_arch: develop
+  #- rhino_pwrmgmt: develop
+  #- freertos: develop
+  - rtthread: develop
+  ......
+  #- bl606p_bthost: develop
+  #- bl606p_blimpls: develop
+  ......
+```
+
+##### ch2601平台
+
+比如在develop分支上面，需要修改`component/sdk_chip_ch2601/package.ymal`文件中的`depends`部分：
+将`rtthread`这个注释打开，需要注释掉这几个组件 `rhino`,`rhino_arch`,`rhino_pwrmgmt`,`freertos`如下所示
+```yaml
+depends:
+  ......
+  #- rhino: develop
+  #- rhino_arch: develop
+  #- rhino_pwrmgmt: develop
+  #- freertos: develop
+  - rtthread: develop
+  ......
+```
+
+##### f133平台
+
+比如在develop分支上面，需要修改`component/sdk_chip_f133/package.ymal`文件中的`depends`部分：
+将`rtthread`这个注释打开，需要注释掉这几个组件 `rhino`,`rhino_arch`,`rhino_pwrmgmt`,`ble_host`,`freertos`最终如下所示:
+```yaml
+depends:
+  ......
+  #- rhino: develop
+  #- rhino_arch: develop
+  #- rhino_pwrmgmt: develop
+  #- freertos: develop
+  - rtthread: develop
+  ......
+  #- ble_host: develop
+  ......
+```
+#### 切换到FreeRTOS
+
+切换到FreeRTOS需要修改的内容与`切换到RT-Thread`这节的内容相似，只需`切换到RT-Thread`这个小节这个基础上，将对应的组件`freertos`注释打开，然后注释`rtthread`这个组件即可。
+
 
 ### 编译&烧录
 

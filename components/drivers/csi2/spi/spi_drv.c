@@ -274,6 +274,7 @@ static spi_driver_t spi_driver = {
         .clk_en = _spi_clock,
         .lpm    = _spi_lpm
     },
+    .timeout         = AOS_WAIT_FOREVER,
     .config          = _spi_config,
     .config_get      = _spi_config_get,
     .send            = _spi_send,

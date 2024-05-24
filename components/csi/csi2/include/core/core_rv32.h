@@ -260,8 +260,8 @@ typedef struct {
 /*@} end of group CSI_PMP */
 
 /* CACHE Register Definitions */
-#define CACHE_MHCR_L0BTB_Pos                   12U                                           /*!< CACHE MHCR: L0BTB Position */
-#define CACHE_MHCR_L0BTB_Msk                   (0x1UL << CACHE_MHCR_L0BTB_Pos)               /*!< CACHE MHCR: WA Mask */
+#define CACHE_MHCR_BTB_Pos                     12U                                           /*!< CACHE MHCR: BTB Position */
+#define CACHE_MHCR_BTB_Msk                     (0x1UL << CACHE_MHCR_BTB_Pos)                 /*!< CACHE MHCR: WA Mask */
 
 #define CACHE_MHCR_BPE_Pos                     5U                                            /*!< CACHE MHCR: BPE Position */
 #define CACHE_MHCR_BPE_Msk                     (0x1UL << CACHE_MHCR_BPE_Pos)                 /*!< CACHE MHCR: BPE Mask */
@@ -343,8 +343,8 @@ typedef struct {
  */
 typedef struct {
     __IOM unsigned long long MTIMECMP;            /*!< Offset: 0x000 (R/W) Timer compare register */
-    uint32_t RESERVED[8187];
-    __IM  unsigned long long MTIME;               /*!< Offset: 0x7FFC (R)  Timer current register */
+    uint32_t RESERVED[8188];
+    __IM  unsigned long long MTIME;               /*!< Offset: 0x7FF8 (R)  Timer current register */
 } CORET_Type;
 
 /*@} end of group CSI_SysTick */
@@ -445,6 +445,31 @@ typedef struct {
   \defgroup CSI_Core_FunctionInterface Functions and Instructions Reference
 */
 
+/**
+  \brief   Get current hartid
+  \return  hartid
+ */
+__STATIC_INLINE int csi_get_cpu_id(void)
+{
+    unsigned long result;
+    __ASM volatile("csrr %0, mhartid" : "=r"(result) : : "memory");
+    return result;
+}
+
+/**
+  \brief   Get cache line size
+  \return  cache line size
+ */
+__STATIC_INLINE int csi_get_cache_line_size(void)
+{
+#if CONFIG_CPU_E906 || CONFIG_CPU_E906F || CONFIG_CPU_E906FD || CONFIG_CPU_E906P || CONFIG_CPU_E906FP || CONFIG_CPU_E906FDP \
+    || CONFIG_CPU_E907 || CONFIG_CPU_E907F || CONFIG_CPU_E907FD || CONFIG_CPU_E907P || CONFIG_CPU_E907FP || CONFIG_CPU_E907FDP
+    return 8;
+#else
+    return 4;
+#endif
+}
+
 /* ##########################   VIC functions  #################################### */
 /**
   \ingroup  CSI_Core_FunctionInterface
@@ -466,6 +491,7 @@ typedef struct {
 __STATIC_INLINE void csi_vic_enable_irq(int32_t IRQn)
 {
     CLIC->CLICINT[IRQn].IE |= CLIC_INTIE_IE_Msk;
+    __DSB();
 }
 
 /**
@@ -476,26 +502,7 @@ __STATIC_INLINE void csi_vic_enable_irq(int32_t IRQn)
 __STATIC_INLINE void csi_vic_disable_irq(int32_t IRQn)
 {
     CLIC->CLICINT[IRQn].IE &= ~CLIC_INTIE_IE_Msk;
-}
-
-/**
-  \brief   Enable External Secure Interrupt
-  \details Enable a secure device-specific interrupt in the VIC interrupt controller.
-  \param [in]      IRQn  External interrupt number. Value cannot be negative.
- */
-__STATIC_INLINE void csi_vic_enable_sirq(int32_t IRQn)
-{
-    CLIC->CLICINT[IRQn].IE |= (CLIC_INTIE_IE_Msk | CLIC_INTIE_T_Msk);
-}
-
-/**
-  \brief   Disable External Secure Interrupt
-  \details Disable a secure device-specific interrupt in the VIC interrupt controller.
-  \param [in]      IRQn  External interrupt number. Value cannot be negative.
- */
-__STATIC_INLINE void csi_vic_disable_sirq(int32_t IRQn)
-{
-    CLIC->CLICINT[IRQn].IE &= ~(CLIC_INTIE_IE_Msk | CLIC_INTIE_T_Msk);
+    __DSB();
 }
 
 /**
@@ -543,24 +550,6 @@ __STATIC_INLINE void csi_vic_clear_pending_irq(int32_t IRQn)
 }
 
 /**
-  \brief   Set Wake up Interrupt
-  \details Set the wake up bit of an external interrupt.
-  \param [in]      IRQn  Interrupt number. Value cannot be negative.
- */
-__STATIC_INLINE void csi_vic_set_wakeup_irq(int32_t IRQn)
-{
-}
-
-/**
-  \brief   Clear Wake up Interrupt
-  \details Clear the wake up bit of an external interrupt.
-  \param [in]      IRQn  External interrupt number. Value cannot be negative.
- */
-__STATIC_INLINE void csi_vic_clear_wakeup_irq(int32_t IRQn)
-{
-}
-
-/**
   \brief   Set Interrupt Priority
   \details Set the priority of an interrupt.
   \note    The priority cannot be set for every core interrupt.
@@ -571,6 +560,7 @@ __STATIC_INLINE void csi_vic_set_prio(int32_t IRQn, uint32_t priority)
 {
     uint8_t nlbits = (CLIC->CLICINFO & CLIC_INFO_CLICINTCTLBITS_Msk) >> CLIC_INFO_CLICINTCTLBITS_Pos;
     CLIC->CLICINT[IRQn].CTL = (CLIC->CLICINT[IRQn].CTL & (~CLIC_INTCFG_PRIO_Msk)) | (priority << (8 - nlbits));
+    __DSB();
 }
 
 /**
@@ -589,32 +579,33 @@ __STATIC_INLINE uint32_t csi_vic_get_prio(int32_t IRQn)
 }
 
 /**
-  \brief   Set interrupt handler
-  \details Set the interrupt handler according to the interrupt num, the handler will be filled in irq vectors.
-  \param [in]      IRQn  Interrupt number.
-  \param [in]   handler  Interrupt handler.
+  \brief   Get Interrupt thresh
+  \details Read the thresh of interrupt
+           Only the interrupt priority is greater than the value of thresh, the interrupt can be responded to
+  \return             Interrupt thresh value(0~255).
+                      Value is aligned automatically to the implemented priority bits of the microcontroller.
  */
-__STATIC_INLINE void csi_vic_set_vector(int32_t IRQn, uint32_t handler)
+__STATIC_INLINE uint32_t csi_vic_get_thresh(void)
 {
-    if (IRQn >= 0 && IRQn < 1024) {
-        uint32_t *vectors = (uint32_t *)__get_MTVT();
-        vectors[IRQn] = handler;
-    }
+    return CLIC->MINTTHRESH >> 24;
 }
 
 /**
-  \brief   Get interrupt handler
-  \details Get the address of interrupt handler function.
-  \param [in]      IRQn  Interrupt number.
+  \brief   Set Interrupt thresh
+  \details Write the thresh of interrupt
+           Only the interrupt priority is greater than the value of thresh, the interrupt can be responded to
+  \param [in]      Interrupt thresh value(0~255).
  */
-__STATIC_INLINE uint32_t csi_vic_get_vector(int32_t IRQn)
+__STATIC_INLINE uint32_t csi_vic_set_thresh(uint32_t thresh)
 {
-    if (IRQn >= 0 && IRQn < 1024) {
-        uint32_t *vectors = (uint32_t *)__get_MTVT();
-        return (uint32_t)vectors[IRQn];
-    }
+    uint32_t temp = CLIC->MINTTHRESH;
+    uint8_t nlbits = (CLIC->CLICINFO & CLIC_INFO_CLICINTCTLBITS_Msk) >> CLIC_INFO_CLICINTCTLBITS_Pos;
 
-    return 0;
+    if(!nlbits)
+        CLIC->MINTTHRESH = 0xff << 24;
+
+    CLIC->MINTTHRESH = thresh << 24;
+    return temp;
 }
 
 /*@} end of CSI_Core_VICFunctions */
@@ -690,6 +681,16 @@ __STATIC_INLINE void csi_mpu_disable_region(uint32_t idx)
   @{
  */
 
+__STATIC_INLINE uint32_t _csi_coret_config(unsigned long coret_base, uint32_t ticks, int32_t IRQn)
+{
+    CORET_Type *coret = (CORET_Type *)coret_base;
+    if ((coret->MTIMECMP != 0) && (coret->MTIMECMP != 0xffffffffffffffff)) {
+        coret->MTIMECMP = coret->MTIMECMP + ticks;
+    } else {
+        coret->MTIMECMP = coret->MTIME + ticks;
+    }
+    return (0UL);
+}
 
 /**
   \brief   CORE timer Configuration
@@ -705,25 +706,29 @@ __STATIC_INLINE void csi_mpu_disable_region(uint32_t idx)
  */
 __STATIC_INLINE uint32_t csi_coret_config(uint32_t ticks, int32_t IRQn)
 {
-    if ((CORET->MTIMECMP != 0) && (CORET->MTIMECMP != 0xffffffffffffffff)) {
-        CORET->MTIMECMP = CORET->MTIMECMP + ticks;
-    } else {
-        CORET->MTIMECMP = CORET->MTIME + ticks;
-    }
-    return (0UL);
+    return _csi_coret_config(CORET_BASE, ticks, IRQn);
 }
 
 /**
   \brief   get CORE timer reload value
+  \return          CORE timer counter value(64bit).
+ */
+__STATIC_INLINE uint64_t csi_coret_get_load2(void)
+{
+    return CORET->MTIMECMP;
+}
+
+/**
+  \brief   get CORE timer reload value(deprecated)
   \return          CORE timer counter value.
  */
-__STATIC_INLINE uint32_t csi_coret_get_load(void)
+__STATIC_INLINE unsigned long csi_coret_get_load(void)
 {
     return CORET->MTIMECMP & 0xFFFFFFFF;
 }
 
 /**
-  \brief   get CORE timer reload high value
+  \brief   get CORE timer reload high value(deprecated)
   \return          CORE timer counter value.
  */
 __STATIC_INLINE uint32_t csi_coret_get_loadh(void)
@@ -733,20 +738,53 @@ __STATIC_INLINE uint32_t csi_coret_get_loadh(void)
 
 /**
   \brief   get CORE timer counter value
+  \return          CORE timer counter value(64bit).
+ */
+__STATIC_INLINE uint64_t csi_coret_get_value2(void)
+{
+    return CORET->MTIME;
+}
+
+/**
+  \brief   get CORE timer counter value(deprecated)
   \return          CORE timer counter value.
  */
-__STATIC_INLINE uint32_t csi_coret_get_value(void)
+__STATIC_INLINE unsigned long csi_coret_get_value(void)
 {
     return CORET->MTIME & 0xFFFFFFFF;
 }
 
 /**
-  \brief   get CORE timer counter high value
+  \brief   get CORE timer counter high value(deprecated)
   \return          CORE timer counter value.
  */
 __STATIC_INLINE uint32_t csi_coret_get_valueh(void)
 {
     return (CORET->MTIME >> 32) & 0xFFFFFFFF;
+}
+
+__STATIC_INLINE void csi_coret_reset_value2()
+{
+    CORET_Type *coret = (CORET_Type *)CORET_BASE;
+    coret->MTIMECMP = 0;
+}
+
+/**
+  \brief   Enable CoreTimer(within clint) Interrupts
+ */
+__ALWAYS_STATIC_INLINE void csi_coret_irq_enable(void)
+{
+    extern void soc_irq_enable(uint32_t irq_num);
+    return soc_irq_enable(7);
+}
+
+/**
+  \brief   Disable CoreTimer(within clint) Interrupts
+ */
+__ALWAYS_STATIC_INLINE void csi_coret_irq_disable(void)
+{
+    extern void soc_irq_disable(uint32_t irq_num);
+    return soc_irq_disable(7);
 }
 
 /*@} end of CSI_Core_SysTickFunctions */
@@ -919,107 +957,6 @@ __STATIC_INLINE void csi_sysmap_config_region(uint32_t idx, uint32_t base_addr, 
 
 /*@} end of CSI_Core_SYSMAPFunctions */
 
-
-/* ##################################### DCC function ########################################### */
-/**
-  \ingroup  CSI_Core_FunctionInterface
-  \defgroup CSI_core_DebugFunctions HAD Functions
-  \brief    Functions that access the HAD debug interface.
-  @{
- */
-
-/**
-  \brief   HAD Send Character
-  \details Transmits a character via the HAD channel 0, and
-           \li Just returns when no debugger is connected that has booked the output.
-           \li Is blocking when a debugger is connected, but the previous character sent has not been transmitted.
-  \param [in]     ch  Character to transmit.
-  \returns            Character to transmit.
- */
-__STATIC_INLINE uint32_t csi_had_send_char(uint32_t ch)
-{
-    DCC->DERJR = (uint8_t)ch;
-
-    return (ch);
-}
-
-
-/**
-  \brief   HAD Receive Character
-  \details Inputs a character via the external variable \ref HAD_RxBuffer.
-  \return             Received character.
-  \return         -1  No character pending.
- */
-__STATIC_INLINE int32_t csi_had_receive_char(void)
-{
-    int32_t ch = -1;                           /* no character available */
-
-    if (_FLD2VAL(DCC_EHSR_JW, DCC->EHSR)) {
-        ch = DCC->DERJW;
-    }
-
-    return (ch);
-}
-
-
-/**
-  \brief   HAD Check Character
-  \details Check whether a character is pending for reading in the variable \ref HAD_RxBuffer.
-  \return          0  No character available.
-  \return          1  Character available.
- */
-__STATIC_INLINE int32_t csi_had_check_char(void)
-{
-    return _FLD2VAL(DCC_EHSR_JW, DCC->EHSR);                              /* no character available */
-}
-
-/*@} end of CSI_core_DebugFunctions */
-
-
-/* ##########################  sleep and Reset functions  #################################### */
-/**
-  \ingroup  CSI_Core_FunctionInterface
-  \defgroup CSI_Core_SleepAndResetFunctions Sleep and Reset Functions
-  \brief    Functions that configure Sleep and Reset.
-  @{
- */
-
-
-/* MEXSTATUS Register Definitions */
-#define MEXSTATUS_RESET_Pos                           0U
-#define MEXSTATUS_RESET_Msk                      (0x3UL << MEXSTATUS_RESET_Pos)                                             /*!< MEXSTATUS: RESET Position */
-#define MEXSTATUS_SLEEP_Pos                           2U
-#define MEXSTATUS_SLEEP_Msk                      (0x3UL << MEXSTATUS_SLEEP_Pos)                                             /*!< MEXSTATUS: RESET Position */
-/*@} end of group CSI_MEXSTATUS */
-
-
-
-/**
-  \brief   CPU System Reset
-  \details Triggle CPU System Reset
-  */
-__STATIC_INLINE void csi_system_reset (void)
-{
-    uint32_t mexstatus;
-    mexstatus = __get_MEXSTATUS();
-    mexstatus &= (~(MEXSTATUS_RESET_Msk));
-    mexstatus |= (uint32_t)(0x2 << MEXSTATUS_RESET_Pos);
-    __set_MEXSTATUS(mexstatus);
-}
-
-/**
-  \brief   CPU Core Reset
-  \details Triggle CPU Core Reset
-  */
-__STATIC_INLINE void csi_core_reset (void)
-{
-    uint32_t mexstatus;
-    mexstatus = __get_MEXSTATUS();
-    mexstatus &= (~(MEXSTATUS_RESET_Msk));
-    mexstatus |= (uint32_t)(0x1 << MEXSTATUS_RESET_Pos);
-    __set_MEXSTATUS(mexstatus);
-}
-
 /* ##########################  Cache functions  #################################### */
 /**
   \ingroup  CSI_Core_FunctionInterface
@@ -1108,7 +1045,6 @@ __STATIC_INLINE int csi_dcache_is_enable()
 /**
   \brief   Enable D-Cache
   \details Turns on D-Cache
-  \note    I-Cache also turns on.
   */
 __STATIC_INLINE void csi_dcache_enable (void)
 {
@@ -1119,7 +1055,7 @@ __STATIC_INLINE void csi_dcache_enable (void)
         __ISB();
         __DCACHE_IALL();                        /* invalidate all dcache */
         cache = __get_MHCR();
-        cache |= (CACHE_MHCR_DE_Msk | CACHE_MHCR_WB_Msk | CACHE_MHCR_WA_Msk | CACHE_MHCR_RS_Msk | CACHE_MHCR_BPE_Msk | CACHE_MHCR_L0BTB_Msk);      /* enable all Cache */
+        cache |= (CACHE_MHCR_DE_Msk | CACHE_MHCR_WB_Msk | CACHE_MHCR_WA_Msk | CACHE_MHCR_RS_Msk | CACHE_MHCR_BPE_Msk | CACHE_MHCR_BTB_Msk);      /* enable all Cache */
         __set_MHCR(cache);
 
         __DSB();
@@ -1132,7 +1068,6 @@ __STATIC_INLINE void csi_dcache_enable (void)
 /**
   \brief   Disable D-Cache
   \details Turns off D-Cache
-  \note    I-Cache also turns off.
   */
 __STATIC_INLINE void csi_dcache_disable (void)
 {
@@ -1155,7 +1090,6 @@ __STATIC_INLINE void csi_dcache_disable (void)
 /**
   \brief   Invalidate D-Cache
   \details Invalidates D-Cache
-  \note    I-Cache also invalid
   */
 __STATIC_INLINE void csi_dcache_invalid (void)
 {
@@ -1172,7 +1106,6 @@ __STATIC_INLINE void csi_dcache_invalid (void)
 /**
   \brief   Clean D-Cache
   \details Cleans D-Cache
-  \note    I-Cache also cleans
   */
 __STATIC_INLINE void csi_dcache_clean (void)
 {
@@ -1189,7 +1122,6 @@ __STATIC_INLINE void csi_dcache_clean (void)
 /**
   \brief   Clean & Invalidate D-Cache
   \details Cleans and Invalidates D-Cache
-  \note    I-Cache also flush.
   */
 __STATIC_INLINE void csi_dcache_clean_invalid (void)
 {
@@ -1209,12 +1141,12 @@ __STATIC_INLINE void csi_dcache_clean_invalid (void)
   \param[in]   addr    address (aligned to 32-byte boundary)
   \param[in]   dsize   size of memory block (in number of bytes)
 */
-__STATIC_INLINE void csi_dcache_invalid_range (uint32_t *addr, int32_t dsize)
+__STATIC_INLINE void csi_dcache_invalid_range (unsigned long *addr, size_t dsize)
 {
 #if (__DCACHE_PRESENT == 1U)
-    int32_t op_size = dsize + (uint32_t)addr % 32;
-    uint32_t op_addr = (uint32_t)addr;
-    int32_t linesize = 32;
+    int linesize = csi_get_cache_line_size();
+    long op_size = dsize + (unsigned long)addr % linesize;
+    unsigned long op_addr = (unsigned long)addr;
 
     __DSB();
 
@@ -1235,13 +1167,13 @@ __STATIC_INLINE void csi_dcache_invalid_range (uint32_t *addr, int32_t dsize)
   \param[in]   addr    address (aligned to 32-byte boundary)
   \param[in]   dsize   size of memory block (in number of bytes)
 */
-__STATIC_INLINE void csi_dcache_clean_range (uint32_t *addr, int32_t dsize)
+__STATIC_INLINE void csi_dcache_clean_range (unsigned long *addr, size_t dsize)
 {
 
 #if (__DCACHE_PRESENT == 1U)
-    int32_t op_size = dsize + (uint32_t)addr % 32;
-    uint32_t op_addr = (uint32_t) addr & CACHE_INV_ADDR_Msk;
-    int32_t linesize = 32;
+    int linesize = csi_get_cache_line_size();
+    long op_size = dsize + (unsigned long)addr % linesize;
+    unsigned long op_addr = (unsigned long) addr & CACHE_INV_ADDR_Msk;
 
     __DSB();
 
@@ -1263,12 +1195,12 @@ __STATIC_INLINE void csi_dcache_clean_range (uint32_t *addr, int32_t dsize)
   \param[in]   addr    address (aligned to 16-byte boundary)
   \param[in]   dsize   size of memory block (aligned to 16-byte boundary)
 */
-__STATIC_INLINE void csi_dcache_clean_invalid_range (uint32_t *addr, int32_t dsize)
+__STATIC_INLINE void csi_dcache_clean_invalid_range (unsigned long *addr, size_t dsize)
 {
 #if (__DCACHE_PRESENT == 1U)
-    int32_t op_size = dsize + (uint32_t)addr % 32;
-    uint32_t op_addr = (uint32_t) addr;
-    int32_t linesize = 32;
+    int linesize = csi_get_cache_line_size();
+    long op_size = dsize + (unsigned long)addr % linesize;
+    unsigned long op_addr = (unsigned long) addr;
 
     __DSB();
 
@@ -1282,69 +1214,166 @@ __STATIC_INLINE void csi_dcache_clean_invalid_range (uint32_t *addr, int32_t dsi
 #endif
 }
 
-/**
-  \brief   setup cacheable range Cache
-  \param [in]  index      cache scope index (0, 1, 2, 3).
-  \param [in]  baseAddr   base address must be aligned with size.
-  \param [in]  size       \ref CACHE Register Definitions. cache scope size.
-  \param [in]  enable     enable or disable cache scope.
-  \details setup Cache range
-  */
-__STATIC_INLINE void csi_cache_set_range (uint32_t index, uint32_t baseAddr, uint32_t size, uint32_t enable)
-{
-    ;
-}
-
-/**
-  \brief   Enable cache profile
-  \details Turns on Cache profile
-  */
-__STATIC_INLINE void csi_cache_enable_profile (void)
-{
-    ;
-}
-
-/**
-  \brief   Disable cache profile
-  \details Turns off Cache profile
-  */
-__STATIC_INLINE void csi_cache_disable_profile (void)
-{
-    ;
-}
-
-/**
-  \brief   Reset cache profile
-  \details Reset Cache profile
-  */
-__STATIC_INLINE void csi_cache_reset_profile (void)
-{
-    ;
-}
-
-/**
-  \brief   cache access times
-  \details Cache access times
-  \note    every 256 access add 1.
-  \return          cache access times, actual times should be multiplied by 256
-  */
-__STATIC_INLINE uint32_t csi_cache_get_access_time (void)
-{
-    return 0;
-}
-
-/**
-  \brief   cache miss times
-  \details Cache miss times
-  \note    every 256 miss add 1.
-  \return          cache miss times, actual times should be multiplied by 256
-  */
-__STATIC_INLINE uint32_t csi_cache_get_miss_time (void)
-{
-    return 0;
-}
-
 /*@} end of CSI_Core_CacheFunctions */
+
+#if (CONFIG_CPU_E907 || CONFIG_CPU_E907F || CONFIG_CPU_E907FD || CONFIG_CPU_E907P || CONFIG_CPU_E907FP || CONFIG_CPU_E907FDP)
+/**
+ \ingroup    CSI_tcm_register
+ \defgroup   CSI_TCM
+ \brief      Type definitions for the tcm Registers
+ @{
+ */
+
+/**
+ \brief  Consortium definition for accessing protection area selection register(MITCMCR, csr<0x7f9>).
+ */
+typedef union {
+    struct {
+        uint32_t EN: 1;                             /*!< bit:     0  Instruction Tightly-Coupled Memory enable */
+        uint32_t _reserved0: 1;                     /*!< bit:     1  Reserved */
+        uint32_t _reserved1: 1;                     /*!< bit:     2  Reserved */
+        uint32_t _reserved2: 1;                     /*!< bit:     3  Reserved */
+        uint32_t Size: 4;                           /*!< bit:  4..7  Size of ITCM */
+        uint32_t _reserved4: 4;                     /*!< bit:  8..11 Reserved */
+        uint32_t Base_Address: 20;                  /*!< bit: 12..31 Base address of ITCM */
+    } b;                                            /*!< Structure    Access by bit */
+    uint32_t w;                                     /*!< Type         Access by whole register */
+} MITCMCR_Type;
+
+#define MITCMCR_Base_Address_Pos             12U                                              /*!< MITCMCR: Base_Address Position */
+#define MITCMCR_Base_Address_Msk             (0xfffffUL << MITCMCR_Base_Address_Pos)           /*!< MITCMCR: Base_Address Mask */
+
+#define MITCMCR_Size_Pos                     4U                                               /*!< MITCMCR: Size Position */
+#define MITCMCR_Size_Msk                     (0xfUL << MITCMCR_Size_Pos)                       /*!< MITCMCR: Size Mask */
+
+#define MITCMCR_EN_Pos                       0U                                               /*!< MITCMCR: EN Position */
+#define MITCMCR_EN_Msk                       (0x1UL << MITCMCR_EN_Pos)                         /*!< MITCMCR: EN Mask */
+
+/**
+ \brief  Consortium definition for accessing protection area selection register(MDTCMCR, csr<0x7f8>).
+ */
+typedef union {
+    struct {
+        uint32_t EN: 1;                             /*!< bit:     0  Instruction Tightly-Coupled Memory enable */
+        uint32_t _reserved0: 1;                     /*!< bit:     1  Reserved */
+        uint32_t _reserved1: 1;                     /*!< bit:     2  Reserved */
+        uint32_t _reserved2: 1;                     /*!< bit:     3  Reserved */
+        uint32_t Size: 4;                           /*!< bit:  4..7  Size of DTCM */
+        uint32_t _reserved4: 4;                     /*!< bit:  8..11 Reserved */
+        uint32_t Base_Address: 20;                  /*!< bit: 12..31 Base address of DTCM */
+    } b;                                            /*!< Structure    Access by bit */
+    uint32_t w;                                     /*!< Type         Access by whole register */
+} MDTCMCR_Type;
+
+#define MDTCMCR_Base_Address_Pos             12U                                              /*!< MDTCMCR: Base_Address Position */
+#define MDTCMCR_Base_Address_Msk             (0xfffffUL << MDTCMCR_Base_Address_Pos)           /*!< MDTCMCR: Base_Address Mask */
+
+#define MDTCMCR_Size_Pos                     4U                                               /*!< MDTCMCR: Size Position */
+#define MDTCMCR_Size_Msk                     (0xfUL << MDTCMCR_Size_Pos)                       /*!< MDTCMCR: Size Mask */
+
+#define MDTCMCR_EN_Pos                       0U                                               /*!< MDTCMCR: EN Position */
+#define MDTCMCR_EN_Msk                       (0x1UL << MDTCMCR_EN_Pos)                         /*!< MDTCMCR: EN Mask */
+/*@} end of group CSI_TCM_bitfield */
+
+/* ##########################  TCM functions  #################################### */
+/**
+ \ingroup  CSI_Core_FunctionInterface
+ \defgroup CSI_Core_TCMFunctions TCM Functions
+ \brief    Functions that configure TCM.
+ @{
+ */
+
+/**
+ \brief   Enable ITCM
+ \details Turns on ITCM
+ */
+__STATIC_INLINE void csi_itcm_enable (void)
+{
+    __set_MITCMCR(__get_MITCMCR() | MITCMCR_EN_Msk);
+}
+
+/**
+ \brief   Enable DTCM
+ \details Turns on DTCM
+ */
+__STATIC_INLINE void csi_dtcm_enable (void)
+{
+    __set_MDTCMCR(__get_MDTCMCR() | MDTCMCR_EN_Msk);
+}
+
+/**
+ \brief   Enable ITCM
+ \details Turns on ITCM
+ */
+__STATIC_INLINE void csi_itcm_disable (void)
+{
+    __set_MITCMCR(__get_MITCMCR() & (~MITCMCR_EN_Msk));
+}
+
+/**
+ \brief   Enable DTCM
+ \details Turns on DTCM
+ */
+__STATIC_INLINE void csi_dtcm_disable (void)
+{
+    __set_MDTCMCR(__get_MDTCMCR() & (~MDTCMCR_EN_Msk));
+}
+
+/**
+ \brief   Get ITCM Size
+ \details Get ITCM Size
+ \return         ITCM size (bytes).
+ */
+__STATIC_INLINE unsigned long csi_itcm_get_size(void)
+{
+    MITCMCR_Type sizemask;
+    unsigned long ret;
+
+    sizemask.w = __get_MITCMCR();
+    ret = sizemask.b.Size;
+
+    return (1 << ret) << 9;
+}
+
+/**
+ \brief   Get DTCM Size
+ \details Get DTCM Size
+ \return         DTCM size (bytes).
+ */
+__STATIC_INLINE unsigned long csi_dtcm_get_size(void)
+{
+    MDTCMCR_Type sizemask;
+    unsigned long ret;
+
+    sizemask.w = __get_MDTCMCR();
+    ret = sizemask.b.Size;
+
+    return (1 << ret) << 9;
+}
+
+/**
+ \brief   Set ITCM Base Address
+ \details Set ITCM Base Address
+ \param [in]  base_addr  itcm base address.
+ */
+__STATIC_INLINE void csi_itcm_set_base_addr(unsigned long base_addr)
+{
+    __set_MITCMCR((__get_MITCMCR() & (~MITCMCR_Base_Address_Msk)) | (base_addr & MITCMCR_Base_Address_Msk));
+}
+
+/**
+ \brief   Set DTCM Base Address
+ \details Set DTCM Base Address
+ \param [in]  base_addr  dtcm base address.
+ */
+__STATIC_INLINE void csi_dtcm_set_base_addr(unsigned long base_addr)
+{
+    __set_MDTCMCR((__get_MDTCMCR() & (~MDTCMCR_Base_Address_Msk)) | (base_addr & MDTCMCR_Base_Address_Msk));
+}
+
+/*@} end of CSI_Core_TCMFunctions */
+#endif /* end e907xx */
+
 
 /*@} end of CSI_core_DebugFunctions */
 
@@ -1373,7 +1402,6 @@ __STATIC_INLINE void csi_irq_restore(uint32_t irq_state)
 }
 
 /*@} end of IRQ Functions */
-
 
 #ifdef __cplusplus
 }

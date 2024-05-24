@@ -20,6 +20,7 @@ extern "C" {
 #define SPI_IOC_SEND_RECV               (DEV_SPI_IOCTL_CMD_BASE + 6)
 #define SPI_IOC_SEND_THEN_RECV          (DEV_SPI_IOCTL_CMD_BASE + 7)
 #define SPI_IOC_SEND_THEN_SEND          (DEV_SPI_IOCTL_CMD_BASE + 8)
+#define SPI_IOC_TIMEOUT                 (DEV_SPI_IOCTL_CMD_BASE + 9)
 
 typedef struct {
     uint8_t *tx_data;

@@ -6,6 +6,7 @@
 #define TM_VPM_FACTORY_H
 
 #include <tmedia_core/common/common_inc.h>
+#include <tmedia_core/util/util_inc.h>
 #include <tmedia_core/entity/vpm/vpm.h>
 
 using namespace std;

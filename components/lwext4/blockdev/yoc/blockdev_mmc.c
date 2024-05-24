@@ -44,12 +44,46 @@ static int blockdev_mmc_bread(struct ext4_blockdev *bdev, void *buf, uint64_t bl
 static int blockdev_mmc_bwrite(struct ext4_blockdev *bdev, const void *buf,
                                uint64_t blk_id, uint32_t blk_cnt);
 static int blockdev_mmc_close(struct ext4_blockdev *bdev);
+static int blockdev_mmc_lock(struct ext4_blockdev *bdev);
+static int blockdev_mmc_unlock(struct ext4_blockdev *bdev);
 
 /******************************************************************************/
 EXT4_BLOCKDEV_STATIC_INSTANCE(blockdev_mmc, 512, 0, blockdev_mmc_open,
-                              blockdev_mmc_bread, blockdev_mmc_bwrite, blockdev_mmc_close, 0, 0);
+                              blockdev_mmc_bread, blockdev_mmc_bwrite, blockdev_mmc_close, blockdev_mmc_lock, blockdev_mmc_unlock);
 
 /******************************************************************************/
+static aos_mutex_t blk_mmc_mtx;
+static int blockdev_mmc_lock(struct ext4_blockdev *bdev)
+{
+    int ret;
+
+    if (!aos_mutex_is_valid(&blk_mmc_mtx)) {
+        ret = aos_mutex_new(&blk_mmc_mtx);
+        if (ret != 0) {
+            return -1;
+        }
+    }
+    ret = aos_mutex_lock(&blk_mmc_mtx, AOS_WAIT_FOREVER);
+    if (ret != 0) {
+        return -1;
+    }
+    return 0;
+}
+
+static int blockdev_mmc_unlock(struct ext4_blockdev *bdev)
+{
+    int ret;
+
+    if (aos_mutex_is_valid(&blk_mmc_mtx)) {
+        ret = aos_mutex_unlock(&blk_mmc_mtx);
+        if (ret != 0) {
+            return -1;
+        }
+        return 0;
+    }
+    return -1;
+}
+
 static int blockdev_mmc_open(struct ext4_blockdev *bdev)
 {
     partition_t partition;

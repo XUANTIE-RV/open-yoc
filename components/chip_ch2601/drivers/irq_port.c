@@ -16,24 +16,12 @@
 
 void soc_irq_enable(uint32_t irq_num)
 {
-#if defined(CONFIG_SYSTEM_SECURE)
-    csi_vic_enable_sirq((int32_t)irq_num);
-#elif defined(CONFIG_MMU)
     csi_vic_enable_irq((int32_t)irq_num);
-#else
-    csi_vic_enable_irq((int32_t)irq_num);
-#endif
 }
 
 void soc_irq_disable(uint32_t irq_num)
 {
-#if defined(CONFIG_SYSTEM_SECURE)
-    csi_vic_disable_sirq((int32_t)irq_num);
-#elif defined(CONFIG_MMU)
     csi_vic_disable_irq((int32_t)irq_num);
-#else
-    csi_vic_disable_irq((int32_t)irq_num);
-#endif
 }
 
 bool soc_irq_is_enabled(uint32_t irq_num)
@@ -54,22 +42,12 @@ void soc_irq_priority(uint32_t irq_num, uint32_t priority)
     csi_vic_set_prio((int32_t)irq_num, priority);
 }
 
-void soc_irq_enable_wakeup(uint32_t irq_num)
-{
-    csi_vic_set_wakeup_irq((int32_t)irq_num);
-}
-
-void soc_irq_disable_wakeup(uint32_t irq_num)
-{
-    csi_vic_clear_wakeup_irq((int32_t)irq_num);
-}
-
 uint32_t soc_irq_get_irq_num(void)
 {
 #ifdef __CSKY__
     return ((__get_PSR() >> 16U) & 0xFFU) - 32U;
 #elif defined(__riscv)
-#if defined(CONFIG_CPU_C906) || defined(CONFIG_CPU_C910)
+#if defined(CONFIG_CPU_C906FDV) || defined(CONFIG_CPU_C910)
 #ifdef CONFIG_MMU
     uint32_t num = PLIC->PLIC_H0_SCLAIM;
 #else
@@ -84,7 +62,7 @@ uint32_t soc_irq_get_irq_num(void)
 void soc_irq_end(uint32_t irq_num)
 {
 #if defined(__riscv)
-#if defined(CONFIG_CPU_C906) || defined(CONFIG_CPU_C910)
+#if defined(CONFIG_CPU_C906FDV) || defined(CONFIG_CPU_C910)
 #ifdef CONFIG_MMU
     PLIC->PLIC_H0_SCLAIM = irq_num;
 #else

@@ -88,23 +88,26 @@
 
         <div id="div-5" class="sw_button">
           <LightCard
-            id="switch-0"
-            v-model="value1"
+            id="light-1"
+            v-model="value_light1"
+            :status="light1_status"
             title="客厅灯"
             height="160px"
             width="128px"
           />
           <ScreenCard
-            id="switch-1"
-            v-model="value3"
+            id="screen-1"
+            v-model="value_screen1"
+            :status="screen1_status"
             title="窗帘"
             height="160px"
             width="128px"
             style="margin-left: 18px"
           />
           <SwitchCard
-            id="switch-2"
-            v-model="value2"
+            id="switch-1"
+            v-model="value_switch1"
+            :status="switch1_status"
             title="开关状态"
             height="160px"
             width="128px"
@@ -166,10 +169,11 @@ import gw from "gateway";
 import { FlPopup } from "falcon-ui";
 import aliyun from "../../voice_parse/action_parse_aliyun";
 import lyasr from "../../voice_parse/action_parse_lyasr";
+import aui_action from "../../voice_parse/aui_action";
 
 
 var cnum = ["一", "二", "三", "四", "五", "六", "日"];
-var voiceParse= 1;//0:aliyun ,1:lyasr
+var voiceParse= aui_action.voiceParse;//0:aliyun ,1:lyasr
 
 export default {
   name: "index",
@@ -371,26 +375,6 @@ export default {
                 this.showPop(false, false, "center");
               });
             }
-            if (obj.data.title === "卧室灯") {
-              var operations = {
-                operands: "light2",
-                operator: "ACT_BRIVALUE",
-                value: 1,
-              };
-              operations.value = obj.data.count;
-
-              gw.nodeListGet().then(async (props) => {
-                for (var i in props) {
-                  console.log("index created:"+props[i]);
-                  if (props[i].dev_name === "light2") {
-                    gw.subDevCtrl(operations, props[i].dev_addr);
-                    return;
-                  }
-                }
-                this.msg = "该设备未上线"
-                this.showPop(false, false, "center");
-              });
-            }
           } ,
         token:null
       },
@@ -408,7 +392,6 @@ export default {
 
             gw.nodeListGet().then((props) => {
               if (!props) {
-                this.value1 = false;
                 this.light1_status =0;
                 this.msg = "该设备未上线"
                 this.showPop(false, false, "center");
@@ -421,7 +404,6 @@ export default {
                   return;
                 }
               }
-              this.value1 = false;
               this.light1_status =0;
               this.msg = "该设备未上线"
               this.showPop(false, false, "center");
@@ -441,7 +423,6 @@ export default {
             };
             gw.nodeListGet().then((props) => {
               if (!props) {
-                this.value1 = false;
                 this.light1_status =0;
                 this.msg = "该设备未上线"
                 this.showPop(false, false, "center");
@@ -451,12 +432,10 @@ export default {
                 console.log("index created:"+props[i]);
                 if (props[i].dev_name === "light1") {
                   gw.subDevCtrl(operations, props[i].dev_addr);
-                  this.value1 = false;
                   this.light1_status = 0;
                   return;
                 }
               }
-              this.value1 = false;
               this.light1_status =0;
               this.msg = "该设备未上线"
               this.showPop(false, false, "center");
@@ -466,79 +445,11 @@ export default {
       },
       {
         module:"$falcon",
-        event:"open_light2",
+        event:"open_screen1",
         callback:
           async () => {
             var operations = {
-              operands: "light2",
-              operator: "ACT_OPEN",
-              value: 1,
-            };
-            gw.nodeListGet().then((props) => {
-              if (!props) {
-                this.value2 = false;
-                this.light2_status =0;
-                this.msg = "该设备未上线"
-                this.showPop(false, false, "center");
-                return;
-              }
-              for (var i in props) {
-                console.log("index created:"+props[i]);
-                if (props[i].dev_name === "light2") {
-                  gw.subDevCtrl(operations, props[i].dev_addr);
-                  return;
-                }
-              }
-              this.value2 = false;
-              this.light2_status =0;
-              this.msg = "该设备未上线"
-              this.showPop(false, false, "center");
-            });
-          },   
-        token:null
-      },
-      {
-        module:"$falcon",
-        event:"close_light2",
-        callback:
-          async () => {
-            var operations = {
-              operands: "light2",
-              operator: "ACT_CLOSE",
-              value: 1,
-            };
-            gw.nodeListGet().then((props) => {
-              if (!props) {
-                this.value2 = false;
-                this.light2_status =0;
-                this.msg = "该设备未上线"
-                this.showPop(false, false, "center");
-                return;
-              }
-              for (var i in props) {
-                console.log("index created:"+props[i]);
-                if (props[i].dev_name === "light2") {
-                  gw.subDevCtrl(operations, props[i].dev_addr);
-                  this.value2 = false;
-                  this.light2_status = 0;
-                  return;
-                }
-              }
-              this.value2 = false;
-              this.light2_status =0;
-              this.msg = "该设备未上线"
-              this.showPop(false, false, "center");
-            });
-          },   
-        token:null
-      },
-      {
-        module:"$falcon",
-        event:"open_screen",
-        callback:
-          async () => {
-            var operations = {
-              operands: "screen",
+              operands: "screen1",
               operator: "ACT_OPEN",
               value: 1,
             };
@@ -546,21 +457,19 @@ export default {
             gw.nodeListGet().then((props) => {
               console.log("index created:"+props);
               if (!props) {
-                this.value3 = false;
-                this.screen_status = 0;
+                this.screen1_status = 0;
                 this.msg = "该设备未上线"
                 this.showPop(false, false, "center");
                 return;
               }
               for (var i in props) {
                 console.log("index created:"+props[i]);
-                if (props[i].dev_name === "screen") {
+                if (props[i].dev_name === "screen1") {
                   gw.subDevCtrl(operations, props[i].dev_addr);
                   return;
                 }
               }
-              this.value3 = false;
-              this.screen_status = 0;
+              this.screen1_status = 0;
               this.msg = "该设备未上线"
               this.showPop(false, false, "center");
             });
@@ -569,33 +478,30 @@ export default {
       },
       {
         module:"$falcon",
-        event:"close_screen",
+        event:"close_screen1",
         callback:
           async () => {
             var operations = {
-              operands: "screen",
+              operands: "screen1",
               operator: "ACT_CLOSE",
               value: "1",
             };
             gw.nodeListGet().then((props) => {
               if (!props) {
-                this.value3 = false;
-                this.screen_status = 0;
+                this.screen1_status = 0;
                 this.msg = "该设备未上线"
                 this.showPop(false, false, "center");
                 return;
               }
               for (var i in props) {
                 console.log("index created:"+props[i]);
-                if (props[i].dev_name === "screen") {
+                if (props[i].dev_name === "screen1") {
                   gw.subDevCtrl(operations, props[i].dev_addr);
-                  this.value3 = false;
-                  this.screen_status = 0;
+                  this.screen1_status = 0;
                   return;
                 }
               }
-              this.value3 = false;
-              this.screen_status = 0;
+              this.screen1_status = 0;
               this.msg = "该设备未上线"
               this.showPop(false, false, "center");
             });
@@ -623,11 +529,7 @@ export default {
             gw.grpDevCtrl(operations, "OBJ_SCREEN");
 
             this.light1_status = 0;
-            this.light2_status = 0;
-            this.screen_status = 0;
-            this.value1 = false;
-            this.value2 = false;
-            this.value3 = false;
+            this.screen1_status = 0;
           },   
         token:null
       },
@@ -648,11 +550,7 @@ export default {
             };
             gw.grpDevCtrl(operations, "OBJ_SCREEN");
             this.light1_status = 0;
-            this.light2_status = 0;
-            this.screen_status = 0;
-            this.value1 = false
-            this.value2 = false
-            this.value3 = false
+            this.screen1_status = 0;
           },   
         token:null
       },
@@ -666,16 +564,12 @@ export default {
               operator: "",
               value: 0,
             };
-            var existFlag=[false,false,false];
+            var existFlag=[false,false];
             gw.nodeListGet().then((props) => {
               //至少有一个已入网设备，不会进入这里
               if (!props) {
-                this.value1 = false
-                this.value2 = false
-                this.value3 = false
                 this.light1_status = 0;
-                this.light2_status = 0;
-                this.screen_status = 0;
+                this.screen1_status = 0;
                 console.log("index created:"+"something wrong!");
                 return;
               }
@@ -691,38 +585,21 @@ export default {
                   gw.subDevCtrl(operations, props[i].dev_addr);
                   existFlag[0]=true;
                 }
-                else if (props[i].dev_name === "light2") {
-                  operations.operands="light2";
-                  operations.operator="ACT_OPEN";
-                  operations.value=1;
-                  gw.subDevCtrl(operations, props[i].dev_addr);
-                  operations.operator="ACT_BRIVALUE";
-                  operations.value=20;
-                  gw.subDevCtrl(operations, props[i].dev_addr);
-                  existFlag[1]=true;
-                }
-                else if (props[i].dev_name === "screen") {
-                  operations.operands="screen";
+                else if (props[i].dev_name === "screen1") {
+                  operations.operands="screen1";
                   operations.operator="ACT_CLOSE";
                   operations.value=1;
                   gw.subDevCtrl(operations, props[i].dev_addr);
-                  this.value3 = false;
-                  this.screen_status = 0;
-                  existFlag[2]=true;
+                  this.screen1_status = 0;
+                  existFlag[1]=true;
                 }
               }
               //不在线显示为关闭
               if(!existFlag[0]){
-                this.value1 = false;
                 this.light1_status = 0;
               }
               if(!existFlag[1]){
-                this.value2 = false;
-                this.light2_status = 0;
-              }
-              if(!existFlag[2]){
-                this.value3 = false;
-                this.screen_status = 0;
+                this.screen1_status = 0;
               }
             });
           },   
@@ -738,16 +615,12 @@ export default {
               operator: "",
               value: 0,
             };
-            var existFlag=[false,false,false];
+            var existFlag=[false,false];
             gw.nodeListGet().then((props) => {
               //至少有一个已入网设备，不会进入这里
               if (!props) {
-                this.value1 = false
-                this.value2 = false
-                this.value3 = false
                 this.light1_status = 0;
-                this.light2_status = 0;
-                this.screen_status = 0;
+                this.screen1_status = 0;
                 console.log("index created:"+"something wrong!");
                 return;
               }
@@ -760,33 +633,20 @@ export default {
                   gw.subDevCtrl(operations, props[i].dev_addr);
                   existFlag[0]=true;
                 }
-                else if (props[i].dev_name === "light2") {
-                  operations.operands="light2";
+                else if (props[i].dev_name === "screen1") {
+                  operations.operands="screen1";
                   operations.operator="ACT_OPEN";
                   operations.value=1;
                   gw.subDevCtrl(operations, props[i].dev_addr);
                   existFlag[1]=true;
                 }
-                else if (props[i].dev_name === "screen") {
-                  operations.operands="screen";
-                  operations.operator="ACT_OPEN";
-                  operations.value=1;
-                  gw.subDevCtrl(operations, props[i].dev_addr);
-                  existFlag[2]=true;
-                }
               }
               //不在线显示为关闭
               if(!existFlag[0]){
-                this.value1 = false;
                 this.light1_status = 0;
               }
               if(!existFlag[1]){
-                this.value2 = false;
-                this.light2_status = 0;
-              }
-              if(!existFlag[2]){
-                this.value3 = false;
-                this.screen_status = 0;
+                this.screen1_status = 0;
               }
             });
           },   
@@ -802,14 +662,11 @@ export default {
               operator: "",
               value: 0,
             };
-            var existFlag=[false,false];
+            var existFlag=false;
             gw.nodeListGet().then((props) => {
               //至少有一个已入网设备，不会进入这里
               if (!props) {
-                this.value1 = false
-                this.value2 = false
                 this.light1_status = 0;
-                this.light2_status = 0;
                 console.log("index created:"+"something wrong!");
                 return;
               }
@@ -822,22 +679,10 @@ export default {
                   gw.subDevCtrl(operations, props[i].dev_addr);
                   existFlag[0]=true;
                 }
-                else if (props[i].dev_name === "light2") {
-                  operations.operands="light2";
-                  operations.operator="ACT_OPEN";
-                  operations.value=1;
-                  gw.subDevCtrl(operations, props[i].dev_addr);
-                  existFlag[1]=true;
-                }
               }
               //不在线显示为关闭
-              if(!existFlag[0]){
-                this.value1 = false;
+              if(!existFlag){
                 this.light1_status = 0;
-              }
-              if(!existFlag[1]){
-                this.value2 = false;
-                this.light2_status = 0;
               }
             });
           },   
@@ -854,9 +699,6 @@ export default {
             };
             gw.grpDevCtrl(operations, "OBJ_LIGHT");
             this.light1_status = 0;
-            this.light2_status = 0;
-            this.value1 = false;
-            this.value2 = false;
           },   
         token:null
       },
@@ -912,46 +754,27 @@ export default {
           (props) => {
             console.log("network created:"+props.dev_addr+" "+props.dev_name+" "+props.dev_state);
             if(props.dev_name=== "light1"){
-              this.updateFlag1=true;
               if(props.dev_state){
-                this.value1 = true;
                 this.light1_status = 1;
               }
               else{
-                this.value1 = false;
                 this.light1_status =0;
               }
             }
-            else if(props.dev_name=== "light2"){
-              this.updateFlag2=true;
+            else if(props.dev_name=== "screen1"){
               if(props.dev_state){
-                this.value2 = true;
-                this.light2_status = 1;
+                this.screen1_status = 1;
               }
               else{
-                this.value2 = false;
-                this.light2_status =0;
-              }
-            }
-            else if(props.dev_name=== "screen"){
-              this.updateFlag3=true;
-              if(props.dev_state){
-                this.value3 = true;
-                this.screen_status = 1;
-              }
-              else{
-                this.value3 = false;
-                this.screen_status = 0;
+                this.screen1_status = 0;
               }
             }
             else if(props.dev_name=== "switch1"){
               if(props.dev_state){
-                this.value2 = true;
-                this.light2_status = 1;
+                this.switch1_status = 1;
               }
               else{
-                this.value2 = false;
-                this.light2_status =0;
+                this.switch1_status =0;
               }
             }
           },   
@@ -1117,12 +940,12 @@ export default {
       cur_time: "12:30",
       cur_date: "10月11日 星期六",
       cur_temp: "16度",
-      value1: false,
-      value2: false,
-      value3: false,
+      value_light1: false,
+      value_switch1: false,
+      value_screen1: false,
       light1_status: 0,
-      light2_status: 0,
-      screen_status: 0,
+      switch1_status: 0,
+      screen1_status: 0,
       result: "",
       timerId: 0,
       show_popup: false,
@@ -1136,115 +959,78 @@ export default {
       count2: 0,
       // msg: "该设备未上线",
       msg: "    请等待...   ",
-      updateFlag1:false,
-      updateFlag2:false,
-      updateFlag3:false,
-      timer1:0,
-      timer2:0,
-      timer3:0,
     };
   },
-  //value1，light1_status对应左侧的客厅灯
-  //value3,screen_status对应中间的窗帘
-  //value2，light2_status对应右边的开关
-  //后续，value2和value3对调，light2_status改成switch_status ，底层增加obj_switch
+  //value_light1，light1_status对应左侧的客厅灯
+  //value_screen1,screen1_status对应中间的窗帘
+  //value_switch1，switch1_status对应右边的开关
+  //底层增加obj_switch
   watch: {
     // 对灯1的状态进行检测
-    value1() {
-      if (this.value1) {
+    async value_light1() {
+      let flag=0;
+      let props=await gw.nodeListGet();
+      if (props) {
+        for (var i in props) {
+          if (props[i].dev_name === "light1") {
+            flag=1;
+            break;
+          }
+        }
+      }
+      if(flag==0){
+        this.value_light1=false;
+        this.light1_status =false;
+        this.msg = "该设备未上线"
+        this.showPop(false, false, "center");
+        return;
+      };
+      if (this.value_light1) {
         if(this.light1_status){
           return;
         }
-        console.log("index watch:"+"light1_" + this.value1);
+        console.log("index watch:"+"light1_" + this.value_light1);
         $falcon.trigger("open_light1");
-        //设备入网但断电时收不到NodeStatusRpt
-        this.updateFlag1=false;
-        this.timer1=setTimeout(()=>{
-          if(!this.updateFlag1){
-            this.value1 = false;
-            this.light1_status =0;
-          }else{
-            this.timer1=0;
-          }
-
-        },1000);
       } else {
-        if(this.timer1) {
-          clearTimeout(this.timer1);
-          this.timer1=0;
-        }
         if(!this.light1_status){
           return;
         }
-        console.log("index watch:"+"light1_" + this.value1);
+        console.log("index watch:"+"light1_" + this.value_light1);
         $falcon.trigger("close_light1");
       }
     },
-    /*
-    value2() {
-      if (this.value2) {
-        // gw 1
-        if(this.light2_status){
-          return;
-        }
-        console.log("index watch:"+"light2_" + this.value2);
-        $falcon.trigger("open_light2");
-        //设备入网但断电时收不到NodeStatusRpt
-        this.updateFlag2=false;
-        this.timer2=setTimeout(()=>{
-          if(!this.updateFlag2){
-            this.value2 = false;
-            this.light2_status =0;
-          }
-          else{
-            this.timer2=0;
-          }
-
-        },1000);
-      } else {
-        if(this.timer2) {
-          clearTimeout(this.timer2);
-          this.timer2=0;
-        }
-        // gw 0
-        if(!this.light2_status){
-          return;
-        }
-        console.log("index watch:"+"light2_" + this.value2);
-        $falcon.trigger("close_light2");
-      }
-    },
-    */
     // 对 窗帘状态进行控制
-    value3() {
-      if (this.value3) {
-        if(this.screen_status){
+    async value_screen1() {
+      let flag=0;
+      let props=await gw.nodeListGet();
+      if (props) {
+        for (var i in props) {
+          if (props[i].dev_name === "screen1") {
+            flag=1;
+            break;
+          }
+        }
+      }
+      if(flag==0){
+        this.value_screen1=false;
+        this.screen1_status =false;
+        this.msg = "该设备未上线"
+        this.showPop(false, false, "center");
+        return;
+      };
+      if (this.value_screen1) {
+        if(this.screen1_status){
           return;
         }
-        console.log("index watch:"+"screen_" + this.value3);
-        $falcon.trigger("open_screen");
-        //设备入网但断电时收不到NodeStatusRpt
-        this.updateFlag3=false;
-        this.timer3=setTimeout(()=>{
-          if(!this.updateFlag3){
-            this.value3 = false;
-            this.screen_status =0;
-          }
-          else{
-            this.timer3=0;
-          }
-
-        },5000);
+        console.log("index watch:"+"screen1_" + this.value_screen1);
+        $falcon.trigger("open_screen1");
+    
       } else {
-        if(this.timer3) {
-          clearTimeout(this.timer3);
-          this.timer3=0;
-        }
-        if(!this.screen_status){
+        if(!this.screen1_status){
           return;
         }
-        console.log("index watch:"+"screen_" + this.value3);
-        $falcon.trigger("close_screen");
+        console.log("index watch:"+"screen1_" + this.value_screen1);
+        $falcon.trigger("close_screen1");
       }
     },
   },
@@ -1356,8 +1142,8 @@ export default {
       }
     },
     startCount1() {
-      if (!this.value1) {
-        this.value1 = true;
+      if (!this.value_light1) {
+        this.value_light1 = true;
       }
       this.intervalId = setInterval(this.incrementCount1, 100);
     },
@@ -1375,8 +1161,8 @@ export default {
       }
     },
     startCount2() {
-      if (!this.value2) {
-        this.value2 = true;
+      if (!this.value_switch1) {
+        this.value_switch1 = true;
       }
       this.intervalId = setInterval(this.incrementCount2, 100);
     },

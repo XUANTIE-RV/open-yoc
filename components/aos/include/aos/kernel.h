@@ -70,6 +70,7 @@ typedef void* aos_queue_t;
 typedef void* aos_timer_t;
 typedef void* aos_work_t;
 typedef void* aos_event_t;
+typedef void* aos_spinlock_t;
 
 typedef struct {
     void *hdl;
@@ -110,6 +111,38 @@ typedef int32_t aos_status_t; /**< AOS返回值状态类型 */
  */
 aos_status_t aos_task_create(aos_task_t *task, const char *name, void (*fn)(void *),
                      void *arg,void *stack_buf, size_t stack_size, int32_t prio, uint32_t options);
+
+/**
+ * 创建任务，该接口为创建任务分配TCB（任务控制块）并且根据指定的执行体、任务名称、栈大小来初始化对应成员.
+ * 该接口任务栈是由内核分配的。
+ *
+ * @par 使用约束
+ * 该接口不能在中断上下文中调用
+ *
+ * @par 错误处理
+ * 如果任务执行体入口函数为NULL，或任务名为NULL，或任务句柄为NULL，则返回错误码-EINVAL \n
+ * 如果栈大小为零，则返回错误 \n
+ * 如果任务优先级超过配置上限或等于IDLE任务优先级，则返回错误码-EINVAL \n
+ *
+ * @param[in]  task        任务对象句柄.
+ * @param[in]  name        任务名称.若任务名称为空，则使用默认任务名“default_name”。
+ * @param[in]  fn          任务执行体入口函数。
+ * @param[in]  arg         任务执行体入口函数的参数。
+ * @param[in]  stack_buf   栈空间地址，如果地址为空则内核根据stack_size为任务分配栈空间.
+ * @param[in]  stack_size  栈大小（字节为单位）。
+ * @param[in]  prio        任务优先级，最大指由配置参数AOS_MAX_APP_PRI(默认为60)决定.
+ * @param[in]  options     任务创建选项,当前支持选项：\n
+ *                         @ref AOS_TASK_AUTORUN 任务创建后自动加入就绪队列，可被调度器调度执行. \n
+ * @param[in]  cpuid       需要绑定的cpuid
+ *
+ * @return  状态码
+ * @retval 0 创建任务成功
+ * @retval -EINVAL 输入非法参数导致失败
+ * @retval -ENOMEM 内存不足导致失败
+ * @retval -1 其他原因导致的失败
+ */
+aos_status_t aos_task_create_ext(aos_task_t *task, const char *name, void (*fn)(void *),
+                     void *arg,void *stack_buf, size_t stack_size, int32_t prio, uint32_t options, uint32_t cpuid);
 
 /**
  * 挂起任务，该接口将已创建的任务挂起，暂时不执行，挂起的对象既可以是任务自身也可以是其他任务，\n
@@ -587,7 +620,6 @@ void aos_event_free(aos_event_t *event);
  * @param[in]  flags        request flag set.
  * @param[in]  opt          operation type, such as AND,OR,AND_CLEAR,OR_CLEAR.
  * @param[out] actl_flags   the internal flags value hold by event.
- * @param[in]  flags        request flag set.
  * @param[in]  timeout      max wait time in millisecond.
  *
  * @return  0: success.
@@ -610,7 +642,7 @@ int aos_event_set(aos_event_t *event, unsigned int flags, unsigned char opt);
 /**
  * This function will check if event is valid.
  *
- * @param[in]  sem  pointer to the semaphore.
+ * @param[in]  event    event object pointer.
  *
  * @return  0: invalid, 1: valid.
  */
@@ -1131,7 +1163,6 @@ int aos_mm_dump(void);
 /**
  * Get the maximum number of system's schedule priority
  *
- * @param[in]   task        task handle
  * @param[in]   policy      the task's schedule policy
  *
  * @return  maximum schedule priority
@@ -1171,6 +1202,59 @@ int aos_is_sched_disable(void);
  * @return    1 is disabled, 0 is enable
  */
 int aos_is_irq_disable(void);
+
+/**
+ * Get the current hartid
+ *
+ * @return    cpu id
+ */
+int aos_get_cur_cpu_id(void);
+
+/**
+ * Init a spinlock
+ *
+ * @param[in]   lock        the spinlock
+ */
+void aos_spin_lock_init(aos_spinlock_t *lock);
+
+/**
+ * Lock a spinlock
+ *
+ * @param[in]   lock        the spinlock
+ */
+void aos_spin_lock(aos_spinlock_t *lock);
+
+/**
+ * Unlock a spinlock
+ *
+ * @param[in]   lock        the spinlock
+ */
+void aos_spin_unlock(aos_spinlock_t *lock);
+
+/**
+ * Lock a spinlock and mask interrupt
+ *
+ * @param[in]   lock    the spinlock
+ *
+ * @return  the irq status
+ */
+unsigned long aos_spin_lock_irqsave(aos_spinlock_t *lock);
+
+/**
+ * Unlock a spinlock and restore interrupt masking status
+ *
+ * @param[in]   lock    the spinlock
+ * @param[in]   flags   the irq status before locking
+ */
+void aos_spin_lock_irqrestore(aos_spinlock_t *lock, unsigned long flags);
+
+#if defined(CONFIG_SMP) && CONFIG_SMP
+/**
+ * boot secondary cpu
+ */
+void aos_secondary_cpu_up(void);
+
+#endif
 
 /**
  * The exception callback function set

@@ -260,8 +260,8 @@ typedef struct {
 /*@} end of group CSI_PMP */
 
 /* CACHE Register Definitions */
-#define CACHE_MHCR_L0BTB_Pos                   12U                                           /*!< CACHE MHCR: L0BTB Position */
-#define CACHE_MHCR_L0BTB_Msk                   (0x1UL << CACHE_MHCR_L0BTB_Pos)               /*!< CACHE MHCR: WA Mask */
+#define CACHE_MHCR_BTB_Pos                   12U                                           /*!< CACHE MHCR: BTB Position */
+#define CACHE_MHCR_BTB_Msk                   (0x1UL << CACHE_MHCR_BTB_Pos)               /*!< CACHE MHCR: WA Mask */
 
 #define CACHE_MHCR_BPE_Pos                     5U                                            /*!< CACHE MHCR: BPE Position */
 #define CACHE_MHCR_BPE_Msk                     (0x1UL << CACHE_MHCR_BPE_Pos)                 /*!< CACHE MHCR: BPE Mask */
@@ -815,7 +815,7 @@ __STATIC_INLINE void csi_dcache_enable (void)
     __ISB();
     __DCACHE_IALL();                        /* invalidate all dcache */
     cache = __get_MHCR();
-    cache |= (CACHE_MHCR_DE_Msk | CACHE_MHCR_WB_Msk | CACHE_MHCR_WA_Msk | CACHE_MHCR_RS_Msk | CACHE_MHCR_BPE_Msk | CACHE_MHCR_L0BTB_Msk);      /* enable all Cache */
+    cache |= (CACHE_MHCR_DE_Msk | CACHE_MHCR_WB_Msk | CACHE_MHCR_WA_Msk | CACHE_MHCR_RS_Msk | CACHE_MHCR_BPE_Msk | CACHE_MHCR_BTB_Msk);      /* enable all Cache */
     __set_MHCR(cache);
 
     __DSB();

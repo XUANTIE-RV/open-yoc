@@ -1,0 +1,14 @@
+target remote 30.120.234.13:1025
+
+set confirm off
+set height 0
+
+reset
+
+set $mhcr = 0x17f
+set $mxstatus = 0x638000
+set $mhint = 0x650c
+
+lo
+
+

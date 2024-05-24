@@ -26,7 +26,11 @@
 #define DEBUG
 #endif
 
+#if ULOG_TAG_USE_SHORT_FILE
+#define ULOG_TAG __FUNCTION__, __LINE__
+#else
 #define ULOG_TAG __FILE__, __LINE__
+#endif
 
 #ifdef __linux__
 #include <syslog.h>

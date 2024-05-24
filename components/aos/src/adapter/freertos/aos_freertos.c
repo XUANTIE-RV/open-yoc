@@ -75,7 +75,7 @@ const char *aos_version_get(void)
 
 const char *aos_kernel_version_get(void)
 {
-    static char ver_buf[24] = {0};
+    static char ver_buf[32] = {0};
     if (ver_buf[0] == 0) {
         snprintf(ver_buf, sizeof(ver_buf), "FreeRTOS %s", tskKERNEL_VERSION_NUMBER);
     }
@@ -134,12 +134,16 @@ aos_status_t aos_task_resume(aos_task_t *task)
     return 0;
 }
 
+/*in aos_task_create, it is not recommended to set argsument options to AOS_TASK_NONE 
+because it is not recommended in FreeRTOS to create a task and then immediately suspend it.*/
+
 aos_status_t aos_task_create(aos_task_t *task, const char *name, void (*fn)(void *),
                              void *arg, void *stack, size_t stack_size, int32_t prio, uint32_t options)
 {
     int       ret;
+    uint8_t   old_pri = prio;
 
-    if(task == NULL) {
+    if (task == NULL) {
         return -EINVAL;
     }
 
@@ -147,16 +151,27 @@ aos_status_t aos_task_create(aos_task_t *task, const char *name, void (*fn)(void
         // TODO:
     }
 
+    /*The task priority is set to the lowest level for preventing immediate task switching 
+    due to high priority when the task is successfully created.*/
+
+    if (options == AOS_TASK_NONE) {
+        prio = configMAX_PRIORITIES - 1;
+    }
+
     ret = aos_task_new_ext(task,name,fn,arg,stack_size,prio);
     if (ret != 0) {
         return ret;
     }
 
-    if (options == 0) {
+    if (options == AOS_TASK_NONE) { 
         ret = aos_task_suspend(task);
         if (ret != 0) {
             return ret;
-        }       
+        } 
+        ret = aos_task_pri_change(task, prio, &old_pri);
+        if (ret != 0) {
+            return ret;
+        } 
     }
 
     return 0;
@@ -461,7 +476,7 @@ int aos_mutex_lock(aos_mutex_t *mutex, unsigned int ms)
         }
         BaseType_t ret = xSemaphoreTakeRecursive(*mutex, ms == AOS_WAIT_FOREVER ? portMAX_DELAY : pdMS_TO_TICKS(ms));
         if (ret != pdPASS)
-            return -1;
+            return -ETIMEDOUT;
     }
     return 0;
 }
@@ -526,7 +541,7 @@ int aos_sem_wait(aos_sem_t *sem, unsigned int ms)
         return -EPERM;
     }
     int ret = xSemaphoreTake(*sem, ms == AOS_WAIT_FOREVER ? portMAX_DELAY : pdMS_TO_TICKS(ms));
-    return ret == pdPASS ? 0 : -1;
+    return ret == pdPASS ? 0 : -ETIMEDOUT;
 }
 
 void aos_sem_signal(aos_sem_t *sem)
@@ -915,6 +930,8 @@ int aos_timer_change_once(aos_timer_t *timer, int ms)
 
 int aos_timer_gettime(aos_timer_t *timer, uint64_t value[4])
 {
+    CHECK_HANDLE(timer);
+
     tmr_adapter_t *pTimer = NULL;
     uint64_t init_ms;
     uint64_t round_ms;
@@ -1445,6 +1462,10 @@ aos_status_t aos_task_sched_policy_set(aos_task_t *task, uint8_t policy, uint8_t
 
 aos_status_t aos_task_sched_policy_get(aos_task_t *task, uint8_t *policy)
 {
+    CHECK_HANDLE(task);
+    if (policy == NULL) {
+        return -EINVAL;
+    }
 #if (configUSE_PREEMPTION == 1)
 #if (configUSE_TIME_SLICING == 1)
     return AOS_KSCHED_RR;
@@ -1477,6 +1498,7 @@ aos_status_t aos_task_time_slice_set(aos_task_t *task, uint32_t slice)
 
 aos_status_t aos_task_time_slice_get(aos_task_t *task, uint32_t *slice)
 {
+    CHECK_HANDLE(task);
     if (!slice)
         return -EINVAL;
     *slice = 1000 / configTICK_RATE_HZ;

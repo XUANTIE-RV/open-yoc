@@ -192,8 +192,8 @@ static int _pan_display(rvm_dev_t *dev)
     if(g_CanvstmpBuf) {
         memcpy(g_CanvasBuf[g_CanvasUpdate % CVI_DISPLAY_CANVAS_NUM], g_CanvstmpBuf, g_stCanvasInfo.stSize.u32Width * g_stCanvasInfo.stSize.u32Height* 4);
     }
+    CVI_VO_GetWaitVSync(0);
 #endif
-    // CVI_VO_GetWaitVSync(0);
     CVI_RGN_UpdateCanvas(CVI_OSD_HANDLE);
     _event = _display_event;
     return 0;

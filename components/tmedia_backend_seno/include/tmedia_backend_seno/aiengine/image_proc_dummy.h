@@ -11,7 +11,7 @@
 
 using namespace std;
 
-class ImageProcDummy : public ImageProc
+class ImageProcDummy : public TMImageProc
 {
 public:
     ImageProcDummy();

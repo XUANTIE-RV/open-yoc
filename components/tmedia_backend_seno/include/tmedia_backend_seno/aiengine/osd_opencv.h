@@ -14,11 +14,11 @@
 
 using namespace std;
 
-class OSDOpenCV : public OSD
+class TMOsdOpenCV : public TMOsd
 {
 public:
-    OSDOpenCV();
-    ~OSDOpenCV();
+    TMOsdOpenCV();
+    ~TMOsdOpenCV();
 
     int Open(int idx);
     int Close();

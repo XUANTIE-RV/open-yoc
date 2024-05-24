@@ -32,11 +32,16 @@ static void components_init(void)
     extern int aos_vfs_init(void);
     aos_vfs_init();
 #endif
+
 }
 
 static void application_task_entry(void *arg)
 {
     components_init();
+
+#if defined(CONFIG_SMP) && CONFIG_SMP
+    aos_secondary_cpu_up();
+#endif /* CONFIG_SMP */
 
     main();
 

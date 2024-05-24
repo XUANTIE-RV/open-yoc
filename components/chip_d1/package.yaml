@@ -1,7 +1,7 @@
 
 ## 第一部分： 基础信息
 name: chip_d1                                    # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
-version: v7.8.0                                   # <必选项> 组件版本号
+version: v7.9.0                                   # <必选项> 组件版本号
 description: driver & sdk for platform/mcu d1  chip         # <必选项> 建议至少20字以上
 type: chip                                          # <必选项> 组件类型，为：solution, chip, board, common, sdk
 
@@ -97,6 +97,7 @@ build_config:
     - libs/<CONFIG_MELIS_LIB_SUB_PATH>   #   -Llibs
   include:
     - include
+    - include/asm
     - pcm/include
     - melis/include/hal/sdmmc
     - melis/include/hal/sdmmc/osal
@@ -144,6 +145,7 @@ build_config:
 #   CONFIG_PARAM_NOT_CHECK: y
 #   CONFIG_CLI: y
 def_config:
+  CONFIG_PLIC_BASE: 0x10000000
   CONFIG_MELIS_LIB_SUB_PATH: "/"
   CONFIG_VIC_TSPDR: 0x14000000
   CONFIG_LOG_DEFAULT_LEVEL: 2
@@ -151,13 +153,15 @@ def_config:
   CONFIG_NON_ADDRESS_FLASH: y
   CONFIG_CSI_V2: 1
   CONFIG_CSI: "csi2"
-  CONFIG_CPU_C906: y
+  CONFIG_CPU_C906FDV: 1
+  CONFIG_RISCV_VECTOR_LEN: 128
   CONFIG_ARCH_INTERRUPTSTACK: 4096
   CONFIG_SOC_SUN20I: 1
   CONFIG_SOC_SUN20IW1: 1
   CONFIG_SOC_SUN20IW1P1: 1
   CONFIG_ARCH_SUN20IW1: 1
   CONFIG_DRIVERS_SUNXI_CCU: 1   # common_ccmu.h
+  CONFIG_SHM_ALIGN_CACHE: 64
   CONFIG_USE_MINIALSA: 1
   # SPINOR
   CONFIG_SUNXI_SPI_CPU_XFER_ONLY: 1 # SPI not DMA
@@ -181,6 +185,7 @@ def_config:
   CONFIG_SND_PLATFORM_SUNXI_DMIC: 1
   # DISPLAY
   CONFIG_LCD_SUPPORT_TFT08006: 1
+  CONFIG_LCD_SUPPORT_RE_TFT720P: 1
   MIPI_DSI_IP_VERSION: 40
   CONFIG_DISP2_SUNXI_SUPPORT_ENAHNCE: 1
   CONFIG_SUNXI_DISP2_FB_DISABLE_ROTATE: 1

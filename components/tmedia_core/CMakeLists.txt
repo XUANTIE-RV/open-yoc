@@ -43,6 +43,7 @@ SET(LIBSOURCE
 	src/entity/parser/src/parser.cpp
 	src/entity/parser/src/parser_factory.cpp
         
+    src/entity/format/src/format_muxer.cpp
     src/entity/format/src/format_demuxer.cpp
 	src/entity/format/src/format_factory.cpp
 	src/entity/format/src/format_info.cpp

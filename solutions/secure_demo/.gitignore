@@ -80,3 +80,13 @@ solutions_cb5654/*/*.mk
 solutions_cb5654/*/*.txt
 solutions_cb5654/Makefile
 .components.db
+
+gdbinit
+gdbinitflash
+mkflash.sh
+
+.cache/
+cdkws.mk
+project.cdkws
+secure_demo.mk
+secure_demo.txt

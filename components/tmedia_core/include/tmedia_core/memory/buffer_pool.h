@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Alibaba Group Holding Limited
+ * Copyright (C) 2022-2023 Alibaba Group Holding Limited
  */
 
 #ifndef TM_BUFFER_POOL_H
@@ -51,8 +51,10 @@ extern "C" {
      * buffer pool release
      *
      * @param pool
+     *
+     * @return 0 for success, 1 for wait buffer unref, -1 for error
      */
-    void TMBufferPool_Release(TMBufferPool *pool);
+    int TMBufferPool_Release(TMBufferPool *pool);
 
 
     /**

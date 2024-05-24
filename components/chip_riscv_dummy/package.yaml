@@ -1,7 +1,7 @@
 
 ## 第一部分： 基础信息
 name: chip_riscv_dummy                              # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
-version: v7.8.0                                     # <必选项> 组件版本号
+version: v7.9.0                                     # <必选项> 组件版本号
 description: riscv cpu dummy driver SDK.            # <必选项> 建议至少20字以上
 type: chip                                          # <必选项> 组件类型，为：solution, chip, board, common, sdk
 tag: 核心模块                                       # <可选项> 组件分类，缺省值： ''
@@ -62,9 +62,8 @@ license: Apache license v2.0                        # <可选项> 源代码的�
 hw_info:
   arch_name: riscv
   vendor_name: dummy
-  cpu_name: e907fp
-  ld_script: gcc_xip.ld
-  # ld_script: gcc_xip_rv64.ld
+  cpu_name: c906fd
+  ld_script: gcc_flash_xiaohui.ld
   flash_program: nofile
 
 ## 第四部分：编译连接信息
@@ -92,17 +91,23 @@ build_config:
     - NO_MORE_DEFINE
   include:
     - include
-    - sys
+    - include/asm
 
 # source_file:                             # <可选项> 指定参与编译的源代码文件，支持通配符，采用相对路径
 #   - src/*.c                              # 例：组件 src 目录下所有的扩展名为 c 的源代码文件
 source_file:
-  - "arch/<arch>/<cpu>/*.c"
-  - "arch/<arch>/<cpu>/*.S"
-  - "drivers/*.S"
-  - "drivers/*.c"
-  - "sys/*.S"
-  - "sys/*.c"
+  - src/arch/<cpu>/*.c
+  - src/arch/<cpu>/*.S
+  - src/sys/*.c
+  - src/drivers/clk.c
+  - src/drivers/dma.c
+  - src/drivers/dw_uart_ll.c
+  - src/drivers/gpio.c
+  - src/drivers/gpio_pin.c
+  - src/drivers/pinmux.c
+  - src/drivers/power_manage.c
+  - src/drivers/timer.c
+  - src/drivers/uart.c
 
 ## 第五部分：配置信息
 # def_config:                              # 组件的可配置项
@@ -113,9 +118,12 @@ def_config:
   CONFIG_CSI_V2: 1
   CONFIG_CSI: csi2
   CONFIG_SUPPORT_TSPEND: 1
-  CONFIG_XIP: 1
-  CONFIG_VIC_TSPDR: 0x4004000000 # for c906 tspend
-  __QEMU_RUN: 1
+# CONFIG_XIP: 1
+  CONFIG_ARCH_MAINSTACK: 4096              # for baremetal application
+  CONFIG_ARCH_INTERRUPTSTACK: 4096
+  CONFIG_VIC_TSPDR: 0x0c000000           # coret addr in clint
+  CONFIG_PLIC_BASE: 0x08000000
+  CONFIG_CPU_C906FD: 1
 
 ## 第六部分：安装信息
 # install:

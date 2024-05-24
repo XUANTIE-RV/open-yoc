@@ -21,10 +21,6 @@
 extern "C" {
 #endif
 
-#define PLIC_BASE           (0x10000000UL)
-#define CORET_BASE          (PLIC_BASE + 0x4000000UL)               /*!< CORET Base Address */
-#define PLIC                ((PLIC_Type *)PLIC_BASE)
-
 #ifndef EHS_VALUE
 #define EHS_VALUE               20000000U
 #endif

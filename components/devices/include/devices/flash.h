@@ -15,6 +15,11 @@ typedef struct {
     uint32_t    start_addr;
     uint32_t    sector_size;
     uint32_t    sector_count;
+    uint16_t    page_size;                       ///< page-size of nand-device
+    uint16_t    oob_size;                        ///< oob-size(spare size) of nand-device
+    uint16_t    block_size;                      ///< block size
+    uint16_t    max_bad_blocks;                  ///< max possible bad blocks of nand-device
+    uint32_t    total_blocks;                    ///< total blocks of nand-device
 } rvm_hal_flash_dev_info_t;
 
 #define rvm_hal_flash_open(name) rvm_hal_device_open(name)

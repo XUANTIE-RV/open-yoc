@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Alibaba Group Holding Limited
+ * Copyright (C) 2022-2023 Alibaba Group Holding Limited
  */
 
 #ifndef TM_ENTITY_H
@@ -14,15 +14,53 @@ class TMPipeline;
 #define TM_STR_BASE(R) #R
 #define TM_STR(R)      TM_STR_BASE(R)
 
+#define ASSERT_STATE(state)                                                             \
+    do {                                                                                \
+        if (mState != state)                                                            \
+        {                                                                               \
+            LOG_E("Entity('%s') mState(%u) error\n", mName.c_str(), (uint32_t)mState);  \
+            return TMResult::TM_STATE_ERROR;                                            \
+        }                                                                               \
+    } while(0)
+
+#define ASSERT_STATE2(state1, state2)                                            \
+    do {                                                                                \
+        if (mState != state1 && mState != state2)                                       \
+        {                                                                               \
+            LOG_E("Entity('%s') mState(%u) error\n", mName.c_str(), (uint32_t)mState);  \
+            return TMResult::TM_STATE_ERROR;                                            \
+        }                                                                               \
+    } while(0)
+
+#define NO_HANDLE_STATE(state)      \
+    do {                            \
+        if (mState == state)        \
+        {                           \
+            return TMResult::TM_OK; \
+        }                           \
+    } while(0)
+
+#define SET_STATE(state)    \
+    do {                    \
+        mState = state;     \
+    } while (0)
+
 typedef void* (*class_new_t)();
 
 namespace TMedia {
     void tmedia_backend_seno_init();
     void tmedia_backend_lgpl_init();
     void tmedia_backend_light_init();
-    #define BackendInit() tmedia_backend_seno_init();         \
-                          TMedia::tmedia_backend_lgpl_init(); \
-                          TMedia::tmedia_backend_light_init();
+    static inline void BackendInit()
+    {
+        tmedia_backend_seno_init();
+    #ifdef LICENSE_LGPL
+        TMedia::tmedia_backend_lgpl_init();
+    #endif
+    #ifdef PLATFORM_LIGHT
+        TMedia::tmedia_backend_light_init();
+    #endif
+    }
 }
 
 /* Entity state and operate

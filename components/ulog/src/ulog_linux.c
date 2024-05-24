@@ -21,6 +21,7 @@ static unsigned char g_log_level = LOG_DEBUG;
 int                  aos_set_log_level(aos_log_level_t log_level)
 {
     g_log_level = log_level;
+    return 0;
 }
 
 int ulog(const unsigned char lvl, const char *mod, const char *f, const unsigned long l,

@@ -97,13 +97,7 @@ static int phy_recv(ipc_t *ipc, phy_data_t *msg, int ms)
 
         if ((msg->flag & SHM_CACHE) && m.data) {
             #if defined(__riscv)
-            #if (__riscv_xlen == 32)
-            csi_dcache_invalid_range((uint32_t *)m.data, SHM_ALIGN_SIZE(m.len, SHM_ALIGN_CACHE));
-            #elif (__riscv_xlen == 64)
-            csi_dcache_invalid_range((uint64_t *)m.data, SHM_ALIGN_SIZE(m.len, SHM_ALIGN_CACHE));
-            #else
-            csi_dcache_invalid_range((uint32_t *)m.data, SHM_ALIGN_SIZE(m.len, SHM_ALIGN_CACHE));
-            #endif
+            csi_dcache_invalid_range((unsigned long *)m.data, SHM_ALIGN_SIZE(m.len, SHM_ALIGN_CACHE));
             #endif
         }
 
@@ -126,13 +120,7 @@ static int phy_send(ipc_t *ipc, phy_data_t *msg, int ms)
 {
     if (msg->flag & SHM_CACHE) {
         #if defined(__riscv)
-        #if (__riscv_xlen == 32)
-        csi_dcache_clean_range((uint32_t *)msg->data, SHM_ALIGN_SIZE(msg->len, SHM_ALIGN_CACHE));
-        #elif (__riscv_xlen == 64)
-        csi_dcache_clean_range((uint64_t *)msg->data, SHM_ALIGN_SIZE(msg->len, SHM_ALIGN_CACHE));
-        #else
-        csi_dcache_clean_range((uint32_t *)msg->data, SHM_ALIGN_SIZE(msg->len, SHM_ALIGN_CACHE));
-        #endif
+        csi_dcache_clean_range((unsigned long *)msg->data, SHM_ALIGN_SIZE(msg->len, SHM_ALIGN_CACHE));
         #endif
     }
 

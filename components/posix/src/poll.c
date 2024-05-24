@@ -1,13 +1,8 @@
 /*
  * Copyright (C) 2021 Alibaba Group Holding Limited
  */
-
 #include <poll.h>
-#if defined(CONFIG_AOS_LWIP) || defined(CONFIG_SAL)
-#include <lwip/opt.h>
-#endif
-
-#if (!defined(CONFIG_AOS_LWIP) && !defined(CONFIG_SAL)) || (defined(CONFIG_AOS_LWIP) && !LWIP_SOCKET_POLL) || (defined(CONFIG_SAL) && !LWIP_SOCKET_POLL)
+#if !LWIP_POSIX_SOCKETS_IO_NAMES
 #include <stdbool.h>
 #include <stdio.h>
 #include <limits.h>
@@ -16,11 +11,6 @@
 #include <aos/kernel.h>
 #include <vfs.h>
 
-#if !defined(CONFIG_AOS_LWIP) && !defined(CONFIG_SAL)
-#define CONFIG_NO_TCPIP
-#endif
-
-#ifdef CONFIG_NO_TCPIP
 struct poll_arg {
     aos_sem_t sem;
 };
@@ -48,74 +38,6 @@ static void deinit_parg(struct poll_arg *parg)
 {
     aos_sem_free(&parg->sem);
 }
-#else
-#include <sys/socket.h>
-struct poll_arg {
-    int efd;
-};
-
-extern ssize_t lwip_write(int s, const void *dataptr, size_t size);
-extern int lwip_select(int maxfdp1, fd_set *readset, fd_set *writeset, fd_set *exceptset,
-                       struct timeval *timeout);
-extern int lwip_eventfd(unsigned int initval, int flags);
-extern int lwip_close(int s);
-
-static void vfs_poll_notify(void *fd, void *arg)
-{
-    struct poll_arg *parg = arg;
-    uint64_t val = 1;
-    lwip_write(parg->efd, &val, sizeof val);
-}
-
-static int init_parg(struct poll_arg *parg)
-{
-    int efd;
-    efd = lwip_eventfd(0, 0);
-
-    if (efd < 0) {
-        errno = EINVAL;
-        return -1;
-    }
-
-    parg->efd = efd;
-
-    return 0;
-}
-
-static void deinit_parg(struct poll_arg *parg)
-{
-    lwip_close(parg->efd);
-}
-
-static int wait_io(int maxfd, fd_set *rfds, fd_set *wfds, fd_set *efds, struct poll_arg *parg, int timeout)
-{
-    int ret;
-    struct timeval tv = {
-        .tv_sec  = timeout / 1000,
-        .tv_usec = (timeout % 1000) * 1000,
-    };
-
-    FD_SET(parg->efd, rfds);
-    maxfd = parg->efd > maxfd ? parg->efd : maxfd;
-    ret = lwip_select(maxfd + 1, rfds, wfds, efds, timeout >= 0 ? &tv : NULL);
-
-    /* return socketfd event num only ,so we sub event fd num */
-    if (ret > 0) {
-        if (FD_ISSET(parg->efd, rfds)) {
-            ret--;
-        }
-        if (FD_ISSET(parg->efd, wfds)) {
-            errno = EINVAL;
-            return -1;
-        }
-        if (FD_ISSET(parg->efd, efds)) {
-            errno = EINVAL;
-            return -1;
-        }
-    }
-    return ret;
-}
-#endif
 
 static int pre_poll(struct pollfd *fds, int nfds, fd_set *rfds, fd_set *wfds, fd_set *efds, void *parg)
 {
@@ -235,6 +157,34 @@ check_poll:
 
 int poll(struct pollfd fds[], nfds_t nfds, int timeout)
 {
+#if defined(CONFIG_AOS_LWIP) || defined(CONFIG_SAL)
+#define FLAG_FD_SOCKET 1
+#define FLAG_FD_DEVICE (1 << 1)
+    int flags = 0;
+    for (int j = 0; j < nfds; j++) {
+        struct pollfd *pfd = &fds[j];
+        if (pfd->fd < aos_vfs_fd_offset_get()) {
+            flags |= FLAG_FD_SOCKET;
+        } else {
+            flags |= FLAG_FD_DEVICE;
+        }
+    }
+    if (flags == (FLAG_FD_SOCKET | FLAG_FD_DEVICE)) {
+        // FIXME: socket and files can't exist the same time
+        printf("socket and files can't exist the same time\r\n");
+        return -1;
+    }
+    if (flags == FLAG_FD_SOCKET) {
+#if defined(CONFIG_AOS_LWIP)
+        extern int lwip_poll(struct pollfd *fds, nfds_t nfds, int timeout);
+        return lwip_poll(fds, nfds, timeout);
+#elif defined(CONFIG_SAL)
+        // TODO:
+        return 0;
+#endif
+    }
+#endif
     return aos_poll(fds, nfds, timeout);
 }
-#endif
+
+#endif /* !LWIP_POSIX_SOCKETS_IO_NAMES */

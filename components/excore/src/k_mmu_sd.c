@@ -218,7 +218,8 @@ int k_mmu_init(k_mmu_regions_t memmaps[], int memmaps_size)
     //csi_dcache_clean_range((uint64_t*)&g_mmu_page_table, sizeof(g_mmu_page_table));
     csi_mmu_invalid_tlb_all();
     __set_SATP(((unsigned long)&g_mmu_page_table >> 12));
-    csi_mmu_enable(MMU_MODE_39);
+    csi_mmu_set_mode(MMU_MODE_39);
+    csi_mmu_enable();
     //csi_dcache_invalid();
     //csi_icache_invalid();
     return 0;

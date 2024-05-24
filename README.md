@@ -6,7 +6,7 @@ YoC是一个基于AliOS Things的基础软件平台。它为开发人员提供�
 
 ## 架构
 
-<img src="https://github.com/T-head-Semi/open-yoc/blob/v7.8.0/components/yoc/resources/yoc.png?raw=true">
+<img src="https://github.com/T-head-Semi/open-yoc/blob/v7.9.0/components/yoc/resources/yoc.png?raw=true">
 
 - 内核与驱动： RVM CSI 层定义了 片上系统外设的统一接口，芯片对接完成RVM CSI接口，就可以支持 YoC 的软件系统。OSAL/POSIX接口提供了内核统一接口，集成了AliOS Things、FreeRTOS以及RT-Thread内核。RVM HAL为上层各类组件提供了统一的硬件抽象接口。
 - 基础组件： 包含了设备管理框架、低功耗管理、高级安全可信计算（TEE）、网络协议、蓝牙协议栈、虚拟文件系统、网络管理器等。核心服务层采用独立模块化设计，用户可以根据应用需求，自由组装。
@@ -18,7 +18,7 @@ YoC 平台定义了芯片的统一接口，提供应用最基础的核心服务�
 
 ### RVB2601开发板
 
-RVB2601是基于平头哥生态芯片CH2601的开发板，板载JTAG调试器，WiFi&BLE芯片W800，音频ADCES7210，音频DACES8156，128x64 OLED屏幕，RGB三色指示灯，用户按键，及兼容Arduino的扩展接口。
+RVB2601是基于玄铁生态芯片CH2601的开发板，板载JTAG调试器，WiFi&BLE芯片W800，音频ADCES7210，音频DACES8156，128x64 OLED屏幕，RGB三色指示灯，用户按键，及兼容Arduino的扩展接口。
 
 具体开发板硬件规格及信息请到[RVB2601开发板](https://occ.t-head.cn/vendor/detail/index?spm=a2cl5.14300867.0.0.681c1f9cxK233N&id=3886757103532519424&vendorId=3706716635429273600&module=4).
 
@@ -55,7 +55,7 @@ BL606P-DVK专为用于评估音视频应用诞生，适用于智能面板、智�
 试用示例之前请先使用以下命令进行下载:
 
 ```bash
-git clone git@github.com:T-head-Semi/open-yoc.git -b v7.8.0
+git clone git@github.com:T-head-Semi/open-yoc.git -b v7.9.0
 ```
 
 或者从GITEE下载：
@@ -63,16 +63,64 @@ git clone git@github.com:T-head-Semi/open-yoc.git -b v7.8.0
 mkdir yocworkspace
 cd yocworkspace
 yoc init
-yoc install yoc -b v7.8.0
+yoc install yoc -b v7.9.0
 ```
 
 然后到`solutions`目录下，所有的示例都在那里，用户可以根据每个示例下的`README.md`文件进行操作。
 通用示例如下：
 | **分类** | **示例名称** | **说明** |
 | --- | --- | --- |
-| QEMU | riscv_dummy_demo | 运行在QEMU环境的helloword例程，支持RISC-V/CSKY/ARM的CPU。点击[QEMU-Linux快速使用指南](https://occ.t-head.cn/community/course/detail?id=586128575195774976)了解QEMU。 |
-|  | csky_dummy_demo |  |
-|  | arm_dummy_demo |  |
+| QEMU | bare_core_dsp | 一个简单的基于baremetal的玄铁exx系列P扩展使用示例。 |
+|  | bare_core_ecc | 一个简单的基于baremetal的玄铁cpu ECC校验使用示例。 |
+|  | bare_core_vector | 一个简单的基于baremetal的玄铁cpu vector使用示例。 |
+|  | bare_core_matrix | 一个简单的基于baremetal的玄铁cpu matrix使用示例。 |
+|  | bare_core_lockup | 一个简单的基于baremetal的玄铁exx cpu锁定lockup使用示例。 |
+|  | bare_coremark | 一个简单的基于baremetal的coremark示例。coremark是一种基准测试套件，用于评估嵌入式系统处理器的性能，全面测试CPU、内存、编译器性能，不涵盖浮点运算、IO、网络等方面。 |
+|  | bare_core_nmi | 一个简单的基于baremetal的玄铁exx cpu非屏蔽中断使用示例。 |
+|  | bare_core_tcm | 一个简单的基于baremetal的玄铁cpu tcm功能使用示例。 |
+|  | bare_core_vic | 一个简单的基于baremetal的玄铁cpu中断控制器使用示例. |
+|  | bare_core_wfe | 一个简单的基于baremetal的玄铁exx cpu低功耗唤醒wfe功能使用示例。 |
+|  | bare_core_wfi | 一个简单的基于baremetal的玄铁exx cpu低功耗唤醒wfi功能使用示例。 |
+|  | bare_cpp_demo | 一个简单的基于baremetal的c++使用示例。 |
+|  | bare_dhrystone | 一个简单的基于baremetal的dhrystone示例。dhrystone是一种基准测试程序，用于评估处理器的速度和效率。其主要用于测试整数运算速度和效率，不涵盖浮点运算、IO、网络等方面。 |
+|  | bare_drv_timer | 一个简单的基于baremetal的定时器驱动裸驱示例(基于csi2.0规范). |
+|  | bare_drv_uart | 一个简单的基于baremetal的串口驱动裸驱示例(基于csi2.0规范).  |
+|  | bare_helloworld | 一个简单的基于baremetal的helloword demo，可运行在QEMU环境. |
+|  | bare_linpack_dp | 一个简单的基于baremetal的linpack_dp示例。linpack_dp是一种用于评估计算机系统浮点运算性能的基准测试程序，用于测试双精度浮点运算性能。 |
+|  | bare_linpack_sp | 一个简单的基于baremetal的linpack_sp示例。linpack_sp是一种用于评估计算机系统浮点运算性能的基准测试程序，用于测试单精度浮点运算性能。 |
+|  | bare_whetstone | 一个简单的基于baremetal的whetstone示例。whetstone是一种基准测试程序，用于评估处理器的浮点运算性能，不涵盖整数运算、IO、网络等方面。 |
+|  | mcu_freertos_helloworld | 一个面向mcu领域的基于freertos的helloword demo |
+|  | mcu_freertos_event | 一个面向mcu领域的基于freertos的event使用示例 |
+|  | mcu_freertos_message_q | 一个面向mcu领域的基于freertos的message queue 使用示例 |
+|  | mcu_freertos_mutex | 一个面向mcu领域的基于freertos的mutex使用示例 |
+|  | mcu_freertos_sem | 一个面向mcu领域的基于freertos的sem使用示例 |
+|  | mcu_freertos_task | 一个面向mcu领域的基于freertos的task使用示例 |
+|  | mcu_freertos_time | 一个面向mcu领域的基于freertos的time 使用示例  |
+|  | mcu_freertos_timer | 一个面向mcu领域的基于freertos的timer 使用示例 |
+|  | mcu_freertos_cpp | 一个面向mcu领域的基于freertos的cpp demo |
+|  | mcu_rtthread_helloworld | 一个面向mcu领域的基于rtthread的helloword demo |
+|  | mcu_rtthread_event | 一个面向mcu领域的基于rtthread的event demo |
+|  | mcu_rtthread_message_q | 一个面向mcu领域的基于rtthread的message queue demo |
+|  | mcu_rtthread_mutex | 一个面向mcu领域的基于rtthread的mutex demo |
+|  | mcu_rtthread_sem | 一个面向mcu领域的基于rtthread的sem demo |
+|  | mcu_rtthread_task | 一个面向mcu领域的基于rtthread的task demo |
+|  | mcu_rtthread_time | 一个面向mcu领域的基于rtthread的time demo |
+|  | mcu_rtthread_timer | 一个面向mcu领域的基于rtthread的timer demo |
+|  | mcu_rtthread_cpp | 一个面向mcu领域的基于rtthread的cpp demo |
+|  | mcu_rtthread_smp | 一个面向mcu领域的基于rtthread的smp demo |
+|  | soc_helloworld | 一个面向soc领域(使用osal封装)的helloworld示例，可运行在玄铁QEMU环境. |
+|  | soc_smp_demo | 一个面向soc领域(使用osal封装)的smp demo |
+|  | soc_core_dsp | 一个面向soc领域(使用osal封装)的玄铁cpu dsp多线程使用示例 |
+|  | soc_core_vector | 一个面向soc领域(使用osal封装)的玄铁cpu vector多线程使用示例 |
+|  | soc_core_matrix | 一个面向soc领域(使用osal封装)的玄铁cpu matrix多线程使用示例 |
+|  | soc_kernel_event | 一个面向soc领域(使用osal封装)的event demo |
+|  | soc_kernel_message_q | 一个面向soc领域(使用osal封装)的message_q demo |
+|  | soc_kernel_mutex | 一个面向soc领域(使用osal封装)的mutex demo |
+|  | soc_kernel_sem | 一个面向soc领域(使用osal封装)的sem demo |
+|  | soc_kernel_task | 一个面向soc领域(使用osal封装)的task demo |
+|  | soc_kernel_time | 一个面向soc领域(使用osal封装)的time demo | 
+|  | soc_kernel_timer | 一个面向soc领域(使用osal封装)的timer demo | 
+|  | soc_cpp_demo | 一个面向soc领域(使用osal封装)的cpp demo | 
 | 最小系统 | helloworld | 最小系统Helloworld例程，例程将创建一个任务实现周期性hello world日志输出。 |
 | bootloader例程 | ch2601_boot | 基于CH2601平台的bootloader实例，完成下一级镜像的验签、跳转到下一级镜像和升级等功能。SDK中提供了其他已支持芯片平台的bootloader适配例程，可通过实例名字选择。比如：bl606p_boot -  BL606P平台、d1_boot_demo - D1平台、cv181xh_boot - CV181xH平台 |
 | CLI命令行 | cli_demo | 串口命令行输入示例。串口命令行一般包括调试命令， 测试命令，获取系统信息命令，控制LOG信息打印等，用户也可以根据需要增加调测指令。 |
@@ -95,17 +143,34 @@ yoc install yoc -b v7.8.0
 
 ## 参考资料
 
-- 平头哥开源社区: https://xuantie.t-head.cn/
+- 玄铁开源社区: https://www.xrvm.cn/
 
-- 平头哥开源社区文档中心：[文档中心](https://xuantie.t-head.cn/document-index)
+- 玄铁开源社区文档中心：[文档中心](https://www.xrvm.cn/document-index?spm=a2cl5.14290816.0.0.b0b3mSsmmSsm3Z)
 
-- YoC使用手册yocbook: [yocbook](https://xuantie.t-head.cn/document?temp=yoc-platform-overview&slug=yocbook)
+- YoC使用手册yocbook: [yocbook](https://www.xrvm.cn/document?temp=yoc-platform-overview&slug=yocbook)
 
 ## 许可证
 
 YoC系统完全开源，代码版本遵循Apache License 2.0开源许可协议，可以免费在商业产品中使用，并且不需要公开私有代码。
 
 ## Release Note
+
+### 2023.5.21
+#### 新增特性
+1. 新增RT-Thread内核，并支持SMP功能
+2. FreerRTOS升级到v10.4.3 LTS版本
+3. 增加CPU RTOS SDK，支持RV系列CPU
+4. CSI CPU相关接口更新
+
+#### 开发工具
+|开发工具|版本|说明|
+| --- | --- | --- |
+|[CDK](https://www.xrvm.cn/community/download?id=4313363375687012352)|>=V2.24.2|面向基于RISC-V的MCU/AIoT领域的极简开发环境，帮助开发者从工程获取到配置、开发、下载、调试全链路的图形界面的支持。|
+|[CDS](https://www.xrvm.cn/community/download?id=616214177698021376)|>=V5.2.18|面向基于玄铁CPU的集成开发环境，支持Bare metal、RTOS、Linux等各类程序的开发。|
+|[QEMU](https://www.xrvm.cn/community/download?id=4300747789186437120)|>=V4.2.9|玄铁QEMU是一个以开源项目QEMU为基础，支持玄铁处理器的软件模拟器，提供了带基本外设的玄铁开发板模板。|
+|[XuanTie Debug Server](https://www.xrvm.cn/community/download?id=4313368247333359616)|>=V5.18.1|XuanTie DebugServer是一个调试代理软件，它通过CKLINK，以JTAG的方式连接目标板，并支持“GDB Remote Protocol” 。开发者可以通过GDB对运行在玄铁800系列和玄铁900系列处理器上的软件程序进行在线调试。|
+|[yoctools](https://yoc.docs.t-head.cn/yocbook/Chapter2-%E5%BF%AB%E9%80%9F%E4%B8%8A%E6%89%8B%E6%8C%87%E5%BC%95/YocTools.html)|>=2.0.76|Linux下命令行构建编译工具。|
+|[玄铁工具链](https://www.xrvm.cn/community/download?id=4308603453615181824)|V2.10.0|riscv编译所需工具链，可通过yoc命令安装(yoc toolchain --riscv -f)；也可以自行下载安装，并在系统变量中设置对应的路径信息。
 
 ### 2023.8.15
 #### 新增特性

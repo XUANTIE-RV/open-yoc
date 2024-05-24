@@ -18,6 +18,79 @@ cd workspace
 yoc init
 yoc install httpclient_demo
 ```
+### 切换系统内核
+
+#### 切换到RHINO
+
+默认支持RHINO 无需切换,如果需要从RT-Thread修改到RHINO，则根据下一节内容`切换到RT-Thread`下面的内容修改回去。
+
+#### 切换到RT-Thread
+
+##### D1平台
+
+比如在develop分支上面，需要修改`component/sdk_chip_d1/package.ymal`文件中的`depends`部分：
+将`rtthread`这个注释打开，需要注释掉这几个组件 `rhino`,`rhino_arch`,`rhino_pwrmgmt`,`ble_host`,`freertos`最终如下所示:
+```yaml
+depends:
+  ......
+  #- rhino: develop
+  #- rhino_arch: develop
+  #- rhino_pwrmgmt: develop
+  #- freertos: develop
+  - rtthread: develop
+  ......
+  #- ble_host: develop
+```
+
+##### bl606P平台
+
+比如在develop分支上面，需要修改`component/sdk_chip_bl606p_e907/package.ymal`文件中的`depends`部分：
+将`rtthread`这个注释打开，需要注释掉这几个组件 `rhino`,`rhino_arch`,`rhino_pwrmgmt`,`bl606p_bthost`,`bl606p_blimpls`,`freertos`如下所示
+```yaml
+depends:
+  ......
+  #- rhino: develop
+  #- rhino_arch: develop
+  #- rhino_pwrmgmt: develop
+  #- freertos: develop
+  - rtthread: develop
+  ......
+  #- bl606p_bthost: develop
+  #- bl606p_blimpls: develop
+  ......
+```
+
+##### ch2601平台
+
+比如在develop分支上面，需要修改`component/sdk_chip_ch2601/package.ymal`文件中的`depends`部分：
+将`rtthread`这个注释打开，需要注释掉这几个组件 `rhino`,`rhino_arch`,`rhino_pwrmgmt`,`freertos`如下所示
+```yaml
+depends:
+  ......
+  #- rhino: develop
+  #- rhino_arch: develop
+  #- rhino_pwrmgmt: develop
+  #- freertos: develop
+  - rtthread: develop
+  ......
+```
+
+##### f133平台
+
+比如在develop分支上面，需要修改`component/sdk_chip_f133/package.ymal`文件中的`depends`部分：
+将`rtthread`这个注释打开，需要注释掉这几个组件 `rhino`,`rhino_arch`,`rhino_pwrmgmt`,`ble_host`,`freertos`最终如下所示:
+```yaml
+depends:
+  ......
+  #- rhino: develop
+  #- rhino_arch: develop
+  #- rhino_pwrmgmt: develop
+  #- freertos: develop
+  - rtthread: develop
+  ......
+  #- ble_host: develop
+  ......
+```
 
 ### 编译&烧录
 
@@ -185,7 +258,7 @@ ifconfig ap <ssid> <password>
 [   9.300]<D>[NTP]<event_svr>sync success
 [   9.300]<I>[init]<event_svr>NTP Success
 Usage: web http|https
-     : web http get <url>, such as web http get http://occ.t-head.cn
+     : web http get <url>, such as web http get http://www.xrvm.cn/
 ```
 
 **HTTP测试**
@@ -217,12 +290,12 @@ Usage: web http|https
 
 **自定义URL测试**
 
-通过串口CLI输入 `web http get <URL>` 命令进行HTTP GET访问测试。比如输入 `web http get http://occ.t-head.cn`。
+通过串口CLI输入 `web http get <URL>` 命令进行HTTP GET访问测试。比如输入 `web http get http://www.xrvm.cn`。
 
 ```cli
-[13:40:13.338]发→◇web http get http://occ.t-head.cn
+[13:40:13.338]发→◇web http get http://www.xrvm.cn
 □
-[13:40:13.343]收←◆web http get http://occ.t-head.cn
+[13:40:13.343]收←◆web http get http://www.xrvm.cn
 ...(省略)...
 
 [8069.410]<I>[example]<cli-uart>++++++++++++++ HTTP GET TEST OK

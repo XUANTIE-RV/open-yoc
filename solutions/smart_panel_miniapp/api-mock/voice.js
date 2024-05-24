@@ -36,7 +36,7 @@ let eventRet = {
   //debug=1 ，复制“打开客厅灯” 替换shortcutCMD中的result （ctrl+c，修改js，然后aiot-cli simulator ./）
   //asr测试： 打开客厅灯  开灯  离家模式  下一首
   shortcutCMD:"{\"header\":{\"namespace\":\"VirtualAssistant\",\"name\":\"RecognitionCompleted\",\"status\":20000000,\"message_id\":\"2372e565ddfb469792e1b9db3c4e0761\","+
-  "\"task_id\":\"c43cb044cf4078c20c48497d91db6651\",\"status_text\":\"Gateway:SUCCESS:Success.\"},\"payload\":{\"result\":\"打开客厅灯\",\"confidence\":0.44200456142425537}}",
+  "\"task_id\":\"c43cb044cf4078c20c48497d91db6651\",\"status_text\":\"Gateway:SUCCESS:Success.\"},\"payload\":{\"result\":\"回家模式\",\"confidence\":0.44200456142425537}}",
   nlpBegin:"",
   //debug=2
   //nlp测试： 我要听歌  （拦截的情况下 nlpEnd1被忽略）
@@ -62,7 +62,7 @@ let eventRet = {
 export default {
   on(event, callback) {
 
-    let debug=20;
+    let debug=0;
 
     if(debug){
       if(event=="shortcutCMD"){
@@ -74,7 +74,7 @@ export default {
             $falcon.trigger("open_light2");
           }
           else if(eventRet.shortcutCMD.indexOf("关窗帘")!=-1){
-            $falcon.trigger("open_screen");
+            $falcon.trigger("open_screen1");
           }
           else if(eventRet.shortcutCMD.indexOf("关灯")!=-1){
             let operations = {
@@ -86,15 +86,15 @@ export default {
           else if(eventRet.shortcutCMD.indexOf("离家模式")!=-1){
             $falcon.trigger("open_light1");
             $falcon.trigger("open_light2");
-            $falcon.trigger("open_screen");
+            $falcon.trigger("open_screen1");
           }
           else if(eventRet.shortcutCMD.indexOf("睡眠模式")!=-1){
             $falcon.trigger("open_light1");
             $falcon.trigger("open_light2");
-            $falcon.trigger("open_screen");
+            $falcon.trigger("open_screen1");
           }
           else if(eventRet.shortcutCMD.indexOf("电影模式")!=-1){
-            $falcon.trigger("open_screen");
+            $falcon.trigger("open_screen1");
           }
           setTimeout(() => { 
             eventFunc.shortcutCMD[0](eventRet.shortcutCMD);

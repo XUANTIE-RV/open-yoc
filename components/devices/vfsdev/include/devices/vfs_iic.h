@@ -21,6 +21,7 @@ extern "C" {
 #define IIC_IOC_SLAVE_RECV              (DEV_IIC_IOCTL_CMD_BASE + 7)
 #define IIC_IOC_MEM_WRITE               (DEV_IIC_IOCTL_CMD_BASE + 8)
 #define IIC_IOC_MEM_READ                (DEV_IIC_IOCTL_CMD_BASE + 9)
+#define IIC_IOC_TIMEOUT                 (DEV_IIC_IOCTL_CMD_BASE + 10)
 
 typedef struct {
     uint16_t dev_addr;

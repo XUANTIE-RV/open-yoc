@@ -22,7 +22,7 @@ int mtb_init(void)
     int i;
     int ret = -1;
     uint32_t cur_offset;
-    uint32_t flash_length;
+    uint64_t flash_length;
     storage_info_t storage_info;
     partition_device_ops_t *handle;
     partition_device_info_t flash_info;
@@ -72,14 +72,14 @@ int mtb_init(void)
     flash_length = flash_info.device_size;
     while(1) {
         if (flash_info.sector_size > 0) {
-            if (i * flash_info.sector_size == flash_info.device_size) {
+            if ((uint64_t)i * flash_info.sector_size == flash_info.device_size) {
                 MTB_LOGE("mtb cant find magic");
                 return -1;
             }
             cur_offset = i * flash_info.sector_size;
             ret = partition_device_read(handle, cur_offset, &m_buf, sizeof(mtb_head_t));
         } else if (flash_info.block_size > 0) {
-            if (i * flash_info.block_size == flash_info.device_size) {
+            if ((uint64_t)i * flash_info.block_size == flash_info.device_size) {
                 MTB_LOGE("mtb cant find magic");
                 return -1;
             }
@@ -94,7 +94,7 @@ int mtb_init(void)
             if (m_buf.head.magic == BMTB_MAGIC) {
                 MTB_LOGD("find bmtb %d", m_buf.head.version);
                 if (m_buf.head.version == 1) {
-                    if (g_mtb.using_addr + m_buf.head.size < flash_length) {
+                    if ((uint64_t)g_mtb.using_addr + m_buf.head.size < flash_length) {
                         mtb_head_t i_buf;
                         if (!partition_device_read(handle, cur_offset + m_buf.head.size,
                                                 &i_buf, sizeof(mtb_head_t))) {

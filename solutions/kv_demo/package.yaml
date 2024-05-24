@@ -1,7 +1,7 @@
 
 ## 第一部分： 基础信息
 name: kv_demo                                       # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
-version: v7.8.0                                    # <必选项> 组件版本号
+version: v7.9.0                                    # <必选项> 组件版本号
 description: kv demo                                # <必选项> 建议至少20字以上
 type: solution                                      # <必选项> 组件类型，为：solution, chip, board, common, sdk
 
@@ -12,13 +12,13 @@ type: solution                                      # <必选项> 组件类型�
 #   - minilibc: v7.2.0
 #   - aos: >=v7.2.0
 sdk_chip:
-  - sdk_chip_bl606p_e907: v7.8.0
-  - sdk_chip_d1: v7.8.0
-  - sdk_chip_ch2601: v7.8.0
-  - sdk_chip_f133: v7.8.0
-  - sdk_chip_cv181xh_bga: v7.8.0
+  - sdk_chip_bl606p_e907: v7.9.0
+  - sdk_chip_d1: v7.9.0
+  - sdk_chip_ch2601: v7.9.0
+  - sdk_chip_f133: v7.9.0
+  - sdk_chip_cv181xh_bga: v7.9.0
 depends:
-  - sdk_chip_bl606p_e907: v7.8.0
+  - sdk_chip_bl606p_e907: v7.9.0
 
 ## 第三部分：板级信息
 # hw_info:                                 # 对 solution、board、chip 三个字段的改进，统称为 hw_info 字段

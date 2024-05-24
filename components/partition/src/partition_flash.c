@@ -22,9 +22,9 @@ static int part_flash_info_get(void *handle, partition_device_info_t *info)
         if (rc == 0) {
             info->base_addr = flash_info.start_addr;
             info->sector_size = flash_info.sector_size;
-            info->device_size = flash_info.sector_size * flash_info.sector_count;
+            info->device_size = (uint64_t)flash_info.sector_size * flash_info.sector_count;
             info->erase_size = info->sector_size;
-            info->block_size = 0;
+            info->block_size = flash_info.block_size;
 #if defined(CONFIG_DEBUG) && CONFIG_DEBUG > 2
             static int iprintflag = 0;
             if (!iprintflag) {
@@ -51,12 +51,12 @@ static int part_flash_read(void *handle, off_t offset, void *data, size_t data_l
     }
 
     if (handle && data && data_len > 0) {
-        uint32_t device_size;
+        uint64_t device_size;
         rvm_hal_flash_dev_info_t flash_info;
 
         rc = rvm_hal_flash_get_info(handle, &flash_info);
         if (rc == 0) {
-            device_size = flash_info.sector_size * flash_info.sector_count;
+            device_size = (uint64_t)flash_info.sector_size * flash_info.sector_count;
             if (data_len > device_size || offset + data_len > device_size) {
                 MTB_LOGE("read size overflow.");
                 return -EINVAL;
@@ -77,12 +77,12 @@ static int part_flash_write(void *handle, off_t offset, void *data, size_t data_
     }
 
     if (handle && data && data_len > 0) {
-        uint32_t device_size;
+        uint64_t device_size;
         rvm_hal_flash_dev_info_t flash_info;
 
         rc = rvm_hal_flash_get_info(handle, &flash_info);
         if (rc == 0) {
-            device_size = flash_info.sector_size * flash_info.sector_count;
+            device_size = (uint64_t)flash_info.sector_size * flash_info.sector_count;
             if (data_len > device_size || offset + data_len > device_size) {
                 MTB_LOGE("write size overflow.");
                 return -EINVAL;
@@ -103,12 +103,12 @@ static int part_flash_erase(void *handle, off_t offset, size_t len)
     }
 
     if (handle && len > 0) {
-        uint32_t device_size;
+        uint64_t device_size;
         rvm_hal_flash_dev_info_t flash_info;
 
         rc = rvm_hal_flash_get_info(handle, &flash_info);
         if (rc == 0) {
-            device_size = flash_info.sector_size * flash_info.sector_count;
+            device_size = (uint64_t)flash_info.sector_size * flash_info.sector_count;
             if (len > device_size || offset + len > device_size) {
                 MTB_LOGE("erase size overflow.");
                 return -EINVAL;

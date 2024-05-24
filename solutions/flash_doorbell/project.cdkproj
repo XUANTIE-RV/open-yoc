@@ -11,6 +11,16 @@
   <VendorInfo>
     <VendorName>NULL</VendorName>
   </VendorInfo>
+  <DebugSessions>
+    <watchExpressions/>
+    <memoryExpressions>;;;</memoryExpressions>
+    <statistics>;;MHZ;</statistics>
+    <peripheralTabs/>
+    <WatchDisplayFormat>0</WatchDisplayFormat>
+    <LocalDisplayFormat>0</LocalDisplayFormat>
+    <debugLayout/>
+    <memoryTabColSizeExpressions>100:8;100:8;100:8;100:8;</memoryTabColSizeExpressions>
+  </DebugSessions>
   <BuildConfigs>
     <BuildConfig Name="BuildSet">
       <Target>
@@ -95,14 +105,17 @@
         <BeforeCompile>
           <RunUserProg>no</RunUserProg>
           <UserProgName/>
+          <IsBatchScript>no</IsBatchScript>
         </BeforeCompile>
         <BeforeMake>
           <RunUserProg>yes</RunUserProg>
           <UserProgName>"$(ProjectPath)/script/before_build.sh"</UserProgName>
+          <IsBatchScript>no</IsBatchScript>
         </BeforeMake>
         <AfterMake>
           <RunUserProg>yes</RunUserProg>
           <UserProgName>"$(ProjectPath)/script/after_build.sh"</UserProgName>
+          <IsBatchScript>no</IsBatchScript>
         </AfterMake>
         <Tools/>
       </User>
@@ -142,6 +155,8 @@
         <AutoLDFile>no</AutoLDFile>
         <LinkType>whole-archive</LinkType>
         <IncludeAllLibs>yes</IncludeAllLibs>
+        <LinkSpecsType>none</LinkSpecsType>
+        <LinkUseNewlibNano>no</LinkUseNewlibNano>
       </Linker>
       <Debug>
         <LoadApplicationAtStartup>yes</LoadApplicationAtStartup>
@@ -149,6 +164,7 @@
         <StopAt>yes</StopAt>
         <StopAtText>main</StopAtText>
         <InitFile>$(ProjectPath)/gdbinit</InitFile>
+        <PreInit/>
         <AfterLoadFile/>
         <AutoRun>yes</AutoRun>
         <ResetType>Hard Reset</ResetType>
@@ -157,6 +173,7 @@
         <AfterResetFile/>
         <Dumpcore>no</Dumpcore>
         <DumpcoreText>$(ProjectPath)/$(ProjectName).cdkcore</DumpcoreText>
+        <SVCFile/>
         <ConfigICE>
           <IP>localhost</IP>
           <PORT>1025</PORT>
@@ -167,6 +184,7 @@
           <WaitReset>500</WaitReset>
           <DDC>yes</DDC>
           <TRST>no</TRST>
+          <PreReset>no</PreReset>
           <DebugPrint>no</DebugPrint>
           <Connect>Normal</Connect>
           <ResetType>Soft Reset</ResetType>
@@ -194,19 +212,22 @@
         </ConfigSIM>
         <ConfigOpenOCD>
           <OpenOCDExecutablePath/>
+          <OpenOCDLocally>yes</OpenOCDLocally>
           <OpenOCDTelnetPortEnable>no</OpenOCDTelnetPortEnable>
           <OpenOCDTelnetPort>4444</OpenOCDTelnetPort>
           <OpenOCDTclPortEnable>no</OpenOCDTclPortEnable>
           <OpenOCDTclPort>6666</OpenOCDTclPort>
           <OpenOCDConfigOptions/>
           <OpenOCDTimeout>5000</OpenOCDTimeout>
+          <OpenOCDRemoteIP>localhost</OpenOCDRemoteIP>
+          <OpenOCDRemotePort>3333</OpenOCDRemotePort>
           <PluginID>openocd-sifive</PluginID>
           <Version>latest</Version>
         </ConfigOpenOCD>
       </Debug>
       <Flash>
         <InitFile>$(ProjectPath)/cdkinitflash</InitFile>
-        <PreInit>$(ProjectPath)/cdkpreinit</PreInit>
+        <PreInit/>
         <Erase>Erase Sectors</Erase>
         <Algorithms Path=""/>
         <Program>yes</Program>
@@ -214,20 +235,18 @@
         <ResetAndRun>no</ResetAndRun>
         <ResetType>Soft Reset</ResetType>
         <SoftResetVal/>
+        <FlashIndex>no</FlashIndex>
+        <FlashIndexVal>0</FlashIndexVal>
         <External>no</External>
         <Command/>
         <Arguments/>
       </Flash>
     </BuildConfig>
   </BuildConfigs>
-  <DebugSessions>
-    <watchExpressions/>
-    <memoryExpressions>;;;</memoryExpressions>
-    <statistics>;;MHZ;</statistics>
-    <peripheralTabs/>
-    <WatchDisplayFormat>0</WatchDisplayFormat>
-    <LocalDisplayFormat>0</LocalDisplayFormat>
-    <debugLayout/>
-    <memoryTabColSizeExpressions>100:8;100:8;100:8;100:8;</memoryTabColSizeExpressions>
-  </DebugSessions>
+  <ToolsConfig>
+    <Compiler>
+      <Name>XTGccElfNewlib</Name>
+      <Version>latest</Version>
+    </Compiler>
+  </ToolsConfig>
 </Project>

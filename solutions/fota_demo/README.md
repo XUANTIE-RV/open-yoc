@@ -24,6 +24,79 @@ yoc init
 yoc install fota_demo
 ```
 
+### 切换系统内核
+
+#### 切换到RHINO
+
+默认支持RHINO 无需切换,如果需要从RT-Thread修改到RHINO，则根据下一节内容`切换到RT-Thread`下面的内容修改回去。
+
+#### 切换到RT-Thread
+
+##### D1平台
+
+比如在develop分支上面，需要修改`component/sdk_chip_d1/package.ymal`文件中的`depends`部分：
+将`rtthread`这个注释打开，需要注释掉这几个组件 `rhino`,`rhino_arch`,`rhino_pwrmgmt`,`ble_host`,`freertos`最终如下所示:
+```yaml
+depends:
+  ......
+  #- rhino: develop
+  #- rhino_arch: develop
+  #- rhino_pwrmgmt: develop
+  #- freertos: develop
+  - rtthread: develop
+  ......
+  #- ble_host: develop
+```
+
+##### bl606P平台
+
+比如在develop分支上面，需要修改`component/sdk_chip_bl606p_e907/package.ymal`文件中的`depends`部分：
+将`rtthread`这个注释打开，需要注释掉这几个组件 `rhino`,`rhino_arch`,`rhino_pwrmgmt`,`bl606p_bthost`,`bl606p_blimpls`,`freertos`如下所示
+```yaml
+depends:
+  ......
+  #- rhino: develop
+  #- rhino_arch: develop
+  #- rhino_pwrmgmt: develop
+  #- freertos: develop
+  - rtthread: develop
+  ......
+  #- bl606p_bthost: develop
+  #- bl606p_blimpls: develop
+  ......
+```
+
+##### ch2601平台
+
+比如在develop分支上面，需要修改`component/sdk_chip_ch2601/package.ymal`文件中的`depends`部分：
+将`rtthread`这个注释打开，需要注释掉这几个组件 `rhino`,`rhino_arch`,`rhino_pwrmgmt`,`freertos`如下所示
+```yaml
+depends:
+  ......
+  #- rhino: develop
+  #- rhino_arch: develop
+  #- rhino_pwrmgmt: develop
+  #- freertos: develop
+  - rtthread: develop
+  ......
+```
+
+##### f133平台
+
+比如在develop分支上面，需要修改`component/sdk_chip_f133/package.ymal`文件中的`depends`部分：
+将`rtthread`这个注释打开，需要注释掉这几个组件 `rhino`,`rhino_arch`,`rhino_pwrmgmt`,`ble_host`,`freertos` 最终如下所示:
+```yaml
+depends:
+  ......
+  #- rhino: develop
+  #- rhino_arch: develop
+  #- rhino_pwrmgmt: develop
+  #- freertos: develop
+  - rtthread: develop
+  #- ble_host: develop
+  ......
+```
+
 ### 编译&烧录
 
 注意：
@@ -62,27 +135,6 @@ make flashall SDK=sdk_chip_bl606p_e907
 ```
 
 #### ch2601平台
-
-由于CH2601 RAM资源比较有限，所以针对fota demo需要使用另一个连接脚本`gcc_flash_heap_bigger.ld`，具体在component/chip_ch2601下。需要替换
-
-`component/chip_ch2601/package.ymal`文件中的如下部分：
-
-```yaml
-hw_info:
-
- arch_name: riscv
-
- vendor_name: thead
-
- cpu_name: e906
-
- ld_script: gcc_flash_heap_bigger.ld   # gcc_flash.ld
-
- toolchain_prefix: riscv64-unknown-elf
-
- flash_program: ch2601_flash.elf
-```
-
 1. 编译
 
 ```bash

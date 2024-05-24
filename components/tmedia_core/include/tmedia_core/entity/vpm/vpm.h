@@ -52,6 +52,13 @@ typedef int (*TMVpmInputDataConsumedCallback)(TMVideoFrame *);
 class TMVpm : public TMFilterEntity
 {
 public:
+    enum class FrameState : uint32_t
+    {
+        STATE_EMPTY,
+        STATE_NEW,
+        STATE_USED,
+    };
+
     enum class PropID : uint32_t
     {
         // PropID            Data Type & Value range
@@ -104,6 +111,8 @@ public:
     virtual int SendFrame(TMVpmInputChannel *inChn, TMVideoFrame &frame, int timeout = -1) = 0;
     virtual int RecvFrame(TMVpmOutputChannel *outChn, TMVideoFrame &frame, int timeout = -1) = 0;
 
+    virtual int Dump(void) = 0;
+
     TMVpmParams mParams;
     TMPropertyList mDefaultPropertyList;
     TMPropertyList mCurrentPropertyList;
@@ -130,6 +139,14 @@ protected:
 class TMVpmInputChannel final
 {
 public:
+    enum class ZOrderOperation : uint32_t
+    {
+        UP,
+        DOWN,
+        TOP,
+        BOTTOM,
+    }; 
+
     enum class PropID : uint32_t
     {
         // PropID                  Data Type & Value range
@@ -167,6 +184,9 @@ public:
 
         // flip property
         FLIP_ENABLE,            // bool,    up-down flip origin frame, default is disabled
+
+        // z-order property
+        Z_ORDER_ADJUST,         // enum class ZOrderOperation
     };
 
 public:
@@ -174,16 +194,16 @@ public:
     {
         mVpm = NULL;
         mOpaque = NULL;
-        mHoldingFrameIsReady = false;
+        mHoldingFrameState = TMVpm::FrameState::STATE_EMPTY;
         mConsumedCallback = DefaultInputDataConsumedCallback;
         InitDefaultPropertyList();
     }
     ~TMVpmInputChannel()
     {
-        if (mHoldingFrameIsReady && mConsumedCallback != NULL)
+        if (mHoldingFrameState == TMVpm::FrameState::STATE_NEW && mConsumedCallback != NULL)
         {
             mConsumedCallback(&mHoldingFrame);
-            mHoldingFrameIsReady = false;
+            mHoldingFrameState = TMVpm::FrameState::STATE_EMPTY;
         }
     }
     // input channel keeps last video frame for compositing until channel destoried
@@ -195,7 +215,7 @@ public:
 
     TMVpmInputDataConsumedCallback mConsumedCallback;
     TMVideoFrame mHoldingFrame;
-    bool         mHoldingFrameIsReady;
+    TMVpm::FrameState mHoldingFrameState;
     std::mutex   mHoldingFrameMutex;   // to protect mHoldingFrame
 
 protected:

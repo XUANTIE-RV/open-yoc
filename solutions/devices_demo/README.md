@@ -18,6 +18,79 @@ cd workspace
 yoc init
 yoc install devices_demo
 ```
+### 切换系统内核
+
+#### 切换到RHINO
+
+默认支持RHINO 无需切换,如果需要从RT-Thread修改到RHINO，则根据下一节内容`切换到RT-Thread`下面的内容修改回去。
+
+#### 切换到RT-Thread
+
+##### D1平台
+
+比如在develop分支上面，需要修改`component/sdk_chip_d1/package.ymal`文件中的`depends`部分：
+将`rtthread`这个注释打开，需要注释掉这几个组件 `rhino`,`rhino_arch`,`rhino_pwrmgmt`,`ble_host`,`freertos`最终如下所示:
+```yaml
+depends:
+  ......
+  #- rhino: develop
+  #- rhino_arch: develop
+  #- rhino_pwrmgmt: develop
+  #- freertos: develop
+  - rtthread: develop
+  ......
+  #- ble_host: develop
+```
+
+##### bl606P平台
+
+比如在develop分支上面，需要修改`component/sdk_chip_bl606p_e907/package.ymal`文件中的`depends`部分：
+将`rtthread`这个注释打开，需要注释掉这几个组件 `rhino`,`rhino_arch`,`rhino_pwrmgmt`,`bl606p_bthost`,`bl606p_blimpls`,`freertos`如下所示
+```yaml
+depends:
+  ......
+  #- rhino: develop
+  #- rhino_arch: develop
+  #- rhino_pwrmgmt: develop
+  #- freertos: develop
+  - rtthread: develop
+  ......
+  #- bl606p_bthost: develop
+  #- bl606p_blimpls: develop
+  ......
+```
+
+##### ch2601平台
+
+比如在develop分支上面，需要修改`component/sdk_chip_ch2601/package.ymal`文件中的`depends`部分：
+将`rtthread`这个注释打开，需要注释掉这几个组件 `rhino`,`rhino_arch`,`rhino_pwrmgmt`,`freertos`如下所示
+```yaml
+depends:
+  ......
+  #- rhino: develop
+  #- rhino_arch: develop
+  #- rhino_pwrmgmt: develop
+  #- freertos: develop
+  - rtthread: develop
+  ......
+```
+
+##### f133平台
+
+比如在develop分支上面，需要修改`component/sdk_chip_f133/package.ymal`文件中的`depends`部分：
+将`rtthread`这个注释打开，需要注释掉这几个组件 `rhino`,`rhino_arch`,`rhino_pwrmgmt`,`ble_host`,`freertos`最终如下所示:
+```yaml
+depends:
+  ......
+  #- rhino: develop
+  #- rhino_arch: develop
+  #- rhino_pwrmgmt: develop
+  #- freertos: develop
+  - rtthread: develop
+  ......
+  #- ble_host: develop
+  ......
+```
 
 ### 编译&烧录
 
@@ -132,6 +205,8 @@ riscv64-unknown-elf-gdb yoc.elf -x gdbinit
 
    appdemohal uart_multiple_task 138 139 138 139
 
+   appdemohal uart_poll 138 139
+
 7. pwm: appdemohal pwm 37 0 1000 0.1 10000 0.5
 
    37：PWM使用的IO口，更详细的信息请查看soc.h，D1使用的IO口均参见soc.h
@@ -145,6 +220,18 @@ riscv64-unknown-elf-gdb yoc.elf -x gdbinit
    10000：freq_chg = 10000，变化后的频率
    
    0.5：duty_cycle_chg = 0.5，变化后的占空比 
+8. iic: 
+   <iic>: iic 单任务    <iic_task>: iic 多任务
+   appdemohal <iic> <master_send|master_recv>  36  37
+   appdemohal <iic_task> <master>  36 37
+
+   <master|slave>：master让设备作主去发送与接收数据, slave让设备作从去接收并发出数据
+
+   36 37：iic对应的IO口
+
+   如单任务时，设备作主去传输数据的命令为：appdemohal iic master_send 36 37
+
+   注意：由于 D1 的iic只能作主，不能作从，所以需要其它开发板作从配合验证（如 RVB2601 开发板）
 ```
 
 ## bl606p平台
@@ -169,10 +256,14 @@ riscv64-unknown-elf-gdb yoc.elf -x gdbinit
    appdemohal uart 0 1（0 1：uart使用的IO口）
 
    appdemohal uart_multiple_task 0 1 0 1
+   
+   appdemohal uart_poll 0 1 
 
-6. spi: appdemohal spi <master|slave> <send|recv|send_recv> 25 26 27 28
+6. spi: appdemohal spi <master> <send|recv|send_recv> 25 26 27 28
+        appdemohal spi <slave>  <send|send_recv> 25 26 27 28
 
-   <master|slave>：master让设备作主, slave让设备作从
+   <master>：master让设备作主
+   <slave>: slave让设备作从
 
    <send|recv|send_recv>：send发送数据, recv接收数据,send_recv发送并接收数据
 
@@ -180,7 +271,9 @@ riscv64-unknown-elf-gdb yoc.elf -x gdbinit
 
    如设备作 spi 通信中的主发送并接收数据的命令为：appdemohal spi master send_recv 25 26 27 28
 
-   注意：由于 BL606p 只有一个spi, 所以可使用两块 BL606p 开发板对接连线测试此 spi 功能
+   注意：
+   1、由于 BL606p 只有一个spi, 所以可使用两块 BL606p 开发板对接连线测试此 spi 功能。
+   2、其中从设备接收数据暂不支持测试，如果在从设备执行`appdemohal spi slave send_recv 25 26 27 28`出现错误打印信息为正常现象。
 
 7. iic: 
    <iic>: iic 单任务    <iic_task>: iic 多任务
@@ -240,7 +333,6 @@ riscv64-unknown-elf-gdb yoc.elf -x gdbinit
    appdemohal <iic_task> <master|slave>  8 9
    <master|slave>：master让设备作主去发送与接收数据; slave让设备作从去接收并发出数据; 
 
-
    8 9：iic对应的IO口
 
    如单任务时设备作从去传输数据的命令为：appdemohal iic slave_send 8 9
@@ -288,6 +380,8 @@ riscv64-unknown-elf-gdb yoc.elf -x gdbinit
    appdemohal uart 27 28（27 28 uart使用的IO口）
 
    appdemohal uart_multiple_task 27 28 27 28
+
+   appdemohal uart_poll 27 28 
 
 9. gpio
 
@@ -348,6 +442,5 @@ riscv64-unknown-elf-gdb yoc.elf -x gdbinit
 2. clk:     appdemohal clk
 3. rtc:     appdemohal rtc
 4. timer:   appdemohal timer
-5. flash:   appdemohal flash
 
 

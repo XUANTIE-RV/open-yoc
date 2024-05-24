@@ -17,6 +17,12 @@
 //     mmio_write_32(0x30020a8, 0x70109);
 // }
 
+csi_dma_t dma_hdl;
+void board_dma_init(void)
+{
+    csi_dma_init(&dma_hdl, 0);
+}
+
 void board_init(void)
 {
     // board_clk_init();
@@ -26,4 +32,6 @@ void board_init(void)
     PINMUX_CONFIG(JTAG_CPU_TMS, CV_2WTMS_CR_4WTMS);
     PINMUX_CONFIG(JTAG_CPU_TCK, CV_2WTCK_CR_4WTCK);
     PINMUX_CONFIG(JTAG_CPU_TRST, JTAG_CPU_TRST);
+
+    board_dma_init();
 }

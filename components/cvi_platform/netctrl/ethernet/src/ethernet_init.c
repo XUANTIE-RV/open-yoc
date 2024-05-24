@@ -46,7 +46,7 @@ netmgr_hdl_t g_netmgr;
 #if !defined(MIN)
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 #endif
-struct netif xnetif; /* network interface structure */
+struct netif eth_xnetif; /* network interface structure */
 
 #if 0
 void *cxcloud_hdl;
@@ -112,7 +112,7 @@ static void cx_cloud_task(void *arg)
 }
 #endif
 
-void net_status_callback(struct netif *netif)
+void eth_net_status_callback(struct netif *netif)
 {
 #if 0
     aos_task_t ntp_handle;
@@ -216,7 +216,7 @@ static int eth_set_ipaddr(rvm_dev_t *dev, const ip_addr_t *ipaddr, const ip_addr
 
 static int eth_get_ipaddr(rvm_dev_t *dev, ip_addr_t *ipaddr, ip_addr_t *netmask_addr, ip_addr_t *gw_addr)
 {
-    struct netif *netif = &xnetif;
+    struct netif *netif = &eth_xnetif;
     aos_check_return_einval(netif && ipaddr && netmask_addr && gw_addr);
 
     ip_addr_copy(*(ip4_addr_t *)ip_2_ip4(ipaddr), *netif_ip_addr4(netif));
@@ -268,7 +268,7 @@ static int eth_get_dns_server(rvm_dev_t *dev, ip_addr_t ipaddr[], uint32_t num)
 static int eth_set_hostname(rvm_dev_t *dev, const char *name)
 {
 #if LWIP_NETIF_HOSTNAME
-    struct netif *netif = &xnetif;
+    struct netif *netif = &eth_xnetif;
     netif_set_hostname(netif, name);
     return 0;
 #else
@@ -279,7 +279,7 @@ static int eth_set_hostname(rvm_dev_t *dev, const char *name)
 static const char *eth_get_hostname(rvm_dev_t *dev)
 {
 #if LWIP_NETIF_HOSTNAME
-    struct netif *netif = &xnetif;
+    struct netif *netif = &eth_xnetif;
     return netif_get_hostname(netif);
 #else
     return NULL;
@@ -370,21 +370,21 @@ static void eth_init_func(void *paras)
 	IP4_ADDR(&gw, GW_ADDR0, GW_ADDR1, GW_ADDR2, GW_ADDR3);
 
 
-	xnetif.name[0] = 'r';
-	xnetif.name[1] = '0' + idx;
-	netif_add(&xnetif, &ipaddr, &netmask, &gw, NULL, ethif_init, tcpip_input);
+	eth_xnetif.name[0] = 'r';
+	eth_xnetif.name[1] = '0' + idx;
+	netif_add(&eth_xnetif, &ipaddr, &netmask, &gw, NULL, ethif_init, tcpip_input);
 
     /*  Registers the default network interface. */
-    netif_set_default(&xnetif);
+    netif_set_default(&eth_xnetif);
 
     /*  When the netif is fully configured this function must be called.*/
-	netif_set_link_up(&xnetif);
-	netif_set_up(&xnetif);
+	netif_set_link_up(&eth_xnetif);
+	netif_set_up(&eth_xnetif);
 
 	// netif_set_ipaddr(&xnetif, NULL);
     // netif_set_netmask(&xnetif, NULL);
     // netif_set_gw(&xnetif[0], NULL);
-	netif_set_status_callback(&xnetif, net_status_callback);
+	netif_set_status_callback(&eth_xnetif, eth_net_status_callback);
     if(rvm_driver_register(&neteth_driver.drv, NULL, 0) < 0) {
         printf("ether device register error \r\n");
     } else {
@@ -394,7 +394,7 @@ static void eth_init_func(void *paras)
     event_service_init(NULL);
     netmgr_service_init(NULL);
     LOGD(TAG, "DHCP start");
-	netifapi_dhcp_start(&xnetif);
+	netifapi_dhcp_start(&eth_xnetif);
 }
 
 void ethernet_init(void)

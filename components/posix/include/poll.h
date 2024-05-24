@@ -5,11 +5,19 @@
 #ifndef _POLL_H
 #define _POLL_H
 
+#if defined(CONFIG_AOS_LWIP) || defined(CONFIG_SAL)
+#include <lwip/opt.h>
+#else
+#undef LWIP_POSIX_SOCKETS_IO_NAMES
+#define LWIP_POSIX_SOCKETS_IO_NAMES 0
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#if (!defined(CONFIG_AOS_LWIP) && !defined(CONFIG_SAL)) || (defined(CONFIG_AOS_LWIP) && !LWIP_SOCKET_POLL) || (defined(CONFIG_SAL) && !LWIP_SOCKET_POLL)
+#if !LWIP_POSIX_SOCKETS_IO_NAMES
+
 #if !defined(POLLIN) && !defined(POLLOUT)
 #define POLLIN     0x1
 #define POLLOUT    0x2
@@ -31,7 +39,8 @@ struct pollfd {
 #endif
 
 int poll(struct pollfd fds[], nfds_t nfds, int timeout);
-#endif
+
+#endif /* !LWIP_POSIX_SOCKETS_IO_NAMES */
 
 #ifdef __cplusplus
 }

@@ -1,12 +1,12 @@
 /*
- * Copyright (C) 2017-2019 Alibaba Group Holding Limited
+ * Copyright (C) 2017-2024 Alibaba Group Holding Limited
  */
 
 /******************************************************************************
  * @file     dw_uart_ll.h
  * @brief    header file for uart ll driver
  * @version  V1.0
- * @date     18. December 2019
+ * @date     18. December 2024
  ******************************************************************************/
 
 #ifndef _DW_UART_LL_H_
@@ -274,19 +274,7 @@ typedef struct {
     __IM  uint32_t LSR;              /* Offset: 0x014 (R/ )  Line state register */
     __IM  uint32_t MSR;              /* Offset: 0x018 (R/ )  Modem state register */
     uint32_t RESERVED1[21];
-    __IOM uint32_t FAR;              /* Offset: 0x070 (R/W)  FIFO accesss register */
-    __IM  uint32_t TFR;              /* Offset: 0x074 (R/ )  transmit FIFO read */
-    __OM  uint32_t RFW;              /* Offset: 0x078 ( /W)  receive FIFO write */
     __IM  uint32_t USR;              /* Offset: 0x07c (R/ )  UART state register */
-    __IM  uint32_t TFL;              /* Offset: 0x080 (R/ )  transmit FIFO level */
-    __IM  uint32_t RFL;              /* Offset: 0x084 (R/ )  receive FIFO level */
-    uint32_t RESERVED2[7];
-    __IOM uint32_t HTX;              /* Offset: 0x0a4 (R/W)  Halt TX */
-    __IOM uint32_t DMASA;            /* Offset: 0x0a8 (R/W)  DMA Software Acknowledge */
-    uint32_t RESERVED3[5];
-    __IOM  uint32_t UART_RATE;       /* Offset: 0x0c0 (R/ )  Uart Rate */
-    uint32_t RESERVED4[206];
-    __IM  uint32_t IP_ID;            /* Offset: 0x3FC (R/W)  Uart edition id */
 } dw_uart_regs_t;
 
 static inline void dw_uart_enable_recv_irq(dw_uart_regs_t *uart_base)
@@ -329,7 +317,8 @@ static inline uint32_t dw_uart_putready(dw_uart_regs_t *uart_base)
 {
     uint32_t status = 0U, ret = 0U;
 
-    status = uart_base->USR & DW_UART_USR_TFNF_SET;
+    status = uart_base->LSR & DW_UART_LSR_THRE_SET;
+
     if (status != 0U) {
         ret = 1U;
     }
@@ -341,7 +330,8 @@ static inline uint32_t dw_uart_getready(dw_uart_regs_t *uart_base)
 {
     uint32_t status = 0U, ret = 0U;
 
-    status = uart_base->USR & DW_UART_USR_RFNE_SET;
+    status = uart_base->LSR & DW_UART_LSR_DR_READY;
+
     if (status != 0U) {
         ret = 1U;
     }
@@ -374,16 +364,6 @@ static inline uint8_t dw_uart_getchar(dw_uart_regs_t *uart_base)
     return (uint8_t)(uart_base->RBR);
 }
 
-static inline uint32_t dw_uart_get_receive_fifo_waiting_data(dw_uart_regs_t *uart_base)
-{
-    return uart_base->RFL;
-}
-
-static inline uint32_t dw_uart_get_trans_fifo_waiting_data(dw_uart_regs_t *uart_base)
-{
-    return uart_base->TFL;
-}
-
 static inline uint32_t dw_uart_get_intr_en_status(dw_uart_regs_t *uart_base)
 {
     return uart_base->IER;
@@ -399,47 +379,16 @@ static inline void dw_uart_set_fcr_reg(dw_uart_regs_t *uart_base, uint32_t value
     uart_base->FCR = value;
 }
 
-static inline void dw_uart_set_tx_etb_func(dw_uart_regs_t *uart_base, uint32_t en)
-{
-    if (en == DW_UART_HTX_TX_ETB_FUNC_EN) {
-        uart_base->HTX |= DW_UART_HTX_TX_ETB_FUNC_EN;
-    } else {
-        uart_base->HTX &= ~(DW_UART_HTX_TX_ETB_FUNC_EN);
-    }
-}
-
-static inline void dw_uart_set_rx_etb_func(dw_uart_regs_t *uart_base, uint32_t en)
-{
-    if (en == DW_UART_HTX_RX_ETB_FUNC_EN) {
-        uart_base->HTX |= DW_UART_HTX_RX_ETB_FUNC_EN;
-    } else {
-        uart_base->HTX &= ~(DW_UART_HTX_RX_ETB_FUNC_EN);
-    }
-}
-
-static inline void dw_uart_config_uart_baud(dw_uart_regs_t *uart_base, uint8_t uart_rate)
-{
-    uart_base->UART_RATE = uart_rate;
-}
-
-static inline uint32_t dw_uart_get_ip_id(dw_uart_regs_t *uart_base)
-{
-    return uart_base->IP_ID;
-}
-
 static inline void dw_uart_enable_auto_flow_control(dw_uart_regs_t *uart_base)
 {
     uart_base->MCR |= DW_UART_MCR_AFCE_EN;
+    uart_base->MCR |= DW_UART_MCR_RTS_EN;
 }
 
 static inline void dw_uart_disable_auto_flow_control(dw_uart_regs_t *uart_base)
 {
-    uart_base->MCR &= ~(DW_UART_MCR_AFCE_EN);
-}
-
-static inline void dw_uart_enable_rts(dw_uart_regs_t *uart_base)
-{
-    uart_base->MCR |= DW_UART_MCR_RTS_EN;
+    uart_base->MCR &= ~DW_UART_MCR_AFCE_EN;
+    uart_base->MCR &= ~DW_UART_MCR_RTS_EN;
 }
 
 int32_t  dw_uart_wait_timeout(dw_uart_regs_t *uart_base);

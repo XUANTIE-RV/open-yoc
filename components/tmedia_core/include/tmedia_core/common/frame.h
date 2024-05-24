@@ -53,6 +53,7 @@ public:
     TMFrame& operator=(const TMFrame& frame);
 
     virtual void Init();
+    virtual void Init(TMClockType_e type, uint32_t time_base);
     int SetBuffer(TMBuffer *buffer, int align = 0, int stride = 0);
     TMBuffer *GetBuffer() const;
     int SetNativeFrameCtx(TMBuffer *buffer);
@@ -97,6 +98,7 @@ public:
     virtual ~TMVideoFrame();
     TMVideoFrame& operator=(const TMVideoFrame& frame);
     virtual void Init();
+    virtual void Init(TMClockType_e type, uint32_t time_base);
     int  RegisterReleaseFunc(TMFrameReleaseFunc releaseFunc);
 
     void Dump();
@@ -128,6 +130,7 @@ public:
     TMAudioFrame();
     virtual ~TMAudioFrame();
     virtual void Init();
+    virtual void Init(TMClockType_e type, uint32_t time_base);
 
     virtual int PrepareBuffer(TMBufferType bufType = TMBUFFER_TYPE_USER_MALLOC, int flags = 0, int addrAlign = 0, int strideAlign = 0);
 

@@ -1,7 +1,7 @@
 
 ## 第一部分： 基础信息
 name: speex                                         # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
-version: v7.8.0                                    # <必选项> 组件版本号
+version: v7.9.0                                    # <必选项> 组件版本号
 description: speex是一个专利免费/源码开源的dsp库。其包含预处理、回声消除、jitter buffer、音频重采样、定点/浮点傅里叶变换等模块 # <必选项> 建议至少20字以上
 type: common                                        # <必选项> 组件类型，为：solution, chip, board, common, sdk
 tag: 多媒体播放器                                   # <可选项> 组件分类，缺省值： ''
@@ -46,13 +46,44 @@ build_config:
     - USE_KISS_FFT
   include:
     - include
-  libpath:
-    - libs/<cpu>
-  libs:
-    - speex_prebuild
+  internal_include:
+    - .
+    - src/.
+    - include/speex
 
 # source_file:                             # <可选项> 指定参与编译的源代码文件，支持通配符，采用相对路径
 #   - src/*.c                              # 例：组件 src 目录下所有的扩展名为 c 的源代码文件
+source_file:
+  - "src/cb_search.c"
+  - "src/exc_10_32_table.c"
+  - "src/exc_8_128_table.c"
+  - "src/filters.c"
+  - "src/gain_table.c"
+  - "src/hexc_table.c"
+  - "src/high_lsp_tables.c"
+  - "src/lsp.c"
+  - "src/ltp.c"
+  - "src/speex.c"
+  - "src/stereo.c"
+  - "src/vbr.c"
+  - "src/vq.c"
+  - "src/bits.c"
+  - "src/exc_10_16_table.c"
+  - "src/exc_20_32_table.c"
+  - "src/exc_5_256_table.c"
+  - "src/exc_5_64_table.c"
+  - "src/gain_table_lbr.c"
+  - "src/hexc_10_32_table.c"
+  - "src/lpc.c"
+  - "src/lsp_tables_nb.c"
+  - "src/modes.c"
+  - "src/modes_wb.c"
+  - "src/nb_celp.c"
+  - "src/quant_lsp.c"
+  - "src/sb_celp.c"
+  - "src/speex_callbacks.c"
+  - "src/speex_header.c"
+  - "src/window.c"
 
 ## 第五部分：配置信息
 # def_config:                              # 组件的可配置项
@@ -69,9 +100,6 @@ install:
   - dest: "include/speex"
     source:
       - "include/speex/*.h"
-  - dest: "lib"
-    source:
-      - "libs/<cpu>/*.a"
 
 ## 第七部分：导出部分
 # export:
