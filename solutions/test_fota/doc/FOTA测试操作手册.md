@@ -8,7 +8,7 @@
 
 本操作文档以PANGU为例。
 
-具体文档详见：https://yoc.docs.t-head.cn/yocbook/Chapter5-%E7%BB%84%E4%BB%B6/%E7%B3%BB%E7%BB%9F%E5%8D%87%E7%BA%A7/
+具体文档详见：https://www.xrvm.cn/document?temp=fota&slug=yocbook
 
 
 

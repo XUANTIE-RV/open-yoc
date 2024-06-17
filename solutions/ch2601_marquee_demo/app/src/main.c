@@ -79,7 +79,7 @@ static void lable_test(void)
     lv_label_set_align(p, LV_LABEL_ALIGN_CENTER);
     lv_obj_set_pos(p, 0, 4);
     lv_obj_set_size(p, 128, 60);
-    lv_label_set_text(p, "THEAD\nMARQUEE\nDEMO");
+    lv_label_set_text(p, "MARQUEE\nDEMO");
 }
 
 #ifdef CONFIG_GPIO_MODE

@@ -10,13 +10,13 @@ vendor:                     #厂商信息字段
 
     chip: alkaid             #芯片名称
 
-    chip_vendor: thead      #芯片厂商
+    chip_vendor: xuantie      #芯片厂商
 
 cpu:
     - idx: 0
       name: e906
       arch: riscv
-      vendor: thead
+      vendor: xuantie
       version: v1.0
       endian: little
       irq_num: 32

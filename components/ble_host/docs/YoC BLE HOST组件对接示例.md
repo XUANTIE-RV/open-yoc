@@ -30,7 +30,7 @@ hci驱动组件。ble host组件通过hci接口同ble芯片的LL层进行通信�
 <a name="vULvc"></a>
 # 3. HCI Driver API介绍
 
-<br />参考YoC Book 蓝牙驱动移植章节中，API介绍，[链接地址](https://yoc.docs.t-head.cn/yocbook/Chapter8-%E8%8A%AF%E7%89%87%E5%AF%B9%E6%8E%A5/%E8%93%9D%E7%89%99%E9%A9%B1%E5%8A%A8%E7%A7%BB%E6%A4%8D.html)
+<br />参考YoC Book 蓝牙驱动移植章节中，API介绍，[链接地址](https://www.xrvm.cn/document?temp=bluetooth-device-driver-adaptation-instructions&slug=yocbook)
 
 | API | 说明 |
 | --- | --- |
