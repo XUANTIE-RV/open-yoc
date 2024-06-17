@@ -1,6 +1,6 @@
 # 概述
 
-针对平头哥wifihal组件的测试solution，目的是验证wifihal对接的准确性
+针对达摩院玄铁wifihal组件的测试solution，目的是验证wifihal对接的准确性
 
 # 操作手册
 

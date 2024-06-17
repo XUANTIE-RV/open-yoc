@@ -1,6 +1,6 @@
 # 概述
 
-针对平头哥ble_host组件的测试solution，目的是验证ble_host对接的准确性
+针对达摩院玄铁ble_host组件的测试solution，目的是验证ble_host对接的准确性
 
 # 操作手册
 

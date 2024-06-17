@@ -25,4 +25,4 @@ yoc install chip_sc5654
 
 ## 接口
 
-见[CSI接口描述](https://yoc.docs.t-head.cn/yocbook/Chapter3-AliOS/CSI%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8%E6%8E%A5%E5%8F%A3/CSI2/)
+见[CSI接口描述](https://www.xrvm.cn/document?temp=csi&slug=csi-chn)

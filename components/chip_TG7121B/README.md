@@ -27,8 +27,6 @@ sdk_genie_mesh是SDK的入口，在安装sdk_genie_mesh时chip_TG7121B组件也�
 ​
 
 TG7121B的大多数外设都已经对接HAL API，可以参考如下文档链接直接使用HAL API开发。
-[见HAL接口文档]: [https://yoc.docs.t-head.cn/yocbook/Chapter3-AliOS/HAL硬件抽象层接口/](https://yoc.docs.t-head.cn/yocbook/Chapter3-AliOS/HAL%E7%A1%AC%E4%BB%B6%E6%8A%BD%E8%B1%A1%E5%B1%82%E6%8E%A5%E5%8F%A3/)
-[见HAL接口文档]: [https://yoc.docs.t-head.cn/yocbook/Chapter3-AliOS/HAL硬件抽象层接口/](https://yoc.docs.t-head.cn/yocbook/Chapter3-AliOS/HAL%E7%A1%AC%E4%BB%B6%E6%8A%BD%E8%B1%A1%E5%B1%82%E6%8E%A5%E5%8F%A3/)
 ​
 
 部分功能HAL API尚不支持，可以参考以下章节。

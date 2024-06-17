@@ -1,7 +1,7 @@
 ## 概述
 RTL8723块是一款低功耗WIFI+蓝牙二合一WIFI模块，SDIO接口，支持IEEE802.11B/G/N 标准,可以与其它符合该标准的无线设备互相联通,支持最新的64/128 位WEP 数据加密，支持WPA-PSK/WPA2-PSK,WPA/WPA2 安全机制,可适应不同的工作环境。
 
-在yoc移植的过程中，如果需要支持WiFi功能(例如有配网需求，参考netmgr即 （[网络管理器](https://yoc.docs.t-head.cn/yocbook/Chapter4-%E6%A0%B8%E5%BF%83%E6%A8%A1%E5%9D%97/%E7%BD%91%E7%BB%9C%E8%BF%9E%E6%8E%A5/%E7%BD%91%E7%BB%9C%E7%AE%A1%E7%90%86%E5%99%A8.html))，则需要对相关接口进行移植实现，包含`net`及`wifi`两部分：
+在yoc移植的过程中，如果需要支持WiFi功能(例如有配网需求，参考netmgr即 （[网络管理器](https://www.xrvm.cn/document?temp=netmgr&slug=yocbook))，则需要对相关接口进行移植实现，包含`net`及`wifi`两部分：
 
 - NET HAL的接口定义请查看头文件：`net_impl.h`。
 - WiFi HAL的接口定义请查看头文件：`wifi_impl.h`。
@@ -268,7 +268,7 @@ void wifi_rtl8723ds_register(rtl8723ds_gpio_pin *config)
 ```
 - **示例详解**
   
-  主要流程为**注册网卡驱动**----->**启动netmgr微服务**（netmgr详细说明 [网络管理器](https://yoc.docs.t-head.cn/yocbook/Chapter4-%E6%A0%B8%E5%BF%83%E6%A8%A1%E5%9D%97/%E7%BD%91%E7%BB%9C%E8%BF%9E%E6%8E%A5/%E7%BD%91%E7%BB%9C%E7%AE%A1%E7%90%86%E5%99%A8.html) ）
+主要流程为**注册网卡驱动**----->**启动netmgr微服务**（netmgr详细说明 [网络管理器](https://www.xrvm.cn/document?temp=netmgr&slug=yocbook) ）
 
 ```C
 void rtl8723ds_init(void)

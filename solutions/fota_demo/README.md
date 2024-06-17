@@ -75,7 +75,7 @@ kv set model Model2
 kv setint fota_en 0/1
 
 #若调整ota服务器，参考如下命令，默认就是如下URL
-kv set otaurl http://occ.t-head.cn/api/image/ota/pull
+kv set otaurl http://www.xrvm.cn/api/image/ota/pull
 
 ```
 设置完毕重启开发板

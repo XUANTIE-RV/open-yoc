@@ -29,8 +29,8 @@
 | 软件名称        | 版本     | 功用           | 备注                                                         |
 | --------------- | -------- | -------------- | ------------------------------------------------------------ |
 | 工具链          | V3.10.21 | 编译           | 下载命令 sudo yoc toolchain -c (下载和安装csky工具链)        |
-| CskyDebugServer | V5.10.4  | 调试用         | https://occ.t-head.cn/community/download_detail?id=616215132330000384 |
-| OCC             |          | 升级包管理升级 | https://occ.t-head.cn/                                       |
+| CskyDebugServer | V5.10.4  | 调试用         | https://www.xrvm.cn/community/download_detail?id=616215132330000384 |
+| OCC             |          | 升级包管理升级 | https://www.xrvm.cn/                                       |
 
 
 
@@ -301,7 +301,7 @@ kv set device_id id #id为下载下来的CID
 
 若调整ota服务器，参考如下命令，默认就是如下URL 
 
-kv set otaurl http://occ.t-head.cn/api/image/ota/pull
+kv set otaurl http://www.xrvm.cn/api/image/ota/pull
 ```
 
 

@@ -284,7 +284,7 @@ ai eqparam null
 ## 3.3 语音DSP固件切换(CB5654开发板)
 方案支持多种固件，默认使用的是mit固件
 
-### 切换到T-HEAD固件
+### 切换到xuantie固件
 - 切换组件
 组件voice_mit修改为voice_thead
 
@@ -365,7 +365,7 @@ kv set model Model2
 kv setint fota_en 0/1
 
 #若调整ota服务器，参考如下命令，默认就是如下URL
-kv set otaurl http://occ.t-head.cn/api/image/ota/pull
+kv set otaurl http://www.xrvm.cn/api/image/ota/pull
 
 ```
 

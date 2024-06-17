@@ -23,7 +23,6 @@ TG7120B芯片组件，主要提供TG7120B芯片驱动代码。包含
 - P2默认值为SW TMS引脚。
 - P3默认值为SW TCK引脚。
 - P16 P17目前只能接晶振不能做GPIO用。
-- 接口说明参考[CSI GPIO接口](https://yoc.docs.t-head.cn/yocbook/Chapter3-AliOS/CSI%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8%E6%8E%A5%E5%8F%A3/CSI1/GPIO.html) 
 
 其他接口说明:
 
@@ -51,7 +50,6 @@ TG7120B芯片组件，主要提供TG7120B芯片驱动代码。包含
 
 - 硬件支持bypass模式和attenuation模式，bypass模式量程为[0,0.8V],attenuation模式量程约为[0,3.2V]。
 - 支持电源电压检测功能，即测量当前芯片供电电压。
-- 接口说明参考[CSI ADC接口](https://yoc.docs.t-head.cn/yocbook/Chapter3-AliOS/CSI%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8%E6%8E%A5%E5%8F%A3/CSI1/ADC.html) 
 
 其他接口说明:
 
@@ -81,7 +79,6 @@ TG7120B芯片组件，主要提供TG7120B芯片驱动代码。包含
 - UP AND DOWN MODE，FALLING方式，占空比为CMP_VAL/TOP_VAL，不支持0%和100%。需要gpio输出高低来辅助实现。
 - 当系统休眠时，pwm信息会丢失，唤醒后需要重新配置。
 -  所有可fmux的io都可以复用为pwm。
-- 接口说明参考[CSI PWM接口](https://yoc.docs.t-head.cn/yocbook/Chapter3-AliOS/CSI%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8%E6%8E%A5%E5%8F%A3/CSI1/PWM.html) 
 
 其他接口说明:
 
@@ -117,7 +114,6 @@ TG7120B芯片组件，主要提供TG7120B芯片驱动代码。包含
 - 当系统休眠时，spi信息会丢失，唤醒后需要重新配置。
 - 所有可fmux的io都可以复用为spi。
 - 当使用spi发送数据时，可以选择自动或手动控制cs的高低，可以选择是否使用中断。所谓手动是通过将IO设置为GPIO并将其输出高低。spi_Cfg_t中的force_cs为true时选择手动模式，spi_Cfg_t中的int_mode为true时使用中断方式。
-- 接口说明参考[CSI SPI接口](https://yoc.docs.t-head.cn/yocbook/Chapter3-AliOS/CSI%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8%E6%8E%A5%E5%8F%A3/CSI1/SPI.html)
 
 ### 2.5. I2C
 
@@ -126,7 +122,6 @@ TG7120B芯片组件，主要提供TG7120B芯片驱动代码。包含
 -  当系统休眠时，i2c信息会丢失，唤醒后需要重新配置。
 -  所有可fmux的io都可以复用为i2c。
 -  i2c使用时需要接上拉电阻，比如2.2K。
-- 接口说明参考[CSI I2C接口](https://yoc.docs.t-head.cn/yocbook/Chapter3-AliOS/CSI%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8%E6%8E%A5%E5%8F%A3/CSI1/I2C.html)
 
 ### 2.6. UART
 
@@ -136,7 +131,6 @@ TG7120B芯片组件，主要提供TG7120B芯片驱动代码。包含
 -  所有可fmux的io都可以复用为uart。
 -  系统日志打印默认使用uart0(p9、p10)
 -  假设当前系统主频为hclk且不分频，需要的波特率为baud，实际硬件配置的寄存器为divisor = (hclk) / (16 * baud)。当丢失的小数部分大于2%时，此波特率不支持会乱码。
-- 接口说明参考[CSI UART接口](https://yoc.docs.t-head.cn/yocbook/Chapter3-AliOS/CSI%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8%E6%8E%A5%E5%8F%A3/CSI1/UART.html)
 
 ### 2.7.  Timer
 
@@ -146,7 +140,6 @@ TG7120B芯片组件，主要提供TG7120B芯片驱动代码。包含
 -  支持中断方式和非中断方式。
 -  支持free-running mode和user-defined count mode。前者减到0后，自动加载0xFFFFFFFF。后者减到0后，自动加载用户预先配置的值。SDK默认使用user-defined count mode。
 - 当系统休眠时，timer信息会丢失，唤醒后需要重新配置。
-- 接口说明参考[CSI Timer接口](https://yoc.docs.t-head.cn/yocbook/Chapter3-AliOS/CSI%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8%E6%8E%A5%E5%8F%A3/CSI1/TIMER.html)
 
 ### 2.8.  WDT
 
@@ -154,11 +147,9 @@ TG7120B芯片组件，主要提供TG7120B芯片驱动代码。包含
 -  watchdog喂狗周期可选择2S、4S、8S、16S、32S、64S、128S、256S。
 -  watchdog使用轮询模式。当选择轮询方式时，超过喂狗周期未喂狗，系统将产生复位。
 - 当系统休眠时，watchdog信息会丢失，唤醒后需要重新配置。
-- 接口说明参考[CSI WDT接口](https://yoc.docs.t-head.cn/yocbook/Chapter3-AliOS/CSI%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8%E6%8E%A5%E5%8F%A3/CSI1/WDT.html) 
 
 ### 2.9. DMA
 - 支持4通道DMA
-- 接口说明参考[CSI DMA接口](https://yoc.docs.t-head.cn/yocbook/Chapter3-AliOS/CSI%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8%E6%8E%A5%E5%8F%A3/CSI1/DMAC.html) 
 
 #### 2.9.1.dma中断函数
 函数名称：void dw_dmac_irqhandler(int32_t idx)
@@ -190,7 +181,6 @@ TG7120B芯片组件，主要提供TG7120B芯片驱动代码。包含
 
 ### 2.10. SPIFLASH
 
-接口说明参考[CSI SPIFLASH接口](https://yoc.docs.t-head.cn/yocbook/Chapter3-AliOS/CSI%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8%E6%8E%A5%E5%8F%A3/CSI1/SPIFLASH.html) 
 #### 2.10.1. spif初始化
 
 函数名称：spiflash_handle_t csi_spiflash_initialize(int32_t idx, spiflash_event_cb_t cb_event)
@@ -329,7 +319,7 @@ txPower：发射功率，参考下面宏定义设置
 
 | 宏定义名称              | 功能说明  | 功能说明                              | 备注 |
 | --------------------- | -------- | ------------------------------------ | ---- |
-| PHY_MCU_TYPE          | 4        | MCU型号，TG7120B搭载平头哥玄铁CK802 CPU |      |
+| PHY_MCU_TYPE          | 4        | MCU型号，TG7120B搭载玄铁CK802 CPU |      |
 | AOS_DEFAULT_APP_PRI   | 10       | Task默认优先级                        |      |
 | AOS_MAX_APP_PRI       | 14       | 系统支持的APP Task最高优先级            |      |
 | CONFIG_KERNEL_PRI_MAX | 14       | 系统支持的KERNEL Task最高优先级         |      |

@@ -17,7 +17,7 @@ keywords:
 author:
   name: feimi
 license: Apache license v2.0
-homepage: https://occ.t-head.cn
+homepage: https://www.xrvm.cn
 type: solution
 depends:
   - aos: v7.4.3

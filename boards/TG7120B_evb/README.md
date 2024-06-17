@@ -61,7 +61,7 @@ RGB三色灯管脚定义
 
 ### 5.1. 烧录工具
 
-TG7120B烧录工具TG71XXProgrammer[下载](https://occ.t-head.cn/vendor/detail/download?spm=a2cl5.14300867.0.0.6bce180foUrUcQ&id=3898058978009550848&vendorId=3895463451199475712&module=1#sticky)，支持通过串口烧录镜像。
+TG7120B烧录工具TG71XXProgrammer[下载](https://www.xrvm.cn/vendor/detail/download?spm=a2cl5.14300867.0.0.6bce180foUrUcQ&id=3898058978009550848&vendorId=3895463451199475712&module=1#sticky)，支持通过串口烧录镜像。
 
 解压后，遵照TG71XX Programmer User's Guide.docx烧录。
 

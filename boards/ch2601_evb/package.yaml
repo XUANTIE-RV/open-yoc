@@ -19,7 +19,7 @@ license: Apache license v2.0                        # <可选项> 源代码的�
 # hw_info:                                 # 对 solution、board、chip 三个字段的改进，统称为 hw_info 字段
 #   cpu_id: cpu0
 #   cpu_name: CK804EF
-#   vendor_name: t-head
+#   vendor_name: xuantie
 #   chip_name: chip_pangu                  # <可选项> 指定芯片组件名,未设置时，使用depends中 chip 第一个组件
 #   board_name: pangu_cpu0_evb                 # <可选项> 指定开发板组件名，未设置时，使用depends中 board 第一个组件
 #   ld_script: configs/gcc_eflash.ld       # <可选项> 连接时使用 LD 脚本，当选把未设置时，使用对应的 board 的 LD 脚本
@@ -41,7 +41,7 @@ license: Apache license v2.0                        # <可选项> 源代码的�
 #   cpu_id: cpu0
 #   board_name: pangu_cpu0_evb
 #   cpu_name: CK805EF
-#   vendor_name: thead
+#   vendor_name: xuantie
 #   chip_name: 'chip_pangu'
 #   ld_script: configs/gcc_eflash.ld.S
 
@@ -70,7 +70,7 @@ license: Apache license v2.0                        # <可选项> 源代码的�
 #     flash_program: bin/flash_program.elf # <可选项> 该CPU对应烧写程序，未指定时使用全局烧写程序
 #     toolchain_prefix: csky-abiv2-elf     # <可选项> 编译器前缀
 hw_info:
-  vendor_name: thead
+  vendor_name: xuantie
   chip_name: chip_ch2601
   cpu_name: e906
   ld_script: ./gcc_flash.ld

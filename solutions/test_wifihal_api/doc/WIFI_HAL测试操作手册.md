@@ -29,8 +29,8 @@
 
 | 软件名称        | 版本     | 功用     | 下载链接                                                     |
 | --------------- | -------- | -------- | ------------------------------------------------------------ |
-| 工具链          | V3.10.21 | 编译     | https://occ.t-head.cn/community/download?id=3782044712072974336 |
-| CskyDebugServer | V5.10.4  | 调试用   | https://occ.t-head.cn/community/download_detail?id=616215132330000384 |
+| 工具链          | V3.10.21 | 编译     | https://www.xrvm.cn/community/download?id=3782044712072974336 |
+| CskyDebugServer | V5.10.4  | 调试用   | https://www.xrvm.cn/community/download_detail?id=616215132330000384 |
 | 串口工具        | -        | 查看日志 | -                                                            |
 
 ​    在Ubuntu子系统中（下列操作除了强调Windows客户端以外，其他操作都在Ubuntu子系统中完成），将工具链加入到环境变量中，例如csky-elfabiv2-tools-x86_64-minilibc-20200502.tar.gz解压后存放在自定义目录下，可在 该目录下找到 csky-elfabiv2-tools-x86_64-minilibc-20200502文件夹，文件夹内有 bin 文件夹， 将 bin 文件夹路径加入到环境变量。

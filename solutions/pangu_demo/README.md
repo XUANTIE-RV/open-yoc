@@ -53,7 +53,7 @@ iwpriv wifi_debug set_mac 00e04c87A080
 ### FOTA服务器设置
 
 ```
-kv set otaurl http://pre.occ.t-head.cn/api/image/ota/pull
+kv set otaurl http://www.xrvm.cn/api/image/ota/pull
 ```
 
 ### FOTA使能配置

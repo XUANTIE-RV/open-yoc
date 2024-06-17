@@ -6,13 +6,13 @@ version 7.4  pangu_secure_demo该版本提供sec_crypto、mbedtls、key_mgr组�
 
 阅读以下章节前请先熟悉YoCBook以下内容：
 
-- [CSI2接口](https://yoc.docs.t-head.cn/yocbook/Chapter3-AliOS/CSI%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8%E6%8E%A5%E5%8F%A3/CSI2/)
+- [CSI2接口](https://www.xrvm.cn/document?temp=csi&slug=csi-chn)
 
-- [CDK](https://yoc.docs.t-head.cn/yocbook/Chapter2-%E5%BF%AB%E9%80%9F%E4%B8%8A%E6%89%8B%E6%8C%87%E5%BC%95/)
+- [CDK](https://www.xrvm.cn/document?temp=use-cdk-to-get-started-quickly&slug=yocbook)
 
-- [安全组件](https://yoc.docs.t-head.cn/yocbook/Chapter5-%E7%BB%84%E4%BB%B6/%E5%AE%89%E5%85%A8%E7%BB%84%E4%BB%B6/)
+- [安全组件](https://www.xrvm.cn/document?temp=key_mgr&slug=yocbook)
 
-- [芯片对接](https://yoc.docs.t-head.cn/yocbook/Chapter8-%E8%8A%AF%E7%89%87%E5%AF%B9%E6%8E%A5/)
+- [芯片对接](https://www.xrvm.cn/document?temp=overview-4&slug=yocbook)
 
 
 # 概述

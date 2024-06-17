@@ -2,7 +2,7 @@
 ## 第一部分： 基础信息
 name: voice_thead                                    # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
 version: v7.4.3                                     # <必选项> 组件版本号
-description: 麦克风服务，平头哥语音唤醒算法固件       # <必选项> 建议至少20字以上
+description: 麦克风服务，达摩院玄铁语音唤醒算法固件       # <必选项> 建议至少20字以上
 type: common                                        # <必选项> 组件类型，为：solution, chip, board, common, sdk
 
 tag: 核心模块                                       # <可选项> 组件分类，缺省值： ''
@@ -24,7 +24,7 @@ depends:
 # hw_info:                                 # 对 solution、board、chip 三个字段的改进，统称为 hw_info 字段
 #   cpu_id: cpu0
 #   cpu_name: CK804EF
-#   vendor_name: t-head
+#   vendor_name: xuantie
 #   chip_name: chip_pangu                  # <可选项> 指定芯片组件名,未设置时，使用depends中 chip 第一个组件
 #   board_name: pangu_cpu0                 # <可选项> 指定开发板组件名，未设置时，使用depends中 board 第一个组件
 #   ld_script: configs/gcc_eflash.ld       # <可选项> 连接时使用 LD 脚本，当选把未设置时，使用对应的 board 的 LD 脚本
@@ -43,7 +43,7 @@ depends:
 #   cpu_id: cpu0
 #   board_name: pangu_cpu0
 #   cpu_name: CK805EF
-#   vendor_name: thead
+#   vendor_name: xuantie
 #   chip_name: 'chip_pangu'
 #   ld_script: configs/gcc_eflash.ld.S
 

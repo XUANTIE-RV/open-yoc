@@ -189,7 +189,7 @@ typedef struct sal_op_s {
 
 ### 驱动注册
 
-主要流程为**注册网卡驱动**----->**启动netmgr微服务**（netmgr详细说明 [网络管理器](https://yoc.docs.t-head.cn/yocbook/Chapter4-%E6%A0%B8%E5%BF%83%E6%A8%A1%E5%9D%97/%E7%BD%91%E7%BB%9C%E8%BF%9E%E6%8E%A5/%E7%BD%91%E7%BB%9C%E7%AE%A1%E7%90%86%E5%99%A8.html) ）
+主要流程为**注册网卡驱动**----->**启动netmgr微服务**（netmgr详细说明 [网络管理器](https://www.xrvm.cn/document?temp=netmgr&slug=yocbook) ）
 
 ```c
 #include <devices/esp8266.h>

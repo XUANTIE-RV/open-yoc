@@ -10,7 +10,7 @@ hw_info:
   # board_name: board_dummy
   # toolchain_prefix: csky-abiv2-elf
   # cpu_name: CK805EF
-  # vendor_name: thead
+  # vendor_name: xuantie
   # chip_name: 'chip_ch2201'
   # ld_script: configs/gcc_eflash.ld.S
 
