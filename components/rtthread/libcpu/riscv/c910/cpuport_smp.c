@@ -68,7 +68,6 @@ static inline void spinlock_unlock(spinlock_t *lock)
     /* Use memory barrier to keep coherency */
     mb();
     atomic_set(&lock->lock, 0);
-    asm volatile("nop");
 }
 
 void rt_hw_spin_lock_init(rt_hw_spinlock_t *lock)

@@ -1,7 +1,7 @@
 
 ## 第一部分： 基础信息
 name: yoc                                           # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
-version: v7.9.0                                    # <必选项> 组件版本号
+version: v7.9.1                                    # <必选项> 组件版本号
 description: YoC组件集合                             # <必选项> 建议至少20字以上
 type: common                                        # <必选项> 组件类型，为：solution, chip, board, common, sdk
 tag: 核心模块                                        # <可选项> 组件分类，缺省值： ''
@@ -16,6 +16,6 @@ license: Apache license v2.0                         # <可选项> 源代码的�
 #   - minilibc: v7.4.0
 #   - aos: v7.4.0
 depends:
-  - yocopen: v7.9.0
-  - sdk_longyuan: v7.9.0
-  - sdk_chixiao_lite: v7.9.0
+  - yocopen: v7.9.1
+  - sdk_longyuan: v7.9.1
+  - sdk_chixiao_lite: v7.9.1

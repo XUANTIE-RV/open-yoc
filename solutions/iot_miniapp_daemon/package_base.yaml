@@ -1,7 +1,7 @@
 
 ## 第一部分： 基础信息
 name: iot_miniapp_daemon                            # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
-version: v7.9.0                                    # <必选项> 组件版本号
+version: v7.9.1                                    # <必选项> 组件版本号
 description: IoT小程序服务程序                       # <必选项> 建议至少20字以上
 type: solution                                      # <必选项> 组件类型，为：solution, chip, board, common, sdk
 
@@ -12,48 +12,48 @@ type: solution                                      # <必选项> 组件类型�
 #   - minilibc: v7.2.0
 #   - aos: >=v7.2.0
 sdk_chip:
-  - sdk_chip_d1: v7.9.0
-  - sdk_chip_f133: v7.9.0
-  - sdk_chip_cv181xh_bga: v7.9.0
+  - sdk_chip_d1: v7.9.1
+  - sdk_chip_f133: v7.9.1
+  - sdk_chip_cv181xh_bga: v7.9.1
 
 mkflash_script: mkflash.sh
 
 depends:
-  - sdk_chip_f133: v7.9.0
-  - iot_miniapp_sdk: v7.9.0
-  - av: v7.9.0
-  - amrnb: v7.9.0
-  - amrwb: v7.9.0
-  - flac: v7.9.0
-  - ogg: v7.9.0
-  - opus: v7.9.0
-  - pvmp3dec: v7.9.0
-  - sonic: v7.9.0
-  - speex: v7.9.0
-  - speexdsp: v7.9.0
-  - netmgr: v7.9.0
-  - littlefs: v7.9.0
-  - zlib: v7.9.0
-  - ntp: v7.9.0
-  - smart_audio: v7.9.0
-  - drv_amplifier: v7.9.0
-  - wifi_provisioning: v7.9.0
-  - cjson: v7.9.0
-  - websocket: v7.9.0
-  - httpclient: v7.9.0
-  - transport: v7.9.0
-  - button: v7.9.0
-  - adb: v7.9.0
-  - clock_alarm: v7.9.0
-  - drv_ethernet: v7.9.0
-  - fota: v7.9.0
-  - csi2d: v7.9.0
+  - sdk_chip_f133: v7.9.1
+  - iot_miniapp_sdk: v7.9.1
+  - av: v7.9.1
+  - amrnb: v7.9.1
+  - amrwb: v7.9.1
+  - flac: v7.9.1
+  - ogg: v7.9.1
+  - opus: v7.9.1
+  - pvmp3dec: v7.9.1
+  - sonic: v7.9.1
+  - speex: v7.9.1
+  - speexdsp: v7.9.1
+  - netmgr: v7.9.1
+  - littlefs: v7.9.1
+  - zlib: v7.9.1
+  - ntp: v7.9.1
+  - smart_audio: v7.9.1
+  - drv_amplifier: v7.9.1
+  - wifi_provisioning: v7.9.1
+  - cjson: v7.9.1
+  - websocket: v7.9.1
+  - httpclient: v7.9.1
+  - transport: v7.9.1
+  - button: v7.9.1
+  - adb: v7.9.1
+  - clock_alarm: v7.9.1
+  - drv_ethernet: v7.9.1
+  - fota: v7.9.1
+  - csi2d: v7.9.1
   
 ## 第三部分：板级信息
 # hw_info:                                 # 对 solution、board、chip 三个字段的改进，统称为 hw_info 字段
 #   cpu_id: cpu0
 #   cpu_name: CK804EF
-#   vendor_name: t-head
+#   vendor_name: xuantie
 #   chip_name: chip_pangu                  # <可选项> 指定芯片组件名,未设置时，使用depends中 chip 第一个组件
 #   board_name: pangu_cpu0_evb             # <可选项> 指定开发板组件名，未设置时，使用depends中 board 第一个组件
 #   ld_script: configs/gcc_eflash.ld       # <可选项> 连接时使用 LD 脚本，当选把未设置时，使用对应的 board 的 LD 脚本
@@ -74,7 +74,7 @@ depends:
 #   cpu_id: cpu0
 #   board_name: pangu_cpu0_evb
 #   cpu_name: CK805EF
-#   vendor_name: thead
+#   vendor_name: xuantie
 #   chip_name: 'chip_pangu'
 #   ld_script: configs/gcc_eflash.ld.S
 

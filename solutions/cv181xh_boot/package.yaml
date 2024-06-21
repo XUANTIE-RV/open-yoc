@@ -1,6 +1,6 @@
 ## 第一部分： 基础信息
 name: cv181xh_boot                                   # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
-version: v7.9.0                                    # <必选项> 组件版本号
+version: v7.9.1                                    # <必选项> 组件版本号
 description: bootloader for cv181x                  # <必选项> 建议至少20字以上
 type: solution                                      # <必选项> 组件类型，为：solution, chip, board, common, sdk
 
@@ -10,16 +10,16 @@ hw_info:
   ld_script: gcc_flash.ld
 
 depends:                                       # 该组件依赖其他的组件
-  - csi: v7.9.0
-  - chip_cv181x: v7.9.0
-  - boot: v7.9.0
-  - partition: v7.9.0
-  - sec_crypto: v7.9.0
-  - key_mgr: v7.9.0
-  - bootab: v7.9.0
-  - xz: v7.9.0
-  - drv_sdmmc: v7.9.0
-  - lz4: v7.9.0
+  - csi: v7.9.1
+  - chip_cv181x: v7.9.1
+  - boot: v7.9.1
+  - partition: v7.9.1
+  - sec_crypto: v7.9.1
+  - key_mgr: v7.9.1
+  - bootab: v7.9.1
+  - xz: v7.9.1
+  - drv_sdmmc: v7.9.1
+  - lz4: v7.9.1
 
 # 编译参数
 build_config:

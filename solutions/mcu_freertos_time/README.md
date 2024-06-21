@@ -46,7 +46,8 @@ qemu-system-riscv64 -machine xiaohui -nographic -kernel yoc.elf -cpu c907fdvm
 串口看到以下内容输出，表示运行成功：
 
 ```
-xTaskGetTickCount = 0 
+kernel systick is 10 ms
+now time = 0 ms before 19s....
 print cnt every 1s for 10 times
 -----9
 -----8
@@ -62,8 +63,8 @@ print cnt every 3s for 3 times
 -----2
 -----1
 -----0
-xTaskGetTickCount = 2000 
-xTaskGetTickCount after delay = 2100 
+now time = 19010 ms after 19s, will be delay  1s....
+now time = 20010 ms after delay 1s 
 test kernel time successfully!
 ```
 

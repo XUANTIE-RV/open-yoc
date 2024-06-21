@@ -11,6 +11,8 @@
 #ifndef __RT_ATOMIC_H__
 #define __RT_ATOMIC_H__
 
+#include <rthw.h>
+
 #if !defined(__cplusplus)
 
 rt_atomic_t rt_hw_atomic_load(volatile rt_atomic_t *ptr);
@@ -24,13 +26,6 @@ rt_atomic_t rt_hw_atomic_exchange(volatile rt_atomic_t *ptr, rt_atomic_t val);
 void rt_hw_atomic_flag_clear(volatile rt_atomic_t *ptr);
 rt_atomic_t rt_hw_atomic_flag_test_and_set(volatile rt_atomic_t *ptr);
 rt_atomic_t rt_hw_atomic_compare_exchange_strong(volatile rt_atomic_t *ptr, rt_atomic_t *expected, rt_atomic_t desired);
-
-/* To detect stdatomic */
-#if !defined(RT_USING_HW_ATOMIC) && !defined(RT_USING_STDC_ATOMIC)
-#if defined(__GNUC__) && defined(RT_USING_LIBC) && !defined(__STDC_NO_ATOMICS__)
-#define RT_USING_STDC_ATOMIC
-#endif /* __GNUC__ && .. */
-#endif /* !RT_USING_HW_ATOMIC && !RT_USING_STDC_ATOMIC */
 
 #if defined(RT_USING_HW_ATOMIC)
 #define rt_atomic_load(ptr) rt_hw_atomic_load(ptr)
@@ -205,6 +200,35 @@ rt_inline rt_atomic_t rt_soft_atomic_compare_exchange_strong(volatile rt_atomic_
     return temp;
 }
 #endif /* RT_USING_STDC_ATOMIC */
+
+rt_inline rt_bool_t rt_atomic_dec_and_test(volatile rt_atomic_t *ptr)
+{
+    return rt_atomic_sub(ptr, 1) == 0;
+}
+
+rt_inline rt_atomic_t rt_atomic_fetch_add_unless(volatile rt_atomic_t *ptr, rt_atomic_t a, rt_atomic_t u)
+{
+    rt_atomic_t c = rt_atomic_load(ptr);
+
+    do {
+        if (c == u)
+        {
+            break;
+        }
+    } while (!rt_atomic_compare_exchange_strong(ptr, &c, c + a));
+
+    return c;
+}
+
+rt_inline rt_bool_t rt_atomic_add_unless(volatile rt_atomic_t *ptr, rt_atomic_t a, rt_atomic_t u)
+{
+    return rt_atomic_fetch_add_unless(ptr, a, u) != u;
+}
+
+rt_inline rt_bool_t rt_atomic_inc_not_zero(volatile rt_atomic_t *ptr)
+{
+    return rt_atomic_add_unless(ptr, 1, 0);
+}
 
 #endif /* __cplusplus */
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2020 T-head Limited. All rights reserved.
+ * Copyright (C) 2017-2024 Alibaba Group Holding Limited
  *
  * SPDX-License-Identifier: Apache-2.0
  *

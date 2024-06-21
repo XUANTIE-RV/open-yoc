@@ -109,200 +109,39 @@ PRIVILEGED_DATA static size_t xNumberOfSuccessfulFrees = 0;
  * space. */
 PRIVILEGED_DATA static size_t xBlockAllocatedBit = 0;
 
-
 void *pvPortRealloc( uint8_t *srcaddr,size_t xWantedSize )
 {
-
-	
-
-	BlockLink_t *pxBlock, *pxPreviousBlock, *pxNewBlockLink;
-
 	void *pvReturn = NULL;
 
- 
-
-	BlockLink_t *pxBlockold,*pxBlockjudge;
-
 	vTaskSuspendAll();
-
 	{
-
-		/* If this is the first call to malloc then the heap will require
-
-		initialisation to setup the list of free blocks. */
-
-		if( pxEnd == NULL )
-
-		{
-
+		if (pxEnd == NULL) {
 			prvHeapInit();
-
 		}
 
-		else
+		if ((xWantedSize & xBlockAllocatedBit) == 0) {
+			if (xWantedSize) {
+				pvReturn = pvPortMalloc(xWantedSize);
+				if (pvReturn && srcaddr) {
+					size_t size;
+					BlockLink_t *pxBlockold;
 
-		{
-
-			mtCOVERAGE_TEST_MARKER();
-
+					pxBlockold = (BlockLink_t *)(srcaddr - xHeapStructSize);
+					size = pxBlockold->xBlockSize & (~xBlockAllocatedBit);
+					size = size > xWantedSize ? xWantedSize : size;
+					memcpy((uint8_t*)pvReturn, srcaddr, size);
+					vPortFree(srcaddr);
+				}
+			} else {
+				/* xWantedSize == 0, free the mem */
+				if (srcaddr)
+					vPortFree(srcaddr);
+			}
 		}
-
-	
-
-		/* Check the requested block size is not so large that the top bit is
-
-		set.  The top bit of the block size member of the BlockLink_t structure
-
-		is used to determine who owns the block - the application or the
-
-		kernel, so it must be free. */
-
-		if( ( xWantedSize & xBlockAllocatedBit ) == 0 )
-
-		{
-
-			if( ( xWantedSize & portBYTE_ALIGNMENT_MASK ) != 0x00 )
-
-			{
-
-				/* Byte alignment required. */
-
-				xWantedSize += ( portBYTE_ALIGNMENT - ( xWantedSize & portBYTE_ALIGNMENT_MASK ) );
-
-				configASSERT( ( xWantedSize & portBYTE_ALIGNMENT_MASK ) == 0 );
-
-			}
-
-			else
-
-			{
-
-				mtCOVERAGE_TEST_MARKER();
-
-			}
-
- 
-
-			if( ( xWantedSize > 0 ) && ( xWantedSize <= xFreeBytesRemaining ) )
-
-			{
-
- 
-
-				if(srcaddr == NULL)
-
-				{
-
-					pvReturn = pvPortMalloc(xWantedSize);
-
-					( void ) xTaskResumeAll();
-
-                                         return pvReturn;
-
-				}
-
-				pxBlockold = (BlockLink_t *)(srcaddr - xHeapStructSize);                              //找到源地址对应的BlockLink_t结构体，提取其中的xBlockSize信息
-
-				pxBlockjudge = (BlockLink_t *)((uint8_t*)pxBlockold+((pxBlockold->xBlockSize)&(~xBlockAllocatedBit)));  //找到源地址对应的块的尾部。
-
- 
-
- 
-
-				pxPreviousBlock = &xStart;
-
-				pxBlock = xStart.pxNextFreeBlock;
-
-				while(pxBlock != pxBlockjudge&& ( pxBlock->pxNextFreeBlock != NULL ))    //判断源地址块后的下一块是否可用
-
-				{
-
-					pxPreviousBlock = pxBlock;
-
-					pxBlock = pxBlock->pxNextFreeBlock;
-
-				}
-
-				if((xWantedSize< pxBlock->xBlockSize&&(( pxBlock->xBlockSize - xWantedSize ) > heapMINIMUM_BLOCK_SIZE))&&pxBlock == pxBlockjudge) //源地址块的下一块地址可用，并且其块大小大于申请的大小
-
-				{
-
-					pxBlockold->xBlockSize += xWantedSize;
-
-					pxNewBlockLink = (BlockLink_t *)((uint8_t*)pxBlock + xWantedSize);
-
-					pxNewBlockLink->xBlockSize = pxBlock->xBlockSize - xWantedSize;
-
-					
-
-					pxPreviousBlock->pxNextFreeBlock = pxBlock->pxNextFreeBlock;
-
-						/* Insert the new block into the list of free blocks. */
-
-					prvInsertBlockIntoFreeList( pxNewBlockLink );
-
-					pxBlock->pxNextFreeBlock = NULL;
-
-					pvReturn = srcaddr;
-
-					xFreeBytesRemaining -= xWantedSize;
-
- 
-
-					if( xFreeBytesRemaining < xMinimumEverFreeBytesRemaining )
-
-					{
-
-						xMinimumEverFreeBytesRemaining = xFreeBytesRemaining;
-
-					}
-
-				}
-
-				else
-
-				{
-
-					pvReturn = pvPortMalloc((((pxBlockold->xBlockSize)&(~xBlockAllocatedBit))-xHeapStructSize)+xWantedSize);                //下一块不可用，重新申请一块地址空间，大小为原申请空间加上现在申请空间
-
-					memcpy((uint8_t*)pvReturn,srcaddr,( (pxBlockold->xBlockSize&(~xBlockAllocatedBit)) - xHeapStructSize));					   
-
-					vPortFree(srcaddr);																									   //释放源地址空间
-
-				}
-
-				
-
-			}
-
-			else
-
-			{
-
-				mtCOVERAGE_TEST_MARKER();
-
-			}
-
-		}
-
-		else
-
-		{
-
-			mtCOVERAGE_TEST_MARKER();
-
-		}
-
-		
-
 	}
-
-	( void ) xTaskResumeAll();
-
-	configASSERT( ( ( ( size_t ) pvReturn ) & ( size_t ) portBYTE_ALIGNMENT_MASK ) == 0 );
+	(void)xTaskResumeAll();
 
 	return pvReturn;
-
 }
 
 /*-----------------------------------------------------------*/

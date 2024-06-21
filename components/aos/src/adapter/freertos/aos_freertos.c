@@ -1151,7 +1151,7 @@ uint64_t aos_calendar_localtime_get(void)
 
 void aos_msleep(int ms)
 {
-    vTaskDelay(pdMS_TO_TICKS(ms));
+    vTaskDelay(aos_kernel_ms2tick(ms));
     return;
 }
 
@@ -1313,15 +1313,13 @@ int aos_event_get
                                     );
 
     *actl_flags = wait_bits;
-    if (timeout == AOS_NO_WAIT) {
-        if (opt == AOS_EVENT_AND || opt == AOS_EVENT_AND_CLEAR) {
-            if ((wait_bits & flags) != flags) {
-                return -EBUSY; // same as rhino
-            }
-        } else if (opt == AOS_EVENT_OR || opt == AOS_EVENT_AND_CLEAR) {
-            if (!(wait_bits & flags)) {
-                return -EBUSY; // same as rhino
-            }
+    if (opt == AOS_EVENT_AND || opt == AOS_EVENT_AND_CLEAR) {
+        if ((wait_bits & flags) != flags) {
+            return (timeout == AOS_NO_WAIT) ? -EBUSY : -ETIMEDOUT; 
+        }
+    } else if (opt == AOS_EVENT_OR || opt == AOS_EVENT_OR_CLEAR) {
+        if (!(wait_bits & flags)) {
+            return (timeout == AOS_NO_WAIT) ? -EBUSY : -ETIMEDOUT;
         }
     }
     return 0;
@@ -1387,12 +1385,27 @@ int aos_mm_dump(void)
 
 uint64_t aos_kernel_tick2ms(uint64_t ticks)
 {
-    return ticks*1000/configTICK_RATE_HZ;
+    uint64_t   padding;
+    uint64_t   time;
+
+    padding = configTICK_RATE_HZ / 1000;
+    padding = (padding > 0) ? (padding - 1) : 0;
+
+    time    = ((ticks + padding) * 1000) / configTICK_RATE_HZ;
+    return time;
 }
 
 uint64_t aos_kernel_ms2tick(uint64_t ms)
 {
-    return ms *configTICK_RATE_HZ/1000;
+    uint64_t padding;
+    uint64_t   ticks;
+
+    padding = 1000 / configTICK_RATE_HZ;
+    padding = (padding > 0) ? (padding - 1) : 0;
+
+    ticks   = ((ms + padding) * configTICK_RATE_HZ) / 1000;
+
+    return ticks;
 }
 
 int aos_kernel_intrpt_enter(void)

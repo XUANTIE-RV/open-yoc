@@ -16,19 +16,32 @@
  */
 
 #include <rtthread.h>
+
+#define DBG_TAG           "kernel.device"
+#ifdef RT_DEBUG_DEVICE
+#define DBG_LVL           DBG_LOG
+#else
+#define DBG_LVL           DBG_WARNING
+#endif /* defined (RT_DEBUG_DEVICE) */
+#include <rtdbg.h>
+
 #ifdef RT_USING_POSIX_DEVIO
 #include <rtdevice.h> /* for wqueue_init */
 #endif /* RT_USING_POSIX_DEVIO */
 
+#ifdef RT_USING_DFS_V2
+#include <devfs.h>
+#endif /* RT_USING_DFS_V2 */
+
 #ifdef RT_USING_DEVICE
 
 #ifdef RT_USING_DEVICE_OPS
-#define device_init     (dev->ops->init)
-#define device_open     (dev->ops->open)
-#define device_close    (dev->ops->close)
-#define device_read     (dev->ops->read)
-#define device_write    (dev->ops->write)
-#define device_control  (dev->ops->control)
+#define device_init     (dev->ops ? dev->ops->init : RT_NULL)
+#define device_open     (dev->ops ? dev->ops->open : RT_NULL)
+#define device_close    (dev->ops ? dev->ops->close : RT_NULL)
+#define device_read     (dev->ops ? dev->ops->read : RT_NULL)
+#define device_write    (dev->ops ? dev->ops->write : RT_NULL)
+#define device_control  (dev->ops ? dev->ops->control : RT_NULL)
 #else
 #define device_init     (dev->init)
 #define device_open     (dev->open)
@@ -68,6 +81,10 @@ rt_err_t rt_device_register(rt_device_t dev,
     dev->fops = RT_NULL;
     rt_wqueue_init(&(dev->wait_queue));
 #endif /* RT_USING_POSIX_DEVIO */
+
+#ifdef RT_USING_DFS_V2
+    dfs_devfs_device_add(dev);
+#endif /* RT_USING_DFS_V2 */
 
     return RT_EOK;
 }
@@ -178,8 +195,8 @@ rt_err_t rt_device_init(rt_device_t dev)
             result = device_init(dev);
             if (result != RT_EOK)
             {
-                RT_DEBUG_LOG(RT_DEBUG_DEVICE, ("To initialize device:%s failed. The error code is %d\n",
-                           dev->parent.name, result));
+                LOG_E("To initialize device:%s failed. The error code is %d",
+                      dev->parent.name, result);
             }
             else
             {
@@ -216,8 +233,8 @@ rt_err_t rt_device_open(rt_device_t dev, rt_uint16_t oflag)
             result = device_init(dev);
             if (result != RT_EOK)
             {
-                RT_DEBUG_LOG(RT_DEBUG_DEVICE, ("To initialize device:%s failed. The error code is %d\n",
-                           dev->parent.name, result));
+                LOG_E("To initialize device:%s failed. The error code is %d",
+                      dev->parent.name, result);
 
                 return result;
             }
@@ -461,87 +478,4 @@ rt_err_t rt_device_set_tx_complete(rt_device_t dev,
 }
 RTM_EXPORT(rt_device_set_tx_complete);
 
-#ifdef RT_USING_DM
-/**
- * This function  bind drvier and device
- *
- * @param device the pointer of device structure
- * @param driver the pointer of driver structure
- * @param node the pointer of fdt node structure
- *
- * @return the error code, RT_EOK on successfully.
- */
-rt_err_t rt_device_bind_driver(rt_device_t device, rt_driver_t driver, void *node)
-{
-    if((!driver) || (!device))
-    {
-        return -RT_EINVAL;
-    }
-
-    device->drv = driver;
-#ifdef RT_USING_DEVICE_OPS
-    device->ops = driver->dev_ops;
-#endif
-    device->dtb_node = node;
-
-    return RT_EOK;
-}
-RTM_EXPORT(rt_device_bind_driver);
-
-/**
- * This function  create rt_device according to driver infomation
- *
- * @param drv the pointer of driver structure
- * @param device_id specify the ID of the rt_device
- *
- * @return the error code, RT_EOK on successfully.
- */
-rt_device_t rt_device_create_since_driver(rt_driver_t drv,int device_id)
-{
-    rt_device_t device;
-    if (!drv)
-    {
-        return RT_NULL;
-    }
-
-    device = (rt_device_t)rt_calloc(1,drv->device_size);
-    if(device == RT_NULL)
-    {
-        return RT_NULL;
-    }
-    device->device_id = device_id;
-    rt_snprintf(device->parent.name, sizeof(device->parent.name), "%s%d", drv->name, device_id);
-    return device;
-}
-RTM_EXPORT(rt_device_create_since_driver);
-
-/**
- * This function  rt_device probe and init
- *
- * @param device the pointer of rt_device structure
- * @return the error code, RT_EOK on successfully.
- */
-rt_err_t rt_device_probe_and_init(rt_device_t device)
-{
-    int ret = -RT_ERROR;
-    if (!device)
-    {
-        return -RT_EINVAL;
-    }
-    if(!device->drv)
-    {
-        return -RT_ERROR;
-    }
-    if(device->drv->probe)
-    {
-        ret = device->drv->probe((rt_device_t)device);
-    }
-    if(device->drv->probe_init)
-    {
-        ret = device->drv->probe_init((rt_device_t)device);
-    }
-    return ret;
-}
-RTM_EXPORT(rt_device_probe_and_init);
-#endif /* RT_USING_DM */
 #endif /* RT_USING_DEVICE */

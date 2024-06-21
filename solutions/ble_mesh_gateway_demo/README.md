@@ -146,12 +146,12 @@ prov 2    //切换为BLE辅助配网
   	signal: -33 dBm
   ```
 
-  此时可以ping通平头哥OCC社区
+  此时可以ping通玄铁OCC社区
 
   ```
-  > ping occ.t-head.cn
-  	ping occ.t-head.cn(203.119.214.112)
-  	from 203.119.214.112: icmp_seq=1 time=38 ms
+  > ping www.xrvm.cn
+    ping www.xrvm.cn(203.119.175.66)
+    from 203.119.175.66: icmp_seq=1 time=38 ms
   ```
 
   如果Wi-Fi连接失败，会显示“WiFi Not connected”：

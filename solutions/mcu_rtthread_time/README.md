@@ -46,8 +46,8 @@ qemu-system-riscv64 -machine xiaohui -nographic -kernel yoc.elf -cpu c907fdvm
 串口看到以下内容输出，表示运行成功：
 
 ```
-current  kernel systick 10 ms
-current tick count = 0,  will delay 19s....
+kernel systick is 10 ms
+now time = 0 ms before 19s....
 print cnt every 1s for 10 times
 -----9
 -----8
@@ -63,9 +63,9 @@ print cnt every 3s for 3 times
 -----2
 -----1
 -----0
-tick cont = 1900 after 19s, will delay 1s....
-tick cont = 2000 after delay 1s  
-rtt time successfully!
+now time = 19000 ms after 19s, will be delay  1s....
+now time = 20000 ms after delay 1s 
+test kernel time successfully!
 ```
 
 # 基于Windows IDE(CDS/CDK)编译运行

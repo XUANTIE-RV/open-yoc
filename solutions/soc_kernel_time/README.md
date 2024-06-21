@@ -49,7 +49,7 @@ qemu-system-riscv64 -machine xiaohui -nographic -kernel yoc.elf -cpu c907fdvm
 
 ```cli
 kernel systick is 10 ms
-current tick count = 0 before 19s....
+now time = 80 ms before 19s....
 print cnt every 1s for 10 times
 -----9
 -----8
@@ -65,11 +65,10 @@ print cnt every 3s for 3 times
 -----2
 -----1
 -----0
-tick count = 1900 after 19s, will be delay  1s....
-tick count = 2000 after delay 1s 
+now time = 19120 ms after 19s, will be delay  1s....
+now time = 20140 ms after delay 1s 
 test kernel time successfully!
 ```
-注意：当看见打印 "test kernel time successfully!" 表示运行成功。
 
 # 基于Windows IDE(CDS/CDK)编译运行
 

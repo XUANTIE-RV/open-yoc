@@ -2,7 +2,7 @@
 ## 第一部分： 基础信息
 name: smart_speaker_alg_bl606p_lyeva
 # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
-version: v7.9.0                                    # <必选项> 组件版本号
+version: v7.9.1                                    # <必选项> 组件版本号
 description:  bl606p cpu0 demo                            # <必选项> 建议至少20字以上
 type: solution                                      # <必选项> 组件类型，为：solution, chip, board, common, sdk
 
@@ -16,31 +16,31 @@ hw_info:
 #   - minilibc: v7.2.0
 #   - aos: >=v7.2.0
 depends:
-  # - sdk_chip_bl606p_c906: v7.9.0
-  - rhino: v7.9.0
-  - rhino_arch: v7.9.0
-  - aos: v7.9.0
-  - ulog: v7.9.0
-  - bl606p_evb_c906: v7.9.0
-  - chip_bl606p: v7.9.0
-  - csi: v7.9.0
-  - cli: v7.9.0
-  - debug: v7.9.0
-  - libc_stub: v7.9.0
-  - uservice: v7.9.0
-  - ipc: v7.9.0
-  - posto: v7.9.0
-  - cxvision: v7.9.0
-  - cjson: v7.9.0
-  - alg_kws_mind: v7.9.0
-  - log_ipc: v7.9.0
-  - devices: v7.9.0
+  # - sdk_chip_bl606p_c906: v7.9.1
+  - rhino: v7.9.1
+  - rhino_arch: v7.9.1
+  - aos: v7.9.1
+  - ulog: v7.9.1
+  - bl606p_evb_c906: v7.9.1
+  - chip_bl606p: v7.9.1
+  - csi: v7.9.1
+  - cli: v7.9.1
+  - debug: v7.9.1
+  - libc_stub: v7.9.1
+  - uservice: v7.9.1
+  - ipc: v7.9.1
+  - posto: v7.9.1
+  - cxvision: v7.9.1
+  - cjson: v7.9.1
+  - alg_kws_mind: v7.9.1
+  - log_ipc: v7.9.1
+  - devices: v7.9.1
 
 ## 第三部分：板级信息
 # hw_info:                                 # 对 solution、board、chip 三个字段的改进，统称为 hw_info 字段
 #   cpu_id: cpu0
 #   cpu_name: CK804EF
-#   vendor_name: t-head
+#   vendor_name: xuantie
 #   chip_name: chip_pangu                  # <可选项> 指定芯片组件名,未设置时，使用depends中 chip 第一个组件
 #   board_name: pangu_cpu0_evb             # <可选项> 指定开发板组件名，未设置时，使用depends中 board 第一个组件
 #   ld_script: configs/gcc_eflash.ld       # <可选项> 连接时使用 LD 脚本，当选把未设置时，使用对应的 board 的 LD 脚本
@@ -62,7 +62,7 @@ depends:
 #   cpu_id: cpu0
 #   board_name: pangu_cpu0_evb
 #   cpu_name: CK805EF
-#   vendor_name: thead
+#   vendor_name: xuantie
 #   chip_name: 'chip_pangu'
 #   ld_script: configs/gcc_eflash.ld.S
 

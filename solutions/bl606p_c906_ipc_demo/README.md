@@ -4,7 +4,7 @@ bl606p_c906_ipc_demo是核间通信ipc在c906侧的demo，主要完成了c906侧
 # 使用
 
 ## 通过命令行
-需要先安装[yoctools](https://yoc.docs.t-head.cn/yocbook/Chapter2-%E5%BF%AB%E9%80%9F%E4%B8%8A%E6%89%8B%E6%8C%87%E5%BC%95/YocTools.html)。
+需要先安装[yoctools](https://www.xrvm.cn/document?temp=yoctools&slug=yocbook)。
 
 ### DEMO获取
 

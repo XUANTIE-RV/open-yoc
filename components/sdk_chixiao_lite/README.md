@@ -35,11 +35,11 @@
 
 # 平台手册
 
-在线文档：[[在线链接](https://occ.t-head.cn/document?temp=stp6yg14re1q6wbb&slug=video-vision-application-platform)]
+在线文档：[[在线链接](https://www.xrvm.cn/document?temp=stp6yg14re1q6wbb&slug=video-vision-application-platform)]
 
 
 
 # 版本说明
 
-[[Release Notes](https://occ.t-head.cn/document?temp=oypviaqc542rtakq&slug=video-vision-application-platform)]
+[[Release Notes](https://www.xrvm.cn/document?temp=oypviaqc542rtakq&slug=video-vision-application-platform)]
 

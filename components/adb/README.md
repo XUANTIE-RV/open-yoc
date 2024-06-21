@@ -2,7 +2,7 @@
 
 ## 概述
 
-yoc 的 tydb(T-head YOC Debug Bridge),debug工具 主要功能有：
+yoc 的 tydb(DAMO XuanTie YOC Debug Bridge),debug工具 主要功能有：
 • 上位机和设备之间上传/下载/删除文件
 • 运行设备的shell（命令）
 • 支持 ymodem 协议固件下载功能

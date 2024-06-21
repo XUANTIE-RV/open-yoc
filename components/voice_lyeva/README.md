@@ -1,6 +1,6 @@
 ## 概述
 
-Thead算法的语音服务，主要功能Thead算法的的节点串接与启动运行。
+DAMO XuanTie算法的语音服务，主要功能DAMO XuanTie算法的的节点串接与启动运行。
 
 ## 组件安装
 ```bash

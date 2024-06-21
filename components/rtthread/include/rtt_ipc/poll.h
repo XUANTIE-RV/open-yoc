@@ -10,7 +10,10 @@
  */
 #ifndef IPC_POLL_H__
 #define IPC_POLL_H__
-#include <rtthread.h>
+
+#include <rtdef.h>
+#include <rtconfig.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -36,4 +39,4 @@ rt_inline void rt_poll_add(rt_wqueue_t *wq, rt_pollreq_t *req)
 }
 #endif
 
-#endif /* IPC_POLL_H__ */
+#endif

@@ -27,7 +27,7 @@ static void thread1_entry(void *parameter)
 
     while (1) {
         /* pend and receive message(s) from message queue */
-        if (rt_mq_recv(&mq, &buf, sizeof(buf), RT_WAITING_FOREVER) == RT_EOK) {
+        if (rt_mq_recv(&mq, &buf, sizeof(buf), RT_WAITING_FOREVER) >= 0) {
             rt_kprintf("thread1: recv msg from msg queue, the content:%c\n", buf);
             if (cnt == 19) {
                 break;

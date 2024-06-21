@@ -4,7 +4,7 @@ display_drv_demo是display和input驱动的示例代码程序，演示了display
 # CDK
 在CDK的首页，通过搜索关键字lcd，可以找到display_drv_demo，然后创建工程。
 
-CDK的使用可以参考YoCBook [《CDK开发快速上手》](https://yoc.docs.t-head.cn/yocbook/Chapter2-%E5%BF%AB%E9%80%9F%E4%B8%8A%E6%89%8B%E6%8C%87%E5%BC%95/%E4%BD%BF%E7%94%A8CDK%E5%BC%80%E5%8F%91%E5%BF%AB%E9%80%9F%E4%B8%8A%E6%89%8B.html) 章节
+CDK的使用可以参考YoCBook [《CDK开发快速上手》](https://www.xrvm.cn/document?temp=use-cdk-to-get-started-quickly&slug=yocbook) 章节
 
 # 启动
 烧录完成之后系统会自动启动，串口会有打印输出。

@@ -54,7 +54,7 @@ static inline int _csi_vlenb_get_value(void)
 // #define ARCH_CPU_64BIT
 /* RT-Thread Kernel */
 #define RT_NAME_MAX 48
-#define RT_ALIGN_SIZE 8
+#define RT_ALIGN_SIZE 4
 #ifdef CONFIG_NR_CPUS
 #define RT_CPUS_NR CONFIG_NR_CPUS
 #else
@@ -82,13 +82,8 @@ static inline int _csi_vlenb_get_value(void)
 #define RT_MAIN_THREAD_STACK_SIZE (4096 + STATIC_CSK_CPU_STACK_EXTRAL)
 /* kservice optimization */
 
-#define RT_DEBUG
-#define RT_DEBUG_COLOR
-#define RT_DEBUG_SCHEDULER  0
-#define RT_DEBUG_THREAD 0
-#define RT_DEBUG_TIMER  0
-#define RT_DEBUG_IRQ    0
-#define RT_DEBUG_INIT   0
+#define RT_USING_DEBUG
+// #define RT_DEBUGING_COLOR
 
 /* Inter-Thread communication */
 
@@ -108,6 +103,8 @@ static inline int _csi_vlenb_get_value(void)
 #define RT_USING_SMALL_MEM_AS_HEAP
 #define RT_USING_HEAP
 #define RT_USING_HEAP_ISR
+#define RT_BACKTRACE_LEVEL_MAX_NR 32
+#define RT_USING_SCHED_THREAD_CTX
 
 /* Kernel Device Object */
 

@@ -9,10 +9,10 @@ hmacsha256   test pass
 ## CDK
 在CDK的首页，通过搜索secure_demo，可以找到secure_demo，然后创建工程。
 
-CDK的使用可以参考YoCBook [《CDK开发快速上手》](https://yoc.docs.t-head.cn/yocbook/Chapter2-%E5%BF%AB%E9%80%9F%E4%B8%8A%E6%89%8B%E6%8C%87%E5%BC%95/%E4%BD%BF%E7%94%A8CDK%E5%BC%80%E5%8F%91%E5%BF%AB%E9%80%9F%E4%B8%8A%E6%89%8B.html) 章节
+CDK的使用可以参考YoCBook [《CDK开发快速上手》](https://www.xrvm.cn/document?temp=use-cdk-to-get-started-quickly&slug=yocbook) 章节
 
 ## 通过命令行
-需要先安装[yoctools](https://yoc.docs.t-head.cn/yocbook/Chapter2-%E5%BF%AB%E9%80%9F%E4%B8%8A%E6%89%8B%E6%8C%87%E5%BC%95/YocTools.html)。
+需要先安装[yoctools](https://www.xrvm.cn/document?temp=yoctools&slug=yocbook)。
 
 ### DEMO获取
 
@@ -26,7 +26,7 @@ yoc install secure_demo
 ### 编译&烧录
 
 注意：
-    烧录时请注意当前目录下的`gdbinitflash`文件中的`target remote localhost:1025`内容需要改成用户实际连接时的T-HeadDebugServer中显示的对应的内容。
+    烧录时请注意当前目录下的`gdbinitflash`文件中的`target remote localhost:1025`内容需要改成用户实际连接时的 XuanTie Debug Server 中显示的对应的内容。
 
 #### bl606P平台
 

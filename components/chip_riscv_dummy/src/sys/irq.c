@@ -173,11 +173,19 @@ void ecc_l2_irqhandler(void *arg)
 
 void ECC_L1_IRQHandler(void)
 {
+#if defined(CONFIG_SMP) && CONFIG_SMP
+    g_irq_nested_level[csi_get_cpu_id()]++;
+#else
     g_irq_nested_level++;
+#endif
     CSI_INTRPT_ENTER();
     ecc_l1_irqhandler(NULL);
     CSI_INTRPT_EXIT();
+#if defined(CONFIG_SMP) && CONFIG_SMP
+    g_irq_nested_level[csi_get_cpu_id()]--;
+#else
     g_irq_nested_level--;
+#endif
 }
 
 #endif

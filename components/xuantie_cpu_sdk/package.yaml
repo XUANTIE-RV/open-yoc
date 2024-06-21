@@ -1,7 +1,7 @@
 
 ## 第一部分： 基础信息
 name: xuantie_cpu_sdk                                # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
-version: v7.9.0                                     # <必选项> 组件版本号
+version: v7.9.1                                     # <必选项> 组件版本号
 description: 面向玄铁处理器的最小cpu sdk             # <必选项> 建议至少20字以上
 type: common                                         # <必选项> 组件类型，为：solution, chip, board, common, sdk
 tag: 核心模块                                        # <可选项> 组件分类，缺省值： ''
@@ -15,96 +15,96 @@ license: Apache license v2.0                         # <可选项> 源代码的�
 #   - aos: >=v7.2.0
 depends:
   # base component
-  - yoc_base: v7.9.0
-  - libc_bare: v7.9.0
-  - libc_stub: v7.9.0
-  - libc_freertos: v7.9.0
-  - libc_rtthread: v7.9.0
-  - posix: v7.9.0
+  - yoc_base: v7.9.1
+  - libc_bare: v7.9.1
+  - libc_stub: v7.9.1
+  - libc_freertos: v7.9.1
+  - libc_rtthread: v7.9.1
+  - posix: v7.9.1
 
   # chip
-  - chip_riscv_dummy: v7.9.0
+  - chip_riscv_dummy: v7.9.1
 
   # boards
-  - board_riscv_dummy: v7.9.0
+  - board_riscv_dummy: v7.9.1
 
   # chip sdk
-  - sdk_chip_riscv_dummy: v7.9.0
+  - sdk_chip_riscv_dummy: v7.9.1
 
   # freertos kernel
-  - freertos: v7.9.0
+  - freertos: v7.9.1
 
   # rhino kernel
-  #- rhino: v7.9.0
-  #- rhino_arch: v7.9.0
+  #- rhino: v7.9.1
+  #- rhino_arch: v7.9.1
 
   # rtt kernel
-  - rtthread: v7.9.0
+  - rtthread: v7.9.1
 
   # fs
-  - vfs: v7.9.0
-  - devfs: v7.9.0
+  - vfs: v7.9.1
+  - devfs: v7.9.1
 
 # # security
-# - mbedtls: v7.9.0
-# - key_mgr: v7.9.0
-# - sec_crypto: v7.9.0
-# - se: v7.9.0
+# - mbedtls: v7.9.1
+# - key_mgr: v7.9.1
+# - sec_crypto: v7.9.1
+# - se: v7.9.1
 
 # # zip
-# - zlib: v7.9.0
-# - xz: v7.9.0
+# - zlib: v7.9.1
+# - xz: v7.9.1
 
   # demo
-  - bare_core_dsp: v7.9.0
-  - bare_core_ecc: v7.9.0
-  - bare_core_vector: v7.9.0
-  - bare_core_matrix: v7.9.0
-  - bare_core_lockup: v7.9.0
-  - bare_coremark: v7.9.0
-  - bare_core_nmi: v7.9.0
-  - bare_core_tcm: v7.9.0
-  - bare_core_vic: v7.9.0
-  - bare_core_wfe: v7.9.0
-  - bare_core_wfi: v7.9.0
-  - bare_cpp_demo: v7.9.0
-  - bare_dhrystone: v7.9.0
-  - bare_drv_timer: v7.9.0
-  - bare_drv_uart: v7.9.0
-  - bare_helloworld: v7.9.0
-  - bare_linpack_dp: v7.9.0
-  - bare_linpack_sp: v7.9.0
-  - bare_whetstone: v7.9.0
-  - mcu_freertos_helloworld: v7.9.0
-  - mcu_freertos_event: v7.9.0
-  - mcu_freertos_message_q: v7.9.0
-  - mcu_freertos_mutex: v7.9.0
-  - mcu_freertos_sem: v7.9.0
-  - mcu_freertos_task: v7.9.0
-  - mcu_freertos_time: v7.9.0
-  - mcu_freertos_timer: v7.9.0
-  - mcu_freertos_cpp: v7.9.0
-  - mcu_rtthread_helloworld: v7.9.0
-  - mcu_rtthread_event: v7.9.0
-  - mcu_rtthread_message_q: v7.9.0
-  - mcu_rtthread_mutex: v7.9.0
-  - mcu_rtthread_sem: v7.9.0
-  - mcu_rtthread_task: v7.9.0
-  - mcu_rtthread_time: v7.9.0
-  - mcu_rtthread_timer: v7.9.0
-  - mcu_rtthread_cpp: v7.9.0
-  - mcu_rtthread_smp: v7.9.0
-  - soc_helloworld: v7.9.0
-  - soc_smp_demo: v7.9.0
-  - soc_core_dsp: v7.9.0
-  - soc_core_vector: v7.9.0
-  - soc_core_matrix: v7.9.0
-  - soc_kernel_event: v7.9.0
-  - soc_kernel_message_q: v7.9.0
-  - soc_kernel_mutex: v7.9.0
-  - soc_kernel_sem: v7.9.0
-  - soc_kernel_task: v7.9.0
-  - soc_kernel_time: v7.9.0
-  - soc_kernel_timer: v7.9.0
-  - soc_cpp_demo: v7.9.0
+  - bare_core_dsp: v7.9.1
+  - bare_core_ecc: v7.9.1
+  - bare_core_vector: v7.9.1
+  - bare_core_matrix: v7.9.1
+  - bare_core_lockup: v7.9.1
+  - bare_coremark: v7.9.1
+  - bare_core_nmi: v7.9.1
+  - bare_core_tcm: v7.9.1
+  - bare_core_vic: v7.9.1
+  - bare_core_wfe: v7.9.1
+  - bare_core_wfi: v7.9.1
+  - bare_cpp_demo: v7.9.1
+  - bare_dhrystone: v7.9.1
+  - bare_drv_timer: v7.9.1
+  - bare_drv_uart: v7.9.1
+  - bare_helloworld: v7.9.1
+  - bare_linpack_dp: v7.9.1
+  - bare_linpack_sp: v7.9.1
+  - bare_whetstone: v7.9.1
+  - mcu_freertos_helloworld: v7.9.1
+  - mcu_freertos_event: v7.9.1
+  - mcu_freertos_message_q: v7.9.1
+  - mcu_freertos_mutex: v7.9.1
+  - mcu_freertos_sem: v7.9.1
+  - mcu_freertos_task: v7.9.1
+  - mcu_freertos_time: v7.9.1
+  - mcu_freertos_timer: v7.9.1
+  - mcu_freertos_cpp: v7.9.1
+  - mcu_rtthread_helloworld: v7.9.1
+  - mcu_rtthread_event: v7.9.1
+  - mcu_rtthread_message_q: v7.9.1
+  - mcu_rtthread_mutex: v7.9.1
+  - mcu_rtthread_sem: v7.9.1
+  - mcu_rtthread_task: v7.9.1
+  - mcu_rtthread_time: v7.9.1
+  - mcu_rtthread_timer: v7.9.1
+  - mcu_rtthread_cpp: v7.9.1
+  - mcu_rtthread_smp: v7.9.1
+  - soc_helloworld: v7.9.1
+  - soc_smp_demo: v7.9.1
+  - soc_core_dsp: v7.9.1
+  - soc_core_vector: v7.9.1
+  - soc_core_matrix: v7.9.1
+  - soc_kernel_event: v7.9.1
+  - soc_kernel_message_q: v7.9.1
+  - soc_kernel_mutex: v7.9.1
+  - soc_kernel_sem: v7.9.1
+  - soc_kernel_task: v7.9.1
+  - soc_kernel_time: v7.9.1
+  - soc_kernel_timer: v7.9.1
+  - soc_cpp_demo: v7.9.1
 

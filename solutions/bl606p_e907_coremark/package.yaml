@@ -1,6 +1,6 @@
 ## 第一部分： 基础信息
 name: bl606p_e907_coremark                          # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
-version: v7.9.0                                    # <必选项> 组件版本号
+version: v7.9.1                                    # <必选项> 组件版本号
 description: coremark for bl606p e907               # <必选项> 建议至少20字以上
 type: solution                                      # <必选项> 组件类型，为：solution, chip, board, common, sdk
 
@@ -10,8 +10,8 @@ hw_info:
   ld_script: gcc_flash_e907.ld
 
 depends:                                       # 该组件依赖其他的组件
-  - csi: v7.9.0
-  - chip_bl606p: v7.9.0
+  - csi: v7.9.1
+  - chip_bl606p: v7.9.1
 
 # 编译参数
 build_config:

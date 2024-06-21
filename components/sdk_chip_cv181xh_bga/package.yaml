@@ -1,7 +1,7 @@
 
 ## 第一部分： 基础信息
 name: sdk_chip_cv181xh_bga                          # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
-version: v7.9.0                                    # <必选项> 组件版本号
+version: v7.9.1                                    # <必选项> 组件版本号
 description: the sdk chip for cv1810x               # <必选项> 建议至少20字以上
 type: sdk                                           # <必选项> 组件类型，为：solution, chip, board, common, sdk
 
@@ -12,37 +12,37 @@ type: sdk                                           # <必选项> 组件类型�
 #   - minilibc: v7.2.0
 #   - aos: >=v7.2.0
 depends:
-  - yoc_kernel: v7.9.0
-  - libc_stub: v7.9.0
-  - posix: v7.9.0
-  - vfs: v7.9.0
-  - littlefs: v7.9.0
-  - lwext4: v7.9.0
-  - netmgr: v7.9.0
-  - cjson: v7.9.0
-  - mpegts: v7.9.0
-  - at: v7.9.0
-  - cv181xh_huashanpi_evb: v7.9.0
-  - chip_cv181x: v7.9.0
-  - g711: v7.9.0
-  - ntp: v7.9.0
-  - drv_wifi_rtl8723ds: v7.9.0
-  - drv_bt_rtl8723ds: v7.9.0
-  - ble_host: v7.9.0
-  - lwip: v7.9.0
-  - mbedtls: v7.9.0
-  - minialsa: v7.9.0
-  - drv_snd_cv181x: v7.9.0
-  - drv_sdmmc: v7.9.0
-  - fatfs: v7.9.0
-  - cvi_mmf_sdk_cv181xx: v7.9.0
-  - cvi_platform: v7.9.0
-  - cvi_sensor: v7.9.0
-  - cherryusb: v7.9.0
-  - key_mgr: v7.9.0
-  - sec_crypto: v7.9.0
-  - bootab: v7.9.0
-  - drv_touchscreen_gsl1680: v7.9.0
-  - drv_display_st7701s: v7.9.0
-  - drv_usbh_class: v7.9.0
-  - tiny_bbm: v7.9.0
+  - yoc_kernel: v7.9.1
+  - libc_stub: v7.9.1
+  - posix: v7.9.1
+  - vfs: v7.9.1
+  - littlefs: v7.9.1
+  - lwext4: v7.9.1
+  - netmgr: v7.9.1
+  - cjson: v7.9.1
+  - mpegts: v7.9.1
+  - at: v7.9.1
+  - cv181xh_huashanpi_evb: v7.9.1
+  - chip_cv181x: v7.9.1
+  - g711: v7.9.1
+  - ntp: v7.9.1
+  - drv_wifi_rtl8723ds: v7.9.1
+  - drv_bt_rtl8723ds: v7.9.1
+  - ble_host: v7.9.1
+  - lwip: v7.9.1
+  - mbedtls: v7.9.1
+  - minialsa: v7.9.1
+  - drv_snd_cv181x: v7.9.1
+  - drv_sdmmc: v7.9.1
+  - fatfs: v7.9.1
+  - cvi_mmf_sdk_cv181xx: v7.9.1
+  - cvi_platform: v7.9.1
+  - cvi_sensor: v7.9.1
+  - cherryusb: v7.9.1
+  - key_mgr: v7.9.1
+  - sec_crypto: v7.9.1
+  - bootab: v7.9.1
+  - drv_touchscreen_gsl1680: v7.9.1
+  - drv_display_st7701s: v7.9.1
+  - drv_usbh_class: v7.9.1
+  - tiny_bbm: v7.9.1

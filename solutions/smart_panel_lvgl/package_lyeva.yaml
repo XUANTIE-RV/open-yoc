@@ -1,6 +1,6 @@
 ## 第一部分： 基础信息
 name: smart_panel_lvgl
-version: v7.9.0
+version: v7.9.1
 description: smart panel solution with UI(lvgl) + gateway + Voice
 type: solution
 ## 第二部分：依赖信息
@@ -10,65 +10,65 @@ type: solution
 #   - minilibc: v7.2.0
 #   - aos: >=v7.2.0
 sdk_chip:
-  - sdk_chip_d1: v7.9.0
-  - sdk_chip_f133: v7.9.0
-  - sdk_chip_cv181xh_bga: v7.9.0
+  - sdk_chip_d1: v7.9.1
+  - sdk_chip_f133: v7.9.1
+  - sdk_chip_cv181xh_bga: v7.9.1
 
 mkflash_script: mkflash.sh
 
 depends:
-  - sdk_chip_d1: v7.9.0
-  - tsl_engine: v7.9.0
-  - duktape: v7.9.0
-  - dut_service: v7.9.0
-  - smartliving: v7.9.0
-  - fota: v7.9.0
-  - lvgl: v7.9.0
-  - breeze: v7.9.0
-  - av: v7.9.0
-  - amrnb: v7.9.0
-  - amrwb: v7.9.0
-  - flac: v7.9.0
-  - ogg: v7.9.0
-  - opus: v7.9.0
-  - pvmp3dec: v7.9.0
-  - sonic: v7.9.0
-  - speex: v7.9.0
-  - speexdsp: v7.9.0
-  - netmgr: v7.9.0
-  - littlefs: v7.9.0
-  - zlib: v7.9.0
-  - ntp: v7.9.0
-  - smart_audio: v7.9.0
-  - drv_amplifier: v7.9.0
-  - wifi_provisioning: v7.9.0
-  - aui_cloud_mind: v7.9.0
-  - cjson: v7.9.0
-  - alg_pcm_input: v7.9.0
-  - alg_record: v7.9.0
-  - record: v7.9.0
-  - websocket: v7.9.0
-  - posto: v7.9.0
-  - cxvision: v7.9.0
-  - voice_wrapper: v7.9.0
-  - httpclient: v7.9.0
-  - transport: v7.9.0
-  - button: v7.9.0
-  - alg_dispatch: v7.9.0         # alg: mind & thead
-  - alg_kws_lyeva: v7.9.0        # alg: thead
-  - voice_lyeva: v7.9.0          # alg: thead
-  - adb: v7.9.0
-  - clock_alarm: v7.9.0
-  - at: v7.9.0
-  - ers: v7.9.0
-  - ota_module: v7.9.0
-  - gateway_mgmt: v7.9.0
-  - ble_mesh: v7.9.0
+  - sdk_chip_d1: v7.9.1
+  - tsl_engine: v7.9.1
+  - duktape: v7.9.1
+  - dut_service: v7.9.1
+  - smartliving: v7.9.1
+  - fota: v7.9.1
+  - lvgl: v7.9.1
+  - breeze: v7.9.1
+  - av: v7.9.1
+  - amrnb: v7.9.1
+  - amrwb: v7.9.1
+  - flac: v7.9.1
+  - ogg: v7.9.1
+  - opus: v7.9.1
+  - pvmp3dec: v7.9.1
+  - sonic: v7.9.1
+  - speex: v7.9.1
+  - speexdsp: v7.9.1
+  - netmgr: v7.9.1
+  - littlefs: v7.9.1
+  - zlib: v7.9.1
+  - ntp: v7.9.1
+  - smart_audio: v7.9.1
+  - drv_amplifier: v7.9.1
+  - wifi_provisioning: v7.9.1
+  - aui_cloud_mind: v7.9.1
+  - cjson: v7.9.1
+  - alg_pcm_input: v7.9.1
+  - alg_record: v7.9.1
+  - record: v7.9.1
+  - websocket: v7.9.1
+  - posto: v7.9.1
+  - cxvision: v7.9.1
+  - voice_wrapper: v7.9.1
+  - httpclient: v7.9.1
+  - transport: v7.9.1
+  - button: v7.9.1
+  - alg_dispatch: v7.9.1         # alg: mind & xuantie
+  - alg_kws_lyeva: v7.9.1        # alg: xuantie
+  - voice_lyeva: v7.9.1          # alg: xuantie
+  - adb: v7.9.1
+  - clock_alarm: v7.9.1
+  - at: v7.9.1
+  - ers: v7.9.1
+  - ota_module: v7.9.1
+  - gateway_mgmt: v7.9.1
+  - ble_mesh: v7.9.1
 ## 第三部分：板级信息
 # hw_info:                                 # 对 solution、board、chip 三个字段的改进，统称为 hw_info 字段
 #   cpu_id: cpu0
 #   cpu_name: CK804EF
-#   vendor_name: t-head
+#   vendor_name: xuantie
 #   chip_name: chip_pangu                  # <可选项> 指定芯片组件名,未设置时，使用depends中 chip 第一个组件
 #   board_name: pangu_cpu0_evb             # <可选项> 指定开发板组件名，未设置时，使用depends中 board 第一个组件
 #   ld_script: configs/gcc_eflash.ld       # <可选项> 连接时使用 LD 脚本，当选把未设置时，使用对应的 board 的 LD 脚本
@@ -89,7 +89,7 @@ depends:
 #   cpu_id: cpu0
 #   board_name: pangu_cpu0_evb
 #   cpu_name: CK805EF
-#   vendor_name: thead
+#   vendor_name: xuantie
 #   chip_name: 'chip_pangu'
 #   ld_script: configs/gcc_eflash.ld.S
 

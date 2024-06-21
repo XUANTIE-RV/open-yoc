@@ -1,7 +1,7 @@
 
 ## 第一部分： 基础信息
 name: chip_bl606p                                  # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
-version: v7.9.0                                   # <必选项> 组件版本号
+version: v7.9.1                                   # <必选项> 组件版本号
 description: driver & sdk for platform/mcu bl606p chip         # <必选项> 建议至少20字以上
 type: chip                                         # <必选项> 组件类型，为：solution, chip, board, common, sdk
 
@@ -21,19 +21,19 @@ hw_info:
     arch_name: riscv
     cpu_name: c906fdv
     toolchain_prefix: riscv64-unknown-elf
-    vendor_name: thead
+    vendor_name: xuantie
     ld_script: gcc_flash_c906.ld
     flash_program: bl606p_flasher.elf
   cpu1:
     arch_name: riscv
-    vendor_name: thead
+    vendor_name: xuantie
     cpu_name: e907fp
     ld_script: gcc_flash_e907.ld
     flash_program: bl606p_flasher.elf
     toolchain_prefix: riscv64-unknown-elf
   cpu2:
     arch_name: riscv
-    vendor_name: thead
+    vendor_name: xuantie
     cpu_name: e902m
     ld_script: gcc_flash_e902.ld
     flash_program: xxxx

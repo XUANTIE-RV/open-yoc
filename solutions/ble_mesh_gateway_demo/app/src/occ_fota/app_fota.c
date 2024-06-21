@@ -26,7 +26,7 @@
 #define KV_FOTA_CYCLE_MS "fota_cycle"
 #define KV_FOTA_ENABLED  "fota_en"
 
-#define DEFAULT_URL "https://occ.t-head.cn"
+#define DEFAULT_URL "https://www.xrvm.cn"
 
 #define DEIVICE_STR_CID_LEN (32)
 

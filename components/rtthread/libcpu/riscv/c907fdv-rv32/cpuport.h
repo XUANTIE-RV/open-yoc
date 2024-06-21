@@ -66,7 +66,7 @@ typedef union {
 #endif
 
 #ifndef __ASSEMBLY__
-#include <rtthread.h>
+#include <rtdef.h>
 
 int rt_hw_cpu_id(void);
 

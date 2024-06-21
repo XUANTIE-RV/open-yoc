@@ -15,7 +15,7 @@ int rtthread_startup(void)
 #ifdef RT_USING_SMP
     rt_hw_spin_lock_init(&_cpus_lock);
 #endif
-    rt_hw_interrupt_disable();
+    rt_hw_local_irq_disable();
 
     /* board level initialization
      * NOTE: please initialize heap inside board initialization.

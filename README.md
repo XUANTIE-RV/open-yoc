@@ -2,11 +2,11 @@
 
 ## 介绍
 
-YoC是一个基于AliOS Things的基础软件平台。它为开发人员提供了统一的芯片CSI接口。还提供针对蓝牙、WiFi、语音、视觉应用等优化的组件。可以通过IDE(集成开发环境剑池CDK)进行开发，并使用系统性能分析工具来调试、开发和部署功能组件。它有助于SoC公司和开发人员快速交付定制的SDK，可以显著缩短产品上市时间。
+YoC是一个基于RTOS系统、RISC-V 软硬融合、端云一体的开源AIoT软件平台。它为开发人员提供了统一的芯片CSI接口。还提供针对蓝牙、WiFi、语音、视觉应用等优化的组件。可以通过IDE(集成开发环境剑池CDK)进行开发，并使用系统性能分析工具来调试、开发和部署功能组件。它有助于SoC公司和开发人员快速交付定制的SDK，可以显著缩短产品上市时间。
 
 ## 架构
 
-<img src="https://github.com/T-head-Semi/open-yoc/blob/v7.9.0/components/yoc/resources/yoc.png?raw=true">
+<img src="https://github.com/T-head-Semi/open-yoc/blob/v7.9.1/components/yoc/resources/yoc.png?raw=true">
 
 - 内核与驱动： RVM CSI 层定义了 片上系统外设的统一接口，芯片对接完成RVM CSI接口，就可以支持 YoC 的软件系统。OSAL/POSIX接口提供了内核统一接口，集成了AliOS Things、FreeRTOS以及RT-Thread内核。RVM HAL为上层各类组件提供了统一的硬件抽象接口。
 - 基础组件： 包含了设备管理框架、低功耗管理、高级安全可信计算（TEE）、网络协议、蓝牙协议栈、虚拟文件系统、网络管理器等。核心服务层采用独立模块化设计，用户可以根据应用需求，自由组装。
@@ -20,42 +20,42 @@ YoC 平台定义了芯片的统一接口，提供应用最基础的核心服务�
 
 RVB2601是基于玄铁生态芯片CH2601的开发板，板载JTAG调试器，WiFi&BLE芯片W800，音频ADCES7210，音频DACES8156，128x64 OLED屏幕，RGB三色指示灯，用户按键，及兼容Arduino的扩展接口。
 
-具体开发板硬件规格及信息请到[RVB2601开发板](https://occ.t-head.cn/vendor/detail/index?spm=a2cl5.14300867.0.0.681c1f9cxK233N&id=3886757103532519424&vendorId=3706716635429273600&module=4).
+具体开发板硬件规格及信息请到[RVB2601开发板](https://www.xrvm.cn/vendor/detail/index?spm=a2cl5.14300867.0.0.681c1f9cxK233N&id=3886757103532519424&vendorId=3706716635429273600&module=4).
 
-开发板快速上手手册请参考[RVB2601应用开发实战系列一: Helloworld最小系统](https://occ.t-head.cn/community/post/detail?spm=a2cl5.14300867.0.0.713b180fsACOZd&id=3887622217227972608)。
+开发板快速上手手册请参考[RVB2601应用开发实战系列一: Helloworld最小系统](https://www.xrvm.cn/community/post/detail?spm=a2cl5.14300867.0.0.713b180fsACOZd&id=3887622217227972608)。
 
 ### d1_dock_pro开发板
 
 Lichee D1 Dock Pro是一款功能集成度较高的RISC-V Linux开发套件。它板载128Mbit SPI FLASH及MIPI、RGB屏幕接口，拥有丰富的外设（2.4G Wi-Fi+BT模块、双数字麦克风和音频功放等），支持HDMI输出，同时还提供USB-JTAG和USB-UART功能。
 
-具体开发板硬件规格及信息请到[d1_dock_pro开发板](https://occ.t-head.cn/vendor/detail/index?spm=a2cl5.26076654.0.0.1c7f180fYWbuLz&id=4030046623349878784).
+具体开发板硬件规格及信息请到[d1_dock_pro开发板](https://www.xrvm.cn/vendor/detail/index?spm=a2cl5.26076654.0.0.1c7f180fYWbuLz&id=4030046623349878784).
 
-开发板快速上手手册请参考[YoC RTOS 实战：lichee D1 dock 开发板快速上手教程](https://occ.t-head.cn/community/post/detail?spm=a2cl5.26076654.0.0.6dea180f5EqKus&id=4035432797019185152)
+开发板快速上手手册请参考[YoC RTOS 实战：lichee D1 dock 开发板快速上手教程](https://www.xrvm.cn/community/post/detail?spm=a2cl5.26076654.0.0.6dea180f5EqKus&id=4035432797019185152)
 
 ### bl606p开发板
 
 BL606P-DVK专为用于评估音视频应用诞生，适用于智能面板、智能音箱、语音故事机等设备，适用于各类音视频和 AIoT 应用的开发。
 
-具体开发板硬件规格及信息请到[BL606P-DVK开发板](https://occ.t-head.cn/vendor/detail/index?spm=a2cl5.26076654.0.0.4112180fes3RoI&id=4105634631926222848).
+具体开发板硬件规格及信息请到[BL606P-DVK开发板](https://www.xrvm.cn/vendor/detail/index?spm=a2cl5.26076654.0.0.4112180fes3RoI&id=4105634631926222848).
 
-开发板快速上手手册请参考[BL606P 开发板上手手册](https://occ.t-head.cn/community/post/detail?spm=a2cl5.27438731.0.0.4e28180fT0sZG1&id=4106009187719385088)
+开发板快速上手手册请参考[BL606P 开发板上手手册](https://www.xrvm.cn/community/post/detail?spm=a2cl5.27438731.0.0.4e28180fT0sZG1&id=4106009187719385088)
 
 ### 华山派开发板
 
 华山派 CV1812H开发板，是算能和生态伙伴硬件十万个为什么联合推出的开源生态开发板，为广大使用者提供基于RISC-V的开源开发环境，以视觉、AI场景开发为核心实现功能，芯片更集成第二代全自研深度学习张量处理器（TPU），全自研智能图像处理引擎（Smart ISP），硬件级别高度安全资料保护架构（Security），语音处理引擎及H.264/265智能编解码技术，同时还有配套的多媒体软件平台和IVE硬件加速接口，使AI部署与执行更加高效、快速、便捷。主流的深度学习框架，比如Caffe，Pytorch，ONNX ，MXNet和TensorFlow(Lite) 框架的主流网络可以轻松的移植。
 
-具体开发板硬件规格及信息请到[华山派开发板](https://xuantie.t-head.cn/product/board/4212612498014146560?spm=a2cl5.26076654.0.0.347f4aa84husd3).
+具体开发板硬件规格及信息请到[华山派开发板](https://www.xrvm.cn/product/board/4212612498014146560?spm=a2cl5.26076654.0.0.347f4aa84husd3).
 
-开发板快速上手手册请参考[华山派开发板上手手册](https://xuantie.t-head.cn/document?temp=huashan-school-development-board-handbook&slug=yocbook)
+开发板快速上手手册请参考[华山派开发板上手手册](https://www.xrvm.cn/document?temp=huashan-school-development-board-handbook&slug=yocbook)
 
 ## 示例列表
 
-使用之前请先安装[yoctools](https://xuantie.t-head.cn/document?temp=yoctools&slug=yocbook)编译构建工具。
+使用之前请先安装[yoctools](https://www.xrvm.cn/document?temp=yoctools&slug=yocbook)编译构建工具。
 
 试用示例之前请先使用以下命令进行下载:
 
 ```bash
-git clone git@github.com:T-head-Semi/open-yoc.git -b v7.9.0
+git clone git@github.com:XUANTIE-RV/open-yoc.git -b v7.9.1
 ```
 
 或者从GITEE下载：
@@ -63,7 +63,7 @@ git clone git@github.com:T-head-Semi/open-yoc.git -b v7.9.0
 mkdir yocworkspace
 cd yocworkspace
 yoc init
-yoc install yoc -b v7.9.0
+yoc install yoc -b v7.9.1
 ```
 
 然后到`solutions`目录下，所有的示例都在那里，用户可以根据每个示例下的`README.md`文件进行操作。
@@ -155,7 +155,24 @@ YoC系统完全开源，代码版本遵循Apache License 2.0开源许可协议�
 
 ## Release Note
 
-### 2023.5.21
+### 2023.6.21 (v7.9.1)
+#### 新增特性
+1. 更新RT-Thread内核至5.1.0版本
+2. 修复FreeRTOS中pvPortRealloc接口实现错误，存在潜在的内存泄漏问题
+3. 修复csi_coret_get_value2接口实现错误，对应C907 32位模式存在时间溢出问题
+4. 修复smart_speaker_v2通过CDK拉取编译报错问题
+
+#### 开发工具
+|开发工具|版本|说明|
+| --- | --- | --- |
+|[CDK](https://www.xrvm.cn/community/download?id=4313363375687012352)|>=V2.24.2|面向基于RISC-V的MCU/AIoT领域的极简开发环境，帮助开发者从工程获取到配置、开发、下载、调试全链路的图形界面的支持。|
+|[CDS](https://www.xrvm.cn/community/download?id=616214177698021376)|>=V5.2.18|面向基于玄铁CPU的集成开发环境，支持Bare metal、RTOS、Linux等各类程序的开发。|
+|[QEMU](https://www.xrvm.cn/community/download?id=4300747789186437120)|>=V4.2.9|玄铁QEMU是一个以开源项目QEMU为基础，支持玄铁处理器的软件模拟器，提供了带基本外设的玄铁开发板模板。|
+|[XuanTie Debug Server](https://www.xrvm.cn/community/download?id=4313368247333359616)|>=V5.18.1|XuanTie DebugServer是一个调试代理软件，它通过CKLINK，以JTAG的方式连接目标板，并支持“GDB Remote Protocol” 。开发者可以通过GDB对运行在玄铁800系列和玄铁900系列处理器上的软件程序进行在线调试。|
+|[yoctools](https://yoc.docs.t-head.cn/yocbook/Chapter2-%E5%BF%AB%E9%80%9F%E4%B8%8A%E6%89%8B%E6%8C%87%E5%BC%95/YocTools.html)|>=2.0.80|Linux下命令行构建编译工具。|
+|[玄铁工具链](https://www.xrvm.cn/community/download?id=4308603453615181824)|V2.10.0|riscv编译所需工具链，可通过yoc命令安装(yoc toolchain --riscv -f)；也可以自行下载安装，并在系统变量中设置对应的路径信息。
+
+### 2023.5.21 (v7.9.0)
 #### 新增特性
 1. 新增RT-Thread内核，并支持SMP功能
 2. FreerRTOS升级到v10.4.3 LTS版本
@@ -172,7 +189,7 @@ YoC系统完全开源，代码版本遵循Apache License 2.0开源许可协议�
 |[yoctools](https://yoc.docs.t-head.cn/yocbook/Chapter2-%E5%BF%AB%E9%80%9F%E4%B8%8A%E6%89%8B%E6%8C%87%E5%BC%95/YocTools.html)|>=2.0.76|Linux下命令行构建编译工具。|
 |[玄铁工具链](https://www.xrvm.cn/community/download?id=4308603453615181824)|V2.10.0|riscv编译所需工具链，可通过yoc命令安装(yoc toolchain --riscv -f)；也可以自行下载安装，并在系统变量中设置对应的路径信息。
 
-### 2023.8.15
+### 2023.8.15 (v7.8.0)
 #### 新增特性
 1. 完善设备驱动
 2. 新增CSI2D图像加速库
@@ -185,7 +202,7 @@ YoC系统完全开源，代码版本遵循Apache License 2.0开源许可协议�
 #### 新增开发板
 1. 支持华山派开发板
 
-### 2023.3.11
+### 2023.3.11 (v7.7.0)
 #### 新增特性
 1. 设备驱动框架新增显示设备、块设备的支持
 2. 支持CherryUSB协议栈
@@ -200,7 +217,7 @@ YoC系统完全开源，代码版本遵循Apache License 2.0开源许可协议�
 1. LVGL版本更新至v8.3.1
 2. 接入移远EC200A USB 4G模组
 
-### 2022.10.20
+### 2022.10.20 (v7.6.0)
 1. QEMU平台支持更多的RISC-V CPU， 具体请参考`riscv_dummy_demo`
 2. 增加FOTA对AB分区升级的支持，具体可参考`fota_demo`
 3. 提供更多通用示例供开发者快速上手
@@ -208,6 +225,7 @@ YoC系统完全开源，代码版本遵循Apache License 2.0开源许可协议�
 #### 开发工具
 |开发工具|版本|说明|
 | --- | --- | --- |
-|[CDK](https://xuantie.t-head.cn/soft-tools/tools/4197790929093988352?spm=a2cl5.14290816.0.0.5911jOGIjOGIaJ)|>=V2.22.0|集成开发环境IDE|
-|[yoctools](https://yoc.docs.t-head.cn/yocbook/Chapter2-%E5%BF%AB%E9%80%9F%E4%B8%8A%E6%89%8B%E6%8C%87%E5%BC%95/YocTools.html)|>=2.0.56|Linux下命令行构建编译工具|
-|[玄铁工具链](https://occ.t-head.cn/community/download?id=4090445921563774976)|V2.6.1|riscv编译所需工具链，可通过yoc命令安装(yoc toolchain --riscv -f)；也可以自行下载安装，并在系统变量中设置对应的路径信息|
+|[CDK](https://www.xrvm.cn/community/download?id=4210079943993921536)|>=V2.22.0|集成开发环境IDE|
+|[yoctools](https://www.xrvm.cn/document?temp=yoctools&slug=yocbook)|>=2.0.56|Linux下命令行构建编译工具|
+|[玄铁工具链](https://www.xrvm.cn/community/download?id=4224193099938729984)|V2.6.1|riscv编译所需工具链，可通过yoc命令安装(yoc toolchain --riscv -f)；也可以自行下载安装，并在系统变量中设置对应的路径信息|
+

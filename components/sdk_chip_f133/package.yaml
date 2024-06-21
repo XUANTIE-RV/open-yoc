@@ -1,7 +1,7 @@
 
 ## 第一部分： 基础信息
 name: sdk_chip_f133                                        # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
-version: v7.9.0                                    # <必选项> 组件版本号
+version: v7.9.1                                    # <必选项> 组件版本号
 description: the sdk chip for f133                  # <必选项> 建议至少20字以上
 type: sdk                                        # <必选项> 组件类型，为：solution, chip, board, common, sdk
 
@@ -12,21 +12,21 @@ type: sdk                                        # <必选项> 组件类型，�
 #   - minilibc: v7.2.0
 #   - aos: >=v7.2.0
 depends:
-  - yoc_base: v7.9.0
-  - rhino: v7.9.0
-  - rhino_arch: v7.9.0
-  - rhino_pwrmgmt: v7.9.0
-  # - freertos: v7.9.0
-  # - rtthread: v7.9.0
-  - libc_stub: v7.9.0
-  - posix: v7.9.0
-  - vfs: v7.9.0
-  - f133_evb: v7.9.0
-  - chip_d1: v7.9.0
-  - drv_wifi_rtl8723ds: v7.9.0
-  - drv_bt_rtl8723ds: v7.9.0
-  - lwip: v7.9.0
-  - mbedtls: v7.9.0
-  - sec_crypto: v7.9.0
-  - ble_host: v7.9.0
-  - key_mgr: v7.9.0
+  - yoc_base: v7.9.1
+  - rhino: v7.9.1
+  - rhino_arch: v7.9.1
+  - rhino_pwrmgmt: v7.9.1
+  # - freertos: v7.9.1
+  # - rtthread: v7.9.1
+  - libc_stub: v7.9.1
+  - posix: v7.9.1
+  - vfs: v7.9.1
+  - f133_evb: v7.9.1
+  - chip_d1: v7.9.1
+  - drv_wifi_rtl8723ds: v7.9.1
+  - drv_bt_rtl8723ds: v7.9.1
+  - lwip: v7.9.1
+  - mbedtls: v7.9.1
+  - sec_crypto: v7.9.1
+  - ble_host: v7.9.1
+  - key_mgr: v7.9.1

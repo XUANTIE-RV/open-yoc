@@ -1,6 +1,6 @@
 ## 第一部分： 基础信息
 name: gateway_mgmt
-version: v7.9.0
+version: v7.9.1
 description: gateway management
 type: common
 tag: 核心模块

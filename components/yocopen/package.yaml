@@ -1,7 +1,7 @@
 
 ## 第一部分： 基础信息
 name: yocopen                                        # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
-version: v7.9.0                                     # <必选项> 组件版本号
+version: v7.9.1                                     # <必选项> 组件版本号
 description: YoC组件集合                             # <必选项> 建议至少20字以上
 type: common                                         # <必选项> 组件类型，为：solution, chip, board, common, sdk
 tag: 核心模块                                        # <可选项> 组件分类，缺省值： ''
@@ -15,162 +15,162 @@ license: Apache license v2.0                         # <可选项> 源代码的�
 #   - aos: >=v7.2.0
 depends:
   # base component
-  - yoc_base: v7.9.0
-  - rhino: v7.9.0
-  - rhino_arch: v7.9.0
-  - rhino_pwrmgmt: v7.9.0
-  - freertos: v7.9.0
-  - rtthread: v7.9.0
-  - minilibc: v7.9.0
-  - libc_stub: v7.9.0
-  - posix: v7.9.0
-  - ipc: v7.9.0
-  - log_ipc: v7.9.0
+  - yoc_base: v7.9.1
+  - rhino: v7.9.1
+  - rhino_arch: v7.9.1
+  - rhino_pwrmgmt: v7.9.1
+  - freertos: v7.9.1
+  - rtthread: v7.9.1
+  - minilibc: v7.9.1
+  - libc_stub: v7.9.1
+  - posix: v7.9.1
+  - ipc: v7.9.1
+  - log_ipc: v7.9.1
 
   # boot
-  - boot: v7.9.0
-  - bootab: v7.9.0
+  - boot: v7.9.1
+  - bootab: v7.9.1
 
   # fastboot
-  - excore: v7.9.0
+  - excore: v7.9.1
 
   # cpu sdk
-  - xuantie_cpu_sdk: v7.9.0
+  - xuantie_cpu_sdk: v7.9.1
 
   # network
-  - lwip: v7.9.0
-  - sal: v7.9.0
-  - ntp: v7.9.0
-  - sntp: v7.9.0
-  - netmgr: v7.9.0
-  - httpclient: v7.9.0
-  - transport: v7.9.0
-  - websocket: v7.9.0
-  - fota: v7.9.0
-  - wifi_provisioning: v7.9.0
+  - lwip: v7.9.1
+  - sal: v7.9.1
+  - ntp: v7.9.1
+  - sntp: v7.9.1
+  - netmgr: v7.9.1
+  - httpclient: v7.9.1
+  - transport: v7.9.1
+  - websocket: v7.9.1
+  - fota: v7.9.1
+  - wifi_provisioning: v7.9.1
 
   # audio media
-  - minialsa: v7.9.0
-  - pvmp3dec: v7.9.0
-  - record: v7.9.0
-  - av: v7.9.0
-  - av_cp: v7.9.0
-  - amrnb: v7.9.0
-  - amrwb: v7.9.0
-  - speexdsp: v7.9.0
-  - flac: v7.9.0
-  - speex: v7.9.0
-  - sonic: v7.9.0
-  - opus: v7.9.0
-  - ogg: v7.9.0
-  - smart_audio: v7.9.0
+  - minialsa: v7.9.1
+  - pvmp3dec: v7.9.1
+  - record: v7.9.1
+  - av: v7.9.1
+  - av_cp: v7.9.1
+  - amrnb: v7.9.1
+  - amrwb: v7.9.1
+  - speexdsp: v7.9.1
+  - flac: v7.9.1
+  - speex: v7.9.1
+  - sonic: v7.9.1
+  - opus: v7.9.1
+  - ogg: v7.9.1
+  - smart_audio: v7.9.1
 
   # fs
-  - vfs: v7.9.0
-  - devfs: v7.9.0
-  - littlefs: v7.9.0
-  - fatfs: v7.9.0
-  - lwext4: v7.9.0
+  - vfs: v7.9.1
+  - devfs: v7.9.1
+  - littlefs: v7.9.1
+  - fatfs: v7.9.1
+  - lwext4: v7.9.1
 
   # security
-  - mbedtls: v7.9.0
-  - key_mgr: v7.9.0
-  - sec_crypto: v7.9.0
-  - se: v7.9.0
+  - mbedtls: v7.9.1
+  - key_mgr: v7.9.1
+  - sec_crypto: v7.9.1
+  - se: v7.9.1
 
   # bluetooth
-  - ble_mesh: v7.9.0
-  - ble_host: v7.9.0
+  - ble_mesh: v7.9.1
+  - ble_host: v7.9.1
 
   # zip
-  - zlib: v7.9.0
-  - xz: v7.9.0
+  - zlib: v7.9.1
+  - xz: v7.9.1
 
   # utils
-  - cmsis: v7.9.0
-  - at: v7.9.0
-  - ers: v7.9.0
-  - button: v7.9.0
-  - clock_alarm: v7.9.0
-  - cjson: v7.9.0
-  - fct: v7.9.0
-  - dut_service: v7.9.0
-  - adb: v7.9.0
-  - csi2d: v7.9.0
+  - cmsis: v7.9.1
+  - at: v7.9.1
+  - ers: v7.9.1
+  - button: v7.9.1
+  - clock_alarm: v7.9.1
+  - cjson: v7.9.1
+  - fct: v7.9.1
+  - dut_service: v7.9.1
+  - adb: v7.9.1
+  - csi2d: v7.9.1
 
   # Ali Tmall app
-  - smartliving: v7.9.0
-  - breeze: v7.9.0
+  - smartliving: v7.9.1
+  - breeze: v7.9.1
 
   # device drivers
-  - drv_bt_rtl8723ds: v7.9.0
-  - drv_wifi_rtl8723ds: v7.9.0
-  - drv_sdmmc: v7.9.0
-  - drv_leds: v7.9.0    # no use
-  - drv_light: v7.9.0
-  - drv_snd_bl606p: v7.9.0
+  - drv_bt_rtl8723ds: v7.9.1
+  - drv_wifi_rtl8723ds: v7.9.1
+  - drv_sdmmc: v7.9.1
+  - drv_leds: v7.9.1    # no use
+  - drv_light: v7.9.1
+  - drv_snd_bl606p: v7.9.1
 
   # chip
-  - chip_riscv_dummy: v7.9.0
-  - chip_ch2601: v7.9.0
-  - chip_d1: v7.9.0
-  - chip_bl606p: v7.9.0
+  - chip_riscv_dummy: v7.9.1
+  - chip_ch2601: v7.9.1
+  - chip_d1: v7.9.1
+  - chip_bl606p: v7.9.1
 
   # boards
-  - board_riscv_dummy: v7.9.0
-  - ch2601_evb: v7.9.0
-  - d1_dockpro_evb: v7.9.0
-  - bl606p_evb_e907: v7.9.0
-  - bl606p_evb_c906: v7.9.0
+  - board_riscv_dummy: v7.9.1
+  - ch2601_evb: v7.9.1
+  - d1_dockpro_evb: v7.9.1
+  - bl606p_evb_e907: v7.9.1
+  - bl606p_evb_c906: v7.9.1
 
   # chip sdk
-  - sdk_chip_riscv_dummy: v7.9.0
-  - sdk_chip_ch2601: v7.9.0
-  - sdk_chip_d1: v7.9.0
-  - sdk_chip_bl606p_e907: v7.9.0
+  - sdk_chip_riscv_dummy: v7.9.1
+  - sdk_chip_ch2601: v7.9.1
+  - sdk_chip_d1: v7.9.1
+  - sdk_chip_bl606p_e907: v7.9.1
 
   # common demo
-  - helloworld: v7.9.0
-  - fota_demo: v7.9.0
-  - wifi_demo: v7.9.0
-  - httpclient_demo: v7.9.0
-  - kv_demo: v7.9.0
-  - cli_demo: v7.9.0
-  - xplayer_demo: v7.9.0
-  - codec_demo: v7.9.0
-  - devices_demo: v7.9.0
-  - ipc_demo: v7.9.0
-  - led_demo: v7.9.0
-  - display_drv_demo: v7.9.0
-  - usb_demo: v7.9.0
-  - gprs_demo: v7.9.0
-  - fs_demo: v7.9.0
-  - secure_demo: v7.9.0
-  - cpp_demo: v7.9.0
-  - ble_uart_profile_server_demo: v7.9.0
-  - ble_uart_profile_client_demo: v7.9.0
-  - ble_shell_demo: v7.9.0
-  - ble_scanner_demo: v7.9.0
-  - ble_ibeacon_demo: v7.9.0
-  - ble_hrs_demo: v7.9.0
-  - ble_hid_keyboard_demo: v7.9.0
-  - ble_dis_demo: v7.9.0
-  - ble_bas_demo: v7.9.0
-  - ble_advertising_demo: v7.9.0
-  - mesh_shell: v7.9.0
-  - mesh_switch_node_demo: v7.9.0
-  - mesh_light_node_demo: v7.9.0
-  - ble_ibeacon_apple_demo: v7.9.0
+  - helloworld: v7.9.1
+  - fota_demo: v7.9.1
+  - wifi_demo: v7.9.1
+  - httpclient_demo: v7.9.1
+  - kv_demo: v7.9.1
+  - cli_demo: v7.9.1
+  - xplayer_demo: v7.9.1
+  - codec_demo: v7.9.1
+  - devices_demo: v7.9.1
+  - ipc_demo: v7.9.1
+  - led_demo: v7.9.1
+  - display_drv_demo: v7.9.1
+  - usb_demo: v7.9.1
+  - gprs_demo: v7.9.1
+  - fs_demo: v7.9.1
+  - secure_demo: v7.9.1
+  - cpp_demo: v7.9.1
+  - ble_uart_profile_server_demo: v7.9.1
+  - ble_uart_profile_client_demo: v7.9.1
+  - ble_shell_demo: v7.9.1
+  - ble_scanner_demo: v7.9.1
+  - ble_ibeacon_demo: v7.9.1
+  - ble_hrs_demo: v7.9.1
+  - ble_hid_keyboard_demo: v7.9.1
+  - ble_dis_demo: v7.9.1
+  - ble_bas_demo: v7.9.1
+  - ble_advertising_demo: v7.9.1
+  - mesh_shell: v7.9.1
+  - mesh_switch_node_demo: v7.9.1
+  - mesh_light_node_demo: v7.9.1
+  - ble_ibeacon_apple_demo: v7.9.1
   # ch2601 demo
-  - ch2601_boot: v7.9.0
+  - ch2601_boot: v7.9.1
   # bl606p demo
-  - bl606p_boot: v7.9.0
-  - bl606p_e907_coremark: v7.9.0
-  - bl606p_e907_dhrystone: v7.9.0
-  - bl606p_c906_ipc_demo: v7.9.0
+  - bl606p_boot: v7.9.1
+  - bl606p_e907_coremark: v7.9.1
+  - bl606p_e907_dhrystone: v7.9.1
+  - bl606p_c906_ipc_demo: v7.9.1
   # d1 demo
-  - d1_boot_demo: v7.9.0
-  - d1_button_demo: v7.9.0
+  - d1_boot_demo: v7.9.1
+  - d1_button_demo: v7.9.1
 
   # test
-  #- sdk_test_solutions: v7.9.0
+  #- sdk_test_solutions: v7.9.1

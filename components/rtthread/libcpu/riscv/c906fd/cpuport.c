@@ -145,3 +145,9 @@ void rt_hw_set_process_id(int pid)
 {
     //TODO
 }
+
+rt_bool_t rt_hw_interrupt_is_disabled(void)
+{
+    extern unsigned long cpu_is_irq_enable();
+    return !cpu_is_irq_enable();
+}

@@ -4,7 +4,7 @@ ch2601_boot是基于ch2601平台的一个bootloader的DEMO，其基本功能有�
 # 使用
 
 ## 通过命令行
-需要先安装[yoctools](https://yoc.docs.t-head.cn/yocbook/Chapter2-%E5%BF%AB%E9%80%9F%E4%B8%8A%E6%89%8B%E6%8C%87%E5%BC%95/YocTools.html)。
+需要先安装[yoctools](https://www.xrvm.cn/document?temp=yoctools&slug=yocbook)。
 
 ### DEMO获取
 
@@ -34,7 +34,7 @@ make install
 
 ### 调试
 
-请注意当前目录下的`gdbinit`文件中的`target remote localhost:1025`内容需要改成用户实际连接时的T-HeadDebugServer中显示的对应的内容。
+请注意当前目录下的`gdbinit`文件中的`target remote localhost:1025`内容需要改成用户实际连接时的 XuanTie Debug Server 中显示的对应的内容。
 
 ```bash
 riscv64-unknown-elf-gdb boot.elf -x gdbinit

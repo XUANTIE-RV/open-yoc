@@ -163,7 +163,11 @@ if [ -n "$COMP_ALG_KWS_MIND_PATH" ]; then
 # mind kws + lyeva asr 
 if [ -n "$CONFIG_ALG_ASR_LYEVA" ]; then
     FIRMWARE_NAME="c906fdv_fw_asr_lyeva"
-    FIRMWARE_PATH="../../components/alg_asr_lyeva/libs/chip_bl606p/e907fp/firmware"
+    if [ -n "$EXE_EXT" ]; then
+        FIRMWARE_PATH="$CONFIG_ALG_ASR_LYEVA/libs/chip_bl606p/e907fp/firmware"
+    else
+        FIRMWARE_PATH="../../components/alg_asr_lyeva/libs/chip_bl606p/e907fp/firmware"
+    fi
 else
 # mind kws only
     FIRMWARE_NAME="c906fdv_fw_mind"
@@ -175,11 +179,15 @@ else
 if [ -n "$COMP_ALG_KWS_LYEVA_PATH" ]; then
 # lyeva kws
     FIRMWARE_NAME="c906fdv_fw_lyeva"
-    FIRMWARE_PATH="$COMP_ALG_KWS_LYEVA_PATH/libs/chip_bl606p/e907fp/firmware"
+    if [ -n "$EXE_EXT" ]; then
+        FIRMWARE_PATH="$COMP_ALG_KWS_LYEVA_PATH/libs/chip_bl606p/e907fp/firmware"
+    else
+        FIRMWARE_PATH="../../components/us_algo_c906/libs/chip_bl606p/e907fp/firmware"
+    fi
 elif [ -n "$CONFIG_US_ALGO_C906" ]; then
 # us_alog_c906
     FIRMWARE_NAME="c906fdv_fw_us"
-    FIRMWARE_PATH="../../components/us_algo_c906/libs/chip_bl606p/e907fp/firmware"
+    FIRMWARE_PATH="$CONFIG_US_ALGO_C906/libs/chip_bl606p/e907fp/firmware"
 fi
 
 fi

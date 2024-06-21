@@ -84,6 +84,8 @@ typedef void* aos_event_t;
 #define AOS_EVENT_OR               0x00u
 #define AOS_EVENT_OR_CLEAR         0x01u
 
+#define AOS_WAIT_FOREVER           BL_0S_WAIT_FOREVER
+
 static inline int aos_task_new_ext(aos_task_t *task, const char *name, void (*fn)(void *), void *arg, int stack_size, int prio) {return 0;}
 static inline aos_status_t aos_task_delete(aos_task_t *task) {return 0;}
 static inline aos_task_t aos_task_self() {return 0;}
@@ -109,6 +111,7 @@ static inline int aos_mutex_new(aos_mutex_t *mutex) {return 0;}
 static inline void aos_mutex_free(aos_mutex_t *mutex) {}
 static inline int aos_mutex_lock(aos_mutex_t *mutex, unsigned int timeout) {return 0;}
 static inline int aos_mutex_unlock(aos_mutex_t *mutex) {return 0;}
+static inline int aos_mutex_is_valid(aos_mutex_t *mutex) {return 0;}
 static inline int aos_sem_new(aos_sem_t *sem, int count) {return 0;}
 static inline void aos_sem_free(aos_sem_t *sem) {}
 static inline int aos_sem_wait(aos_sem_t *sem, unsigned int timeout) {return 0;}

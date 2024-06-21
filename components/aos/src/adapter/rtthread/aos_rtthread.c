@@ -174,7 +174,7 @@ aos_status_t aos_task_resume(aos_task_t *task)
     {
         level = rt_hw_interrupt_disable();
         /* A task with higher priority than the current running task is ready */
-        if (rt_thread_resume(thread) == RT_EOK && thread->current_priority <= rt_thread_self()->current_priority)
+        if (rt_thread_resume(thread) == RT_EOK && RT_SCHED_PRIV(thread).current_priority <= RT_SCHED_PRIV(rt_thread_self()).current_priority)
         {
             need_schedule = RT_TRUE;
         }
@@ -236,12 +236,8 @@ int _aos_task_new_ext(aos_task_t *task, const char *name, void (*fn)(void *), vo
         return -EFAULT;
     }
 
-#if defined(CSK_CPU_STACK_EXTRAL)
-    stack_size += CSK_CPU_STACK_EXTRAL;
-#endif
-
     if (stack_start) {
-        tid = (struct rt_thread *)aos_malloc(sizeof(struct rt_thread));
+        tid = (struct rt_thread *)aos_zalloc(sizeof(struct rt_thread));
         if (tid == NULL)
             goto failure;
         ret = rt_thread_init(tid, name, fn, arg, stack_start, stack_size, prio, 10u);
@@ -250,6 +246,9 @@ int _aos_task_new_ext(aos_task_t *task, const char *name, void (*fn)(void *), vo
             goto failure;
         }
     } else {
+#if defined(CSK_CPU_STACK_EXTRAL)
+        stack_size += CSK_CPU_STACK_EXTRAL;
+#endif
         tid = rt_thread_create(name, fn, arg, stack_size, prio, 10u);
     }
 
@@ -263,11 +262,11 @@ int _aos_task_new_ext(aos_task_t *task, const char *name, void (*fn)(void *), vo
 #endif
         if (options == AOS_TASK_NONE)
         {
-            tid->number      = tid->current_priority >> 3;            /* 5bit */
-            tid->number_mask = 1L << tid->number;
-            tid->high_mask   = 1L << (tid->current_priority & 0x07);  /* 3bit */
+            RT_SCHED_PRIV(tid).number = RT_SCHED_PRIV(tid).current_priority >> 3;            /* 5bit */
+            RT_SCHED_PRIV(tid).number_mask = 1L << RT_SCHED_PRIV(tid).number;
+            RT_SCHED_PRIV(tid).high_mask   = 1L << (RT_SCHED_PRIV(tid).current_priority & 0x07);  /* 3bit */
             /* change thread stat */
-            tid->stat = RT_THREAD_SUSPEND;
+            RT_SCHED_CTX(tid).stat = RT_THREAD_SUSPEND;
         }
         else if (options == AOS_TASK_AUTORUN)
         {
@@ -968,7 +967,7 @@ int aos_queue_recv(aos_queue_t *queue, unsigned int ms, void *msg, size_t *size)
     {
         ret = rt_mq_recv(mq, msg, *size, rt_tick_from_millisecond(ms));
     }
-    if (ret != RT_EOK)
+    if (ret <= 0)
     {
         *size = 0;
         return -1;
@@ -1434,7 +1433,7 @@ int rtthread_startup(void)
 #ifdef RT_USING_SMP
     rt_hw_spin_lock_init(&_cpus_lock);
 #endif
-    rt_hw_interrupt_disable();
+    rt_hw_local_irq_disable();
 
     /* board level initialization
      * NOTE: please initialize heap inside board initialization.
@@ -1511,7 +1510,11 @@ int aos_get_mminfo(int32_t *total, int32_t *used, int32_t *mfree, int32_t *peak)
 {
     aos_check_return_einval(total && used && mfree && peak);
 
-    rt_memory_info((rt_size_t *)total, (rt_size_t *)used, (rt_size_t *)peak);
+    rt_size_t rtotal, rused, rmax_used;
+    rt_memory_info(&rtotal, &rused, &rmax_used);
+    *total = (int32_t)rtotal;
+    *used = (int32_t)rused;
+    *peak = (int32_t)rmax_used;
     *mfree = *total - *used;
 
     return 0;
@@ -1875,7 +1878,7 @@ aos_status_t aos_task_pri_change(aos_task_t *task, uint8_t pri, uint8_t *old_pri
     if (old_pri == NULL)
         return -EFAULT;
     else
-        *old_pri = ktask->current_priority;
+        *old_pri = RT_SCHED_PRIV(ktask).current_priority;
 
     level = rt_hw_interrupt_disable();
     res = rt_thread_control(ktask, RT_THREAD_CTRL_CHANGE_PRIORITY, &pri);
@@ -1897,7 +1900,7 @@ aos_status_t aos_task_pri_get(aos_task_t *task, uint8_t *priority)
     rt_base_t level;
 
     level = rt_hw_interrupt_disable();
-    pri = ktask->current_priority;
+    pri = RT_SCHED_PRIV(ktask).current_priority;
     rt_hw_interrupt_enable(level);
 
     if (pri > RT_THREAD_PRIORITY_MAX - 1)

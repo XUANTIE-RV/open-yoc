@@ -22,5 +22,6 @@
 #include "rtt_ipc/pipe.h"
 #include "rtt_ipc/poll.h"
 #include "rtt_ipc/ringblk_buf.h"
+#include "rtt_ipc/condvar.h"
 
 #endif /* __RT_DEVICE_H__ */

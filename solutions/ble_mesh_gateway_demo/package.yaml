@@ -1,6 +1,6 @@
 ## 第一部分： 基础信息
 name: ble_mesh_gateway_demo
-version: v7.9.0
+version: v7.9.1
 description: YoC smart lighting SDK
 type: solution
 ## 第二部分：依赖信息
@@ -10,38 +10,38 @@ type: solution
 #   - minilibc: v7.2.0
 #   - aos: >=v7.2.0
 sdk_chip:
-  - sdk_chip_d1: v7.9.0
-  - sdk_chip_f133: v7.9.0
+  - sdk_chip_d1: v7.9.1
+  - sdk_chip_f133: v7.9.1
 mkflash_script: mkflash.sh
 depends:
-  - sdk_chip_d1: v7.9.0
-  - at: v7.9.0
-  - ble_mesh: v7.9.0
-  - breeze: v7.9.0
-  - button: v7.9.0
-  - cjson: v7.9.0
-  - tsl_engine: v7.9.0
-  - duktape: v7.9.0
-  - dut_service: v7.9.0
-  - ers: v7.9.0
-  - fota: v7.9.0
-  - httpclient: v7.9.0
-  - transport: v7.9.0
-  - key_mgr: v7.9.0
-  - lwip: v7.9.0
-  - mbedtls: v7.9.0
-  - netmgr: v7.9.0
-  - ntp: v7.9.0
-  - gateway_mgmt: v7.9.0
-  - ota_module: v7.9.0
-  - smartliving: v7.9.0
-  - vfs: v7.9.0
-  - wifi_provisioning: v7.9.0
+  - sdk_chip_d1: v7.9.1
+  - at: v7.9.1
+  - ble_mesh: v7.9.1
+  - breeze: v7.9.1
+  - button: v7.9.1
+  - cjson: v7.9.1
+  - tsl_engine: v7.9.1
+  - duktape: v7.9.1
+  - dut_service: v7.9.1
+  - ers: v7.9.1
+  - fota: v7.9.1
+  - httpclient: v7.9.1
+  - transport: v7.9.1
+  - key_mgr: v7.9.1
+  - lwip: v7.9.1
+  - mbedtls: v7.9.1
+  - netmgr: v7.9.1
+  - ntp: v7.9.1
+  - gateway_mgmt: v7.9.1
+  - ota_module: v7.9.1
+  - smartliving: v7.9.1
+  - vfs: v7.9.1
+  - wifi_provisioning: v7.9.1
 ## 第三部分：板级信息
 # hw_info:                                 # 对 solution、board、chip 三个字段的改进，统称为 hw_info 字段
 #   cpu_id: cpu0
 #   cpu_name: CK804EF
-#   vendor_name: t-head
+#   vendor_name: xuantie
 #   chip_name: chip_pangu                  # <可选项> 指定芯片组件名,未设置时，使用depends中 chip 第一个组件
 #   board_name: pangu_cpu0                 # <可选项> 指定开发板组件名，未设置时，使用depends中 board 第一个组件
 #   ld_script: configs/gcc_eflash.ld       # <可选项> 连接时使用 LD 脚本，当选把未设置时，使用对应的 board 的 LD 脚本
@@ -62,7 +62,7 @@ depends:
 #   cpu_id: cpu0
 #   board_name: pangu_cpu0
 #   cpu_name: CK805EF
-#   vendor_name: thead
+#   vendor_name: xuantie
 #   chip_name: 'chip_pangu'
 #   ld_script: configs/gcc_eflash.ld.S
 hw_info:

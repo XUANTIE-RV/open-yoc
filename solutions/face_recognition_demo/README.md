@@ -16,7 +16,7 @@ yoc install face_recognition_demo
 ### 编译&烧录
 
 注意：
-    烧录时请注意当前目录下的`gdbinitflash`文件中的`target remote localhost:1025`内容需要改成用户实际连接时的T-HeadDebugServer中显示的对应的内容。
+    烧录时请注意当前目录下的`gdbinitflash`文件中的`target remote localhost:1025`内容需要改成用户实际连接时的 XuanTie Debug Server 中显示的对应的内容。
 
 烧录完成之后，按板子上的复位键即可看到串口输出。
 

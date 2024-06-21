@@ -946,7 +946,18 @@ __STATIC_INLINE uint64_t csi_coret_get_load2(void)
  */
 __STATIC_INLINE uint64_t csi_coret_get_value2()
 {
+#if __riscv_xlen == 64
     return csi_clint_get_value();
+#else
+    uint64_t result;
+    unsigned long high, low;
+
+    __ASM volatile("csrr %0, timeh" : "=r"(high));
+    __ASM volatile("csrr %0, time" : "=r"(low));
+    result = ((uint64_t)high << 32) | low;
+
+    return result;
+#endif
 }
 
 /**

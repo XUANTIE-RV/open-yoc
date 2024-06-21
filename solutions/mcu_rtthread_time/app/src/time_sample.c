@@ -6,42 +6,46 @@
 #include <rthw.h>
 #include <rtdef.h>
 
-void example_main(void *arg)
+#define  RT_SYSTICK      (1000 / CONFIG_SYSTICK_HZ)
+
+void example_main()
 {
-    rt_uint32_t uwTickCount = 0;
-    rt_uint32_t cnt = 0;
-    rt_tick_t cur_count = 0;
-    rt_tick_t delay_1s_tick  = CONFIG_SYSTICK_HZ;
-    rt_tick_t delay_3s_tick  = 3*CONFIG_SYSTICK_HZ;
-    rt_tick_t delay_19s_tick_count  = 0;
+    uint32_t cnt = 0;
+    long long cur_time = 0;
+    long long expect_time = 0;
+    long long delay_19s_time = 0;
+    const long long delay_1s_time = 1000;
 
     cnt = 10;
-    rt_kprintf("current  kernel systick %d ms\n", 1000/CONFIG_SYSTICK_HZ);
-    cur_count = rt_tick_get();
-    rt_kprintf("current tick count = %u,  will delay 19s....\n", cur_count);
-    rt_kprintf("print cnt every 1s for %lu times\n", cnt);
-    uwTickCount = cur_count;
+    printf("kernel systick is %u ms\n", RT_SYSTICK);
+    cur_time = rt_tick_get() * RT_SYSTICK;
+    printf("now time = %llu ms before 19s....\n", cur_time);
+    printf("print cnt every 1s for %u times\n", cnt);
+    expect_time = cur_time;
     while (cnt--) {
-        uwTickCount += delay_1s_tick;
-        rt_thread_delay(delay_1s_tick);
-        rt_kprintf("-----%lu\n", cnt);
+        expect_time += 1000;
+        rt_thread_mdelay(1000);
+        printf("-----%u\n", cnt);
     }
     cnt = 3;
-    rt_kprintf("print cnt every 3s for %lu times\n", cnt);
+    printf("print cnt every 3s for %u times\n", cnt);
     while (cnt--) {
-        uwTickCount += delay_3s_tick;
-        rt_thread_delay(delay_3s_tick);
-        rt_kprintf("-----%lu\n", cnt);
+        expect_time += 3000;
+        rt_thread_mdelay(3000);
+        printf("-----%u\n", cnt);
     }
-    delay_19s_tick_count = rt_tick_get();
-    rt_kprintf("tick cont = %u after 19s, will delay 1s....\n", delay_19s_tick_count);
-    rt_thread_delay(delay_1s_tick);
-    cur_count = rt_tick_get();
-    rt_kprintf("tick cont = %u after delay 1s\n", cur_count);
-
-    if ((delay_19s_tick_count- uwTickCount) < 3 && (cur_count - delay_19s_tick_count-delay_1s_tick) < 2) {
-        rt_kprintf("rtt time successfully!\n");
+    delay_19s_time = rt_tick_get() * RT_SYSTICK;
+    printf("now time = %llu ms after 19s, will be delay  1s....\n", delay_19s_time);
+    rt_thread_mdelay(1000);
+    cur_time = rt_tick_get() * RT_SYSTICK;
+    printf("now time = %llu ms after delay 1s \n", cur_time);
+    if ((delay_19s_time - expect_time) < 0 || (cur_time - delay_19s_time - delay_1s_time) < 0) {
+        printf("test kernel time fail\n");
+        return;
+    }
+    if ((delay_19s_time - expect_time) < 200 && (cur_time - delay_19s_time - delay_1s_time) < 200) {
+        printf("test kernel time successfully!\n");
     } else {
-        rt_kprintf("rtt time fail\n");
+        printf("test kernel time fail\n");
     }
 }

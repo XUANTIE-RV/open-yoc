@@ -1,5 +1,5 @@
 name: ch2601_boot
-version: v7.9.0                                     # <必选项> 组件版本号
+version: v7.9.1                                     # <必选项> 组件版本号
 description: BootLoader for ch2601
 
 type: solution
@@ -9,13 +9,13 @@ hw_info:
   ld_script: gcc_flash.ld
 
 depends:                                       # 该组件依赖其他的组件
-  - csi: v7.9.0
-  - chip_ch2601: v7.9.0
-  - ch2601_evb: v7.9.0
-  - boot: v7.9.0
-  - partition: v7.9.0
-  - sec_crypto: v7.9.0
-  - key_mgr: v7.9.0
+  - csi: v7.9.1
+  - chip_ch2601: v7.9.1
+  - ch2601_evb: v7.9.1
+  - boot: v7.9.1
+  - partition: v7.9.1
+  - sec_crypto: v7.9.1
+  - key_mgr: v7.9.1
 
 # 编译参数
 build_config:

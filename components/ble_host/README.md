@@ -10,7 +10,7 @@
 
 开发者如果需要完整地运行该组件功能，需要准备一个或者多个支持BLE功能的开发板，支持BLE功能的智能手机，相应的测试APP。配套的示例程序，开发者可以选用YoC Solutions中包含的ble_xxx相关的示例。
 
-开发者如果需要将该组件移植到其他的支持BLE功能的芯片上，可以参考《[YoC BLE HOST组件对接示例](https://yoc.docs.t-head.cn/yocbook/Chapter8-%E8%8A%AF%E7%89%87%E5%AF%B9%E6%8E%A5/%E8%93%9D%E7%89%99%E9%A9%B1%E5%8A%A8%E5%AF%B9%E6%8E%A5%E4%BE%8B%E7%A8%8B.html)》《[YoC蓝牙驱动移植](https://yoc.docs.t-head.cn/yocbook/Chapter8-%E8%8A%AF%E7%89%87%E5%AF%B9%E6%8E%A5/%E8%93%9D%E7%89%99%E9%A9%B1%E5%8A%A8%E7%A7%BB%E6%A4%8D.html) 》文档。
+开发者如果需要将该组件移植到其他的支持BLE功能的芯片上，可以参考《[蓝牙设备驱动适配说明](https://www.xrvm.cn/document?temp=bluetooth-device-driver-adaptation-instructions&slug=yocbook) 》文档。
 
 ## 组件安装
 

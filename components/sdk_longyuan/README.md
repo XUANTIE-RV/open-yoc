@@ -1,4 +1,4 @@
-智能语音应用平台（LongYuan）是一个基于 YoC（Yun On Chip，[详情](https://occ.t-head.cn/document?temp=yoc-platform-overview&slug=yocbook)）的轻量级高实时的离在线语音应用平台，通过打造音频播放器、分布式语音AI、JS GUI引擎等轻量化的组件和易用的应用框架，让语音零基础的开发者，能够快速开发出智能语音产品。典型应用场景包括：智能音箱、故事机、语音面板、声控小家电等。
+智能语音应用平台（LongYuan）是一个基于 YoC（Yun On Chip，[详情](https://www.xrvm.cn/document?temp=yoc-platform-overview&slug=yocbook)）的轻量级高实时的离在线语音应用平台，通过打造音频播放器、分布式语音AI、JS GUI引擎等轻量化的组件和易用的应用框架，让语音零基础的开发者，能够快速开发出智能语音产品。典型应用场景包括：智能音箱、故事机、语音面板、声控小家电等。
 # 平台特性
 
 - 轻量级高实时的YoC系统
@@ -28,7 +28,7 @@
 
 # 平台手册
 
-在线文档：[在线链接](https://occ.t-head.cn/document?temp=introduction-to-longyuan-intelligent-speech-application-platform&slug=longyuan)
+在线文档：[在线链接](https://www.xrvm.cn/document?temp=introduction-to-longyuan-intelligent-speech-application-platform&slug=longyuan)
 
 离线文档：本地文档手册（智能语音应用平台.lakebook）将以lakebook方式提供，请登录[语雀](https://www.yuque.com/download)下载阅读工具。
 
@@ -36,5 +36,5 @@
 
 # 版本说明
 
-[Release Notes](https://occ.t-head.cn/document?temp=version-description&slug=longyuan)
+[Release Notes](https://www.xrvm.cn/document?temp=version-description&slug=longyuan)
 

@@ -1,5 +1,5 @@
 ## 概述
-Thead算法KWS推理应用节点，基于Thead的语音算法应用框架，主要功能为关键词唤
+DAMO XuanTie算法KWS推理应用节点，基于DAMO XuanTie的语音算法应用框架，主要功能为关键词唤
 
 
 ## 组件安装

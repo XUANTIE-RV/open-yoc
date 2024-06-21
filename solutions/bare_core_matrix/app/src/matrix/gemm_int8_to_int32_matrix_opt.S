@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2023 T-Head Semiconductor Co., Ltd. All rights reserved.
+ * Copyright (C) 2019-2024 Alibaba Group Holding Limited
  *
  * SPDX-License-Identifier: Apache-2.0
  *

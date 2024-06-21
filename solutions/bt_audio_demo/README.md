@@ -13,7 +13,7 @@
 
 | 平台名称 | 说明文档 |
 | --- | --- |
-| BL606P 开发板 | [开发板快速上手手册](https://xuantie.t-head.cn/document?temp=quick-start-manual-for-bl606-p-development-board&slug=longyuan) |
+| BL606P 开发板 | [开发板快速上手手册](https://www.xrvm.cn/document?temp=quick-start-manual-for-bl606-p-development-board&slug=longyuan) |
 
 # 代码解读
 蓝牙音频开发过程主要包括两个部分：
