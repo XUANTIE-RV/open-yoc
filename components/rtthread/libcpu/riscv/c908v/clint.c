@@ -23,7 +23,11 @@ enum C908_MP
     C908_CORE0 = 0,
     C908_CORE1,
     C908_CORE2,
-    C908_CORE3
+    C908_CORE3,
+    C908_CORE4,
+    C908_CORE5,
+    C908_CORE6,
+    C908_CORE7,
 };
 
 /**
@@ -53,6 +57,18 @@ void clint_ipi_send(uint64_t id)
     case C908_CORE3:
         clint->SSIP3 |= (uint32_t)0x1;
         break;
+    case C908_CORE4:
+        clint->SSIP4 |= (uint32_t)0x1;
+        break;
+    case C908_CORE5:
+        clint->SSIP5 |= (uint32_t)0x1;
+        break;
+    case C908_CORE6:
+        clint->SSIP6 |= (uint32_t)0x1;
+        break;
+    case C908_CORE7:
+        clint->SSIP7 |= (uint32_t)0x1;
+        break;
     default:
         break;
     }
@@ -70,6 +86,18 @@ void clint_ipi_send(uint64_t id)
         break;
     case C908_CORE3:
         clint->MSIP3 |= (uint32_t)0x1;
+        break;
+    case C908_CORE4:
+        clint->MSIP4 |= (uint32_t)0x1;
+        break;
+    case C908_CORE5:
+        clint->MSIP5 |= (uint32_t)0x1;
+        break;
+    case C908_CORE6:
+        clint->MSIP6 |= (uint32_t)0x1;
+        break;
+    case C908_CORE7:
+        clint->MSIP7 |= (uint32_t)0x1;
         break;
     default:
         break;
@@ -104,6 +132,18 @@ void clint_ipi_clear(uint64_t id)
     case C908_CORE3:
         clint->SSIP3 &= ~(uint32_t)0x1;
         break;
+    case C908_CORE4:
+        clint->SSIP4 &= ~(uint32_t)0x1;
+        break;
+    case C908_CORE5:
+        clint->SSIP5 &= ~(uint32_t)0x1;
+        break;
+    case C908_CORE6:
+        clint->SSIP6 &= ~(uint32_t)0x1;
+        break;
+    case C908_CORE7:
+        clint->SSIP7 &= ~(uint32_t)0x1;
+        break;
     default:
         break;
     }
@@ -121,6 +161,18 @@ void clint_ipi_clear(uint64_t id)
         break;
     case C908_CORE3:
         clint->MSIP3 &= ~(uint32_t)0x1;
+        break;
+    case C908_CORE4:
+        clint->MSIP4 &= ~(uint32_t)0x1;
+        break;
+    case C908_CORE5:
+        clint->MSIP5 &= ~(uint32_t)0x1;
+        break;
+    case C908_CORE6:
+        clint->MSIP6 &= ~(uint32_t)0x1;
+        break;
+    case C908_CORE7:
+        clint->MSIP7 &= ~(uint32_t)0x1;
         break;
     default:
         break;
@@ -216,6 +268,54 @@ void rt_hw_scondary_interrupt_init(void)
         /* set hart threshold 0, enable all interrupt */
         PLIC->PLIC_H3_MTH = 0;
         PLIC->PLIC_H3_STH = 0;
+    }
+    else if (core_id == C908_CORE4)
+    {
+        for (i = 0; i < 32; i++)
+        {
+            PLIC->PLIC_H4_MIE[i] = 0;
+            PLIC->PLIC_H4_SIE[i] = 0;
+        }
+
+        /* set hart threshold 0, enable all interrupt */
+        PLIC->PLIC_H4_MTH = 0;
+        PLIC->PLIC_H4_STH = 0;
+    }
+    else if (core_id == C908_CORE5)
+    {
+        for (i = 0; i < 32; i++)
+        {
+            PLIC->PLIC_H5_MIE[i] = 0;
+            PLIC->PLIC_H5_SIE[i] = 0;
+        }
+
+        /* set hart threshold 0, enable all interrupt */
+        PLIC->PLIC_H5_MTH = 0;
+        PLIC->PLIC_H5_STH = 0;
+    }
+    else if (core_id == C908_CORE6)
+    {
+        for (i = 0; i < 32; i++)
+        {
+            PLIC->PLIC_H6_MIE[i] = 0;
+            PLIC->PLIC_H6_SIE[i] = 0;
+        }
+
+        /* set hart threshold 0, enable all interrupt */
+        PLIC->PLIC_H6_MTH = 0;
+        PLIC->PLIC_H6_STH = 0;
+    }
+    else if (core_id == C908_CORE7)
+    {
+        for (i = 0; i < 32; i++)
+        {
+            PLIC->PLIC_H7_MIE[i] = 0;
+            PLIC->PLIC_H7_SIE[i] = 0;
+        }
+
+        /* set hart threshold 0, enable all interrupt */
+        PLIC->PLIC_H7_MTH = 0;
+        PLIC->PLIC_H7_STH = 0;
     }
     else
     {

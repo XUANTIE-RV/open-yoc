@@ -25,12 +25,6 @@ int main(void)
 {
     board_init();
     printf("bare_dhrystore demo start!\r\n");
-#if CONFIG_CPU_XUANTIE_E902 || CONFIG_CPU_XUANTIE_E902M || CONFIG_CPU_XUANTIE_E902T || CONFIG_CPU_XUANTIE_E902MT
-    // FIXME:
-    csi_dcache_clean_invalid();
-    csi_dcache_disable();
-    csi_icache_disable();
-#endif
     benchmark_dhry_main();
     return 0;
 }

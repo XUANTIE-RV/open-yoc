@@ -67,36 +67,36 @@ extern "C" {
 #endif
 
 #ifndef CONFIG_BOARD_GPIO
-#define CONFIG_BOARD_GPIO 1
+#define CONFIG_BOARD_GPIO 0
 #endif
 
 #ifndef CONFIG_BOARD_PWM
-#define CONFIG_BOARD_PWM 1
+#define CONFIG_BOARD_PWM 0
 #endif
 
 #ifndef CONFIG_BOARD_ADC
-#define CONFIG_BOARD_ADC 1
+#define CONFIG_BOARD_ADC 0
 #endif
 
 #ifndef CONFIG_BOARD_BUTTON
-#define CONFIG_BOARD_BUTTON 1
+#define CONFIG_BOARD_BUTTON 0
 #endif
 
 #ifndef CONFIG_BOARD_LED
-#define CONFIG_BOARD_LED 1
+#define CONFIG_BOARD_LED 0
 #endif
 
-//#ifndef CONFIG_BOARD_WIFI
-//#define CONFIG_BOARD_WIFI 1
-//#endif
+#ifndef CONFIG_BOARD_WIFI
+#define CONFIG_BOARD_WIFI 0
+#endif
 
-//#ifndef CONFIG_BOARD_BT
-//#define CONFIG_BOARD_BT 1
-//#endif
+#ifndef CONFIG_BOARD_BT
+#define CONFIG_BOARD_BT 0
+#endif
 
-//#ifndef CONFIG_BOARD_AUDIO
-//#define CONFIG_BOARD_AUDIO 1
-//#endif
+#ifndef CONFIG_BOARD_AUDIO
+#define CONFIG_BOARD_AUDIO 0
+#endif
 
 #define BOARD_NAME "RISCV_DUMMY"
 

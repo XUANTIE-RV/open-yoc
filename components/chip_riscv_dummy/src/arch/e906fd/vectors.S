@@ -43,20 +43,26 @@ irq_nested_mcause:
 
 #if !CONFIG_SUPPORT_IRQ_NESTED
     .align  2
-    .global Default_IRQHandler
     .weak   Default_IRQHandler
     .type   Default_IRQHandler, %function
 Default_IRQHandler:
     csrw    mscratch, sp
     la      sp, g_top_irqstack
+#if CONFIG_CHECK_FPU_DIRTY
+    addi    sp, sp, -76
+#else
     addi    sp, sp, -72
+#endif
     sw      t0, 4(sp)
     sw      t1, 8(sp)
     csrr    t0, mepc
     csrr    t1, mcause
     sw      t1, 64(sp)
     sw      t0, 68(sp)
-
+#if CONFIG_CHECK_FPU_DIRTY
+    csrr    t0, mstatus
+    sw      t0, 72(sp)
+#endif
     sw      ra, 0(sp)
     sw      t2, 12(sp)
     sw      a0, 16(sp)
@@ -78,6 +84,9 @@ Default_IRQHandler:
     sw      t0, 0(sp)
 #endif /*__riscv_dsp */
 
+#if CONFIG_CHECK_FPU_DIRTY
+    csrr    t3, mstatus
+#endif
     SAVE_FLOAT_REGISTERS
 
     la      t0, do_irq
@@ -106,6 +115,9 @@ Default_IRQHandler:
     and     a5, a4, a3
     sb      a5, 0(a2)
 
+#if CONFIG_CHECK_FPU_DIRTY
+    RESTORE_MSTATUS
+#endif
     li      t0, MSTATUS_PRV1
     csrs    mstatus, t0
     csrw    mcause, a1
@@ -137,12 +149,15 @@ Default_IRQHandler:
     lw      t5, 56(sp)
     lw      t6, 60(sp)
 
+#if CONFIG_CHECK_FPU_DIRTY
+    addi    sp, sp, 76
+#else
     addi    sp, sp, 72
+#endif
     csrr    sp, mscratch
     mret
 #else
     .align  2
-    .global Default_IRQHandler
     .weak   Default_IRQHandler
     .type   Default_IRQHandler, %function
 Default_IRQHandler:
@@ -183,14 +198,21 @@ Default_IRQHandler:
     lw      t1, 4(sp)
     addi    sp, sp, 8
 .Lnested2:
+#if CONFIG_CHECK_FPU_DIRTY
+    addi    sp, sp, -76
+#else
     addi    sp, sp, -72
+#endif
     sw      t0, 4(sp)
     sw      t1, 8(sp)
     csrr    t0, mepc
     csrr    t1, mcause
     sw      t1, 64(sp)
     sw      t0, 68(sp)
-
+#if CONFIG_CHECK_FPU_DIRTY
+    csrr    t0, mstatus
+    sw      t0, 72(sp)
+#endif
     csrs    mstatus, 8
 
     sw      ra, 0(sp)
@@ -214,6 +236,9 @@ Default_IRQHandler:
     sw      t0, 0(sp)
 #endif /*__riscv_dsp */
 
+#if CONFIG_CHECK_FPU_DIRTY
+    csrr    t3, mstatus
+#endif
     SAVE_FLOAT_REGISTERS
 
     la      t0, do_irq
@@ -250,10 +275,14 @@ Default_IRQHandler:
     sw      t1, (t0)
     bgt     t1, zero, .Lnested3
 
+#if CONFIG_CHECK_FPU_DIRTY
+    RESTORE_MSTATUS
+#endif
+
     li      t0, MSTATUS_PRV1
     csrs    mstatus, t0
     csrw    mcause, a1
-    
+
     RESTORE_FLOAT_REGISTERS
 
 #if __riscv_dsp
@@ -281,7 +310,11 @@ Default_IRQHandler:
     lw      t5, 56(sp)
     lw      t6, 60(sp)
 
+#if CONFIG_CHECK_FPU_DIRTY
+    addi    sp, sp, 76
+#else
     addi    sp, sp, 72
+#endif
     csrr    sp, mscratch
     mret
 
@@ -296,7 +329,10 @@ Default_IRQHandler:
     andi    a0, a1, 0xFFFFFC00
     or      t0, a0, t0
     csrw    mcause, t0
-    
+
+#if CONFIG_CHECK_FPU_DIRTY
+    RESTORE_MSTATUS
+#endif
     RESTORE_FLOAT_REGISTERS
 
 #if __riscv_dsp
@@ -328,7 +364,11 @@ Default_IRQHandler:
     lw      t5, 56(sp)
     lw      t6, 60(sp)
 
+#if CONFIG_CHECK_FPU_DIRTY
+    addi    sp, sp, 76
+#else
     addi    sp, sp, 72
+#endif
     mret
 #endif
 
@@ -392,7 +432,6 @@ trap:
 
     .align  6
     .weak   Default_Handler
-    .global Default_Handler
     .type   Default_Handler, %function
 Default_Handler:
     /* Check for nmi */
@@ -415,13 +454,21 @@ Default_Handler:
 
     csrw    mscratch, sp
     la      sp, g_top_trapstack
+#if CONFIG_CHECK_FPU_DIRTY
+    addi    sp, sp, -76
+#else
     addi    sp, sp, -72
+#endif
     sw      t0, 4(sp)
     sw      t1, 8(sp)
     csrr    t0, mepc
     csrr    t1, mcause
     sw      t1, 64(sp)
     sw      t0, 68(sp)
+#if CONFIG_CHECK_FPU_DIRTY
+    csrr    t0, mstatus
+    sw      t0, 72(sp)
+#endif
 
     sw      ra, 0(sp)
     sw      t2, 12(sp)
@@ -444,6 +491,9 @@ Default_Handler:
     sw      t0, 0(sp)
 #endif /*__riscv_dsp */
 
+#if CONFIG_CHECK_FPU_DIRTY
+    csrr    t3, mstatus
+#endif
     SAVE_FLOAT_REGISTERS
 
     la      t0, handle_nmi_exception
@@ -472,6 +522,9 @@ Default_Handler:
     and     a5, a4, a3
     sb      a5, 0(a2)
 
+#if CONFIG_CHECK_FPU_DIRTY
+    RESTORE_MSTATUS
+#endif
     li      t0, MSTATUS_PRV1
     csrs    mstatus, t0
     csrw    mcause, a1
@@ -486,6 +539,10 @@ Default_Handler:
 
     lw      t0, 68(sp)
     csrw    mepc, t0
+#if CONFIG_CHECK_FPU_DIRTY
+    lw      t0, 72(sp)
+    csrw    mstatus, t0
+#endif
     lw      ra, 0(sp)
     lw      t0, 4(sp)
     lw      t1, 8(sp)
@@ -503,7 +560,11 @@ Default_Handler:
     lw      t5, 56(sp)
     lw      t6, 60(sp)
 
+#if CONFIG_CHECK_FPU_DIRTY
+    addi    sp, sp, 76
+#else
     addi    sp, sp, 72
+#endif
     csrr    sp, mscratch
 
     /* restore mscratch */
@@ -524,7 +585,6 @@ Default_Handler:
  *    overwritten by other handlers */
     .macro  def_irq_handler handler_name
     .weak   \handler_name
-    .globl  \handler_name
     .set    \handler_name, Default_Handler
     .endm
 

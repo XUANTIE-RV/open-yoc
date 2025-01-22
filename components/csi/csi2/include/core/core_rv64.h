@@ -231,7 +231,16 @@ typedef struct {
     __IOM uint32_t PLIC_H2_SIE[32];
     __IOM uint32_t PLIC_H3_MIE[32];
     __IOM uint32_t PLIC_H3_SIE[32];
-    uint32_t RESERVED2[(0x01FFFFC - 0x00023FC) / 4 - 1];
+    __IOM uint32_t PLIC_H4_MIE[32];
+    __IOM uint32_t PLIC_H4_SIE[32];
+    __IOM uint32_t PLIC_H5_MIE[32];
+    __IOM uint32_t PLIC_H5_SIE[32];
+    __IOM uint32_t PLIC_H6_MIE[32];
+    __IOM uint32_t PLIC_H6_SIE[32];
+    __IOM uint32_t PLIC_H7_MIE[32];
+    __IOM uint32_t PLIC_H7_SIE[32];
+
+    uint32_t RESERVED2[(0x01FFFFC - 0x00027FC) / 4 - 1];
     __IOM uint32_t PLIC_PER;
     __IOM uint32_t PLIC_H0_MTH;
     __IOM uint32_t PLIC_H0_MCLAIM;
@@ -260,6 +269,34 @@ typedef struct {
     __IOM uint32_t PLIC_H3_STH;
     __IOM uint32_t PLIC_H3_SCLAIM;
     uint32_t RESERVED10[0xFFC / 4 - 1];
+
+    __IOM uint32_t PLIC_H4_MTH;
+    __IOM uint32_t PLIC_H4_MCLAIM;
+    uint32_t RESERVED11[0xFFC / 4 - 1];
+    __IOM uint32_t PLIC_H4_STH;
+    __IOM uint32_t PLIC_H4_SCLAIM;
+    uint32_t RESERVED12[0xFFC / 4 - 1];
+
+    __IOM uint32_t PLIC_H5_MTH;
+    __IOM uint32_t PLIC_H5_MCLAIM;
+    uint32_t RESERVED13[0xFFC / 4 - 1];
+    __IOM uint32_t PLIC_H5_STH;
+    __IOM uint32_t PLIC_H5_SCLAIM;
+    uint32_t RESERVED14[0xFFC / 4 - 1];
+
+    __IOM uint32_t PLIC_H6_MTH;
+    __IOM uint32_t PLIC_H6_MCLAIM;
+    uint32_t RESERVED15[0xFFC / 4 - 1];
+    __IOM uint32_t PLIC_H6_STH;
+    __IOM uint32_t PLIC_H6_SCLAIM;
+    uint32_t RESERVED16[0xFFC / 4 - 1];
+
+    __IOM uint32_t PLIC_H7_MTH;
+    __IOM uint32_t PLIC_H7_MCLAIM;
+    uint32_t RESERVED17[0xFFC / 4 - 1];
+    __IOM uint32_t PLIC_H7_STH;
+    __IOM uint32_t PLIC_H7_SCLAIM;
+    uint32_t RESERVED18[0xFFC / 4 - 1];
 } PLIC_Type;
 
 
@@ -495,7 +532,11 @@ typedef struct {
     __IOM uint32_t MSIP1;
     __IOM uint32_t MSIP2;
     __IOM uint32_t MSIP3;
-    uint32_t RESERVED0[(0x4004000 - 0x400000C) / 4 - 1];
+    __IOM uint32_t MSIP4;
+    __IOM uint32_t MSIP5;
+    __IOM uint32_t MSIP6;
+    __IOM uint32_t MSIP7;
+    uint32_t RESERVED0[(0x4004000 - 0x400001C) / 4 - 1];
     __IOM uint32_t MTIMECMPL0;
     __IOM uint32_t MTIMECMPH0;
     __IOM uint32_t MTIMECMPL1;
@@ -504,14 +545,26 @@ typedef struct {
     __IOM uint32_t MTIMECMPH2;
     __IOM uint32_t MTIMECMPL3;
     __IOM uint32_t MTIMECMPH3;
-    uint32_t RESERVED1[(0x400BFF8 - 0x400401C) / 4 - 1];
+    __IOM uint32_t MTIMECMPL4;
+    __IOM uint32_t MTIMECMPH4;
+    __IOM uint32_t MTIMECMPL5;
+    __IOM uint32_t MTIMECMPH5;
+    __IOM uint32_t MTIMECMPL6;
+    __IOM uint32_t MTIMECMPH6;
+    __IOM uint32_t MTIMECMPL7;
+    __IOM uint32_t MTIMECMPH7;
+    uint32_t RESERVED1[(0x400BFF8 - 0x400403C) / 4 - 1];
     __IOM uint32_t MTIMEL;
     __IOM uint32_t MTIMEH;
     __IOM uint32_t SSIP0;
     __IOM uint32_t SSIP1;
     __IOM uint32_t SSIP2;
     __IOM uint32_t SSIP3;
-    uint32_t RESERVED2[(0x400D000 - 0x400C00C) / 4 - 1];
+    __IOM uint32_t SSIP4;
+    __IOM uint32_t SSIP5;
+    __IOM uint32_t SSIP6;
+    __IOM uint32_t SSIP7;
+    uint32_t RESERVED2[(0x400D000 - 0x400C01C) / 4 - 1];
     __IOM uint32_t STIMECMPL0;
     __IOM uint32_t STIMECMPH0;
     __IOM uint32_t STIMECMPL1;
@@ -520,7 +573,15 @@ typedef struct {
     __IOM uint32_t STIMECMPH2;
     __IOM uint32_t STIMECMPL3;
     __IOM uint32_t STIMECMPH3;
-    uint32_t RESERVED3[(0x400FFF8 - 0x400D01C) / 4 - 1];
+    __IOM uint32_t STIMECMPL4;
+    __IOM uint32_t STIMECMPH4;
+    __IOM uint32_t STIMECMPL5;
+    __IOM uint32_t STIMECMPH5;
+    __IOM uint32_t STIMECMPL6;
+    __IOM uint32_t STIMECMPH6;
+    __IOM uint32_t STIMECMPL7;
+    __IOM uint32_t STIMECMPH7;
+    uint32_t RESERVED3[(0x400FFF8 - 0x400D03C) / 4 - 1];
     __IOM uint32_t STIMEL;
     __IOM uint32_t STIMEH;
 } CLINT_Type;
@@ -1287,7 +1348,7 @@ __STATIC_INLINE void csi_dcache_enable(void)
         __ISB();
         __DCACHE_IALL();                        /* invalidate all dcache */
         cache = __get_MHCR();
-        cache |= (CACHE_MHCR_DE_Msk | CACHE_MHCR_WB_Msk | CACHE_MHCR_WA_Msk | CACHE_MHCR_RS_Msk | CACHE_MHCR_BPE_Msk | CACHE_MHCR_BTB_Msk | CACHE_MHCR_IBPE_Msk | CACHE_MHCR_WBR_Msk);      /* enable all Cache */
+        cache |= CACHE_MHCR_DE_Msk;             /* enable dcache */
         __set_MHCR(cache);
 
         __DSB();
@@ -1648,7 +1709,7 @@ __STATIC_INLINE void csi_mmu_invalid_tlb_all(void)
 
 #if CONFIG_CPU_XUANTIE_C907 || CONFIG_CPU_XUANTIE_C907FD || CONFIG_CPU_XUANTIE_C907FDV || CONFIG_CPU_XUANTIE_C907FDVM \
     || CONFIG_CPU_XUANTIE_C908 || CONFIG_CPU_XUANTIE_C908V || CONFIG_CPU_XUANTIE_C908I \
-    || CONFIG_CPU_XUANTIE_C910 || CONFIG_CPU_XUANTIE_C920 || CONFIG_CPU_XUANTIE_C910V2 || CONFIG_CPU_XUANTIE_C920V2 \
+    || CONFIG_CPU_XUANTIE_C910V2 || CONFIG_CPU_XUANTIE_C920V2 \
     || CONFIG_CPU_XUANTIE_C910V3 || CONFIG_CPU_XUANTIE_C910V3_CP || CONFIG_CPU_XUANTIE_C920V3 || CONFIG_CPU_XUANTIE_C920V3_CP \
     || CONFIG_CPU_XUANTIE_R908 || CONFIG_CPU_XUANTIE_R908FD || CONFIG_CPU_XUANTIE_R908FDV \
     || CONFIG_CPU_XUANTIE_R908_CP || CONFIG_CPU_XUANTIE_R908FD_CP || CONFIG_CPU_XUANTIE_R908FDV_CP \
@@ -1920,7 +1981,7 @@ __STATIC_INLINE int csi_vlenb_get_value(void)
     return result;
 }
 
-#if __riscv_matrix
+#if __riscv_matrix || __riscv_xtheadmatrix
 /**
   \brief   Get the bytes of matrix per register
   \return  the bytes of matrix per register
@@ -1931,7 +1992,7 @@ __STATIC_INLINE int csi_xmlenb_get_value(void)
     __ASM volatile("csrr %0, xmlenb" : "=r"(result) : : "memory");
     return result;
 }
-#endif /* __riscv_matrix */
+#endif /* __riscv_matrix || __riscv_xtheadmatrix */
 
 #ifdef __cplusplus
 }

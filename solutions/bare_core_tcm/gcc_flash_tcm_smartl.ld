@@ -256,7 +256,7 @@ SECTIONS
   *tcm_code.o(*.data*)
  __dtcm_code_end__ = .;
  } > REGION_DTCM AT > REGION_RODATA
- .bss : {
+ .bss (NOLOAD): {
   . = ALIGN(0x4) ;
   __sbss = ALIGN(0x4) ;
   __bss_start__ = . ;
@@ -272,13 +272,13 @@ SECTIONS
   __bss_end__ = .;
   __end = . ;
   end = . ;
- } > REGION_BSS AT > REGION_BSS
- ._user_heap : {
+ } > REGION_BSS
+ ._user_heap (NOLOAD): {
   . = ALIGN(0x4) ;
   *(.stack*)
   . = ALIGN(0x4) ;
   __heap_start = .;
   . += __min_heap_size;
   . = ALIGN(0x4) ;
- } > REGION_BSS AT > REGION_BSS
+ } > REGION_BSS
 }

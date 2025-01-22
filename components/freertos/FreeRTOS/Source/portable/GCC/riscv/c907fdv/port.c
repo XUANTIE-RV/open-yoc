@@ -44,8 +44,8 @@ StackType_t *pxPortInitialiseStack( StackType_t *pxTopOfStack, StackType_t *pxEn
 StackType_t *pxPortInitialiseStack( StackType_t *pxTopOfStack, TaskFunction_t pxCode, void *pvParameters )
 #endif
 {
+    extern int __global_pointer$;
     StackType_t *stk  = NULL;
-    register int *gp asm("x3");
     StackType_t temp = (StackType_t)pxTopOfStack;
 #if defined(CONFIG_RISCV_SMODE) && CONFIG_RISCV_SMODE
     unsigned long status = SR_SPP_S | SR_SPIE;
@@ -59,7 +59,7 @@ StackType_t *pxPortInitialiseStack( StackType_t *pxTopOfStack, TaskFunction_t px
 #ifdef __riscv_flen
     status |= SR_FS_INITIAL;
 #endif
-#if __riscv_matrix
+#if __riscv_matrix || __riscv_xtheadmatrix
     status |= SR_MS_INITIAL;
 #endif
 
@@ -104,7 +104,7 @@ StackType_t *pxPortInitialiseStack( StackType_t *pxTopOfStack, TaskFunction_t px
     *(--stk)  = (StackType_t)ivalue;                    /* X6          */
     *(--stk)  = (StackType_t)ivalue;                    /* X5          */
     *(--stk)  = (StackType_t)ivalue;                    /* X4          */
-    *(--stk)  = (StackType_t)gp;                        /* X3          */
+    *(--stk)  = (StackType_t)&__global_pointer$;        /* X3          */
 #if CONFIG_AOS_OSAL	
     *(--stk)  = (StackType_t)aos_task_exit;             /* X1          */
 #else
@@ -136,7 +136,7 @@ StackType_t *pxPortInitialiseStack( StackType_t *pxTopOfStack, TaskFunction_t px
     }
 #endif
 
-#if __riscv_matrix
+#if __riscv_matrix || __riscv_xtheadmatrix
     {
         *(--stk)  = (StackType_t)0x0L;                  /* XMRSTART    */
         *(--stk)  = (StackType_t)0x0L;                  /* XMCSR       */
@@ -148,7 +148,7 @@ StackType_t *pxPortInitialiseStack( StackType_t *pxTopOfStack, TaskFunction_t px
             *(--stk)  = (StackType_t)ivalue;            /* M7 ~ M0    */
         }
     }
-#endif /* __riscv_matrix */
+#endif /* __riscv_matrix || __riscv_xtheadmatrix */
 
 #if( portHAS_STACK_OVERFLOW_CHECKING == 1 )
     if (stk <= pxEndOfStack) {

@@ -1,0 +1,2240 @@
+<?xml version="1.0" ?>
+<Project Name="soc_helloworld_c907fd_xiaohui_rtthread" Version="1" Language="C">
+  <Description>一个面向soc领域(使用osal封装)的helloworld示例，可运行在玄铁QEMU环境.</Description>
+  <Dependencies Name="Debug"/>
+  <VirtualDirectory Name="boards">
+    <VirtualDirectory Name="board_riscv_dummy">
+      <VirtualDirectory Name="include">
+        <File Name="../../../../../../boards/board_riscv_dummy/include/rtconfig.h">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../boards/board_riscv_dummy/include/FreeRTOSConfig.h">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../boards/board_riscv_dummy/include/board.h">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../boards/board_riscv_dummy/include/csi_config.h">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../boards/board_riscv_dummy/include/k_config.h">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../boards/board_riscv_dummy/include/lwipopts.h">
+          <FileOption/>
+        </File>
+      </VirtualDirectory>
+      <VirtualDirectory Name="src">
+        <VirtualDirectory Name="uart">
+          <File Name="../../../../../../boards/board_riscv_dummy/src/uart/board_uart.c">
+            <FileOption/>
+          </File>
+        </VirtualDirectory>
+        <File Name="../../../../../../boards/board_riscv_dummy/src/board_init.c">
+          <FileOption/>
+        </File>
+      </VirtualDirectory>
+    </VirtualDirectory>
+  </VirtualDirectory>
+  <VirtualDirectory Name="solutions">
+    <VirtualDirectory Name="soc_helloworld">
+      <VirtualDirectory Name="app">
+        <VirtualDirectory Name="include">
+          <File Name="../../../../../../solutions/soc_helloworld/app/include/app_main.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../solutions/soc_helloworld/app/include/app_config.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../solutions/soc_helloworld/app/include/app_init.h">
+            <FileOption/>
+          </File>
+        </VirtualDirectory>
+        <VirtualDirectory Name="src">
+          <VirtualDirectory Name="init">
+            <File Name="../../../../../../solutions/soc_helloworld/app/src/init/init.c">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../solutions/soc_helloworld/app/src/init/cli_cmd.c">
+              <FileOption/>
+            </File>
+          </VirtualDirectory>
+          <File Name="../../../../../../solutions/soc_helloworld/app/src/main.c">
+            <FileOption/>
+          </File>
+        </VirtualDirectory>
+      </VirtualDirectory>
+    </VirtualDirectory>
+  </VirtualDirectory>
+  <VirtualDirectory Name="components">
+    <VirtualDirectory Name="rtthread">
+      <VirtualDirectory Name="libcpu">
+        <VirtualDirectory Name="riscv">
+          <VirtualDirectory Name="c907fd">
+            <File Name="../../../../../../components/rtthread/libcpu/riscv/c907fd/cpuport.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/rtthread/libcpu/riscv/c907fd/stackframe.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/rtthread/libcpu/riscv/c907fd/stack.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/rtthread/libcpu/riscv/c907fd/rt_interrupt.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/rtthread/libcpu/riscv/c907fd/cpuport_smp.c">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/rtthread/libcpu/riscv/c907fd/atomic_riscv.c">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/rtthread/libcpu/riscv/c907fd/cpuport.c">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/rtthread/libcpu/riscv/c907fd/interrupt.c">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/rtthread/libcpu/riscv/c907fd/clint.c">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/rtthread/libcpu/riscv/c907fd/interrupt_gcc.S">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/rtthread/libcpu/riscv/c907fd/context_gcc.S">
+              <FileOption/>
+            </File>
+          </VirtualDirectory>
+          <VirtualDirectory Name="common">
+            <File Name="../../../../../../components/rtthread/libcpu/riscv/common/backtrace.c">
+              <FileOption/>
+            </File>
+          </VirtualDirectory>
+        </VirtualDirectory>
+      </VirtualDirectory>
+      <VirtualDirectory Name="include">
+        <VirtualDirectory Name="rtt_ipc">
+          <File Name="../../../../../../components/rtthread/include/rtt_ipc/poll.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/rtthread/include/rtt_ipc/completion.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/rtthread/include/rtt_ipc/dataqueue.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/rtthread/include/rtt_ipc/ringblk_buf.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/rtthread/include/rtt_ipc/waitqueue.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/rtthread/include/rtt_ipc/workqueue.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/rtthread/include/rtt_ipc/pipe.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/rtthread/include/rtt_ipc/condvar.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/rtthread/include/rtt_ipc/ringbuffer.h">
+            <FileOption/>
+          </File>
+        </VirtualDirectory>
+        <File Name="../../../../../../components/rtthread/include/rtservice.h">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/rtthread/include/rtthread.h">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/rtthread/include/rtm.h">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/rtthread/include/rtsched.h">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/rtthread/include/rtatomic.h">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/rtthread/include/rthw.h">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/rtthread/include/rtdef.h">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/rtthread/include/rtcompiler.h">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/rtthread/include/finsh.h">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/rtthread/include/rttypes.h">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/rtthread/include/rtdevice.h">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/rtthread/include/rtdbg.h">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/rtthread/include/rtklibc.h">
+          <FileOption/>
+        </File>
+      </VirtualDirectory>
+      <VirtualDirectory Name="src">
+        <VirtualDirectory Name="rtt_ipc">
+          <File Name="../../../../../../components/rtthread/src/rtt_ipc/condvar.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/rtthread/src/rtt_ipc/completion.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/rtthread/src/rtt_ipc/pipe.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/rtthread/src/rtt_ipc/ringblk_buf.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/rtthread/src/rtt_ipc/workqueue.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/rtthread/src/rtt_ipc/waitqueue.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/rtthread/src/rtt_ipc/dataqueue.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/rtthread/src/rtt_ipc/ringbuffer.c">
+            <FileOption/>
+          </File>
+        </VirtualDirectory>
+        <VirtualDirectory Name="klibc">
+          <File Name="../../../../../../components/rtthread/src/klibc/kstring.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/rtthread/src/klibc/kstdio.c">
+            <FileOption/>
+          </File>
+        </VirtualDirectory>
+        <File Name="../../../../../../components/rtthread/src/scheduler_mp.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/rtthread/src/memheap.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/rtthread/src/scheduler_comm.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/rtthread/src/components.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/rtthread/src/cpu.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/rtthread/src/signal.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/rtthread/src/mem.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/rtthread/src/thread_sem.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/rtthread/src/kservice.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/rtthread/src/ipc.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/rtthread/src/object.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/rtthread/src/idle.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/rtthread/src/cmd.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/rtthread/src/scheduler_up.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/rtthread/src/clock.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/rtthread/src/irq.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/rtthread/src/thread.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/rtthread/src/timer.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/rtthread/src/device.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/rtthread/src/slab.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/rtthread/src/mempool.c">
+          <FileOption/>
+        </File>
+      </VirtualDirectory>
+    </VirtualDirectory>
+    <VirtualDirectory Name="csi">
+      <VirtualDirectory Name="csi2">
+        <VirtualDirectory Name="include">
+          <VirtualDirectory Name="core">
+            <File Name="../../../../../../components/csi/csi2/include/core/core_ck802.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/csi/csi2/include/core/core_ck807.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/csi/csi2/include/core/core_ck610.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/csi/csi2/include/core/core_807.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/csi/csi2/include/core/core_801.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/csi/csi2/include/core/csi_rv64_gcc.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/csi/csi2/include/core/core_810.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/csi/csi2/include/core/core_805.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/csi/csi2/include/core/core_803.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/csi/csi2/include/core/core_804.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/csi/csi2/include/core/core_ck801.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/csi/csi2/include/core/core_ck803.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/csi/csi2/include/core/csi_gcc.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/csi/csi2/include/core/csi_arm64_gcc.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/csi/csi2/include/core/core_ck810.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/csi/csi2/include/core/csi_rv_common.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/csi/csi2/include/core/core_802.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/csi/csi2/include/core/csi_rv32_gcc.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/csi/csi2/include/core/core_rv32.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/csi/csi2/include/core/core_rv64.h">
+              <FileOption/>
+            </File>
+          </VirtualDirectory>
+          <VirtualDirectory Name="drv">
+            <File Name="../../../../../../components/csi/csi2/include/drv/gpio.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/csi/csi2/include/drv/sha.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/csi/csi2/include/drv/spinand.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/csi/csi2/include/drv/ecdsa.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/csi/csi2/include/drv/fft.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/csi/csi2/include/drv/eth_mac.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/csi/csi2/include/drv/tipc.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/csi/csi2/include/drv/clk.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/csi/csi2/include/drv/hmac.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/csi/csi2/include/drv/mbox.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/csi/csi2/include/drv/eth_phy.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/csi/csi2/include/drv/eflash.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/csi/csi2/include/drv/sensor.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/csi/csi2/include/drv/pmu.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/csi/csi2/include/drv/drv_fft.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/csi/csi2/include/drv/eth.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/csi/csi2/include/drv/qspi.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/csi/csi2/include/drv/list.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/csi/csi2/include/drv/gpio_pin.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/csi/csi2/include/drv/baud_calc.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/csi/csi2/include/drv/irq.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/csi/csi2/include/drv/porting.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/csi/csi2/include/drv/aes.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/csi/csi2/include/drv/sdif.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/csi/csi2/include/drv/etb.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/csi/csi2/include/drv/dma.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/csi/csi2/include/drv/tee.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/csi/csi2/include/drv/i2s.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/csi/csi2/include/drv/common.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/csi/csi2/include/drv/uart.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/csi/csi2/include/drv/usi_iic.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/csi/csi2/include/drv/pwm.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/csi/csi2/include/drv/rng.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/csi/csi2/include/drv/iso7816.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/csi/csi2/include/drv/spiflash.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/csi/csi2/include/drv/usi.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/csi/csi2/include/drv/intc.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/csi/csi2/include/drv/timer.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/csi/csi2/include/drv/pin.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/csi/csi2/include/drv/iic.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/csi/csi2/include/drv/adc.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/csi/csi2/include/drv/usi_usart.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/csi/csi2/include/drv/des.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/csi/csi2/include/drv/wdt.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/csi/csi2/include/drv/io.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/csi/csi2/include/drv/usi_spi.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/csi/csi2/include/drv/ecdh.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/csi/csi2/include/drv/sasc.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/csi/csi2/include/drv/rtc.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/csi/csi2/include/drv/rsa.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/csi/csi2/include/drv/pm.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/csi/csi2/include/drv/codec.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/csi/csi2/include/drv/tick.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/csi/csi2/include/drv/efuse.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/csi/csi2/include/drv/crc.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/csi/csi2/include/drv/spi.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/csi/csi2/include/drv/ringbuf.h">
+              <FileOption/>
+            </File>
+          </VirtualDirectory>
+          <VirtualDirectory Name="dsp">
+            <File Name="../../../../../../components/csi/csi2/include/dsp/csi_const_structs.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/csi/csi2/include/dsp/csi_common_tables.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/csi/csi2/include/dsp/csi_instance.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/csi/csi2/include/dsp/csi_math.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/csi/csi2/include/dsp/csky_const_structs.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/csi/csi2/include/dsp/csky_vdsp2_const_structs.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/csi/csi2/include/dsp/csky_math.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/csi/csi2/include/dsp/csky_common_tables.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/csi/csi2/include/dsp/csky_vdsp2_math.h">
+              <FileOption/>
+            </File>
+          </VirtualDirectory>
+          <File Name="../../../../../../components/csi/csi2/include/syslog.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/csi/csi2/include/csi_core.h">
+            <FileOption/>
+          </File>
+        </VirtualDirectory>
+        <VirtualDirectory Name="src">
+          <File Name="../../../../../../components/csi/csi2/src/csi_misc.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/csi/csi2/src/csi_ringbuf.c">
+            <FileOption/>
+          </File>
+        </VirtualDirectory>
+      </VirtualDirectory>
+    </VirtualDirectory>
+    <VirtualDirectory Name="chip_riscv_dummy">
+      <VirtualDirectory Name="include">
+        <VirtualDirectory Name="asm">
+          <File Name="../../../../../../components/chip_riscv_dummy/include/asm/riscv_csr.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/chip_riscv_dummy/include/asm/riscv_asm_macro.h">
+            <FileOption/>
+          </File>
+        </VirtualDirectory>
+        <VirtualDirectory Name="drv">
+          <File Name="../../../../../../components/chip_riscv_dummy/include/drv/dev_tag.h">
+            <FileOption/>
+          </File>
+        </VirtualDirectory>
+        <File Name="../../../../../../components/chip_riscv_dummy/include/dw_timer_ll.h">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/chip_riscv_dummy/include/dw_uart_ll.h">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/chip_riscv_dummy/include/dw_uart.h">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/chip_riscv_dummy/include/soc.h">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/chip_riscv_dummy/include/sys_clk.h">
+          <FileOption/>
+        </File>
+      </VirtualDirectory>
+      <VirtualDirectory Name="src">
+        <VirtualDirectory Name="arch">
+          <VirtualDirectory Name="c907fd">
+            <File Name="../../../../../../components/chip_riscv_dummy/src/arch/c907fd/trap_c.c">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/chip_riscv_dummy/src/arch/c907fd/system.c">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/chip_riscv_dummy/src/arch/c907fd/vectors.S">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/chip_riscv_dummy/src/arch/c907fd/startup.S">
+              <FileOption/>
+            </File>
+          </VirtualDirectory>
+        </VirtualDirectory>
+        <VirtualDirectory Name="sys">
+          <File Name="../../../../../../components/chip_riscv_dummy/src/sys/devices.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/chip_riscv_dummy/src/sys/reboot.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/chip_riscv_dummy/src/sys/tick.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/chip_riscv_dummy/src/sys/os_port.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/chip_riscv_dummy/src/sys/target_get.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/chip_riscv_dummy/src/sys/weak.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/chip_riscv_dummy/src/sys/sys_clk.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/chip_riscv_dummy/src/sys/irq.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/chip_riscv_dummy/src/sys/irq_port.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/chip_riscv_dummy/src/sys/pre_main.c">
+            <FileOption/>
+          </File>
+        </VirtualDirectory>
+        <VirtualDirectory Name="drivers">
+          <File Name="../../../../../../components/chip_riscv_dummy/src/drivers/clk.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/chip_riscv_dummy/src/drivers/dma.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/chip_riscv_dummy/src/drivers/dw_uart_ll.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/chip_riscv_dummy/src/drivers/gpio.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/chip_riscv_dummy/src/drivers/gpio_pin.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/chip_riscv_dummy/src/drivers/pinmux.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/chip_riscv_dummy/src/drivers/power_manage.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/chip_riscv_dummy/src/drivers/timer.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/chip_riscv_dummy/src/drivers/uart.c">
+            <FileOption/>
+          </File>
+        </VirtualDirectory>
+      </VirtualDirectory>
+    </VirtualDirectory>
+    <VirtualDirectory Name="aos">
+      <VirtualDirectory Name="include">
+        <VirtualDirectory Name="aos">
+          <File Name="../../../../../../components/aos/include/aos/kernel.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/aos/include/aos/crc16.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/aos/include/aos/yloop.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/aos/include/aos/types.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/aos/include/aos/list.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/aos/include/aos/integer.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/aos/include/aos/errno.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/aos/include/aos/version.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/aos/include/aos/queue.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/aos/include/aos/console_uart.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/aos/include/aos/wdt.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/aos/include/aos/hash.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/aos/include/aos/aos.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/aos/include/aos/ringbuffer.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/aos/include/aos/osal_debug.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/aos/include/aos/debug.h">
+            <FileOption/>
+          </File>
+        </VirtualDirectory>
+        <VirtualDirectory Name="yoc">
+          <File Name="../../../../../../components/aos/include/yoc/sysinfo.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/aos/include/yoc/nvram.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/aos/include/yoc/yoc.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/aos/include/yoc/lpm.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/aos/include/yoc/init.h">
+            <FileOption/>
+          </File>
+        </VirtualDirectory>
+      </VirtualDirectory>
+      <VirtualDirectory Name="src">
+        <VirtualDirectory Name="adapter">
+          <VirtualDirectory Name="rtthread">
+            <File Name="../../../../../../components/aos/src/adapter/rtthread/hook_weak.c">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/aos/src/adapter/rtthread/aos_rtthread.c">
+              <FileOption/>
+            </File>
+          </VirtualDirectory>
+        </VirtualDirectory>
+        <VirtualDirectory Name="eventloop">
+          <File Name="../../../../../../components/aos/src/eventloop/evtloop_event.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/aos/src/eventloop/evtloop_device.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/aos/src/eventloop/yloop.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/aos/src/eventloop/evtloop_main.c">
+            <FileOption/>
+          </File>
+        </VirtualDirectory>
+        <VirtualDirectory Name="cplusplus">
+          <File Name="../../../../../../components/aos/src/cplusplus/crt_init.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/aos/src/cplusplus/crt.cpp">
+            <FileOption/>
+          </File>
+        </VirtualDirectory>
+        <File Name="../../../../../../components/aos/src/crc16.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/aos/src/except.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/aos/src/list.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/aos/src/hash.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/aos/src/lpm.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/aos/src/main.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/aos/src/ringbuffer.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/aos/src/select.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/aos/src/settings_ali.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/aos/src/softwdt.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/aos/src/sysinfo.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/aos/src/ustdio.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/aos/src/aos_porting.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/aos/src/console_uart.c">
+          <FileOption/>
+        </File>
+      </VirtualDirectory>
+    </VirtualDirectory>
+    <VirtualDirectory Name="cli">
+      <VirtualDirectory Name="src">
+        <VirtualDirectory Name="iobox">
+          <File Name="../../../../../../components/cli/src/iobox/path_helper.h">
+            <FileOption/>
+          </File>
+        </VirtualDirectory>
+        <File Name="../../../../../../components/cli/src/cli_console.h">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/cli/src/cli_adapt.h">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/cli/src/cli_api.h">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/cli/src/cli_uagent.h">
+          <FileOption/>
+        </File>
+        <VirtualDirectory Name="sys">
+          <File Name="../../../../../../components/cli/src/sys/cli_sysinfo.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/cli/src/sys/cli_ps.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/cli/src/sys/cli_addr_op.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/cli/src/sys/cli_free.c">
+            <FileOption/>
+          </File>
+        </VirtualDirectory>
+        <File Name="../../../../../../components/cli/src/cli.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/cli/src/cli_console.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/cli/src/cli_adapt.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/cli/src/cli_aos.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/cli/src/uart_console.c">
+          <FileOption/>
+        </File>
+      </VirtualDirectory>
+      <VirtualDirectory Name="include">
+        <VirtualDirectory Name="aos">
+          <File Name="../../../../../../components/cli/include/aos/cli.h">
+            <FileOption/>
+          </File>
+        </VirtualDirectory>
+      </VirtualDirectory>
+    </VirtualDirectory>
+    <VirtualDirectory Name="kv">
+      <VirtualDirectory Name="include">
+        <VirtualDirectory Name="aos">
+          <File Name="../../../../../../components/kv/include/aos/kv.h">
+            <FileOption/>
+          </File>
+        </VirtualDirectory>
+        <File Name="../../../../../../components/kv/include/kv_cache_typedef.h">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/kv/include/kvset.h">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/kv/include/kv_cache.h">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/kv/include/block.h">
+          <FileOption/>
+        </File>
+      </VirtualDirectory>
+      <File Name="../../../../../../components/kv/block.c">
+        <FileOption/>
+      </File>
+      <File Name="../../../../../../components/kv/kvset.c">
+        <FileOption/>
+      </File>
+      <File Name="../../../../../../components/kv/kv_cache.c">
+        <FileOption/>
+      </File>
+      <File Name="../../../../../../components/kv/kv_aos.c">
+        <FileOption/>
+      </File>
+      <File Name="../../../../../../components/kv/kv_fct.c">
+        <FileOption/>
+      </File>
+      <File Name="../../../../../../components/kv/cli_kvtool.c">
+        <FileOption/>
+      </File>
+    </VirtualDirectory>
+    <VirtualDirectory Name="ulog">
+      <VirtualDirectory Name="include">
+        <VirtualDirectory Name="ulog">
+          <File Name="../../../../../../components/ulog/include/ulog/ulog.h">
+            <FileOption/>
+          </File>
+        </VirtualDirectory>
+      </VirtualDirectory>
+      <VirtualDirectory Name="internal">
+        <File Name="../../../../../../components/ulog/internal/ulog_api.h">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/ulog/internal/ulog_session_file.h">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/ulog/internal/ulog_config.h">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/ulog/internal/ulog_ring_fifo.h">
+          <FileOption/>
+        </File>
+      </VirtualDirectory>
+      <VirtualDirectory Name="src">
+        <File Name="../../../../../../components/ulog/src/ulog.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/ulog/src/ulog_cli.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/ulog/src/ulog_init.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/ulog/src/ulog_utility.c">
+          <FileOption/>
+        </File>
+      </VirtualDirectory>
+    </VirtualDirectory>
+    <VirtualDirectory Name="devices">
+      <VirtualDirectory Name="include">
+        <VirtualDirectory Name="devices">
+          <VirtualDirectory Name="impl">
+            <File Name="../../../../../../components/devices/include/devices/impl/qspi_impl.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/devices/include/devices/impl/ethernet_impl.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/devices/include/devices/impl/rtc_impl.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/devices/include/devices/impl/timer_impl.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/devices/include/devices/impl/sensor_impl.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/devices/include/devices/impl/net_impl.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/devices/include/devices/impl/i2s_impl.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/devices/include/devices/impl/display_impl.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/devices/include/devices/impl/iic_impl.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/devices/include/devices/impl/spi_impl.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/devices/include/devices/impl/clk_impl.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/devices/include/devices/impl/battery_impl.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/devices/include/devices/impl/gpiopin_impl.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/devices/include/devices/impl/adc_impl.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/devices/include/devices/impl/flash_impl.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/devices/include/devices/impl/wifi_impl.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/devices/include/devices/impl/wdt_impl.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/devices/include/devices/impl/hci_impl.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/devices/include/devices/impl/blockdev_impl.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/devices/include/devices/impl/cir_impl.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/devices/include/devices/impl/pwm_impl.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/devices/include/devices/impl/can_impl.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/devices/include/devices/impl/gnss_impl.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/devices/include/devices/impl/input_impl.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/devices/include/devices/impl/uart_impl.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/devices/include/devices/impl/led_impl.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/devices/include/devices/impl/gprs_impl.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/devices/include/devices/impl/nbiot_impl.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/devices/include/devices/impl/camera_impl.h">
+              <FileOption/>
+            </File>
+          </VirtualDirectory>
+          <File Name="../../../../../../components/devices/include/devices/cir.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/devices/include/devices/battery.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/devices/include/devices/clk.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/devices/include/devices/camera.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/devices/include/devices/wifi.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/devices/include/devices/blockdev.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/devices/include/devices/flash.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/devices/include/devices/sensor.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/devices/include/devices/qspi.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/devices/include/devices/display.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/devices/include/devices/ethernet.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/devices/include/devices/led.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/devices/include/devices/i2s.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/devices/include/devices/uart.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/devices/include/devices/pwm.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/devices/include/devices/hci.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/devices/include/devices/gprs.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/devices/include/devices/driver.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/devices/include/devices/can.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/devices/include/devices/timer.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/devices/include/devices/input.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/devices/include/devices/iic.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/devices/include/devices/adc.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/devices/include/devices/gnss.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/devices/include/devices/wdt.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/devices/include/devices/device.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/devices/include/devices/nbiot.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/devices/include/devices/rtc.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/devices/include/devices/gpiopin.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/devices/include/devices/spi.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/devices/include/devices/netdrv.h">
+            <FileOption/>
+          </File>
+        </VirtualDirectory>
+      </VirtualDirectory>
+      <VirtualDirectory Name="vfsdev">
+        <VirtualDirectory Name="include">
+          <VirtualDirectory Name="devices">
+            <File Name="../../../../../../components/devices/vfsdev/include/devices/vfs_battery.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/devices/vfsdev/include/devices/vfs_spi.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/devices/vfsdev/include/devices/vfs_wifi.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/devices/vfsdev/include/devices/vfs_nbiot.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/devices/vfsdev/include/devices/vfs_hci.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/devices/vfsdev/include/devices/vfs_camera.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/devices/vfsdev/include/devices/vfs_qspi.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/devices/vfsdev/include/devices/vfs_gpiopin.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/devices/vfsdev/include/devices/vfs_netdrv.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/devices/vfsdev/include/devices/vfs_blockdev.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/devices/vfsdev/include/devices/vfs_timer.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/devices/vfsdev/include/devices/vfs_input.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/devices/vfsdev/include/devices/vfs_device.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/devices/vfsdev/include/devices/vfs_iic.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/devices/vfsdev/include/devices/vfs_can.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/devices/vfsdev/include/devices/vfs_i2s.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/devices/vfsdev/include/devices/vfs_gprs.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/devices/vfsdev/include/devices/vfs_cir.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/devices/vfsdev/include/devices/vfs_led.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/devices/vfsdev/include/devices/vfs_rtc.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/devices/vfsdev/include/devices/vfs_pwm.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/devices/vfsdev/include/devices/vfs_clk.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/devices/vfsdev/include/devices/vfs_adc.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/devices/vfsdev/include/devices/vfs_uart.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/devices/vfsdev/include/devices/vfs_gnss.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/devices/vfsdev/include/devices/vfs_flash.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/devices/vfsdev/include/devices/vfs_wdt.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/devices/vfsdev/include/devices/vfs_sensor.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/devices/vfsdev/include/devices/vfs_ethernet.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/devices/vfsdev/include/devices/vfs_display.h">
+              <FileOption/>
+            </File>
+          </VirtualDirectory>
+        </VirtualDirectory>
+        <VirtualDirectory Name="src">
+          <File Name="../../../../../../components/devices/vfsdev/src/vfs_qspi.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/devices/vfsdev/src/vfs_battery.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/devices/vfsdev/src/vfs_display.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/devices/vfsdev/src/vfs_timer.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/devices/vfsdev/src/vfs_nbiot.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/devices/vfsdev/src/vfs_blockdev.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/devices/vfsdev/src/vfs_i2s.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/devices/vfsdev/src/vfs_gpiopin.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/devices/vfsdev/src/vfs_iic.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/devices/vfsdev/src/vfs_gnss.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/devices/vfsdev/src/vfs_spi.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/devices/vfsdev/src/vfs_camera.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/devices/vfsdev/src/vfs_rtc.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/devices/vfsdev/src/vfs_device.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/devices/vfsdev/src/vfs_gprs.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/devices/vfsdev/src/vfs_uart.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/devices/vfsdev/src/vfs_wdt.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/devices/vfsdev/src/vfs_netdrv.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/devices/vfsdev/src/vfs_wifi.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/devices/vfsdev/src/vfs_pwm.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/devices/vfsdev/src/vfs_hci.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/devices/vfsdev/src/vfs_adc.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/devices/vfsdev/src/vfs_can.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/devices/vfsdev/src/vfs_led.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/devices/vfsdev/src/vfs_cir.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/devices/vfsdev/src/vfs_sensor.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/devices/vfsdev/src/vfs_flash.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/devices/vfsdev/src/vfs_clk.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/devices/vfsdev/src/vfs_input.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/devices/vfsdev/src/vfs_eth.c">
+            <FileOption/>
+          </File>
+        </VirtualDirectory>
+      </VirtualDirectory>
+      <VirtualDirectory Name="internal_inc">
+        <File Name="../../../../../../components/devices/internal_inc/dev_internal.h">
+          <FileOption/>
+        </File>
+      </VirtualDirectory>
+      <VirtualDirectory Name="src">
+        <File Name="../../../../../../components/devices/src/uart.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/devices/src/hci.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/devices/src/camera.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/devices/src/netdrv.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/devices/src/wdt.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/devices/src/display.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/devices/src/eth.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/devices/src/sensor.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/devices/src/gprs.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/devices/src/wifi.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/devices/src/led.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/devices/src/clk.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/devices/src/i2s.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/devices/src/gpiopin.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/devices/src/can.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/devices/src/adc.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/devices/src/blockdev.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/devices/src/flash.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/devices/src/gnss.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/devices/src/battery.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/devices/src/pwm.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/devices/src/cir.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/devices/src/timer.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/devices/src/rtc.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/devices/src/device.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/devices/src/nbiot.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/devices/src/qspi.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/devices/src/iic.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/devices/src/input.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/devices/src/spi.c">
+          <FileOption/>
+        </File>
+      </VirtualDirectory>
+    </VirtualDirectory>
+    <VirtualDirectory Name="drivers">
+      <VirtualDirectory Name="csi2">
+        <VirtualDirectory Name="include">
+          <VirtualDirectory Name="devices">
+            <File Name="../../../../../../components/drivers/csi2/include/devices/devicelist.h">
+              <FileOption/>
+            </File>
+          </VirtualDirectory>
+        </VirtualDirectory>
+        <VirtualDirectory Name="iic">
+          <File Name="../../../../../../components/drivers/csi2/iic/iic_drv.c">
+            <FileOption/>
+          </File>
+        </VirtualDirectory>
+        <VirtualDirectory Name="uart">
+          <File Name="../../../../../../components/drivers/csi2/uart/uart_drv.c">
+            <FileOption/>
+          </File>
+        </VirtualDirectory>
+        <VirtualDirectory Name="spiflash">
+          <File Name="../../../../../../components/drivers/csi2/spiflash/flash_weak.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/drivers/csi2/spiflash/spiflash_drv.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/drivers/csi2/spiflash/spinand_drv.c">
+            <FileOption/>
+          </File>
+        </VirtualDirectory>
+        <VirtualDirectory Name="adc">
+          <File Name="../../../../../../components/drivers/csi2/adc/adc_drv.c">
+            <FileOption/>
+          </File>
+        </VirtualDirectory>
+        <VirtualDirectory Name="rtc">
+          <File Name="../../../../../../components/drivers/csi2/rtc/rtc_drv.c">
+            <FileOption/>
+          </File>
+        </VirtualDirectory>
+        <VirtualDirectory Name="wdt">
+          <File Name="../../../../../../components/drivers/csi2/wdt/wdt_drv.c">
+            <FileOption/>
+          </File>
+        </VirtualDirectory>
+        <VirtualDirectory Name="gpio">
+          <File Name="../../../../../../components/drivers/csi2/gpio/gpiopin_drv.c">
+            <FileOption/>
+          </File>
+        </VirtualDirectory>
+        <VirtualDirectory Name="clk">
+          <File Name="../../../../../../components/drivers/csi2/clk/clk_drv.c">
+            <FileOption/>
+          </File>
+        </VirtualDirectory>
+        <VirtualDirectory Name="sdmmc">
+          <File Name="../../../../../../components/drivers/csi2/sdmmc/mmc_drv.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/drivers/csi2/sdmmc/sd_drv.c">
+            <FileOption/>
+          </File>
+        </VirtualDirectory>
+        <VirtualDirectory Name="i2s">
+          <File Name="../../../../../../components/drivers/csi2/i2s/i2s_drv.c">
+            <FileOption/>
+          </File>
+        </VirtualDirectory>
+        <VirtualDirectory Name="pwm">
+          <File Name="../../../../../../components/drivers/csi2/pwm/pwm_drv.c">
+            <FileOption/>
+          </File>
+        </VirtualDirectory>
+        <VirtualDirectory Name="spi">
+          <File Name="../../../../../../components/drivers/csi2/spi/qspi_drv.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/drivers/csi2/spi/spi_drv.c">
+            <FileOption/>
+          </File>
+        </VirtualDirectory>
+        <VirtualDirectory Name="timer">
+          <File Name="../../../../../../components/drivers/csi2/timer/timer_drv.c">
+            <FileOption/>
+          </File>
+        </VirtualDirectory>
+      </VirtualDirectory>
+    </VirtualDirectory>
+    <VirtualDirectory Name="debug">
+      <VirtualDirectory Name="include">
+        <VirtualDirectory Name="debug">
+          <File Name="../../../../../../components/debug/include/debug/dbg.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/debug/include/debug/debug_dumpsys.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/debug/include/debug/debug_test.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/debug/include/debug/debug_print.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/debug/include/debug/debug_api.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/debug/include/debug/debug_cpuusage.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/debug/include/debug/debug_cli_cmd.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/debug/include/debug/debug_lastword.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/debug/include/debug/debug_infoget.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/debug/include/debug/debug_backtrace.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/debug/include/debug/debug_panic.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/debug/include/debug/debug_overview.h">
+            <FileOption/>
+          </File>
+        </VirtualDirectory>
+      </VirtualDirectory>
+      <VirtualDirectory Name="src">
+        <VirtualDirectory Name="arch">
+          <File Name="../../../../../../components/debug/src/arch/backtrace.h">
+            <FileOption/>
+          </File>
+        </VirtualDirectory>
+        <File Name="../../../../../../components/debug/src/debug_panic.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/debug/src/debug_print.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/debug/src/debug_dumpsys.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/debug/src/debug_cli_cmd.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/debug/src/debug.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/debug/src/debug_weak.c">
+          <FileOption/>
+        </File>
+      </VirtualDirectory>
+    </VirtualDirectory>
+    <VirtualDirectory Name="uservice">
+      <VirtualDirectory Name="include">
+        <VirtualDirectory Name="uservice">
+          <File Name="../../../../../../components/uservice/include/uservice/event.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/uservice/include/uservice/uservice.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/uservice/include/uservice/eventid.h">
+            <FileOption/>
+          </File>
+        </VirtualDirectory>
+      </VirtualDirectory>
+      <VirtualDirectory Name="src">
+        <File Name="../../../../../../components/uservice/src/event.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/uservice/src/event_svr.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/uservice/src/rpc.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/uservice/src/uservice.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/uservice/src/utask.c">
+          <FileOption/>
+        </File>
+      </VirtualDirectory>
+    </VirtualDirectory>
+    <VirtualDirectory Name="partition">
+      <VirtualDirectory Name="include">
+        <VirtualDirectory Name="yoc">
+          <File Name="../../../../../../components/partition/include/yoc/partition.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/partition/include/yoc/partition_device.h">
+            <FileOption/>
+          </File>
+        </VirtualDirectory>
+        <File Name="../../../../../../components/partition/include/verify_wrapper.h">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/partition/include/mtb.h">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/partition/include/verify.h">
+          <FileOption/>
+        </File>
+      </VirtualDirectory>
+      <VirtualDirectory Name="internal_inc">
+        <File Name="../../../../../../components/partition/internal_inc/mtb_log.h">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/partition/internal_inc/mtb_internal.h">
+          <FileOption/>
+        </File>
+      </VirtualDirectory>
+      <VirtualDirectory Name="utils">
+        <File Name="../../../../../../components/partition/utils/crc32.h">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/partition/utils/misc.h">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/partition/utils/misc.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/partition/utils/crc32.c">
+          <FileOption/>
+        </File>
+      </VirtualDirectory>
+      <VirtualDirectory Name="src">
+        <File Name="../../../../../../components/partition/src/partition_flash.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/partition/src/partition_emmc.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/partition/src/verify.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/partition/src/partition_flash_aos.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/partition/src/partition_test.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/partition/src/partition_device.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/partition/src/partition.c">
+          <FileOption/>
+        </File>
+      </VirtualDirectory>
+      <VirtualDirectory Name="mtb">
+        <File Name="../../../../../../components/partition/mtb/mtbv4.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/partition/mtb/mtb.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/partition/mtb/mtbv.c">
+          <FileOption/>
+        </File>
+      </VirtualDirectory>
+    </VirtualDirectory>
+    <VirtualDirectory Name="libc_stub">
+      <VirtualDirectory Name="compilers">
+        <VirtualDirectory Name="gcc">
+          <VirtualDirectory Name="sys">
+            <File Name="../../../../../../components/libc_stub/compilers/gcc/sys/termios.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../components/libc_stub/compilers/gcc/sys/ioctl.h">
+              <FileOption/>
+            </File>
+          </VirtualDirectory>
+          <File Name="../../../../../../components/libc_stub/compilers/gcc/time.h">
+            <FileOption/>
+          </File>
+        </VirtualDirectory>
+      </VirtualDirectory>
+      <VirtualDirectory Name="include">
+        <VirtualDirectory Name="sys">
+          <File Name="../../../../../../components/libc_stub/include/sys/select.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/libc_stub/include/sys/random.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/libc_stub/include/sys/_stdint.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../components/libc_stub/include/sys/time.h">
+            <FileOption/>
+          </File>
+        </VirtualDirectory>
+        <VirtualDirectory Name="serf">
+          <File Name="../../../../../../components/libc_stub/include/serf/minilibc_stdio.h">
+            <FileOption/>
+          </File>
+        </VirtualDirectory>
+        <File Name="../../../../../../components/libc_stub/include/errno.h">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../components/libc_stub/include/inttypes.h">
+          <FileOption/>
+        </File>
+      </VirtualDirectory>
+      <VirtualDirectory Name="sys">
+        <File Name="../../../../../../components/libc_stub/sys/fcntl.c">
+          <FileOption/>
+        </File>
+      </VirtualDirectory>
+      <VirtualDirectory Name="string">
+        <File Name="../../../../../../components/libc_stub/string/strext.c">
+          <FileOption/>
+        </File>
+      </VirtualDirectory>
+      <File Name="../../../../../../components/libc_stub/lib_sleep.c">
+        <FileOption/>
+      </File>
+      <File Name="../../../../../../components/libc_stub/lib_usleep.c">
+        <FileOption/>
+      </File>
+      <File Name="../../../../../../components/libc_stub/newlib_stub.c">
+        <FileOption/>
+      </File>
+      <File Name="../../../../../../components/libc_stub/lib_msleep.c">
+        <FileOption/>
+      </File>
+      <File Name="../../../../../../components/libc_stub/newlib_reentry.c">
+        <FileOption/>
+      </File>
+      <File Name="../../../../../../components/libc_stub/random.c">
+        <FileOption/>
+      </File>
+      <File Name="../../../../../../components/libc_stub/settimeofday.c">
+        <FileOption/>
+      </File>
+      <File Name="../../../../../../components/libc_stub/mini_printf.c">
+        <FileOption/>
+      </File>
+    </VirtualDirectory>
+  </VirtualDirectory>
+  <VendorInfo>
+    <VendorName>import_sdk_project</VendorName>
+  </VendorInfo>
+  <ToolsConfig>
+    <Compiler>
+      <Name>XTGccElfNewlib</Name>
+      <Version>latest</Version>
+    </Compiler>
+  </ToolsConfig>
+  <DebugSessions>
+    <watchExpressions/>
+    <memoryExpressions>;;;</memoryExpressions>
+    <statistics>;;MHZ</statistics>
+    <peripheralTabs/>
+    <WatchDisplayFormat/>
+    <LocalDisplayFormat/>
+    <debugLayout/>
+    <memoryTabColSizeExpressions/>
+    <QuickWatchDisplayFormat/>
+  </DebugSessions>
+  <BuildConfigs>
+    <BuildConfig Name="BuildSet_GCC">
+      <Target>
+        <ROMBank Selected="1">
+          <ROM1>
+            <InUse>no</InUse>
+            <Start/>
+            <Size/>
+          </ROM1>
+          <ROM2>
+            <InUse>no</InUse>
+            <Start/>
+            <Size/>
+          </ROM2>
+          <ROM3>
+            <InUse>no</InUse>
+            <Start/>
+            <Size/>
+          </ROM3>
+          <ROM4>
+            <InUse>no</InUse>
+            <Start/>
+            <Size/>
+          </ROM4>
+          <ROM5>
+            <InUse>no</InUse>
+            <Start/>
+            <Size/>
+          </ROM5>
+        </ROMBank>
+        <RAMBank>
+          <RAM1>
+            <InUse>no</InUse>
+            <Start/>
+            <Size/>
+            <Init>yes</Init>
+          </RAM1>
+          <RAM2>
+            <InUse>no</InUse>
+            <Start/>
+            <Size/>
+            <Init>yes</Init>
+          </RAM2>
+          <RAM3>
+            <InUse>no</InUse>
+            <Start/>
+            <Size/>
+            <Init>yes</Init>
+          </RAM3>
+          <RAM4>
+            <InUse>no</InUse>
+            <Start/>
+            <Size/>
+            <Init>yes</Init>
+          </RAM4>
+          <RAM5>
+            <InUse>no</InUse>
+            <Start/>
+            <Size/>
+            <Init>yes</Init>
+          </RAM5>
+        </RAMBank>
+        <CPU>c907fd</CPU>
+        <UseMiniLib>yes</UseMiniLib>
+        <Endian>little</Endian>
+        <UseEnhancedLRW>no</UseEnhancedLRW>
+        <UseContinueBuild>no</UseContinueBuild>
+        <ToolchainID>XTGccElfNewlib</ToolchainID>
+        <ToolchainVersion>latest</ToolchainVersion>
+        <UseSemiHost>no</UseSemiHost>
+      </Target>
+      <Output>
+        <OutputName>$(ProjectName)</OutputName>
+        <Type>Executable</Type>
+        <CreateHexFile>no</CreateHexFile>
+        <CreateBinFile>no</CreateBinFile>
+        <Preprocessor>no</Preprocessor>
+        <Disassmeble>yes</Disassmeble>
+        <CallGraph>no</CallGraph>
+        <Map>no</Map>
+      </Output>
+      <User>
+        <BeforeCompile>
+          <RunUserProg>no</RunUserProg>
+          <UserProgName/>
+          <IsBatchScript>no</IsBatchScript>
+        </BeforeCompile>
+        <BeforeMake>
+          <RunUserProg>yes</RunUserProg>
+          <UserProgName>../../../../../../solutions/soc_helloworld/script/before_build.sh ../../../../../../solutions/soc_helloworld ../../../../../../boards/board_riscv_dummy ../../../../../../components/chip_riscv_dummy xiaohui c907fd $(OBJCOPY) $(OBJDUMP)</UserProgName>
+          <IsBatchScript>no</IsBatchScript>
+        </BeforeMake>
+        <AfterMake>
+          <RunUserProg>yes</RunUserProg>
+          <UserProgName>../../../../../../solutions/soc_helloworld/script/after_build.sh ../../../../../../solutions/soc_helloworld ../../../../../../boards/board_riscv_dummy ../../../../../../components/chip_riscv_dummy xiaohui c907fd $(OBJCOPY) $(OBJDUMP)</UserProgName>
+          <IsBatchScript>no</IsBatchScript>
+        </AfterMake>
+        <Tools/>
+      </User>
+      <Compiler>
+        <Define>CONFIG_KERNEL_RTTHREAD=1;__RT_KERNEL_SOURCE__=1;CONFIG_OPT_FOOTPRINT_LEVEL=0;CONFIG_INIT_TASK_STACK_SIZE=8192;CONFIG_AOS_NEWLINE_SUPPORT=1;CONFIG_DEVICEID_FROM_KV=1;CONFIG_AOS_OSAL=1;AOS_RTT_SPIN_LOCK_STRUCT_SIZE=32;AOS_COMP_CLI=1;CLI_INBUF_SIZE=256;CLI_OUTBUF_SIZE=512;CLI_MAX_COMMANDS=128;CLI_MAX_ARG_NUM=16;CLI_MAX_ONCECMD_NUM=4;CLI_TASK_PRIORITY=60;CLI_CONFIG_STACK_SIZE=4096;CLI_TELNET_ENABLE=0;CLI_UAGENT_ENABLE=0;CLI_SEPRATED_CONSOLE=0;CLI_IOBOX_ENABLE=0;CONFIG_LFS_MOUNTPOINT=&quot;/&quot;;CONFIG_KV_ENABLE_CACHE=0;CONFIG_KV_START_OPT=1;CONFIG_KV_HASH_BUCKET=16;CONFIG_KV_GET_ERASE_FLAG_AUTO=0;CONFIG_KV_LARGE_NODE=0;AOS_COMP_ULOG=&quot;y&quot;;ULOG_TAG_USE_SHORT_FILE=1;ULOG_CONFIG_POP_FS_PATH=&quot;/fatfs/&quot;;CONFIG_DEVICES_RVM_HAL=1;CONFIG_UART_RECV_BUF_SIZE=1024;AOS_COMP_DEBUG=1;DEBUG_PANIC_PRT_INT=1;DEBUG_CPUUSAGE_RECODE_TO_FILE_ENABLE=0;DEBUG_CPUUSAGE_MAX_TASK=80;DEBUG_CPUUSAGE_FILE_NAME=&quot;/data/cpuusage&quot;;DEBUG_LAST_WORD_ENABLE=0;DEBUG_LOG_FILE_NUM=10;DEBUG_LASTWORD_RAM_ADDR=0;DEBUG_LASTWORD_REGION_LEN=16384;DEBUG_LOG_DIR_NAME=&quot;/data/crash_reports&quot;;DEBUG_CONFIG_LOG_FILE_NAME=&quot;/data/crash_reports/crash_report&quot;;DEBUG_CONFIG_LOG_FILE_INDEX=&quot;/data/crash_reports/log_file_index&quot;;DEBUG_ULOG_FLUSH=0;DEBUG_TEST_CMDS_ENABLE=0;CONFIG_USERVICE_EVENT_TASK_STACK_SIZE=2048;CONFIG_USERVICE_SELECT_TASK_STACK_SIZE=2048;CONFIG_LIBC_MINI_PRINTF_SUPPORT=0;CONFIG_MEMALIGN_SUPPORT=1;CONFIG_NEWLIB_REENTRY_SUPPORT=1;CONFIG_CSI_V2=1;CONFIG_CSI=&quot;csi2&quot;;CONFIG_SUPPORT_TSPEND=1;CONFIG_ARCH_MAINSTACK=8192;CONFIG_ARCH_INTERRUPTSTACK=8192;CONFIG_VIC_TSPDR=201326592;CONFIG_PLIC_BASE=134217728;CONFIG_CPU_XUANTIE_C907FD=1;CONFIG_CHECK_FPU_DIRTY=1;CONFIG_APP_TASK_STACK_SIZE=8192;CONFIG_SYSTICK_HZ=100;CONFIG_BOARD_XIAOHUI_EVB=1;CONFIG_DEBUG=1;</Define>
+        <Undefine/>
+        <Optim>Optimize size (-Os)</Optim>
+        <DebugLevel>Maximum (-g3)</DebugLevel>
+        <IncludePath>$(ProjectPath);../../../../../../solutions/soc_helloworld/include;../../../../../../components/rtthread/include;../../../../../../components/rtthread/libcpu/riscv/c907fd;../../../../../../components/csi/csi2/include;../../../../../../boards/board_riscv_dummy/include;../../../../../../components/chip_riscv_dummy/include;../../../../../../components/chip_riscv_dummy/include/asm;../../../../../../components/aos/include;../../../../../../components/cli/include;../../../../../../components/kv/include;../../../../../../components/ulog/include;../../../../../../components/devices/include;../../../../../../components/devices/vfsdev/include;../../../../../../components/drivers/csi2/include;../../../../../../components/debug/include;../../../../../../components/uservice/include;../../../../../../components/partition/include;../../../../../../components/libc_stub/compilers/gcc;../../../../../../components/libc_stub/include;../../../../../../solutions/soc_helloworld/app/include;../../../../../../components/cli/src;../../../../../../components/cli/src/iobox;../../../../../../components/ulog/internal;../../../../../../components/devices/internal_inc;../../../../../../components/debug/include/debug;../../../../../../components/debug/src/arch;../../../../../../components/partition/internal_inc;../../../../../../components/partition/utils;</IncludePath>
+        <OtherFlags>-MP -MMD -Os -Wno-main -mcmodel=medany -Wno-unused-function -Wpointer-arith -Wno-undef -Wall -ffunction-sections -fdata-sections -fno-inline-functions -fno-builtin -fno-strict-aliasing -g -Wunused -Wformat -Wformat-security -Warray-bounds -Wuninitialized -Wreturn-type -Wcomment -Wswitch -Wparentheses -Wno-unused-variable</OtherFlags>
+        <Verbose>no</Verbose>
+        <Ansi>no</Ansi>
+        <Syntax>no</Syntax>
+        <Pedantic>no</Pedantic>
+        <PedanticErr>no</PedanticErr>
+        <InhibitWarn>no</InhibitWarn>
+        <AllWarn>yes</AllWarn>
+        <WarnErr>no</WarnErr>
+        <OneElfS>no</OneElfS>
+        <OneElfSPerData>no</OneElfSPerData>
+        <Fstrict>no</Fstrict>
+      </Compiler>
+      <Asm>
+        <Define>CONFIG_KERNEL_RTTHREAD=1;__RT_KERNEL_SOURCE__=1;CONFIG_OPT_FOOTPRINT_LEVEL=0;CONFIG_INIT_TASK_STACK_SIZE=8192;CONFIG_AOS_NEWLINE_SUPPORT=1;CONFIG_DEVICEID_FROM_KV=1;CONFIG_AOS_OSAL=1;AOS_RTT_SPIN_LOCK_STRUCT_SIZE=32;AOS_COMP_CLI=1;CLI_INBUF_SIZE=256;CLI_OUTBUF_SIZE=512;CLI_MAX_COMMANDS=128;CLI_MAX_ARG_NUM=16;CLI_MAX_ONCECMD_NUM=4;CLI_TASK_PRIORITY=60;CLI_CONFIG_STACK_SIZE=4096;CLI_TELNET_ENABLE=0;CLI_UAGENT_ENABLE=0;CLI_SEPRATED_CONSOLE=0;CLI_IOBOX_ENABLE=0;CONFIG_LFS_MOUNTPOINT=&quot;/&quot;;CONFIG_KV_ENABLE_CACHE=0;CONFIG_KV_START_OPT=1;CONFIG_KV_HASH_BUCKET=16;CONFIG_KV_GET_ERASE_FLAG_AUTO=0;CONFIG_KV_LARGE_NODE=0;AOS_COMP_ULOG=&quot;y&quot;;ULOG_TAG_USE_SHORT_FILE=1;ULOG_CONFIG_POP_FS_PATH=&quot;/fatfs/&quot;;CONFIG_DEVICES_RVM_HAL=1;CONFIG_UART_RECV_BUF_SIZE=1024;AOS_COMP_DEBUG=1;DEBUG_PANIC_PRT_INT=1;DEBUG_CPUUSAGE_RECODE_TO_FILE_ENABLE=0;DEBUG_CPUUSAGE_MAX_TASK=80;DEBUG_CPUUSAGE_FILE_NAME=&quot;/data/cpuusage&quot;;DEBUG_LAST_WORD_ENABLE=0;DEBUG_LOG_FILE_NUM=10;DEBUG_LASTWORD_RAM_ADDR=0;DEBUG_LASTWORD_REGION_LEN=16384;DEBUG_LOG_DIR_NAME=&quot;/data/crash_reports&quot;;DEBUG_CONFIG_LOG_FILE_NAME=&quot;/data/crash_reports/crash_report&quot;;DEBUG_CONFIG_LOG_FILE_INDEX=&quot;/data/crash_reports/log_file_index&quot;;DEBUG_ULOG_FLUSH=0;DEBUG_TEST_CMDS_ENABLE=0;CONFIG_USERVICE_EVENT_TASK_STACK_SIZE=2048;CONFIG_USERVICE_SELECT_TASK_STACK_SIZE=2048;CONFIG_LIBC_MINI_PRINTF_SUPPORT=0;CONFIG_MEMALIGN_SUPPORT=1;CONFIG_NEWLIB_REENTRY_SUPPORT=1;CONFIG_CSI_V2=1;CONFIG_CSI=&quot;csi2&quot;;CONFIG_SUPPORT_TSPEND=1;CONFIG_ARCH_MAINSTACK=8192;CONFIG_ARCH_INTERRUPTSTACK=8192;CONFIG_VIC_TSPDR=201326592;CONFIG_PLIC_BASE=134217728;CONFIG_CPU_XUANTIE_C907FD=1;CONFIG_CHECK_FPU_DIRTY=1;CONFIG_APP_TASK_STACK_SIZE=8192;CONFIG_SYSTICK_HZ=100;CONFIG_BOARD_XIAOHUI_EVB=1;CONFIG_DEBUG=1;</Define>
+        <Undefine/>
+        <IncludePath>$(ProjectPath);../../../../../../solutions/soc_helloworld/include;../../../../../../components/rtthread/include;../../../../../../components/rtthread/libcpu/riscv/c907fd;../../../../../../components/csi/csi2/include;../../../../../../boards/board_riscv_dummy/include;../../../../../../components/chip_riscv_dummy/include;../../../../../../components/chip_riscv_dummy/include/asm;../../../../../../components/aos/include;../../../../../../components/cli/include;../../../../../../components/kv/include;../../../../../../components/ulog/include;../../../../../../components/devices/include;../../../../../../components/devices/vfsdev/include;../../../../../../components/drivers/csi2/include;../../../../../../components/debug/include;../../../../../../components/uservice/include;../../../../../../components/partition/include;../../../../../../components/libc_stub/compilers/gcc;../../../../../../components/libc_stub/include;../../../../../../solutions/soc_helloworld/app/include;../../../../../../components/cli/src;../../../../../../components/cli/src/iobox;../../../../../../components/ulog/internal;../../../../../../components/devices/internal_inc;../../../../../../components/debug/include/debug;../../../../../../components/debug/src/arch;../../../../../../components/partition/internal_inc;../../../../../../components/partition/utils;</IncludePath>
+        <OtherFlags>-MP -MMD -Os -Wno-main -mcmodel=medany -D__ASSEMBLY__ -DAOS_COMP_DEBUG</OtherFlags>
+        <DebugLevel>gdwarf2</DebugLevel>
+      </Asm>
+      <Linker>
+        <Garbage>yes</Garbage>
+        <Garbage2>yes</Garbage2>
+        <LDFile>../../../../../../components/chip_riscv_dummy/gcc_flash_xiaohui.ld</LDFile>
+        <LibName>m;</LibName>
+        <LibPath>../../../../../../components/csi/csi2/dsp/lib;</LibPath>
+        <OtherFlags>-MP -MMD -Os -Wno-main -mcmodel=medany -Wl,-zmax-page-size=1024 -Wl,-Map=yoc.map</OtherFlags>
+        <AutoLDFile>no</AutoLDFile>
+        <LinkType>whole-archive</LinkType>
+        <IncludeAllLibs>yes</IncludeAllLibs>
+        <LinkSpecsType>none</LinkSpecsType>
+        <LinkUseNewlibNano>no</LinkUseNewlibNano>
+      </Linker>
+      <Debug>
+        <LoadApplicationAtStartup>yes</LoadApplicationAtStartup>
+        <Connector>SIM</Connector>
+        <StopAt>yes</StopAt>
+        <StopAtText>main</StopAtText>
+        <InitFile>$(ProjectPath)/gdbinit.remote</InitFile>
+        <PreInit/>
+        <AfterLoadFile/>
+        <AutoRun>yes</AutoRun>
+        <ResetType>Hard Reset</ResetType>
+        <SoftResetVal>0</SoftResetVal>
+        <ResetAfterLoad>no</ResetAfterLoad>
+        <AfterResetFile/>
+        <Dumpcore>no</Dumpcore>
+        <DumpcoreText/>
+        <SVCFile/>
+        <ConfigICE>
+          <IP>localhost</IP>
+          <PORT>1025</PORT>
+          <CPUNumber>0</CPUNumber>
+          <Clock>12000</Clock>
+          <Delay>10</Delay>
+          <NResetDelay>100</NResetDelay>
+          <WaitReset>50</WaitReset>
+          <DDC>yes</DDC>
+          <TRST>no</TRST>
+          <PreReset>no</PreReset>
+          <DebugPrint>no</DebugPrint>
+          <Connect>Normal</Connect>
+          <ResetType>soft</ResetType>
+          <SoftResetVal>0</SoftResetVal>
+          <RTOSType>None</RTOSType>
+          <DownloadToFlash>no</DownloadToFlash>
+          <ResetAfterConnect>yes</ResetAfterConnect>
+          <GDBName/>
+          <GDBServerType>Local</GDBServerType>
+          <OtherFlags/>
+          <ICEEnablePCSampling>no</ICEEnablePCSampling>
+          <ICESamplingFreq>1000</ICESamplingFreq>
+          <RemoteICEEnablePCSampling>no</RemoteICEEnablePCSampling>
+          <RemoteICESamplingPort>1026</RemoteICESamplingPort>
+          <Version>latest</Version>
+          <SupportRemoteICEAsyncDebug>no</SupportRemoteICEAsyncDebug>
+        </ConfigICE>
+        <ConfigSIM>
+          <SIMTarget>soccfg/riscv64/xiaohui_c907_cfg.xml</SIMTarget>
+          <OtherFlags>-smp cpus=4</OtherFlags>
+          <NoGraphic>yes</NoGraphic>
+          <Log>no</Log>
+          <SimTrace>no</SimTrace>
+          <Version>latest</Version>
+        </ConfigSIM>
+        <ConfigOpenOCD>
+          <OpenOCDExecutablePath/>
+          <OpenOCDLocally>yes</OpenOCDLocally>
+          <OpenOCDTelnetPortEnable>no</OpenOCDTelnetPortEnable>
+          <OpenOCDTelnetPort>4444</OpenOCDTelnetPort>
+          <OpenOCDTclPortEnable>no</OpenOCDTclPortEnable>
+          <OpenOCDTclPort>6666</OpenOCDTclPort>
+          <OpenOCDConfigOptions/>
+          <OpenOCDTimeout>5000</OpenOCDTimeout>
+          <OpenOCDRemoteIP>localhost</OpenOCDRemoteIP>
+          <OpenOCDRemotePort>3333</OpenOCDRemotePort>
+          <PluginID>openocd-sifive</PluginID>
+          <Version>latest</Version>
+        </ConfigOpenOCD>
+      </Debug>
+      <Flash>
+        <InitFile/>
+        <PreInit/>
+        <Erase>Erase Sectors</Erase>
+        <Algorithms Path=""/>
+        <Program>no</Program>
+        <Verify>no</Verify>
+        <ResetAndRun>no</ResetAndRun>
+        <ResetType/>
+        <SoftResetVal/>
+        <FlashIndex>no</FlashIndex>
+        <FlashIndexVal>0</FlashIndexVal>
+        <External>no</External>
+        <Command/>
+        <Arguments/>
+      </Flash>
+    </BuildConfig>
+    <BuildConfig Name="BuildSet_LLVM">
+      <Target>
+        <ROMBank Selected="1">
+          <ROM1>
+            <InUse>no</InUse>
+            <Start/>
+            <Size/>
+          </ROM1>
+          <ROM2>
+            <InUse>no</InUse>
+            <Start/>
+            <Size/>
+          </ROM2>
+          <ROM3>
+            <InUse>no</InUse>
+            <Start/>
+            <Size/>
+          </ROM3>
+          <ROM4>
+            <InUse>no</InUse>
+            <Start/>
+            <Size/>
+          </ROM4>
+          <ROM5>
+            <InUse>no</InUse>
+            <Start/>
+            <Size/>
+          </ROM5>
+        </ROMBank>
+        <RAMBank>
+          <RAM1>
+            <InUse>no</InUse>
+            <Start/>
+            <Size/>
+            <Init>yes</Init>
+          </RAM1>
+          <RAM2>
+            <InUse>no</InUse>
+            <Start/>
+            <Size/>
+            <Init>yes</Init>
+          </RAM2>
+          <RAM3>
+            <InUse>no</InUse>
+            <Start/>
+            <Size/>
+            <Init>yes</Init>
+          </RAM3>
+          <RAM4>
+            <InUse>no</InUse>
+            <Start/>
+            <Size/>
+            <Init>yes</Init>
+          </RAM4>
+          <RAM5>
+            <InUse>no</InUse>
+            <Start/>
+            <Size/>
+            <Init>yes</Init>
+          </RAM5>
+        </RAMBank>
+        <CPU>c907fd</CPU>
+        <UseMiniLib>yes</UseMiniLib>
+        <Endian>little</Endian>
+        <UseEnhancedLRW>no</UseEnhancedLRW>
+        <UseContinueBuild>no</UseContinueBuild>
+        <ToolchainID>XTLLVMElfNewlib</ToolchainID>
+        <ToolchainVersion>latest</ToolchainVersion>
+        <UseSemiHost>no</UseSemiHost>
+      </Target>
+      <Output>
+        <OutputName>$(ProjectName)</OutputName>
+        <Type>Executable</Type>
+        <CreateHexFile>no</CreateHexFile>
+        <CreateBinFile>no</CreateBinFile>
+        <Preprocessor>no</Preprocessor>
+        <Disassmeble>yes</Disassmeble>
+        <CallGraph>no</CallGraph>
+        <Map>no</Map>
+      </Output>
+      <User>
+        <BeforeCompile>
+          <RunUserProg>no</RunUserProg>
+          <UserProgName/>
+          <IsBatchScript>no</IsBatchScript>
+        </BeforeCompile>
+        <BeforeMake>
+          <RunUserProg>yes</RunUserProg>
+          <UserProgName>../../../../../../solutions/soc_helloworld/script/before_build.sh ../../../../../../solutions/soc_helloworld ../../../../../../boards/board_riscv_dummy ../../../../../../components/chip_riscv_dummy xiaohui c907fd $(OBJCOPY) $(OBJDUMP)</UserProgName>
+          <IsBatchScript>no</IsBatchScript>
+        </BeforeMake>
+        <AfterMake>
+          <RunUserProg>yes</RunUserProg>
+          <UserProgName>../../../../../../solutions/soc_helloworld/script/after_build.sh ../../../../../../solutions/soc_helloworld ../../../../../../boards/board_riscv_dummy ../../../../../../components/chip_riscv_dummy xiaohui c907fd $(OBJCOPY) $(OBJDUMP)</UserProgName>
+          <IsBatchScript>no</IsBatchScript>
+        </AfterMake>
+        <Tools/>
+      </User>
+      <Compiler>
+        <Define>CONFIG_KERNEL_RTTHREAD=1;__RT_KERNEL_SOURCE__=1;CONFIG_OPT_FOOTPRINT_LEVEL=0;CONFIG_INIT_TASK_STACK_SIZE=8192;CONFIG_AOS_NEWLINE_SUPPORT=1;CONFIG_DEVICEID_FROM_KV=1;CONFIG_AOS_OSAL=1;AOS_RTT_SPIN_LOCK_STRUCT_SIZE=32;AOS_COMP_CLI=1;CLI_INBUF_SIZE=256;CLI_OUTBUF_SIZE=512;CLI_MAX_COMMANDS=128;CLI_MAX_ARG_NUM=16;CLI_MAX_ONCECMD_NUM=4;CLI_TASK_PRIORITY=60;CLI_CONFIG_STACK_SIZE=4096;CLI_TELNET_ENABLE=0;CLI_UAGENT_ENABLE=0;CLI_SEPRATED_CONSOLE=0;CLI_IOBOX_ENABLE=0;CONFIG_LFS_MOUNTPOINT=&quot;/&quot;;CONFIG_KV_ENABLE_CACHE=0;CONFIG_KV_START_OPT=1;CONFIG_KV_HASH_BUCKET=16;CONFIG_KV_GET_ERASE_FLAG_AUTO=0;CONFIG_KV_LARGE_NODE=0;AOS_COMP_ULOG=&quot;y&quot;;ULOG_TAG_USE_SHORT_FILE=1;ULOG_CONFIG_POP_FS_PATH=&quot;/fatfs/&quot;;CONFIG_DEVICES_RVM_HAL=1;CONFIG_UART_RECV_BUF_SIZE=1024;AOS_COMP_DEBUG=1;DEBUG_PANIC_PRT_INT=1;DEBUG_CPUUSAGE_RECODE_TO_FILE_ENABLE=0;DEBUG_CPUUSAGE_MAX_TASK=80;DEBUG_CPUUSAGE_FILE_NAME=&quot;/data/cpuusage&quot;;DEBUG_LAST_WORD_ENABLE=0;DEBUG_LOG_FILE_NUM=10;DEBUG_LASTWORD_RAM_ADDR=0;DEBUG_LASTWORD_REGION_LEN=16384;DEBUG_LOG_DIR_NAME=&quot;/data/crash_reports&quot;;DEBUG_CONFIG_LOG_FILE_NAME=&quot;/data/crash_reports/crash_report&quot;;DEBUG_CONFIG_LOG_FILE_INDEX=&quot;/data/crash_reports/log_file_index&quot;;DEBUG_ULOG_FLUSH=0;DEBUG_TEST_CMDS_ENABLE=0;CONFIG_USERVICE_EVENT_TASK_STACK_SIZE=2048;CONFIG_USERVICE_SELECT_TASK_STACK_SIZE=2048;CONFIG_LIBC_MINI_PRINTF_SUPPORT=0;CONFIG_MEMALIGN_SUPPORT=1;CONFIG_NEWLIB_REENTRY_SUPPORT=1;CONFIG_CSI_V2=1;CONFIG_CSI=&quot;csi2&quot;;CONFIG_SUPPORT_TSPEND=1;CONFIG_ARCH_MAINSTACK=8192;CONFIG_ARCH_INTERRUPTSTACK=8192;CONFIG_VIC_TSPDR=201326592;CONFIG_PLIC_BASE=134217728;CONFIG_CPU_XUANTIE_C907FD=1;CONFIG_CHECK_FPU_DIRTY=1;CONFIG_APP_TASK_STACK_SIZE=8192;CONFIG_SYSTICK_HZ=100;CONFIG_BOARD_XIAOHUI_EVB=1;CONFIG_DEBUG=1;</Define>
+        <Undefine/>
+        <Optim>Optimize size (-Os)</Optim>
+        <DebugLevel>Maximum (-g3)</DebugLevel>
+        <IncludePath>$(ProjectPath);../../../../../../solutions/soc_helloworld/include;../../../../../../components/rtthread/include;../../../../../../components/rtthread/libcpu/riscv/c907fd;../../../../../../components/csi/csi2/include;../../../../../../boards/board_riscv_dummy/include;../../../../../../components/chip_riscv_dummy/include;../../../../../../components/chip_riscv_dummy/include/asm;../../../../../../components/aos/include;../../../../../../components/cli/include;../../../../../../components/kv/include;../../../../../../components/ulog/include;../../../../../../components/devices/include;../../../../../../components/devices/vfsdev/include;../../../../../../components/drivers/csi2/include;../../../../../../components/debug/include;../../../../../../components/uservice/include;../../../../../../components/partition/include;../../../../../../components/libc_stub/compilers/gcc;../../../../../../components/libc_stub/include;../../../../../../solutions/soc_helloworld/app/include;../../../../../../components/cli/src;../../../../../../components/cli/src/iobox;../../../../../../components/ulog/internal;../../../../../../components/devices/internal_inc;../../../../../../components/debug/include/debug;../../../../../../components/debug/src/arch;../../../../../../components/partition/internal_inc;../../../../../../components/partition/utils;</IncludePath>
+        <OtherFlags>-MP -MMD -Os -Wno-main -mcmodel=medany -Wno-unused-function -Wpointer-arith -Wno-undef -Wall -ffunction-sections -fdata-sections -fno-inline-functions -fno-builtin -fno-strict-aliasing -g -Wunused -Wformat -Wformat-security -Warray-bounds -Wuninitialized -Wreturn-type -Wcomment -Wswitch -Wparentheses -Wno-unused-variable</OtherFlags>
+        <Verbose>no</Verbose>
+        <Ansi>no</Ansi>
+        <Syntax>no</Syntax>
+        <Pedantic>no</Pedantic>
+        <PedanticErr>no</PedanticErr>
+        <InhibitWarn>no</InhibitWarn>
+        <AllWarn>yes</AllWarn>
+        <WarnErr>no</WarnErr>
+        <OneElfS>no</OneElfS>
+        <OneElfSPerData>no</OneElfSPerData>
+        <Fstrict>no</Fstrict>
+      </Compiler>
+      <Asm>
+        <Define>CONFIG_KERNEL_RTTHREAD=1;__RT_KERNEL_SOURCE__=1;CONFIG_OPT_FOOTPRINT_LEVEL=0;CONFIG_INIT_TASK_STACK_SIZE=8192;CONFIG_AOS_NEWLINE_SUPPORT=1;CONFIG_DEVICEID_FROM_KV=1;CONFIG_AOS_OSAL=1;AOS_RTT_SPIN_LOCK_STRUCT_SIZE=32;AOS_COMP_CLI=1;CLI_INBUF_SIZE=256;CLI_OUTBUF_SIZE=512;CLI_MAX_COMMANDS=128;CLI_MAX_ARG_NUM=16;CLI_MAX_ONCECMD_NUM=4;CLI_TASK_PRIORITY=60;CLI_CONFIG_STACK_SIZE=4096;CLI_TELNET_ENABLE=0;CLI_UAGENT_ENABLE=0;CLI_SEPRATED_CONSOLE=0;CLI_IOBOX_ENABLE=0;CONFIG_LFS_MOUNTPOINT=&quot;/&quot;;CONFIG_KV_ENABLE_CACHE=0;CONFIG_KV_START_OPT=1;CONFIG_KV_HASH_BUCKET=16;CONFIG_KV_GET_ERASE_FLAG_AUTO=0;CONFIG_KV_LARGE_NODE=0;AOS_COMP_ULOG=&quot;y&quot;;ULOG_TAG_USE_SHORT_FILE=1;ULOG_CONFIG_POP_FS_PATH=&quot;/fatfs/&quot;;CONFIG_DEVICES_RVM_HAL=1;CONFIG_UART_RECV_BUF_SIZE=1024;AOS_COMP_DEBUG=1;DEBUG_PANIC_PRT_INT=1;DEBUG_CPUUSAGE_RECODE_TO_FILE_ENABLE=0;DEBUG_CPUUSAGE_MAX_TASK=80;DEBUG_CPUUSAGE_FILE_NAME=&quot;/data/cpuusage&quot;;DEBUG_LAST_WORD_ENABLE=0;DEBUG_LOG_FILE_NUM=10;DEBUG_LASTWORD_RAM_ADDR=0;DEBUG_LASTWORD_REGION_LEN=16384;DEBUG_LOG_DIR_NAME=&quot;/data/crash_reports&quot;;DEBUG_CONFIG_LOG_FILE_NAME=&quot;/data/crash_reports/crash_report&quot;;DEBUG_CONFIG_LOG_FILE_INDEX=&quot;/data/crash_reports/log_file_index&quot;;DEBUG_ULOG_FLUSH=0;DEBUG_TEST_CMDS_ENABLE=0;CONFIG_USERVICE_EVENT_TASK_STACK_SIZE=2048;CONFIG_USERVICE_SELECT_TASK_STACK_SIZE=2048;CONFIG_LIBC_MINI_PRINTF_SUPPORT=0;CONFIG_MEMALIGN_SUPPORT=1;CONFIG_NEWLIB_REENTRY_SUPPORT=1;CONFIG_CSI_V2=1;CONFIG_CSI=&quot;csi2&quot;;CONFIG_SUPPORT_TSPEND=1;CONFIG_ARCH_MAINSTACK=8192;CONFIG_ARCH_INTERRUPTSTACK=8192;CONFIG_VIC_TSPDR=201326592;CONFIG_PLIC_BASE=134217728;CONFIG_CPU_XUANTIE_C907FD=1;CONFIG_CHECK_FPU_DIRTY=1;CONFIG_APP_TASK_STACK_SIZE=8192;CONFIG_SYSTICK_HZ=100;CONFIG_BOARD_XIAOHUI_EVB=1;CONFIG_DEBUG=1;</Define>
+        <Undefine/>
+        <IncludePath>$(ProjectPath);../../../../../../solutions/soc_helloworld/include;../../../../../../components/rtthread/include;../../../../../../components/rtthread/libcpu/riscv/c907fd;../../../../../../components/csi/csi2/include;../../../../../../boards/board_riscv_dummy/include;../../../../../../components/chip_riscv_dummy/include;../../../../../../components/chip_riscv_dummy/include/asm;../../../../../../components/aos/include;../../../../../../components/cli/include;../../../../../../components/kv/include;../../../../../../components/ulog/include;../../../../../../components/devices/include;../../../../../../components/devices/vfsdev/include;../../../../../../components/drivers/csi2/include;../../../../../../components/debug/include;../../../../../../components/uservice/include;../../../../../../components/partition/include;../../../../../../components/libc_stub/compilers/gcc;../../../../../../components/libc_stub/include;../../../../../../solutions/soc_helloworld/app/include;../../../../../../components/cli/src;../../../../../../components/cli/src/iobox;../../../../../../components/ulog/internal;../../../../../../components/devices/internal_inc;../../../../../../components/debug/include/debug;../../../../../../components/debug/src/arch;../../../../../../components/partition/internal_inc;../../../../../../components/partition/utils;</IncludePath>
+        <OtherFlags>-MP -MMD -Os -Wno-main -mcmodel=medany -D__ASSEMBLY__ -DAOS_COMP_DEBUG</OtherFlags>
+        <DebugLevel>gdwarf2</DebugLevel>
+      </Asm>
+      <Linker>
+        <Garbage>yes</Garbage>
+        <Garbage2>yes</Garbage2>
+        <LDFile>../../../../../../components/chip_riscv_dummy/gcc_flash_xiaohui.ld</LDFile>
+        <LibName>m;</LibName>
+        <LibPath>../../../../../../components/csi/csi2/dsp/lib;</LibPath>
+        <OtherFlags>-MP -MMD -Os -Wno-main -mcmodel=medany -Wl,-zmax-page-size=1024 -Wl,-Map=yoc.map</OtherFlags>
+        <AutoLDFile>no</AutoLDFile>
+        <LinkType>whole-archive</LinkType>
+        <IncludeAllLibs>yes</IncludeAllLibs>
+        <LinkSpecsType>none</LinkSpecsType>
+        <LinkUseNewlibNano>no</LinkUseNewlibNano>
+      </Linker>
+      <Debug>
+        <LoadApplicationAtStartup>yes</LoadApplicationAtStartup>
+        <Connector>SIM</Connector>
+        <StopAt>yes</StopAt>
+        <StopAtText>main</StopAtText>
+        <InitFile>$(ProjectPath)/gdbinit.remote</InitFile>
+        <PreInit/>
+        <AfterLoadFile/>
+        <AutoRun>yes</AutoRun>
+        <ResetType>Hard Reset</ResetType>
+        <SoftResetVal>0</SoftResetVal>
+        <ResetAfterLoad>no</ResetAfterLoad>
+        <AfterResetFile/>
+        <Dumpcore>no</Dumpcore>
+        <DumpcoreText/>
+        <SVCFile/>
+        <ConfigICE>
+          <IP>localhost</IP>
+          <PORT>1025</PORT>
+          <CPUNumber>0</CPUNumber>
+          <Clock>12000</Clock>
+          <Delay>10</Delay>
+          <NResetDelay>100</NResetDelay>
+          <WaitReset>50</WaitReset>
+          <DDC>yes</DDC>
+          <TRST>no</TRST>
+          <PreReset>no</PreReset>
+          <DebugPrint>no</DebugPrint>
+          <Connect>Normal</Connect>
+          <ResetType>soft</ResetType>
+          <SoftResetVal>0</SoftResetVal>
+          <RTOSType>None</RTOSType>
+          <DownloadToFlash>no</DownloadToFlash>
+          <ResetAfterConnect>yes</ResetAfterConnect>
+          <GDBName/>
+          <GDBServerType>Local</GDBServerType>
+          <OtherFlags/>
+          <ICEEnablePCSampling>no</ICEEnablePCSampling>
+          <ICESamplingFreq>1000</ICESamplingFreq>
+          <RemoteICEEnablePCSampling>no</RemoteICEEnablePCSampling>
+          <RemoteICESamplingPort>1026</RemoteICESamplingPort>
+          <Version>latest</Version>
+          <SupportRemoteICEAsyncDebug>no</SupportRemoteICEAsyncDebug>
+        </ConfigICE>
+        <ConfigSIM>
+          <SIMTarget>soccfg/riscv64/xiaohui_c907_cfg.xml</SIMTarget>
+          <OtherFlags>-smp cpus=4</OtherFlags>
+          <NoGraphic>yes</NoGraphic>
+          <Log>no</Log>
+          <SimTrace>no</SimTrace>
+          <Version>latest</Version>
+        </ConfigSIM>
+        <ConfigOpenOCD>
+          <OpenOCDExecutablePath/>
+          <OpenOCDLocally>yes</OpenOCDLocally>
+          <OpenOCDTelnetPortEnable>no</OpenOCDTelnetPortEnable>
+          <OpenOCDTelnetPort>4444</OpenOCDTelnetPort>
+          <OpenOCDTclPortEnable>no</OpenOCDTclPortEnable>
+          <OpenOCDTclPort>6666</OpenOCDTclPort>
+          <OpenOCDConfigOptions/>
+          <OpenOCDTimeout>5000</OpenOCDTimeout>
+          <OpenOCDRemoteIP>localhost</OpenOCDRemoteIP>
+          <OpenOCDRemotePort>3333</OpenOCDRemotePort>
+          <PluginID>openocd-sifive</PluginID>
+          <Version>latest</Version>
+        </ConfigOpenOCD>
+      </Debug>
+      <Flash>
+        <InitFile/>
+        <PreInit/>
+        <Erase>Erase Sectors</Erase>
+        <Algorithms Path=""/>
+        <Program>no</Program>
+        <Verify>no</Verify>
+        <ResetAndRun>no</ResetAndRun>
+        <ResetType/>
+        <SoftResetVal/>
+        <FlashIndex>no</FlashIndex>
+        <FlashIndexVal>0</FlashIndexVal>
+        <External>no</External>
+        <Command/>
+        <Arguments/>
+      </Flash>
+    </BuildConfig>
+  </BuildConfigs>
+</Project>

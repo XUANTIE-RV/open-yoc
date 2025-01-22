@@ -434,6 +434,8 @@ int print_driver(const char *fmt, va_list ap, unsigned int buf[])
 
     int index = 0;
 
+    (void)chars_written;
+
     for (;;) {
         /* reset the format state */
         flags = 0;

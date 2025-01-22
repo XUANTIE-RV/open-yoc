@@ -103,19 +103,19 @@ static int iic_csky_clock(rvm_dev_t *dev, bool enable)
 
 static int iic_csky_config(rvm_dev_t *dev, rvm_hal_iic_config_t *config)
 {
-    csi_error_t ret = csi_iic_mode(&IIC(dev)->handle, config->mode);
+    csi_error_t ret = csi_iic_mode(&IIC(dev)->handle, (csi_iic_mode_t)config->mode);
     if (ret != CSI_OK) {
         LOGE(TAG, "csi_iic set mode error");
         return -1;
     }
 
-    ret = csi_iic_addr_mode(&IIC(dev)->handle, config->addr_mode);
+    ret = csi_iic_addr_mode(&IIC(dev)->handle, (csi_iic_addr_mode_t)config->addr_mode);
     if (ret != CSI_OK) {
         LOGE(TAG, "csi_iic_addr_mode error");
         return -1;
     }
 
-    ret = csi_iic_speed(&IIC(dev)->handle, config->speed);
+    ret = csi_iic_speed(&IIC(dev)->handle, (csi_iic_speed_t)config->speed);
     if (ret != CSI_OK) {
         LOGE(TAG, "csi_iic set speed error");
         return -1;

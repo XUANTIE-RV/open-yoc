@@ -107,19 +107,19 @@ rt_hw_context_switch:
 rt_hw_context_switch_interrupt:
     /* set rt_thread_switch_interrupt_flag to 1 */
     la    t0, rt_thread_switch_interrupt_flag
-    lw    t2, 0(t0)
+    LOAD  t2, 0(t0)
     bnez  t2, _reswitch
     li    t1, 1
-    sw    t1, 0(t0)
+    STORE t1, 0(t0)
 
     /* set rt_interrupt_from_thread */
     la    t0, rt_interrupt_from_thread
-    sw    a0, 0(t0)
+    STORE a0, 0(t0)
 
 _reswitch:
     /* set rt_interrupt_to_thread */
     la    t0, rt_interrupt_to_thread
-    sw    a1, 0(t0)
+    STORE a1, 0(t0)
 
     /* trigger the tspend exception (causes context switch) */
     li      t0, RISCV_VIC_TSPDR

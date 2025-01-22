@@ -81,6 +81,13 @@ check_cpu $cpu_name
 check_board $board
 check_rtos $rtos
 
+################################################
+IS_V210XX_TOOLCHAIN=0
+if riscv64-unknown-elf-gcc -v 2>&1 | grep -q "Xuantie-900 elf newlib gcc Toolchain V2.10"; then
+	IS_V210XX_TOOLCHAIN=1
+fi
+################################################
+
 SDK_COMP=../../components/sdk_chip_riscv_dummy
 CHIP_COMP=../../components/chip_riscv_dummy
 BOARD_COMP=../../boards/board_riscv_dummy
@@ -88,6 +95,10 @@ BOARD_COMP=../../boards/board_riscv_dummy
 cp $SDK_COMP/package.yaml $SDK_COMP/package.yaml.bak
 cp $CHIP_COMP/package.yaml $CHIP_COMP/package.yaml.bak
 cp $BOARD_COMP/package.yaml $BOARD_COMP/package.yaml.bak
+if [[ $IS_V210XX_TOOLCHAIN == 1 ]];then
+	cp package.yaml package.yaml.bak
+	cp package.yaml.v210x package.yaml
+fi
 
 cp $SDK_COMP/package.yaml.$rtos $SDK_COMP/package.yaml
 cp $CHIP_COMP/package.yaml.$cpu_name $CHIP_COMP/package.yaml
@@ -100,4 +111,7 @@ make || exit 1
 mv $SDK_COMP/package.yaml.bak $SDK_COMP/package.yaml
 mv $CHIP_COMP/package.yaml.bak $CHIP_COMP/package.yaml
 mv $BOARD_COMP/package.yaml.bak $BOARD_COMP/package.yaml
+if [[ $IS_V210XX_TOOLCHAIN == 1 ]];then
+	mv package.yaml.bak package.yaml
+fi
 

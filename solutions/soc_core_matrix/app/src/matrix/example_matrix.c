@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-#ifdef __riscv_matrix
+#if defined(__riscv_matrix) || defined(__riscv_xtheadmatrix)
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h>

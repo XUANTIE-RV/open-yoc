@@ -93,10 +93,8 @@ cp $SDK_COMP/package.yaml.$rtos $SDK_COMP/package.yaml
 cp $CHIP_COMP/package.yaml.$cpu_name $CHIP_COMP/package.yaml
 cp $BOARD_COMP/package.yaml.$board $BOARD_COMP/package.yaml
 
-if [[ $cpu_name = "e"* ]]; then
-	cp package.yaml package.yaml.bak
-	cp package.yaml.smartl package.yaml
-fi
+cp package.yaml package.yaml.bak
+cp package.yaml.$board package.yaml
 
 #echo "===start to compile==="
 make || exit 1
@@ -105,7 +103,5 @@ make || exit 1
 mv $SDK_COMP/package.yaml.bak $SDK_COMP/package.yaml
 mv $CHIP_COMP/package.yaml.bak $CHIP_COMP/package.yaml
 mv $BOARD_COMP/package.yaml.bak $BOARD_COMP/package.yaml
-if [[ $cpu_name = "e"* ]]; then
-	mv package.yaml.bak package.yaml
-fi
+mv package.yaml.bak package.yaml
 

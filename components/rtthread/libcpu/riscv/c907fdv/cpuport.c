@@ -111,7 +111,7 @@ rt_uint8_t *rt_hw_stack_init(void       *tentry,
     frame->mstatus |= SR_VS_INITIAL;
 #endif
 
-#if defined(__riscv_matrix)
+#if defined(__riscv_matrix) || defined(__riscv_xtheadmatrix)
     int xmlenb = csi_xmlenb_get_value();
 
     stk -= sizeof(rt_hw_stack_x_frame_t);

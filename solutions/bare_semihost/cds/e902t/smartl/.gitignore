@@ -5,3 +5,5 @@
 /components/
 /solutions/
 %SystemDrive%
+/Debug_GCC/
+/Debug_LLVM/

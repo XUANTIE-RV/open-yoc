@@ -50,7 +50,9 @@ unsigned long page_table_l0[512] __attribute__ ((aligned(4096)));
 void _mmu_init(void) __attribute__((noinline));
 void _mmu_init(void)
 {
-#if CONFIG_CPU_XUANTIE_C906 || CONFIG_CPU_XUANTIE_C906FD || CONFIG_CPU_XUANTIE_C906FDV || CONFIG_CPU_XUANTIE_C910 || CONFIG_CPU_XUANTIE_C920 || CONFIG_CPU_XUANTIE_C908 || CONFIG_CPU_XUANTIE_C908V || CONFIG_CPU_XUANTIE_C908I
+#if CONFIG_CPU_XUANTIE_C906 || CONFIG_CPU_XUANTIE_C906FD || CONFIG_CPU_XUANTIE_C906FDV \
+    || CONFIG_CPU_XUANTIE_C908 || CONFIG_CPU_XUANTIE_C908V || CONFIG_CPU_XUANTIE_C908I \
+    || CONFIG_CPU_XUANTIE_R910 || CONFIG_CPU_XUANTIE_R920
     unsigned long status = __get_MXSTATUS();
     /* open MAEE for thead-mmu extension */
     status |= (1 << 21);
@@ -243,10 +245,10 @@ void SystemInit(void)
     /* enable theadisaee & MM */
     unsigned long status = __get_MXSTATUS();
     status |= (1 << 22 | 1 << 15);
-#if __riscv_matrix
+#if __riscv_matrix || __riscv_xtheadmatrix
     /* enable matrix */
     status &= ~(1ul << 0);
-#endif /* __riscv_matrix */
+#endif /* __riscv_matrix || __riscv_xtheadmatrix */
     __set_MXSTATUS(status);
 
 #if __riscv_flen
@@ -261,7 +263,7 @@ void SystemInit(void)
     status |= (1 << MSTATUS_VS_SHIFT);
     __set_MSTATUS(status);
 #endif
-#ifdef __riscv_matrix
+#if __riscv_matrix || __riscv_xtheadmatrix
     /* enable matrix ISA */
     status = __get_MSTATUS();
     status |= (1 << MSTATUS_MS_SHIFT);

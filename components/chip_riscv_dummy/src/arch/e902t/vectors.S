@@ -43,7 +43,6 @@ irq_nested_mcause:
 
 #if !CONFIG_SUPPORT_IRQ_NESTED
     .align  2
-    .global Default_IRQHandler
     .weak   Default_IRQHandler
     .type   Default_IRQHandler, %function
 Default_IRQHandler:
@@ -104,7 +103,7 @@ Default_IRQHandler:
     mret
 #else
     .align  2
-    .global Default_IRQHandler
+    .weak  Default_IRQHandler
     .type   Default_IRQHandler, %function
 Default_IRQHandler:
     addi    sp, sp, -8
@@ -285,7 +284,6 @@ trap:
 
     .align  6
     .weak   Default_Handler
-    .global Default_Handler
     .type   Default_Handler, %function
 Default_Handler:
     /* Check for nmi */
@@ -379,7 +377,6 @@ Default_Handler:
  *    overwritten by other handlers */
     .macro  def_irq_handler handler_name
     .weak   \handler_name
-    .globl  \handler_name
     .set    \handler_name, Default_Handler
     .endm
 

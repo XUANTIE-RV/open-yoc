@@ -39,12 +39,18 @@ StackType_t *pxPortInitialiseStack( StackType_t *pxTopOfStack, StackType_t *pxEn
 StackType_t *pxPortInitialiseStack( StackType_t *pxTopOfStack, TaskFunction_t pxCode, void *pvParameters )
 #endif
 {
+    extern int __global_pointer$;
     StackType_t *stk  = NULL;
-    register int *gp asm("x3");
     uint32_t temp = (uint32_t)pxTopOfStack;
+#if CONFIG_CHECK_FPU_DIRTY
+    uint32_t status = __get_MSTATUS();
+#endif
 
     temp &= 0xFFFFFFF8UL;
     stk = (StackType_t *)temp;
+#if CONFIG_CHECK_FPU_DIRTY
+    *(--stk)  = (uint32_t)status;
+#endif
     *(--stk)  = (uint32_t)pxCode;            /* Entry Point */
     *(--stk)  = (uint32_t)0x31313131L;       /* X31         */
     *(--stk)  = (uint32_t)0x30303030L;       /* X30         */
@@ -74,7 +80,7 @@ StackType_t *pxPortInitialiseStack( StackType_t *pxTopOfStack, TaskFunction_t px
     *(--stk)  = (uint32_t)0x06060606L;       /* X6          */
     *(--stk)  = (uint32_t)0x05050505L;       /* X5          */
     *(--stk)  = (uint32_t)0x04040404L;       /* X4          */
-    *(--stk)  = (uint32_t)gp;                /* X3          */
+    *(--stk)  = (uint32_t)&__global_pointer$;/* X3          */
 #if CONFIG_AOS_OSAL
     *(--stk)  = (uint32_t)aos_task_exit;     /* X1          */
 #else

@@ -5,7 +5,7 @@
 
 #ifndef __ASSEMBLY__
 /* define extra stack size */
-#if __riscv_matrix
+#if __riscv_matrix || __riscv_xtheadmatrix
 static inline int _csi_xmlenb_get_value(void)
 {
     int result;
@@ -38,7 +38,7 @@ static inline int _csi_vlenb_get_value(void)
 
 #define CSK_CPU_STACK_EXTRAL    (STACK_M_EXTRAL_SIZE + STACK_V_EXTRAL_SIZE + STACK_F_EXTRAL_SIZE)
 
-#if defined(__riscv_matrix) || defined(__riscv_vector)
+#if defined(__riscv_matrix) || defined(__riscv_xtheadmatrix) || defined(__riscv_vector)
 /* FIXME: for static allocate stack */
 #define STATIC_CSK_CPU_STACK_EXTRAL       (8192)
 #else

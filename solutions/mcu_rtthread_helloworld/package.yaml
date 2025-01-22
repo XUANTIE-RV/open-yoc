@@ -1,25 +1,22 @@
 
 ## 第一部分： 基础信息
 name: mcu_rtthread_helloworld                       # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
-version: v8.0.0                                    # <必选项> 组件版本号
+version: v8.1.0                                    # <必选项> 组件版本号
 description: 一个面向mcu领域的基于rtthread的helloword demo                   # <必选项> 建议至少20字以上
 type: solution                                      # <必选项> 组件类型，为：solution, chip, board, common, sdk
 
 ## 第二部分：依赖信息
 #           指定该组件依赖的组件及版本，版本支持条件比较，支持：>=v1.0, >v1.0, ==v1.0, <=v1.0, <v1.0, v1.0
 #           未指定条件时，默认为 ==，如 v1.0 与 ==v1.0
-# sdk_chip:                                # <可选项> 该组件依赖sdk组件，合理的依赖才能保证组件能编译、使用
-#   - sdk_chip_csky_dummy: v8.0.0
-#   - sdk_chip_riscv_dummy: v8.0.0
+sdk_chip:                                # <可选项> 该组件依赖sdk组件，合理的依赖才能保证组件能编译、使用
+  - sdk_chip_wujian300: v8.1.0
+  - sdk_chip_riscv_dummy: v8.1.0
 # depends:                                 # <可选项> 该组件依赖其他的组件，合理的依赖才能保证组件能编译、使用
 #   - minilibc: v7.2.0
 #   - aos: >=v7.2.0
 depends:
-  - csi: v8.0.0
-  - libc_rtthread: v8.0.0
-  - board_riscv_dummy: v8.0.0
-  - chip_riscv_dummy: v8.0.0
-  - rtthread: v8.0.0
+  - sdk_chip_riscv_dummy: v8.1.0
+  - libc_rtthread: v8.1.0
 
 ## 第三部分：板级信息
 # hw_info:                                 # 对 solution、board、chip 三个字段的改进，统称为 hw_info 字段
@@ -51,7 +48,8 @@ depends:
 #   chip_name: 'chip_pangu'
 #   ld_script: configs/gcc_eflash.ld.S
 hw_info:
-  board_name: board_riscv_dummy
+  toolchain_prefix: riscv64-unknown-elf
+  board_name: ""
 
 ## 第四部分：编译连接信息
 # build_config:                            # <可选项> 编译配置项
@@ -72,6 +70,9 @@ hw_info:
 #   libpath:                               # 指定静态库所在的路径（相对于该组件路径）
 #     - libs                               #   -Llibs
 build_config:
+  cflag: >
+    -Wpointer-arith -Wno-undef -Wall -ffunction-sections
+    -fdata-sections -fno-inline-functions -fno-builtin -fno-strict-aliasing
   ldflag: '-Wl,-zmax-page-size=1024 -Wl,-Map=yoc.map'
   include:
     - app/include

@@ -144,7 +144,7 @@ __exit:
 secondary_cpu_entry:
 #if defined(CONFIG_SMP) && CONFIG_SMP
     la a0, secondary_boot_flag
-    lw a0, 0(a0)
+    ld a0, 0(a0)
     li a1, 0xa55a
     beq a0, a1, 1f
 #endif

@@ -35,7 +35,7 @@
  *----------------------------------------------------------*/
 #ifndef __ASSEMBLY__
 /* define extra stack size */
-#if __riscv_matrix
+#if __riscv_matrix || __riscv_xtheadmatrix
 static inline int _csi_xmlenb_get_value(void)
 {
     int result;

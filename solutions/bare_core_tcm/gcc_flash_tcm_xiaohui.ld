@@ -258,7 +258,7 @@ SECTIONS
   *tcm_code.o(*.data*)
  __dtcm_code_end__ = .;
  } > REGION_DTCM AT > REGION_RODATA
- .bss : {
+ .bss (NOLOAD): {
   . = ALIGN(0x4) ;
   __sbss = ALIGN(0x4) ;
   __bss_start__ = . ;

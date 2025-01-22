@@ -30,7 +30,6 @@ g_top_trapstack:
 .global _interrupt_return_address
 
     .align  3
-    .global Scoret_Handler
     .weak   Scoret_Handler
     .type   Scoret_Handler, %function
 Scoret_Handler:
@@ -61,17 +60,25 @@ Scoret_Handler:
     sd      t5, (56+56)(sp)
     sd      t6, (60+60)(sp)
 
+#if CONFIG_CHECK_FPU_DIRTY || CONFIG_CHECK_VECTOR_DIRTY
+    csrr    t3, sstatus
+#endif
     SAVE_FLOAT_REGISTERS
     SAVE_VECTOR_REGISTERS
 
     la      t2, CORET_IRQHandler
     jalr    t2
 
+#if CONFIG_CHECK_FPU_DIRTY || CONFIG_CHECK_VECTOR_DIRTY
+    RESTORE_SSTATUS
+#endif
     RESTORE_VECTOR_REGISTERS
     RESTORE_FLOAT_REGISTERS
 
+#if (!CONFIG_CHECK_FPU_DIRTY) && (!CONFIG_CHECK_VECTOR_DIRTY)
     ld      t0, (72+72)(sp)
     csrw    sstatus, t0
+#endif
     ld      t0, (68+68)(sp)
     csrw    sepc, t0
 
@@ -98,7 +105,6 @@ Scoret_Handler:
 
 
     .align  3
-    .global Mcoret_Handler
     .weak   Mcoret_Handler
     .type   Mcoret_Handler, %function
 Mcoret_Handler:
@@ -138,17 +144,25 @@ Mcoret_Handler:
     sd      t5, (56+56)(sp)
     sd      t6, (60+60)(sp)
 
+#if CONFIG_CHECK_FPU_DIRTY || CONFIG_CHECK_VECTOR_DIRTY
+    csrr    t3, mstatus
+#endif
     SAVE_FLOAT_REGISTERS
     SAVE_VECTOR_REGISTERS
 
     la      t2, CORET_IRQHandler
     jalr    t2
 
+#if CONFIG_CHECK_FPU_DIRTY || CONFIG_CHECK_VECTOR_DIRTY
+    RESTORE_MSTATUS
+#endif
     RESTORE_VECTOR_REGISTERS
     RESTORE_FLOAT_REGISTERS
 
+#if (!CONFIG_CHECK_FPU_DIRTY) && (!CONFIG_CHECK_VECTOR_DIRTY)
     ld      t0, (72+72)(sp)
     csrw    mstatus, t0
+#endif
     ld      t0, (68+68)(sp)
     csrw    mepc, t0
 
@@ -179,7 +193,6 @@ Mcoret_Handler:
 
 #if CONFIG_ECC_L1_ENABLE
     .align  3
-    .global ECC_L1_Handler
     .weak   ECC_L1_Handler
     .type   ECC_L1_Handler, %function
 ECC_L1_Handler:
@@ -219,17 +232,25 @@ ECC_L1_Handler:
     sd      t5, (56+56)(sp)
     sd      t6, (60+60)(sp)
 
+#if CONFIG_CHECK_FPU_DIRTY || CONFIG_CHECK_VECTOR_DIRTY
+    csrr    t3, mstatus
+#endif
     SAVE_FLOAT_REGISTERS
     SAVE_VECTOR_REGISTERS
 
     la      t2, ECC_L1_IRQHandler
     jalr    t2
 
+#if CONFIG_CHECK_FPU_DIRTY || CONFIG_CHECK_VECTOR_DIRTY
+    RESTORE_MSTATUS
+#endif
     RESTORE_VECTOR_REGISTERS
     RESTORE_FLOAT_REGISTERS
 
+#if (!CONFIG_CHECK_FPU_DIRTY) && (!CONFIG_CHECK_VECTOR_DIRTY)
     ld      t0, (72+72)(sp)
     csrw    mstatus, t0
+#endif
     ld      t0, (68+68)(sp)
     csrw    mepc, t0
 
@@ -260,7 +281,6 @@ ECC_L1_Handler:
 #endif
 
     .align  3
-    .global Sirq_Handler
     .weak   Sirq_Handler
     .type   Sirq_Handler, %function
 Sirq_Handler:
@@ -290,16 +310,24 @@ Sirq_Handler:
     sd      t5, (56+56)(sp)
     sd      t6, (60+60)(sp)
 
+#if CONFIG_CHECK_FPU_DIRTY || CONFIG_CHECK_VECTOR_DIRTY
+    csrr    t3, sstatus
+#endif
     SAVE_FLOAT_REGISTERS
     SAVE_VECTOR_REGISTERS
 
     la      t2, do_irq
     jalr    t2
+#if CONFIG_CHECK_FPU_DIRTY || CONFIG_CHECK_VECTOR_DIRTY
+    RESTORE_SSTATUS
+#endif
     RESTORE_VECTOR_REGISTERS
     RESTORE_FLOAT_REGISTERS
 
+#if (!CONFIG_CHECK_FPU_DIRTY) && (!CONFIG_CHECK_VECTOR_DIRTY)
     ld      t0, (72+72)(sp)
     csrw    sstatus, t0
+#endif
     ld      t0, (68+68)(sp)
     csrw    sepc, t0
 
@@ -326,7 +354,6 @@ Sirq_Handler:
 
 
     .align  3
-    .global Mirq_Handler
     .weak   Mirq_Handler
     .type   Mirq_Handler, %function
 Mirq_Handler:
@@ -370,17 +397,25 @@ Mirq_Handler:
     sd      t5, (56+56)(sp)
     sd      t6, (60+60)(sp)
 
+#if CONFIG_CHECK_FPU_DIRTY || CONFIG_CHECK_VECTOR_DIRTY
+    csrr    t3, mstatus
+#endif
     SAVE_FLOAT_REGISTERS
     SAVE_VECTOR_REGISTERS
 
     la      t2, do_irq
     jalr    t2
 _interrupt_return_address:
+#if CONFIG_CHECK_FPU_DIRTY || CONFIG_CHECK_VECTOR_DIRTY
+    RESTORE_MSTATUS
+#endif
     RESTORE_VECTOR_REGISTERS
     RESTORE_FLOAT_REGISTERS
 
+#if (!CONFIG_CHECK_FPU_DIRTY) && (!CONFIG_CHECK_VECTOR_DIRTY)
     ld      t0, (72+72)(sp)
     csrw    mstatus, t0
+#endif
     ld      t0, (68+68)(sp)
     csrw    mepc, t0
 
@@ -405,7 +440,6 @@ _interrupt_return_address:
     csrr    sp, mscratch
 
 #if CONFIG_PROFILING_PERF && CONFIG_PERF_BACKTRACE_USE_FP
-    ld      s0, (sp)
     addi    sp, sp, 8
 #endif
     ld      t0, (0)(sp)
@@ -473,7 +507,6 @@ trap:
 
     .align  3
     .weak   Default_Handler
-    .global Default_Handler
     .type   Default_Handler, %function
 Default_Handler:
     j       trap
@@ -485,7 +518,6 @@ Default_Handler:
  *    overwritten by other handlers */
     .macro  def_irq_handler handler_name
     .weak   \handler_name
-    .globl  \handler_name
     .set    \handler_name, Default_Handler
     .endm
 

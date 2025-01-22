@@ -150,12 +150,12 @@ static int _spi_config(rvm_dev_t *dev, rvm_hal_spi_config_t *config)
         csi_spi_link_dma(&SPI(dev)->handle, NULL, NULL);
     }
 
-    ret = csi_spi_cp_format(&SPI(dev)->handle, config->format);
+    ret = csi_spi_cp_format(&SPI(dev)->handle, (csi_spi_cp_format_t)config->format);
     if (ret < 0) {
         return -1;
     }
 
-    ret = csi_spi_frame_len(&SPI(dev)->handle, config->data_size);
+    ret = csi_spi_frame_len(&SPI(dev)->handle, (csi_spi_frame_len_t)config->data_size);
     if (ret < 0) {
         return -1;
     }

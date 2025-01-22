@@ -1,0 +1,1115 @@
+<?xml version="1.0" ?>
+<Project Name="mcu_freertos_cpp_e907f_smartl" Version="1" Language="C">
+  <Description>一个面向mcu领域的基于freertos的cpp demo</Description>
+  <Dependencies Name="Debug"/>
+  <VirtualDirectory Name="boards">
+    <VirtualDirectory Name="board_riscv_dummy">
+      <VirtualDirectory Name="include">
+        <File Name="../../../../../boards/board_riscv_dummy/include/rtconfig.h">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../boards/board_riscv_dummy/include/FreeRTOSConfig.h">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../boards/board_riscv_dummy/include/board.h">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../boards/board_riscv_dummy/include/csi_config.h">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../boards/board_riscv_dummy/include/k_config.h">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../boards/board_riscv_dummy/include/lwipopts.h">
+          <FileOption/>
+        </File>
+      </VirtualDirectory>
+      <VirtualDirectory Name="src">
+        <VirtualDirectory Name="uart">
+          <File Name="../../../../../boards/board_riscv_dummy/src/uart/board_uart.c">
+            <FileOption/>
+          </File>
+        </VirtualDirectory>
+        <File Name="../../../../../boards/board_riscv_dummy/src/board_init.c">
+          <FileOption/>
+        </File>
+      </VirtualDirectory>
+    </VirtualDirectory>
+  </VirtualDirectory>
+  <VirtualDirectory Name="solutions">
+    <VirtualDirectory Name="mcu_freertos_cpp">
+      <VirtualDirectory Name="app">
+        <VirtualDirectory Name="include">
+          <File Name="../../../../../solutions/mcu_freertos_cpp/app/include/app_main.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../solutions/mcu_freertos_cpp/app/include/app_config.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../solutions/mcu_freertos_cpp/app/include/app_init.h">
+            <FileOption/>
+          </File>
+        </VirtualDirectory>
+        <VirtualDirectory Name="src">
+          <File Name="../../../../../solutions/mcu_freertos_cpp/app/src/crt_init.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../solutions/mcu_freertos_cpp/app/src/pre_main.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../solutions/mcu_freertos_cpp/app/src/main.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../solutions/mcu_freertos_cpp/app/src/cpp_example.cpp">
+            <FileOption/>
+          </File>
+        </VirtualDirectory>
+      </VirtualDirectory>
+    </VirtualDirectory>
+  </VirtualDirectory>
+  <VirtualDirectory Name="components">
+    <VirtualDirectory Name="freertos">
+      <VirtualDirectory Name="FreeRTOS">
+        <VirtualDirectory Name="Source">
+          <VirtualDirectory Name="portable">
+            <VirtualDirectory Name="GCC">
+              <VirtualDirectory Name="riscv">
+                <VirtualDirectory Name="e907f">
+                  <VirtualDirectory Name="tspend">
+                    <File Name="../../../../../components/freertos/FreeRTOS/Source/portable/GCC/riscv/e907f/tspend/portmacro.h">
+                      <FileOption/>
+                    </File>
+                    <File Name="../../../../../components/freertos/FreeRTOS/Source/portable/GCC/riscv/e907f/tspend/cpu_task_sw.S">
+                      <FileOption/>
+                    </File>
+                  </VirtualDirectory>
+                  <VirtualDirectory Name="non_tspend">
+                    <File Name="../../../../../components/freertos/FreeRTOS/Source/portable/GCC/riscv/e907f/non_tspend/portmacro.h">
+                      <FileOption/>
+                    </File>
+                  </VirtualDirectory>
+                  <File Name="../../../../../components/freertos/FreeRTOS/Source/portable/GCC/riscv/e907f/port.c">
+                    <FileOption/>
+                  </File>
+                </VirtualDirectory>
+              </VirtualDirectory>
+            </VirtualDirectory>
+            <VirtualDirectory Name="MemMang">
+              <File Name="../../../../../components/freertos/FreeRTOS/Source/portable/MemMang/heap_4.c">
+                <FileOption/>
+              </File>
+            </VirtualDirectory>
+          </VirtualDirectory>
+          <VirtualDirectory Name="include">
+            <File Name="../../../../../components/freertos/FreeRTOS/Source/include/event_groups.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/freertos/FreeRTOS/Source/include/mpu_wrappers.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/freertos/FreeRTOS/Source/include/semphr.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/freertos/FreeRTOS/Source/include/task.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/freertos/FreeRTOS/Source/include/stack_macros.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/freertos/FreeRTOS/Source/include/timers.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/freertos/FreeRTOS/Source/include/list.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/freertos/FreeRTOS/Source/include/croutine.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/freertos/FreeRTOS/Source/include/StackMacros.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/freertos/FreeRTOS/Source/include/projdefs.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/freertos/FreeRTOS/Source/include/atomic.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/freertos/FreeRTOS/Source/include/mpu_prototypes.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/freertos/FreeRTOS/Source/include/queue.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/freertos/FreeRTOS/Source/include/deprecated_definitions.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/freertos/FreeRTOS/Source/include/stream_buffer.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/freertos/FreeRTOS/Source/include/message_buffer.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/freertos/FreeRTOS/Source/include/portable.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/freertos/FreeRTOS/Source/include/FreeRTOS.h">
+              <FileOption/>
+            </File>
+          </VirtualDirectory>
+          <File Name="../../../../../components/freertos/FreeRTOS/Source/timers.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../components/freertos/FreeRTOS/Source/tasks.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../components/freertos/FreeRTOS/Source/queue.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../components/freertos/FreeRTOS/Source/list.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../components/freertos/FreeRTOS/Source/event_groups.c">
+            <FileOption/>
+          </File>
+        </VirtualDirectory>
+      </VirtualDirectory>
+      <File Name="../../../../../components/freertos/freertos_native.c">
+        <FileOption/>
+      </File>
+    </VirtualDirectory>
+    <VirtualDirectory Name="csi">
+      <VirtualDirectory Name="csi2">
+        <VirtualDirectory Name="include">
+          <VirtualDirectory Name="core">
+            <File Name="../../../../../components/csi/csi2/include/core/core_ck802.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/core/core_ck807.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/core/core_ck610.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/core/core_807.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/core/core_801.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/core/csi_rv64_gcc.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/core/core_810.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/core/core_805.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/core/core_803.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/core/core_804.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/core/core_ck801.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/core/core_ck803.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/core/csi_gcc.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/core/csi_arm64_gcc.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/core/core_ck810.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/core/csi_rv_common.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/core/core_802.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/core/csi_rv32_gcc.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/core/core_rv32.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/core/core_rv64.h">
+              <FileOption/>
+            </File>
+          </VirtualDirectory>
+          <VirtualDirectory Name="drv">
+            <File Name="../../../../../components/csi/csi2/include/drv/gpio.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/sha.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/spinand.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/ecdsa.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/fft.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/eth_mac.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/tipc.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/clk.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/hmac.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/mbox.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/eth_phy.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/eflash.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/sensor.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/pmu.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/drv_fft.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/eth.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/qspi.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/list.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/gpio_pin.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/baud_calc.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/irq.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/porting.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/aes.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/sdif.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/etb.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/dma.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/tee.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/i2s.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/common.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/uart.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/usi_iic.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/pwm.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/rng.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/iso7816.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/spiflash.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/usi.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/intc.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/timer.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/pin.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/iic.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/adc.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/usi_usart.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/des.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/wdt.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/io.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/usi_spi.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/ecdh.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/sasc.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/rtc.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/rsa.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/pm.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/codec.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/tick.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/efuse.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/crc.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/spi.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/ringbuf.h">
+              <FileOption/>
+            </File>
+          </VirtualDirectory>
+          <VirtualDirectory Name="dsp">
+            <File Name="../../../../../components/csi/csi2/include/dsp/csi_const_structs.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/dsp/csi_common_tables.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/dsp/csi_instance.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/dsp/csi_math.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/dsp/csky_const_structs.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/dsp/csky_vdsp2_const_structs.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/dsp/csky_math.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/dsp/csky_common_tables.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/dsp/csky_vdsp2_math.h">
+              <FileOption/>
+            </File>
+          </VirtualDirectory>
+          <File Name="../../../../../components/csi/csi2/include/syslog.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../components/csi/csi2/include/csi_core.h">
+            <FileOption/>
+          </File>
+        </VirtualDirectory>
+        <VirtualDirectory Name="src">
+          <File Name="../../../../../components/csi/csi2/src/csi_misc.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../components/csi/csi2/src/csi_ringbuf.c">
+            <FileOption/>
+          </File>
+        </VirtualDirectory>
+      </VirtualDirectory>
+    </VirtualDirectory>
+    <VirtualDirectory Name="chip_riscv_dummy">
+      <VirtualDirectory Name="include">
+        <VirtualDirectory Name="asm">
+          <File Name="../../../../../components/chip_riscv_dummy/include/asm/riscv_csr.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../components/chip_riscv_dummy/include/asm/riscv_asm_macro.h">
+            <FileOption/>
+          </File>
+        </VirtualDirectory>
+        <VirtualDirectory Name="drv">
+          <File Name="../../../../../components/chip_riscv_dummy/include/drv/dev_tag.h">
+            <FileOption/>
+          </File>
+        </VirtualDirectory>
+        <File Name="../../../../../components/chip_riscv_dummy/include/dw_timer_ll.h">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../components/chip_riscv_dummy/include/dw_uart_ll.h">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../components/chip_riscv_dummy/include/dw_uart.h">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../components/chip_riscv_dummy/include/soc.h">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../components/chip_riscv_dummy/include/sys_clk.h">
+          <FileOption/>
+        </File>
+      </VirtualDirectory>
+      <VirtualDirectory Name="src">
+        <VirtualDirectory Name="arch">
+          <VirtualDirectory Name="e907f">
+            <File Name="../../../../../components/chip_riscv_dummy/src/arch/e907f/trap_c.c">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/chip_riscv_dummy/src/arch/e907f/system.c">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/chip_riscv_dummy/src/arch/e907f/vectors.S">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/chip_riscv_dummy/src/arch/e907f/startup.S">
+              <FileOption/>
+            </File>
+          </VirtualDirectory>
+        </VirtualDirectory>
+        <VirtualDirectory Name="sys">
+          <File Name="../../../../../components/chip_riscv_dummy/src/sys/devices.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../components/chip_riscv_dummy/src/sys/reboot.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../components/chip_riscv_dummy/src/sys/tick.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../components/chip_riscv_dummy/src/sys/os_port.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../components/chip_riscv_dummy/src/sys/target_get.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../components/chip_riscv_dummy/src/sys/weak.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../components/chip_riscv_dummy/src/sys/sys_clk.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../components/chip_riscv_dummy/src/sys/irq.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../components/chip_riscv_dummy/src/sys/irq_port.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../components/chip_riscv_dummy/src/sys/pre_main.c">
+            <FileOption/>
+          </File>
+        </VirtualDirectory>
+        <VirtualDirectory Name="drivers">
+          <File Name="../../../../../components/chip_riscv_dummy/src/drivers/clk.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../components/chip_riscv_dummy/src/drivers/dma.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../components/chip_riscv_dummy/src/drivers/dw_uart_ll.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../components/chip_riscv_dummy/src/drivers/gpio.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../components/chip_riscv_dummy/src/drivers/gpio_pin.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../components/chip_riscv_dummy/src/drivers/pinmux.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../components/chip_riscv_dummy/src/drivers/power_manage.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../components/chip_riscv_dummy/src/drivers/timer.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../components/chip_riscv_dummy/src/drivers/uart.c">
+            <FileOption/>
+          </File>
+        </VirtualDirectory>
+      </VirtualDirectory>
+    </VirtualDirectory>
+    <VirtualDirectory Name="libc_freertos">
+      <VirtualDirectory Name="compilers">
+        <VirtualDirectory Name="gcc">
+          <VirtualDirectory Name="sys">
+            <File Name="../../../../../components/libc_freertos/compilers/gcc/sys/termios.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/libc_freertos/compilers/gcc/sys/ioctl.h">
+              <FileOption/>
+            </File>
+          </VirtualDirectory>
+          <File Name="../../../../../components/libc_freertos/compilers/gcc/time.h">
+            <FileOption/>
+          </File>
+        </VirtualDirectory>
+      </VirtualDirectory>
+      <VirtualDirectory Name="include">
+        <VirtualDirectory Name="sys">
+          <File Name="../../../../../components/libc_freertos/include/sys/select.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../components/libc_freertos/include/sys/random.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../components/libc_freertos/include/sys/_stdint.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../components/libc_freertos/include/sys/time.h">
+            <FileOption/>
+          </File>
+        </VirtualDirectory>
+        <VirtualDirectory Name="serf">
+          <File Name="../../../../../components/libc_freertos/include/serf/minilibc_stdio.h">
+            <FileOption/>
+          </File>
+        </VirtualDirectory>
+        <File Name="../../../../../components/libc_freertos/include/errno.h">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../components/libc_freertos/include/inttypes.h">
+          <FileOption/>
+        </File>
+      </VirtualDirectory>
+      <VirtualDirectory Name="sys">
+        <File Name="../../../../../components/libc_freertos/sys/fcntl.c">
+          <FileOption/>
+        </File>
+      </VirtualDirectory>
+      <VirtualDirectory Name="string">
+        <File Name="../../../../../components/libc_freertos/string/strext.c">
+          <FileOption/>
+        </File>
+      </VirtualDirectory>
+      <File Name="../../../../../components/libc_freertos/lib_sleep.c">
+        <FileOption/>
+      </File>
+      <File Name="../../../../../components/libc_freertos/lib_usleep.c">
+        <FileOption/>
+      </File>
+      <File Name="../../../../../components/libc_freertos/newlib_stub.c">
+        <FileOption/>
+      </File>
+      <File Name="../../../../../components/libc_freertos/lib_msleep.c">
+        <FileOption/>
+      </File>
+      <File Name="../../../../../components/libc_freertos/random.c">
+        <FileOption/>
+      </File>
+      <File Name="../../../../../components/libc_freertos/settimeofday.c">
+        <FileOption/>
+      </File>
+      <File Name="../../../../../components/libc_freertos/mini_printf.c">
+        <FileOption/>
+      </File>
+    </VirtualDirectory>
+  </VirtualDirectory>
+  <VendorInfo>
+    <VendorName>import_sdk_project</VendorName>
+  </VendorInfo>
+  <ToolsConfig>
+    <Compiler>
+      <Name>XTGccElfNewlib</Name>
+      <Version>latest</Version>
+    </Compiler>
+  </ToolsConfig>
+  <DebugSessions>
+    <watchExpressions/>
+    <memoryExpressions>;;;</memoryExpressions>
+    <statistics>;;MHZ</statistics>
+    <peripheralTabs/>
+    <WatchDisplayFormat/>
+    <LocalDisplayFormat/>
+    <debugLayout/>
+    <memoryTabColSizeExpressions/>
+    <QuickWatchDisplayFormat/>
+  </DebugSessions>
+  <BuildConfigs>
+    <BuildConfig Name="BuildSet_GCC">
+      <Target>
+        <ROMBank Selected="1">
+          <ROM1>
+            <InUse>no</InUse>
+            <Start/>
+            <Size/>
+          </ROM1>
+          <ROM2>
+            <InUse>no</InUse>
+            <Start/>
+            <Size/>
+          </ROM2>
+          <ROM3>
+            <InUse>no</InUse>
+            <Start/>
+            <Size/>
+          </ROM3>
+          <ROM4>
+            <InUse>no</InUse>
+            <Start/>
+            <Size/>
+          </ROM4>
+          <ROM5>
+            <InUse>no</InUse>
+            <Start/>
+            <Size/>
+          </ROM5>
+        </ROMBank>
+        <RAMBank>
+          <RAM1>
+            <InUse>no</InUse>
+            <Start/>
+            <Size/>
+            <Init>yes</Init>
+          </RAM1>
+          <RAM2>
+            <InUse>no</InUse>
+            <Start/>
+            <Size/>
+            <Init>yes</Init>
+          </RAM2>
+          <RAM3>
+            <InUse>no</InUse>
+            <Start/>
+            <Size/>
+            <Init>yes</Init>
+          </RAM3>
+          <RAM4>
+            <InUse>no</InUse>
+            <Start/>
+            <Size/>
+            <Init>yes</Init>
+          </RAM4>
+          <RAM5>
+            <InUse>no</InUse>
+            <Start/>
+            <Size/>
+            <Init>yes</Init>
+          </RAM5>
+        </RAMBank>
+        <CPU>e907f</CPU>
+        <UseMiniLib>yes</UseMiniLib>
+        <Endian>little</Endian>
+        <UseEnhancedLRW>no</UseEnhancedLRW>
+        <UseContinueBuild>no</UseContinueBuild>
+        <ToolchainID>XTGccElfNewlib</ToolchainID>
+        <ToolchainVersion>latest</ToolchainVersion>
+        <UseSemiHost>no</UseSemiHost>
+      </Target>
+      <Output>
+        <OutputName>$(ProjectName)</OutputName>
+        <Type>Executable</Type>
+        <CreateHexFile>no</CreateHexFile>
+        <CreateBinFile>no</CreateBinFile>
+        <Preprocessor>no</Preprocessor>
+        <Disassmeble>yes</Disassmeble>
+        <CallGraph>no</CallGraph>
+        <Map>no</Map>
+      </Output>
+      <User>
+        <BeforeCompile>
+          <RunUserProg>no</RunUserProg>
+          <UserProgName/>
+          <IsBatchScript>no</IsBatchScript>
+        </BeforeCompile>
+        <BeforeMake>
+          <RunUserProg>yes</RunUserProg>
+          <UserProgName>../../../../../solutions/mcu_freertos_cpp/script/before_build.sh ../../../../../solutions/mcu_freertos_cpp ../../../../../boards/board_riscv_dummy ../../../../../components/chip_riscv_dummy smartl e907f $(OBJCOPY) $(OBJDUMP)</UserProgName>
+          <IsBatchScript>no</IsBatchScript>
+        </BeforeMake>
+        <AfterMake>
+          <RunUserProg>yes</RunUserProg>
+          <UserProgName>../../../../../solutions/mcu_freertos_cpp/script/after_build.sh ../../../../../solutions/mcu_freertos_cpp ../../../../../boards/board_riscv_dummy ../../../../../components/chip_riscv_dummy smartl e907f $(OBJCOPY) $(OBJDUMP)</UserProgName>
+          <IsBatchScript>no</IsBatchScript>
+        </AfterMake>
+        <Tools/>
+      </User>
+      <Compiler>
+        <Define>CONFIG_KERNEL_FREERTOS=&quot;y&quot;;CONFIG_CSI_V2=1;CONFIG_CSI=&quot;csi2&quot;;CONFIG_LIBC_MINI_PRINTF_SUPPORT=1;CONFIG_SUPPORT_TSPEND=1;CONFIG_SUPPORT_IRQ_NESTED=1;CONFIG_XIP=0;CONFIG_ARCH_MAINSTACK=4096;CONFIG_ARCH_INTERRUPTSTACK=4096;CONFIG_CPU_XUANTIE_E907F=1;CONFIG_CHECK_FPU_DIRTY=1;CONFIG_INIT_TASK_STACK_SIZE=8192;CONFIG_APP_TASK_STACK_SIZE=4096;CONFIG_SYSTICK_HZ=100;CONFIG_BOARD_SMARTL_EVB=1;CONFIG_DEBUG=1;CLI_CONFIG_STACK_SIZE=4096;</Define>
+        <Undefine/>
+        <Optim>Optimize size (-Os)</Optim>
+        <DebugLevel>Maximum (-g3)</DebugLevel>
+        <IncludePath>$(ProjectPath);../../../../../solutions/mcu_freertos_cpp/include;../../../../../components/freertos/FreeRTOS/Source/include;../../../../../components/freertos/FreeRTOS/Source/portable/GCC/riscv/e907f;../../../../../components/freertos/FreeRTOS/Source/portable/GCC/riscv/e907f/tspend;../../../../../components/csi/csi2/include;../../../../../boards/board_riscv_dummy/include;../../../../../components/chip_riscv_dummy/include;../../../../../components/chip_riscv_dummy/include/asm;../../../../../components/libc_freertos/compilers/gcc;../../../../../components/libc_freertos/include;../../../../../solutions/mcu_freertos_cpp/app/include;</IncludePath>
+        <OtherFlags>-MP -MMD -Os -Wno-main -mcmodel=medlow -Wno-unused-function -Wpointer-arith -Wno-undef -Wall -ffunction-sections -fdata-sections -fno-inline-functions -fno-builtin -fno-strict-aliasing -O2 -DHAVE_INIT_ARRAY_LD</OtherFlags>
+        <Verbose>no</Verbose>
+        <Ansi>no</Ansi>
+        <Syntax>no</Syntax>
+        <Pedantic>no</Pedantic>
+        <PedanticErr>no</PedanticErr>
+        <InhibitWarn>no</InhibitWarn>
+        <AllWarn>yes</AllWarn>
+        <WarnErr>no</WarnErr>
+        <OneElfS>no</OneElfS>
+        <OneElfSPerData>no</OneElfSPerData>
+        <Fstrict>no</Fstrict>
+      </Compiler>
+      <Asm>
+        <Define>CONFIG_KERNEL_FREERTOS=&quot;y&quot;;CONFIG_CSI_V2=1;CONFIG_CSI=&quot;csi2&quot;;CONFIG_LIBC_MINI_PRINTF_SUPPORT=1;CONFIG_SUPPORT_TSPEND=1;CONFIG_SUPPORT_IRQ_NESTED=1;CONFIG_XIP=0;CONFIG_ARCH_MAINSTACK=4096;CONFIG_ARCH_INTERRUPTSTACK=4096;CONFIG_CPU_XUANTIE_E907F=1;CONFIG_CHECK_FPU_DIRTY=1;CONFIG_INIT_TASK_STACK_SIZE=8192;CONFIG_APP_TASK_STACK_SIZE=4096;CONFIG_SYSTICK_HZ=100;CONFIG_BOARD_SMARTL_EVB=1;CONFIG_DEBUG=1;CLI_CONFIG_STACK_SIZE=4096;</Define>
+        <Undefine/>
+        <IncludePath>$(ProjectPath);../../../../../solutions/mcu_freertos_cpp/include;../../../../../components/freertos/FreeRTOS/Source/include;../../../../../components/freertos/FreeRTOS/Source/portable/GCC/riscv/e907f;../../../../../components/freertos/FreeRTOS/Source/portable/GCC/riscv/e907f/tspend;../../../../../components/csi/csi2/include;../../../../../boards/board_riscv_dummy/include;../../../../../components/chip_riscv_dummy/include;../../../../../components/chip_riscv_dummy/include/asm;../../../../../components/libc_freertos/compilers/gcc;../../../../../components/libc_freertos/include;../../../../../solutions/mcu_freertos_cpp/app/include;</IncludePath>
+        <OtherFlags>-MP -MMD -Os -Wno-main -mcmodel=medlow</OtherFlags>
+        <DebugLevel>gdwarf2</DebugLevel>
+      </Asm>
+      <Linker>
+        <Garbage>yes</Garbage>
+        <Garbage2>yes</Garbage2>
+        <LDFile>../../../../../solutions/mcu_freertos_cpp/gcc_flash_smartl.ld.dram</LDFile>
+        <LibName>m;</LibName>
+        <LibPath>../../../../../components/csi/csi2/dsp/lib;</LibPath>
+        <OtherFlags>-MP -MMD -Os -Wno-main -mcmodel=medlow -Wl,-zmax-page-size=1024 -Wl,-Map=yoc.map -lstdc++</OtherFlags>
+        <AutoLDFile>no</AutoLDFile>
+        <LinkType>whole-archive</LinkType>
+        <IncludeAllLibs>yes</IncludeAllLibs>
+        <LinkSpecsType>none</LinkSpecsType>
+        <LinkUseNewlibNano>no</LinkUseNewlibNano>
+      </Linker>
+      <Debug>
+        <LoadApplicationAtStartup>yes</LoadApplicationAtStartup>
+        <Connector>SIM</Connector>
+        <StopAt>yes</StopAt>
+        <StopAtText>main</StopAtText>
+        <InitFile>$(ProjectPath)/gdbinit.remote</InitFile>
+        <PreInit/>
+        <AfterLoadFile/>
+        <AutoRun>yes</AutoRun>
+        <ResetType>Hard Reset</ResetType>
+        <SoftResetVal>0</SoftResetVal>
+        <ResetAfterLoad>no</ResetAfterLoad>
+        <AfterResetFile/>
+        <Dumpcore>no</Dumpcore>
+        <DumpcoreText/>
+        <SVCFile/>
+        <ConfigICE>
+          <IP>localhost</IP>
+          <PORT>1025</PORT>
+          <CPUNumber>0</CPUNumber>
+          <Clock>12000</Clock>
+          <Delay>10</Delay>
+          <NResetDelay>100</NResetDelay>
+          <WaitReset>50</WaitReset>
+          <DDC>yes</DDC>
+          <TRST>no</TRST>
+          <PreReset>no</PreReset>
+          <DebugPrint>no</DebugPrint>
+          <Connect>Normal</Connect>
+          <ResetType>soft</ResetType>
+          <SoftResetVal>0</SoftResetVal>
+          <RTOSType>None</RTOSType>
+          <DownloadToFlash>no</DownloadToFlash>
+          <ResetAfterConnect>yes</ResetAfterConnect>
+          <GDBName/>
+          <GDBServerType>Local</GDBServerType>
+          <OtherFlags/>
+          <ICEEnablePCSampling>no</ICEEnablePCSampling>
+          <ICESamplingFreq>1000</ICESamplingFreq>
+          <RemoteICEEnablePCSampling>no</RemoteICEEnablePCSampling>
+          <RemoteICESamplingPort>1026</RemoteICESamplingPort>
+          <Version>latest</Version>
+          <SupportRemoteICEAsyncDebug>no</SupportRemoteICEAsyncDebug>
+        </ConfigICE>
+        <ConfigSIM>
+          <SIMTarget>soccfg/riscv32/smartl_e907_cfg.xml</SIMTarget>
+          <OtherFlags/>
+          <NoGraphic>yes</NoGraphic>
+          <Log>no</Log>
+          <SimTrace>no</SimTrace>
+          <Version>latest</Version>
+        </ConfigSIM>
+        <ConfigOpenOCD>
+          <OpenOCDExecutablePath/>
+          <OpenOCDLocally>yes</OpenOCDLocally>
+          <OpenOCDTelnetPortEnable>no</OpenOCDTelnetPortEnable>
+          <OpenOCDTelnetPort>4444</OpenOCDTelnetPort>
+          <OpenOCDTclPortEnable>no</OpenOCDTclPortEnable>
+          <OpenOCDTclPort>6666</OpenOCDTclPort>
+          <OpenOCDConfigOptions/>
+          <OpenOCDTimeout>5000</OpenOCDTimeout>
+          <OpenOCDRemoteIP>localhost</OpenOCDRemoteIP>
+          <OpenOCDRemotePort>3333</OpenOCDRemotePort>
+          <PluginID>openocd-sifive</PluginID>
+          <Version>latest</Version>
+        </ConfigOpenOCD>
+      </Debug>
+      <Flash>
+        <InitFile/>
+        <PreInit/>
+        <Erase>Erase Sectors</Erase>
+        <Algorithms Path=""/>
+        <Program>no</Program>
+        <Verify>no</Verify>
+        <ResetAndRun>no</ResetAndRun>
+        <ResetType/>
+        <SoftResetVal/>
+        <FlashIndex>no</FlashIndex>
+        <FlashIndexVal>0</FlashIndexVal>
+        <External>no</External>
+        <Command/>
+        <Arguments/>
+      </Flash>
+    </BuildConfig>
+    <BuildConfig Name="BuildSet_LLVM">
+      <Target>
+        <ROMBank Selected="1">
+          <ROM1>
+            <InUse>no</InUse>
+            <Start/>
+            <Size/>
+          </ROM1>
+          <ROM2>
+            <InUse>no</InUse>
+            <Start/>
+            <Size/>
+          </ROM2>
+          <ROM3>
+            <InUse>no</InUse>
+            <Start/>
+            <Size/>
+          </ROM3>
+          <ROM4>
+            <InUse>no</InUse>
+            <Start/>
+            <Size/>
+          </ROM4>
+          <ROM5>
+            <InUse>no</InUse>
+            <Start/>
+            <Size/>
+          </ROM5>
+        </ROMBank>
+        <RAMBank>
+          <RAM1>
+            <InUse>no</InUse>
+            <Start/>
+            <Size/>
+            <Init>yes</Init>
+          </RAM1>
+          <RAM2>
+            <InUse>no</InUse>
+            <Start/>
+            <Size/>
+            <Init>yes</Init>
+          </RAM2>
+          <RAM3>
+            <InUse>no</InUse>
+            <Start/>
+            <Size/>
+            <Init>yes</Init>
+          </RAM3>
+          <RAM4>
+            <InUse>no</InUse>
+            <Start/>
+            <Size/>
+            <Init>yes</Init>
+          </RAM4>
+          <RAM5>
+            <InUse>no</InUse>
+            <Start/>
+            <Size/>
+            <Init>yes</Init>
+          </RAM5>
+        </RAMBank>
+        <CPU>e907f</CPU>
+        <UseMiniLib>yes</UseMiniLib>
+        <Endian>little</Endian>
+        <UseEnhancedLRW>no</UseEnhancedLRW>
+        <UseContinueBuild>no</UseContinueBuild>
+        <ToolchainID>XTLLVMElfNewlib</ToolchainID>
+        <ToolchainVersion>latest</ToolchainVersion>
+        <UseSemiHost>no</UseSemiHost>
+      </Target>
+      <Output>
+        <OutputName>$(ProjectName)</OutputName>
+        <Type>Executable</Type>
+        <CreateHexFile>no</CreateHexFile>
+        <CreateBinFile>no</CreateBinFile>
+        <Preprocessor>no</Preprocessor>
+        <Disassmeble>yes</Disassmeble>
+        <CallGraph>no</CallGraph>
+        <Map>no</Map>
+      </Output>
+      <User>
+        <BeforeCompile>
+          <RunUserProg>no</RunUserProg>
+          <UserProgName/>
+          <IsBatchScript>no</IsBatchScript>
+        </BeforeCompile>
+        <BeforeMake>
+          <RunUserProg>yes</RunUserProg>
+          <UserProgName>../../../../../solutions/mcu_freertos_cpp/script/before_build.sh ../../../../../solutions/mcu_freertos_cpp ../../../../../boards/board_riscv_dummy ../../../../../components/chip_riscv_dummy smartl e907f $(OBJCOPY) $(OBJDUMP)</UserProgName>
+          <IsBatchScript>no</IsBatchScript>
+        </BeforeMake>
+        <AfterMake>
+          <RunUserProg>yes</RunUserProg>
+          <UserProgName>../../../../../solutions/mcu_freertos_cpp/script/after_build.sh ../../../../../solutions/mcu_freertos_cpp ../../../../../boards/board_riscv_dummy ../../../../../components/chip_riscv_dummy smartl e907f $(OBJCOPY) $(OBJDUMP)</UserProgName>
+          <IsBatchScript>no</IsBatchScript>
+        </AfterMake>
+        <Tools/>
+      </User>
+      <Compiler>
+        <Define>CONFIG_KERNEL_FREERTOS=&quot;y&quot;;CONFIG_CSI_V2=1;CONFIG_CSI=&quot;csi2&quot;;CONFIG_LIBC_MINI_PRINTF_SUPPORT=1;CONFIG_SUPPORT_TSPEND=1;CONFIG_SUPPORT_IRQ_NESTED=1;CONFIG_XIP=0;CONFIG_ARCH_MAINSTACK=4096;CONFIG_ARCH_INTERRUPTSTACK=4096;CONFIG_CPU_XUANTIE_E907F=1;CONFIG_CHECK_FPU_DIRTY=1;CONFIG_INIT_TASK_STACK_SIZE=8192;CONFIG_APP_TASK_STACK_SIZE=4096;CONFIG_SYSTICK_HZ=100;CONFIG_BOARD_SMARTL_EVB=1;CONFIG_DEBUG=1;CLI_CONFIG_STACK_SIZE=4096;</Define>
+        <Undefine/>
+        <Optim>Optimize size (-Os)</Optim>
+        <DebugLevel>Maximum (-g3)</DebugLevel>
+        <IncludePath>$(ProjectPath);../../../../../solutions/mcu_freertos_cpp/include;../../../../../components/freertos/FreeRTOS/Source/include;../../../../../components/freertos/FreeRTOS/Source/portable/GCC/riscv/e907f;../../../../../components/freertos/FreeRTOS/Source/portable/GCC/riscv/e907f/tspend;../../../../../components/csi/csi2/include;../../../../../boards/board_riscv_dummy/include;../../../../../components/chip_riscv_dummy/include;../../../../../components/chip_riscv_dummy/include/asm;../../../../../components/libc_freertos/compilers/gcc;../../../../../components/libc_freertos/include;../../../../../solutions/mcu_freertos_cpp/app/include;</IncludePath>
+        <OtherFlags>-MP -MMD -Os -Wno-main -mcmodel=medlow -Wno-unused-function -Wpointer-arith -Wno-undef -Wall -ffunction-sections -fdata-sections -fno-inline-functions -fno-builtin -fno-strict-aliasing -O2 -DHAVE_INIT_ARRAY_LD</OtherFlags>
+        <Verbose>no</Verbose>
+        <Ansi>no</Ansi>
+        <Syntax>no</Syntax>
+        <Pedantic>no</Pedantic>
+        <PedanticErr>no</PedanticErr>
+        <InhibitWarn>no</InhibitWarn>
+        <AllWarn>yes</AllWarn>
+        <WarnErr>no</WarnErr>
+        <OneElfS>no</OneElfS>
+        <OneElfSPerData>no</OneElfSPerData>
+        <Fstrict>no</Fstrict>
+      </Compiler>
+      <Asm>
+        <Define>CONFIG_KERNEL_FREERTOS=&quot;y&quot;;CONFIG_CSI_V2=1;CONFIG_CSI=&quot;csi2&quot;;CONFIG_LIBC_MINI_PRINTF_SUPPORT=1;CONFIG_SUPPORT_TSPEND=1;CONFIG_SUPPORT_IRQ_NESTED=1;CONFIG_XIP=0;CONFIG_ARCH_MAINSTACK=4096;CONFIG_ARCH_INTERRUPTSTACK=4096;CONFIG_CPU_XUANTIE_E907F=1;CONFIG_CHECK_FPU_DIRTY=1;CONFIG_INIT_TASK_STACK_SIZE=8192;CONFIG_APP_TASK_STACK_SIZE=4096;CONFIG_SYSTICK_HZ=100;CONFIG_BOARD_SMARTL_EVB=1;CONFIG_DEBUG=1;CLI_CONFIG_STACK_SIZE=4096;</Define>
+        <Undefine/>
+        <IncludePath>$(ProjectPath);../../../../../solutions/mcu_freertos_cpp/include;../../../../../components/freertos/FreeRTOS/Source/include;../../../../../components/freertos/FreeRTOS/Source/portable/GCC/riscv/e907f;../../../../../components/freertos/FreeRTOS/Source/portable/GCC/riscv/e907f/tspend;../../../../../components/csi/csi2/include;../../../../../boards/board_riscv_dummy/include;../../../../../components/chip_riscv_dummy/include;../../../../../components/chip_riscv_dummy/include/asm;../../../../../components/libc_freertos/compilers/gcc;../../../../../components/libc_freertos/include;../../../../../solutions/mcu_freertos_cpp/app/include;</IncludePath>
+        <OtherFlags>-MP -MMD -Os -Wno-main -mcmodel=medlow</OtherFlags>
+        <DebugLevel>gdwarf2</DebugLevel>
+      </Asm>
+      <Linker>
+        <Garbage>yes</Garbage>
+        <Garbage2>yes</Garbage2>
+        <LDFile>../../../../../solutions/mcu_freertos_cpp/gcc_flash_smartl.ld.dram</LDFile>
+        <LibName>m;</LibName>
+        <LibPath>../../../../../components/csi/csi2/dsp/lib;</LibPath>
+        <OtherFlags>-MP -MMD -Os -Wno-main -mcmodel=medlow -Wl,-zmax-page-size=1024 -Wl,-Map=yoc.map -lstdc++</OtherFlags>
+        <AutoLDFile>no</AutoLDFile>
+        <LinkType>whole-archive</LinkType>
+        <IncludeAllLibs>yes</IncludeAllLibs>
+        <LinkSpecsType>none</LinkSpecsType>
+        <LinkUseNewlibNano>no</LinkUseNewlibNano>
+      </Linker>
+      <Debug>
+        <LoadApplicationAtStartup>yes</LoadApplicationAtStartup>
+        <Connector>SIM</Connector>
+        <StopAt>yes</StopAt>
+        <StopAtText>main</StopAtText>
+        <InitFile>$(ProjectPath)/gdbinit.remote</InitFile>
+        <PreInit/>
+        <AfterLoadFile/>
+        <AutoRun>yes</AutoRun>
+        <ResetType>Hard Reset</ResetType>
+        <SoftResetVal>0</SoftResetVal>
+        <ResetAfterLoad>no</ResetAfterLoad>
+        <AfterResetFile/>
+        <Dumpcore>no</Dumpcore>
+        <DumpcoreText/>
+        <SVCFile/>
+        <ConfigICE>
+          <IP>localhost</IP>
+          <PORT>1025</PORT>
+          <CPUNumber>0</CPUNumber>
+          <Clock>12000</Clock>
+          <Delay>10</Delay>
+          <NResetDelay>100</NResetDelay>
+          <WaitReset>50</WaitReset>
+          <DDC>yes</DDC>
+          <TRST>no</TRST>
+          <PreReset>no</PreReset>
+          <DebugPrint>no</DebugPrint>
+          <Connect>Normal</Connect>
+          <ResetType>soft</ResetType>
+          <SoftResetVal>0</SoftResetVal>
+          <RTOSType>None</RTOSType>
+          <DownloadToFlash>no</DownloadToFlash>
+          <ResetAfterConnect>yes</ResetAfterConnect>
+          <GDBName/>
+          <GDBServerType>Local</GDBServerType>
+          <OtherFlags/>
+          <ICEEnablePCSampling>no</ICEEnablePCSampling>
+          <ICESamplingFreq>1000</ICESamplingFreq>
+          <RemoteICEEnablePCSampling>no</RemoteICEEnablePCSampling>
+          <RemoteICESamplingPort>1026</RemoteICESamplingPort>
+          <Version>latest</Version>
+          <SupportRemoteICEAsyncDebug>no</SupportRemoteICEAsyncDebug>
+        </ConfigICE>
+        <ConfigSIM>
+          <SIMTarget>soccfg/riscv32/smartl_e907_cfg.xml</SIMTarget>
+          <OtherFlags/>
+          <NoGraphic>yes</NoGraphic>
+          <Log>no</Log>
+          <SimTrace>no</SimTrace>
+          <Version>latest</Version>
+        </ConfigSIM>
+        <ConfigOpenOCD>
+          <OpenOCDExecutablePath/>
+          <OpenOCDLocally>yes</OpenOCDLocally>
+          <OpenOCDTelnetPortEnable>no</OpenOCDTelnetPortEnable>
+          <OpenOCDTelnetPort>4444</OpenOCDTelnetPort>
+          <OpenOCDTclPortEnable>no</OpenOCDTclPortEnable>
+          <OpenOCDTclPort>6666</OpenOCDTclPort>
+          <OpenOCDConfigOptions/>
+          <OpenOCDTimeout>5000</OpenOCDTimeout>
+          <OpenOCDRemoteIP>localhost</OpenOCDRemoteIP>
+          <OpenOCDRemotePort>3333</OpenOCDRemotePort>
+          <PluginID>openocd-sifive</PluginID>
+          <Version>latest</Version>
+        </ConfigOpenOCD>
+      </Debug>
+      <Flash>
+        <InitFile/>
+        <PreInit/>
+        <Erase>Erase Sectors</Erase>
+        <Algorithms Path=""/>
+        <Program>no</Program>
+        <Verify>no</Verify>
+        <ResetAndRun>no</ResetAndRun>
+        <ResetType/>
+        <SoftResetVal/>
+        <FlashIndex>no</FlashIndex>
+        <FlashIndexVal>0</FlashIndexVal>
+        <External>no</External>
+        <Command/>
+        <Arguments/>
+      </Flash>
+    </BuildConfig>
+  </BuildConfigs>
+</Project>

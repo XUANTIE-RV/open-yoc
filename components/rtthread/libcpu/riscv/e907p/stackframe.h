@@ -14,6 +14,7 @@
 #define __STACKFRAME_H__
 
 #include "cpuport.h"
+#include "riscv_csr.h"
 
 #if defined(__riscv_flen) && defined(ENABLE_FPU)
 #if __riscv_flen == 64
@@ -56,6 +57,7 @@
 #define FPU_CTX_F30_OFF  (__riscv_flen >> 5) * 120 /* offsetof(fpu_context_t, fpustatus.f[30]) - offsetof(fpu_context_t, fpustatus.f[0]) */
 #define FPU_CTX_F31_OFF  (__riscv_flen >> 5) * 124 /* offsetof(fpu_context_t, fpustatus.f[31]) - offsetof(fpu_context_t, fpustatus.f[0]) */
 #endif /* ENABLE_FPU */
+
 
 .macro SAVE_ALL
 #if __riscv_dsp
@@ -103,17 +105,28 @@
     STORE x31, 30 * REGBYTES(sp)
     csrr  x1, mepc
     STORE x1,   31 * REGBYTES(sp)
+#if CONFIG_CHECK_FPU_DIRTY
+    csrr  t3, mstatus
+    STORE t3,   32 * REGBYTES(sp)
+#else
     csrr  x1, mstatus
     STORE x1,   32 * REGBYTES(sp)
+#endif
 
 #if defined(__riscv_flen) && defined(ENABLE_FPU)
+#if CONFIG_CHECK_FPU_DIRTY
+    /* skip if not dirty */
+    li     t1, SR_FS_DIRTY
+    and    t3, t3, t1
+    bne    t3, t1, 1f
+#endif  /*CONFIG_CHECK_FPU_DIRTY*/
     /* save float registers */
-    mv t1, sp
-    addi t1, t1, CTX_GENERAL_REG_NR * REGBYTES
+    mv     t1, sp
+    addi   t1, t1, CTX_GENERAL_REG_NR * REGBYTES
     /* save fcsr registers */
-    frcsr    t0
-    sw       t0, (0)(t1)
-    addi t1, t1, (1) * REGBYTES
+    frcsr  t0
+    sw     t0, (0)(t1)
+    addi   t1, t1, (1) * REGBYTES
 
     FSTORE f0,  FPU_CTX_F0_OFF(t1)
     FSTORE f1,  FPU_CTX_F1_OFF(t1)
@@ -147,6 +160,9 @@
     FSTORE f29, FPU_CTX_F29_OFF(t1)
     FSTORE f30, FPU_CTX_F30_OFF(t1)
     FSTORE f31, FPU_CTX_F31_OFF(t1)
+#if CONFIG_CHECK_FPU_DIRTY
+1:
+#endif /*CONFIG_CHECK_FPU_DIRTY*/
 #endif /* __riscv_flen && ENABLE_FPU */
 #if __riscv_dsp
     mv   t1, sp
@@ -162,7 +178,24 @@
 #endif /*__riscv_dsp */
 .endm
 
+#if CONFIG_CHECK_FPU_DIRTY
+.macro RESTORE_MSTATUS
+    li       t1, 0
+    /* general regs */
+    li       t0, (CTX_GENERAL_REG_NR - 1) * REGBYTES
+    add      t1, t1, t0
+    /* restore mstatus */
+    add      sp, sp, t1
+    LOAD     t3, (0)(sp)
+    csrw     mstatus, t3
+    sub      sp, sp, t1
+.endm
+#endif /*CONFIG_CHECK_FPU_DIRTY */
+
 .macro RESTORE_ALL
+#if CONFIG_CHECK_FPU_DIRTY
+    RESTORE_MSTATUS
+#endif /*CONFIG_CHECK_FPU_DIRTY */
 #if __riscv_dsp
     addi t2, sp, (CTX_GENERAL_REG_NR) * REGBYTES
 #if defined(__riscv_flen) && defined(ENABLE_FPU)
@@ -175,6 +208,12 @@
     csrw vxsat, t0
 #endif /*__riscv_dsp */
 #if defined(__riscv_flen) && defined(ENABLE_FPU)
+#if CONFIG_CHECK_FPU_DIRTY
+    /* skip if not dirty */
+    li       t1, SR_FS_DIRTY
+    and      t3, t3, t1
+    bne      t3, t1, 1f
+#endif  /*CONFIG_CHECK_FPU_DIRTY*/
     /* restore float register  */
     addi t2, sp, (CTX_GENERAL_REG_NR + 1) * REGBYTES
     FLOAD f0, FPU_CTX_F0_OFF(t2)
@@ -214,13 +253,18 @@
     addi     t2, sp, CTX_GENERAL_REG_NR * REGBYTES
     lw       t0, 0(t2)
     fscsr    t0
+#if CONFIG_CHECK_FPU_DIRTY
+1:
+#endif  /*CONFIG_CHECK_FPU_DIRTY*/
 #endif /* __riscv_flen && ENABLE_FPU */
 
     /* reserve general registers */
     LOAD x1,   31 * REGBYTES(sp)
     csrw mepc, x1
+#if !CONFIG_CHECK_FPU_DIRTY
     LOAD x1,   32 * REGBYTES(sp)
     csrw mstatus, x1
+#endif
     LOAD x1,   0 * REGBYTES(sp)
     LOAD x2,   1 * REGBYTES(sp)
     LOAD x3,   2 * REGBYTES(sp)

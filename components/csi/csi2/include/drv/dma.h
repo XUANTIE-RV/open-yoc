@@ -65,13 +65,13 @@ typedef enum {
 } csi_dma_trans_dir_t;
 
 typedef struct {
-    int8_t ctrl_idx;
-    int8_t ch_idx;
+    uint8_t ctrl_idx;
+    uint8_t ch_idx;
 } csi_dma_ch_desc_t;
 
 typedef struct {
     uint16_t dev_tag;
-    int8_t   ctrl_idx;
+    uint8_t  ctrl_idx;
     const csi_dma_ch_desc_t *ch_list;
 } csi_dma_ch_spt_list_t;
 

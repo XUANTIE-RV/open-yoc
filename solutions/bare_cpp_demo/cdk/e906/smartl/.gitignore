@@ -1,0 +1,15 @@
+
+/Debug/
+/Release/
+/boards/
+/components/
+/solutions/
+cdkws.mk
+Obj/
+Lst/
+__workspace_pack__/
+.cdk
+.cache
+*.cdkws
+*.mk
+*.bat

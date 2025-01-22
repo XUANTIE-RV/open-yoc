@@ -1,6 +1,6 @@
 ## 第一部分： 基础信息
 name: rtthread                                      # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
-version: v8.0.0                                    # <必选项> 组件版本号
+version: v8.1.0                                    # <必选项> 组件版本号
 description: RT-Thread 实时操作系统内核，体积小、功耗低、实时性、调试方便等特点 # <必选项> 建议至少20字以上
 type: common                                        # <必选项> 组件类型，为：solution, chip, board, common, sdk
 tag: 核心模块                                       # <可选项> 组件分类，缺省值： ''
@@ -42,7 +42,7 @@ build_config:
         -Wformat -Wformat-security
         -Warray-bounds -Wuninitialized
         -Wreturn-type -Wcomment -Wswitch
-        -Wparentheses -Wlogical-op
+        -Wparentheses
   asmflag: -D__ASSEMBLY__
   include:
     - include
@@ -55,6 +55,7 @@ source_file:
   - libcpu/<arch>/<cpu>/*.c
   - libcpu/<arch>/<cpu>/interrupt_gcc.S
   - libcpu/<arch>/<cpu>/context_gcc.S
+  - libcpu/<arch>/common/*.c
   - src/rtt_ipc/*.c
   - src/klibc/*.c
 

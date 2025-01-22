@@ -14,6 +14,7 @@
 #define __STACKFRAME_H__
 
 #include "cpuport.h"
+#include "riscv_csr.h"
 
 #ifdef ENABLE_FPU
 #define FPU_CTX_F0_OFF   0   /* offsetof(fpu_context_t, fpustatus.f[0])  - offsetof(fpu_context_t, fpustatus.f[0]) */
@@ -85,10 +86,20 @@
     STORE x31, 30 * REGBYTES(sp)
     csrr  x1, mepc
     STORE x1,  31 * REGBYTES(sp)
+#if CONFIG_CHECK_FPU_DIRTY || CONFIG_CHECK_VECTOR_DIRTY
+    csrr  t3, mstatus
+    STORE t3,  32 * REGBYTES(sp)
+#else
     csrr  x1, mstatus
     STORE x1,  32 * REGBYTES(sp)
+#endif /* CONFIG_CHECK_FPU_DIRTY || CONFIG_CHECK_VECTOR_DIRTY */
 
 #if defined(__riscv_flen) && defined(ENABLE_FPU)
+#if CONFIG_CHECK_FPU_DIRTY
+    li       t1, SR_FS_DIRTY
+    and      t4, t3, t1
+    bne      t4, t1, 1f
+#endif /* CONFIG_CHECK_FPU_DIRTY */
     /* save fcsr registers */
     addi sp, sp, -(CTX_FPU_CSR_REG_NR) * REGBYTES
     frcsr    t0
@@ -127,9 +138,22 @@
     fsd f29, FPU_CTX_F29_OFF(sp)
     fsd f30, FPU_CTX_F30_OFF(sp)
     fsd f31, FPU_CTX_F31_OFF(sp)
+#if CONFIG_CHECK_FPU_DIRTY
+    j   2f
+1:
+    /* don't store, move sp only */
+    addi sp, sp, -(CTX_FPU_CSR_REG_NR + CTX_FPU_REG_NR) * REGBYTES
+2:
+#endif /* CONFIG_CHECK_FPU_DIRTY */
 #endif /* __riscv_flen && ENABLE_FPU */
 
 #if defined(__riscv_vector) && defined(ENABLE_VECTOR)
+#if CONFIG_CHECK_VECTOR_DIRTY
+    /* check if VS filed of MSTATUS is 'dirty' */
+    li       t1, SR_VS_DIRTY
+    and      t4, t3, t1
+    bne      t4, t1, 3f
+#endif
     /* save vector csr registers */
     addi sp, sp, -(CTX_VECTOR_CSR_REG_NR) * REGBYTES
     csrr    t0, vl
@@ -149,8 +173,8 @@
     sub  sp, sp, t2
     slli t0, t0, 3
     mv   t1, sp
-    vsetvli  zero, zero, e8, m8
 #if (__riscv_v == 7000)
+    vsetvli  zero, zero, e8, m8
     vsb.v    v0, (t1)
     add      t1, t1, t0
     vsb.v    v8, (t1)
@@ -159,6 +183,7 @@
     add      t1, t1, t0
     vsb.v    v24, (t1)
 #elif (__riscv_v == 1000000)
+    vsetvli  zero, zero, e8, m8, ta, ma
     vs8r.v   v0, (t1)
     add      t1, t1, t0
     vs8r.v   v8, (t1)
@@ -167,16 +192,64 @@
     add      t1, t1, t0
     vs8r.v   v24, (t1)
 #endif
+#if CONFIG_CHECK_VECTOR_DIRTY
+    j        4f
+3:
+    /* don't save, move sp only */
+    addi     sp, sp, -(CTX_VECTOR_CSR_REG_NR) * REGBYTES
+    csrr     t0, vlenb
+    li       t1, CTX_VECTOR_REG_NR
+    mul      t2, t0, t1
+    sub      sp, sp, t2
+4:
+#endif /* CONFIG_CHECK_VECTOR_DIRTY */
 #endif /* __riscv_vector && ENABLE_VECTOR */
 .endm
 
-.macro RESTORE_ALL
+#if CONFIG_CHECK_FPU_DIRTY || CONFIG_CHECK_VECTOR_DIRTY
+.macro RESTORE_MSTATUS
+    li       t1, 0
+
 #if defined(__riscv_vector) && defined(ENABLE_VECTOR)
+    addi     t1, t1, (CTX_VECTOR_CSR_REG_NR) * REGBYTES
+    csrr     t0, vlenb
+    li       t2, CTX_VECTOR_REG_NR
+    mul      t2, t0, t2
+    add      t1, t1, t2
+#endif
+
+#if defined(__riscv_flen) && defined(ENABLE_FPU)
+    addi     t1, t1, (CTX_FPU_CSR_REG_NR + CTX_FPU_REG_NR) * REGBYTES
+#endif
+
+    /* general regs */
+    addi     t1, t1, (CTX_GENERAL_REG_NR - 1) * REGBYTES
+
+    /* restore mstatus */
+    add      sp, sp, t1
+    ld       t3, (0)(sp)
+    csrw     mstatus, t3
+    sub      sp, sp, t1
+.endm
+#endif /* CONFIG_CHECK_FPU_DIRTY || CONFIG_CHECK_VECTOR_DIRTY */
+
+.macro RESTORE_ALL
+#if CONFIG_CHECK_FPU_DIRTY || CONFIG_CHECK_VECTOR_DIRTY
+    RESTORE_MSTATUS
+#endif
+#if defined(__riscv_vector) && defined(ENABLE_VECTOR)
+#if CONFIG_CHECK_VECTOR_DIRTY
+    /* restore mstatus first */
+    /* check if VS filed of MSTATUS is 'dirty' */
+    li       t1, SR_VS_DIRTY
+    and      t4, t3, t1
+    bne      t4, t1, 1f
+#endif
     /* restore vector registers */
     csrr     t0, vlenb
     slli     t0, t0, 3
-    vsetvli  zero, zero, e8, m8
 #if (__riscv_v == 7000)
+    vsetvli  zero, zero, e8, m8
     vlb.v    v0, (sp)
     add      sp, sp, t0
     vlb.v    v8, (sp)
@@ -186,6 +259,7 @@
     vlb.v    v24, (sp)
     add      sp, sp, t0
 #elif (__riscv_v == 1000000)
+    vsetvli  zero, zero, e8, m8, ta, ma
     vl8r.v   v0, (sp)
     add      sp, sp, t0
     vl8r.v   v8, (sp)
@@ -206,9 +280,25 @@
     ld       t2, (32)(sp)
     csrw     vxrm, t2
     addi     sp, sp, (CTX_VECTOR_CSR_REG_NR) * REGBYTES
+#if CONFIG_CHECK_VECTOR_DIRTY
+    j        2f
+1:
+    csrr     t0, vlenb
+    li       t1, CTX_VECTOR_REG_NR
+    mul      t2, t0, t1
+    add      sp, sp, t2
+    addi     sp, sp, (CTX_VECTOR_CSR_REG_NR) * REGBYTES
+2:
+#endif /* CONFIG_CHECK_VECTOR_DIRTY */
 #endif /* __riscv_vector && ENABLE_VECTOR */
 
 #if defined(__riscv_flen) && defined(ENABLE_FPU)
+#if CONFIG_CHECK_FPU_DIRTY
+    /* check if FS filed of MSTATUS is 'dirty' */
+    li       t1, SR_FS_DIRTY
+    and      t4, t3, t1
+    bne      t4, t1, 3f
+#endif
     /* restore float register */
     fld f0, FPU_CTX_F0_OFF(sp)
     fld f1, FPU_CTX_F1_OFF(sp)
@@ -247,13 +337,22 @@
     ld       t0, 0(sp)
     fscsr    t0
     addi     sp, sp, CTX_FPU_CSR_REG_NR * REGBYTES
+#if CONFIG_CHECK_FPU_DIRTY
+    j        4f
+3:
+    addi     sp, sp, CTX_FPU_REG_NR * REGBYTES
+    addi     sp, sp, CTX_FPU_CSR_REG_NR * REGBYTES
+4:
+#endif /* CONFIG_CHECK_FPU_DIRTY */
 #endif /* __riscv_flen && ENABLE_FPU */
 
     /* restore general registers */
     LOAD x1,  31 * REGBYTES(sp)
     csrw mepc, x1
+#if (!CONFIG_CHECK_FPU_DIRTY) && (!CONFIG_CHECK_VECTOR_DIRTY)
     LOAD x1,  32 * REGBYTES(sp)
     csrw mstatus, x1
+#endif
     LOAD x1,   0 * REGBYTES(sp)
     LOAD x3,   2 * REGBYTES(sp)
     LOAD x4,   3 * REGBYTES(sp)

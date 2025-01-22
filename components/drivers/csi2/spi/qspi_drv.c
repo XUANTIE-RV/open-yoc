@@ -130,7 +130,7 @@ static int _qspi_config(rvm_dev_t *dev, rvm_hal_qspi_config_t *config)
         return -1;
     }
 
-    ret = csi_qspi_mode(&QSPI(dev)->handle, config->mode);
+    ret = csi_qspi_mode(&QSPI(dev)->handle, (csi_qspi_mode_t)config->mode);
     if (ret != CSI_OK) {
         return -1;
     }

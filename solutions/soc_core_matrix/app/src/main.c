@@ -29,7 +29,7 @@ int main(void)
     board_yoc_init();
 
     printf("soc_core_matrix demo start!\r\n");
-#ifdef __riscv_matrix
+#if defined(__riscv_matrix) || defined(__riscv_xtheadmatrix)
     example_core_matrix();
 #else
     printf("matrix is not support for this cpu!\n");

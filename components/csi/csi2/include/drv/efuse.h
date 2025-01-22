@@ -36,6 +36,7 @@ extern "C" {
 typedef struct {
     uint32_t            start;              ///< Efuse start address
     uint32_t            end;                ///< Efuse end address
+    uint32_t            size;                ///< Efuse size
 } csi_efuse_info_t;
 
 typedef struct {

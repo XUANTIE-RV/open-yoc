@@ -116,19 +116,19 @@ Mtspend_Handler:
 #else
     /* get rt_thread_switch_interrupt_flag */
     la    t0, rt_thread_switch_interrupt_flag
-    lw    t2, 0(t0)
+    LOAD  t2, 0(t0)
     beqz  t2, tspend_exit       /* tspend already handled */
     /* clear rt_thread_switch_interrupt_flag to 0 */
-    sw    zero, 0(t0)
+    STORE zero, 0(t0)
 
     /* switch thread */
     la    t0, rt_interrupt_from_thread
-    lw    t1, 0(t0)
-    sw    sp, 0(t1)
+    LOAD  t1, 0(t0)
+    STORE sp, 0(t1)
 
     la    t0, rt_interrupt_to_thread
-    lw    t1, 0(t0)
-    lw    sp, 0(t1)
+    LOAD  t1, 0(t0)
+    LOAD  sp, 0(t1)
 
 tspend_exit:
 #if !CONFIG_INTC_CLIC_PLIC

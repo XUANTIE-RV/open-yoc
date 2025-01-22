@@ -33,6 +33,10 @@
 #endif
 #endif
 
+#if !CONFIG_INTC_CLIC_PLIC && CONFIG_SUPPORT_IRQ_NESTED
+#error "Please disable CONFIG_SUPPORT_IRQ_NESTED in package.yaml when use PLIC."
+#endif
+
 #if CONFIG_ECC_L2_ENABLE
 static csi_dev_t ecc_l2_dev;
 #endif
@@ -50,7 +54,9 @@ unsigned long page_table_l0[512] __attribute__ ((aligned(4096)));
 void _mmu_init(void) __attribute__((noinline));
 void _mmu_init(void)
 {
-#if CONFIG_CPU_XUANTIE_C906 || CONFIG_CPU_XUANTIE_C906FD || CONFIG_CPU_XUANTIE_C906FDV || CONFIG_CPU_XUANTIE_C910 || CONFIG_CPU_XUANTIE_C920 || CONFIG_CPU_XUANTIE_C908 || CONFIG_CPU_XUANTIE_C908V || CONFIG_CPU_XUANTIE_C908I
+#if CONFIG_CPU_XUANTIE_C906 || CONFIG_CPU_XUANTIE_C906FD || CONFIG_CPU_XUANTIE_C906FDV \
+    || CONFIG_CPU_XUANTIE_C908 || CONFIG_CPU_XUANTIE_C908V || CONFIG_CPU_XUANTIE_C908I \
+    || CONFIG_CPU_XUANTIE_R910 || CONFIG_CPU_XUANTIE_R920
     unsigned long status = __get_MXSTATUS();
     /* open MAEE for thead-mmu extension */
     status |= (1 << 21);

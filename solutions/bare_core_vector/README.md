@@ -1,6 +1,6 @@
 # 概述
 
-`bare_core_vector` 是一个玄铁最小系统RTOS SDK中面向baremetal领域的玄铁cpu vector使用示例，可运行在QEMU环境。
+`bare_core_vector` 是一个玄铁RTOS SDK中面向baremetal领域的玄铁cpu vector使用示例，可运行在QEMU环境。
 
 用户可参考vector汇编相关代码实现其他功能。
 
@@ -15,7 +15,7 @@
 ```
 - cpu: <br />
         r920 r908fdv r908fdv-cp <br />
-        c906fdv c908v c920 c920v2 c920v3 c920v3-cp <br />
+        c906fdv c908v c920v2 c920v3 c920v3-cp <br />
         c907fdv c907fdvm c907fdv-rv32 c907fdvm-rv32
 - platform: <br />
         xiaohui
@@ -42,7 +42,7 @@ qemu-system-riscv64 -machine xiaohui -nographic -kernel yoc.elf -cpu c907fdvm
 
 ### 基于FPGA平台运行
 
-如何基于FPGA平台运行请参考《玄铁最小系统RTOS SDK使用参考手册》
+如何基于FPGA平台运行请参考《玄铁RTOS SDK用户手册》
 
 ### 运行结果
 正常运行串口输出内容参考如下
@@ -61,30 +61,24 @@ vector runs successfully!
 
 # 基于Windows IDE(CDS/CDK)编译运行
 
-如何基于CDS/CDK等IDE编译运行具体请参考《玄铁最小系统RTOS SDK使用参考手册》
+如何基于CDS/CDK等IDE编译运行具体请参考《玄铁RTOS SDK用户手册》
 
 # 相关文档和工具
 
 相关文档和工具下载请从玄铁官方站点 https://www.xrvm.cn 搜索下载
 
-1、《玄铁最小系统RTOS SDK快速上手手册》
+1、《玄铁RTOS SDK用户手册》
 
-2、《玄铁最小系统RTOS SDK使用参考手册》
-
-3、玄铁模拟器QEMU工具
+2、玄铁模拟器QEMU工具
 
 
 # 注意事项
 
-1、Linux平台下基础环境搭建请参考《玄铁最小系统RTOS SDK快速上手手册》
+1、Linux平台下基础环境搭建请参考《玄铁RTOS SDK用户手册》
 
-2、如果出现无法运行情况，请使用`sudo pip install yoctools -U`更新最新版本的yoctools再做尝试。
+2、如果出现无法编译情况，请使用`sudo pip install yoctools -U`更新最新版本的yoctools再做尝试。
 
 3、玄铁exx系列cpu仅支持smartl平台，cxx/rxx系列cpu仅支持xiaohui平台。
 
-4、玄铁exx系列cpu支持Linux/CDK/CDS环境编译，cxx/rxx系列cpu支持Linux/CDS环境编译
-
-5、某些示例并不是支持所有的玄铁cpu类型，更详细的信息请参考《玄铁最小系统RTOS SDK使用参考手册》
-
-6、某些示例跟硬件特性相关，QEMU中相关功能可能未模拟，只能在相应FPGA硬件平台上运行。
+4、某些示例跟硬件特性相关，QEMU中相关功能可能未模拟，只能在相应FPGA硬件平台上运行。
 

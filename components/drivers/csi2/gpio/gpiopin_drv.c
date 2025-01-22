@@ -91,7 +91,7 @@ static int _gpio_pin_attach_callback(rvm_dev_t *dev, rvm_hal_gpio_pin_callback c
 
 static int _gpio_pin_set_direction(rvm_dev_t *dev, rvm_hal_gpio_dir_t dir)
 {
-    csi_error_t ret = csi_gpio_pin_dir(&GPIOPINDEV(dev)->handle, dir);
+    csi_error_t ret = csi_gpio_pin_dir(&GPIOPINDEV(dev)->handle, (csi_gpio_dir_t)dir);
     if (ret != CSI_OK) {
         LOGE(TAG, "csi_gpio_pin_dir error");
         return -1;
@@ -101,7 +101,7 @@ static int _gpio_pin_set_direction(rvm_dev_t *dev, rvm_hal_gpio_dir_t dir)
 
 static int _gpio_pin_set_mode(rvm_dev_t *dev, rvm_hal_gpio_mode_t mode)
 {
-    csi_error_t ret = csi_gpio_pin_mode(&GPIOPINDEV(dev)->handle, mode);
+    csi_error_t ret = csi_gpio_pin_mode(&GPIOPINDEV(dev)->handle, (csi_gpio_mode_t)mode);
     if (ret != CSI_OK) {
         LOGE(TAG, "csi_gpio_pin_mode error");
         return -1;
@@ -111,7 +111,7 @@ static int _gpio_pin_set_mode(rvm_dev_t *dev, rvm_hal_gpio_mode_t mode)
 
 static int _gpio_pin_set_irq_mode(rvm_dev_t *dev, rvm_hal_gpio_irq_mode_t irq_mode)
 {
-    csi_error_t ret = csi_gpio_pin_irq_mode(&GPIOPINDEV(dev)->handle, irq_mode);
+    csi_error_t ret = csi_gpio_pin_irq_mode(&GPIOPINDEV(dev)->handle, (csi_gpio_irq_mode_t)irq_mode);
     if (ret != CSI_OK) {
         LOGE(TAG, "csi_gpio_pin_irq_mode error");
         return -1;
@@ -141,13 +141,13 @@ static int _gpio_pin_set_debounce(rvm_dev_t *dev, bool enable)
 
 static int _gpio_pin_write(rvm_dev_t *dev, rvm_hal_gpio_pin_data_t value)
 {
-    csi_gpio_pin_write(&GPIOPINDEV(dev)->handle, value);
+    csi_gpio_pin_write(&GPIOPINDEV(dev)->handle, (csi_gpio_pin_state_t)value);
     return 0;
 }
 
 static int _gpio_pin_read(rvm_dev_t *dev, rvm_hal_gpio_pin_data_t *value)
 {
-    rvm_hal_gpio_pin_data_t val = csi_gpio_pin_read(&GPIOPINDEV(dev)->handle);
+    rvm_hal_gpio_pin_data_t val = (rvm_hal_gpio_pin_data_t)csi_gpio_pin_read(&GPIOPINDEV(dev)->handle);
     *value = val;
     return 0;
 }

@@ -35,6 +35,7 @@ const csi_perip_info_t g_soc_info[] = {
     {DW_TIMER0_BASE,           TIM0_IRQn,                0,    DEV_DW_TIMER_TAG},
     {DW_TIMER1_BASE,           TIM1_IRQn,                1,    DEV_DW_TIMER_TAG},
     {DW_TIMER2_BASE,           TIM2_IRQn,                2,    DEV_DW_TIMER_TAG},
+    {DW_TIMER3_BASE,           TIM3_IRQn,                3,    DEV_DW_TIMER_TAG},
 #if CONFIG_SUPPORT_NMI_DEMO
     {DW_TIMER4_BASE,           FAKE_IRQ_TIMER4,          4,    DEV_DW_TIMER_TAG},
 #endif

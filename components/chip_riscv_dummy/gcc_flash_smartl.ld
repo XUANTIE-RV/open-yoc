@@ -26,6 +26,7 @@ MEMORY
 {
     ISRAM : ORIGIN = 0x00000000 , LENGTH = 0x20000   /* ISRAM 128KB*/
     DSRAM : ORIGIN = 0x20000000 , LENGTH = 0x80000   /* DSRAM 512KB*/
+    SRAM :  ORIGIN = 0x60000000 , LENGTH = 0x20000   /* SRAM 128KB, no cacheable*/
 }
 
 __min_heap_size = 0x200;

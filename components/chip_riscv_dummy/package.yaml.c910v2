@@ -1,7 +1,7 @@
 
 ## 第一部分： 基础信息
 name: chip_riscv_dummy                              # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
-version: v8.0.0                                     # <必选项> 组件版本号
+version: v8.1.0                                     # <必选项> 组件版本号
 description: riscv cpu dummy driver SDK.            # <必选项> 建议至少20字以上
 type: chip                                          # <必选项> 组件类型，为：solution, chip, board, common, sdk
 tag: 核心模块                                       # <可选项> 组件分类，缺省值： ''
@@ -85,10 +85,8 @@ hw_info:
 #   libpath:                               # 指定静态库所在的路径（相对于该组件路径）
 #     - libs                               #   -Llibs
 build_config:
-  cflag: ' -Wno-unused-function -Os -g'
-  cxxflag: ' -Wno-unused-function -Os -g'
-  define:
-    - NO_MORE_DEFINE
+  cflag: ' -Wno-unused-function'
+  cxxflag: ' -Wno-unused-function'
   include:
     - include
     - include/asm
@@ -124,6 +122,7 @@ def_config:
   CONFIG_VIC_TSPDR: 0x0c000000           # coret addr in clint
   CONFIG_PLIC_BASE: 0x08000000
   CONFIG_CPU_XUANTIE_C910V2: 1
+  CONFIG_CHECK_FPU_DIRTY: 1
 
 ## 第六部分：安装信息
 # install:

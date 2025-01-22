@@ -1131,7 +1131,9 @@ __ALWAYS_STATIC_INLINE void __ICACHE_IPA(unsigned long addr)
  */
 __ALWAYS_STATIC_INLINE void __DCACHE_IALL(void)
 {
+#ifndef __riscv_xtheadse
     __ASM volatile("dcache.iall");
+#endif
 }
 
 /**
@@ -1140,7 +1142,9 @@ __ALWAYS_STATIC_INLINE void __DCACHE_IALL(void)
  */
 __ALWAYS_STATIC_INLINE void __DCACHE_CALL(void)
 {
+#ifndef __riscv_xtheadse
     __ASM volatile("dcache.call");
+#endif
 }
 
 /**
@@ -1149,7 +1153,9 @@ __ALWAYS_STATIC_INLINE void __DCACHE_CALL(void)
  */
 __ALWAYS_STATIC_INLINE void __DCACHE_CIALL(void)
 {
+#ifndef __riscv_xtheadse
     __ASM volatile("dcache.ciall");
+#endif
 }
 
 /**

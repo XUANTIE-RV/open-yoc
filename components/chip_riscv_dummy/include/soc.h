@@ -287,6 +287,7 @@ typedef enum IRQn {
     TIM0_IRQn                       =   25U,                         /* timer0 Interrupt for CLIC*/
     TIM1_IRQn                       =   26U,                         /* timer1 Interrupt for CLIC*/
     TIM2_IRQn                       =   27U      + PLIC_IRQ_OFFSET,  /* timer2 Interrupt */
+    TIM3_IRQn                       =   28U      + PLIC_IRQ_OFFSET,  /* timer3 Interrupt */
     END_IRQn                        =   1024U    + PLIC_IRQ_OFFSET
 } irqn_type_t;
 #else
@@ -298,6 +299,7 @@ typedef enum IRQn {
     TIM0_IRQn                       =   25U,     /* timer0 Interrupt */
     TIM1_IRQn                       =   26U,     /* timer1 Interrupt */
     TIM2_IRQn                       =   27U,     /* timer2 Interrupt */
+    TIM3_IRQn                       =   28U,     /* timer3 Interrupt */
 } irqn_type_t;
 #endif /* CONFIG_INTC_CLIC_PLIC */
 
@@ -305,6 +307,7 @@ typedef enum IRQn {
 #define DW_TIMER0_BASE             (0x19001000UL)
 #define DW_TIMER1_BASE             (0x19001014UL)
 #define DW_TIMER2_BASE             (0x19001028UL)
+#define DW_TIMER3_BASE             (0x1900103CUL)
 
 #else
 #error  "Not support soc!!!"

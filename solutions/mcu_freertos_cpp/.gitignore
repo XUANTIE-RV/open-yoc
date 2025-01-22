@@ -91,3 +91,5 @@ __workspace_pack__
 mkflash.sh
 gdbinitflash
 cdkinitflash
+gdbinit.remote
+gdbinit.*

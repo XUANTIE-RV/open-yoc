@@ -1,35 +1,47 @@
 #!/bin/sh
 BASE_PWD=`pwd`
-MK_BOARD_PATH=$BOARD_PATH
-MK_CHIP_PATH=$CHIP_PATH
-MK_SOLUTION_PATH=$SOLUTION_PATH
 
 echo "[INFO] Generated output files ..."
 echo $BASE_PWD
 
 EXE_EXT=`which ls | grep -o .exe`
 if [ -n "$EXE_EXT" ]; then
+    if [ ! -d  "${SOLUTION_PATH}" ];then
+        SOLUTION_PATH=$1
+    fi
+    if [ ! -d  "${BOARD_PATH}" ];then
+        BOARD_PATH=$2
+    fi
+    if [ ! -d  "${CHIP_PATH}" ];then
+        CHIP_PATH=$3
+    fi
+    PLATFORM=$4
+    CPU=$5
     if [ -z "$IS_IN_CDS" ]; then
         echo "I am in CDK."
         OBJCOPY=riscv64-unknown-elf-objcopy
         ELF_NAME=`ls Obj/*.elf`
-        $OBJCOPY -O binary $ELF_NAME yoc.bin
-        cp $ELF_NAME yoc.elf
+        $OBJCOPY -O binary $ELF_NAME $SOLUTION_PATH/yoc.bin
+        cp $ELF_NAME $SOLUTION_PATH/yoc.elf
+        cp -arf yoc.map $SOLUTION_PATH/yoc.map
     fi
-    PRODUCT=$MK_BOARD_PATH/configs/product$EXE_EXT
+    PRODUCT=$BOARD_PATH/configs/product$EXE_EXT
 else
     echo "I am in Linux."
-    while getopts ":s:b:c:a:" optname
+    while getopts ":s:b:c:u:a:" optname
     do
         case "$optname" in
         "s")
-            MK_SOLUTION_PATH=$OPTARG
+            SOLUTION_PATH=$OPTARG
             ;;
         "b")
-            MK_BOARD_PATH=$OPTARG
+            BOARD_PATH=$OPTARG
             ;;
         "c")
-            MK_CHIP_PATH=$OPTARG
+            CHIP_PATH=$OPTARG
+            ;;
+        "u")
+            CPU=$OPTARG
             ;;
         "a")
             # echo "the all variables from yoctools, value is $OPTARG"
@@ -49,29 +61,42 @@ else
         #echo "option index is $OPTIND"
     done
     PRODUCT=product
-    PATH_HAASUI_SDK=../../components/haasui_sdk
+    if [ "${CPU#e}" != "$CPU" ]; then
+        PLATFORM='smartl'
+    else
+        PLATFORM='xiaohui'
+    fi
 fi
 
-MK_GENERATED_PATH=${MK_SOLUTION_PATH}/generated
+MK_GENERATED_PATH=${SOLUTION_PATH}/generated
 rm -fr $MK_GENERATED_PATH
 mkdir -p $MK_GENERATED_PATH/data/
 
-echo $MK_SOLUTION_PATH
-echo $MK_BOARD_PATH
-echo $MK_CHIP_PATH
-echo $MK_GENERATED_PATH
+# echo $SOLUTION_PATH
+# echo $BOARD_PATH
+# echo $CHIP_PATH
+# echo $MK_GENERATED_PATH
+# echo $PLATFORM
+# echo $CPU
 
-if [ ! -f gdbinitflash ]; then
-    cp -arf $MK_BOARD_PATH/script/gdbinitflash $BASE_PWD
+if [ ! -f $SOLUTION_PATH/gdbinitflash ]; then
+    cp -arf $BOARD_PATH/script/gdbinitflash $SOLUTION_PATH
 fi
 
-if [ ! -f cdkinitflash ]; then
-    cp -arf $MK_BOARD_PATH/script/cdkinitflash $BASE_PWD
+if [ ! -f $SOLUTION_PATH/cdkinitflash ]; then
+    cp -arf $BOARD_PATH/script/cdkinitflash $SOLUTION_PATH
 fi
 
-if [ ! -f gdbinit ]; then
-    cp -arf $MK_BOARD_PATH/script/gdbinit $BASE_PWD
+if [ ! -f $SOLUTION_PATH/gdbinit ]; then
+    cp -arf $BOARD_PATH/script/gdbinit $SOLUTION_PATH
 fi
 
-cp -arf $MK_BOARD_PATH/script/mkflash.sh $BASE_PWD
-
+if [ -z "$EXE_EXT" ]; then
+    # linux
+    cp -arf $BOARD_PATH/script/mkflash.sh $SOLUTION_PATH
+    if [ ! -f $SOLUTION_PATH/gdbinit.$CPU ]; then
+        cp -arf $BOARD_PATH/script/$PLATFORM/gdbinit.$CPU $SOLUTION_PATH/gdbinit.$CPU
+    fi
+else
+    cp -arf $BOARD_PATH/script/$PLATFORM/gdbinit.$CPU ${ProjectPath}/gdbinit.remote
+fi

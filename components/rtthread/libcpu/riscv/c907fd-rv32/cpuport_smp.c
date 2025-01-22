@@ -119,10 +119,10 @@ static void secondary_cpu_init(void)
     /* enable theadisaee & MM */
     unsigned long status = __get_MXSTATUS();
     status |= (1 << 22 | 1 << 15);
-#if __riscv_matrix
+#if __riscv_matrix || __riscv_xtheadmatrix
     /* enable matrix */
     status &= ~(1ul << 0);
-#endif /* __riscv_matrix */
+#endif /* __riscv_matrix || __riscv_xtheadmatrix */
     __set_MXSTATUS(status);
 
 #if __riscv_flen
@@ -137,7 +137,7 @@ static void secondary_cpu_init(void)
     status |= SR_VS_INITIAL;
     __set_MSTATUS(status);
 #endif
-#ifdef __riscv_matrix
+#if __riscv_matrix || __riscv_xtheadmatrix
     /* enable matrix ISA */
     status = __get_MSTATUS();
     status |= SR_MS_INITIAL;

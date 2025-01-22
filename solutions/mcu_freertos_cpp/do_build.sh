@@ -2,9 +2,15 @@
 ###attention: do_build.sh in demo mcu_freertos_xxx should keep same with solutions/mcu_freertos_helloworld/do_build.sh for xt-rtos sdk
 
 solution_name=$(basename "$(pwd)")
-RULE_CONFIG_FILE="../../components/xuantie_cpu_sdk/xt_rtos_sdk.csv"
+if [ "$2" == 'wujian300' ]; then
+	RULE_CONFIG_FILE="../../components/wujian300_soc_sdk/sdk.csv"
+	SDK_NAME="wujian300_soc_sdk"
+else
+	RULE_CONFIG_FILE="../../components/xuantie_cpu_sdk/xt_rtos_sdk.csv"
+	SDK_NAME="xuantie_cpu_sdk"
+fi
 if [ ! -e $RULE_CONFIG_FILE ]; then
-	echo "rule file: $RULE_CONFIG_FILE is not exist, xuantie_cpu_sdk component may be not installed yet!"
+	echo "rule file: $RULE_CONFIG_FILE is not exist, $SDK_NAME component may be not installed yet!"
 	exit 1
 fi
 
@@ -13,6 +19,7 @@ function help() {
 	echo "eg:"
 	echo "./do_build.sh c906fd xiaohui"
 	echo "./do_build.sh e906fdp smartl"
+	echo "./do_build.sh e906fdp wujian300"
 }
 
 function check_cpu() {
@@ -40,7 +47,7 @@ function check_cpu() {
 
 function check_board() {
 	board=$1
-	board_list=('smartl' 'xiaohui')
+	board_list=('smartl' 'xiaohui' 'wujian300')
 	#echo "the board is "$board
 	for _board in ${board_list[*]}; do
 		if [ "$board" == "$_board" ]; then
@@ -60,31 +67,40 @@ fi
 
 cpu_name=$1
 board=$2
+rtos=freertos
 
 check_cpu $cpu_name
 check_board $board
 
-CHIP_COMP=../../components/chip_riscv_dummy
-BOARD_COMP=../../boards/board_riscv_dummy
+if [ "$board" == 'wujian300' ]; then
+	SDK_COMP=../../components/sdk_chip_wujian300
+	CHIP_COMP=../../components/chip_wujian300
+	BOARD_COMP=../../boards/board_wujian300_evb
+	SDK_CHIP=sdk_chip_wujian300
+else
+	SDK_COMP=../../components/sdk_chip_riscv_dummy
+	CHIP_COMP=../../components/chip_riscv_dummy
+	BOARD_COMP=../../boards/board_riscv_dummy
+	SDK_CHIP=sdk_chip_riscv_dummy
+fi
 
+cp $SDK_COMP/package.yaml $SDK_COMP/package.yaml.bak
 cp $CHIP_COMP/package.yaml $CHIP_COMP/package.yaml.bak
 cp $BOARD_COMP/package.yaml $BOARD_COMP/package.yaml.bak
 
+cp $SDK_COMP/package.yaml.$rtos $SDK_COMP/package.yaml
 cp $CHIP_COMP/package.yaml.$cpu_name $CHIP_COMP/package.yaml
 cp $BOARD_COMP/package.yaml.$board $BOARD_COMP/package.yaml
 
-if [[ $cpu_name = "e"* ]]; then
-	cp package.yaml package.yaml.bak
-	cp package.yaml.smartl package.yaml
-fi
+cp package.yaml package.yaml.bak
+cp package.yaml.$board package.yaml
 
 #echo "===start to compile==="
-make || exit 1
+make SDK=$SDK_CHIP || exit 1
 #echo "===compile done!!!==="
 
+mv $SDK_COMP/package.yaml.bak $SDK_COMP/package.yaml
 mv $CHIP_COMP/package.yaml.bak $CHIP_COMP/package.yaml
 mv $BOARD_COMP/package.yaml.bak $BOARD_COMP/package.yaml
-if [[ $cpu_name = "e"* ]]; then
-	mv package.yaml.bak package.yaml
-fi
+mv package.yaml.bak package.yaml
 

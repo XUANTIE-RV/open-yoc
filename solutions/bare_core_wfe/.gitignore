@@ -84,6 +84,8 @@ solutions_cb5654/Makefile
 mkflash.sh
 gdbinitflash
 cdkinitflash
+gdbinit.remote
+gdbinit.*
 
 .cache/
 *.cdkws

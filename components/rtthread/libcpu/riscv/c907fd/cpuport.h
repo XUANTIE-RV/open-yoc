@@ -55,7 +55,7 @@ typedef union {
 #define CTX_VECTOR_CSR_REG_NR   0
 #endif
 
-#if defined(__riscv_matrix)
+#if defined(__riscv_matrix) || defined(__riscv_xtheadmatrix)
 /* 8 matrix registers */
 #define CTX_MATRIX_REG_NR       8
 /* 8 matrix csr registers */

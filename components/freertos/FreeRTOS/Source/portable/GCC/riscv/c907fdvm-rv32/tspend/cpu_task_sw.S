@@ -72,6 +72,52 @@ cpu_intrpt_restore:
     csrw MODE_PREFIX(status), a0
     ret
 
+#if CONFIG_CHECK_FPU_DIRTY || CONFIG_CHECK_VECTOR_DIRTY || CONFIG_CHECK_MATRIX_DIRTY
+.macro FREERTOS_RESTORE_MSTATUS
+    li       t1, 0
+#if __riscv_matrix || __riscv_xtheadmatrix
+#if __riscv_xlen == 64
+    addi     t1, t1, 24
+#else
+    addi     t1, t1, 12
+#endif /*__riscv_xlen */
+    csrr     t0, xmlenb
+    slli     t0, t0, 3
+    add      t1, t1, t0
+#endif /* __riscv_matrix || __riscv_xtheadmatrix */
+
+#ifdef __riscv_vector
+    csrr     t0, vlenb
+    slli     t0, t0, 5
+    add      t1, t1, t0
+#if __riscv_xlen == 64
+    addi     t1, t1, 40
+#else
+    addi     t1, t1, 20
+#endif  /* __riscv_xlen */
+#endif  /* __riscv_vector */
+
+#if __riscv_flen
+#if __riscv_xlen == 64
+    addi     t1, t1, (256 + 8)
+#else
+    addi     t1, t1, (256 + 4)
+#endif /* __riscv_xlen */
+#endif /* __riscv_flen */
+
+#if __riscv_xlen == 64
+    addi     t1, t1, (256 - 8)
+#else
+    addi     t1, t1, (128 - 4)
+#endif /* __riscv_xlen */
+
+    add      sp, sp, t1
+    load_x   t3, (0)(sp)
+    csrw     mstatus, t3
+    sub      sp, sp, t1
+.endm
+#endif /* CONFIG_CHECK_FPU_DIRTY || CONFIG_CHECK_VECTOR_DIRTY || CONFIG_CHECK_MATRIX_DIRTY */
+
 /********************************************************************
  * Functions: vPortYield
  *
@@ -141,9 +187,14 @@ Mtspend_Handler:
 
     csrr     t0, MODE_PREFIX(epc)
     store_x  t0, (120+120)(sp)
+#if CONFIG_CHECK_FPU_DIRTY || CONFIG_CHECK_VECTOR_DIRTY || CONFIG_CHECK_MATRIX_DIRTY
+    csrr     t3, MODE_PREFIX(status)
+    store_x  t3, (124+124)(sp)
+#else
     csrr     t0, MODE_PREFIX(status)
     store_x  t0, (124+124)(sp)
-#else
+#endif /* CONFIG_CHECK_FPU_DIRTY, CONFIG_CHECK_VECTOR_DIRTY, CONFIG_CHECK_MATRIX_DIRTY */
+#else /* __riscv_xlen == 32 */
     addi     sp, sp, -128
     store_x  x1,  (0  )(sp)
     store_x  x3,  (4  )(sp)
@@ -178,12 +229,23 @@ Mtspend_Handler:
 
     csrr     t0, MODE_PREFIX(epc)
     store_x  t0, (120)(sp)
+#if CONFIG_CHECK_FPU_DIRTY || CONFIG_CHECK_VECTOR_DIRTY || CONFIG_CHECK_MATRIX_DIRTY
+    csrr     t3, MODE_PREFIX(status)
+    store_x  t3, (124)(sp)
+#else
     csrr     t0, MODE_PREFIX(status)
     store_x  t0, (124)(sp)
-#endif
+#endif /* CONFIG_CHECK_FPU_DIRTY, CONFIG_CHECK_VECTOR_DIRTY, CONFIG_CHECK_MATRIX_DIRTY */
+#endif /* __riscv_xlen */
 
 #ifdef __riscv_flen
 #if __riscv_xlen == 64
+#if CONFIG_CHECK_FPU_DIRTY
+    li       t1, SR_FS_DIRTY
+    and      t4, t3, t1
+    bne      t4, t1, 1f
+#endif /* CONFIG_CHECK_FPU_DIRTY */
+
     addi     sp, sp, -(4+4)
     frcsr    t0
     store_x  t0, (0  +0  )(sp)
@@ -191,7 +253,7 @@ Mtspend_Handler:
     addi     sp, sp, -(4)
     frcsr    t0
     store_x  t0, (0)(sp)
-#endif
+#endif /* __riscv_xlen == 64 */
 
     addi     sp, sp, -(128+128)
     fstore_x f31, (0  +0  )(sp)
@@ -226,9 +288,24 @@ Mtspend_Handler:
     fstore_x f2,  (116+116)(sp)
     fstore_x f1,  (120+120)(sp)
     fstore_x f0,  (124+124)(sp)
-#endif
+#if CONFIG_CHECK_FPU_DIRTY
+    j        2f
+1:
+#if __riscv_xlen == 64
+    addi     sp, sp, -264
+#else
+    addi     sp, sp, -260
+#endif /* __riscv_xlen == 64 */
+2:
+#endif /* CONFIG_CHECK_FPU_DIRTY */
+#endif /* __riscv_flen */
 
 #ifdef __riscv_vector
+#if CONFIG_CHECK_VECTOR_DIRTY
+    li       t1, SR_VS_DIRTY
+    and      t4, t3, t1
+    bne      t4, t1, 3f
+#endif
 #if __riscv_xlen == 64
     addi     sp, sp, -(20+20)
     csrr     t0, vl
@@ -259,8 +336,8 @@ Mtspend_Handler:
     slli     t0, t0, 3
     slli     t1, t0, 2
     sub      sp, sp, t1
-    vsetvli  zero, zero, e8, m8
 #if (__riscv_v == 7000)
+    vsetvli  zero, zero, e8, m8
     vsb.v    v0, (sp)
     add      sp, sp, t0
     vsb.v    v8, (sp)
@@ -269,6 +346,7 @@ Mtspend_Handler:
     add      sp, sp, t0
     vsb.v    v24, (sp)
 #elif (__riscv_v == 1000000)
+    vsetvli  zero, zero, e8, m8, ta, ma
     vs8r.v   v0, (sp)
     add      sp, sp, t0
     vs8r.v   v8, (sp)
@@ -279,9 +357,27 @@ Mtspend_Handler:
 #endif
     sub      t0, t1, t0
     sub      sp, sp, t0
+#if CONFIG_CHECK_VECTOR_DIRTY
+    j        4f
+3:
+#if __riscv_xlen == 64
+    addi     sp, sp, -40
+#else
+    addi     sp, sp, -20
+#endif /* __riscv_xlen == 64 */
+    csrr     t0, vlenb
+    slli     t0, t0, 5
+    sub      sp, sp, t0
+4:
+#endif /* CONFIG_CHECK_VECTOR_DIRTY */
 #endif /*__riscv_vector*/
 
-#ifdef __riscv_matrix
+#if __riscv_matrix || __riscv_xtheadmatrix
+#if CONFIG_CHECK_MATRIX_DIRTY
+    li       t1, SR_MS_DIRTY
+    and      t4, t3, t1
+    bne      t4, t1, 5f
+#endif
 #if __riscv_xlen == 64
     addi     sp, sp, -(12+12)
     csrr     t0, xmrstart
@@ -305,7 +401,20 @@ Mtspend_Handler:
     sub      sp, sp, t1
     csrw     xmrstart, x0
     mst8mb   m0, (sp)
-#endif /*__riscv_matrix*/
+#if CONFIG_CHECK_MATRIX_DIRTY
+    j        6f
+5:
+#if __riscv_xlen == 64
+    addi     sp, sp, -24
+#else
+    addi     sp, sp, -12
+#endif
+    csrr     t0, xmlenb
+    slli     t1, t0, 3
+    sub      sp, sp, t1
+6:
+#endif /* CONFIG_CHECK_MATRIX_DIRTY */
+#endif /* __riscv_matrix || __riscv_xtheadmatrix */
 
     la       a1, pxCurrentTCB
     load_x   a1, (a1)
@@ -318,12 +427,22 @@ __vPortFistTask:
     load_x   a1, (a1)
     load_x   sp, (a1)
 
+#if CONFIG_CHECK_FPU_DIRTY || CONFIG_CHECK_VECTOR_DIRTY || CONFIG_CHECK_MATRIX_DIRTY
+    FREERTOS_RESTORE_MSTATUS
+#endif
+
     /*clear software interrupt*/
     li       t0, (RISCV_VIC_TSPDR)
     li       t2, 0x0
     sw       t2, 0(t0)
 
-#ifdef __riscv_matrix
+#if __riscv_matrix || __riscv_xtheadmatrix
+#if CONFIG_CHECK_MATRIX_DIRTY
+    li       t1, SR_MS_DIRTY
+    and      t4, t3, t1
+    bne      t4, t1, 11f
+#endif
+
     csrr     t0, xmlenb
     slli     t1, t0, 3
     csrw     xmrstart, x0
@@ -346,14 +465,32 @@ __vPortFistTask:
     csrw     xmsize, t0
     addi     sp, sp, 12
 #endif /*__riscv_xlen */
-
-#endif /*__riscv_matrix*/
+#if CONFIG_CHECK_MATRIX_DIRTY
+    j        12f
+11:
+    csrr     t0, xmlenb
+    slli     t1, t0, 3
+    add      sp, sp, t1
+#if __riscv_xlen == 64
+    addi     sp, sp, 24
+#else
+    addi     sp, sp, 12
+#endif
+12:
+#endif /* CONFIG_CHECK_MATRIX_DIRTY */
+#endif /* __riscv_matrix || __riscv_xtheadmatrix */
 
 #ifdef __riscv_vector
+#if CONFIG_CHECK_VECTOR_DIRTY
+    li       t1, SR_VS_DIRTY
+    and      t4, t3, t1
+    bne      t4, t1, 13f
+#endif
+
     csrr     t0, vlenb
     slli     t0, t0, 3
-    vsetvli  zero, zero, e8, m8
 #if (__riscv_v == 7000)
+    vsetvli  zero, zero, e8, m8
     vlb.v    v0, (sp)
     add      sp, sp, t0
     vlb.v    v8, (sp)
@@ -363,6 +500,7 @@ __vPortFistTask:
     vlb.v    v24, (sp)
     add      sp, sp, t0
 #elif (__riscv_v == 1000000)
+    vsetvli  zero, zero, e8, m8, ta, ma
     vl8r.v   v0, (sp)
     add      sp, sp, t0
     vl8r.v   v8, (sp)
@@ -395,9 +533,28 @@ __vPortFistTask:
     csrw     vxrm, t2
     addi     sp, sp, (20)
 #endif /*__riscv_xlen*/
+#if CONFIG_CHECK_VECTOR_DIRTY
+    j        14f
+13:
+    /* don't restore, move sp only */
+#if __riscv_xlen == 64
+    addi     sp, sp, (20+20)
+#else
+    addi     sp, sp, (20)
+#endif
+    csrr     t0, vlenb
+    slli     t0, t0, 5
+    add      sp, sp, t0
+14:
+#endif /* CONFIG_CHECK_VECTOR_DIRTY */
 #endif /*__riscv_vector*/
 
 #ifdef __riscv_flen
+#if CONFIG_CHECK_FPU_DIRTY
+    li       t1, SR_FS_DIRTY
+    and      t4, t3, t1
+    bne      t4, t1, 15f
+#endif
     fload_x  f31,( 0 + 0 )(sp)
     fload_x  f30,( 4 + 4 )(sp)
     fload_x  f29,( 8 + 8 )(sp)
@@ -441,11 +598,23 @@ __vPortFistTask:
     fscsr    t0
     addi     sp, sp, (4)
 #endif /*__riscv_xlen*/
+#if CONFIG_CHECK_FPU_DIRTY
+    j        16f
+15:
+#if __riscv_xlen == 64
+    addi     sp, sp, 264
+#else
+    addi     sp, sp, 260
+#endif
+16:
+#endif /* CONFIG_CHECK_FPU_DIRTY */
 #endif /*__riscv_flen*/
 
 #if __riscv_xlen == 64
+#if (!CONFIG_CHECK_FPU_DIRTY) && (!CONFIG_CHECK_VECTOR_DIRTY) && (!CONFIG_CHECK_MATRIX_DIRTY)
     load_x   t0, (124 +124)(sp)
     csrw     MODE_PREFIX(status), t0
+#endif
 
     load_x   t0, (120 +120)(sp)
     csrw     MODE_PREFIX(epc), t0
@@ -482,8 +651,10 @@ __vPortFistTask:
     load_x   x31, (116+116)(sp)
     addi     sp, sp, (128+128)
 #else
+#if (!CONFIG_CHECK_FPU_DIRTY) && (!CONFIG_CHECK_VECTOR_DIRTY) && (!CONFIG_CHECK_MATRIX_DIRTY)
     load_x   t0, (124)(sp)
     csrw     MODE_PREFIX(status), t0
+#endif
 
     load_x   t0, (120)(sp)
     csrw     MODE_PREFIX(epc), t0

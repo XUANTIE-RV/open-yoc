@@ -1,9 +1,8 @@
-target remote 10.63.43.186:1025
+# target remote 30.120.234.13:1025
 
 set confirm off
 set height 0
 
-reset
 set $msmpr = 0x1
 
 # Invalidate & Clear IBP BTB BHT ICache & DCache

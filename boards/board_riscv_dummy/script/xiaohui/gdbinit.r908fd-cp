@@ -1,4 +1,4 @@
-target remote 10.63.43.184:1025
+# target remote 30.120.234.13:1025
 
 set confirm off
 set height 0

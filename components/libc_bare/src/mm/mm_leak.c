@@ -26,6 +26,10 @@
 
 extern char __sdata, __edata, __sbss, __ebss;
 
+struct mm_status {
+    dq_queue_t  list[MAX_HASH];
+};
+
 static struct mm_status mm_status;
 static struct mm_status mm_status_snapshoot;
 static int min_free = 0xFFFFFFFF;
@@ -40,10 +44,6 @@ static inline int addr2hash(void *p)
     addr ^= addr >> 11;
     return addr & (MAX_HASH - 1);
 }
-
-struct mm_status {
-    dq_queue_t  list[MAX_HASH];
-};
 
 void mm_dbg_clone(struct m_dbg_hdr * src , struct m_dbg_hdr * dst)
 {

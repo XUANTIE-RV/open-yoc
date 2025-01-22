@@ -20,6 +20,7 @@
 #define __CSI_RV_COMMON_H__
 
 #include <stdlib.h>
+#include <stdint.h>
 
 #ifndef __ASM
 #define __ASM                   __asm     /*!< asm keyword for GNU Compiler */

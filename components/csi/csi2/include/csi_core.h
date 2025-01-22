@@ -76,6 +76,12 @@
 extern "C" {
 #endif
 
+#if CONFIG_CPU_XUANTIE_E9XX || CONFIG_CPU_XUANTIE_C906 || CONFIG_CPU_XUANTIE_C906FD || CONFIG_CPU_XUANTIE_C906FDV
+#if CONFIG_SMP
+#error "This CPU does not support SMP."
+#endif
+#endif
+
 __STATIC_INLINE const char* csi_get_cpu_name()
 {
 #if CONFIG_CPU_XUANTIE_C906
@@ -106,16 +112,12 @@ __STATIC_INLINE const char* csi_get_cpu_name()
 	return "c908v";
 #elif CONFIG_CPU_XUANTIE_C908I
 	return "c908i";
-#elif CONFIG_CPU_XUANTIE_C910
-	return "c910";
 #elif CONFIG_CPU_XUANTIE_C910V2
 	return "c910v2";
 #elif CONFIG_CPU_XUANTIE_C910V3
 	return "c910v3";
 #elif CONFIG_CPU_XUANTIE_C910V3_CP
 	return "c910v3-cp";
-#elif CONFIG_CPU_XUANTIE_C920
-	return "c920";
 #elif CONFIG_CPU_XUANTIE_C920V2
 	return "c920v2";
 #elif CONFIG_CPU_XUANTIE_C920V3

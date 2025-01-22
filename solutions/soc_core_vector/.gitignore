@@ -84,3 +84,13 @@ solutions_cb5654/Makefile
 mkflash.sh
 gdbinitflash
 cdkinitflash
+gdbinit.remote
+gdbinit.*
+
+.cache/
+*.cdkws
+cdkws.mk
+soc_core_vector*.mk
+soc_core_vector*.txt
+__workspace_pack__
+compilation.db

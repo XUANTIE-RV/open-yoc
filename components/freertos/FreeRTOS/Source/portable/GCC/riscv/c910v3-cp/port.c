@@ -44,8 +44,8 @@ StackType_t *pxPortInitialiseStack( StackType_t *pxTopOfStack, StackType_t *pxEn
 StackType_t *pxPortInitialiseStack( StackType_t *pxTopOfStack, TaskFunction_t pxCode, void *pvParameters )
 #endif
 {
+    extern int __global_pointer$;
     StackType_t *stk  = NULL;
-    register int *gp asm("x3");
     uint64_t temp = (uint64_t)pxTopOfStack;
 #if defined(CONFIG_RISCV_SMODE) && CONFIG_RISCV_SMODE
     unsigned long status = SR_SPP_S | SR_SPIE;
@@ -95,7 +95,7 @@ StackType_t *pxPortInitialiseStack( StackType_t *pxTopOfStack, TaskFunction_t px
     *(--stk)  = (uint64_t)0x0606060606060606L;       /* X6          */
     *(--stk)  = (uint64_t)0x0505050505050505L;       /* X5          */
     *(--stk)  = (uint64_t)0x0404040404040404L;       /* X4          */
-    *(--stk)  = (uint64_t)gp;                        /* X3          */
+    *(--stk)  = (uint64_t)&__global_pointer$;        /* X3          */
 #if CONFIG_AOS_OSAL
     *(--stk)  = (uint64_t)aos_task_exit;             /* X1          */
 #else

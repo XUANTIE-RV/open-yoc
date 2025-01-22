@@ -1400,7 +1400,11 @@ int aos_kernel_intrpt_enter(void)
 int aos_kernel_intrpt_exit(void)
 {
     g_intrpt_nested_cnt --;
-    portYIELD_FROM_ISR(pdTRUE);
+    BaseType_t state = xTaskGetSchedulerState();
+    if (state == taskSCHEDULER_RUNNING)
+        portYIELD_FROM_ISR(pdTRUE);
+    else
+        portYIELD_FROM_ISR(pdFALSE);
     return 0;
 }
 

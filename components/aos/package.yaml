@@ -1,6 +1,6 @@
 ## 第一部分： 基础信息
 name: aos                                           # <必选项> 包名称 （符合C语言变量命名规则），长度少于等于64字节
-version: v8.0.0                                    # <必选项> 组件版本号
+version: v8.1.0                                    # <必选项> 组件版本号
 description: aos kernel api                         # <必选项> 建议至少20字以上
 type: common                                        # <必选项> 组件类型，为：solution, chip, board, common, sdk
 tag: 核心模块                                       # <可选项> 组件分类，缺省值： ''
@@ -36,6 +36,7 @@ license: Apache license v2.0                        # <可选项> 源代码的�
 #   libpath:                               # 指定静态库所在的路径（相对于该组件路径）
 #     - libs                               #   -Llibs
 build_config:
+  cxxflag: -Wno-implicit-exception-spec-mismatch
   include:
     - include
 

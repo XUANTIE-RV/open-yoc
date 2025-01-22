@@ -22,7 +22,6 @@ solutions/**/*.elf
 solutions/**/Packages
 solutions/**/Boards
 solutions/**/Chips
-*.bat
 bootloader/bin/
 modules/security/tee_ca/bin
 bootloader/libs/libcsi.a
@@ -84,6 +83,8 @@ solutions_cb5654/Makefile
 mkflash.sh
 gdbinitflash
 cdkinitflash
+gdbinit.remote
+gdbinit.*
 
 .cache/
 *.cdkws

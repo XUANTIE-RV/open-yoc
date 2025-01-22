@@ -16,6 +16,8 @@
  * limitations under the License.
  */
 
+#include "riscv_csr.h"
+
 /* Enable interrupts when returning from the handler */
 #define MSTATUS_PRV1 0x1880
 .equ RISCV_MSTATUS_MIE,        (1<<3)       /*machine-level interrupt bit*/
@@ -44,6 +46,28 @@ cpu_is_irq_enable:
     csrr a0, mstatus
     andi a0, a0, RISCV_MSTATUS_MIE
     ret
+
+#if CONFIG_CHECK_FPU_DIRTY
+.macro FREERTOS_RESTORE_MSTATUS
+    li       t1, 0
+
+#ifdef __riscv_dsp
+    addi     t1, t1, 4
+#endif
+
+#if __riscv_flen == 64
+    addi     t1, t1, 260
+#elif __riscv_flen == 32
+    addi     t1, t1, 132
+#endif
+    addi     t1, t1, (128-4)
+
+    add      sp, sp, t1
+    lw       t3, (0)(sp)
+    csrw     mstatus, t3
+    sub      sp, sp, t1
+.endm
+#endif /* CONFIG_CHECK_FPU_DIRTY */
 
 /********************************************************************
  * Functions: vPortYield
@@ -84,7 +108,11 @@ vPortStartTask:
 .global tspend_handler
 .type   tspend_handler, %function
 tspend_handler:
+#if CONFIG_CHECK_FPU_DIRTY
+    addi    sp, sp, -128
+#else
     addi    sp, sp, -124
+#endif
     sw      x1, 0(sp)
     sw      x3, 4(sp)
     sw      x4, 8(sp)
@@ -117,8 +145,17 @@ tspend_handler:
     sw      x31, 116(sp)
     csrr    t0, mepc
     sw      t0, 120(sp)
+#if CONFIG_CHECK_FPU_DIRTY
+    csrr    t3, mstatus
+    sw      t3, 124(sp)
+#endif
 
 #if __riscv_flen == 64
+#if CONFIG_CHECK_FPU_DIRTY
+    li      t1, SR_FS_DIRTY
+    and     t3, t3, t1
+    bne     t3, t1, 1f
+#endif
     addi     sp, sp, -4
     frcsr    t0
     sw       t0, 0(sp)
@@ -156,7 +193,18 @@ tspend_handler:
     fsd     f2,  (116+116)(sp)
     fsd     f1,  (120+120)(sp)
     fsd     f0,  (124+124)(sp)
+#if CONFIG_CHECK_FPU_DIRTY
+    j       2f
+1:
+    addi    sp, sp, -260
+2:
+#endif
 #elif __riscv_flen == 32
+#if CONFIG_CHECK_FPU_DIRTY
+    li      t1, SR_FS_DIRTY
+    and     t3, t3, t1
+    bne     t3, t1, 1f
+#endif
     addi     sp, sp, -4
     frcsr    t0
     sw       t0, 0(sp)
@@ -194,7 +242,13 @@ tspend_handler:
     fsw     f2, 116(sp)
     fsw     f1, 120(sp)
     fsw     f0, 124(sp)
+#if CONFIG_CHECK_FPU_DIRTY
+    j       2f
+1:
+    addi    sp, sp, -132
+2:
 #endif
+#endif /* __riscv_flen */
 
 #if __riscv_dsp
     addi    sp, sp, -4
@@ -213,6 +267,10 @@ __vPortFistTask:
     lw      a1, (a1)
     lw      sp, (a1)
 
+#if CONFIG_CHECK_FPU_DIRTY
+    FREERTOS_RESTORE_MSTATUS
+#endif
+
 #if __riscv_dsp
     lw      t0, 0(sp)
     csrw    vxsat, t0
@@ -220,6 +278,11 @@ __vPortFistTask:
 #endif /*__riscv_dsp */
 
 #if __riscv_flen == 64
+#if CONFIG_CHECK_FPU_DIRTY
+    li      t1, SR_FS_DIRTY
+    and     t3, t3, t1
+    bne     t3, t1, 11f
+#endif
     fld     f31, (0  +0  )(sp)
     fld     f30, (4  +4  )(sp)
     fld     f29, (8  +8  )(sp)
@@ -257,7 +320,18 @@ __vPortFistTask:
     lw       t0, 0(sp)
     fscsr    t0
     addi     sp, sp, 4
+#if CONFIG_CHECK_FPU_DIRTY
+    j        12f
+11:
+    addi     sp, sp, 260
+12:
+#endif /* CONFIG_CHECK_FPU_DIRTY */
 #elif __riscv_flen == 32
+#if CONFIG_CHECK_FPU_DIRTY
+    li      t1, SR_FS_DIRTY
+    and     t3, t3, t1
+    bne     t3, t1, 11f
+#endif
     flw     f31, 0(sp)
     flw     f30, 4(sp)
     flw     f29, 8(sp)
@@ -295,7 +369,13 @@ __vPortFistTask:
     lw       t0, 0(sp)
     fscsr    t0
     addi     sp, sp, 4
-#endif
+#if CONFIG_CHECK_FPU_DIRTY
+    j        12f
+11:
+    addi     sp, sp, 132
+12:
+#endif /* CONFIG_CHECK_FPU_DIRTY */
+#endif /* __riscv_flen == 32 */
 
     /* Run in machine mode */
     li      t0, MSTATUS_PRV1
@@ -334,8 +414,11 @@ __vPortFistTask:
     lw      x29, 108(sp)
     lw      x30, 112(sp)
     lw      x31, 116(sp)
+#if CONFIG_CHECK_FPU_DIRTY
+    addi    sp, sp, 128
+#else
     addi    sp, sp, 124
-    
+#endif
     mret
 
     .size   tspend_handler, . - tspend_handler

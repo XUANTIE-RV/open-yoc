@@ -1,3 +1,13 @@
-target remote 10.63.58.147:1025
-reset
+# target remote 10.63.58.147:1025
+
+###########################
+set $mhcr = 0
+set *0x0 = 0x6f
+monitor nreset halt
+###########################
+
+set $mhcr = 0x103f
+set $mhint = 0x600c
+set $mxstatus = 0x440800
+
 lo

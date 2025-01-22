@@ -25,11 +25,139 @@
 #ifndef __RISCV_ASM_MACRO_H__
 #define __RISCV_ASM_MACRO_H__
 
+#if (!defined(__riscv_flen)) && (CONFIG_CHECK_FPU_DIRTY)
+#error "this cpu doesn't supprot FPU, but macro 'CONFIG_CHECK_FPU_DIRTY' is defined, please remove it."
+#endif
+
+#if (!defined(__riscv_vector)) && (CONFIG_CHECK_VECTOR_DIRTY)
+#error "this cpu doesn't supprot vector, but macro 'CONFIG_CHECK_VECTOR_DIRTY' is defined, please remove it."
+#endif
+
+#if (!defined(__riscv_matrix) && !defined(__riscv_xtheadmatrix)) && (CONFIG_CHECK_MATRIX_DIRTY)
+#error "this cpu doesn't supprot matrix, but macro 'CONFIG_CHECK_MATRIX_DIRTY' is defined, please remove it."
+#endif
+
 #include "riscv_csr.h"
+
+#if CONFIG_CHECK_FPU_DIRTY || CONFIG_CHECK_VECTOR_DIRTY || CONFIG_CHECK_MATRIX_DIRTY
+.macro RESTORE_MSTATUS
+    /* t0 and t1 are not restored before using */
+    /* now, sp is at the top of the stack (the lowest address)*/
+    li       t1, 0
+#if __riscv_matrix || __riscv_xtheadmatrix  /* matrix registers */
+#if __riscv_xlen == 64
+    addi     t1, t1, (12 + 12)
+#else
+    addi     t1, t1, 12
+#endif /*__riscv_xlen */
+    csrr     t0, xmlenb
+    slli     t0, t0, 3
+    add      t1, t1, t0
+#endif /* __riscv_matrix || __riscv_xtheadmatrix */
+
+#ifdef __riscv_vector /* vector registers */
+    csrr     t0, vlenb
+    slli     t0, t0, 5
+    add      t1, t1, t0
+#if __riscv_xlen == 64
+    addi     t1, t1, (20+20)
+#else
+    addi     t1, t1, 20
+#endif  /* __riscv_xlen */
+#endif  /* __riscv_vector */
+
+#if __riscv_flen == 64 /* float registers */
+#if __riscv_xlen == 64
+    addi     t1, t1, 168
+#else
+    addi     t1, t1, 164
+#endif /* __riscv_xlen */
+
+#elif __riscv_flen == 32
+    addi     t1, t1, 84
+#endif /* __riscv_flen */
+
+#ifdef __riscv_dsp  /* vxsat register, 32-bit cpu only */
+    addi     t1, t1, 4
+#endif /* __riscv_dsp */
+
+#if __riscv_xlen == 64  /*general purpose registers*/
+    addi     t1, t1, (72 + 72)
+#elif __riscv_xlen == 32
+    addi     t1, t1, 72
+#endif
+    add      sp, sp, t1
+
+    /* now, sp is the position of mstatus */
+    load_x   t3, (0)(sp)
+    csrw     mstatus, t3
+    sub      sp, sp, t1
+.endm
+
+.macro RESTORE_SSTATUS
+    /* t0 and t1 are not restored before using */
+    /* now, sp is at the top of the stack (the lowest address)*/
+    li       t1, 0
+#if __riscv_matrix || __riscv_xtheadmatrix /* matrix registers */
+#if __riscv_xlen == 64
+    addi     t1, t1, (12 + 12)
+#else
+    addi     t1, t1, 12
+#endif /*__riscv_xlen */
+    csrr     t0, xmlenb
+    slli     t0, t0, 3
+    add      t1, t1, t0
+#endif /* __riscv_matrix || __riscv_xtheadmatrix */
+
+#ifdef __riscv_vector /* vector registers */
+    csrr     t0, vlenb
+    slli     t0, t0, 5
+    add      t1, t1, t0
+#if __riscv_xlen == 64
+    addi     t1, t1, (20+20)
+#else
+    addi     t1, t1, 20
+#endif  /* __riscv_xlen */
+#endif  /* __riscv_vector */
+
+#if __riscv_flen == 64 /* float registers */
+#if __riscv_xlen == 64
+    addi     t1, t1, 168
+#else
+    addi     t1, t1, 164
+#endif /* __riscv_xlen */
+
+#elif __riscv_flen == 32
+    addi     t1, t1, 84
+#endif /* __riscv_flen */
+
+#if __riscv_xlen == 64  /*general purpose registers*/
+    addi     t1, t1, (72 + 72)
+#elif __riscv_xlen == 32
+    addi     t1, t1, 72
+#endif
+    add      sp, sp, t1
+
+    /* now, sp is the position of mstatus */
+    load_x   t3, (0)(sp)
+    csrw     sstatus, t3
+    sub      sp, sp, t1
+.endm
+
+#endif /* CONFIG_CHECK_FPU_DIRTY || CONFIG_CHECK_VECTOR_DIRTY || CONFIG_CHECK_MATRIX_DIRTY */
 
 .macro SAVE_VECTOR_REGISTERS
     /* t0,t1 saved before using */
+    /* mstatus->t3 */
 #ifdef __riscv_vector
+#if CONFIG_CHECK_VECTOR_DIRTY
+    /* check if VS filed of MSTATUS is 'dirty' */
+    li       t1, SR_VS_DIRTY
+    and      t4, t3, t1
+    bne      t4, t1, 1f
+#endif /* CONFIG_CHECK_VECTOR_DIRTY */
+
+    /* if dirty, save vector registers */
 #if __riscv_xlen == 64
     addi     sp, sp, -(20+20)
     csrr     t0, vl
@@ -60,8 +188,8 @@
     slli     t0, t0, 3
     slli     t1, t0, 2
     sub      sp, sp, t1
-    vsetvli  zero, zero, e8, m8
 #if (__riscv_v == 7000)
+    vsetvli  zero, zero, e8, m8
     vsb.v    v0, (sp)
     add      sp, sp, t0
     vsb.v    v8, (sp)
@@ -70,6 +198,7 @@
     add      sp, sp, t0
     vsb.v    v24, (sp)
 #elif (__riscv_v == 1000000)
+    vsetvli  zero, zero, e8, m8, ta, ma
     vs8r.v   v0, (sp)
     add      sp, sp, t0
     vs8r.v   v8, (sp)
@@ -80,16 +209,39 @@
 #endif
     sub      t0, t1, t0
     sub      sp, sp, t0
+#if CONFIG_CHECK_VECTOR_DIRTY
+    j        2f
+1:  /* don't need to save vector registers, set sp */
+#if __riscv_xlen == 64
+    addi     sp, sp, -(20+20)
+#else
+    addi     sp, sp, -20
+#endif
+    csrr     t0, vlenb
+    slli     t0, t0, 5
+    sub      sp, sp, t0
+2:
+#endif /* CONFIG_CHECK_VECTOR_DIRTY */
 #endif /*__riscv_vector*/
 .endm
 
 .macro RESTORE_VECTOR_REGISTERS
-    /* t0,t1,t2 not restored before using */
+    /* t0,t1,t2 not restored before using, mstatus has been restored before using */
 #ifdef __riscv_vector
+#if CONFIG_CHECK_VECTOR_DIRTY
+    /* check if VS filed of MSTATUS is 'dirty' */
+    li       t1, SR_VS_DIRTY
+    and      t4, t3, t1
+    bne      t4, t1, 1f
+#endif /* CONFIG_CHECK_VECTOR_DIRTY */
+
+    /* get the range of register */
     csrr     t0, vlenb
     slli     t0, t0, 3
-    vsetvli  zero, zero, e8, m8
+
+    /* save */
 #if (__riscv_v == 7000)
+    vsetvli  zero, zero, e8, m8
     vlb.v    v0, (sp)
     add      sp, sp, t0
     vlb.v    v8, (sp)
@@ -99,6 +251,7 @@
     vlb.v    v24, (sp)
     add      sp, sp, t0
 #elif (__riscv_v == 1000000)
+    vsetvli  zero, zero, e8, m8, ta, ma
     vl8r.v   v0, (sp)
     add      sp, sp, t0
     vl8r.v   v8, (sp)
@@ -131,14 +284,35 @@
     csrw     vxrm, t2
     addi     sp, sp, 20
 #endif /*__riscv_xlen */
-
+#if CONFIG_CHECK_VECTOR_DIRTY
+    j        2f
+1:
+    /* don't restore, move sp only */
+#if __riscv_xlen == 64
+    addi     sp, sp, (20+20)
+#else
+    addi     sp, sp, (20)
+#endif
+    csrr     t0, vlenb
+    slli     t0, t0, 5
+    add      sp, sp, t0
+2:
+#endif /* CONFIG_CHECK_VECTOR_DIRTY */
 #endif /*__riscv_vector*/
 .endm
 
 
 .macro SAVE_FLOAT_REGISTERS
-    /* t0 saved before using */
+    /* t0, t1 saved before using */
 #if __riscv_flen == 64
+#if CONFIG_CHECK_FPU_DIRTY
+    /* check if FS filed of MSTATUS is 'dirty' */
+    li       t1, SR_FS_DIRTY
+    and      t4, t3, t1
+    bne      t4, t1, 1f
+#endif /*CONFIG_CHECK_FPU_DIRTY*/
+
+    /* save */
 #if __riscv_xlen == 64
     addi     sp, sp, -(4+4)
     frcsr    t0
@@ -171,6 +345,13 @@
     fstore_x ft10,(72+72)(sp)
     fstore_x ft11,(76+76)(sp)
 #elif __riscv_flen == 32
+#if CONFIG_CHECK_FPU_DIRTY
+    /* check if FS filed of MSTATUS is 'dirty' */
+    li       t1, SR_FS_DIRTY
+    and      t4, t3, t1
+    bne      t4, t1, 1f
+#endif  /* CONFIG_CHECK_FPU_DIRTY */
+
     addi     sp, sp, -4
     frcsr    t0
     store_x  t0, 0(sp)
@@ -197,11 +378,34 @@
     fstore_x ft10,72(sp)
     fstore_x ft11,76(sp)
 #endif /*__riscv_flen */
+#if CONFIG_CHECK_FPU_DIRTY
+    j        2f
+1:
+    /* don't store, move sp only */
+#if __riscv_flen == 64
+#if __riscv_xlen == 64
+    addi     sp, sp, -168
+#else
+    addi     sp, sp, -164
+#endif /*__riscv_xlen */
+#elif __riscv_flen == 32
+    addi     sp, sp, -84
+#endif /* __riscv_xlen */
+2:
+#endif
 .endm
 
 .macro RESTORE_FLOAT_REGISTERS
-    /* t0 not restored before using */
+    /* t0 and t1 are not restored before using, mstatus has been restored before using */
 #if __riscv_flen == 64
+#if CONFIG_CHECK_FPU_DIRTY
+    /* check if FS filed of MSTATUS is 'dirty' */
+    li       t1, SR_FS_DIRTY
+    and      t4, t3, t1
+    bne      t4, t1, 1f
+#endif /* CONFIG_CHECK_FPU_DIRTY */
+
+    /* restore */
     fload_x  ft0, (0 +0 )(sp)
     fload_x  ft1, (4 +4 )(sp)
     fload_x  ft2, (8 +8 )(sp)
@@ -234,6 +438,14 @@
     addi     sp, sp, 4
 #endif /*__riscv_xlen */
 #elif __riscv_flen == 32
+#if CONFIG_CHECK_FPU_DIRTY
+    /* check if FS filed of MSTATUS is 'dirty' */
+    li       t1, SR_FS_DIRTY
+    and      t4, t3, t1
+    bne      t4, t1, 1f
+#endif /* CONFIG_CHECK_FPU_DIRTY */
+
+    /* restore */
     fload_x  ft0, 0(sp)
     fload_x  ft1, 4(sp)
     fload_x  ft2, 8(sp)
@@ -260,11 +472,35 @@
     fscsr    t0
     addi     sp, sp, 4
 #endif /*__riscv_flen */
+#if CONFIG_CHECK_FPU_DIRTY
+    j        2f
+1:
+    /* don't restore, move sp only */
+#if __riscv_flen == 64
+#if __riscv_xlen == 64
+    addi     sp, sp, 168
+#elif __riscv_xlen == 32
+    addi     sp, sp, 164
+#endif
+#elif __riscv_flen == 32
+    addi     sp, sp, 84
+#endif /* __riscv_flen */
+2:
+#endif /* CONFIG_CHECK_FPU_DIRTY */
 .endm
 
 .macro SAVE_MATRIX_REGISTERS
     /* t0,t1 saved before using */
-#ifdef __riscv_matrix
+
+#if __riscv_matrix || __riscv_xtheadmatrix
+#if CONFIG_CHECK_MATRIX_DIRTY
+    /* check if FS filed of MSTATUS is 'dirty' */
+    li       t1, SR_MS_DIRTY
+    and      t4, t3, t1
+    bne      t4, t1, 1f
+#endif /* CONFIG_CHECK_MATRIX_DIRTY */
+
+    /* store */
 #if __riscv_xlen == 64
     addi     sp, sp, -(12+12)
     csrr     t0, xmrstart
@@ -288,12 +524,35 @@
     sub      sp, sp, t1
     csrw     xmrstart, x0
     mst8mb   m0, (sp)
-#endif /*__riscv_matrix*/
+#if CONFIG_CHECK_MATRIX_DIRTY
+    j        2f
+1:
+    /* don't save, move sp only */
+    csrr     t0, xmlenb
+    slli     t1, t0, 3
+    sub      sp, sp, t1
+#if __riscv_xlen == 64
+    addi     sp, sp, -24
+#else
+    addi     sp, sp, -12
+#endif
+2:
+#endif /* CONFIG_CHECK_MATRIX_DIRTY */
+#endif /* __riscv_matrix || __riscv_xtheadmatrix */
 .endm
 
 .macro RESTORE_MATRIX_REGISTERS
-    /* t0,t1 not restored before using */
-#ifdef __riscv_matrix
+    /* t0 and t1 are not restored before using, mstatus has been restored before using */
+
+#if __riscv_matrix || __riscv_xtheadmatrix
+#if CONFIG_CHECK_MATRIX_DIRTY
+    /* check if FS filed of MSTATUS is 'dirty' */
+    li       t1, SR_MS_DIRTY
+    and      t4, t3, t1
+    bne      t4, t1, 1f
+#endif /* CONFIG_CHECK_MATRIX_DIRTY */
+
+    /* restore */
     csrr     t0, xmlenb
     slli     t1, t0, 3
     csrw     xmrstart, x0
@@ -316,8 +575,21 @@
     csrw     xmsize, t0
     addi     sp, sp, 12
 #endif /*__riscv_xlen */
-
-#endif /*__riscv_matrix*/
+#if CONFIG_CHECK_MATRIX_DIRTY
+    j        2f
+1:
+    /* don't restore, move sp only */
+    csrr     t0, xmlenb
+    slli     t1, t0, 3
+    add      sp, sp, t1
+#if __riscv_xlen == 64
+    addi     sp, sp, 24
+#else
+    addi     sp, sp, 12
+#endif
+2:
+#endif /* CONFIG_CHECK_MATRIX_DIRTY */
+#endif /* __riscv_matrix || __riscv_xtheadmatrix */
 .endm
 
 
