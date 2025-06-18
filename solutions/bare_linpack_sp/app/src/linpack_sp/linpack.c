@@ -718,16 +718,6 @@ return clock()/1.0e6;
 #endif
 
 //typedef	unsigned int u_int32_t;
-typedef union
-{
-  double value;
-  struct
-  {
-    u_int32_t msw;
-    u_int32_t lsw;
-  } parts;
-  uint64_t word;
-} ieee_double_shape_type_e;
 
 void benchmark_linpack_sp_main()
 {
@@ -929,5 +919,6 @@ void benchmark_linpack_sp_main()
 	print_time(7);
 	fprintf(stderr,ROLLING);fprintf(stderr,PREC);
 	fprintf(stderr," Precision %5d Kflops ; %d Reps \n",kflops,NTIMES);
-        printf("bare_linpack_sp runs success!\n");
+
+	printf("bare_linpack_sp runs success!\n");
 }

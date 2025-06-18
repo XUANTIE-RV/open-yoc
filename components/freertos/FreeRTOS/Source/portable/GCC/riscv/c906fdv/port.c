@@ -90,7 +90,7 @@ StackType_t *pxPortInitialiseStack( StackType_t *pxTopOfStack, TaskFunction_t px
     *(--stk)  = (uint64_t)0x1111111111111111L;       /* X11         */
     *(--stk)  = (uint64_t)pvParameters;              /* X10         */
     *(--stk)  = (uint64_t)0x0909090909090909L;       /* X9          */
-    *(--stk)  = (uint64_t)0x0808080808080808L;       /* X8          */
+    *(--stk)  = (uint64_t)pxTopOfStack;              /* X8, aka. fp */
     *(--stk)  = (uint64_t)0x0707070707070707L;       /* X7          */
     *(--stk)  = (uint64_t)0x0606060606060606L;       /* X6          */
     *(--stk)  = (uint64_t)0x0505050505050505L;       /* X5          */

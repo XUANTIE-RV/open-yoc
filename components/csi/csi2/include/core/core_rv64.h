@@ -219,7 +219,7 @@ typedef struct {
  */
 
 typedef struct {
-    uint32_t RESERVED0;                 /*!< Offset: 0x000 (R/W)  CLINT configure register */
+    uint32_t RESERVED0;
     __IOM uint32_t PLIC_PRIO[1023];
     __IOM uint32_t PLIC_IP[32];
     uint32_t RESERVED1[3972 / 4 - 1];
@@ -403,7 +403,9 @@ typedef struct {
 #define CACHE_MHCR_IE_Msk                      (0x1UL << CACHE_MHCR_IE_Pos)                  /*!< CACHE MHCR: IE Mask */
 
 #if CONFIG_CPU_XUANTIE_R908 || CONFIG_CPU_XUANTIE_R908FD || CONFIG_CPU_XUANTIE_R908FDV \
-    || CONFIG_CPU_XUANTIE_R908_CP || CONFIG_CPU_XUANTIE_R908FD_CP || CONFIG_CPU_XUANTIE_R908FDV_CP
+    || CONFIG_CPU_XUANTIE_R908_CP || CONFIG_CPU_XUANTIE_R908FD_CP || CONFIG_CPU_XUANTIE_R908FDV_CP \
+    || CONFIG_CPU_XUANTIE_R908_CP_XT || CONFIG_CPU_XUANTIE_R908FD_CP_XT || CONFIG_CPU_XUANTIE_R908FDV_CP_XT \
+    || CONFIG_CPU_XUANTIE_C908X || CONFIG_CPU_XUANTIE_C908X_CP || CONFIG_CPU_XUANTIE_C908X_CP_XT
 #define MCER_ECC_FATAL_Pos           34U
 #define MCER_ECC_FATAL_Msk           (0x1ULL << MCER_ECC_FATAL_Pos)
 
@@ -440,7 +442,7 @@ typedef struct {
 #define CACHE_MCER2H_RAMID_Msk                 (0x3ULL << CACHE_MCER2H_RAMID_Pos)
 
 #define CACHE_INV_ADDR_Pos                     6U
-#define CACHE_INV_ADDR_Msk                     (0xFFFFFFFFULL << CACHE_INV_ADDR_Pos)
+#define CACHE_INV_ADDR_Msk                     (~((0x1ULL << CACHE_INV_ADDR_Pos) - 1))
 
 enum MCER_FAULT_RAMID {
     /* L1 Cache, JTLB and TCM (RAMID of MCER)*/
@@ -1277,13 +1279,11 @@ __STATIC_INLINE void csi_icache_enable(void)
     if (!csi_icache_is_enable()) {
         uint32_t cache;
         __DSB();
-        __ISB();
         __ICACHE_IALL();
         cache = __get_MHCR();
         cache |= CACHE_MHCR_IE_Msk;
         __set_MHCR(cache);
         __DSB();
-        __ISB();
     }
 #endif
 }
@@ -1299,13 +1299,11 @@ __STATIC_INLINE void csi_icache_disable(void)
     if (csi_icache_is_enable()) {
         uint32_t cache;
         __DSB();
-        __ISB();
         cache = __get_MHCR();
         cache &= ~CACHE_MHCR_IE_Msk;            /* disable icache */
         __set_MHCR(cache);
         __ICACHE_IALL();                        /* invalidate all icache */
         __DSB();
-        __ISB();
     }
 #endif
 }
@@ -1319,10 +1317,8 @@ __STATIC_INLINE void csi_icache_invalid(void)
 {
 #if (__ICACHE_PRESENT == 1U)
     __DSB();
-    __ISB();
     __ICACHE_IALL();                        /* invalidate all icache */
     __DSB();
-    __ISB();
 #endif
 }
 
@@ -1345,14 +1341,12 @@ __STATIC_INLINE void csi_dcache_enable(void)
     if (!csi_dcache_is_enable()) {
         uint32_t cache;
         __DSB();
-        __ISB();
         __DCACHE_IALL();                        /* invalidate all dcache */
         cache = __get_MHCR();
         cache |= CACHE_MHCR_DE_Msk;             /* enable dcache */
         __set_MHCR(cache);
 
         __DSB();
-        __ISB();
     }
 #endif
 }
@@ -1368,13 +1362,11 @@ __STATIC_INLINE void csi_dcache_disable(void)
     if (csi_dcache_is_enable()) {
         uint32_t cache;
         __DSB();
-        __ISB();
         cache = __get_MHCR();
         cache &= ~(uint32_t)CACHE_MHCR_DE_Msk; /* disable all Cache */
         __set_MHCR(cache);
         __DCACHE_IALL();                             /* invalidate all Cache */
         __DSB();
-        __ISB();
     }
 #endif
 }
@@ -1387,10 +1379,8 @@ __STATIC_INLINE void csi_dcache_invalid(void)
 {
 #if (__DCACHE_PRESENT == 1U)
     __DSB();
-    __ISB();
     __DCACHE_IALL();                            /* invalidate all Cache */
     __DSB();
-    __ISB();
 #endif
 }
 
@@ -1403,10 +1393,8 @@ __STATIC_INLINE void csi_dcache_clean(void)
 {
 #if (__DCACHE_PRESENT == 1U)
     __DSB();
-    __ISB();
     __DCACHE_CALL();                                     /* clean all Cache */
     __DSB();
-    __ISB();
 #endif
 }
 
@@ -1419,10 +1407,8 @@ __STATIC_INLINE void csi_dcache_clean_invalid(void)
 {
 #if (__DCACHE_PRESENT == 1U)
     __DSB();
-    __ISB();
     __DCACHE_CIALL();                                   /* clean and inv all Cache */
     __DSB();
-    __ISB();
 #endif
 }
 
@@ -1437,7 +1423,7 @@ __STATIC_INLINE void csi_dcache_invalid_range(unsigned long *addr, size_t dsize)
 #if (__DCACHE_PRESENT == 1U)
     int linesize = csi_get_cache_line_size();
     long op_size = dsize + (unsigned long)addr % linesize;
-    unsigned long op_addr = (unsigned long)addr;
+    unsigned long op_addr = (unsigned long)addr & CACHE_INV_ADDR_Msk;
 
     __DSB();
 #if CBO_INSN_SUPPORT
@@ -1528,7 +1514,7 @@ __STATIC_INLINE void csi_dcache_clean_invalid_range(unsigned long *addr, size_t 
 #if (__DCACHE_PRESENT == 1U)
     int linesize = csi_get_cache_line_size();
     long op_size = dsize + (unsigned long)addr % linesize;
-    unsigned long op_addr = (unsigned long) addr;
+    unsigned long op_addr = (unsigned long) addr & CACHE_INV_ADDR_Msk;
 
     __DSB();
 #if CBO_INSN_SUPPORT
@@ -1709,10 +1695,14 @@ __STATIC_INLINE void csi_mmu_invalid_tlb_all(void)
 
 #if CONFIG_CPU_XUANTIE_C907 || CONFIG_CPU_XUANTIE_C907FD || CONFIG_CPU_XUANTIE_C907FDV || CONFIG_CPU_XUANTIE_C907FDVM \
     || CONFIG_CPU_XUANTIE_C908 || CONFIG_CPU_XUANTIE_C908V || CONFIG_CPU_XUANTIE_C908I \
+    || CONFIG_CPU_XUANTIE_C908X || CONFIG_CPU_XUANTIE_C908X_CP || CONFIG_CPU_XUANTIE_C908X_CP_XT \
     || CONFIG_CPU_XUANTIE_C910V2 || CONFIG_CPU_XUANTIE_C920V2 \
-    || CONFIG_CPU_XUANTIE_C910V3 || CONFIG_CPU_XUANTIE_C910V3_CP || CONFIG_CPU_XUANTIE_C920V3 || CONFIG_CPU_XUANTIE_C920V3_CP \
+    || CONFIG_CPU_XUANTIE_C910V3 || CONFIG_CPU_XUANTIE_C920V3 \
+    || CONFIG_CPU_XUANTIE_C910V3_CP || CONFIG_CPU_XUANTIE_C920V3_CP \
+    || CONFIG_CPU_XUANTIE_C910V3_CP_XT || CONFIG_CPU_XUANTIE_C920V3_CP_XT \
     || CONFIG_CPU_XUANTIE_R908 || CONFIG_CPU_XUANTIE_R908FD || CONFIG_CPU_XUANTIE_R908FDV \
     || CONFIG_CPU_XUANTIE_R908_CP || CONFIG_CPU_XUANTIE_R908FD_CP || CONFIG_CPU_XUANTIE_R908FDV_CP \
+    || CONFIG_CPU_XUANTIE_R908_CP_XT || CONFIG_CPU_XUANTIE_R908FD_CP_XT || CONFIG_CPU_XUANTIE_R908FDV_CP_XT \
     || CONFIG_CPU_XUANTIE_R910 || CONFIG_CPU_XUANTIE_R920
 /**
  \ingroup    CSI_tcm_register

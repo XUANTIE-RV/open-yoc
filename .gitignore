@@ -1,0 +1,6 @@
+.vscode
+solutions/*/gdbinit.*
+.defconfig
+*.fold
+perf_rtos_*.data
+.yoc

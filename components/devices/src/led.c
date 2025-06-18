@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+#include <errno.h>
 #include <devices/led.h>
 #include <dev_internal.h>
 #include <devices/impl/led_impl.h>

@@ -235,7 +235,7 @@ void rt_hw_scondary_interrupt_init(void)
     }
     else if (core_id == C908_CORE1)
     {
-        for (i = 0; i < 32; i++)
+        for (i = 0; i < (CONFIG_IRQ_NUM + 31) / 32; i++)
         {
             PLIC->PLIC_H1_MIE[i] = 0;
             PLIC->PLIC_H1_SIE[i] = 0;
@@ -247,7 +247,7 @@ void rt_hw_scondary_interrupt_init(void)
     }
     else if (core_id == C908_CORE2)
     {
-        for (i = 0; i < 32; i++)
+        for (i = 0; i < (CONFIG_IRQ_NUM + 31) / 32; i++)
         {
             PLIC->PLIC_H2_MIE[i] = 0;
             PLIC->PLIC_H2_SIE[i] = 0;
@@ -259,7 +259,7 @@ void rt_hw_scondary_interrupt_init(void)
     }
     else if (core_id == C908_CORE3)
     {
-        for (i = 0; i < 32; i++)
+        for (i = 0; i < (CONFIG_IRQ_NUM + 31) / 32; i++)
         {
             PLIC->PLIC_H3_MIE[i] = 0;
             PLIC->PLIC_H3_SIE[i] = 0;
@@ -271,7 +271,7 @@ void rt_hw_scondary_interrupt_init(void)
     }
     else if (core_id == C908_CORE4)
     {
-        for (i = 0; i < 32; i++)
+        for (i = 0; i < (CONFIG_IRQ_NUM + 31) / 32; i++)
         {
             PLIC->PLIC_H4_MIE[i] = 0;
             PLIC->PLIC_H4_SIE[i] = 0;
@@ -283,7 +283,7 @@ void rt_hw_scondary_interrupt_init(void)
     }
     else if (core_id == C908_CORE5)
     {
-        for (i = 0; i < 32; i++)
+        for (i = 0; i < (CONFIG_IRQ_NUM + 31) / 32; i++)
         {
             PLIC->PLIC_H5_MIE[i] = 0;
             PLIC->PLIC_H5_SIE[i] = 0;
@@ -295,7 +295,7 @@ void rt_hw_scondary_interrupt_init(void)
     }
     else if (core_id == C908_CORE6)
     {
-        for (i = 0; i < 32; i++)
+        for (i = 0; i < (CONFIG_IRQ_NUM + 31) / 32; i++)
         {
             PLIC->PLIC_H6_MIE[i] = 0;
             PLIC->PLIC_H6_SIE[i] = 0;
@@ -307,7 +307,7 @@ void rt_hw_scondary_interrupt_init(void)
     }
     else if (core_id == C908_CORE7)
     {
-        for (i = 0; i < 32; i++)
+        for (i = 0; i < (CONFIG_IRQ_NUM + 31) / 32; i++)
         {
             PLIC->PLIC_H7_MIE[i] = 0;
             PLIC->PLIC_H7_SIE[i] = 0;

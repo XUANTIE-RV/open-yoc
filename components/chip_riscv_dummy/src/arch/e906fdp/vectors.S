@@ -46,6 +46,10 @@ irq_nested_mcause:
     .weak   Default_IRQHandler
     .type   Default_IRQHandler, %function
 Default_IRQHandler:
+#if CONFIG_PROFILING_PERF && CONFIG_PERF_BACKTRACE_USE_FP
+    addi    sp, sp, -4
+    sw      s0, (sp)
+#endif
     csrw    mscratch, sp
     la      sp, g_top_irqstack
 #if CONFIG_CHECK_FPU_DIRTY
@@ -60,8 +64,8 @@ Default_IRQHandler:
     sw      t1, 64(sp)
     sw      t0, 68(sp)
 #if CONFIG_CHECK_FPU_DIRTY
-    csrr    t0, mstatus
-    sw      t0, 72(sp)
+    csrr    t1, mstatus
+    sw      t1, 72(sp)
 #endif
     sw      ra, 0(sp)
     sw      t2, 12(sp)
@@ -85,7 +89,7 @@ Default_IRQHandler:
 #endif /*__riscv_dsp */
 
 #if CONFIG_CHECK_FPU_DIRTY
-    csrr    t3, mstatus
+    mv      t3, t1
 #endif
     SAVE_FLOAT_REGISTERS
 
@@ -155,6 +159,11 @@ Default_IRQHandler:
     addi    sp, sp, 72
 #endif
     csrr    sp, mscratch
+
+#if CONFIG_PROFILING_PERF && CONFIG_PERF_BACKTRACE_USE_FP
+    addi    sp, sp, 4
+#endif
+
     mret
 #else
     .align  2
@@ -186,9 +195,12 @@ Default_IRQHandler:
     li      t0, 1
     bgt     t1, t0, .Lnested1
 
-    lw      t0, 0(sp)
-    lw      t1, 4(sp)
-    addi    sp, sp, 8
+#if CONFIG_PROFILING_PERF && CONFIG_PERF_BACKTRACE_USE_FP
+    addi    sp, sp, -8
+    sw      s0, (sp)
+    csrr    t0, mepc
+    sw      t0, 4(sp)
+#endif
 
     csrw    mscratch, sp
     la      sp, g_top_irqstack
@@ -210,8 +222,8 @@ Default_IRQHandler:
     sw      t1, 64(sp)
     sw      t0, 68(sp)
 #if CONFIG_CHECK_FPU_DIRTY
-    csrr    t0, mstatus
-    sw      t0, 72(sp)
+    csrr    t1, mstatus
+    sw      t1, 72(sp)
 #endif
     csrs    mstatus, 8
 
@@ -237,7 +249,7 @@ Default_IRQHandler:
 #endif /*__riscv_dsp */
 
 #if CONFIG_CHECK_FPU_DIRTY
-    csrr    t3, mstatus
+    mv      t3, t1
 #endif
     SAVE_FLOAT_REGISTERS
 
@@ -316,6 +328,12 @@ Default_IRQHandler:
     addi    sp, sp, 72
 #endif
     csrr    sp, mscratch
+#if CONFIG_PROFILING_PERF && CONFIG_PERF_BACKTRACE_USE_FP
+    addi    sp, sp, 8
+#endif
+    lw      t0, 0(sp)
+    lw      t1, 4(sp)
+    addi    sp, sp, 8
     mret
 
 .Lnested3:
@@ -466,8 +484,8 @@ Default_Handler:
     sw      t1, 64(sp)
     sw      t0, 68(sp)
 #if CONFIG_CHECK_FPU_DIRTY
-    csrr    t0, mstatus
-    sw      t0, 72(sp)
+    csrr    t1, mstatus
+    sw      t1, 72(sp)
 #endif
 
     sw      ra, 0(sp)
@@ -492,7 +510,7 @@ Default_Handler:
 #endif /*__riscv_dsp */
 
 #if CONFIG_CHECK_FPU_DIRTY
-    csrr    t3, mstatus
+    mv      t3, t1
 #endif
     SAVE_FLOAT_REGISTERS
 

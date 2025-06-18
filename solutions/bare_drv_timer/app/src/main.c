@@ -24,5 +24,5 @@ int main(void)
 {
     board_init();
     printf("bare_drv_timer demo start!\r\n");
-    return example_timer(1);
+    return example_timer(EXAMPLE_TIMER_IDX);
 }

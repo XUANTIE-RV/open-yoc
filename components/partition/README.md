@@ -2,8 +2,6 @@
 partition(分区管理)是基于imtb(image mtb)里的分区信息来统一管理flash分区的接口。它能够统一管理flash分区信息，并对分区进行统一的读写以及擦除的操作。
 
 ### 分区定义
-#### 分区说明
-分区信息保存在每个board组件的config中, 例如boards/pangu/config/config.yaml 该文件为文本格式可打开查看分区情况。
 
 #### 分区示例
 

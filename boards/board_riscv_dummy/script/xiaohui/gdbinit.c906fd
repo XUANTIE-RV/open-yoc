@@ -3,11 +3,4 @@
 set confirm off
 set height 0
 
-
-set $mhcr = 0x17f
-set $mxstatus = 0x638000
-set $mhint = 0x650c
-
 lo
-
-

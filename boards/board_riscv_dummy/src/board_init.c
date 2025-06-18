@@ -69,8 +69,8 @@ void board_init(void)
 #include <rthw.h>
 #include <rtthread.h>
 
-extern unsigned long __heap_start;
-extern unsigned long __heap_end;
+extern unsigned long g_heap_start;
+extern unsigned long g_heap_end;
 
 void rt_hw_board_init(void)
 {
@@ -79,7 +79,7 @@ void rt_hw_board_init(void)
 
 #ifdef RT_USING_HEAP
     /* initialize memory system */
-    rt_system_heap_init((void *)&__heap_start, (void *)&__heap_end);
+    rt_system_heap_init((void *)g_heap_start, (void *)g_heap_end);
 #endif
 
 #if RT_DEBUG_INIT
@@ -155,43 +155,6 @@ static struct c9xx_regs_struct {
 #define C9xx_PLIC_DELEG_OFFSET     0x001ffffc
 #define C9xx_PLIC_DELEG_ENABLE     0x1
 
-#define CSR_MCOR         0x7c2
-#define CSR_MHCR         0x7c1
-#define CSR_MCCR2        0x7c3
-#define CSR_MHINT        0x7c5
-#define CSR_MXSTATUS     0x7c0
-#define CSR_MIE          0x304
-#define CSR_PLIC_BASE    0xfc1
-#define CSR_MRMR         0x7c6
-#define CSR_MRVBR        0x7c7
-#define CSR_MSMPR        0x7f3
-#define CSR_MTVEC        0x305
-/* Machine Memory Protection */
-#define CSR_PMPCFG0                     0x3a0
-#define CSR_PMPCFG1                     0x3a1
-#define CSR_PMPCFG2                     0x3a2
-#define CSR_PMPCFG3                     0x3a3
-#define CSR_PMPCFG4                     0x3a4
-#define CSR_PMPCFG5                     0x3a5
-#define CSR_PMPCFG6                     0x3a6
-#define CSR_PMPCFG7                     0x3a7
-#define CSR_PMPCFG8                     0x3a8
-#define CSR_PMPCFG9                     0x3a9
-#define CSR_PMPCFG10                    0x3aa
-#define CSR_PMPCFG11                    0x3ab
-#define CSR_PMPCFG12                    0x3ac
-#define CSR_PMPCFG13                    0x3ad
-#define CSR_PMPCFG14                    0x3ae
-#define CSR_PMPCFG15                    0x3af
-#define CSR_PMPADDR0                    0x3b0
-#define CSR_PMPADDR1                    0x3b1
-#define CSR_PMPADDR2                    0x3b2
-#define CSR_PMPADDR3                    0x3b3
-#define CSR_PMPADDR4                    0x3b4
-#define CSR_PMPADDR5                    0x3b5
-#define CSR_PMPADDR6                    0x3b6
-#define CSR_PMPADDR7                    0x3b7
-
 #define XIAOHUI_SRESET_BASE              0x18030000
 #define XIAOHUI_SRESET_ADDR_OFFSET       0x10
 #define PRIMARY_STARTUP_CORE_ID		0
@@ -247,10 +210,14 @@ void riscv_soc_start_cpu(int cpu_num)
 
 	c9xx_csr_copy();
 	*(unsigned long *)((unsigned long)XIAOHUI_SRESET_BASE + XIAOHUI_SRESET_ADDR_OFFSET + ((cpu_num - 1) << 3)) = (unsigned long)Reset_Handler;
+#if __riscv_xtheadsync
 	__ASM("sync");
+#endif
 	mrmr = *(uint32_t *)(XIAOHUI_SRESET_BASE);
 	*(uint32_t *)(XIAOHUI_SRESET_BASE) = mrmr | (0x1 << (cpu_num - 1));
+#if __riscv_xtheadsync
 	__ASM("sync");
+#endif
 }
 
 void riscv_soc_init_cpu(void)

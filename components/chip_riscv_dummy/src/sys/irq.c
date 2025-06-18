@@ -21,29 +21,31 @@
 #include <csi_core.h>
 #include <csi_config.h>
 #include <drv/common.h>
-#if CONFIG_AOS_OSAL
-#include <aos/kernel.h>
-#endif
 
-extern void Default_Handler(void);
 extern uint32_t soc_irq_get_irq_num(void);
 extern void soc_irq_end(uint32_t irq_num);
 
 #if CONFIG_AOS_OSAL
+#include <aos/kernel.h>
+#include <dbg.h>
 #define CSI_INTRPT_ENTER() aos_kernel_intrpt_enter()
 #define CSI_INTRPT_EXIT()  aos_kernel_intrpt_exit()
 #else
 #ifdef CONFIG_KERNEL_FREERTOS
+#include <FreeRTOS.h>
 extern int freertos_intrpt_enter(void);
 extern int freertos_intrpt_exit(void);
 #define CSI_INTRPT_ENTER() freertos_intrpt_enter()
 #define CSI_INTRPT_EXIT()  freertos_intrpt_exit()
 #elif defined(CONFIG_KERNEL_RTTHREAD)
+#include <rtthread.h>
+#define printk rt_kprintf
 extern void rt_interrupt_enter(void);
 extern void rt_interrupt_leave(void);
 #define CSI_INTRPT_ENTER() rt_interrupt_enter()
 #define CSI_INTRPT_EXIT()  rt_interrupt_leave()
 #else
+#define printk printf
 #define CSI_INTRPT_ENTER()
 #define CSI_INTRPT_EXIT()
 #endif
@@ -218,16 +220,26 @@ void do_irq(void)
 #endif
     CSI_INTRPT_ENTER();
     irqn = soc_irq_get_irq_num();
+
+    if (irqn > sizeof(g_irq_table) / sizeof(g_irq_table[0]) - 1 ) {
+        printk("undefined interrupt: irqn = 0x%x\n", irqn);
+        while(1);
+    }
     if (g_irq_table[irqn]) {
-        if (g_irq_table[irqn]->irq_handler)
+        if (g_irq_table[irqn]->irq_handler) {
             /* for compatibility */
             g_irq_table[irqn]->irq_handler(g_irq_table[irqn]);
-        else if (g_irq_table[irqn]->irq_handler2)
+        }
+        else if (g_irq_table[irqn]->irq_handler2) {
             g_irq_table[irqn]->irq_handler2(irqn, g_irq_table[irqn]->arg);
-        else
-            Default_Handler();
+        }
+        else {
+            printk("undefined interrupt: irqn = 0x%x\n", irqn);
+            /*the interrupt has no registered isr*/
+            while(1);
+        }
     } else {
-        Default_Handler();
+        while(1);
     }
     /* clear irq for cxx */
     soc_irq_end(irqn);

@@ -17,55 +17,35 @@ if [ -n "$EXE_EXT" ]; then
     fi
     PLATFORM=$4
     CPU=$5
+    OBJCOPY=$6
+    OBJDUMP=$7
     if [ -z "$IS_IN_CDS" ]; then
         echo "I am in CDK."
-        OBJCOPY=riscv64-unknown-elf-objcopy
+        if [ -z "$OBJCOPY" ]; then
+            OBJCOPY=riscv64-unknown-elf-objcopy
+        fi
+        if [ -z "$OBJDUMP" ]; then
+            OBJDUMP=riscv64-unknown-elf-objdump
+        fi
+        echo $OBJCOPY
+        echo $OBJDUMP
         ELF_NAME=`ls Obj/*.elf`
         $OBJCOPY -O binary $ELF_NAME $SOLUTION_PATH/yoc.bin
+        $OBJDUMP -d $ELF_NAME > $SOLUTION_PATH/yoc.asm
         cp $ELF_NAME $SOLUTION_PATH/yoc.elf
         cp -arf yoc.map $SOLUTION_PATH/yoc.map
     fi
     PRODUCT=$BOARD_PATH/configs/product$EXE_EXT
 else
     echo "I am in Linux."
-    while getopts ":s:b:c:u:a:" optname
-    do
-        case "$optname" in
-        "s")
-            SOLUTION_PATH=$OPTARG
-            ;;
-        "b")
-            BOARD_PATH=$OPTARG
-            ;;
-        "c")
-            CHIP_PATH=$OPTARG
-            ;;
-        "u")
-            CPU=$OPTARG
-            ;;
-        "a")
-            # echo "the all variables from yoctools, value is $OPTARG"
-            ;;
-        "h")
-            ;;
-        ":")
-            echo "No argument value for option $OPTARG"
-            ;;
-        "?")
-            echo "Unknown option $OPTARG"
-            ;;
-        *)
-            echo "Unknown error while processing options"
-            ;;
-        esac
-        #echo "option index is $OPTIND"
-    done
     PRODUCT=product
-    if [ "${CPU#e}" != "$CPU" ]; then
-        PLATFORM='smartl'
-    else
-        PLATFORM='xiaohui'
-    fi
+    SOLUTION_PATH=$1
+    BOARD_PATH=$2
+    CHIP_PATH=$3
+    PLATFORM=$4
+    CPU=$5
+    OBJCOPY=$6
+    OBJDUMP=$7
 fi
 
 MK_GENERATED_PATH=${SOLUTION_PATH}/generated

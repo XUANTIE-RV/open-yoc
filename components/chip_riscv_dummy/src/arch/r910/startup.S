@@ -86,14 +86,16 @@ Reset_Handler:
     or	    a0, a0,a1
     csrw    mtvec, a0
 
+#if defined(CONFIG_SMP) && CONFIG_SMP
     /* get cpu id */
     csrr a0, mhartid
 
-#if defined(CONFIG_SMP) && CONFIG_SMP
     /* check if hart is within range */
     /* tp: hart id */
     li	t0, CONFIG_NR_CPUS
     bge	a0, t0, hart_out_of_bounds_loop
+#else
+    li  a0, 0
 #endif
 
 #ifdef CONFIG_KERNEL_NONE

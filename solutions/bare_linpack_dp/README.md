@@ -10,16 +10,21 @@
 
 ## 编译
 
+GCC使用以下命令编译：
 ```bash
 ./do_build.sh <cpu> <platform>
 ```
+LLVM使用以下命令编译：
+```bash
+./do_build_llvm.sh <cpu> <platform>
+```
+
+`cpu`和`platform`支持列表：
 - cpu: <br />
-        e906fd e906fdp e907fd e907fdp <br />
-        r910 r920 r908 r908fd r908fdv r908-cp r908fd-cp r908fdv-cp <br />
-        c906fd c906fdv c908 c908v c910v2 c910v3 c910v3-cp c920v2 c920v3 c920v3-cp <br />
-        c907fd c907fdv c907fdvm c907fd-rv32 c907fdv-rv32 c907fdvm-rv32
+        `smartl/xiaohui`平台的cpu参考 [`components/xuantie_cpu_sdk/xt_rtos_sdk.csv`](../../components/xuantie_cpu_sdk/xt_rtos_sdk.csv) 的 `cpu_list` <br />
+        `wujian300`平台的cpu参考 [`components/wujian300_soc_sdk/sdk.csv`](../../components/wujian300_soc_sdk/sdk.csv) 的 `cpu_list`
 - platform: <br />
-        smartl xiaohui
+        smartl xiaohui wujian300
 
 以玄铁`e907fdp`类型为例，可以使用如下命令编译:
 ```bash
@@ -77,9 +82,7 @@ bare_linpack_dp runs success!
 
 1、Linux平台下基础环境搭建请参考《玄铁RTOS SDK用户手册》
 
-2、如果出现无法编译情况，请使用`sudo pip install yoctools -U`更新最新版本的yoctools再做尝试。
+2、玄铁exx系列cpu仅支持smartl平台，cxx/rxx系列cpu仅支持xiaohui平台。
 
-3、玄铁exx系列cpu仅支持smartl平台，cxx/rxx系列cpu仅支持xiaohui平台。
-
-4、某些示例跟硬件特性相关，QEMU中相关功能可能未模拟，只能在相应FPGA硬件平台上运行。
+3、某些示例跟硬件特性相关，QEMU中相关功能可能未模拟，只能在相应FPGA硬件平台上运行。
 

@@ -26,7 +26,11 @@ uint32_t g_system_clock = IHS_VALUE;
 #if CONFIG_BOARD_XIAOHUI_EVB
 uint32_t soc_get_cpu_freq(uint32_t idx)
 {
+#ifndef CONFIG_CPU_FREQ_HZ
     return 50*1000000;
+#else
+    return CONFIG_CPU_FREQ_HZ;
+#endif
 }
 
 uint32_t soc_get_coretim_freq(void)

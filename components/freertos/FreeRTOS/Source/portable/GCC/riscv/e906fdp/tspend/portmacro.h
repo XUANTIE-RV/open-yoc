@@ -118,6 +118,8 @@ extern portLONG pendsvflag;
 extern void vPortYield( void );
 #define portYIELD()                 vPortYield();
 
+/* Added as there is no such function in FreeRTOS. */
+extern void *pvPortRealloc( uint8_t *srcaddr,size_t xWantedSize );
 /*-----------------------------------------------------------*/
 
 /* Task function macros as described on the FreeRTOS.org WEB site. */
@@ -140,9 +142,6 @@ do                                                       \
 {                                                        \
     g_fr_next_sleep_ticks = x;                           \
 } while (0)
-
-#define configASSERT( a )   do {if ((a)==0){printk("Assert : %s %d\r\n", __FILE__, __LINE__);while(1);}}while(0)
-
 
 #ifdef __cplusplus
 }

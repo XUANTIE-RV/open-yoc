@@ -26,31 +26,29 @@ define tasklist_bt
         printf "\n"
         p $thread_node->parent.name
         p *$thread_node
-    end
 
-    # set register to restore the task
-    set $x1  = *(rt_ubase_t *)((unsigned long)$thread_node->sp +  0 * sizeof(rt_ubase_t))
-    set $x3  = *(rt_ubase_t *)((unsigned long)$thread_node->sp +  2 * sizeof(rt_ubase_t))
-    set $x4  = *(rt_ubase_t *)((unsigned long)$thread_node->sp +  3 * sizeof(rt_ubase_t))
-    set $x5  = *(rt_ubase_t *)((unsigned long)$thread_node->sp +  4 * sizeof(rt_ubase_t))
-    set $x6  = *(rt_ubase_t *)((unsigned long)$thread_node->sp +  5 * sizeof(rt_ubase_t))
-    set $x7  = *(rt_ubase_t *)((unsigned long)$thread_node->sp +  6 * sizeof(rt_ubase_t))
-    set $x8  = *(rt_ubase_t *)((unsigned long)$thread_node->sp +  7 * sizeof(rt_ubase_t))
-    set $x9  = *(rt_ubase_t *)((unsigned long)$thread_node->sp +  8 * sizeof(rt_ubase_t))
-    set $x10 = *(rt_ubase_t *)((unsigned long)$thread_node->sp +  9 * sizeof(rt_ubase_t))
-    set $x11 = *(rt_ubase_t *)((unsigned long)$thread_node->sp + 10 * sizeof(rt_ubase_t))
-    set $x12 = *(rt_ubase_t *)((unsigned long)$thread_node->sp + 11 * sizeof(rt_ubase_t))
-    set $x13 = *(rt_ubase_t *)((unsigned long)$thread_node->sp + 12 * sizeof(rt_ubase_t))
-    set $x14 = *(rt_ubase_t *)((unsigned long)$thread_node->sp + 13 * sizeof(rt_ubase_t))
-    set $x15 = *(rt_ubase_t *)((unsigned long)$thread_node->sp + 14 * sizeof(rt_ubase_t))
-    set $pc =  *(rt_ubase_t *)((unsigned long)$thread_node->sp + 15 * sizeof(rt_ubase_t))
+      # set register to restore the task
+      set $x1  = *(rt_ubase_t *)((unsigned long)$thread_node->sp +  0 * sizeof(rt_ubase_t))
+      set $x3  = *(rt_ubase_t *)((unsigned long)$thread_node->sp +  2 * sizeof(rt_ubase_t))
+      set $x4  = *(rt_ubase_t *)((unsigned long)$thread_node->sp +  3 * sizeof(rt_ubase_t))
+      set $x5  = *(rt_ubase_t *)((unsigned long)$thread_node->sp +  4 * sizeof(rt_ubase_t))
+      set $x6  = *(rt_ubase_t *)((unsigned long)$thread_node->sp +  5 * sizeof(rt_ubase_t))
+      set $x7  = *(rt_ubase_t *)((unsigned long)$thread_node->sp +  6 * sizeof(rt_ubase_t))
+      set $x8  = *(rt_ubase_t *)((unsigned long)$thread_node->sp +  7 * sizeof(rt_ubase_t))
+      set $x9  = *(rt_ubase_t *)((unsigned long)$thread_node->sp +  8 * sizeof(rt_ubase_t))
+      set $x10 = *(rt_ubase_t *)((unsigned long)$thread_node->sp +  9 * sizeof(rt_ubase_t))
+      set $x11 = *(rt_ubase_t *)((unsigned long)$thread_node->sp + 10 * sizeof(rt_ubase_t))
+      set $x12 = *(rt_ubase_t *)((unsigned long)$thread_node->sp + 11 * sizeof(rt_ubase_t))
+      set $x13 = *(rt_ubase_t *)((unsigned long)$thread_node->sp + 12 * sizeof(rt_ubase_t))
+      set $x14 = *(rt_ubase_t *)((unsigned long)$thread_node->sp + 13 * sizeof(rt_ubase_t))
+      set $x15 = *(rt_ubase_t *)((unsigned long)$thread_node->sp + 14 * sizeof(rt_ubase_t))
+      set $pc =  *(rt_ubase_t *)((unsigned long)$thread_node->sp + 15 * sizeof(rt_ubase_t))
 
-    set $sp = (unsigned long)$thread_node->sp + 17 * sizeof(rt_ubase_t)
-    # print the thread stack backtrace
-    if $thread_node != $current_thread
-        printf "\n"
-        bt
-        printf "--------thread information output completed--------\n\n"
+      set $sp = (unsigned long)$thread_node->sp + 17 * sizeof(rt_ubase_t)
+      # print the thread stack backtrace
+      printf "\n"
+      bt
+      printf "--------thread information output completed--------\n\n"
     end
     set $gdb_node = ($gdb_node)->next
     shell sleep 1

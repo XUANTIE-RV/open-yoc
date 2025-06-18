@@ -532,7 +532,7 @@ static int __data_read(unsigned long read_addr, void *buffer, size_t size, void 
 #if defined(CONFIG_LZ4_COMP)
 #include <lz4.h>
 #ifndef CONFIG_LZ4_BUFFER_ADDR
-#error "Please define CONFIG_LZ4_BUFFER_ADDR in package.yaml"
+#error "Please define CONFIG_LZ4_BUFFER_ADDR in sub.mk"
 #endif
 #endif
 

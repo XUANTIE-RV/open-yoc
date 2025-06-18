@@ -183,7 +183,7 @@ void rt_hw_scondary_interrupt_init(void)
     }
     else if (core_id == R920_CORE1)
     {
-        for (i = 0; i < 32; i++)
+        for (i = 0; i < (CONFIG_IRQ_NUM + 31) / 32; i++)
         {
             PLIC->PLIC_H1_MIE[i] = 0;
             PLIC->PLIC_H1_SIE[i] = 0;
@@ -195,7 +195,7 @@ void rt_hw_scondary_interrupt_init(void)
     }
     else if (core_id == R920_CORE2)
     {
-        for (i = 0; i < 32; i++)
+        for (i = 0; i < (CONFIG_IRQ_NUM + 31) / 32; i++)
         {
             PLIC->PLIC_H2_MIE[i] = 0;
             PLIC->PLIC_H2_SIE[i] = 0;
@@ -207,7 +207,7 @@ void rt_hw_scondary_interrupt_init(void)
     }
     else if (core_id == R920_CORE3)
     {
-        for (i = 0; i < 32; i++)
+        for (i = 0; i < (CONFIG_IRQ_NUM + 31) / 32; i++)
         {
             PLIC->PLIC_H3_MIE[i] = 0;
             PLIC->PLIC_H3_SIE[i] = 0;

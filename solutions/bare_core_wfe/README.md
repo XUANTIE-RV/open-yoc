@@ -10,11 +10,18 @@
 
 ## 编译
 
+GCC使用以下命令编译：
 ```bash
 ./do_build.sh <cpu> <platform>
 ```
+LLVM使用以下命令编译：
+```bash
+./do_build_llvm.sh <cpu> <platform>
+```
+
+`cpu`和`platform`支持列表：
 - cpu: <br />
-        e902 e902m e902t e902mt e906 e906f e906fd e906p e906fp e906fdp e907 e907f e907fd e907p e907fp e907fdp <br />
+        `smartl`平台的cpu参考 [`components/xuantie_cpu_sdk/xt_rtos_sdk.csv`](../../components/xuantie_cpu_sdk/xt_rtos_sdk.csv) 的 `cpu_list`
 - platform: <br />
         smartl
 
@@ -57,9 +64,7 @@ bare_core_wfe runs success!
 
 1、Linux平台下基础环境搭建请参考《玄铁RTOS SDK用户手册》
 
-2、如果出现无法编译情况，请使用`sudo pip install yoctools -U`更新最新版本的yoctools再做尝试。
+2、玄铁exx系列cpu仅支持smartl平台，cxx/rxx系列cpu仅支持xiaohui平台。
 
-3、玄铁exx系列cpu仅支持smartl平台，cxx/rxx系列cpu仅支持xiaohui平台。
-
-4、某些示例跟硬件特性相关，QEMU中相关功能可能未模拟，只能在相应FPGA硬件平台上运行。
+3、某些示例跟硬件特性相关，QEMU中相关功能可能未模拟，只能在相应FPGA硬件平台上运行。
 

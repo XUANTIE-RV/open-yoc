@@ -52,23 +52,26 @@ static void section_init(void)
 static void clic_init(void)
 {
     int i;
-
+#ifndef CONFIG_SUPPORT_NON_VECTOR_IRQ
     /* get interrupt level from info */
     CLIC->CLICCFG = (((CLIC->CLICINFO & CLIC_INFO_CLICINTCTLBITS_Msk) >> CLIC_INFO_CLICINTCTLBITS_Pos) << CLIC_CLICCFG_NLBIT_Pos);
 
     for (i = 0; i < 64; i++) {
         CLIC->CLICINT[i].IP = 0;
         CLIC->CLICINT[i].ATTR = 1; /* use vector interrupt */
-        csi_vic_set_prio(i, 1);
     }
+#else
+    /* get interrupt level from info */
+    CLIC->CLICCFG = 0;
 
-#ifndef CONFIG_KERNEL_NONE
-    /* tspend use lower priority */
-    csi_vic_set_prio(Machine_Software_IRQn, 0);
+    for (i = 0; i < 64; i++) {
+        CLIC->CLICINT[i].IP = 0;
+        CLIC->CLICINT[i].ATTR = 0; /* use non-vector interrupt */
+    }
+#endif
     /* tspend use positive interrupt */
     CLIC->CLICINT[Machine_Software_IRQn].ATTR = 0x3;
     csi_irq_enable(Machine_Software_IRQn);
-#endif
 }
 
 static void interrupt_init(void)
@@ -87,6 +90,9 @@ static void interrupt_init(void)
   */
 void SystemInit(void)
 {
+    extern int cpu_features_init(void);
+    cpu_features_init();
+
     /* enable theadisaee */
     uint32_t status = __get_MXSTATUS();
     status |= (1 << 22);

@@ -6,7 +6,7 @@ define tasklist_bt
 
   if ($gdb_task_list)
     set $gdb_task_num = (unsigned long)$gdb_task_list->uxNumberOfItems
-    set $gdb_list_next = (ListItem_t*)$gdb_task_list->pxIndex
+    set $gdb_list_next = (ListItem_t*)$gdb_task_list->xListEnd->pxNext
 
     while ($gdb_task_num)
       # get tcb addr
@@ -17,52 +17,53 @@ define tasklist_bt
       end
       # get task name
       set $gdb_task_name = ((TCB_t*)($gdb_tcb_addr))->pcTaskName
+      if (pxCurrentTCB != $gdb_tcb_addr )
+        # print the task info
+        p $gdb_task_name
+        p *$gdb_tcb_addr
 
-      # print the task info
-      p $gdb_task_name
-      p *$gdb_tcb_addr
+        # (F31 ~ F0 + FCSR) + (V31 ~ V0 + 5*VCSR)
+        set $gdb_vlenb = $vlenb
+        set $offset    = (32 * 8 + 1 * 8) + (32 * ($gdb_vlenb) + 5 * 8)
+        # set register to restore the task
+        set $x1  = *(unsigned long *)((unsigned long)$gdb_tcb_addr->pxTopOfStack + $offset + 0  * sizeof(unsigned long))
+        set $x3  = *(unsigned long *)((unsigned long)$gdb_tcb_addr->pxTopOfStack + $offset + 1  * sizeof(unsigned long))
+        set $x4  = *(unsigned long *)((unsigned long)$gdb_tcb_addr->pxTopOfStack + $offset + 2  * sizeof(unsigned long))
+        set $x5  = *(unsigned long *)((unsigned long)$gdb_tcb_addr->pxTopOfStack + $offset + 3  * sizeof(unsigned long))
+        set $x6  = *(unsigned long *)((unsigned long)$gdb_tcb_addr->pxTopOfStack + $offset + 4  * sizeof(unsigned long))
+        set $x7  = *(unsigned long *)((unsigned long)$gdb_tcb_addr->pxTopOfStack + $offset + 5  * sizeof(unsigned long))
+        set $x8  = *(unsigned long *)((unsigned long)$gdb_tcb_addr->pxTopOfStack + $offset + 6  * sizeof(unsigned long))
+        set $x9  = *(unsigned long *)((unsigned long)$gdb_tcb_addr->pxTopOfStack + $offset + 7  * sizeof(unsigned long))
+        set $x10 = *(unsigned long *)((unsigned long)$gdb_tcb_addr->pxTopOfStack + $offset + 8  * sizeof(unsigned long))
+        set $x11 = *(unsigned long *)((unsigned long)$gdb_tcb_addr->pxTopOfStack + $offset + 9  * sizeof(unsigned long))
+        set $x12 = *(unsigned long *)((unsigned long)$gdb_tcb_addr->pxTopOfStack + $offset + 10 * sizeof(unsigned long))
+        set $x13 = *(unsigned long *)((unsigned long)$gdb_tcb_addr->pxTopOfStack + $offset + 11 * sizeof(unsigned long))
+        set $x14 = *(unsigned long *)((unsigned long)$gdb_tcb_addr->pxTopOfStack + $offset + 12 * sizeof(unsigned long))
+        set $x15 = *(unsigned long *)((unsigned long)$gdb_tcb_addr->pxTopOfStack + $offset + 13 * sizeof(unsigned long))
+        set $x16 = *(unsigned long *)((unsigned long)$gdb_tcb_addr->pxTopOfStack + $offset + 14 * sizeof(unsigned long))
+        set $x17 = *(unsigned long *)((unsigned long)$gdb_tcb_addr->pxTopOfStack + $offset + 15 * sizeof(unsigned long))
+        set $x18 = *(unsigned long *)((unsigned long)$gdb_tcb_addr->pxTopOfStack + $offset + 16 * sizeof(unsigned long))
+        set $x19 = *(unsigned long *)((unsigned long)$gdb_tcb_addr->pxTopOfStack + $offset + 17 * sizeof(unsigned long))
+        set $x20 = *(unsigned long *)((unsigned long)$gdb_tcb_addr->pxTopOfStack + $offset + 18 * sizeof(unsigned long))
+        set $x21 = *(unsigned long *)((unsigned long)$gdb_tcb_addr->pxTopOfStack + $offset + 19 * sizeof(unsigned long))
+        set $x22 = *(unsigned long *)((unsigned long)$gdb_tcb_addr->pxTopOfStack + $offset + 20 * sizeof(unsigned long))
+        set $x23 = *(unsigned long *)((unsigned long)$gdb_tcb_addr->pxTopOfStack + $offset + 21 * sizeof(unsigned long))
+        set $x24 = *(unsigned long *)((unsigned long)$gdb_tcb_addr->pxTopOfStack + $offset + 22 * sizeof(unsigned long))
+        set $x25 = *(unsigned long *)((unsigned long)$gdb_tcb_addr->pxTopOfStack + $offset + 23 * sizeof(unsigned long))
+        set $x26 = *(unsigned long *)((unsigned long)$gdb_tcb_addr->pxTopOfStack + $offset + 24 * sizeof(unsigned long))
+        set $x27 = *(unsigned long *)((unsigned long)$gdb_tcb_addr->pxTopOfStack + $offset + 25 * sizeof(unsigned long))
+        set $x28 = *(unsigned long *)((unsigned long)$gdb_tcb_addr->pxTopOfStack + $offset + 26 * sizeof(unsigned long))
+        set $x29 = *(unsigned long *)((unsigned long)$gdb_tcb_addr->pxTopOfStack + $offset + 27 * sizeof(unsigned long))
+        set $x30 = *(unsigned long *)((unsigned long)$gdb_tcb_addr->pxTopOfStack + $offset + 28 * sizeof(unsigned long))
+        set $x31 = *(unsigned long *)((unsigned long)$gdb_tcb_addr->pxTopOfStack + $offset + 29 * sizeof(unsigned long))
+        set $pc  = *(unsigned long *)((unsigned long)$gdb_tcb_addr->pxTopOfStack + $offset + 30 * sizeof(unsigned long))
+        set $mstatus = *(unsigned long *)((unsigned long)$gdb_tcb_addr->pxTopOfStack + $offset + 31 * sizeof(unsigned long))
+        set $sp = (unsigned long)($gdb_tcb_addr->pxTopOfStack) + $offset + 32 * sizeof(unsigned long)
 
-      # (F31 ~ F0 + FCSR) + (V31 ~ V0 + 5*VCSR)
-      set $gdb_vlenb = $vlenb
-      set $offset    = (32 * 8 + 1 * 8) + (32 * ($gdb_vlenb) + 5 * 8)
-      # set register to restore the task 
-      set $x1  = *(unsigned long *)((unsigned long)$gdb_tcb_addr->pxTopOfStack + $offset + 0  * sizeof(unsigned long))
-      set $x3  = *(unsigned long *)((unsigned long)$gdb_tcb_addr->pxTopOfStack + $offset + 1  * sizeof(unsigned long))
-      set $x4  = *(unsigned long *)((unsigned long)$gdb_tcb_addr->pxTopOfStack + $offset + 2  * sizeof(unsigned long))
-      set $x5  = *(unsigned long *)((unsigned long)$gdb_tcb_addr->pxTopOfStack + $offset + 3  * sizeof(unsigned long))
-      set $x6  = *(unsigned long *)((unsigned long)$gdb_tcb_addr->pxTopOfStack + $offset + 4  * sizeof(unsigned long))
-      set $x7  = *(unsigned long *)((unsigned long)$gdb_tcb_addr->pxTopOfStack + $offset + 5  * sizeof(unsigned long))
-      set $x8  = *(unsigned long *)((unsigned long)$gdb_tcb_addr->pxTopOfStack + $offset + 6  * sizeof(unsigned long))
-      set $x9  = *(unsigned long *)((unsigned long)$gdb_tcb_addr->pxTopOfStack + $offset + 7  * sizeof(unsigned long))
-      set $x10 = *(unsigned long *)((unsigned long)$gdb_tcb_addr->pxTopOfStack + $offset + 8  * sizeof(unsigned long))
-      set $x11 = *(unsigned long *)((unsigned long)$gdb_tcb_addr->pxTopOfStack + $offset + 9  * sizeof(unsigned long))
-      set $x12 = *(unsigned long *)((unsigned long)$gdb_tcb_addr->pxTopOfStack + $offset + 10 * sizeof(unsigned long))
-      set $x13 = *(unsigned long *)((unsigned long)$gdb_tcb_addr->pxTopOfStack + $offset + 11 * sizeof(unsigned long))
-      set $x14 = *(unsigned long *)((unsigned long)$gdb_tcb_addr->pxTopOfStack + $offset + 12 * sizeof(unsigned long))
-      set $x15 = *(unsigned long *)((unsigned long)$gdb_tcb_addr->pxTopOfStack + $offset + 13 * sizeof(unsigned long))
-      set $x16 = *(unsigned long *)((unsigned long)$gdb_tcb_addr->pxTopOfStack + $offset + 14 * sizeof(unsigned long))
-      set $x17 = *(unsigned long *)((unsigned long)$gdb_tcb_addr->pxTopOfStack + $offset + 15 * sizeof(unsigned long))
-      set $x18 = *(unsigned long *)((unsigned long)$gdb_tcb_addr->pxTopOfStack + $offset + 16 * sizeof(unsigned long))
-      set $x19 = *(unsigned long *)((unsigned long)$gdb_tcb_addr->pxTopOfStack + $offset + 17 * sizeof(unsigned long))
-      set $x20 = *(unsigned long *)((unsigned long)$gdb_tcb_addr->pxTopOfStack + $offset + 18 * sizeof(unsigned long))
-      set $x21 = *(unsigned long *)((unsigned long)$gdb_tcb_addr->pxTopOfStack + $offset + 19 * sizeof(unsigned long))
-      set $x22 = *(unsigned long *)((unsigned long)$gdb_tcb_addr->pxTopOfStack + $offset + 20 * sizeof(unsigned long))
-      set $x23 = *(unsigned long *)((unsigned long)$gdb_tcb_addr->pxTopOfStack + $offset + 21 * sizeof(unsigned long))
-      set $x24 = *(unsigned long *)((unsigned long)$gdb_tcb_addr->pxTopOfStack + $offset + 22 * sizeof(unsigned long))
-      set $x25 = *(unsigned long *)((unsigned long)$gdb_tcb_addr->pxTopOfStack + $offset + 23 * sizeof(unsigned long))
-      set $x26 = *(unsigned long *)((unsigned long)$gdb_tcb_addr->pxTopOfStack + $offset + 24 * sizeof(unsigned long))
-      set $x27 = *(unsigned long *)((unsigned long)$gdb_tcb_addr->pxTopOfStack + $offset + 25 * sizeof(unsigned long))
-      set $x28 = *(unsigned long *)((unsigned long)$gdb_tcb_addr->pxTopOfStack + $offset + 26 * sizeof(unsigned long))
-      set $x29 = *(unsigned long *)((unsigned long)$gdb_tcb_addr->pxTopOfStack + $offset + 27 * sizeof(unsigned long))
-      set $x30 = *(unsigned long *)((unsigned long)$gdb_tcb_addr->pxTopOfStack + $offset + 28 * sizeof(unsigned long))
-      set $x31 = *(unsigned long *)((unsigned long)$gdb_tcb_addr->pxTopOfStack + $offset + 29 * sizeof(unsigned long))
-      set $pc  = *(unsigned long *)((unsigned long)$gdb_tcb_addr->pxTopOfStack + $offset + 30 * sizeof(unsigned long))
-      set $mstatus = *(unsigned long *)((unsigned long)$gdb_tcb_addr->pxTopOfStack + $offset + 31 * sizeof(unsigned long))
-      set $sp = (unsigned long)($gdb_tcb_addr->pxTopOfStack) + $offset + 32 * sizeof(unsigned long)
-
-      # print the task stack backtrace
-      bt
-      shell sleep 1
+        # print the task stack backtrace
+        bt
+        shell sleep 1
+      end
 
       set $gdb_task_num = $gdb_task_num - 1
       # go to next task
@@ -75,6 +76,8 @@ end
 define paddr
   # print current info
   i r
+  set $current_task_name = ((TCB_t*)(pxCurrentTCB))->pcTaskName
+  p $current_task_name
   p *(TCB_t*)pxCurrentTCB
   bt
 
@@ -115,6 +118,16 @@ define paddr
   set $gdb_pc  = $pc
   set $gdb_sp  = $x2
 
+  p "-backtrace for pxReadyTasksLists-"
+  set $gdb_max_priority = sizeof(pxReadyTasksLists)/sizeof(pxReadyTasksLists[0])
+  set $gdb_priority_index = 0
+  while($gdb_max_priority > $gdb_priority_index)
+      set $ready_nums = pxReadyTasksLists[$gdb_priority_index].uxNumberOfItems
+      if($ready_nums != 0)
+        tasklist_bt &pxReadyTasksLists[$gdb_priority_index]
+      end
+      set $gdb_priority_index = $gdb_priority_index + 1
+  end
   p "-backtrace for pxDelayedTaskList-"
   tasklist_bt pxDelayedTaskList
   p "-backtrace for pxOverflowDelayedTaskList-"

@@ -2,22 +2,27 @@
 
 `bare_cpp_demo` 是一个玄铁RTOS SDK中面向baremetal领域的c++使用示例，可运行在QEMU环境。
 
-注意：C++程序的支持需要默认增加DHAVE_INIT_ARRAY_LD编译选项，具体请参考对应解决方案下package.yaml编译配置文件中的用法
+注意：C++程序的支持需要默认增加DHAVE_INIT_ARRAY_LD编译选项，具体请参考对应解决方案下Makefile编译配置文件中的用法
 
 # 基于Linux编译运行
 
 ## 编译
 
+GCC使用以下命令编译：
 ```bash
 ./do_build.sh <cpu> <platform>
 ```
+LLVM使用以下命令编译：
+```bash
+./do_build_llvm.sh <cpu> <platform>
+```
+
+`cpu`和`platform`支持列表：
 - cpu: <br />
-        e906 e906f e906fd e906p e906fp e906fdp e907 e907f e907fd e907p e907fp e907fdp <br />
-        r910 r920 r908 r908fd r908fdv r908-cp r908fd-cp r908fdv-cp <br />
-        c906 c906fd c906fdv c908 c908v c908i c910v2 c910v3 c910v3-cp c920v2 c920v3 c920v3-cp <br />
-        c907 c907fd c907fdv c907fdvm c907-rv32 c907fd-rv32 c907fdv-rv32 c907fdvm-rv32
+        `smartl/xiaohui`平台的cpu参考 [`components/xuantie_cpu_sdk/xt_rtos_sdk.csv`](../../components/xuantie_cpu_sdk/xt_rtos_sdk.csv) 的 `cpu_list` <br />
+        `wujian300`平台的cpu参考 [`components/wujian300_soc_sdk/sdk.csv`](../../components/wujian300_soc_sdk/sdk.csv) 的 `cpu_list`
 - platform: <br />
-        smartl xiaohui
+        smartl xiaohui wujian300
 
 以玄铁`e907fdp`类型为例，可以使用如下命令编译:
 ```bash
@@ -84,10 +89,8 @@ CPP DEMO End!!!
 
 1、Linux平台下基础环境搭建请参考《玄铁RTOS SDK用户手册》
 
-2、如果出现无法编译情况，请使用`sudo pip install yoctools -U`更新最新版本的yoctools再做尝试。
+2、玄铁exx系列cpu仅支持smartl平台，cxx/rxx系列cpu仅支持xiaohui平台。
 
-3、玄铁exx系列cpu仅支持smartl平台，cxx/rxx系列cpu仅支持xiaohui平台。
-
-4、某些示例跟硬件特性相关，QEMU中相关功能可能未模拟，只能在相应FPGA硬件平台上运行。
+3、某些示例跟硬件特性相关，QEMU中相关功能可能未模拟，只能在相应FPGA硬件平台上运行。
 
 

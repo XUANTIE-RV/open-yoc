@@ -84,6 +84,9 @@ static void interrupt_init(void)
   */
 void SystemInit(void)
 {
+    extern int cpu_features_init(void);
+    cpu_features_init();
+
     /* enable theadisaee & MM */
     uint32_t status = __get_MXSTATUS();
     status |= (1 << 22 | 1 << 15);

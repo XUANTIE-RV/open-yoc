@@ -68,7 +68,7 @@ extern "C" {
 #define CONFIG_PARTITION_SUPPORT_USB 0
 #endif
 
-// Please define as 1 when use multi devices in config.yaml
+// Please define as 1 when use multi devices in sub.mk
 #ifndef CONFIG_PARTITION_SUPPORT_BLOCK_OR_MULTI_DEV
 #define CONFIG_PARTITION_SUPPORT_BLOCK_OR_MULTI_DEV 0
 #endif
@@ -121,7 +121,7 @@ int partition_init(void);
 /**
  * Open partition with partition name
  *
- * @note  You can find partition name in 'config.yaml'
+ * @note  You can find partition name in 'sub.mk'
  *
  * @param[in]  name     The partition name, e.g., boot,kv,prim
  *

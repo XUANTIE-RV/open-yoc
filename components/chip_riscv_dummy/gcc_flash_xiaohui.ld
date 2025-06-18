@@ -18,11 +18,11 @@
 
 MEMORY
 {
-	DRAM   : ORIGIN = 0x50000000, LENGTH = 0x100000   /* on-chip DRAM 1*1MB */
+	DRAM   : ORIGIN = 0x50000000, LENGTH = 0x800000   /* on-chip DRAM 8*1MB */
 }
 
 __min_heap_size = 0x200;
-PROVIDE (__ram_end  = 0x50100000 - 0x8);
+PROVIDE (__ram_end  = 0x50800000 - 0x8);
 PROVIDE (__heap_end = __ram_end);
 
 REGION_ALIAS("REGION_TEXT",    DRAM);
@@ -75,6 +75,9 @@ SECTIONS
   *(.rodata.str1.4)
   *(.srodata*)
   . = ALIGN(0x8) ;
+
+  __dram_vma = .;
+  QUAD(ORIGIN(DRAM));
 
   __init_array_start = .;
   __ctors_start__ = .;
@@ -239,10 +242,17 @@ SECTIONS
   . = ALIGN(0x4) ;
   __ram_code_end__ = .;
  } > REGION_DATA
+ .rela.dyn : {
+  . = ALIGN(0x8) ;
+  __rela_dyn_start = .;
+  *(.rela.dyn)
+  __rela_dyn_end = .;
+ } > REGION_DATA
  .bss : {
   . = ALIGN(0x4) ;
   __sbss = ALIGN(0x4) ;
   __bss_start__ = . ;
+  KEEP(*dhry_1.o(*.bss))
   *(.dynsbss)
   *(.sbss)
   *(.sbss.*)
@@ -256,7 +266,7 @@ SECTIONS
   __bss_end__ = .;
   __end = . ;
   end = . ;
- } > REGION_BSS 
+ } > REGION_BSS
  ._user_heap (NOLOAD): {
   . = ALIGN(0x4) ;
   *(.stack*)

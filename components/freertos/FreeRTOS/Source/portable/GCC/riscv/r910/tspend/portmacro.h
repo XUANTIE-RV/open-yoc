@@ -87,16 +87,6 @@ not need to be guarded with a critical section. */
 #endif
 /*-----------------------------------------------------------*/
 
-static inline void vPortEnableInterrupt( void )
-{
-    __enable_irq();
-}
-
-static inline void vPortDisableInterrupt( void )
-{
-    __disable_irq();
-}
-
 static inline portLONG SaveLocalPSR (void)
 {
     portLONG flags = csi_irq_save();
@@ -108,16 +98,65 @@ static inline void RestoreLocalPSR (portLONG newMask)
     csi_irq_restore(newMask);
 }
 
+#if configNUMBER_OF_CORES > 1
+#define portGET_CORE_ID()                       csi_get_cpu_id()
+#define __FENCE(p, s) __ASM volatile ("fence " #p "," #s : : : "memory")
+#define mb()        __FENCE(iorw,iorw)
+
+#define portRTOS_SPINLOCK_COUNT                     2
+typedef volatile uint32_t spin_lock_t;
+extern spin_lock_t hw_sync_locks[portRTOS_SPINLOCK_COUNT];
+extern void SecondaryCoresUp(void);
+extern void vPortRecursiveLock(unsigned long ulCoreID, unsigned long ulLockNum, spin_lock_t *pxSpinLock, BaseType_t uxAcquire);
+
+extern volatile UBaseType_t uxYieldCoreAgain[configNUMBER_OF_CORES];
+
+extern UBaseType_t uxCriticalNestings[ configNUMBER_OF_CORES ];
+#define portGET_CRITICAL_NESTING_COUNT(xCoreID)            ( uxCriticalNestings[xCoreID] )
+#define portSET_CRITICAL_NESTING_COUNT(xCoreID, xCount)    ( uxCriticalNestings[xCoreID] = (xCount) )
+#define portINCREMENT_CRITICAL_NESTING_COUNT(xCoreID)      ( uxCriticalNestings[xCoreID]++ )
+#define portDECREMENT_CRITICAL_NESTING_COUNT(xCoreID)      ( uxCriticalNestings[xCoreID]-- )
+
+extern unsigned long cpu_intrpt_save();
+extern void cpu_intrpt_restore(unsigned long ulstate);
+
+#define portDISABLE_INTERRUPTS()                __ASM volatile("csrc mstatus, 8")
+#define portENABLE_INTERRUPTS()                 __ASM volatile("csrs mstatus, 8")
+#define portSET_INTERRUPT_MASK_FROM_ISR()       cpu_intrpt_save();
+#define portCLEAR_INTERRUPT_MASK_FROM_ISR(x)    cpu_intrpt_restore(x)
+#define portSET_INTERRUPT_MASK()                cpu_intrpt_save()
+#define portCLEAR_INTERRUPT_MASK(a)             cpu_intrpt_restore(a)
+#define portENTER_CRITICAL_FROM_ISR()           vTaskEnterCriticalFromISR()
+#define portEXIT_CRITICAL_FROM_ISR(a)           vTaskExitCriticalFromISR(a)
+
+#define portGET_ISR_LOCK(xCoreID)               vPortRecursiveLock(xCoreID, 0, &hw_sync_locks[0], pdTRUE)
+#define portRELEASE_ISR_LOCK(xCoreID)           vPortRecursiveLock(xCoreID, 0, &hw_sync_locks[0], pdFALSE)
+#define portGET_TASK_LOCK(xCoreID)              vPortRecursiveLock(xCoreID, 1, &hw_sync_locks[1], pdTRUE)
+#define portRELEASE_TASK_LOCK(xCoreID)          vPortRecursiveLock(xCoreID, 1, &hw_sync_locks[1], pdFALSE)
+#define portYIELD_CORE(a)                       vPortYield_Core(a)
+#define portENTER_CRITICAL()                    vTaskEnterCritical()
+#define portEXIT_CRITICAL()                     vTaskExitCritical()
+#else  /* configNUMBER_OF_CORES == 1 */
 extern void vPortEnterCritical( void );
 extern void vPortExitCritical( void );
-extern __attribute__((naked)) void cpu_yeild(void);
+
+static inline void vPortEnableInterrupt( void )
+{
+    __enable_irq();
+}
+
+static inline void vPortDisableInterrupt( void )
+{
+    __disable_irq();
+}
 
 #define portDISABLE_INTERRUPTS()                vPortDisableInterrupt()
 #define portENABLE_INTERRUPTS()                 vPortEnableInterrupt()
-#define portENTER_CRITICAL()                    vPortEnterCritical()
-#define portEXIT_CRITICAL()                     vPortExitCritical()
 #define portSET_INTERRUPT_MASK_FROM_ISR()       SaveLocalPSR()
 #define portCLEAR_INTERRUPT_MASK_FROM_ISR(a)    RestoreLocalPSR(a)
+#define portENTER_CRITICAL()                    vPortEnterCritical()
+#define portEXIT_CRITICAL()                     vPortExitCritical()
+#endif  /* configNUMBER_OF_CORES > 1 */
 
 #if configGENERATE_RUN_TIME_STATS
 #define portGET_RUN_TIME_COUNTER_VALUE()        csi_tick_get_ms()
@@ -133,6 +172,8 @@ extern portLONG pendsvflag;
 extern void vPortYield( void );
 #define portYIELD()                 vPortYield();
 
+/* Added as there is no such function in FreeRTOS. */
+extern void *pvPortRealloc( uint8_t *srcaddr,size_t xWantedSize );
 /*-----------------------------------------------------------*/
 
 /* Task function macros as described on the FreeRTOS.org WEB site. */
@@ -156,12 +197,6 @@ do                                                       \
     g_fr_next_sleep_ticks = x;                           \
 } while (0)
 
-#if defined(CONFIG_DEBUG) && CONFIG_DEBUG
-#define configASSERT( a )   do {if ((a)==0){printk("Assert : %s %d\r\n", __FILE__, __LINE__);while(1);}}while(0)
-#else
-#define configASSERT( a )   do {if ((a)==0){printk("Assert : %s %d\r\n", __FILE__, __LINE__);}}while(0)
-#endif
-
 /*-----------------------------------------------------------*/
 
 #define portINLINE	__inline
@@ -170,8 +205,68 @@ do                                                       \
 	#define portFORCE_INLINE inline __attribute__(( always_inline))
 #endif
 
-#define portMEMORY_BARRIER() __asm volatile( "" ::: "memory" )
 /*-----------------------------------------------------------*/
+
+#if configNUMBER_OF_CORES > 1
+
+enum eCoreID
+{
+    CORE_0 = 0,
+    CORE_1,
+    CORE_2,
+    CORE_3
+};
+
+portFORCE_INLINE void clear_software_irq(int id)
+{
+    CLINT_Type *clint = (CLINT_Type *)CORET_BASE;
+
+    switch (id)
+    {
+    case CORE_0:
+        clint->MSIP0 &= ~(uint32_t)0x1;
+        break;
+    case CORE_1:
+        clint->MSIP1 &= ~(uint32_t)0x1;
+        break;
+    case CORE_2:
+        clint->MSIP2 &= ~(uint32_t)0x1;
+        break;
+    case CORE_3:
+        clint->MSIP3 &= ~(uint32_t)0x1;
+        break;
+    default:
+        break;
+    }
+
+    mb();
+}
+
+portFORCE_INLINE void vPortYield_Core(int xCoreID)
+{
+    CLINT_Type *clint = (CLINT_Type *)CORET_BASE;
+
+    switch (xCoreID)
+    {
+    case CORE_0:
+        clint->MSIP0 |= (uint32_t)0x1;
+        break;
+    case CORE_1:
+        clint->MSIP1 |= (uint32_t)0x1;
+        break;
+    case CORE_2:
+        clint->MSIP2 |= (uint32_t)0x1;
+        break;
+    case CORE_3:
+        clint->MSIP3 |= (uint32_t)0x1;
+        break;
+    default:
+        break;
+    }
+
+    mb();
+}
+#endif /* configNUMBER_OF_CORES > 1 */
 
 #ifdef __cplusplus
 }

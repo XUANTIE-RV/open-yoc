@@ -2,6 +2,7 @@
 out
 .vscode
 .gdbinit
+.defconfig
 !**/script/gdbinit
 yoc.asm
 yoc.bin
@@ -85,6 +86,8 @@ gdbinitflash
 cdkinitflash
 gdbinit.remote
 gdbinit.*
+
+package.yaml.bak
 
 .cache/
 *.cdkws

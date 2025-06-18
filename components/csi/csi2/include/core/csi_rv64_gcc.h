@@ -32,10 +32,14 @@
 #if CONFIG_CPU_XUANTIE_C907 || CONFIG_CPU_XUANTIE_C907FD || CONFIG_CPU_XUANTIE_C907FDV || CONFIG_CPU_XUANTIE_C907FDVM \
     || CONFIG_CPU_XUANTIE_C907_RV32 || CONFIG_CPU_XUANTIE_C907FD_RV32 || CONFIG_CPU_XUANTIE_C907FDV_RV32 || CONFIG_CPU_XUANTIE_C907FDVM_RV32 \
     || CONFIG_CPU_XUANTIE_C908 || CONFIG_CPU_XUANTIE_C908V || CONFIG_CPU_XUANTIE_C908I \
-    || CONFIG_CPU_XUANTIE_C910V2 || CONFIG_CPU_XUANTIE_C910V3 || CONFIG_CPU_XUANTIE_C910V3_CP \
-    || CONFIG_CPU_XUANTIE_C920V2 || CONFIG_CPU_XUANTIE_C920V3 || CONFIG_CPU_XUANTIE_C920V3_CP \
+    || CONFIG_CPU_XUANTIE_C908X || CONFIG_CPU_XUANTIE_C908X_CP || CONFIG_CPU_XUANTIE_C908X_CP_XT \
+    || CONFIG_CPU_XUANTIE_C910V2 || CONFIG_CPU_XUANTIE_C920V2 \
+    || CONFIG_CPU_XUANTIE_C910V3 || CONFIG_CPU_XUANTIE_C920V3 \
+    || CONFIG_CPU_XUANTIE_C910V3_CP || CONFIG_CPU_XUANTIE_C920V3_CP \
+    || CONFIG_CPU_XUANTIE_C910V3_CP_XT || CONFIG_CPU_XUANTIE_C920V3_CP_XT \
     || CONFIG_CPU_XUANTIE_R908 || CONFIG_CPU_XUANTIE_R908FD || CONFIG_CPU_XUANTIE_R908FDV \
-    || CONFIG_CPU_XUANTIE_R908_CP || CONFIG_CPU_XUANTIE_R908FD_CP || CONFIG_CPU_XUANTIE_R908FDV_CP
+    || CONFIG_CPU_XUANTIE_R908_CP || CONFIG_CPU_XUANTIE_R908FD_CP || CONFIG_CPU_XUANTIE_R908FDV_CP \
+    || CONFIG_CPU_XUANTIE_R908_CP_XT || CONFIG_CPU_XUANTIE_R908FD_CP_XT || CONFIG_CPU_XUANTIE_R908FDV_CP_XT
 #define CBO_INSN_SUPPORT 1
 #endif
 
@@ -495,6 +499,18 @@ __ALWAYS_STATIC_INLINE unsigned long __get_MTIME(void)
 
     __ASM volatile("rdtime %0" : "=r"(result));
     //__ASM volatile("csrr %0, 0xc01" : "=r"(result));
+    return (result);
+}
+
+/**
+  \brief   Get MTIMEH
+  \details Returns the content of the MTIME Register.
+  \return               MTIME Register value
+  */
+__ALWAYS_STATIC_INLINE unsigned long __get_MTIMEH(void)
+{
+    unsigned long result;
+    __ASM volatile("rdtimeh %0" : "=r"(result));
     return (result);
 }
 
@@ -1588,7 +1604,9 @@ __ALWAYS_STATIC_INLINE void __ISB(void)
 __ALWAYS_STATIC_INLINE void __DSB(void)
 {
     __ASM volatile("fence iorw, iorw");
+#if __riscv_xtheadsync
     __ASM volatile("sync");
+#endif
 }
 
 /**
@@ -1608,7 +1626,9 @@ __ALWAYS_STATIC_INLINE void __DMB(void)
  */
 __ALWAYS_STATIC_INLINE void __SYNC_IS(void)
 {
+#if __riscv_xtheadsync
     __ASM volatile("sync.is");
+#endif
 }
 
 /**
@@ -1617,7 +1637,9 @@ __ALWAYS_STATIC_INLINE void __SYNC_IS(void)
  */
 __ALWAYS_STATIC_INLINE void __ICACHE_IALL(void)
 {
+#if __riscv_xtheadcmo
     __ASM volatile("icache.iall");
+#endif
 }
 
 /**
@@ -1626,7 +1648,9 @@ __ALWAYS_STATIC_INLINE void __ICACHE_IALL(void)
  */
 __ALWAYS_STATIC_INLINE void __ICACHE_IALLS(void)
 {
+#if __riscv_xtheadcmo
     __ASM volatile("icache.ialls");
+#endif
 }
 
 /**
@@ -1636,7 +1660,9 @@ __ALWAYS_STATIC_INLINE void __ICACHE_IALLS(void)
  */
 __ALWAYS_STATIC_INLINE void __ICACHE_IPA(unsigned long addr)
 {
+#if __riscv_xtheadcmo
     __ASM volatile("icache.ipa %0" : : "r"(addr));
+#endif
 }
 
 /**
@@ -1646,7 +1672,9 @@ __ALWAYS_STATIC_INLINE void __ICACHE_IPA(unsigned long addr)
  */
 __ALWAYS_STATIC_INLINE void __ICACHE_IVA(unsigned long addr)
 {
+#if __riscv_xtheadcmo
     __ASM volatile("icache.iva %0" : : "r"(addr));
+#endif
 }
 
 /**
@@ -1655,7 +1683,9 @@ __ALWAYS_STATIC_INLINE void __ICACHE_IVA(unsigned long addr)
  */
 __ALWAYS_STATIC_INLINE void __DCACHE_IALL(void)
 {
+#if __riscv_xtheadcmo
     __ASM volatile("dcache.iall");
+#endif
 }
 
 /**
@@ -1664,7 +1694,9 @@ __ALWAYS_STATIC_INLINE void __DCACHE_IALL(void)
  */
 __ALWAYS_STATIC_INLINE void __DCACHE_CALL(void)
 {
+#if __riscv_xtheadcmo
     __ASM volatile("dcache.call");
+#endif
 }
 
 /**
@@ -1673,7 +1705,9 @@ __ALWAYS_STATIC_INLINE void __DCACHE_CALL(void)
  */
 __ALWAYS_STATIC_INLINE void __DCACHE_CIALL(void)
 {
+#if __riscv_xtheadcmo
     __ASM volatile("dcache.ciall");
+#endif
 }
 
 /**
@@ -1683,7 +1717,9 @@ __ALWAYS_STATIC_INLINE void __DCACHE_CIALL(void)
  */
 __ALWAYS_STATIC_INLINE void __DCACHE_CISW(unsigned long wayset)
 {
+#if __riscv_xtheadcmo
     __ASM volatile("dcache.cisw %0" : : "r"(wayset));
+#endif
 }
 
 #if CBO_INSN_SUPPORT
@@ -1734,7 +1770,9 @@ __ALWAYS_STATIC_INLINE void __CBO_ZERO(unsigned long addr)
  */
 __ALWAYS_STATIC_INLINE void __DCACHE_CPA(unsigned long addr)
 {
+#if __riscv_xtheadcmo
     __ASM volatile("dcache.cpa %0" : : "r"(addr));
+#endif
 }
 
 /**
@@ -1744,7 +1782,9 @@ __ALWAYS_STATIC_INLINE void __DCACHE_CPA(unsigned long addr)
  */
 __ALWAYS_STATIC_INLINE void __DCACHE_CVA(unsigned long addr)
 {
+#if __riscv_xtheadcmo
     __ASM volatile("dcache.cva %0" : : "r"(addr));
+#endif
 }
 
 /**
@@ -1754,7 +1794,9 @@ __ALWAYS_STATIC_INLINE void __DCACHE_CVA(unsigned long addr)
  */
 __ALWAYS_STATIC_INLINE void __DCACHE_CIPA(unsigned long addr)
 {
+#if __riscv_xtheadcmo
     __ASM volatile("dcache.cipa %0" : : "r"(addr));
+#endif
 }
 
 /**
@@ -1764,7 +1806,9 @@ __ALWAYS_STATIC_INLINE void __DCACHE_CIPA(unsigned long addr)
  */
 __ALWAYS_STATIC_INLINE void __DCACHE_CIVA(unsigned long addr)
 {
+#if __riscv_xtheadcmo
     __ASM volatile("dcache.civa %0" : : "r"(addr));
+#endif
 }
 
 /**
@@ -1774,7 +1818,9 @@ __ALWAYS_STATIC_INLINE void __DCACHE_CIVA(unsigned long addr)
  */
 __ALWAYS_STATIC_INLINE void __DCACHE_IPA(unsigned long addr)
 {
+#if __riscv_xtheadcmo
     __ASM volatile("dcache.ipa %0" : : "r"(addr));
+#endif
 }
 
 /**
@@ -1784,7 +1830,9 @@ __ALWAYS_STATIC_INLINE void __DCACHE_IPA(unsigned long addr)
  */
 __ALWAYS_STATIC_INLINE void __DCACHE_IVA(unsigned long addr)
 {
+#if __riscv_xtheadcmo
     __ASM volatile("dcache.iva %0" : : "r"(addr));
+#endif
 }
 
 #endif
@@ -1796,7 +1844,9 @@ __ALWAYS_STATIC_INLINE void __DCACHE_IVA(unsigned long addr)
  */
 __ALWAYS_STATIC_INLINE void __DCACHE_CPAL1(unsigned long addr)
 {
+#if __riscv_xtheadcmo
     __ASM volatile("dcache.cpal1 %0" : : "r"(addr));
+#endif
 }
 
 /**
@@ -1806,7 +1856,9 @@ __ALWAYS_STATIC_INLINE void __DCACHE_CPAL1(unsigned long addr)
  */
 __ALWAYS_STATIC_INLINE void __DCACHE_CVAL1(unsigned long addr)
 {
+#if __riscv_xtheadcmo
     __ASM volatile("dcache.cval1 %0" : : "r"(addr));
+#endif
 }
 
 /**
@@ -1816,7 +1868,9 @@ __ALWAYS_STATIC_INLINE void __DCACHE_CVAL1(unsigned long addr)
  */
 __ALWAYS_STATIC_INLINE void __DCACHE_ISW(unsigned long wayset)
 {
+#if __riscv_xtheadcmo
     __ASM volatile("dcache.isw %0" : : "r"(wayset));
+#endif
 }
 
 #if (__L2CACHE_PRESENT == 1U)

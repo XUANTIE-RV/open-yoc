@@ -15,11 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+#include <errno.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
-#include <errno.h>
 #include <dev_internal.h>
 #include <devices/impl/battery_impl.h>
 

@@ -63,6 +63,9 @@ struct cli_region
             __clisym_##cmd##_desc,                                     \
             (cli_region_func)&name##_stub};
 
+#undef MSH_CMD_EXPORT_ALIAS
+#define MSH_CMD_EXPORT_ALIAS(command, alias, desc, optenable)  \
+    ALIOS_CLI_CMD_REGISTER(command, alias, desc)
 
 /**
  * @brief Initialize the CLI module

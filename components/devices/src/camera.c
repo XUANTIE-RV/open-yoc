@@ -5,11 +5,10 @@
  *
  * Authors: matteo <duanmt@artinchip.com>
  */
-
+#include <errno.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
-#include <errno.h>
 #include <dev_internal.h>
 #include <devices/impl/camera_impl.h>
 

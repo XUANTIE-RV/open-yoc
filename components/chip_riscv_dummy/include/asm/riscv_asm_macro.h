@@ -25,17 +25,6 @@
 #ifndef __RISCV_ASM_MACRO_H__
 #define __RISCV_ASM_MACRO_H__
 
-#if (!defined(__riscv_flen)) && (CONFIG_CHECK_FPU_DIRTY)
-#error "this cpu doesn't supprot FPU, but macro 'CONFIG_CHECK_FPU_DIRTY' is defined, please remove it."
-#endif
-
-#if (!defined(__riscv_vector)) && (CONFIG_CHECK_VECTOR_DIRTY)
-#error "this cpu doesn't supprot vector, but macro 'CONFIG_CHECK_VECTOR_DIRTY' is defined, please remove it."
-#endif
-
-#if (!defined(__riscv_matrix) && !defined(__riscv_xtheadmatrix)) && (CONFIG_CHECK_MATRIX_DIRTY)
-#error "this cpu doesn't supprot matrix, but macro 'CONFIG_CHECK_MATRIX_DIRTY' is defined, please remove it."
-#endif
 
 #include "riscv_csr.h"
 
@@ -86,12 +75,11 @@
 #elif __riscv_xlen == 32
     addi     t1, t1, 72
 #endif
-    add      sp, sp, t1
+    add      t1, sp, t1
 
-    /* now, sp is the position of mstatus */
-    load_x   t3, (0)(sp)
+    /* now, t1 is the position of mstatus */
+    load_x   t3, (0)(t1)
     csrw     mstatus, t3
-    sub      sp, sp, t1
 .endm
 
 .macro RESTORE_SSTATUS
@@ -136,12 +124,11 @@
 #elif __riscv_xlen == 32
     addi     t1, t1, 72
 #endif
-    add      sp, sp, t1
+    add      t1, sp, t1
 
-    /* now, sp is the position of mstatus */
-    load_x   t3, (0)(sp)
+    /* now, t1 is the position of mstatus */
+    load_x   t3, (0)(t1)
     csrw     sstatus, t3
-    sub      sp, sp, t1
 .endm
 
 #endif /* CONFIG_CHECK_FPU_DIRTY || CONFIG_CHECK_VECTOR_DIRTY || CONFIG_CHECK_MATRIX_DIRTY */

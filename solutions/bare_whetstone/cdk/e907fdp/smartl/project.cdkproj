@@ -1,6 +1,6 @@
 <?xml version="1.0" ?>
 <Project Name="bare_whetstone_e907fdp_smartl" Version="1" Language="C">
-  <Description>一个简单的基于baremetal的whetstone示例。whetstone是一种基准测试程序，用于评估处理器的浮点运算性能，不涵盖整数运算、IO、网络等方面。</Description>
+  <Description>bare_whetstone</Description>
   <Dependencies Name="Debug"/>
   <VirtualDirectory Name="boards">
     <VirtualDirectory Name="board_riscv_dummy">
@@ -53,6 +53,123 @@
     </VirtualDirectory>
   </VirtualDirectory>
   <VirtualDirectory Name="components">
+    <VirtualDirectory Name="chip_riscv_dummy">
+      <VirtualDirectory Name="include">
+        <VirtualDirectory Name="asm">
+          <File Name="../../../../../components/chip_riscv_dummy/include/asm/riscv_csr.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../components/chip_riscv_dummy/include/asm/riscv_asm_macro.h">
+            <FileOption/>
+          </File>
+        </VirtualDirectory>
+        <VirtualDirectory Name="drv">
+          <File Name="../../../../../components/chip_riscv_dummy/include/drv/dev_tag.h">
+            <FileOption/>
+          </File>
+        </VirtualDirectory>
+        <File Name="../../../../../components/chip_riscv_dummy/include/dw_timer_ll.h">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../components/chip_riscv_dummy/include/dw_uart_ll.h">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../components/chip_riscv_dummy/include/dw_uart.h">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../components/chip_riscv_dummy/include/soc.h">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../components/chip_riscv_dummy/include/sys_clk.h">
+          <FileOption/>
+        </File>
+      </VirtualDirectory>
+      <VirtualDirectory Name="src">
+        <VirtualDirectory Name="arch">
+          <VirtualDirectory Name="e907fdp">
+            <File Name="../../../../../components/chip_riscv_dummy/src/arch/e907fdp/system.c">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/chip_riscv_dummy/src/arch/e907fdp/trap_c.c">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/chip_riscv_dummy/src/arch/e907fdp/startup.S">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/chip_riscv_dummy/src/arch/e907fdp/vectors.S">
+              <FileOption/>
+            </File>
+          </VirtualDirectory>
+        </VirtualDirectory>
+        <VirtualDirectory Name="sys">
+          <File Name="../../../../../components/chip_riscv_dummy/src/sys/devices.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../components/chip_riscv_dummy/src/sys/feature.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../components/chip_riscv_dummy/src/sys/got_init.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../components/chip_riscv_dummy/src/sys/irq.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../components/chip_riscv_dummy/src/sys/irq_port.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../components/chip_riscv_dummy/src/sys/os_port.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../components/chip_riscv_dummy/src/sys/pre_main.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../components/chip_riscv_dummy/src/sys/reboot.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../components/chip_riscv_dummy/src/sys/sys_clk.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../components/chip_riscv_dummy/src/sys/target_get.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../components/chip_riscv_dummy/src/sys/tick.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../components/chip_riscv_dummy/src/sys/weak.c">
+            <FileOption/>
+          </File>
+        </VirtualDirectory>
+        <VirtualDirectory Name="drivers">
+          <File Name="../../../../../components/chip_riscv_dummy/src/drivers/clk.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../components/chip_riscv_dummy/src/drivers/dma.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../components/chip_riscv_dummy/src/drivers/dw_uart_ll.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../components/chip_riscv_dummy/src/drivers/gpio.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../components/chip_riscv_dummy/src/drivers/gpio_pin.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../components/chip_riscv_dummy/src/drivers/pinmux.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../components/chip_riscv_dummy/src/drivers/power_manage.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../components/chip_riscv_dummy/src/drivers/timer.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../components/chip_riscv_dummy/src/drivers/uart.c">
+            <FileOption/>
+          </File>
+        </VirtualDirectory>
+      </VirtualDirectory>
+    </VirtualDirectory>
     <VirtualDirectory Name="csi">
       <VirtualDirectory Name="csi2">
         <VirtualDirectory Name="include">
@@ -340,29 +457,12 @@
     <VirtualDirectory Name="libc_bare">
       <VirtualDirectory Name="include">
         <VirtualDirectory Name="libc_bare">
-          <VirtualDirectory Name="ringbuffer">
-            <File Name="../../../../../components/libc_bare/include/libc_bare/ringbuffer/ringbuffer.h">
-              <FileOption/>
-            </File>
-          </VirtualDirectory>
           <VirtualDirectory Name="sys">
             <File Name="../../../../../components/libc_bare/include/libc_bare/sys/_stdint.h">
               <FileOption/>
             </File>
           </VirtualDirectory>
-          <File Name="../../../../../components/libc_bare/include/libc_bare/mm_queue.h">
-            <FileOption/>
-          </File>
-          <File Name="../../../../../components/libc_bare/include/libc_bare/syslog.h">
-            <FileOption/>
-          </File>
-          <File Name="../../../../../components/libc_bare/include/libc_bare/umm_heap.h">
-            <FileOption/>
-          </File>
           <File Name="../../../../../components/libc_bare/include/libc_bare/errno.h">
-            <FileOption/>
-          </File>
-          <File Name="../../../../../components/libc_bare/include/libc_bare/mm.h">
             <FileOption/>
           </File>
           <File Name="../../../../../components/libc_bare/include/libc_bare/time.h">
@@ -371,38 +471,9 @@
         </VirtualDirectory>
       </VirtualDirectory>
       <VirtualDirectory Name="src">
-        <VirtualDirectory Name="mm">
-          <File Name="../../../../../components/libc_bare/src/mm/mm_free.c">
-            <FileOption/>
-          </File>
-          <File Name="../../../../../components/libc_bare/src/mm/mm_addfreechunk.c">
-            <FileOption/>
-          </File>
-          <File Name="../../../../../components/libc_bare/src/mm/lib_mallinfo.c">
-            <FileOption/>
-          </File>
-          <File Name="../../../../../components/libc_bare/src/mm/mm_malloc.c">
-            <FileOption/>
-          </File>
-          <File Name="../../../../../components/libc_bare/src/mm/mm_size2ndx.c">
-            <FileOption/>
-          </File>
-          <File Name="../../../../../components/libc_bare/src/mm/mm_initialize.c">
-            <FileOption/>
-          </File>
-          <File Name="../../../../../components/libc_bare/src/mm/dq_addlast.c">
-            <FileOption/>
-          </File>
-          <File Name="../../../../../components/libc_bare/src/mm/dq_rem.c">
-            <FileOption/>
-          </File>
-          <File Name="../../../../../components/libc_bare/src/mm/mm_leak.c">
-            <FileOption/>
-          </File>
-          <File Name="../../../../../components/libc_bare/src/mm/mm_mallinfo.c">
-            <FileOption/>
-          </File>
-        </VirtualDirectory>
+        <File Name="../../../../../components/libc_bare/src/clock_gettime.c">
+          <FileOption/>
+        </File>
         <File Name="../../../../../components/libc_bare/src/_init.c">
           <FileOption/>
         </File>
@@ -417,115 +488,49 @@
         </File>
       </VirtualDirectory>
     </VirtualDirectory>
-    <VirtualDirectory Name="chip_riscv_dummy">
+    <VirtualDirectory Name="mm">
       <VirtualDirectory Name="include">
-        <VirtualDirectory Name="asm">
-          <File Name="../../../../../components/chip_riscv_dummy/include/asm/riscv_csr.h">
-            <FileOption/>
-          </File>
-          <File Name="../../../../../components/chip_riscv_dummy/include/asm/riscv_asm_macro.h">
-            <FileOption/>
-          </File>
-        </VirtualDirectory>
-        <VirtualDirectory Name="drv">
-          <File Name="../../../../../components/chip_riscv_dummy/include/drv/dev_tag.h">
-            <FileOption/>
-          </File>
-        </VirtualDirectory>
-        <File Name="../../../../../components/chip_riscv_dummy/include/dw_timer_ll.h">
+        <File Name="../../../../../components/mm/include/mm_queue.h">
           <FileOption/>
         </File>
-        <File Name="../../../../../components/chip_riscv_dummy/include/dw_uart_ll.h">
+        <File Name="../../../../../components/mm/include/umm_heap.h">
           <FileOption/>
         </File>
-        <File Name="../../../../../components/chip_riscv_dummy/include/dw_uart.h">
-          <FileOption/>
-        </File>
-        <File Name="../../../../../components/chip_riscv_dummy/include/soc.h">
-          <FileOption/>
-        </File>
-        <File Name="../../../../../components/chip_riscv_dummy/include/sys_clk.h">
+        <File Name="../../../../../components/mm/include/mm.h">
           <FileOption/>
         </File>
       </VirtualDirectory>
       <VirtualDirectory Name="src">
-        <VirtualDirectory Name="arch">
-          <VirtualDirectory Name="e907fdp">
-            <File Name="../../../../../components/chip_riscv_dummy/src/arch/e907fdp/trap_c.c">
-              <FileOption/>
-            </File>
-            <File Name="../../../../../components/chip_riscv_dummy/src/arch/e907fdp/system.c">
-              <FileOption/>
-            </File>
-            <File Name="../../../../../components/chip_riscv_dummy/src/arch/e907fdp/vectors.S">
-              <FileOption/>
-            </File>
-            <File Name="../../../../../components/chip_riscv_dummy/src/arch/e907fdp/startup.S">
-              <FileOption/>
-            </File>
-          </VirtualDirectory>
-        </VirtualDirectory>
-        <VirtualDirectory Name="sys">
-          <File Name="../../../../../components/chip_riscv_dummy/src/sys/devices.c">
-            <FileOption/>
-          </File>
-          <File Name="../../../../../components/chip_riscv_dummy/src/sys/reboot.c">
-            <FileOption/>
-          </File>
-          <File Name="../../../../../components/chip_riscv_dummy/src/sys/tick.c">
-            <FileOption/>
-          </File>
-          <File Name="../../../../../components/chip_riscv_dummy/src/sys/os_port.c">
-            <FileOption/>
-          </File>
-          <File Name="../../../../../components/chip_riscv_dummy/src/sys/target_get.c">
-            <FileOption/>
-          </File>
-          <File Name="../../../../../components/chip_riscv_dummy/src/sys/weak.c">
-            <FileOption/>
-          </File>
-          <File Name="../../../../../components/chip_riscv_dummy/src/sys/sys_clk.c">
-            <FileOption/>
-          </File>
-          <File Name="../../../../../components/chip_riscv_dummy/src/sys/irq.c">
-            <FileOption/>
-          </File>
-          <File Name="../../../../../components/chip_riscv_dummy/src/sys/irq_port.c">
-            <FileOption/>
-          </File>
-          <File Name="../../../../../components/chip_riscv_dummy/src/sys/pre_main.c">
-            <FileOption/>
-          </File>
-        </VirtualDirectory>
-        <VirtualDirectory Name="drivers">
-          <File Name="../../../../../components/chip_riscv_dummy/src/drivers/clk.c">
-            <FileOption/>
-          </File>
-          <File Name="../../../../../components/chip_riscv_dummy/src/drivers/dma.c">
-            <FileOption/>
-          </File>
-          <File Name="../../../../../components/chip_riscv_dummy/src/drivers/dw_uart_ll.c">
-            <FileOption/>
-          </File>
-          <File Name="../../../../../components/chip_riscv_dummy/src/drivers/gpio.c">
-            <FileOption/>
-          </File>
-          <File Name="../../../../../components/chip_riscv_dummy/src/drivers/gpio_pin.c">
-            <FileOption/>
-          </File>
-          <File Name="../../../../../components/chip_riscv_dummy/src/drivers/pinmux.c">
-            <FileOption/>
-          </File>
-          <File Name="../../../../../components/chip_riscv_dummy/src/drivers/power_manage.c">
-            <FileOption/>
-          </File>
-          <File Name="../../../../../components/chip_riscv_dummy/src/drivers/timer.c">
-            <FileOption/>
-          </File>
-          <File Name="../../../../../components/chip_riscv_dummy/src/drivers/uart.c">
-            <FileOption/>
-          </File>
-        </VirtualDirectory>
+        <File Name="../../../../../components/mm/src/dq_addlast.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../components/mm/src/dq_rem.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../components/mm/src/lib_mallinfo.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../components/mm/src/mm_addfreechunk.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../components/mm/src/mm_free.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../components/mm/src/mm_initialize.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../components/mm/src/mm_leak.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../components/mm/src/mm_mallinfo.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../components/mm/src/mm_malloc.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../components/mm/src/mm_size2ndx.c">
+          <FileOption/>
+        </File>
       </VirtualDirectory>
     </VirtualDirectory>
   </VirtualDirectory>
@@ -626,7 +631,7 @@
         <CreateHexFile>no</CreateHexFile>
         <CreateBinFile>no</CreateBinFile>
         <Preprocessor>no</Preprocessor>
-        <Disassmeble>yes</Disassmeble>
+        <Disassmeble>no</Disassmeble>
         <CallGraph>no</CallGraph>
         <Map>no</Map>
       </Output>
@@ -649,12 +654,12 @@
         <Tools/>
       </User>
       <Compiler>
-        <Define>CONFIG_KERNEL_NONE=1;CONFIG_SEMIHOST_NATIVE=0;CONFIG_CSI_V2=1;CONFIG_CSI=&quot;csi2&quot;;CONFIG_LIBC_MINI_PRINTF_SUPPORT=1;CONFIG_SUPPORT_TSPEND=1;CONFIG_SUPPORT_IRQ_NESTED=1;CONFIG_XIP=1;CONFIG_ARCH_MAINSTACK=8192;CONFIG_ARCH_INTERRUPTSTACK=4096;CONFIG_CPU_XUANTIE_E907FDP=1;CONFIG_CHECK_FPU_DIRTY=1;CONFIG_INIT_TASK_STACK_SIZE=4096;CONFIG_APP_TASK_STACK_SIZE=4096;CONFIG_SYSTICK_HZ=100;CONFIG_BOARD_SMARTL_EVB=1;CONFIG_DEBUG=1;</Define>
+        <Define>CONFIG_SEMIHOST_NATIVE=0;CONFIG_HAVE_LONG_LONG=1;CONFIG_CSI_V2=1;CONFIG_CSI=csi2;CONFIG_SUPPORT_TSPEND=1;CONFIG_ARCH_INTERRUPTSTACK=4096;CONFIG_SUPPORT_IRQ_NESTED=1;CONFIG_XIP=1;CONFIG_LIBC_MINI_PRINTF_SUPPORT=1;E907;CONFIG_CHECK_FPU_DIRTY=1;CONFIG_INIT_TASK_STACK_SIZE=4096;CONFIG_APP_TASK_STACK_SIZE=8192;CONFIG_SYSTICK_HZ=100;CONFIG_BOARD_SMARTL_EVB=1;CONFIG_CPU_XUANTIE_E907FDP=1;CONFIG_KERNEL_NONE=1;CONFIG_DEBUG=1;CONFIG_ARCH_MAINSTACK=8192</Define>
         <Undefine/>
-        <Optim>Optimize size (-Os)</Optim>
-        <DebugLevel>Maximum (-g3)</DebugLevel>
-        <IncludePath>$(ProjectPath);../../../../../solutions/bare_whetstone/include;../../../../../components/csi/csi2/include;../../../../../components/libc_bare/include/libc_bare;../../../../../boards/board_riscv_dummy/include;../../../../../components/chip_riscv_dummy/include;../../../../../components/chip_riscv_dummy/include/asm;</IncludePath>
-        <OtherFlags>-MP -MMD -Os -Wno-main -mcmodel=medlow -Wno-unused-function -DE907 -O2</OtherFlags>
+        <Optim>Default</Optim>
+        <DebugLevel>Default (-g)</DebugLevel>
+        <IncludePath>$(ProjectPath);../../../../../components/csi/csi2/include;../../../../../components/libc_bare/include/libc_bare;../../../../../components/mm/include;../../../../../components/chip_riscv_dummy/include;../../../../../components/chip_riscv_dummy/include/asm;../../../../../boards/board_riscv_dummy/include;</IncludePath>
+        <OtherFlags>-g -Wall -mcmodel=medany -MP -MMD -Wno-main -g -O2</OtherFlags>
         <Verbose>no</Verbose>
         <Ansi>no</Ansi>
         <Syntax>no</Syntax>
@@ -668,11 +673,11 @@
         <Fstrict>no</Fstrict>
       </Compiler>
       <Asm>
-        <Define>CONFIG_KERNEL_NONE=1;CONFIG_SEMIHOST_NATIVE=0;CONFIG_CSI_V2=1;CONFIG_CSI=&quot;csi2&quot;;CONFIG_LIBC_MINI_PRINTF_SUPPORT=1;CONFIG_SUPPORT_TSPEND=1;CONFIG_SUPPORT_IRQ_NESTED=1;CONFIG_XIP=1;CONFIG_ARCH_MAINSTACK=8192;CONFIG_ARCH_INTERRUPTSTACK=4096;CONFIG_CPU_XUANTIE_E907FDP=1;CONFIG_CHECK_FPU_DIRTY=1;CONFIG_INIT_TASK_STACK_SIZE=4096;CONFIG_APP_TASK_STACK_SIZE=4096;CONFIG_SYSTICK_HZ=100;CONFIG_BOARD_SMARTL_EVB=1;CONFIG_DEBUG=1;</Define>
+        <Define>__ASSEMBLY__;CONFIG_SEMIHOST_NATIVE=0;CONFIG_HAVE_LONG_LONG=1;CONFIG_CSI_V2=1;CONFIG_CSI=csi2;CONFIG_SUPPORT_TSPEND=1;CONFIG_ARCH_INTERRUPTSTACK=4096;CONFIG_SUPPORT_IRQ_NESTED=1;CONFIG_XIP=1;CONFIG_LIBC_MINI_PRINTF_SUPPORT=1;E907;CONFIG_CHECK_FPU_DIRTY=1;CONFIG_INIT_TASK_STACK_SIZE=4096;CONFIG_APP_TASK_STACK_SIZE=8192;CONFIG_SYSTICK_HZ=100;CONFIG_BOARD_SMARTL_EVB=1;CONFIG_CPU_XUANTIE_E907FDP=1;CONFIG_KERNEL_NONE=1;CONFIG_DEBUG=1;CONFIG_ARCH_MAINSTACK=8192</Define>
         <Undefine/>
-        <IncludePath>$(ProjectPath);../../../../../solutions/bare_whetstone/include;../../../../../components/csi/csi2/include;../../../../../components/libc_bare/include/libc_bare;../../../../../boards/board_riscv_dummy/include;../../../../../components/chip_riscv_dummy/include;../../../../../components/chip_riscv_dummy/include/asm;</IncludePath>
-        <OtherFlags>-MP -MMD -Os -Wno-main -mcmodel=medlow</OtherFlags>
-        <DebugLevel>gdwarf2</DebugLevel>
+        <IncludePath>$(ProjectPath);../../../../../components/csi/csi2/include;../../../../../components/libc_bare/include/libc_bare;../../../../../components/mm/include;../../../../../components/chip_riscv_dummy/include;../../../../../components/chip_riscv_dummy/include/asm;../../../../../boards/board_riscv_dummy/include;</IncludePath>
+        <OtherFlags>-g -Wall -mcmodel=medany -MP -MMD -Wno-main -g -O2</OtherFlags>
+        <DebugLevel>none</DebugLevel>
       </Asm>
       <Linker>
         <Garbage>yes</Garbage>
@@ -680,7 +685,7 @@
         <LDFile>../../../../../components/chip_riscv_dummy/gcc_flash_smartl.ld</LDFile>
         <LibName>m;</LibName>
         <LibPath>../../../../../components/csi/csi2/dsp/lib;</LibPath>
-        <OtherFlags>-MP -MMD -Os -Wno-main -mcmodel=medlow -Wl,-zmax-page-size=1024 -Wl,-Map=yoc.map</OtherFlags>
+        <OtherFlags>-mcmodel=medany -nostartfiles -Wl,--gc-sections -Wl,-zmax-page-size=1024 -Wl,-Map=yoc.map</OtherFlags>
         <AutoLDFile>no</AutoLDFile>
         <LinkType>whole-archive</LinkType>
         <IncludeAllLibs>yes</IncludeAllLibs>
@@ -847,7 +852,7 @@
         <CreateHexFile>no</CreateHexFile>
         <CreateBinFile>no</CreateBinFile>
         <Preprocessor>no</Preprocessor>
-        <Disassmeble>yes</Disassmeble>
+        <Disassmeble>no</Disassmeble>
         <CallGraph>no</CallGraph>
         <Map>no</Map>
       </Output>
@@ -870,12 +875,12 @@
         <Tools/>
       </User>
       <Compiler>
-        <Define>CONFIG_KERNEL_NONE=1;CONFIG_SEMIHOST_NATIVE=0;CONFIG_CSI_V2=1;CONFIG_CSI=&quot;csi2&quot;;CONFIG_LIBC_MINI_PRINTF_SUPPORT=1;CONFIG_SUPPORT_TSPEND=1;CONFIG_SUPPORT_IRQ_NESTED=1;CONFIG_XIP=1;CONFIG_ARCH_MAINSTACK=8192;CONFIG_ARCH_INTERRUPTSTACK=4096;CONFIG_CPU_XUANTIE_E907FDP=1;CONFIG_CHECK_FPU_DIRTY=1;CONFIG_INIT_TASK_STACK_SIZE=4096;CONFIG_APP_TASK_STACK_SIZE=4096;CONFIG_SYSTICK_HZ=100;CONFIG_BOARD_SMARTL_EVB=1;CONFIG_DEBUG=1;</Define>
+        <Define>CONFIG_SEMIHOST_NATIVE=0;CONFIG_HAVE_LONG_LONG=1;CONFIG_CSI_V2=1;CONFIG_CSI=csi2;CONFIG_SUPPORT_TSPEND=1;CONFIG_ARCH_INTERRUPTSTACK=4096;CONFIG_SUPPORT_IRQ_NESTED=1;CONFIG_XIP=1;CONFIG_LIBC_MINI_PRINTF_SUPPORT=1;E907;CONFIG_CHECK_FPU_DIRTY=1;CONFIG_INIT_TASK_STACK_SIZE=4096;CONFIG_APP_TASK_STACK_SIZE=8192;CONFIG_SYSTICK_HZ=100;CONFIG_BOARD_SMARTL_EVB=1;CONFIG_CPU_XUANTIE_E907FDP=1;CONFIG_KERNEL_NONE=1;CONFIG_DEBUG=1;CONFIG_ARCH_MAINSTACK=8192</Define>
         <Undefine/>
-        <Optim>Optimize size (-Os)</Optim>
-        <DebugLevel>Maximum (-g3)</DebugLevel>
-        <IncludePath>$(ProjectPath);../../../../../solutions/bare_whetstone/include;../../../../../components/csi/csi2/include;../../../../../components/libc_bare/include/libc_bare;../../../../../boards/board_riscv_dummy/include;../../../../../components/chip_riscv_dummy/include;../../../../../components/chip_riscv_dummy/include/asm;</IncludePath>
-        <OtherFlags>-MP -MMD -Os -Wno-main -mcmodel=medlow -Wno-unused-function -DE907 -O2</OtherFlags>
+        <Optim>Default</Optim>
+        <DebugLevel>Default (-g)</DebugLevel>
+        <IncludePath>$(ProjectPath);../../../../../components/csi/csi2/include;../../../../../components/libc_bare/include/libc_bare;../../../../../components/mm/include;../../../../../components/chip_riscv_dummy/include;../../../../../components/chip_riscv_dummy/include/asm;../../../../../boards/board_riscv_dummy/include;</IncludePath>
+        <OtherFlags>-g -Wall -mcmodel=medany -MP -MMD -Wno-main -g -O2</OtherFlags>
         <Verbose>no</Verbose>
         <Ansi>no</Ansi>
         <Syntax>no</Syntax>
@@ -889,11 +894,11 @@
         <Fstrict>no</Fstrict>
       </Compiler>
       <Asm>
-        <Define>CONFIG_KERNEL_NONE=1;CONFIG_SEMIHOST_NATIVE=0;CONFIG_CSI_V2=1;CONFIG_CSI=&quot;csi2&quot;;CONFIG_LIBC_MINI_PRINTF_SUPPORT=1;CONFIG_SUPPORT_TSPEND=1;CONFIG_SUPPORT_IRQ_NESTED=1;CONFIG_XIP=1;CONFIG_ARCH_MAINSTACK=8192;CONFIG_ARCH_INTERRUPTSTACK=4096;CONFIG_CPU_XUANTIE_E907FDP=1;CONFIG_CHECK_FPU_DIRTY=1;CONFIG_INIT_TASK_STACK_SIZE=4096;CONFIG_APP_TASK_STACK_SIZE=4096;CONFIG_SYSTICK_HZ=100;CONFIG_BOARD_SMARTL_EVB=1;CONFIG_DEBUG=1;</Define>
+        <Define>__ASSEMBLY__;CONFIG_SEMIHOST_NATIVE=0;CONFIG_HAVE_LONG_LONG=1;CONFIG_CSI_V2=1;CONFIG_CSI=csi2;CONFIG_SUPPORT_TSPEND=1;CONFIG_ARCH_INTERRUPTSTACK=4096;CONFIG_SUPPORT_IRQ_NESTED=1;CONFIG_XIP=1;CONFIG_LIBC_MINI_PRINTF_SUPPORT=1;E907;CONFIG_CHECK_FPU_DIRTY=1;CONFIG_INIT_TASK_STACK_SIZE=4096;CONFIG_APP_TASK_STACK_SIZE=8192;CONFIG_SYSTICK_HZ=100;CONFIG_BOARD_SMARTL_EVB=1;CONFIG_CPU_XUANTIE_E907FDP=1;CONFIG_KERNEL_NONE=1;CONFIG_DEBUG=1;CONFIG_ARCH_MAINSTACK=8192</Define>
         <Undefine/>
-        <IncludePath>$(ProjectPath);../../../../../solutions/bare_whetstone/include;../../../../../components/csi/csi2/include;../../../../../components/libc_bare/include/libc_bare;../../../../../boards/board_riscv_dummy/include;../../../../../components/chip_riscv_dummy/include;../../../../../components/chip_riscv_dummy/include/asm;</IncludePath>
-        <OtherFlags>-MP -MMD -Os -Wno-main -mcmodel=medlow</OtherFlags>
-        <DebugLevel>gdwarf2</DebugLevel>
+        <IncludePath>$(ProjectPath);../../../../../components/csi/csi2/include;../../../../../components/libc_bare/include/libc_bare;../../../../../components/mm/include;../../../../../components/chip_riscv_dummy/include;../../../../../components/chip_riscv_dummy/include/asm;../../../../../boards/board_riscv_dummy/include;</IncludePath>
+        <OtherFlags>-g -Wall -mcmodel=medany -MP -MMD -Wno-main -g -O2</OtherFlags>
+        <DebugLevel>none</DebugLevel>
       </Asm>
       <Linker>
         <Garbage>yes</Garbage>
@@ -901,7 +906,7 @@
         <LDFile>../../../../../components/chip_riscv_dummy/gcc_flash_smartl.ld</LDFile>
         <LibName>m;</LibName>
         <LibPath>../../../../../components/csi/csi2/dsp/lib;</LibPath>
-        <OtherFlags>-MP -MMD -Os -Wno-main -mcmodel=medlow -Wl,-zmax-page-size=1024 -Wl,-Map=yoc.map</OtherFlags>
+        <OtherFlags>-mcmodel=medany -nostartfiles -Wl,--gc-sections -Wl,-zmax-page-size=1024 -Wl,-Map=yoc.map</OtherFlags>
         <AutoLDFile>no</AutoLDFile>
         <LinkType>whole-archive</LinkType>
         <IncludeAllLibs>yes</IncludeAllLibs>

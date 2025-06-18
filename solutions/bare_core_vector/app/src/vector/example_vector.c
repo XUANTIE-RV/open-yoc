@@ -29,33 +29,65 @@
 #define min(i, j) ((i) < (j) ? (i): (j))
 #define max(i, j) ((i) > (j) ? (i): (j))
 
-void naive_gemm_fp32(float *sc, const float *sa, const float *sb, int m, int k, int n, int ldc);
-void naive_gemm_fp32_4x4(float *sc, const float *sa, const float *sb, int m, int k, int n, int ldc);
+extern void naive_gemm_fp32(float *sc, const float *sa, const float *sb, int m, int k, int n, int ldc);
+extern void naive_gemm_fp32_4x4(float *sc, const float *sa, const float *sb, int m, int k, int n, int ldc);
 
-void shl_c908_reorder_input_z8_fp32(float *b, float *sb, int k, int n, int ldx);
-void shl_c908_reorder_kernel_n8_fp32(float *src, float *dst, int m, int k, int ldx);
-void shl_c908_gemm_8x8_fp32(float *sc, const float *sa, const float *sb, int m, int k, int n, int ldc);
+extern void shl_c908_reorder_input_z8_fp32(float *b, float *sb, int k, int n, int ldx);
+extern void shl_c908_reorder_kernel_n8_fp32(float *src, float *dst, int m, int k, int ldx);
+extern void shl_c908_gemm_8x8_fp32(float *sc, const float *sa, const float *sb, int m, int k, int n, int ldc);
 
-void shl_c908_reorder_input_z16_fp32_v256(float *b, float *sb, int k, int n, int ldx);
-void shl_c908_reorder_kernel_n8_fp32_v256(float *src, float *dst, int m, int k, int ldx);
-void shl_c908_gemm_8x16_fp32_v256(float *sc, const float *sa, const float *sb, int m, int k, int n, int ldc);
+extern void shl_c908_reorder_input_z16_fp32_v256(float *b, float *sb, int k, int n, int ldx);
+extern void shl_c908_reorder_kernel_n8_fp32_v256(float *src, float *dst, int m, int k, int ldx);
+extern void shl_c908_gemm_8x16_fp32_v256(float *sc, const float *sa, const float *sb, int m, int k, int n, int ldc);
+
+extern void reordered_A(float *src, float *dst, int M, int K);
+extern void reordered_B(float *src, float *dst, int K, int N);
+extern void vdot_compute(float *dst, float *sa, float *sb, int M, int K, int N);
 
 static uint32_t _get_current_ms(void)
 {
     return csi_tick_get_ms();
 }
 
-void* fastmalloc(int size)
+#if CONFIG_USE_FASTMEM
+#include <umm_heap.h>
+struct mm_heap_s g_fast_mmheap;
+void fast_mm_init(void)
 {
+    mm_initialize(&g_fast_mmheap, (void *)CONFIG_FASTMEM_ADDR, (size_t)CONFIG_FASTMEM_SIZE);
+}
+#endif
+
+void* fastmalloc(size_t size)
+{
+#if CONFIG_USE_FASTMEM
+    void *ptr = mm_malloc(&g_fast_mmheap, size, __builtin_return_address(0));
+    if (!ptr) {
+        printf("oom size=%d\n", (int)size);
+        while(1);
+    }
+    memset(ptr, 0, size);
+    return ptr;
+#else
     void* ptr = 0;
     // int iRet = posix_memalign(&ptr, 64, size);
     ptr = malloc(size);
     if (!ptr) {
-        printf("oom size=%d\n", size);
+        printf("oom size=%d\n", (int)size);
         while(1);
     }
     //printf("ptr=%p\n", ptr);
     return ptr;
+#endif
+}
+
+void fastfree(void *ptr)
+{
+#if CONFIG_USE_FASTMEM
+    mm_free(&g_fast_mmheap, ptr, __builtin_return_address(0));
+#else
+    free(ptr);
+#endif
 }
 
 void random_matrix(int m, int n, float *a, int lda)
@@ -138,19 +170,9 @@ int gemm_perf(int m, int k, int n, int loop_cnt)
     for (int i = 0; i < loop_cnt; i++) {
         // 每次循环执行要清零结果矩阵
         memset(sc_ptr, 0, m * n * sizeof(float));
-
-        if (128 == vlen) {
-            shl_c908_reorder_kernel_n8_fp32(sa_data, sa_ptr, m, k, k);
-            shl_c908_reorder_input_z8_fp32(sb_data, sb_ptr, k, n, n);
-            shl_c908_gemm_8x8_fp32(sc_ptr, sa_ptr, sb_ptr, m, k, n, n);
-        } else if (256 == vlen) {
-            shl_c908_reorder_kernel_n8_fp32_v256(sa_data, sa_ptr, m, k, k);
-            shl_c908_reorder_input_z16_fp32_v256(sb_data, sb_ptr, k, n, n);
-            shl_c908_gemm_8x16_fp32_v256(sc_ptr, sa_ptr, sb_ptr, m, k, n, n);
-        } else {
-            printf("Unsupport vlen\n");
-        }
-
+        reordered_A( sa_data, sa_ptr, m, k);
+        reordered_B( sb_data, sb_ptr, k, n);
+        vdot_compute(sc_ptr, sa_ptr, sb_ptr, m, k, n);
     }
     printf("=====>>vector test end.\r\n");
     stop_time = _get_current_ms();
@@ -162,13 +184,13 @@ int gemm_perf(int m, int k, int n, int loop_cnt)
     }
     printf("native time = %ums, vector time = %ums. diff = %ums\n", diff_ms0, diff_ms1, diff_ms0 - diff_ms1);
 
-    free(sc_ptr);
-    free(sa_ptr);
-    free(sa_data);
-    free(sb_ptr);
-    free(sb_data);
-    free(bias_ptr);
-    free(ref);
+    fastfree(sc_ptr);
+    fastfree(sa_ptr);
+    fastfree(sa_data);
+    fastfree(sb_ptr);
+    fastfree(sb_data);
+    fastfree(bias_ptr);
+    fastfree(ref);
 
     return rc;
 }
@@ -201,14 +223,13 @@ static int vector_main(int argc, char **argv)
     return rc;
 }
 
-static void vector_thread(void)
-{
-    vector_main(0, NULL);
-}
-
 int example_core_vector()
 {
     int rc;
+
+#if CONFIG_USE_FASTMEM
+    fast_mm_init();
+#endif
 
     rc = vector_main(0, NULL);
     if (rc == 0)

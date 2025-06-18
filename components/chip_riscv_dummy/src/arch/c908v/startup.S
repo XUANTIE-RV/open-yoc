@@ -22,9 +22,7 @@
 #define CONFIG_NR_CPUS 1
 #endif
 
-.globl  Reset_Handler
-
-.section .vectors
+.section .vectors, "aw", @progbits
     .align  6
     .globl  __Vectors
     .type   __Vectors, @object
@@ -61,8 +59,8 @@ __Vectors:
     .rept    9
     .long    0
     .endr
-    .long    Reset_Handler
 _start:
+    .global Reset_Handler
     .type   Reset_Handler, %function
 Reset_Handler:
 .option push
@@ -79,6 +77,36 @@ Reset_Handler:
     csrc    mstatus, (1 << 3)
 #endif
 
+#if CONFIG_PIE_ENABLE
+    /* Initialize GOT */
+
+    /* Read labels from the linker script, and set them as parematers
+    ** for GOTInitialize.
+    ** We cannot do "la a0, __rela_dyn_start" here because they will
+    ** become GOT relocation, but GOT is not initialized yet here (we
+    ** are going to use them to initialize GOT...).
+    ** So we have to force these to be PC relative relocations
+    */
+.Lpcrel_manual_0:
+    auipc   a0, %pcrel_hi(__rela_dyn_start)
+    addi    a0, a0, %pcrel_lo(.Lpcrel_manual_0)
+.Lpcrel_manual_1:
+    auipc   a1, %pcrel_hi(__rela_dyn_end)
+    addi    a1, a1, %pcrel_lo(.Lpcrel_manual_1)
+.Lpcrel_manual_2:
+    auipc   a2, %pcrel_hi(__stext)
+    addi    a2, a2, %pcrel_lo(.Lpcrel_manual_2)
+.Lpcrel_manual_3:
+    auipc   a3, %pcrel_hi(__dram_vma)
+    addi    a3, a3, %pcrel_lo(.Lpcrel_manual_3)
+
+    call    GOTInitialize
+
+    la      a2, g_heap_end
+    la      a0, __heap_end
+    sd      a0, (a2)
+#endif
+
     la      gp, __global_pointer$
 .option pop
     la      a0, __Vectors
@@ -86,14 +114,16 @@ Reset_Handler:
     or	    a0, a0,a1
     csrw    mtvec, a0
 
+#if defined(CONFIG_SMP) && CONFIG_SMP
     /* get cpu id */
     csrr a0, mhartid
 
-#if defined(CONFIG_SMP) && CONFIG_SMP
     /* check if hart is within range */
     /* tp: hart id */
     li	t0, CONFIG_NR_CPUS
     bge	a0, t0, hart_out_of_bounds_loop
+#else
+    li  a0, 0
 #endif
 
 #ifdef CONFIG_KERNEL_NONE
@@ -162,7 +192,7 @@ hart_out_of_bounds_loop:
     j	hart_out_of_bounds_loop
 #endif
 
-.section .stack
+.section .stack, "aw", @nobits
     .align  4
     .global g_base_irqstack
     .global g_top_irqstack

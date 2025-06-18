@@ -29,7 +29,7 @@ __attribute__((weak)) void riscv_soc_init_cpu(void)
 
 typedef struct _spinlock
 {
-    int lock;
+    long lock;
 } spinlock_t;
 
 #define mb()                          \

@@ -39,6 +39,7 @@ extern "C" {
 /****** DMA Event *****/
 typedef enum {
     DMA_EVENT_TRANSFER_DONE       = 0,  ///< transfer complete
+    DMA_EVENT_TRANSFER_BLOCK_DONE,       ///< transfer block done
     DMA_EVENT_TRANSFER_HALF_DONE,       ///< transfer half done
     DMA_EVENT_TRANSFER_ERROR,           ///< transfer error
 } csi_dma_event_t;
@@ -65,15 +66,80 @@ typedef enum {
 } csi_dma_trans_dir_t;
 
 typedef struct {
-    uint8_t ctrl_idx;
+    uint16_t ctrl_idx;
     uint8_t ch_idx;
 } csi_dma_ch_desc_t;
 
+ typedef struct {
+     uint16_t dev_tag;
+     uint16_t  ctrl_idx;
+     const csi_dma_ch_desc_t *ch_list;
+ } csi_dma_ch_spt_list_t;
+
 typedef struct {
-    uint16_t dev_tag;
-    uint8_t  ctrl_idx;
-    const csi_dma_ch_desc_t *ch_list;
-} csi_dma_ch_spt_list_t;
+    uint16_t ctrl_idx;
+    uint64_t ch_bit_info;
+} csi_dma_ch_bit_desc_t;
+
+
+typedef struct {
+    uint16_t ctrl_idx;
+    uint8_t ch_num;
+} csi_dma_ch_info_t;
+
+typedef struct {
+    uint16_t   parent_dev_id;
+    uint16_t   dev_tag;
+    const csi_dma_ch_bit_desc_t *ch_list;
+} csi_dma_ch_bit_spt_list_t;
+
+#define DMA_HANDSHAKE_NONE 0xff
+
+typedef enum {
+    DMA_HANDSHAKE_TYPE_RX = 0x0,
+    DMA_HANDSHAKE_TYPE_TX = 0x1,
+} csi_dma_handshake_type_t;
+
+typedef struct  {
+    uint16_t   parent_dev_id;
+    uint16_t   dev_tag;
+    uint8_t   rx_hs;
+    uint8_t   tx_hs;
+} csi_dma_handshake_ctrl_t;
+
+typedef struct  {
+    uint16_t   ctrl_idx;
+    const csi_dma_handshake_ctrl_t* handshake_ctrl_list;
+} csi_dma_handshake_list_t;
+
+typedef struct {
+     void*  cpu_base_addr;
+     void*  dma_base_addr;
+     size_t mem_size;
+} csi_dma_mem_desc_t;
+
+typedef struct  {
+   uint16_t  ctrl_idx;
+   const csi_dma_mem_desc_t *mem_list;
+} csi_dma_mem_list_t;
+
+typedef enum {
+    DMA_LINK_LIST_STOP     = 0,
+    DMA_LINK_LIST_RUNNING,
+    DMA_LINK_LIST_READY,
+} csi_dma_link_list_state_t;
+
+typedef enum {
+    DMA_CYCLIC_STOP        = 0,
+    DMA_CYCLIC_RUNNING,
+    DMA_CYCLIC_READY,
+} csi_dma_cyclic_state_t;
+
+typedef struct {
+    void                        *srcaddr;
+    void                        *dstaddr;
+    uint32_t                    length;
+} csi_dma_link_list_item_t;
 
 typedef struct {
     csi_dma_addr_inc_t          src_inc;        ///< source address increment
@@ -88,13 +154,26 @@ typedef struct {
     uint8_t                     half_int_en;    ///< 1:dma enable half interrupt, 0: disable
     uint8_t                     lli_src_en;     ///< 1:dma enable llp, 0 disable
     uint8_t                     lli_dst_en;     ///< 1:dma enable llp, 0 disable
+    uint8_t                     link_list_en;     ///< 1:dma enable link list mode, 0: disable
+    void                        *lli_buf;         ///< link list config
 } csi_dma_ch_config_t;
 
+
+typedef struct {
+    csi_dma_addr_inc_t          src_inc;        ///< source address increment
+    csi_dma_addr_inc_t          dst_inc;        ///< destination address increment
+    csi_dma_data_width_t        src_tw;         ///< source transfer width in byte
+    csi_dma_data_width_t        dst_tw;         ///< destination transfer width in byte
+    uint16_t                    group_len;      ///< group transaction length (unit: bytes)
+    uint8_t                     lli_src_en;     ///< 1:dma enable llp, 0 disable
+    uint8_t                     lli_dst_en;     ///< 1:dma enable llp, 0 disable
+} csi_dma_lli_config_t;
+
 #ifndef DMA_LLI_SIZE
-#define DMA_LLI_SIZE 28
+#define DMA_LLI_SIZE 64
 #endif
 
-#define DEFINE_DESC_BUF(buf_name, num) uint8_t buf_name[num * DMA_LLI_SIZE]
+#define DEFINE_DESC_BUF(buf_name, num) uint8_t buf_name[num * DMA_LLI_SIZE] __attribute__((aligned(64)));
 
 typedef struct csi_dma_ch csi_dma_ch_t;
 
@@ -113,13 +192,15 @@ struct csi_dma_ch {
     uint32_t            lli_loop_buf1;              //lli loop data
     uint8_t             lli_loop[DMA_LLI_SIZE];     //lli loop handle
     int16_t             etb_ch_id;
+    csi_dma_trans_dir_t trans_dir;
+    csi_dma_link_list_state_t link_list_state;
     slist_t             next;
 };
 
 typedef struct {
     csi_dev_t           dev;
     slist_t             head;
-    uint32_t            alloc_status;
+    uint64_t            alloc_status;
     uint32_t            ch_num;
     void                *priv;
 } csi_dma_t;
@@ -180,6 +261,15 @@ void csi_dma_ch_start(csi_dma_ch_t *dma_ch, void *srcaddr, void *dstaddr, uint32
   \return      none
 */
 void csi_dma_ch_stop(csi_dma_ch_t *dma_ch);
+
+/**
+  \brief       add dma lli
+  \param[in]   dma_ch       the dma channel operate handle
+  \param[in]   config       lli config
+  \param[in]   item         lli
+  \return      csi error code
+*/
+csi_error_t csi_dma_add_link_list_item(csi_dma_ch_t *dma_ch, csi_dma_lli_config_t *config, csi_dma_link_list_item_t *item);
 
 /**
   \brief       Attach the callback handler to DMA channel

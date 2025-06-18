@@ -864,7 +864,7 @@ struct rt_thread
     void                        *stack_addr;            /**< stack address */
     rt_uint32_t                 stack_size;             /**< stack size */
 
-    /**< access by assemble code, so do not change position */
+    /* for user information */
     void                        *user_info[5];
 
     /* error code */

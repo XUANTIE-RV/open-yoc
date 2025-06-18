@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+#include <errno.h>
 #include <stdio.h>
 #include <csi_core.h>
 #include <aos/kernel.h>

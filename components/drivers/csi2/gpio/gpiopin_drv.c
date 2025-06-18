@@ -19,6 +19,7 @@
 #include <stdio.h>
 #include <aos/kernel.h>
 #include <drv/gpio_pin.h>
+#include <drv/clk.h>
 #include <devices/impl/gpiopin_impl.h>
 
 #define TAG "gpiopin_drv"

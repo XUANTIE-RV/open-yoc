@@ -17,8 +17,8 @@
 #include <drv/timer.h>
 #include <csi_core.h>
 /* auto define heap size */
-extern size_t __heap_start;
-extern size_t __heap_end;
+extern size_t g_heap_start;
+extern size_t g_heap_end;
 extern k_mm_region_t   g_mm_region[];
 
 extern void soc_hw_timer_init(void);
@@ -30,14 +30,14 @@ __attribute__((weak)) void krhino_init_hook(void)
     soc_hw_timer_init();
 #endif
 
-    size_t h_end = (size_t)(&__heap_end);
-    size_t h_start = (size_t)(&__heap_start);
+    size_t h_end = (size_t)(g_heap_end);
+    size_t h_start = (size_t)(g_heap_start);
 
     if (h_start >= h_end) {
         k_err_proc(RHINO_MM_POOL_SIZE_ERR);
     }
     /* auto define heap size */
-    g_mm_region[0].len = (size_t)(&__heap_end) - (size_t)(&__heap_start);
+    g_mm_region[0].len = (size_t)(g_heap_end) - (size_t)(g_heap_start);
 }
 
 __attribute__((weak)) void krhino_start_hook(void)

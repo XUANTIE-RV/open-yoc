@@ -40,9 +40,15 @@ int example_semihost2(void)
     uint8_t w_buffer[16] = { 1, 2, 3, 4, 5 };
     const char *test_file = "./semihost_test.txt";
 
+    /* Redirect stdout and stderr to the debug host for semihost. */
+    semihost_open(":tt", SEMIHOST_OPEN_W_PLUS);
+    semihost_open(":tt", SEMIHOST_OPEN_A_PLUS);
+
     semihost_printf("output by semihost_printf\n");
     semihost_printf2("output by semihost_printf2\n");
     rc = semihost_write(STDOUT_FILENO, "output by semihost_write\n", 25);
+    SEMI_CHECK_RET_WITH_GOTO(rc == 0, error);
+    rc = semihost_write(STDERR_FILENO, "output1 by semihost_write\n", 26);
     SEMI_CHECK_RET_WITH_GOTO(rc == 0, error);
 
     /* Open in write mode */

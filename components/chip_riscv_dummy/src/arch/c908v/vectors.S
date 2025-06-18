@@ -18,7 +18,7 @@
 
 #include "riscv_asm_macro.h"
 
-.section .stack
+.section .stack, "aw", @nobits
     .align  4
     .global g_trapstackbase
     .global g_top_trapstack
@@ -61,7 +61,7 @@ Scoret_Handler:
     sd      t6, (60+60)(sp)
 
 #if CONFIG_CHECK_FPU_DIRTY || CONFIG_CHECK_VECTOR_DIRTY
-    csrr    t3, sstatus
+    mv      t3, t0
 #endif
     SAVE_FLOAT_REGISTERS
     SAVE_VECTOR_REGISTERS
@@ -145,7 +145,7 @@ Mcoret_Handler:
     sd      t6, (60+60)(sp)
 
 #if CONFIG_CHECK_FPU_DIRTY || CONFIG_CHECK_VECTOR_DIRTY
-    csrr    t3, mstatus
+    mv      t3, t0
 #endif
     SAVE_FLOAT_REGISTERS
     SAVE_VECTOR_REGISTERS
@@ -233,7 +233,7 @@ ECC_L1_Handler:
     sd      t6, (60+60)(sp)
 
 #if CONFIG_CHECK_FPU_DIRTY || CONFIG_CHECK_VECTOR_DIRTY
-    csrr    t3, mstatus
+    mv      t3, t0
 #endif
     SAVE_FLOAT_REGISTERS
     SAVE_VECTOR_REGISTERS
@@ -311,7 +311,7 @@ Sirq_Handler:
     sd      t6, (60+60)(sp)
 
 #if CONFIG_CHECK_FPU_DIRTY || CONFIG_CHECK_VECTOR_DIRTY
-    csrr    t3, sstatus
+    mv      t3, t0
 #endif
     SAVE_FLOAT_REGISTERS
     SAVE_VECTOR_REGISTERS
@@ -399,7 +399,7 @@ Mirq_Handler:
     sd      t6, (60+60)(sp)
 
 #if CONFIG_CHECK_FPU_DIRTY || CONFIG_CHECK_VECTOR_DIRTY
-    csrr    t3, mstatus
+    mv      t3, t0
 #endif
     SAVE_FLOAT_REGISTERS
     SAVE_VECTOR_REGISTERS

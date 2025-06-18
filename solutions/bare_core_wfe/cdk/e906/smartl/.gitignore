@@ -13,3 +13,7 @@ __workspace_pack__/
 *.cdkws
 *.mk
 *.bat
+
+%SystemDrive%
+/Debug_GCC/
+/Debug_LLVM/

@@ -373,14 +373,13 @@ void vPortInitialiseBlocks( void )
 }
 /*-----------------------------------------------------------*/
 
-extern size_t __heap_start;
-extern size_t __heap_end;
-
-unsigned long h_end = (unsigned long)(&__heap_end);
-unsigned long h_start = (unsigned long)(&__heap_start);
+extern size_t g_heap_start;
+extern size_t g_heap_end;
 
 static void prvHeapInit( void )
 {
+unsigned long h_end = (unsigned long)(g_heap_end);
+unsigned long h_start = (unsigned long)(g_heap_start);
 BlockLink_t *pxFirstFreeBlock;
 uint8_t *pucAlignedHeap;
 size_t uxAddress;

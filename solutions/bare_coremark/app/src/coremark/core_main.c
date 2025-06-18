@@ -342,7 +342,7 @@ MAIN_RETURN_TYPE benchmark_coremark_main(int argc, char *argv[]) {
 #endif
 			printf("\n");
             extern uint32_t soc_get_cpu_freq(uint32_t idx);
-            printf("Score (Coremarks/MHz): %6.2f\n", default_num_contexts*results[0].iterations/time_in_secs(total_time) / (soc_get_cpu_freq(0) / 1000000));
+            printf("Score (Coremarks/MHz): %6.2f\n", default_num_contexts*results[0].iterations/time_in_secs(total_time) / ((float)soc_get_cpu_freq(0) / 1000000));
 		}
 #endif
 	}

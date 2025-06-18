@@ -29,10 +29,11 @@ rt_hw_context_switch_to:
 
 #ifdef RT_USING_SMP
 /*
- * void rt_hw_context_switch(rt_ubase_t from, rt_ubase_t to);
+ * void rt_hw_context_switch(rt_ubase_t from, rt_ubase_t to, struct rt_thread *to_thread);
  *
  * a0 --> from
  * a1 --> to
+ * a2 --> to_thread
  */
     .global rt_hw_context_switch
     .type   rt_hw_context_switch, %function
@@ -52,10 +53,8 @@ rt_hw_context_switch:
     //restore to thread context
     LOAD sp, (a1)
 
-#ifdef RT_USING_SMP
     mv   a0, a2
     call  rt_cpus_lock_status_restore
-#endif /*RT_USING_SMP*/
 
     RESTORE_ALL
     mret

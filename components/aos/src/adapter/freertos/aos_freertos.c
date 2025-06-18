@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+#include <errno.h>
 #include <string.h>
 #include <stdlib.h>
 #include <sys/time.h>
@@ -44,6 +45,9 @@
 static aos_task_key_t used_bitmap;
 static long long start_time_ms = 0;
 
+int _aos_task_new_ext(aos_task_t *task, const char *name, void (*fn)(void *), void *arg,
+                      void *stack_start, int stack_size, int prio, uint32_t options, int cpuid);
+
 // weak hook
 __attribute__((weak)) void aos_task_create_hook_lwip_thread_sem(aos_task_t *task)
 {
@@ -52,7 +56,7 @@ __attribute__((weak)) void aos_task_create_hook_lwip_thread_sem(aos_task_t *task
 
 __attribute__((weak)) void aos_task_del_hook_lwip_thread_sem(aos_task_t *task, void *arg)
 {
-    
+
 }
 
 void vApplicationMallocFailedHook( void )
@@ -60,10 +64,10 @@ void vApplicationMallocFailedHook( void )
     // do not assert
 }
 
-volatile int g_intrpt_nested_cnt;
+volatile int g_intrpt_nested_cnt[configNUMBER_OF_CORES] = {0};
 static inline bool is_in_intrp(void)
 {
-    return g_intrpt_nested_cnt > 0;
+    return g_intrpt_nested_cnt[aos_get_cur_cpu_id()] > 0;
 }
 
 void aos_reboot_ext(int cmd)
@@ -201,6 +205,122 @@ int aos_task_new(const char *name, void (*fn)(void *), void *arg,
     return aos_task_new_ext(&task,name,fn,arg,stack_size,AOS_DEFAULT_APP_PRI);
 }
 
+aos_status_t aos_task_create_ext(aos_task_t *task, const char *name, void (*fn)(void *),
+                     void *arg,void *stack_buf, size_t stack_size, int32_t prio, uint32_t options, uint32_t cpuid)
+{
+    int ret;
+
+    if (task == NULL)
+    {
+        return -EINVAL;
+    }
+
+    ret = _aos_task_new_ext(task, name, fn, arg, stack_buf, stack_size, prio, options, cpuid);
+    if (ret != 0)
+    {
+        return ret;
+    }
+
+    return 0;
+}
+
+int _aos_task_new_ext(aos_task_t *task, const char *name, void (*fn)(void *), void *arg,
+                      void *stack_start, int stack_size, int prio, uint32_t options, int cpuid)
+{
+    TaskHandle_t xHandle;
+
+    aos_check_return_einval(task && fn && (stack_size > AOS_MIN_STACK_SIZE) &&
+                            (prio >= 0 && prio < configMAX_PRIORITIES ));
+
+    if (name == NULL)
+    {
+        return -EFAULT;
+    }
+
+    if (stack_start) {
+        StaticTask_t *pxTaskBuffer = pvPortMalloc(sizeof(StaticTask_t));
+        if (pxTaskBuffer == NULL)
+            goto failure;
+        xHandle = xTaskCreateStatic(
+            fn,
+            name,
+            stack_size,
+            arg,
+            prio,
+            (StackType_t*)stack_start,
+            pxTaskBuffer
+        );
+        if (xHandle == NULL) {
+            vPortFree(pxTaskBuffer);
+            goto failure;
+        }
+    } else {
+#if defined(CSK_CPU_STACK_EXTRAL)
+        stack_size += CSK_CPU_STACK_EXTRAL;
+#endif
+        (void) xTaskCreate(
+            fn,
+            name,
+            stack_size,
+            arg,
+            prio,
+            &xHandle
+        );
+    }
+
+    if (xHandle != NULL)
+    {
+        *task = xHandle;
+#if defined(CONFIG_SMP) && CONFIG_SMP
+        if (cpuid != -1) {
+            UBaseType_t uxCoreAffinityMask = (1 << cpuid);
+            vTaskCoreAffinitySet(xHandle, uxCoreAffinityMask);
+        }
+#endif
+        if (options == AOS_TASK_NONE)
+        {
+            vTaskSuspend(xHandle);
+        }
+        else if (options == AOS_TASK_AUTORUN)
+        {
+            // Task is ready to run immediately, nothing to do
+        }
+        return 0;
+    }
+
+failure:
+    *task = 0;
+    return -EPERM;
+}
+
+#if CONFIG_SMP
+void aos_secondary_cpu_up(void)
+{
+    SecondaryCoresUp();
+}
+#endif
+
+void aos_spin_lock_init(aos_spinlock_t *lock)
+{
+    configASSERT(lock != NULL && sizeof(aos_spinlock_t) >= sizeof(SemaphoreHandle_t));
+    *((SemaphoreHandle_t*)lock) = xSemaphoreCreateMutex();
+}
+
+void aos_spin_lock(aos_spinlock_t *lock)
+{
+    configASSERT(xSemaphoreTake(*((SemaphoreHandle_t*)lock), portMAX_DELAY) == pdTRUE);
+}
+
+void aos_spin_unlock(aos_spinlock_t *lock)
+{
+    configASSERT(xSemaphoreGive(*((SemaphoreHandle_t*)lock)) == pdTRUE);
+}
+
+int aos_get_cur_cpu_id()
+{
+    return portGET_CORE_ID();
+}
+
 int aos_task_new_ext(aos_task_t *task, const char *name, void (*fn)(void *), void *arg,
                      int stack_size, int prio)
 {
@@ -298,7 +418,7 @@ void aos_task_show_info(void)
         else
             printf("%-7d", pTaskStatus->eCurrentState);
 
-        printf(" %-13d \n",pTaskStatus->usStackHighWaterMark);
+        printf(" %-13ld \n",(unsigned long)pTaskStatus->usStackHighWaterMark);
         pTaskStatus++;
     }
 
@@ -970,7 +1090,7 @@ void *aos_zalloc(size_t size)
 {
     void* ptr = pvPortMalloc(size);
     if(ptr) {
-        bzero(ptr,size);
+        memset(ptr, 0, size);
     }
     return ptr;
 }
@@ -1393,18 +1513,21 @@ uint64_t aos_kernel_ms2tick(uint64_t ms)
 
 int aos_kernel_intrpt_enter(void)
 {
-    g_intrpt_nested_cnt ++;
+    g_intrpt_nested_cnt[aos_get_cur_cpu_id()] ++;
     return 0;
 }
 
 int aos_kernel_intrpt_exit(void)
 {
-    g_intrpt_nested_cnt --;
+    g_intrpt_nested_cnt[aos_get_cur_cpu_id()] --;
+#ifndef CONFIG_SMP
+    // in SMP, this function cannot be called in ISR
     BaseType_t state = xTaskGetSchedulerState();
     if (state == taskSCHEDULER_RUNNING)
         portYIELD_FROM_ISR(pdTRUE);
     else
         portYIELD_FROM_ISR(pdFALSE);
+#endif
     return 0;
 }
 

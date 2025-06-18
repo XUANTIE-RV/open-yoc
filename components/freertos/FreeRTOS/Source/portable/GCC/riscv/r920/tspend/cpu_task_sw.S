@@ -18,6 +18,10 @@
 
 #include <csi_config.h>
 #include <riscv_csr.h>
+#include <FreeRTOSConfig.h>
+#if CONFIG_CALCULATE_MSIC_TRIGGER
+#include <misc_calculate.h>
+#endif
 
 #ifdef CONFIG_VIC_TSPDR
 #define VIC_TSPDR CONFIG_VIC_TSPDR
@@ -35,7 +39,11 @@
 .global vPortStartTask
 .global Mtspend_Handler
 .global Stspend_Handler
+#if configNUMBER_OF_CORES > 1
+.extern pxCurrentTCBs
+#else
 .extern pxCurrentTCB
+#endif
 .extern vTaskSwitchContext
 .extern g_top_irqstack
 
@@ -72,6 +80,7 @@ cpu_intrpt_restore:
     csrw MODE_PREFIX(status), a0
     ret
 
+#if CONFIG_CHECK_FPU_DIRTY || CONFIG_CHECK_VECTOR_DIRTY
 .macro FREERTOS_RESTORE_MSTATUS
     li       t1, 0
 
@@ -100,11 +109,11 @@ cpu_intrpt_restore:
     addi     t1, t1, (128 - 4)
 #endif /* __riscv_xlen */
 
-    add      sp, sp, t1
-    load_x   t3, (0)(sp)
+    add      t1, sp, t1
+    load_x   t3, (0)(t1)
     csrw     mstatus, t3
-    sub      sp, sp, t1
 .endm
+#endif /* CONFIG_CHECK_FPU_DIRTY || CONFIG_CHECK_VECTOR_DIRTY */
 
 /********************************************************************
  * Functions: vPortYield
@@ -113,7 +122,10 @@ cpu_intrpt_restore:
 .global vPortYield
 .type   vPortYield, %function
 vPortYield:
+    csrr    t2, mhartid
+    slli    t2, t2, 2
     li      t0, RISCV_VIC_TSPDR
+    add     t0, t0, t2
     li      t2, 0x1
     sw      t2, 0(t0)
 
@@ -131,6 +143,7 @@ __loop:
     add     t2, t3, t1
     beqz    t2, __loop
     ret
+    .size vPortYield, . - vPortYield
 
 
 .align 8
@@ -140,6 +153,9 @@ vPortStartTask:
 .align 8
 Stspend_Handler:
 Mtspend_Handler:
+#if CONFIG_CALCULATE_MSIC_TRIGGER
+    MISC_CALCULATE_TIME
+#endif
     addi    sp, sp, -(128+128)
     sd      x1,  (0  +0  )(sp)
     sd      x3,  (4  +4  )(sp)
@@ -180,7 +196,7 @@ Mtspend_Handler:
 #else
     csrr    t0, MODE_PREFIX(status)
     sd      t0, (124+124)(sp)
-#endif /* CONFIG_CHECK_FPU_DIRTY, CONFIG_CHECK_VECTOR_DIRTY */
+#endif /* CONFIG_CHECK_FPU_DIRTY || CONFIG_CHECK_VECTOR_DIRTY */
 
 #ifdef __riscv_flen
 #if CONFIG_CHECK_FPU_DIRTY
@@ -239,7 +255,7 @@ Mtspend_Handler:
     li      t1, SR_VS_DIRTY
     and     t4, t3, t1
     bne     t4, t1, 3f
-#endif
+#endif /* CONFIG_CHECK_VECTOR_DIRTY */
 
     addi    sp, sp, -(20+20)
     csrr    t0, vl
@@ -289,25 +305,52 @@ Mtspend_Handler:
 #endif /* CONFIG_CHECK_VECTOR_DIRTY */
 #endif /*__riscv_vector*/
 
+#if configNUMBER_OF_CORES > 1
+    la       a1, pxCurrentTCBs
+    csrr     a0, mhartid
+    li       t1, (__riscv_xlen / 8)
+    mul      t0, a0, t1
+    add      a1, a1, t0
+    ld       a1, (a1)
+    sd       sp, (a1)
+
+    jal      xPortTaskSwitch
+#else
     la      a1, pxCurrentTCB
     ld      a1, (a1)
     sd      sp, (a1)
 
     jal     vTaskSwitchContext
+#endif /* configNUMBER_OF_CORES > 1 */
 
 __vPortFistTask:
+#if configNUMBER_OF_CORES > 1
+    la      a1, pxCurrentTCBs
+    csrr    t0, mhartid
+    li      t1, (__riscv_xlen / 8)
+    mul     t0, t0, t1
+    add     a1, a1, t0
+
+#else  /* configNUMBER_OF_CORES > 1 */
     la      a1, pxCurrentTCB
+#endif   /* configNUMBER_OF_CORES > 1 */
     ld      a1, (a1)
     ld      sp, (a1)
 
-#if CONFIG_CHECK_VECTOR_DIRTY || CONFIG_CHECK_FPU_DIRTY
+#if CONFIG_CHECK_FPU_DIRTY || CONFIG_CHECK_VECTOR_DIRTY
     FREERTOS_RESTORE_MSTATUS
 #endif
 
+/* when using SMP, pending bit shoudn't be cleared here */
+#if configNUMBER_OF_CORES == 1
     /*clear software interrupt*/
     li      t0, (RISCV_VIC_TSPDR)
+    csrr    t2, mhartid
+    slli    t2, t2, 2
+    add     t0, t0, t2
     li      t2, 0x0
     sw      t2, 0(t0)
+#endif
 
 #ifdef __riscv_vector
 #if CONFIG_CHECK_VECTOR_DIRTY
@@ -350,13 +393,13 @@ __vPortFistTask:
     csrw    vxrm, t2
     addi    sp, sp, (20+20)
 #if CONFIG_CHECK_VECTOR_DIRTY
-    j        14f
+    j       14f
 13:
     /* don't restore, move sp only */
-    addi     sp, sp, (20+20)
-    csrr     t0, vlenb
-    slli     t0, t0, 5
-    add      sp, sp, t0
+    addi    sp, sp, (20+20)
+    csrr    t0, vlenb
+    slli    t0, t0, 5
+    add     sp, sp, t0
 14:
 #endif /* CONFIG_CHECK_VECTOR_DIRTY */
 #endif /*__riscv_vector*/
@@ -366,7 +409,7 @@ __vPortFistTask:
     li       t1, SR_FS_DIRTY
     and      t4, t3, t1
     bne      t4, t1, 15f
-#endif /* CONFIG_CHECK_FPU_DIRTY */
+#endif
 
     fld      f31,( 0 + 0 )(sp)
     fld      f30,( 4 + 4 )(sp)
@@ -416,7 +459,7 @@ __vPortFistTask:
 #if (!CONFIG_CHECK_FPU_DIRTY) && (!CONFIG_CHECK_VECTOR_DIRTY)
     ld      t0, (124 +124)(sp)
     csrw    MODE_PREFIX(status), t0
-#endif /* (!CONFIG_CHECK_FPU_DIRTY) && (!CONFIG_CHECK_VECTOR_DIRTY) */
+#endif
 
     ld      t0, (120 +120)(sp)
     csrw    MODE_PREFIX(epc), t0

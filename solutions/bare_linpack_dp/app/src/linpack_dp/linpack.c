@@ -718,29 +718,19 @@ return clock()/1.0e6;
 #endif
 
 //typedef	unsigned int u_int32_t;
-typedef union
-{
-  double value;
-  struct
-  {
-    u_int32_t msw;
-    u_int32_t lsw;
-  } parts;
-  uint64_t word;
-} ieee_double_shape_type_e;
 
 void benchmark_linpack_dp_main()
 {
-	static REAL aa[100][100],a[100][101],b[100],x[100];
+	static REAL aa[200][200],a[200][201],b[200],x[200];
 	REAL cray,ops,total,norma,normx;
 	REAL resid,residn,eps,t1,tm,tm2;
 	REAL epslon(),second(),kf;
-	static int ipvt[100],n,i,ntimes,info,lda,ldaa,kflops;
+	static int ipvt[200],n,i,ntimes,info,lda,ldaa,kflops;
 
-	lda = 101;
-	ldaa = 100;
+	lda = 201;
+	ldaa = 200;
 	cray = .056; 
-	n = 100;
+	n = 200;
 
 	fprintf(stdout,ROLLING);fprintf(stdout,PREC);fprintf(stdout,"Precision Linpack\n\n");
 	fprintf(stderr,ROLLING);fprintf(stderr,PREC);fprintf(stderr,"Precision Linpack\n\n");
@@ -930,5 +920,5 @@ void benchmark_linpack_dp_main()
 	fprintf(stderr,ROLLING);fprintf(stderr,PREC);
 	fprintf(stderr," Precision %5d Kflops ; %d Reps \n",kflops,NTIMES);
 
-        printf("bare_linpack_dp runs success!\n");
+	printf("bare_linpack_dp runs success!\n");
 }

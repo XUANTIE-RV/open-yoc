@@ -126,6 +126,7 @@ struct csi_dev {
 #endif
 };
 
+#define DEV_IDX_INVALID             0xFFFFU
 #define HANDLE_REG_BASE(handle)     (handle->dev.reg_base)
 #define HANDLE_IRQ_NUM(handle)      (handle->dev.irq_num)
 #define HANDLE_DEV_IDX(handle)      (handle->dev.idx)
@@ -140,6 +141,8 @@ typedef struct {
 
 csi_error_t target_get(csi_dev_tag_t dev_tag, uint32_t idx, csi_dev_t *dev);
 csi_error_t target_get_optimal_dma_channel(void *dma_list, uint32_t ctrl_num, csi_dev_t *parent_dev, void *ch_info);
+csi_error_t target_get_check_dma_access(uint32_t ctrl_idx, void *srcaddr, void *dstaddr, void **dma_base_src_addr, void **dma_base_dst_addr);
+csi_error_t target_get_dma_handshake(uint16_t dma_id, uint16_t dev_id, uint16_t dev_tag, uint8_t type, uint16_t *handshake);
 void mdelay(uint32_t ms);
 void udelay(uint32_t us);
 

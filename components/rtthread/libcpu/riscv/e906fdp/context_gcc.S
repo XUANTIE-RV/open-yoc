@@ -52,7 +52,6 @@ _reswitch:
     or    t1, t1, t2
     sb    t1, (t0)
 
-    /* FIXME: trriger soft-irq quickly */
     fence
     nop
     nop

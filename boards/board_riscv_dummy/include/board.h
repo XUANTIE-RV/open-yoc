@@ -358,6 +358,8 @@ extern "C" {
 #define EXAMPLE_ADC_CH12      0 // PA26
 #define EXAMPLE_ADC_CH12_FUNC 0 // PA26_ADC_A12
 
+#define EXAMPLE_TIMER_IDX     0
+
 /****************************************************************************/
 // Vendor board defines
 

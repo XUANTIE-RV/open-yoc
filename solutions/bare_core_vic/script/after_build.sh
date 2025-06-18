@@ -2,8 +2,12 @@
 
 echo "after build !!!!!!!"
 
-if [ "${CDK_VERSION}" == '' ];then
-    exit
+if [ -z "${CDK_VERSION}" ];then
+    SOLUTION_PATH=$1
+    BOARD_PATH=$2
+    CHIP_PATH=$3
+else
+    echo CDK_Version: ${CDK_VERSION}
 fi
 
 if [ ! -d  "${SOLUTION_PATH}" ];then
@@ -17,15 +21,20 @@ if [ ! -d  "${CHIP_PATH}" ];then
 fi
 PLATFORM=$4
 CPU=$5
+OBJCOPY=$6
+OBJDUMP=$7
 
 # echo $SOLUTION_PATH
 # echo $BOARD_PATH
 # echo $CHIP_PATH
 # echo $PLATFORM
 # echo $CPU
+# echo $OBJCOPY
+# echo $OBJDUMP
 
-echo CDK_Version: ${CDK_VERSION}
+echo Solution Path: ${SOLUTION_PATH}
 echo Board Path: ${BOARD_PATH}
+echo Chip Path: ${CHIP_PATH}
 
 if [ ! -d  "${BOARD_PATH}" ];then
     echo "Boards missing!!!!!!!"
@@ -35,7 +44,7 @@ fi
 AFTER_BUILD="${BOARD_PATH}/script/aft_build.sh"
 
 if [ -f  "${AFTER_BUILD}" ];then
-    sh "${AFTER_BUILD}" $SOLUTION_PATH $BOARD_PATH $CHIP_PATH $PLATFORM $CPU
+    sh "${AFTER_BUILD}" $SOLUTION_PATH $BOARD_PATH $CHIP_PATH $PLATFORM $CPU $OBJCOPY $OBJDUMP
 fi
 
 

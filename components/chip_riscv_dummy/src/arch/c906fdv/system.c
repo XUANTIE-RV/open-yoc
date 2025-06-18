@@ -171,15 +171,15 @@ static void interrupt_init(void)
 {
     int i;
 
-    for (i = 0; i < CONFIG_IRQ_NUM; i++) {
+    for (i = 0; i < CONFIG_IRQ_NUM - 1; i++) {
         PLIC->PLIC_PRIO[i] = 31;
     }
 
-    for (i = 0; i < (CONFIG_IRQ_NUM + 32) / 32; i++) {
+    for (i = 0; i < (CONFIG_IRQ_NUM + 31) / 32; i++) {
         PLIC->PLIC_IP[i] = 0;
     }
 
-    for (i = 0; i < (CONFIG_IRQ_NUM + 32) / 32; i++) {
+    for (i = 0; i < (CONFIG_IRQ_NUM + 31) / 32; i++) {
         PLIC->PLIC_H0_MIE[i] = 0;
         PLIC->PLIC_H0_SIE[i] = 0;
     }
@@ -229,6 +229,9 @@ static void cache_init(void)
   */
 void SystemInit(void)
 {
+    extern int cpu_features_init(void);
+    cpu_features_init();
+
     /* enable theadisaee & MM */
     unsigned long status = __get_MXSTATUS();
     status |= (1 << 22 | 1 << 15);

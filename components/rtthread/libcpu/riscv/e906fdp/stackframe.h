@@ -104,13 +104,9 @@
     STORE x31, 30 * REGBYTES(sp)
     csrr  x1, mepc
     STORE x1,   31 * REGBYTES(sp)
-#if CONFIG_CHECK_FPU_DIRTY
     csrr  t3, mstatus
     STORE t3,   32 * REGBYTES(sp)
-#else
-    csrr  x1, mstatus
-    STORE x1,   32 * REGBYTES(sp)
-#endif
+
 
 #if defined(__riscv_flen) && defined(ENABLE_FPU)
 #if CONFIG_CHECK_FPU_DIRTY

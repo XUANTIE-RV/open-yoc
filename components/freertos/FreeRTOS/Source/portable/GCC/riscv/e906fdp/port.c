@@ -42,15 +42,11 @@ StackType_t *pxPortInitialiseStack( StackType_t *pxTopOfStack, TaskFunction_t px
     extern int __global_pointer$;
     StackType_t *stk  = NULL;
     uint32_t temp = (uint32_t)pxTopOfStack;
-#if CONFIG_CHECK_FPU_DIRTY
     uint32_t status = __get_MSTATUS();
-#endif
 
     temp &= 0xFFFFFFF8UL;
     stk = (StackType_t *)temp;
-#if CONFIG_CHECK_FPU_DIRTY
     *(--stk)  = (uint32_t)status;
-#endif
     *(--stk)  = (uint32_t)pxCode;            /* Entry Point */
     *(--stk)  = (uint32_t)0x31313131L;       /* X31         */
     *(--stk)  = (uint32_t)0x30303030L;       /* X30         */
@@ -75,7 +71,7 @@ StackType_t *pxPortInitialiseStack( StackType_t *pxTopOfStack, TaskFunction_t px
     *(--stk)  = (uint32_t)0x11111111L;       /* X11         */
     *(--stk)  = (uint32_t)pvParameters;      /* X10         */
     *(--stk)  = (uint32_t)0x09090909L;       /* X9          */
-    *(--stk)  = (uint32_t)0x08080808L;       /* X8          */
+    *(--stk)  = (uint32_t)pxTopOfStack;      /* X8, aka. fp */
     *(--stk)  = (uint32_t)0x07070707L;       /* X7          */
     *(--stk)  = (uint32_t)0x06060606L;       /* X6          */
     *(--stk)  = (uint32_t)0x05050505L;       /* X5          */

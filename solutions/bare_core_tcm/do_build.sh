@@ -72,35 +72,4 @@ rtos=bare
 check_cpu $cpu_name
 check_board $board
 
-if [ "$board" == 'wujian300' ]; then
-	SDK_COMP=../../components/sdk_chip_wujian300
-	CHIP_COMP=../../components/chip_wujian300
-	BOARD_COMP=../../boards/board_wujian300_evb
-	SDK_CHIP=sdk_chip_wujian300
-else
-	SDK_COMP=../../components/sdk_chip_riscv_dummy
-	CHIP_COMP=../../components/chip_riscv_dummy
-	BOARD_COMP=../../boards/board_riscv_dummy
-	SDK_CHIP=sdk_chip_riscv_dummy
-fi
-
-cp $SDK_COMP/package.yaml $SDK_COMP/package.yaml.bak
-cp $CHIP_COMP/package.yaml $CHIP_COMP/package.yaml.bak
-cp $BOARD_COMP/package.yaml $BOARD_COMP/package.yaml.bak
-
-cp $SDK_COMP/package.yaml.$rtos $SDK_COMP/package.yaml
-cp $CHIP_COMP/package.yaml.$cpu_name $CHIP_COMP/package.yaml
-cp $BOARD_COMP/package.yaml.$board $BOARD_COMP/package.yaml
-
-cp ./package.yaml ./package.yaml.bak
-cp ./package.yaml.$board ./package.yaml
-
-#echo "===start to compile==="
-make SDK=$SDK_CHIP || exit 1
-#echo "===compile done!!!==="
-
-mv ./package.yaml.bak ./package.yaml
-mv $SDK_COMP/package.yaml.bak $SDK_COMP/package.yaml
-mv $CHIP_COMP/package.yaml.bak $CHIP_COMP/package.yaml
-mv $BOARD_COMP/package.yaml.bak $BOARD_COMP/package.yaml
-
+make -j${nproc} cpu=$1 board=$2 rtos="" toolchain=gcc

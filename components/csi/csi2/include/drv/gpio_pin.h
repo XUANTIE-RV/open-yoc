@@ -27,11 +27,12 @@
 #ifndef _DRV_GPIO_PIN_H_
 #define _DRV_GPIO_PIN_H_
 
+#include <soc.h>
+#include <csi_core.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include <drv/common.h>
 #include <drv/gpio.h>
-#include <soc.h>
 
 #ifdef __cplusplus
 extern "C" {

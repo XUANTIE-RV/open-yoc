@@ -28,8 +28,10 @@
 #define _DRV_BAUD_CALC_H_
 
 #include <stdint.h>
-#include <drv/common.h>
 #include <soc.h>
+#include <csi_core.h>
+#include <drv/common.h>
+
 
 #ifdef __cplusplus
 extern "C" {

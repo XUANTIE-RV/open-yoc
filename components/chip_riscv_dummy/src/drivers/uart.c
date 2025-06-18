@@ -215,7 +215,7 @@ void csi_uart_uninit(csi_uart_t *uart)
     csi_irq_detach((uint32_t)(uart->dev.irq_num));
 }
 
-ATTRIBUTE_DATA csi_error_t csi_uart_baud(csi_uart_t *uart, uint32_t baud)
+csi_error_t csi_uart_baud(csi_uart_t *uart, uint32_t baud)
 {
     CSI_PARAM_CHK(uart, CSI_ERROR);
 
@@ -370,7 +370,7 @@ void csi_uart_putc(csi_uart_t *uart, uint8_t ch)
     }
 }
 
-ATTRIBUTE_DATA uint8_t csi_uart_getc(csi_uart_t *uart)
+uint8_t csi_uart_getc(csi_uart_t *uart)
 {
     CSI_PARAM_CHK(uart, 0U);
 

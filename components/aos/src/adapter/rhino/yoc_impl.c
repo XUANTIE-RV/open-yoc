@@ -21,8 +21,8 @@
 #include <drv/timer.h>
 
 /* auto define heap size */
-extern size_t __heap_start;
-extern size_t __heap_end;
+extern size_t g_heap_start;
+extern size_t g_heap_end;
 
 #ifndef RHINO_CONFIG_STD_MALLOC
 static k_mm_region_head_t hobbit_mm_region_head;
@@ -48,9 +48,17 @@ __attribute__((weak)) lr_timer_t soc_lr_hw_cnt_get(void)
 
 /* auto define heap size */
 __attribute__((weak)) k_mm_region_t g_mm_region[] = {
-    {(uint8_t *)&__heap_start, (size_t)0},
+    {(uint8_t *)NULL, (size_t)0},
 };
-__attribute__((weak)) int g_region_num  = sizeof(g_mm_region)/sizeof(k_mm_region_t);
+
+__attribute__((weak)) int g_region_num = 0;
+
+__attribute__((weak)) void soc_mm_region_init(void)
+{
+    g_mm_region[0].start = (uint8_t *)g_heap_start;
+    g_mm_region[0].len = 0;
+    g_region_num = sizeof(g_mm_region)/sizeof(k_mm_region_t);
+}
 
 #if (RHINO_CONFIG_INTRPT_GUARD > 0)
 void soc_intrpt_guard(void)

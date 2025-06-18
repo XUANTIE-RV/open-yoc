@@ -18,6 +18,10 @@
 
 #include <csi_config.h>
 #include <riscv_csr.h>
+#include <FreeRTOSConfig.h>
+#if CONFIG_CALCULATE_MSIC_TRIGGER
+#include <misc_calculate.h>
+#endif
 
 #ifdef CONFIG_VIC_TSPDR
 #define VIC_TSPDR CONFIG_VIC_TSPDR
@@ -35,7 +39,11 @@
 .global vPortStartTask
 .global Mtspend_Handler
 .global Stspend_Handler
+#if configNUMBER_OF_CORES > 1
+.extern pxCurrentTCBs
+#else
 .extern pxCurrentTCB
+#endif
 .extern vTaskSwitchContext
 .extern g_top_irqstack
 
@@ -111,10 +119,9 @@ cpu_intrpt_restore:
     addi     t1, t1, (128 - 4)
 #endif /* __riscv_xlen */
 
-    add      sp, sp, t1
-    load_x   t3, (0)(sp)
+    add      t1, sp, t1
+    load_x   t3, (0)(t1)
     csrw     mstatus, t3
-    sub      sp, sp, t1
 .endm
 #endif /* CONFIG_CHECK_FPU_DIRTY || CONFIG_CHECK_VECTOR_DIRTY || CONFIG_CHECK_MATRIX_DIRTY */
 
@@ -125,7 +132,10 @@ cpu_intrpt_restore:
 .global vPortYield
 .type   vPortYield, %function
 vPortYield:
+    csrr     t2, mhartid
+    slli     t2, t2, 2
     li       t0, RISCV_VIC_TSPDR
+    add      t0, t0, t2
     li       t2, 0x1
     sw       t2, 0(t0)
 
@@ -152,6 +162,9 @@ vPortStartTask:
 .align 8
 Stspend_Handler:
 Mtspend_Handler:
+#if CONFIG_CALCULATE_MSIC_TRIGGER
+    MISC_CALCULATE_TIME
+#endif
 #if __riscv_xlen == 64
     addi     sp, sp, -(128+128)
     store_x  x1,  (0  +0  )(sp)
@@ -416,14 +429,34 @@ Mtspend_Handler:
 #endif /* CONFIG_CHECK_MATRIX_DIRTY */
 #endif /* __riscv_matrix || __riscv_xtheadmatrix */
 
+#if configNUMBER_OF_CORES > 1
+    la       a1, pxCurrentTCBs
+    csrr     a0, mhartid
+    li       t1, (__riscv_xlen / 8)
+    mul      t0, a0, t1
+    add      a1, a1, t0
+    load_x   a1, (a1)
+    store_x  sp, (a1)
+
+    jal      xPortTaskSwitch
+#else
     la       a1, pxCurrentTCB
     load_x   a1, (a1)
     store_x  sp, (a1)
 
     jal      vTaskSwitchContext
+#endif
 
 __vPortFistTask:
+#if configNUMBER_OF_CORES > 1
+    la       a1, pxCurrentTCBs
+    csrr     t0, mhartid
+    li       t1, (__riscv_xlen / 8)
+    mul      t0, t0, t1
+    add      a1, a1, t0
+#else
     la       a1, pxCurrentTCB
+#endif
     load_x   a1, (a1)
     load_x   sp, (a1)
 
@@ -431,10 +464,15 @@ __vPortFistTask:
     FREERTOS_RESTORE_MSTATUS
 #endif
 
+/* when using SMP, pending bit shoudn't be cleared here */
+#if configNUMBER_OF_CORES == 1
     /*clear software interrupt*/
     li       t0, (RISCV_VIC_TSPDR)
-    li       t2, 0x0
+    csrr     t2, mhartid
+    slli     t2, t2, 2
+    add      t0, t0, t2
     sw       t2, 0(t0)
+#endif
 
 #if __riscv_matrix || __riscv_xtheadmatrix
 #if CONFIG_CHECK_MATRIX_DIRTY

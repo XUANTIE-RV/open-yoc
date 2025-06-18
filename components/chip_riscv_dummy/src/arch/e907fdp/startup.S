@@ -112,7 +112,6 @@ __Vectors:
 
     .size   __Vectors, . - __Vectors
 
-    .globl   Reset_Handler
     .text
     .align   2
     j        Reset_Handler
@@ -122,8 +121,8 @@ __Vectors:
     .align   2
 _start:
     .text
-    .long    Reset_Handler
     .align  2
+    .global Reset_Handler
     .type   Reset_Handler, %function
 Reset_Handler:
 .option push

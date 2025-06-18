@@ -32,6 +32,7 @@
 
 #include <drv/common.h>
 #include <drv/dma.h>
+#include <csi_core.h>
 
 #ifdef __cplusplus
 extern "C" {

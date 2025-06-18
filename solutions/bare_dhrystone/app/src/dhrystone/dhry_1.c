@@ -18,8 +18,8 @@
 #include "dhry.h"
 #include <stdlib.h>
 #include <string.h>
-#include <soc.h>
 #include <drv/tick.h>
+#include <drv/porting.h>
 #include "time.h"
 
 extern int32_t drv_get_cpu_id(void);
@@ -301,7 +301,7 @@ void benchmark_dhry_main(void)
     printf ("Dhrystones per Second:                      ");
     printf ("%6.1f \n", Dhrystones_Per_Second);
     printf ("Score (DMIPS/MHz):                          %6.2f\n",
-            Dhrystones_Per_Second / 1757 / (soc_get_cpu_freq(0) / 1000000));
+            Dhrystones_Per_Second / 1757 / ((float)soc_get_cpu_freq(0) / 1000000));
     printf ("\n");
     printf("bare_dhrystone runs success!\n");
   }

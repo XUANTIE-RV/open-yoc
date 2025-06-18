@@ -6,8 +6,4 @@ set *0x0 = 0x6f
 monitor nreset halt
 ###########################
 
-set $mhcr = 0x103f
-set $mhint = 0x600c
-set $mxstatus = 0x440800
-
 lo

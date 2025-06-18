@@ -4,20 +4,22 @@
 
 该示例使用三方semihost库，包含semihost_printf、semihost_write等打印/文件读写接口。
 
-注意：该示例运行依赖玄铁DebugServer调试工具。
-
 # 基于Linux编译运行
 
 ## 编译
 
+GCC使用以下命令编译：
 ```bash
 ./do_build.sh <cpu> <platform>
 ```
+LLVM使用以下命令编译：
+```bash
+./do_build_llvm.sh <cpu> <platform>
+```
+
+`cpu`和`platform`支持列表：
 - cpu: <br />
-        e902 e902m e902t e902mt e906 e906f e906fd e906p e906fp e906fdp e907 e907f e907fd e907p e907fp e907fdp <br />
-        r910 r920 r908 r908fd r908fdv r908-cp r908fd-cp r908fdv-cp <br />
-        c906 c906fd c906fdv c908 c908v c908i c910v2 c910v3 c910v3-cp c920v2 c920v3 c920v3-cp <br />
-        c907 c907fd c907fdv c907fdvm c907-rv32 c907fd-rv32 c907fdv-rv32 c907fdvm-rv32
+        `smartl/xiaohui`平台的cpu参考 [`components/xuantie_cpu_sdk/xt_rtos_sdk.csv`](../../components/xuantie_cpu_sdk/xt_rtos_sdk.csv) 的 `cpu_list`
 - platform: <br />
         smartl xiaohui
 
@@ -28,7 +30,19 @@
 
 ## 运行
 
-示例仅支持FPGA平台运行。
+示例可以基于玄铁QEMU或FPGA平台运行。
+
+### 基于玄铁QEMU运行
+
+```bash
+# qemu需要添加参数 -semihosting 以支持semihost功能。
+qemu-system-riscv32 -machine smartl -cpu e907fdp -nographic -semihosting -kernel yoc.elf
+```
+
+#### 终端退出qemu
+
+1. 先Ctrl+a
+2. 松开所有按键， 紧接着再按下x键
 
 ### 基于FPGA平台运行
 
@@ -65,9 +79,7 @@ bare_semihost2 demo runs successfully!
 
 1、Linux平台下基础环境搭建请参考《玄铁RTOS SDK用户手册》
 
-2、如果出现无法编译情况，请使用`sudo pip install yoctools -U`更新最新版本的yoctools再做尝试。
+2、玄铁exx系列cpu仅支持smartl平台，cxx/rxx系列cpu仅支持xiaohui平台。
 
-3、玄铁exx系列cpu仅支持smartl平台，cxx/rxx系列cpu仅支持xiaohui平台。
-
-4、某些示例跟硬件特性相关，QEMU中相关功能可能未模拟，只能在相应FPGA硬件平台上运行。
+3、某些示例跟硬件特性相关，QEMU中相关功能可能未模拟，只能在相应FPGA硬件平台上运行。
 

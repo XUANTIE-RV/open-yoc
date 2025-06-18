@@ -72,45 +72,4 @@ rtos=bare
 check_cpu $cpu_name
 check_board $board
 
-if [ "$board" == 'wujian300' ]; then
-	SDK_COMP=../../components/sdk_chip_wujian300
-	CHIP_COMP=../../components/chip_wujian300
-	BOARD_COMP=../../boards/board_wujian300_evb
-	SDK_CHIP=sdk_chip_wujian300
-else
-	SDK_COMP=../../components/sdk_chip_riscv_dummy
-	CHIP_COMP=../../components/chip_riscv_dummy
-	BOARD_COMP=../../boards/board_riscv_dummy
-	SDK_CHIP=sdk_chip_riscv_dummy
-fi
-
-################################################
-IS_V210XX_TOOLCHAIN=0
-if riscv64-unknown-elf-gcc -v 2>&1 | grep -q "Xuantie-900 elf newlib gcc Toolchain V2.10"; then
-	IS_V210XX_TOOLCHAIN=1
-fi
-################################################
-
-cp $SDK_COMP/package.yaml $SDK_COMP/package.yaml.bak
-cp $CHIP_COMP/package.yaml $CHIP_COMP/package.yaml.bak
-cp $BOARD_COMP/package.yaml $BOARD_COMP/package.yaml.bak
-if [[ $IS_V210XX_TOOLCHAIN == 1 ]];then
-	cp package.yaml package.yaml.bak
-	cp package.yaml.v210x package.yaml
-fi
-
-cp $SDK_COMP/package.yaml.$rtos $SDK_COMP/package.yaml
-cp $CHIP_COMP/package.yaml.$cpu_name $CHIP_COMP/package.yaml
-cp $BOARD_COMP/package.yaml.$board $BOARD_COMP/package.yaml
-
-#echo "===start to compile==="
-make SDK=$SDK_CHIP || exit 1
-#echo "===compile done!!!==="
-
-mv $SDK_COMP/package.yaml.bak $SDK_COMP/package.yaml
-mv $CHIP_COMP/package.yaml.bak $CHIP_COMP/package.yaml
-mv $BOARD_COMP/package.yaml.bak $BOARD_COMP/package.yaml
-if [[ $IS_V210XX_TOOLCHAIN == 1 ]];then
-	mv package.yaml.bak package.yaml
-fi
-
+make -j${nproc} cpu=$1 board=$2 rtos="" toolchain=gcc

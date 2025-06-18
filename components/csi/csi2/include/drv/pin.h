@@ -26,9 +26,10 @@
 #ifndef _DRV_PIN_H_
 #define _DRV_PIN_H_
 
+#include <soc.h>
+#include <csi_core.h>
 #include <drv/common.h>
 #include <drv/gpio.h>
-#include <soc.h>
 
 typedef csi_gpio_mode_t csi_pin_mode_t;
 

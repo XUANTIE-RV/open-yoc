@@ -61,7 +61,7 @@ Scoret_Handler:
     sd      t6, (60+60)(sp)
 
 #if CONFIG_CHECK_FPU_DIRTY || CONFIG_CHECK_VECTOR_DIRTY
-    csrr    t3, sstatus
+    mv      t3, t0
 #endif
     SAVE_FLOAT_REGISTERS
     SAVE_VECTOR_REGISTERS
@@ -136,7 +136,7 @@ Mcoret_Handler:
     sd      t6, (60+60)(sp)
 
 #if CONFIG_CHECK_FPU_DIRTY || CONFIG_CHECK_VECTOR_DIRTY
-    csrr    t3, mstatus
+    mv      t3, t0
 #endif
     SAVE_FLOAT_REGISTERS
     SAVE_VECTOR_REGISTERS
@@ -210,7 +210,7 @@ Sirq_Handler:
     sd      t6, (60+60)(sp)
 
 #if CONFIG_CHECK_FPU_DIRTY || CONFIG_CHECK_VECTOR_DIRTY
-    csrr    t3, sstatus
+    mv      t3, t0
 #endif
     SAVE_FLOAT_REGISTERS
     SAVE_VECTOR_REGISTERS
@@ -288,7 +288,7 @@ Mirq_Handler:
     sd      t6, (60+60)(sp)
 
 #if CONFIG_CHECK_FPU_DIRTY || CONFIG_CHECK_VECTOR_DIRTY
-    csrr    t3, mstatus
+    mv      t3, t0
 #endif
     SAVE_FLOAT_REGISTERS
     SAVE_VECTOR_REGISTERS

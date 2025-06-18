@@ -21,11 +21,12 @@
 #include <csi_core.h>
 #include <drv/timer.h>
 #include "soc.h"
+#include <board.h>
 
-#define TIMER0         0
+#define TIMER0         EXAMPLE_TIMER_IDX
 #define TIMER0_IRQn    TIM0_IRQn
 
-#define TIMER1         1
+#define TIMER1         (EXAMPLE_TIMER_IDX + 1)
 #define TIMER1_IRQn    TIM1_IRQn
 
 #define HI_PRIO   3
@@ -37,7 +38,9 @@
 static csi_timer_t g_tick_timer0;
 static csi_timer_t g_tick_timer1;
 
+#if CONFIG_SUPPORT_IRQ_NESTED
 static volatile int endless_loop_cnt = 0;
+#endif
 static volatile int g_tick_cnt0 = 0;
 static volatile int g_tick_cnt1 = 0;
 
@@ -89,7 +92,8 @@ int example_core_vic()
         goto error;
 
     printf("set timer %d 's interrrupt priority with %d (lower priority).\n", TIMER0, LO_PRIO);
-    csi_vic_set_prio(TIMER0_IRQn, LO_PRIO);
+    // csi_timer_init will get irq_num
+    csi_vic_set_prio(g_tick_timer0.dev.irq_num, LO_PRIO);
 
     ret = csi_timer_init(&g_tick_timer1, TIMER1);
     if (ret == CSI_OK) {
@@ -99,7 +103,8 @@ int example_core_vic()
         goto error;
 
     printf("initialize timer %d, set it's interrupt priority : %d (higher priority).\n", TIMER1, HI_PRIO);
-    csi_vic_set_prio(TIMER1_IRQn, HI_PRIO);
+    // csi_timer_init will get irq_num
+    csi_vic_set_prio(g_tick_timer1.dev.irq_num, HI_PRIO);
 
 #if CONFIG_SUPPORT_IRQ_NESTED
     printf("start reload timer %d with lower interrupt priority, and it will enter an endless loop callback\n", TIMER0);

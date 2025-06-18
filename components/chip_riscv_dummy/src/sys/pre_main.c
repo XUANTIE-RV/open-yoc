@@ -26,6 +26,11 @@
 #include <csi_config.h>
 #include <soc.h>
 
+extern unsigned long __heap_start;
+extern unsigned long __heap_end;
+unsigned long g_heap_start = (unsigned long)&__heap_start;
+unsigned long g_heap_end = (unsigned long)&__heap_end;
+
 extern int main(void);
 /*
  *  The ranges of copy from/to are specified by following symbols

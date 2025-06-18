@@ -22,8 +22,6 @@
 #define CONFIG_NR_CPUS 1
 #endif
 
-.globl  Reset_Handler
-
 .section .vectors
     .align  6
     .globl  __Vectors
@@ -61,8 +59,8 @@ __Vectors:
     .rept    9
     .long    0
     .endr
-    .long    Reset_Handler
 _start:
+    .global Reset_Handler
     .type   Reset_Handler, %function
 Reset_Handler:
 .option push
@@ -86,14 +84,16 @@ Reset_Handler:
     or	    a0, a0,a1
     csrw    mtvec, a0
 
+#if defined(CONFIG_SMP) && CONFIG_SMP
     /* get cpu id */
     csrr a0, mhartid
 
-#if defined(CONFIG_SMP) && CONFIG_SMP
     /* check if hart is within range */
     /* tp: hart id */
     li	t0, CONFIG_NR_CPUS
     bge	a0, t0, hart_out_of_bounds_loop
+#else
+    li  a0, 0
 #endif
 
 #ifdef CONFIG_KERNEL_NONE
@@ -144,7 +144,7 @@ __exit:
 secondary_cpu_entry:
 #if defined(CONFIG_SMP) && CONFIG_SMP
     la a0, secondary_boot_flag
-    ld a0, 0(a0)
+    lw a0, 0(a0)
     li a1, 0xa55a
     beq a0, a1, 1f
 #endif

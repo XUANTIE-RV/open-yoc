@@ -1,0 +1,78 @@
+#!/bin/bash
+
+declare -A key_value_map
+# cpu,cpu_full_name,cpu_macro
+key_value_map=(
+    ["e901-cp"]="e901bm-cp,CONFIG_CPU_XUANTIE_E901_CP"
+    ["e901b-cp"]="e901bm-cp,CONFIG_CPU_XUANTIE_E901_B_CP"
+    ["e901m-cp"]="e901bm-cp,CONFIG_CPU_XUANTIE_E901_M_CP"
+    ["e901bm-cp"]="e901bm-cp,CONFIG_CPU_XUANTIE_E901_BM_CP"
+    ["e901mini-cp"]="e901minibzm-cp,CONFIG_CPU_XUANTIE_E901MINI_CP"
+    ["e901minib-cp"]="e901minibzm-cp,CONFIG_CPU_XUANTIE_E901MINI_B_CP"
+    ["e901minizm-cp"]="e901minibzm-cp,CONFIG_CPU_XUANTIE_E901MINI_ZM_CP"
+    ["e901minibzm-cp"]="e901minibzm-cp,CONFIG_CPU_XUANTIE_E901MINI_BZM_CP"
+    ["e902"]="e902mt,CONFIG_CPU_XUANTIE_E902"
+    ["e902m"]="e902mt,CONFIG_CPU_XUANTIE_E902M"
+    ["e902t"]="e902mt,CONFIG_CPU_XUANTIE_E902T"
+    ["e902mt"]="e902mt,CONFIG_CPU_XUANTIE_E902MT"
+    ["e906"]="e906fdp,CONFIG_CPU_XUANTIE_E906"
+    ["e906f"]="e906fdp,CONFIG_CPU_XUANTIE_E906F"
+    ["e906fd"]="e906fdp,CONFIG_CPU_XUANTIE_E906FD"
+    ["e906p"]="e906fdp,CONFIG_CPU_XUANTIE_E906P"
+    ["e906fp"]="e906fdp,CONFIG_CPU_XUANTIE_E906FP"
+    ["e906fdp"]="e906fdp,CONFIG_CPU_XUANTIE_E906FDP"
+    ["e907"]="e907fdp,CONFIG_CPU_XUANTIE_E907"
+    ["e907f"]="e907fdp,CONFIG_CPU_XUANTIE_E907F"
+    ["e907fd"]="e907fdp,CONFIG_CPU_XUANTIE_E907FD"
+    ["e907p"]="e907fdp,CONFIG_CPU_XUANTIE_E907P"
+    ["e907fp"]="e907fdp,CONFIG_CPU_XUANTIE_E907FP"
+    ["e907fdp"]="e907fdp,CONFIG_CPU_XUANTIE_E907FDP"
+    ["c906"]="c906fdv,CONFIG_CPU_XUANTIE_C906"
+    ["c906fd"]="c906fdv,CONFIG_CPU_XUANTIE_C906FD"
+    ["c906fdv"]="c906fdv,CONFIG_CPU_XUANTIE_C906FDV"
+    ["c907"]="c907fdvm,CONFIG_CPU_XUANTIE_C907"
+    ["c907fd"]="c907fdvm,CONFIG_CPU_XUANTIE_C907FD"
+    ["c907fdv"]="c907fdvm,CONFIG_CPU_XUANTIE_C907FDV"
+    ["c907fdvm"]="c907fdvm,CONFIG_CPU_XUANTIE_C907FDVM"
+    ["c907-rv32"]="c907fdvm,CONFIG_CPU_XUANTIE_C907_RV32"
+    ["c907fd-rv32"]="c907fdvm,CONFIG_CPU_XUANTIE_C907FD_RV32"
+    ["c907fdv-rv32"]="c907fdvm,CONFIG_CPU_XUANTIE_C907FDV_RV32"
+    ["c907fdvm-rv32"]="c907fdvm,CONFIG_CPU_XUANTIE_C907FDVM_RV32"
+    ["c908"]="c908v,CONFIG_CPU_XUANTIE_C908"
+    ["c908i"]="c908v,CONFIG_CPU_XUANTIE_C908I"
+    ["c908v"]="c908v,CONFIG_CPU_XUANTIE_C908V"
+    ["c908x"]="c908x-cp-xt,CONFIG_CPU_XUANTIE_C908X"
+    ["c908x-cp"]="c908x-cp-xt,CONFIG_CPU_XUANTIE_C908X_CP"
+    ["c908x-cp-xt"]="c908x-cp-xt,CONFIG_CPU_XUANTIE_C908X_CP_XT"
+    ["c910v2"]="c920v2,CONFIG_CPU_XUANTIE_C910V2"
+    ["c920v2"]="c920v2,CONFIG_CPU_XUANTIE_C920V2"
+    ["c910v3"]="c920v3-cp-xt,CONFIG_CPU_XUANTIE_C910V3"
+    ["c910v3-cp"]="c920v3-cp-xt,CONFIG_CPU_XUANTIE_C910V3_CP"
+    ["c910v3-cp-xt"]="c920v3-cp-xt,CONFIG_CPU_XUANTIE_C910V3_CP_XT"
+    ["c920v3"]="c920v3-cp-xt,CONFIG_CPU_XUANTIE_C920V3"
+    ["c920v3-cp"]="c920v3-cp-xt,CONFIG_CPU_XUANTIE_C920V3_CP"
+    ["c920v3-cp-xt"]="c920v3-cp-xt,CONFIG_CPU_XUANTIE_C920V3_CP_XT"
+    ["r908"]="r908fdv-cp-xt,CONFIG_CPU_XUANTIE_R908"
+    ["r908fd"]="r908fdv-cp-xt,CONFIG_CPU_XUANTIE_R908FD"
+    ["r908fdv"]="r908fdv-cp-xt,CONFIG_CPU_XUANTIE_R908FDV"
+    ["r908-cp"]="r908fdv-cp-xt,CONFIG_CPU_XUANTIE_R908_CP"
+    ["r908fd-cp"]="r908fdv-cp-xt,CONFIG_CPU_XUANTIE_R908FD_CP"
+    ["r908fdv-cp"]="r908fdv-cp-xt,CONFIG_CPU_XUANTIE_R908FDV_CP"
+    ["r908-cp-xt"]="r908fdv-cp-xt,CONFIG_CPU_XUANTIE_R908_CP_XT"
+    ["r908fd-cp-xt"]="r908fdv-cp-xt,CONFIG_CPU_XUANTIE_R908FD_CP_XT"
+    ["r908fdv-cp-xt"]="r908fdv-cp-xt,CONFIG_CPU_XUANTIE_R908FDV_CP_XT"
+    ["r910"]="r910,CONFIG_CPU_XUANTIE_R910"
+    ["r920"]="r920,CONFIG_CPU_XUANTIE_R920"
+)
+
+get_cpu_full_name() {
+    local key="$1"
+    if [[ -n "${key_value_map[$key]}" ]]; then
+        echo "${key_value_map[$key]}"
+    else
+        echo ""
+    fi
+}
+
+result=$(get_cpu_full_name $1)
+echo $result

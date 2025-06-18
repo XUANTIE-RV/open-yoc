@@ -1132,6 +1132,8 @@ extern void (*trap_c_callback)();
 
 void aos_init(void)
 {
+    extern void soc_mm_region_init(void);
+    soc_mm_region_init();
     krhino_init();
 
 #ifdef CONFIG_KERNEL_PWR_MGMT

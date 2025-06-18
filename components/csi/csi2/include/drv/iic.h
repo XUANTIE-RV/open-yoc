@@ -106,10 +106,10 @@ struct csi_iic {
     void                              *priv;
 };
 
-typedef void (*csi_iic_master_send_async_t)(csi_iic_t *iic, uint32_t devaddr, const void *data, uint32_t size);
-typedef void (*csi_iic_master_receive_async_t)(csi_iic_t *iic, uint32_t devaddr, void *data, uint32_t size);
-typedef void (*csi_iic_slave_send_async_t)(csi_iic_t *iic, const void *data, uint32_t size);
-typedef void (*csi_iic_slave_receive_async_t)(csi_iic_t *iic, void *data, uint32_t size);
+typedef csi_error_t (*csi_iic_master_send_async_t)(csi_iic_t *iic, uint32_t devaddr, const void *data, uint32_t size);
+typedef csi_error_t (*csi_iic_master_receive_async_t)(csi_iic_t *iic, uint32_t devaddr, void *data, uint32_t size);
+typedef csi_error_t (*csi_iic_slave_send_async_t)(csi_iic_t *iic, const void *data, uint32_t size);
+typedef csi_error_t (*csi_iic_slave_receive_async_t)(csi_iic_t *iic, void *data, uint32_t size);
 
 /**
   \brief       Init iic ctrl block

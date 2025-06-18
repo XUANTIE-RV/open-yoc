@@ -18,8 +18,6 @@
 
 #include <csi_config.h>
 
-.globl  Reset_Handler
-
 .section .vectors
     .align  6
     .globl  __Vectors
@@ -52,8 +50,8 @@ __Vectors:
     .rept    9
     .long    0
     .endr
-    .long    Reset_Handler
 _start:
+    .global Reset_Handler
     .type   Reset_Handler, %function
 Reset_Handler:
 .option push

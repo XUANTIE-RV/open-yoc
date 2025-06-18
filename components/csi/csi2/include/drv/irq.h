@@ -27,10 +27,10 @@
 #ifndef _DRV_IRQ_H_
 #define _DRV_IRQ_H_
 
-#include <stdint.h>
-#include <drv/common.h>
 #include <soc.h>
 #include <csi_core.h>
+#include <stdint.h>
+#include <drv/common.h>
 
 #ifdef __cplusplus
 extern "C" {

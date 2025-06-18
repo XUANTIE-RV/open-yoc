@@ -27,8 +27,10 @@
 #ifndef _DRV_SENSOR_H_
 #define _DRV_SENSOR_H_
 
-#include <drv/common.h>
 #include <soc.h>
+#include <csi_core.h>
+#include <drv/common.h>
+
 
 typedef enum {
     SENSOR_VDS_3V3_3V3 = 1,

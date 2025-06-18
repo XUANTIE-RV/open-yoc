@@ -35,12 +35,6 @@
 extern "C" {
 #endif
 
-#if CONFIG_XIP
-#define ATTRIBUTE_DATA __attribute__((section(".ram.code")))
-#else
-#define ATTRIBUTE_DATA
-#endif
-
 /*! IER, offset: 0x4 */
 #define DW_UART_IER_ERBFI_Pos             (0U)
 #define DW_UART_IER_ERBFI_Msk             (0x1U << DW_UART_IER_ERBFI_Pos)

@@ -87,7 +87,7 @@ Scoret_Handler:
 #endif
 
 #if CONFIG_CHECK_FPU_DIRTY || CONFIG_CHECK_VECTOR_DIRTY || CONFIG_CHECK_MATRIX_DIRTY
-    csrr    t3, sstatus
+    mv      t3, t0
 #endif
     SAVE_FLOAT_REGISTERS
     SAVE_VECTOR_REGISTERS
@@ -226,7 +226,7 @@ Mcoret_Handler:
 #endif
 
 #if CONFIG_CHECK_FPU_DIRTY || CONFIG_CHECK_VECTOR_DIRTY || CONFIG_CHECK_MATRIX_DIRTY
-    csrr    t3, mstatus
+    mv      t3, t0
 #endif
     SAVE_FLOAT_REGISTERS
     SAVE_VECTOR_REGISTERS
@@ -359,7 +359,7 @@ Sirq_Handler:
 #endif
 
 #if CONFIG_CHECK_FPU_DIRTY || CONFIG_CHECK_VECTOR_DIRTY || CONFIG_CHECK_MATRIX_DIRTY
-    csrr    t3, sstatus
+    mv      t3, t0
 #endif
     SAVE_FLOAT_REGISTERS
     SAVE_VECTOR_REGISTERS
@@ -496,7 +496,7 @@ ECC_L1_Handler:
 #endif
 
 #if CONFIG_CHECK_FPU_DIRTY || CONFIG_CHECK_VECTOR_DIRTY || CONFIG_CHECK_MATRIX_DIRTY
-    csrr    t3, mstatus
+    mv      t3, t0
 #endif
     SAVE_FLOAT_REGISTERS
     SAVE_VECTOR_REGISTERS
@@ -641,7 +641,7 @@ Mirq_Handler:
 #endif
 
 #if CONFIG_CHECK_FPU_DIRTY || CONFIG_CHECK_VECTOR_DIRTY || CONFIG_CHECK_MATRIX_DIRTY
-    csrr    t3, mstatus
+    mv      t3, t0
 #endif
     SAVE_FLOAT_REGISTERS
     SAVE_VECTOR_REGISTERS

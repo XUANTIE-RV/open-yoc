@@ -25,7 +25,7 @@ int main(void)
 {
     board_init();
     printf("bare_core_dsp demo start!\r\n");
-#if (CONFIG_CPU_XUANTIE_E906P || CONFIG_CPU_XUANTIE_E906FP || CONFIG_CPU_XUANTIE_E906FDP|| CONFIG_CPU_XUANTIE_E907P || CONFIG_CPU_XUANTIE_E907FP || CONFIG_CPU_XUANTIE_E907FDP)
+#if defined(__riscv_dsp) || defined(__riscv_xtheadp)
     example_core_dsp();
 #else
     printf("dsp is not support for this cpu!\n");

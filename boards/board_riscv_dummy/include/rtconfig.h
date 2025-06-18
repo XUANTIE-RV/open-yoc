@@ -40,7 +40,7 @@ static inline int _csi_vlenb_get_value(void)
 
 #if defined(__riscv_matrix) || defined(__riscv_xtheadmatrix) || defined(__riscv_vector)
 /* FIXME: for static allocate stack */
-#define STATIC_CSK_CPU_STACK_EXTRAL       (8192)
+#define STATIC_CSK_CPU_STACK_EXTRAL       (16384)
 #else
 #define STATIC_CSK_CPU_STACK_EXTRAL       (0)
 #endif
@@ -84,9 +84,9 @@ static inline int _csi_vlenb_get_value(void)
 #define RT_MAIN_THREAD_STACK_SIZE (4096 + STATIC_CSK_CPU_STACK_EXTRAL)
 /* kservice optimization */
 
-#if CONFIG_CPU_XUANTIE_E906 || CONFIG_CPU_XUANTIE_E906F || CONFIG_CPU_XUANTIE_E906FD || CONFIG_CPU_XUANTIE_E906P || CONFIG_CPU_XUANTIE_E906FP || CONFIG_CPU_XUANTIE_E906FDP \
-    || CONFIG_CPU_XUANTIE_E907 || CONFIG_CPU_XUANTIE_E907F || CONFIG_CPU_XUANTIE_E907FD || CONFIG_CPU_XUANTIE_E907P || CONFIG_CPU_XUANTIE_E907FP || CONFIG_CPU_XUANTIE_E907FDP \
-    || CONFIG_CPU_XUANTIE_E902 || CONFIG_CPU_XUANTIE_E902M || CONFIG_CPU_XUANTIE_E902T || CONFIG_CPU_XUANTIE_E902MT
+#if CONFIG_CPU_XUANTIE_E902 || CONFIG_CPU_XUANTIE_E902M || CONFIG_CPU_XUANTIE_E902T || CONFIG_CPU_XUANTIE_E902MT \
+    || CONFIG_CPU_XUANTIE_E901_CP || CONFIG_CPU_XUANTIE_E901_B_CP || CONFIG_CPU_XUANTIE_E901_M_CP || CONFIG_CPU_XUANTIE_E901_BM_CP \
+    || CONFIG_CPU_XUANTIE_E901MINI_CP || CONFIG_CPU_XUANTIE_E901MINI_B_CP || CONFIG_CPU_XUANTIE_E901MINI_ZM_CP || CONFIG_CPU_XUANTIE_E901MINI_BZM_CP
 // Smartl ISRAM Limited
 #else
 #define RT_USING_DEBUG
@@ -113,6 +113,14 @@ static inline int _csi_vlenb_get_value(void)
 #define RT_USING_HEAP_ISR
 #define RT_BACKTRACE_LEVEL_MAX_NR 32
 #define RT_USING_SCHED_THREAD_CTX
+
+#ifdef CONFIG_UTEST
+#define RT_USING_HOOKLIST
+#define RT_USING_SIGNALS
+#define RT_USING_SLAB
+#define UTEST_THR_STACK_SIZE (4096 + STATIC_CSK_CPU_STACK_EXTRAL)
+#define UTEST_THR_PRIORITY FINSH_THREAD_PRIORITY
+#endif
 
 /* Kernel Device Object */
 
@@ -158,6 +166,10 @@ static inline int _csi_vlenb_get_value(void)
 /* RT-Thread online packages */
 #define FASTLZ_SAMPLE_COMPRESSION_LEVEL 1
 
+#if defined(AOS_COMP_CLI) && AOS_COMP_CLI
+#undef rt_kprintf
+#define rt_kprintf aos_cli_printf
+#endif
 
 #endif /*CONFIG_KERNEL_RTTHREAD*/
 

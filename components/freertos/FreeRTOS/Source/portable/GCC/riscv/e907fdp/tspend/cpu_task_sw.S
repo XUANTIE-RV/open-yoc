@@ -17,6 +17,9 @@
  */
 
 #include "riscv_csr.h"
+#if CONFIG_CALCULATE_MSIC_TRIGGER
+#include <misc_calculate.h>
+#endif
 
 /* Enable interrupts when returning from the handler */
 #define MSTATUS_PRV1 0x1880
@@ -60,12 +63,10 @@ cpu_is_irq_enable:
 #elif __riscv_flen == 32
     addi     t1, t1, 132
 #endif
-    addi     t1, t1, (128-4)
 
-    add      sp, sp, t1
-    lw       t3, (0)(sp)
+    add      t1, sp, t1
+    lw       t3, (124)(t1)
     csrw     mstatus, t3
-    sub      sp, sp, t1
 .endm
 #endif /* CONFIG_CHECK_FPU_DIRTY */
 
@@ -82,7 +83,6 @@ vPortYield:
     or      t1, t1, t2
     sb      t1, (t0)
 
-    /* FIXME: trriger soft-irq quickly */
     fence
     nop
     nop
@@ -108,11 +108,10 @@ vPortStartTask:
 .global tspend_handler
 .type   tspend_handler, %function
 tspend_handler:
-#if CONFIG_CHECK_FPU_DIRTY
-    addi    sp, sp, -128
-#else
-    addi    sp, sp, -124
+#if CONFIG_CALCULATE_MSIC_TRIGGER
+    MISC_CALCULATE_TIME
 #endif
+    addi    sp, sp, -128
     sw      x1, 0(sp)
     sw      x3, 4(sp)
     sw      x4, 8(sp)
@@ -414,11 +413,7 @@ __vPortFistTask:
     lw      x29, 108(sp)
     lw      x30, 112(sp)
     lw      x31, 116(sp)
-#if CONFIG_CHECK_FPU_DIRTY
     addi    sp, sp, 128
-#else
-    addi    sp, sp, 124
-#endif
     mret
 
     .size   tspend_handler, . - tspend_handler
