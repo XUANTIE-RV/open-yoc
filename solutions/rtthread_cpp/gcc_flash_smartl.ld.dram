@@ -188,7 +188,9 @@ SECTIONS
   KEEP(*(*.post_driver_entry))
   __post_driver_end__ = .;
 /************** end of drivers *********/
-  . = ALIGN(0x4) ;
+  . = ALIGN(0x40) ;
+  __jvt_base$ = .;
+  KEEP(*(*.riscv.jvt))
   __erodata = .;
   __rodata_end__ = .;
  } > REGION_RODATA

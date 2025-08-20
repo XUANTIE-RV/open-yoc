@@ -114,7 +114,7 @@ static void smp_perf_record_test(struct record_args *args)
         TaskHandle_t xHandle = NULL;
         snprintf(buf, sizeof(buf), "record_%ld", i);
         UBaseType_t uxCoreAffinityMask = (1 << i);
-        BaseType_t ret = xTaskCreateAffinitySet(perf_record_thread_entry, buf, 8192, args, 32, uxCoreAffinityMask, &xHandle);
+        BaseType_t ret = xTaskCreateAffinitySet(perf_record_thread_entry, buf, CONFIG_APP_TASK_STACK_SIZE / sizeof(StackType_t), args, 32, uxCoreAffinityMask, &xHandle);
         configASSERT(ret == pdPASS);
     }
 }
@@ -139,7 +139,7 @@ static void smp_perf_stat_test(perf_stat_args_t *args)
         char buf[32];
         TaskHandle_t xHandle = NULL;
         snprintf(buf, sizeof(buf), "stat_%ld", i);
-        BaseType_t ret = xTaskCreateAffinitySet(perf_stat_thread_entry, buf, 8192, args, 32, uxCoreAffinityMask, &xHandle);
+        BaseType_t ret = xTaskCreateAffinitySet(perf_stat_thread_entry, buf, CONFIG_APP_TASK_STACK_SIZE / sizeof(StackType_t), args, 32, uxCoreAffinityMask, &xHandle);
         configASSERT(ret == pdPASS);
     }
 }
@@ -260,9 +260,9 @@ int simple_cli_task_create(void)
         configASSERT(xSemStat[i] != NULL);
     }
     UBaseType_t uxCoreAffinityMask = (1 << 0);
-    BaseType_t ret = xTaskCreateAffinitySet(simple_cli_task_entry, buf, 8192, NULL, 32, uxCoreAffinityMask, &xHandle);
+    BaseType_t ret = xTaskCreateAffinitySet(simple_cli_task_entry, buf, CONFIG_APP_TASK_STACK_SIZE / sizeof(StackType_t), NULL, 32, uxCoreAffinityMask, &xHandle);
 #else
-    BaseType_t ret = xTaskCreate(simple_cli_task_entry, buf, 8192, NULL, 32, &xHandle);
+    BaseType_t ret = xTaskCreate(simple_cli_task_entry, buf, CONFIG_APP_TASK_STACK_SIZE / sizeof(StackType_t), NULL, 32, &xHandle);
 #endif
     configASSERT(ret == pdPASS);
     return pdPASS;

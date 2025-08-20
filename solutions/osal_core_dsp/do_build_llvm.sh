@@ -40,7 +40,7 @@ function check_cpu() {
 
 function check_board() {
 	board=$1
-	board_list=('smartl' 'xiaohui')
+	board_list=('smartm' 'smartl' 'xiaohui')
 	#echo "the board is "$board
 	for _board in ${board_list[*]}; do
 		if [ "$board" == "$_board" ]; then

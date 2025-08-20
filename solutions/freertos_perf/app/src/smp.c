@@ -43,7 +43,7 @@ void smp_example(void)
         TaskHandle_t xHandle = NULL;
         snprintf(name, sizeof(name), "thread_%u", (unsigned int)i);
         UBaseType_t uxCoreAffinityMask = (1 << i);
-        BaseType_t ret = xTaskCreateAffinitySet(thread_entry, name, 8192, NULL, 32, uxCoreAffinityMask, &xHandle);
+        BaseType_t ret = xTaskCreateAffinitySet(thread_entry, name, CONFIG_APP_TASK_STACK_SIZE / sizeof(StackType_t), NULL, 32, uxCoreAffinityMask, &xHandle);
         configASSERT(ret == pdPASS);
     }
 }

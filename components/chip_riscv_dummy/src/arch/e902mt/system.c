@@ -52,25 +52,24 @@ static void section_init(void)
 static void clic_init(void)
 {
     int i;
-#ifndef CONFIG_SUPPORT_NON_VECTOR_IRQ
+
     /* get interrupt level from info */
     CLIC->CLICCFG = (((CLIC->CLICINFO & CLIC_INFO_CLICINTCTLBITS_Msk) >> CLIC_INFO_CLICINTCTLBITS_Pos) << CLIC_CLICCFG_NLBIT_Pos);
 
     for (i = 0; i < 64; i++) {
         CLIC->CLICINT[i].IP = 0;
+#ifndef CONFIG_SUPPORT_NON_VECTOR_IRQ
         CLIC->CLICINT[i].ATTR = 1; /* use vector interrupt */
-    }
 #else
-    /* get interrupt level from info */
-    CLIC->CLICCFG = 0;
-
-    for (i = 0; i < 64; i++) {
-        CLIC->CLICINT[i].IP = 0;
         CLIC->CLICINT[i].ATTR = 0; /* use non-vector interrupt */
-    }
 #endif
-    /* tspend use positive interrupt */
+        csi_vic_set_prio(i, 3);
+    }
+    /* coretime use positive interrupt */
+    CLIC->CLICINT[CORET_IRQn].ATTR |= 1 << 1;
+    /* tspend use vector&positive interrupt */
     CLIC->CLICINT[Machine_Software_IRQn].ATTR = 0x3;
+    csi_vic_set_prio(Machine_Software_IRQn, 1);
     csi_irq_enable(Machine_Software_IRQn);
 }
 

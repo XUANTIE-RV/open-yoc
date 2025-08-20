@@ -35,6 +35,8 @@
                   <listOptionValue builtIn="false" value="CONFIG_HAVE_LONG_LONG=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CSI_V2=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CSI=csi2"/>
+                  <listOptionValue builtIn="false" value="CONFIG_INIT_TASK_STACK_SIZE=32768"/>
+                  <listOptionValue builtIn="false" value="CONFIG_APP_TASK_STACK_SIZE=32768"/>
                   <listOptionValue builtIn="false" value="CONFIG_SUPPORT_TSPEND=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_ARCH_INTERRUPTSTACK=32768"/>
                   <listOptionValue builtIn="false" value="CONFIG_VIC_TSPDR=0x0c000000"/>
@@ -44,9 +46,8 @@
                   <listOptionValue builtIn="false" value="CONFIG_USE_FASTMEM=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_FASTMEM_ADDR=0x50400000"/>
                   <listOptionValue builtIn="false" value="CONFIG_FASTMEM_SIZE=0x200000"/>
-                  <listOptionValue builtIn="false" value="CONFIG_CPU_FREQ_HZ=14810000"/>
-                  <listOptionValue builtIn="false" value="CONFIG_INIT_TASK_STACK_SIZE=8192"/>
-                  <listOptionValue builtIn="false" value="CONFIG_APP_TASK_STACK_SIZE=8192"/>
+                  <listOptionValue builtIn="false" value="STATIC_CSK_CPU_STACK_EXTRAL=32768"/>
+                  <listOptionValue builtIn="false" value="CONFIG_CPU_FREQ_HZ=11000000"/>
                   <listOptionValue builtIn="false" value="CONFIG_SYSTICK_HZ=100"/>
                   <listOptionValue builtIn="false" value="CONFIG_BOARD_XIAOHUI_EVB=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CPU_XUANTIE_C908X=1"/>
@@ -75,6 +76,8 @@
                   <listOptionValue builtIn="false" value="CONFIG_HAVE_LONG_LONG=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CSI_V2=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CSI=csi2"/>
+                  <listOptionValue builtIn="false" value="CONFIG_INIT_TASK_STACK_SIZE=32768"/>
+                  <listOptionValue builtIn="false" value="CONFIG_APP_TASK_STACK_SIZE=32768"/>
                   <listOptionValue builtIn="false" value="CONFIG_SUPPORT_TSPEND=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_ARCH_INTERRUPTSTACK=32768"/>
                   <listOptionValue builtIn="false" value="CONFIG_VIC_TSPDR=0x0c000000"/>
@@ -84,9 +87,8 @@
                   <listOptionValue builtIn="false" value="CONFIG_USE_FASTMEM=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_FASTMEM_ADDR=0x50400000"/>
                   <listOptionValue builtIn="false" value="CONFIG_FASTMEM_SIZE=0x200000"/>
-                  <listOptionValue builtIn="false" value="CONFIG_CPU_FREQ_HZ=14810000"/>
-                  <listOptionValue builtIn="false" value="CONFIG_INIT_TASK_STACK_SIZE=8192"/>
-                  <listOptionValue builtIn="false" value="CONFIG_APP_TASK_STACK_SIZE=8192"/>
+                  <listOptionValue builtIn="false" value="STATIC_CSK_CPU_STACK_EXTRAL=32768"/>
+                  <listOptionValue builtIn="false" value="CONFIG_CPU_FREQ_HZ=11000000"/>
                   <listOptionValue builtIn="false" value="CONFIG_SYSTICK_HZ=100"/>
                   <listOptionValue builtIn="false" value="CONFIG_BOARD_XIAOHUI_EVB=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CPU_XUANTIE_C908X=1"/>
@@ -115,6 +117,8 @@
                   <listOptionValue builtIn="false" value="CONFIG_HAVE_LONG_LONG=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CSI_V2=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CSI=csi2"/>
+                  <listOptionValue builtIn="false" value="CONFIG_INIT_TASK_STACK_SIZE=32768"/>
+                  <listOptionValue builtIn="false" value="CONFIG_APP_TASK_STACK_SIZE=32768"/>
                   <listOptionValue builtIn="false" value="CONFIG_SUPPORT_TSPEND=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_ARCH_INTERRUPTSTACK=32768"/>
                   <listOptionValue builtIn="false" value="CONFIG_VIC_TSPDR=0x0c000000"/>
@@ -124,9 +128,8 @@
                   <listOptionValue builtIn="false" value="CONFIG_USE_FASTMEM=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_FASTMEM_ADDR=0x50400000"/>
                   <listOptionValue builtIn="false" value="CONFIG_FASTMEM_SIZE=0x200000"/>
-                  <listOptionValue builtIn="false" value="CONFIG_CPU_FREQ_HZ=14810000"/>
-                  <listOptionValue builtIn="false" value="CONFIG_INIT_TASK_STACK_SIZE=8192"/>
-                  <listOptionValue builtIn="false" value="CONFIG_APP_TASK_STACK_SIZE=8192"/>
+                  <listOptionValue builtIn="false" value="STATIC_CSK_CPU_STACK_EXTRAL=32768"/>
+                  <listOptionValue builtIn="false" value="CONFIG_CPU_FREQ_HZ=11000000"/>
                   <listOptionValue builtIn="false" value="CONFIG_SYSTICK_HZ=100"/>
                   <listOptionValue builtIn="false" value="CONFIG_BOARD_XIAOHUI_EVB=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CPU_XUANTIE_C908X=1"/>
@@ -158,7 +161,8 @@
                 <option id="ckcoregcc.link.option.riscv32.linkfile.1811608081" name="Link file (-T)" superClass="ckcoregcc.link.option.riscv32.linkfile" value="&quot;../../../../../../components/chip_riscv_dummy/gcc_flash_xiaohui.ld&quot;" valueType="string"/>
                 <option id="ckcoregcc.link.option.riscv32.nostdlib.2114489876" name="No startup or default libs (-nostdlib)" superClass="ckcoregcc.link.option.riscv32.nostdlib" value="false" valueType="boolean"/>
                 <option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="ckcoregcc.link.option.riscv32.libs.1023304312" name="Libraries (-l)" superClass="ckcoregcc.link.option.riscv32.libs" valueType="libs">
-								</option>
+                  <listOptionValue builtIn="false" value="m"/>
+                </option>
                 <option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="ckcoregcc.link.option.paths.673587577" name="Library search path (-L)" superClass="ckcoregcc.link.option.paths" valueType="libPaths">
                   <listOptionValue builtIn="false" value="&quot;../../../../../../components/csi/csi2/dsp/lib&quot;"/>
                 </option>
@@ -213,6 +217,8 @@
                   <listOptionValue builtIn="false" value="CONFIG_HAVE_LONG_LONG=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CSI_V2=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CSI=csi2"/>
+                  <listOptionValue builtIn="false" value="CONFIG_INIT_TASK_STACK_SIZE=32768"/>
+                  <listOptionValue builtIn="false" value="CONFIG_APP_TASK_STACK_SIZE=32768"/>
                   <listOptionValue builtIn="false" value="CONFIG_SUPPORT_TSPEND=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_ARCH_INTERRUPTSTACK=32768"/>
                   <listOptionValue builtIn="false" value="CONFIG_VIC_TSPDR=0x0c000000"/>
@@ -222,9 +228,8 @@
                   <listOptionValue builtIn="false" value="CONFIG_USE_FASTMEM=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_FASTMEM_ADDR=0x50400000"/>
                   <listOptionValue builtIn="false" value="CONFIG_FASTMEM_SIZE=0x200000"/>
-                  <listOptionValue builtIn="false" value="CONFIG_CPU_FREQ_HZ=14810000"/>
-                  <listOptionValue builtIn="false" value="CONFIG_INIT_TASK_STACK_SIZE=8192"/>
-                  <listOptionValue builtIn="false" value="CONFIG_APP_TASK_STACK_SIZE=8192"/>
+                  <listOptionValue builtIn="false" value="STATIC_CSK_CPU_STACK_EXTRAL=32768"/>
+                  <listOptionValue builtIn="false" value="CONFIG_CPU_FREQ_HZ=11000000"/>
                   <listOptionValue builtIn="false" value="CONFIG_SYSTICK_HZ=100"/>
                   <listOptionValue builtIn="false" value="CONFIG_BOARD_XIAOHUI_EVB=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CPU_XUANTIE_C908X=1"/>
@@ -253,6 +258,8 @@
                   <listOptionValue builtIn="false" value="CONFIG_HAVE_LONG_LONG=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CSI_V2=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CSI=csi2"/>
+                  <listOptionValue builtIn="false" value="CONFIG_INIT_TASK_STACK_SIZE=32768"/>
+                  <listOptionValue builtIn="false" value="CONFIG_APP_TASK_STACK_SIZE=32768"/>
                   <listOptionValue builtIn="false" value="CONFIG_SUPPORT_TSPEND=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_ARCH_INTERRUPTSTACK=32768"/>
                   <listOptionValue builtIn="false" value="CONFIG_VIC_TSPDR=0x0c000000"/>
@@ -262,9 +269,8 @@
                   <listOptionValue builtIn="false" value="CONFIG_USE_FASTMEM=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_FASTMEM_ADDR=0x50400000"/>
                   <listOptionValue builtIn="false" value="CONFIG_FASTMEM_SIZE=0x200000"/>
-                  <listOptionValue builtIn="false" value="CONFIG_CPU_FREQ_HZ=14810000"/>
-                  <listOptionValue builtIn="false" value="CONFIG_INIT_TASK_STACK_SIZE=8192"/>
-                  <listOptionValue builtIn="false" value="CONFIG_APP_TASK_STACK_SIZE=8192"/>
+                  <listOptionValue builtIn="false" value="STATIC_CSK_CPU_STACK_EXTRAL=32768"/>
+                  <listOptionValue builtIn="false" value="CONFIG_CPU_FREQ_HZ=11000000"/>
                   <listOptionValue builtIn="false" value="CONFIG_SYSTICK_HZ=100"/>
                   <listOptionValue builtIn="false" value="CONFIG_BOARD_XIAOHUI_EVB=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CPU_XUANTIE_C908X=1"/>
@@ -293,6 +299,8 @@
                   <listOptionValue builtIn="false" value="CONFIG_HAVE_LONG_LONG=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CSI_V2=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CSI=csi2"/>
+                  <listOptionValue builtIn="false" value="CONFIG_INIT_TASK_STACK_SIZE=32768"/>
+                  <listOptionValue builtIn="false" value="CONFIG_APP_TASK_STACK_SIZE=32768"/>
                   <listOptionValue builtIn="false" value="CONFIG_SUPPORT_TSPEND=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_ARCH_INTERRUPTSTACK=32768"/>
                   <listOptionValue builtIn="false" value="CONFIG_VIC_TSPDR=0x0c000000"/>
@@ -302,9 +310,8 @@
                   <listOptionValue builtIn="false" value="CONFIG_USE_FASTMEM=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_FASTMEM_ADDR=0x50400000"/>
                   <listOptionValue builtIn="false" value="CONFIG_FASTMEM_SIZE=0x200000"/>
-                  <listOptionValue builtIn="false" value="CONFIG_CPU_FREQ_HZ=14810000"/>
-                  <listOptionValue builtIn="false" value="CONFIG_INIT_TASK_STACK_SIZE=8192"/>
-                  <listOptionValue builtIn="false" value="CONFIG_APP_TASK_STACK_SIZE=8192"/>
+                  <listOptionValue builtIn="false" value="STATIC_CSK_CPU_STACK_EXTRAL=32768"/>
+                  <listOptionValue builtIn="false" value="CONFIG_CPU_FREQ_HZ=11000000"/>
                   <listOptionValue builtIn="false" value="CONFIG_SYSTICK_HZ=100"/>
                   <listOptionValue builtIn="false" value="CONFIG_BOARD_XIAOHUI_EVB=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CPU_XUANTIE_C908X=1"/>
@@ -336,7 +343,8 @@
                 <option id="ckcoregcc.link.option.riscv32.linkfile.1811608081" name="Link file (-T)" superClass="ckcoregcc.link.option.riscv32.linkfile" value="&quot;../../../../../../components/chip_riscv_dummy/gcc_flash_xiaohui.ld&quot;" valueType="string"/>
                 <option id="ckcoregcc.link.option.riscv32.nostdlib.2114489876" name="No startup or default libs (-nostdlib)" superClass="ckcoregcc.link.option.riscv32.nostdlib" value="false" valueType="boolean"/>
                 <option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="ckcoregcc.link.option.riscv32.libs.1023304312" name="Libraries (-l)" superClass="ckcoregcc.link.option.riscv32.libs" valueType="libs">
-								</option>
+                  <listOptionValue builtIn="false" value="m"/>
+                </option>
                 <option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="ckcoregcc.link.option.paths.673587577" name="Library search path (-L)" superClass="ckcoregcc.link.option.paths" valueType="libPaths">
                   <listOptionValue builtIn="false" value="&quot;../../../../../../components/csi/csi2/dsp/lib&quot;"/>
                 </option>

@@ -42,7 +42,7 @@ void smp_example(void)
         char buf[32];
         rt_thread_t tid;
         snprintf(buf, sizeof(buf), "thread_%ld", i);
-        tid = rt_thread_create(buf, thread_entry, RT_NULL, 8192, 32, 5);
+        tid = rt_thread_create(buf, thread_entry, RT_NULL, CONFIG_APP_TASK_STACK_SIZE, 32, 5);
         rt_thread_control(tid, RT_THREAD_CTRL_BIND_CPU, (void *)i);
         if (tid != RT_NULL) {
             rt_thread_startup(tid);

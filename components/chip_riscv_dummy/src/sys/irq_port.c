@@ -81,7 +81,7 @@ uint32_t soc_irq_get_irq_num(void)
 void soc_irq_end(uint32_t irq_num)
 {
 #if CONFIG_CPU_XUANTIE_E9XX
-    //TODO:
+    csi_vic_clear_pending_irq(irq_num);
 #else
 #if CONFIG_INTC_CLIC_PLIC
     if (irq_num <= PLIC_IRQ_OFFSET) {

@@ -64,6 +64,12 @@ SECTIONS
   . = ALIGN(0x10) ;
   __etext = . ;
  } > REGION_TEXT
+ .eh_frame_hdr : {
+  *(.eh_frame_hdr)
+ } > REGION_TEXT
+ .eh_frame : ONLY_IF_RO {
+  KEEP (*(.eh_frame))
+ } > REGION_TEXT
  .rodata : {
   . = ALIGN(0x4) ;
   __srodata = .;
@@ -189,7 +195,10 @@ SECTIONS
   KEEP(*(*.post_driver_entry))
   __post_driver_end__ = .;
 /************** end of drivers *********/
-  . = ALIGN(0x4) ;
+  . = ALIGN(0x40) ;
+  __jvt_base$ = .;
+  KEEP(*(*.riscv.jvt))
+  . = ALIGN(0x8) ;
   __erodata = .;
   __rodata_end__ = .;
  } > REGION_RODATA

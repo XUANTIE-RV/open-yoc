@@ -96,9 +96,9 @@ include $(SOLUTION_PATH)/sub.mk
 include $(TOP_DIR)/tools/core/build_source.mk
 
 LD_LIBS := $(addprefix -l, $(COMPONENTS))
+LD_EXT_LIBS := -lm
 LD_PATH += $(BUILD_DIR)/libs $(ALL_L_PATH)
 LIBS := $(foreach mod,$(COMPONENTS),$(BUILD_DIR)/libs/lib$(mod).a)
-LD_LIBS += -lm
 
 CPU_FLAGS := -mcpu=$(cpu) -mcmodel=medany
 
@@ -109,9 +109,14 @@ CFLAGS += $(addprefix -I, $(ALL_INCS))
 CXXFLAGS += $(CFLAGS)
 ASFLAGS += -D__ASSEMBLY__ $(CFLAGS)
 LDFLAGS := $(CPU_FLAGS) -nostartfiles -Wl,--gc-sections
-LDFLAGS += -Wl,--whole-archive $(LD_LIBS) -Wl,--no-whole-archive
+LDFLAGS += -Wl,--whole-archive $(LD_LIBS) -Wl,--no-whole-archive $(LD_EXT_LIBS)
 LDFLAGS += $(addprefix -L, $(LD_PATH))
 LDFLAGS += -T$(LINKER_SCRIPT) -Wl,-zmax-page-size=1024 -Wl,-Map=$(TARGET).map
+ifeq ($(toolchain), llvm)
+ifneq ($(call get_compiler_macro, __riscv_zcmt),)
+LDFLAGS += -fuse-ld=lld -Wl,--relax-gp
+endif
+endif
 
 endif # CLEANING
 
@@ -146,6 +151,12 @@ $(BUILD_DIR)/%.o: %.S
 # static lib
 $(foreach mod,$(COMPONENTS),$(eval $(call lib_rule_template_func,$(mod))))
 
+ifneq ($(LINKER_SCRIPT_ORI),)
+$(LINKER_SCRIPT):
+	@echo "Preprocessing linker script..."
+	$(CPRE) $(CXX) -E $(CFLAGS) -P $(LINKER_SCRIPT_ORI) -o $(LINKER_SCRIPT)
+endif
+
 $(OUTPUT_ELF): $(LIBS) $(LINKER_SCRIPT)
 	@echo "Linking $@"
 	$(CPRE) $(CXX) -o $@ $(LDFLAGS)
@@ -156,6 +167,6 @@ $(OUTPUT_ELF): $(LIBS) $(LINKER_SCRIPT)
 
 .PHONY: clean
 clean:
-	$(CPRE) rm -rf out yoc.* generated
+	$(CPRE) rm -rf out yoc.* generated .defconfig *.ld.post *.ld.d
 	$(CPRE) rm -rf gdbinitflash .gdbinit gdbinit.remote
 	@echo "done cleaning."

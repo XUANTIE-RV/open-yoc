@@ -54,7 +54,7 @@ void smp_example(void)
         TaskHandle_t xHandle = NULL;
         snprintf(name, sizeof(name), "thread_%u", (unsigned int)i);
         UBaseType_t uxCoreAffinityMask = (1 << i); // core id
-        BaseType_t ret = xTaskCreate(task_entry, name, 8192 / sizeof(StackType_t), NULL, tskIDLE_PRIORITY + 5, &xHandle);
+        BaseType_t ret = xTaskCreate(task_entry, name, CONFIG_APP_TASK_STACK_SIZE / sizeof(StackType_t), NULL, tskIDLE_PRIORITY + 5, &xHandle);
         if (ret != pdPASS)
         {
             printf("create task failed\r\n");

@@ -652,11 +652,11 @@
         <Tools/>
       </User>
       <Compiler>
-        <Define>CONFIG_SEMIHOST_NATIVE=0;CONFIG_HAVE_LONG_LONG=1;CONFIG_CSI_V2=1;CONFIG_CSI=csi2;CONFIG_SUPPORT_TSPEND=1;CONFIG_ARCH_MAINSTACK=8192;CONFIG_ARCH_INTERRUPTSTACK=8192;CONFIG_VIC_TSPDR=0x0c000000;CONFIG_PLIC_BASE=0x08000000;CONFIG_CLIC_BASE=0x0c010000;CONFIG_INTC_CLIC_PLIC=1;CONFIG_SUPPORT_IRQ_NESTED=1;CONFIG_FPP_ENABLE=0;CONFIG_CHECK_FPU_DIRTY=1;CONFIG_CHECK_VECTOR_DIRTY=1;CONFIG_INIT_TASK_STACK_SIZE=8192;CONFIG_APP_TASK_STACK_SIZE=8192;CONFIG_SYSTICK_HZ=100;CONFIG_BOARD_XIAOHUI_EVB=1;CONFIG_CPU_XUANTIE_R908FDV_CP=1;CONFIG_KERNEL_NONE=1;CONFIG_DEBUG=1</Define>
+        <Define>CONFIG_HAVE_LONG_LONG=1;CONFIG_SEMIHOST_NATIVE=0;CONFIG_CSI_V2=1;CONFIG_CSI=csi2;CONFIG_INIT_TASK_STACK_SIZE=8192;CONFIG_APP_TASK_STACK_SIZE=8192;CONFIG_SUPPORT_TSPEND=1;CONFIG_ARCH_MAINSTACK=8192;CONFIG_ARCH_INTERRUPTSTACK=8192;CONFIG_VIC_TSPDR=0x0c000000;CONFIG_PLIC_BASE=0x08000000;CONFIG_CLIC_BASE=0x0c010000;CONFIG_INTC_CLIC_PLIC=1;CONFIG_SUPPORT_IRQ_NESTED=1;CONFIG_FPP_ENABLE=0;CONFIG_CHECK_FPU_DIRTY=1;CONFIG_CHECK_VECTOR_DIRTY=1;CONFIG_SYSTICK_HZ=100;CONFIG_BOARD_XIAOHUI_EVB=1;CONFIG_CPU_XUANTIE_R908FDV_CP=1;CONFIG_KERNEL_NONE=1;CONFIG_DEBUG=1</Define>
         <Undefine/>
         <Optim>Default</Optim>
         <DebugLevel>Default (-g)</DebugLevel>
-        <IncludePath>$(ProjectPath);../../../../../components/csi/csi2/include;../../../../../components/libc_bare/include/libc_bare;../../../../../components/mm/include;../../../../../components/chip_riscv_dummy/include;../../../../../components/chip_riscv_dummy/include/asm;../../../../../boards/board_riscv_dummy/include;</IncludePath>
+        <IncludePath>$(ProjectPath);../../../../../components/csi/csi2/include;../../../../../components/mm/include;../../../../../components/libc_bare/include/libc_bare;../../../../../components/chip_riscv_dummy/include;../../../../../components/chip_riscv_dummy/include/asm;../../../../../boards/board_riscv_dummy/include;</IncludePath>
         <OtherFlags>-g -Wall -mcmodel=medany -MP -MMD -Wno-main -g -Os -Wno-unused-function -Wpointer-arith -Wno-undef -ffunction-sections -fdata-sections -fno-inline-functions -fno-builtin -fno-strict-aliasing</OtherFlags>
         <Verbose>no</Verbose>
         <Ansi>no</Ansi>
@@ -671,9 +671,9 @@
         <Fstrict>no</Fstrict>
       </Compiler>
       <Asm>
-        <Define>__ASSEMBLY__;CONFIG_SEMIHOST_NATIVE=0;CONFIG_HAVE_LONG_LONG=1;CONFIG_CSI_V2=1;CONFIG_CSI=csi2;CONFIG_SUPPORT_TSPEND=1;CONFIG_ARCH_MAINSTACK=8192;CONFIG_ARCH_INTERRUPTSTACK=8192;CONFIG_VIC_TSPDR=0x0c000000;CONFIG_PLIC_BASE=0x08000000;CONFIG_CLIC_BASE=0x0c010000;CONFIG_INTC_CLIC_PLIC=1;CONFIG_SUPPORT_IRQ_NESTED=1;CONFIG_FPP_ENABLE=0;CONFIG_CHECK_FPU_DIRTY=1;CONFIG_CHECK_VECTOR_DIRTY=1;CONFIG_INIT_TASK_STACK_SIZE=8192;CONFIG_APP_TASK_STACK_SIZE=8192;CONFIG_SYSTICK_HZ=100;CONFIG_BOARD_XIAOHUI_EVB=1;CONFIG_CPU_XUANTIE_R908FDV_CP=1;CONFIG_KERNEL_NONE=1;CONFIG_DEBUG=1</Define>
+        <Define>__ASSEMBLY__;CONFIG_HAVE_LONG_LONG=1;CONFIG_SEMIHOST_NATIVE=0;CONFIG_CSI_V2=1;CONFIG_CSI=csi2;CONFIG_INIT_TASK_STACK_SIZE=8192;CONFIG_APP_TASK_STACK_SIZE=8192;CONFIG_SUPPORT_TSPEND=1;CONFIG_ARCH_MAINSTACK=8192;CONFIG_ARCH_INTERRUPTSTACK=8192;CONFIG_VIC_TSPDR=0x0c000000;CONFIG_PLIC_BASE=0x08000000;CONFIG_CLIC_BASE=0x0c010000;CONFIG_INTC_CLIC_PLIC=1;CONFIG_SUPPORT_IRQ_NESTED=1;CONFIG_FPP_ENABLE=0;CONFIG_CHECK_FPU_DIRTY=1;CONFIG_CHECK_VECTOR_DIRTY=1;CONFIG_SYSTICK_HZ=100;CONFIG_BOARD_XIAOHUI_EVB=1;CONFIG_CPU_XUANTIE_R908FDV_CP=1;CONFIG_KERNEL_NONE=1;CONFIG_DEBUG=1</Define>
         <Undefine/>
-        <IncludePath>$(ProjectPath);../../../../../components/csi/csi2/include;../../../../../components/libc_bare/include/libc_bare;../../../../../components/mm/include;../../../../../components/chip_riscv_dummy/include;../../../../../components/chip_riscv_dummy/include/asm;../../../../../boards/board_riscv_dummy/include;</IncludePath>
+        <IncludePath>$(ProjectPath);../../../../../components/csi/csi2/include;../../../../../components/mm/include;../../../../../components/libc_bare/include/libc_bare;../../../../../components/chip_riscv_dummy/include;../../../../../components/chip_riscv_dummy/include/asm;../../../../../boards/board_riscv_dummy/include;</IncludePath>
         <OtherFlags>-g -Wall -mcmodel=medany -MP -MMD -Wno-main -g -Os -Wno-unused-function -Wpointer-arith -Wno-undef -ffunction-sections -fdata-sections -fno-inline-functions -fno-builtin -fno-strict-aliasing</OtherFlags>
         <DebugLevel>none</DebugLevel>
       </Asm>
@@ -873,11 +873,11 @@
         <Tools/>
       </User>
       <Compiler>
-        <Define>CONFIG_SEMIHOST_NATIVE=0;CONFIG_HAVE_LONG_LONG=1;CONFIG_CSI_V2=1;CONFIG_CSI=csi2;CONFIG_SUPPORT_TSPEND=1;CONFIG_ARCH_MAINSTACK=8192;CONFIG_ARCH_INTERRUPTSTACK=8192;CONFIG_VIC_TSPDR=0x0c000000;CONFIG_PLIC_BASE=0x08000000;CONFIG_CLIC_BASE=0x0c010000;CONFIG_INTC_CLIC_PLIC=1;CONFIG_SUPPORT_IRQ_NESTED=1;CONFIG_FPP_ENABLE=0;CONFIG_CHECK_FPU_DIRTY=1;CONFIG_CHECK_VECTOR_DIRTY=1;CONFIG_INIT_TASK_STACK_SIZE=8192;CONFIG_APP_TASK_STACK_SIZE=8192;CONFIG_SYSTICK_HZ=100;CONFIG_BOARD_XIAOHUI_EVB=1;CONFIG_CPU_XUANTIE_R908FDV_CP=1;CONFIG_KERNEL_NONE=1;CONFIG_DEBUG=1</Define>
+        <Define>CONFIG_HAVE_LONG_LONG=1;CONFIG_SEMIHOST_NATIVE=0;CONFIG_CSI_V2=1;CONFIG_CSI=csi2;CONFIG_INIT_TASK_STACK_SIZE=8192;CONFIG_APP_TASK_STACK_SIZE=8192;CONFIG_SUPPORT_TSPEND=1;CONFIG_ARCH_MAINSTACK=8192;CONFIG_ARCH_INTERRUPTSTACK=8192;CONFIG_VIC_TSPDR=0x0c000000;CONFIG_PLIC_BASE=0x08000000;CONFIG_CLIC_BASE=0x0c010000;CONFIG_INTC_CLIC_PLIC=1;CONFIG_SUPPORT_IRQ_NESTED=1;CONFIG_FPP_ENABLE=0;CONFIG_CHECK_FPU_DIRTY=1;CONFIG_CHECK_VECTOR_DIRTY=1;CONFIG_SYSTICK_HZ=100;CONFIG_BOARD_XIAOHUI_EVB=1;CONFIG_CPU_XUANTIE_R908FDV_CP=1;CONFIG_KERNEL_NONE=1;CONFIG_DEBUG=1</Define>
         <Undefine/>
         <Optim>Default</Optim>
         <DebugLevel>Default (-g)</DebugLevel>
-        <IncludePath>$(ProjectPath);../../../../../components/csi/csi2/include;../../../../../components/libc_bare/include/libc_bare;../../../../../components/mm/include;../../../../../components/chip_riscv_dummy/include;../../../../../components/chip_riscv_dummy/include/asm;../../../../../boards/board_riscv_dummy/include;</IncludePath>
+        <IncludePath>$(ProjectPath);../../../../../components/csi/csi2/include;../../../../../components/mm/include;../../../../../components/libc_bare/include/libc_bare;../../../../../components/chip_riscv_dummy/include;../../../../../components/chip_riscv_dummy/include/asm;../../../../../boards/board_riscv_dummy/include;</IncludePath>
         <OtherFlags>-g -Wall -mcmodel=medany -MP -MMD -Wno-main -g -Os -Wno-unused-function -Wpointer-arith -Wno-undef -ffunction-sections -fdata-sections -fno-inline-functions -fno-builtin -fno-strict-aliasing</OtherFlags>
         <Verbose>no</Verbose>
         <Ansi>no</Ansi>
@@ -892,9 +892,9 @@
         <Fstrict>no</Fstrict>
       </Compiler>
       <Asm>
-        <Define>__ASSEMBLY__;CONFIG_SEMIHOST_NATIVE=0;CONFIG_HAVE_LONG_LONG=1;CONFIG_CSI_V2=1;CONFIG_CSI=csi2;CONFIG_SUPPORT_TSPEND=1;CONFIG_ARCH_MAINSTACK=8192;CONFIG_ARCH_INTERRUPTSTACK=8192;CONFIG_VIC_TSPDR=0x0c000000;CONFIG_PLIC_BASE=0x08000000;CONFIG_CLIC_BASE=0x0c010000;CONFIG_INTC_CLIC_PLIC=1;CONFIG_SUPPORT_IRQ_NESTED=1;CONFIG_FPP_ENABLE=0;CONFIG_CHECK_FPU_DIRTY=1;CONFIG_CHECK_VECTOR_DIRTY=1;CONFIG_INIT_TASK_STACK_SIZE=8192;CONFIG_APP_TASK_STACK_SIZE=8192;CONFIG_SYSTICK_HZ=100;CONFIG_BOARD_XIAOHUI_EVB=1;CONFIG_CPU_XUANTIE_R908FDV_CP=1;CONFIG_KERNEL_NONE=1;CONFIG_DEBUG=1</Define>
+        <Define>__ASSEMBLY__;CONFIG_HAVE_LONG_LONG=1;CONFIG_SEMIHOST_NATIVE=0;CONFIG_CSI_V2=1;CONFIG_CSI=csi2;CONFIG_INIT_TASK_STACK_SIZE=8192;CONFIG_APP_TASK_STACK_SIZE=8192;CONFIG_SUPPORT_TSPEND=1;CONFIG_ARCH_MAINSTACK=8192;CONFIG_ARCH_INTERRUPTSTACK=8192;CONFIG_VIC_TSPDR=0x0c000000;CONFIG_PLIC_BASE=0x08000000;CONFIG_CLIC_BASE=0x0c010000;CONFIG_INTC_CLIC_PLIC=1;CONFIG_SUPPORT_IRQ_NESTED=1;CONFIG_FPP_ENABLE=0;CONFIG_CHECK_FPU_DIRTY=1;CONFIG_CHECK_VECTOR_DIRTY=1;CONFIG_SYSTICK_HZ=100;CONFIG_BOARD_XIAOHUI_EVB=1;CONFIG_CPU_XUANTIE_R908FDV_CP=1;CONFIG_KERNEL_NONE=1;CONFIG_DEBUG=1</Define>
         <Undefine/>
-        <IncludePath>$(ProjectPath);../../../../../components/csi/csi2/include;../../../../../components/libc_bare/include/libc_bare;../../../../../components/mm/include;../../../../../components/chip_riscv_dummy/include;../../../../../components/chip_riscv_dummy/include/asm;../../../../../boards/board_riscv_dummy/include;</IncludePath>
+        <IncludePath>$(ProjectPath);../../../../../components/csi/csi2/include;../../../../../components/mm/include;../../../../../components/libc_bare/include/libc_bare;../../../../../components/chip_riscv_dummy/include;../../../../../components/chip_riscv_dummy/include/asm;../../../../../boards/board_riscv_dummy/include;</IncludePath>
         <OtherFlags>-g -Wall -mcmodel=medany -MP -MMD -Wno-main -g -Os -Wno-unused-function -Wpointer-arith -Wno-undef -ffunction-sections -fdata-sections -fno-inline-functions -fno-builtin -fno-strict-aliasing</OtherFlags>
         <DebugLevel>none</DebugLevel>
       </Asm>

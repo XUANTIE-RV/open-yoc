@@ -21,7 +21,7 @@
 /* Enable interrupts when returning from the handler */
 #define MSTATUS_PRV1 0x1880
 
-.section .stack
+.section .stack, "aw", @nobits
     .align  4
     .global g_trapstackbase
     .global g_top_trapstack
@@ -32,11 +32,12 @@ g_top_trapstack:
 #if CONFIG_SUPPORT_IRQ_NESTED
 #define IRQ_NESTED_MAX  (6)
 .section .bss
-irq_nested_level:
-.long 0
+    .align 2
+    irq_nested_level:
+    .long 0
 
-irq_nested_mcause:
-.long 0, 0, 0, 0, 0, 0
+    irq_nested_mcause:
+    .long 0, 0, 0, 0, 0, 0
 #endif
 
 .text

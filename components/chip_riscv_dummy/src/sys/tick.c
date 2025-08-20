@@ -35,10 +35,17 @@ static volatile uint32_t csi_tick = 0U;
 #endif
 static volatile uint32_t last_time_ms = 0U;
 static volatile uint64_t last_time_us = 0U;
-static volatile uint64_t timer_init_value = 0U;
 
+#ifdef CONFIG_TIMER_FOR_TICK
+static csi_timer_t tick_timer;
+#ifndef CONFIG_TICK_TIMER_IDX
+#define CONFIG_TICK_TIMER_IDX   0U
+#endif
+#else
 #if CONFIG_CPU_XUANTIE_E9XX || CONFIG_INTC_CLIC_PLIC
 static csi_dev_t tick_dev;
+#endif
+static volatile uint64_t timer_init_value = 0U;
 #endif
 
 void csi_tick_increase(void)
@@ -59,6 +66,25 @@ uint32_t csi_tick_get(void)
 #endif
 }
 
+#ifdef CONFIG_TIMER_FOR_TICK
+void tick_event_cb(csi_timer_t *timer_handle, void *arg)
+{
+    csi_tick_increase();
+#if CONFIG_AOS_OSAL
+    extern void aos_sys_tick_handler(void);
+    aos_sys_tick_handler();
+#else
+#ifdef CONFIG_KERNEL_FREERTOS
+    extern void xPortSysTickHandler(void);
+    xPortSysTickHandler();
+#elif defined(CONFIG_KERNEL_RTTHREAD)
+    extern void rt_tick_increase(void);
+    rt_tick_increase();
+#else
+#endif
+#endif /* end CONFIG_AOS_OSAL */
+}
+#else
 void tick_irq_handler(void *arg)
 {
     csi_tick_increase();
@@ -77,36 +103,137 @@ void tick_irq_handler(void *arg)
 #endif
 #endif /* end CONFIG_AOS_OSAL */
 }
+#endif /* CONFIG_TIMER_FOR_TICK */
 
 csi_error_t csi_tick_init(void)
 {
-#if CONFIG_CPU_XUANTIE_E9XX || CONFIG_INTC_CLIC_PLIC
-    tick_dev.irq_num = CORET_IRQn;
-    csi_vic_set_prio(tick_dev.irq_num, 31U);
-    csi_irq_attach(tick_dev.irq_num, &tick_irq_handler, &tick_dev);
-#endif
-
 #if defined(CONFIG_SMP) && CONFIG_SMP
     csi_tick[csi_get_cpu_id()] = 0;
 #else
     csi_tick = 0U;
 #endif
+
+#ifdef CONFIG_TIMER_FOR_TICK
+    csi_error_t ret = csi_timer_init(&tick_timer, CONFIG_TICK_TIMER_IDX);
+    if (ret == CSI_OK) {
+        ret = csi_timer_attach_callback(&tick_timer, tick_event_cb, NULL);
+        if (ret == CSI_OK) {
+            ret = csi_timer_start(&tick_timer, (1000000U / CONFIG_SYSTICK_HZ));
+        }
+    }
+    return ret;
+#else
+#if CONFIG_CPU_XUANTIE_E9XX || CONFIG_INTC_CLIC_PLIC
+    tick_dev.irq_num = CORET_IRQn;
+    csi_vic_set_prio(tick_dev.irq_num, 2);
+    csi_irq_attach(tick_dev.irq_num, &tick_irq_handler, &tick_dev);
+#endif
     timer_init_value = csi_coret_get_value2();
     csi_coret_reset_value2();
     csi_coret_config((soc_get_coretim_freq() / CONFIG_SYSTICK_HZ), CORET_IRQn);
     csi_coret_irq_enable();
-
+#endif /* CONFIG_TIMER_FOR_TICK */
     return CSI_OK;
 }
 
 void csi_tick_uninit(void)
 {
+#ifdef CONFIG_TIMER_FOR_TICK
+    csi_timer_stop(&tick_timer);
+    csi_timer_uninit(&tick_timer);
+#else
     csi_coret_irq_disable();
 #if CONFIG_CPU_XUANTIE_E9XX || CONFIG_INTC_CLIC_PLIC
     csi_irq_detach(tick_dev.irq_num);
 #endif
+#endif /* CONFIG_TIMER_FOR_TICK */
 }
 
+#ifdef CONFIG_TIMER_FOR_TICK
+uint32_t csi_tick_get_ms(void)
+{
+    uint32_t time = last_time_ms, freq;
+    freq = csi_timer_get_load_value(&tick_timer) * CONFIG_SYSTICK_HZ;
+
+    while (freq) {
+        time = (csi_tick * (1000U / CONFIG_SYSTICK_HZ)) + ((csi_timer_get_load_value(&tick_timer) - csi_timer_get_remaining_value(&tick_timer)) / (freq / 1000U));
+
+        if (time >= last_time_ms) {
+            break;
+        }
+    }
+
+    last_time_ms = time;
+    return time;
+}
+
+uint64_t csi_tick_get_us(void)
+{
+    uint64_t time, freq;
+    uint32_t temp;
+    freq = soc_get_timer_freq(CONFIG_TICK_TIMER_IDX);
+
+    while (1) {
+        /* the time of coretim pass */
+        temp = csi_timer_get_load_value(&tick_timer) - csi_timer_get_remaining_value(&tick_timer);
+        time = ((uint64_t)temp * 1000U) / (freq / 1000U);
+        /* the time of csi_tick */
+        time += ((uint64_t)csi_tick * (1000000U / CONFIG_SYSTICK_HZ));
+
+        if (time >= last_time_us) {
+            break;
+        }
+    }
+
+    last_time_us = time;
+    return time;
+}
+
+static void _mdelay(void)
+{
+    uint32_t load = csi_timer_get_load_value(&tick_timer);
+    uint32_t start_r = csi_timer_get_remaining_value(&tick_timer);
+    uint32_t cur_r;
+    uint32_t cnt   = (soc_get_timer_freq(CONFIG_TICK_TIMER_IDX) / 1000U);
+
+    while (1) {
+        cur_r = csi_timer_get_remaining_value(&tick_timer);
+
+        if (start_r > cur_r) {
+            if ((start_r - cur_r) >= cnt) {
+                break;
+            }
+        } else {
+            if (((load - cur_r) + start_r) >= cnt) {
+                break;
+            }
+        }
+    }
+}
+
+static void _10udelay(void)
+{
+    uint32_t load = csi_timer_get_load_value(&tick_timer);
+    uint32_t start_r = csi_timer_get_remaining_value(&tick_timer);
+    uint32_t cur_r;
+    uint32_t cnt   = (soc_get_timer_freq(CONFIG_TICK_TIMER_IDX) / 100000U);
+
+    while (1) {
+        cur_r = csi_timer_get_remaining_value(&tick_timer);
+
+        if (start_r > cur_r) {
+            if ((start_r - cur_r) >= cnt) {
+                break;
+            }
+        } else {
+            if (((load - cur_r) + start_r) >= cnt) {
+                break;
+            }
+        }
+    }
+}
+
+#else
 uint32_t csi_tick_get_ms(void)
 {
     uint32_t time;
@@ -166,6 +293,7 @@ static void _10udelay(void)
         }
     }
 }
+#endif
 
 __WEAK void mdelay(uint32_t ms)
 {

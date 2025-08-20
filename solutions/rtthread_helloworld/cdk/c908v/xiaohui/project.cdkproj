@@ -975,7 +975,7 @@
         <Tools/>
       </User>
       <Compiler>
-        <Define>CONFIG_KERNEL_RTTHREAD=1;__RT_KERNEL_SOURCE__=1;CONFIG_UTEST;CONFIG_CSI_V2=1;CONFIG_CSI=csi2;CONFIG_SUPPORT_TSPEND=1;CONFIG_ARCH_MAINSTACK=8192;CONFIG_ARCH_INTERRUPTSTACK=8192;CONFIG_VIC_TSPDR=0x0c000000;CONFIG_PLIC_BASE=0x08000000;CONFIG_CHECK_FPU_DIRTY=1;CONFIG_CHECK_VECTOR_DIRTY=1;CONFIG_INIT_TASK_STACK_SIZE=8192;CONFIG_APP_TASK_STACK_SIZE=8192;CONFIG_SYSTICK_HZ=100;CONFIG_BOARD_XIAOHUI_EVB=1;CONFIG_CPU_XUANTIE_C908V=1;CONFIG_DEBUG=1;CLI_CONFIG_STACK_SIZE=4096;RT_USING_FINSH</Define>
+        <Define>CONFIG_KERNEL_RTTHREAD=1;__RT_KERNEL_SOURCE__=1;CONFIG_UTEST;CONFIG_CSI_V2=1;CONFIG_CSI=csi2;CONFIG_INIT_TASK_STACK_SIZE=8192;CONFIG_APP_TASK_STACK_SIZE=8192;CONFIG_SUPPORT_TSPEND=1;CONFIG_ARCH_MAINSTACK=8192;CONFIG_ARCH_INTERRUPTSTACK=8192;CONFIG_VIC_TSPDR=0x0c000000;CONFIG_PLIC_BASE=0x08000000;CONFIG_CHECK_FPU_DIRTY=1;CONFIG_CHECK_VECTOR_DIRTY=1;CONFIG_SYSTICK_HZ=100;CONFIG_BOARD_XIAOHUI_EVB=1;CONFIG_CPU_XUANTIE_C908V=1;CONFIG_DEBUG=1;CLI_CONFIG_STACK_SIZE=4096;RT_USING_FINSH</Define>
         <Undefine/>
         <Optim>Default</Optim>
         <DebugLevel>Default (-g)</DebugLevel>
@@ -994,7 +994,7 @@
         <Fstrict>no</Fstrict>
       </Compiler>
       <Asm>
-        <Define>__ASSEMBLY__;CONFIG_KERNEL_RTTHREAD=1;__RT_KERNEL_SOURCE__=1;CONFIG_UTEST;CONFIG_CSI_V2=1;CONFIG_CSI=csi2;CONFIG_SUPPORT_TSPEND=1;CONFIG_ARCH_MAINSTACK=8192;CONFIG_ARCH_INTERRUPTSTACK=8192;CONFIG_VIC_TSPDR=0x0c000000;CONFIG_PLIC_BASE=0x08000000;CONFIG_CHECK_FPU_DIRTY=1;CONFIG_CHECK_VECTOR_DIRTY=1;CONFIG_INIT_TASK_STACK_SIZE=8192;CONFIG_APP_TASK_STACK_SIZE=8192;CONFIG_SYSTICK_HZ=100;CONFIG_BOARD_XIAOHUI_EVB=1;CONFIG_CPU_XUANTIE_C908V=1;CONFIG_DEBUG=1;CLI_CONFIG_STACK_SIZE=4096;RT_USING_FINSH</Define>
+        <Define>__ASSEMBLY__;CONFIG_KERNEL_RTTHREAD=1;__RT_KERNEL_SOURCE__=1;CONFIG_UTEST;CONFIG_CSI_V2=1;CONFIG_CSI=csi2;CONFIG_INIT_TASK_STACK_SIZE=8192;CONFIG_APP_TASK_STACK_SIZE=8192;CONFIG_SUPPORT_TSPEND=1;CONFIG_ARCH_MAINSTACK=8192;CONFIG_ARCH_INTERRUPTSTACK=8192;CONFIG_VIC_TSPDR=0x0c000000;CONFIG_PLIC_BASE=0x08000000;CONFIG_CHECK_FPU_DIRTY=1;CONFIG_CHECK_VECTOR_DIRTY=1;CONFIG_SYSTICK_HZ=100;CONFIG_BOARD_XIAOHUI_EVB=1;CONFIG_CPU_XUANTIE_C908V=1;CONFIG_DEBUG=1;CLI_CONFIG_STACK_SIZE=4096;RT_USING_FINSH</Define>
         <Undefine/>
         <IncludePath>$(ProjectPath);../../../../../components/csi/csi2/include;../../../../../components/rtthread/include;../../../../../components/rtthread/libcpu/riscv/c908v;../../../../../components/utest;../../../../../components/finsh;../../../../../components/libc_rtthread/include;../../../../../components/libc_rtthread/compilers/gcc;../../../../../components/chip_riscv_dummy/include;../../../../../components/chip_riscv_dummy/include/asm;../../../../../boards/board_riscv_dummy/include;../../../../../solutions/rtthread_helloworld/app/include;</IncludePath>
         <OtherFlags>-g -Wall -Wno-unused-function -Wformat -Wformat-security -Warray-bounds -Wuninitialized -Wreturn-type -Wcomment -Wswitch -Wparentheses -g -Wall -mcmodel=medany -MP -MMD -Wno-main -g -Os -Wno-unused-function -Wpointer-arith -Wno-undef -ffunction-sections -fdata-sections -fno-inline-functions -fno-builtin -fno-strict-aliasing -Wno-char-subscripts -Wno-unused-but-set-variable</OtherFlags>
@@ -1196,7 +1196,7 @@
         <Tools/>
       </User>
       <Compiler>
-        <Define>CONFIG_KERNEL_RTTHREAD=1;__RT_KERNEL_SOURCE__=1;CONFIG_UTEST;CONFIG_CSI_V2=1;CONFIG_CSI=csi2;CONFIG_SUPPORT_TSPEND=1;CONFIG_ARCH_MAINSTACK=8192;CONFIG_ARCH_INTERRUPTSTACK=8192;CONFIG_VIC_TSPDR=0x0c000000;CONFIG_PLIC_BASE=0x08000000;CONFIG_CHECK_FPU_DIRTY=1;CONFIG_CHECK_VECTOR_DIRTY=1;CONFIG_INIT_TASK_STACK_SIZE=8192;CONFIG_APP_TASK_STACK_SIZE=8192;CONFIG_SYSTICK_HZ=100;CONFIG_BOARD_XIAOHUI_EVB=1;CONFIG_CPU_XUANTIE_C908V=1;CONFIG_DEBUG=1;CLI_CONFIG_STACK_SIZE=4096;RT_USING_FINSH</Define>
+        <Define>CONFIG_KERNEL_RTTHREAD=1;__RT_KERNEL_SOURCE__=1;CONFIG_UTEST;CONFIG_CSI_V2=1;CONFIG_CSI=csi2;CONFIG_INIT_TASK_STACK_SIZE=8192;CONFIG_APP_TASK_STACK_SIZE=8192;CONFIG_SUPPORT_TSPEND=1;CONFIG_ARCH_MAINSTACK=8192;CONFIG_ARCH_INTERRUPTSTACK=8192;CONFIG_VIC_TSPDR=0x0c000000;CONFIG_PLIC_BASE=0x08000000;CONFIG_CHECK_FPU_DIRTY=1;CONFIG_CHECK_VECTOR_DIRTY=1;CONFIG_SYSTICK_HZ=100;CONFIG_BOARD_XIAOHUI_EVB=1;CONFIG_CPU_XUANTIE_C908V=1;CONFIG_DEBUG=1;CLI_CONFIG_STACK_SIZE=4096;RT_USING_FINSH</Define>
         <Undefine/>
         <Optim>Default</Optim>
         <DebugLevel>Default (-g)</DebugLevel>
@@ -1215,7 +1215,7 @@
         <Fstrict>no</Fstrict>
       </Compiler>
       <Asm>
-        <Define>__ASSEMBLY__;CONFIG_KERNEL_RTTHREAD=1;__RT_KERNEL_SOURCE__=1;CONFIG_UTEST;CONFIG_CSI_V2=1;CONFIG_CSI=csi2;CONFIG_SUPPORT_TSPEND=1;CONFIG_ARCH_MAINSTACK=8192;CONFIG_ARCH_INTERRUPTSTACK=8192;CONFIG_VIC_TSPDR=0x0c000000;CONFIG_PLIC_BASE=0x08000000;CONFIG_CHECK_FPU_DIRTY=1;CONFIG_CHECK_VECTOR_DIRTY=1;CONFIG_INIT_TASK_STACK_SIZE=8192;CONFIG_APP_TASK_STACK_SIZE=8192;CONFIG_SYSTICK_HZ=100;CONFIG_BOARD_XIAOHUI_EVB=1;CONFIG_CPU_XUANTIE_C908V=1;CONFIG_DEBUG=1;CLI_CONFIG_STACK_SIZE=4096;RT_USING_FINSH</Define>
+        <Define>__ASSEMBLY__;CONFIG_KERNEL_RTTHREAD=1;__RT_KERNEL_SOURCE__=1;CONFIG_UTEST;CONFIG_CSI_V2=1;CONFIG_CSI=csi2;CONFIG_INIT_TASK_STACK_SIZE=8192;CONFIG_APP_TASK_STACK_SIZE=8192;CONFIG_SUPPORT_TSPEND=1;CONFIG_ARCH_MAINSTACK=8192;CONFIG_ARCH_INTERRUPTSTACK=8192;CONFIG_VIC_TSPDR=0x0c000000;CONFIG_PLIC_BASE=0x08000000;CONFIG_CHECK_FPU_DIRTY=1;CONFIG_CHECK_VECTOR_DIRTY=1;CONFIG_SYSTICK_HZ=100;CONFIG_BOARD_XIAOHUI_EVB=1;CONFIG_CPU_XUANTIE_C908V=1;CONFIG_DEBUG=1;CLI_CONFIG_STACK_SIZE=4096;RT_USING_FINSH</Define>
         <Undefine/>
         <IncludePath>$(ProjectPath);../../../../../components/csi/csi2/include;../../../../../components/rtthread/include;../../../../../components/rtthread/libcpu/riscv/c908v;../../../../../components/utest;../../../../../components/finsh;../../../../../components/libc_rtthread/include;../../../../../components/libc_rtthread/compilers/gcc;../../../../../components/chip_riscv_dummy/include;../../../../../components/chip_riscv_dummy/include/asm;../../../../../boards/board_riscv_dummy/include;../../../../../solutions/rtthread_helloworld/app/include;</IncludePath>
         <OtherFlags>-g -Wall -Wno-unused-function -Wformat -Wformat-security -Warray-bounds -Wuninitialized -Wreturn-type -Wcomment -Wswitch -Wparentheses -g -Wall -mcmodel=medany -MP -MMD -Wno-main -g -Os -Wno-unused-function -Wpointer-arith -Wno-undef -ffunction-sections -fdata-sections -fno-inline-functions -fno-builtin -fno-strict-aliasing -Wno-char-subscripts -Wno-unused-but-set-variable</OtherFlags>

@@ -18,7 +18,7 @@
 
 #include "riscv_asm_macro.h"
 
-.section .stack
+.section .stack, "aw", @nobits
     .align  4
     .global g_trapstackbase
     .global g_top_trapstack

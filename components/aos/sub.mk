@@ -23,7 +23,9 @@ CUR_COMP_DIR := $(TOP_DIR)/components/$(CUR_COMP_NAME)
 ifeq ($(COLLECT_BUILD_FILES), 0)
 CFLAGS += -DCONFIG_OPT_FOOTPRINT_LEVEL=0 -DCONFIG_INIT_TASK_STACK_SIZE=8192 -DCONFIG_AOS_NEWLINE_SUPPORT=1 -DCONFIG_DEVICEID_FROM_KV=1 \
 		  -DCONFIG_AOS_OSAL=1 -DAOS_RTT_SPIN_LOCK_STRUCT_SIZE=32
+ifneq ($(libc), minilibc)
 CFLAGS += -Wno-implicit-exception-spec-mismatch
+endif
 else
 $(CUR_COMP_NAME)_incs := $(CUR_COMP_DIR)/include
 
@@ -41,8 +43,10 @@ $(CUR_COMP_NAME)_c_srcs := $(CUR_COMP_DIR)/src/crc16.c \
                            $(CUR_COMP_DIR)/src/ustdio.c \
                            $(CUR_COMP_DIR)/src/aos_porting.c \
                            $(CUR_COMP_DIR)/src/console_uart.c \
-                           $(wildcard $(CUR_COMP_DIR)/src/eventloop/*.c) \
-                           $(wildcard $(CUR_COMP_DIR)/src/cplusplus/*.c)
+                           $(wildcard $(CUR_COMP_DIR)/src/eventloop/*.c)
+ifneq ($(libc), minilibc)
+$(CUR_COMP_NAME)_c_srcs += $(wildcard $(CUR_COMP_DIR)/src/cplusplus/*.c)
+endif
 
 ifeq ($(call check_cflag_exact_func, -DCONFIG_KERNEL_RHINO=1), 1)
 $(CUR_COMP_NAME)_c_srcs += $(wildcard $(CUR_COMP_DIR)/src/adapter/rhino/*.c)
@@ -54,5 +58,9 @@ ifeq ($(call check_cflag_exact_func, -DCONFIG_KERNEL_RTTHREAD=1), 1)
 $(CUR_COMP_NAME)_c_srcs += $(wildcard $(CUR_COMP_DIR)/src/adapter/rtthread/*.c)
 endif
 
+ifneq ($(libc), minilibc)
+ifeq ($(call check_cflag_exact_func, -DHAVE_INIT_ARRAY_LD), 1)
 $(CUR_COMP_NAME)_cpp_srcs := $(wildcard $(CUR_COMP_DIR)/src/cplusplus/*.cpp)
+endif
+endif
 endif

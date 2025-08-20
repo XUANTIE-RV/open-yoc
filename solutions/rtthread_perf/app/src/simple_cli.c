@@ -74,7 +74,7 @@ static void smp_perf_record_test(struct record_args *args)
         char buf[32];
         rt_thread_t tid;
         snprintf(buf, sizeof(buf), "record_%ld", i);
-        tid = rt_thread_create(buf, perf_thread_entry, args, 8192, 32, 5);
+        tid = rt_thread_create(buf, perf_thread_entry, args, CONFIG_APP_TASK_STACK_SIZE, 32, 5);
         rt_thread_control(tid, RT_THREAD_CTRL_BIND_CPU, (void *)i);
         if (tid != RT_NULL) {
             rt_thread_startup(tid);
@@ -103,7 +103,7 @@ static void smp_perf_stat_test(perf_stat_args_t *args)
         char buf[32];
         rt_thread_t tid;
         snprintf(buf, sizeof(buf), "stat_%ld", i);
-        tid = rt_thread_create(buf, perf_stat_thread_entry, args, 8192, 32, 5);
+        tid = rt_thread_create(buf, perf_stat_thread_entry, args, CONFIG_APP_TASK_STACK_SIZE, 32, 5);
         rt_thread_control(tid, RT_THREAD_CTRL_BIND_CPU, (void *)i);
         if (tid != RT_NULL)
         {
@@ -228,7 +228,7 @@ int simple_cli_task_create(void)
         }
     }
 #endif
-    tid = rt_thread_create("uart_rx", simple_cli_task_entry, RT_NULL, CLI_CONFIG_STACK_SIZE, 60, 10);
+    tid = rt_thread_create("uart_rx", simple_cli_task_entry, RT_NULL, CONFIG_APP_TASK_STACK_SIZE, 60, 10);
     rt_thread_control(tid, RT_THREAD_CTRL_BIND_CPU, (void *)0);
     if (tid != RT_NULL) {
         rt_thread_startup(tid);

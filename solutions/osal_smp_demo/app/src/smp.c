@@ -44,7 +44,7 @@ void smp_example(void)
         char buf[32];
         aos_task_t task;
         snprintf(buf, sizeof(buf), "thread_%d", i);
-        aos_task_create_ext(&task, buf, thread_entry, NULL, NULL, 2048, AOS_DEFAULT_APP_PRI, AOS_TASK_AUTORUN, i);
+        aos_task_create_ext(&task, buf, thread_entry, NULL, NULL, CONFIG_APP_TASK_STACK_SIZE, AOS_DEFAULT_APP_PRI, AOS_TASK_AUTORUN, i);
     }
 }
 

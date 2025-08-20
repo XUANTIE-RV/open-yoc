@@ -1141,11 +1141,6 @@
       <locationURI>PARENT-6-PROJECT_LOC/solutions/osal_kernel_sample/app/src/timer_example.c</locationURI>
     </link>
     <link>
-      <name>components/aos/src/cplusplus/crt.cpp</name>
-      <type>1</type>
-      <locationURI>PARENT-6-PROJECT_LOC/components/aos/src/cplusplus/crt.cpp</locationURI>
-    </link>
-    <link>
       <name>components/rtthread/libcpu/riscv/c907fdvm/interrupt_gcc.S</name>
       <type>1</type>
       <locationURI>PARENT-6-PROJECT_LOC/components/rtthread/libcpu/riscv/c907fdvm/interrupt_gcc.S</locationURI>

@@ -21,11 +21,11 @@
 // I/D Cache will enable in cache_init
 void cpu_features_init(void)
 {
-#if CONFIG_CPU_XUANTIE_E901_CP || CONFIG_CPU_XUANTIE_E901_B_CP || CONFIG_CPU_XUANTIE_E901_M_CP || CONFIG_CPU_XUANTIE_E901_BM_CP
+#if CONFIG_CPU_XUANTIE_E901PLUS_CP || CONFIG_CPU_XUANTIE_E901PLUS_B_CP || CONFIG_CPU_XUANTIE_E901PLUS_M_CP || CONFIG_CPU_XUANTIE_E901PLUS_BM_CP
 	return;
 #endif
 
-#if CONFIG_CPU_XUANTIE_E901MINI_CP || CONFIG_CPU_XUANTIE_E901MINI_B_CP || CONFIG_CPU_XUANTIE_E901MINI_ZM_CP || CONFIG_CPU_XUANTIE_E901MINI_BZM_CP
+#if CONFIG_CPU_XUANTIE_E901_CP || CONFIG_CPU_XUANTIE_E901_B_CP || CONFIG_CPU_XUANTIE_E901_ZM_CP || CONFIG_CPU_XUANTIE_E901_BZM_CP
 	return;
 #endif
 
@@ -71,6 +71,18 @@ void cpu_features_init(void)
 	 * you need to confirm it by your own soc design.
 	 */
 	switch (cpu_type) {
+	case 0x1:
+		if (cpu_ver >= 0x0) {
+			rv_csr_write(CSR_MSMPR, 0x1);
+			rv_csr_write(CSR_MCCR2, 0xe249000b);
+			rv_csr_write(CSR_MXSTATUS, 0x638000);
+			rv_csr_write(CSR_MHINT, 0x1ee30c);
+			rv_csr_write(CSR_MHCR, 0x11ff & (~0x3));
+			rv_csr_write(CSR_MHINT2,0x180);
+		} else {
+			while(1);
+		}
+		break;
 	case 0x2:
 		if (cpu_ver >= 0x0) {
 			rv_csr_write(CSR_MSMPR, 0x1);

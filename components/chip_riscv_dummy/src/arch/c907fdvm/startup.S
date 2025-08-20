@@ -162,7 +162,7 @@ hart_out_of_bounds_loop:
     j	hart_out_of_bounds_loop
 #endif
 
-.section .stack
+.section .stack, "aw", @nobits
     .align  4
     .global g_base_irqstack
     .global g_top_irqstack

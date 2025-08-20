@@ -40,6 +40,7 @@ endif
 endif
 
 ifeq ($(board), smartl)
+else ifeq ($(board), smartm)
 else ifeq ($(board), xiaohui)
 else ifeq ($(board), wujian300)
 else

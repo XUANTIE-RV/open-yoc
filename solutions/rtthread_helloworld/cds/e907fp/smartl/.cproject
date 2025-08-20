@@ -36,6 +36,8 @@
                   <listOptionValue builtIn="false" value="CONFIG_UTEST"/>
                   <listOptionValue builtIn="false" value="CONFIG_CSI_V2=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CSI=csi2"/>
+                  <listOptionValue builtIn="false" value="CONFIG_INIT_TASK_STACK_SIZE=4096"/>
+                  <listOptionValue builtIn="false" value="CONFIG_APP_TASK_STACK_SIZE=8192"/>
                   <listOptionValue builtIn="false" value="CONFIG_SUPPORT_TSPEND=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_ARCH_MAINSTACK=4096"/>
                   <listOptionValue builtIn="false" value="CONFIG_ARCH_INTERRUPTSTACK=4096"/>
@@ -44,8 +46,6 @@
                   <listOptionValue builtIn="false" value="CONFIG_LIBC_MINI_PRINTF_SUPPORT=1"/>
                   <listOptionValue builtIn="false" value="E907"/>
                   <listOptionValue builtIn="false" value="CONFIG_CHECK_FPU_DIRTY=1"/>
-                  <listOptionValue builtIn="false" value="CONFIG_INIT_TASK_STACK_SIZE=4096"/>
-                  <listOptionValue builtIn="false" value="CONFIG_APP_TASK_STACK_SIZE=8192"/>
                   <listOptionValue builtIn="false" value="CONFIG_SYSTICK_HZ=100"/>
                   <listOptionValue builtIn="false" value="CONFIG_BOARD_SMARTL_EVB=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CPU_XUANTIE_E907FP=1"/>
@@ -80,6 +80,8 @@
                   <listOptionValue builtIn="false" value="CONFIG_UTEST"/>
                   <listOptionValue builtIn="false" value="CONFIG_CSI_V2=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CSI=csi2"/>
+                  <listOptionValue builtIn="false" value="CONFIG_INIT_TASK_STACK_SIZE=4096"/>
+                  <listOptionValue builtIn="false" value="CONFIG_APP_TASK_STACK_SIZE=8192"/>
                   <listOptionValue builtIn="false" value="CONFIG_SUPPORT_TSPEND=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_ARCH_MAINSTACK=4096"/>
                   <listOptionValue builtIn="false" value="CONFIG_ARCH_INTERRUPTSTACK=4096"/>
@@ -88,8 +90,6 @@
                   <listOptionValue builtIn="false" value="CONFIG_LIBC_MINI_PRINTF_SUPPORT=1"/>
                   <listOptionValue builtIn="false" value="E907"/>
                   <listOptionValue builtIn="false" value="CONFIG_CHECK_FPU_DIRTY=1"/>
-                  <listOptionValue builtIn="false" value="CONFIG_INIT_TASK_STACK_SIZE=4096"/>
-                  <listOptionValue builtIn="false" value="CONFIG_APP_TASK_STACK_SIZE=8192"/>
                   <listOptionValue builtIn="false" value="CONFIG_SYSTICK_HZ=100"/>
                   <listOptionValue builtIn="false" value="CONFIG_BOARD_SMARTL_EVB=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CPU_XUANTIE_E907FP=1"/>
@@ -124,6 +124,8 @@
                   <listOptionValue builtIn="false" value="CONFIG_UTEST"/>
                   <listOptionValue builtIn="false" value="CONFIG_CSI_V2=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CSI=csi2"/>
+                  <listOptionValue builtIn="false" value="CONFIG_INIT_TASK_STACK_SIZE=4096"/>
+                  <listOptionValue builtIn="false" value="CONFIG_APP_TASK_STACK_SIZE=8192"/>
                   <listOptionValue builtIn="false" value="CONFIG_SUPPORT_TSPEND=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_ARCH_MAINSTACK=4096"/>
                   <listOptionValue builtIn="false" value="CONFIG_ARCH_INTERRUPTSTACK=4096"/>
@@ -132,8 +134,6 @@
                   <listOptionValue builtIn="false" value="CONFIG_LIBC_MINI_PRINTF_SUPPORT=1"/>
                   <listOptionValue builtIn="false" value="E907"/>
                   <listOptionValue builtIn="false" value="CONFIG_CHECK_FPU_DIRTY=1"/>
-                  <listOptionValue builtIn="false" value="CONFIG_INIT_TASK_STACK_SIZE=4096"/>
-                  <listOptionValue builtIn="false" value="CONFIG_APP_TASK_STACK_SIZE=8192"/>
                   <listOptionValue builtIn="false" value="CONFIG_SYSTICK_HZ=100"/>
                   <listOptionValue builtIn="false" value="CONFIG_BOARD_SMARTL_EVB=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CPU_XUANTIE_E907FP=1"/>
@@ -226,6 +226,8 @@
                   <listOptionValue builtIn="false" value="CONFIG_UTEST"/>
                   <listOptionValue builtIn="false" value="CONFIG_CSI_V2=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CSI=csi2"/>
+                  <listOptionValue builtIn="false" value="CONFIG_INIT_TASK_STACK_SIZE=4096"/>
+                  <listOptionValue builtIn="false" value="CONFIG_APP_TASK_STACK_SIZE=8192"/>
                   <listOptionValue builtIn="false" value="CONFIG_SUPPORT_TSPEND=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_ARCH_MAINSTACK=4096"/>
                   <listOptionValue builtIn="false" value="CONFIG_ARCH_INTERRUPTSTACK=4096"/>
@@ -234,8 +236,6 @@
                   <listOptionValue builtIn="false" value="CONFIG_LIBC_MINI_PRINTF_SUPPORT=1"/>
                   <listOptionValue builtIn="false" value="E907"/>
                   <listOptionValue builtIn="false" value="CONFIG_CHECK_FPU_DIRTY=1"/>
-                  <listOptionValue builtIn="false" value="CONFIG_INIT_TASK_STACK_SIZE=4096"/>
-                  <listOptionValue builtIn="false" value="CONFIG_APP_TASK_STACK_SIZE=8192"/>
                   <listOptionValue builtIn="false" value="CONFIG_SYSTICK_HZ=100"/>
                   <listOptionValue builtIn="false" value="CONFIG_BOARD_SMARTL_EVB=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CPU_XUANTIE_E907FP=1"/>
@@ -270,6 +270,8 @@
                   <listOptionValue builtIn="false" value="CONFIG_UTEST"/>
                   <listOptionValue builtIn="false" value="CONFIG_CSI_V2=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CSI=csi2"/>
+                  <listOptionValue builtIn="false" value="CONFIG_INIT_TASK_STACK_SIZE=4096"/>
+                  <listOptionValue builtIn="false" value="CONFIG_APP_TASK_STACK_SIZE=8192"/>
                   <listOptionValue builtIn="false" value="CONFIG_SUPPORT_TSPEND=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_ARCH_MAINSTACK=4096"/>
                   <listOptionValue builtIn="false" value="CONFIG_ARCH_INTERRUPTSTACK=4096"/>
@@ -278,8 +280,6 @@
                   <listOptionValue builtIn="false" value="CONFIG_LIBC_MINI_PRINTF_SUPPORT=1"/>
                   <listOptionValue builtIn="false" value="E907"/>
                   <listOptionValue builtIn="false" value="CONFIG_CHECK_FPU_DIRTY=1"/>
-                  <listOptionValue builtIn="false" value="CONFIG_INIT_TASK_STACK_SIZE=4096"/>
-                  <listOptionValue builtIn="false" value="CONFIG_APP_TASK_STACK_SIZE=8192"/>
                   <listOptionValue builtIn="false" value="CONFIG_SYSTICK_HZ=100"/>
                   <listOptionValue builtIn="false" value="CONFIG_BOARD_SMARTL_EVB=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CPU_XUANTIE_E907FP=1"/>
@@ -314,6 +314,8 @@
                   <listOptionValue builtIn="false" value="CONFIG_UTEST"/>
                   <listOptionValue builtIn="false" value="CONFIG_CSI_V2=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CSI=csi2"/>
+                  <listOptionValue builtIn="false" value="CONFIG_INIT_TASK_STACK_SIZE=4096"/>
+                  <listOptionValue builtIn="false" value="CONFIG_APP_TASK_STACK_SIZE=8192"/>
                   <listOptionValue builtIn="false" value="CONFIG_SUPPORT_TSPEND=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_ARCH_MAINSTACK=4096"/>
                   <listOptionValue builtIn="false" value="CONFIG_ARCH_INTERRUPTSTACK=4096"/>
@@ -322,8 +324,6 @@
                   <listOptionValue builtIn="false" value="CONFIG_LIBC_MINI_PRINTF_SUPPORT=1"/>
                   <listOptionValue builtIn="false" value="E907"/>
                   <listOptionValue builtIn="false" value="CONFIG_CHECK_FPU_DIRTY=1"/>
-                  <listOptionValue builtIn="false" value="CONFIG_INIT_TASK_STACK_SIZE=4096"/>
-                  <listOptionValue builtIn="false" value="CONFIG_APP_TASK_STACK_SIZE=8192"/>
                   <listOptionValue builtIn="false" value="CONFIG_SYSTICK_HZ=100"/>
                   <listOptionValue builtIn="false" value="CONFIG_BOARD_SMARTL_EVB=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CPU_XUANTIE_E907FP=1"/>

@@ -27,7 +27,11 @@ void cmd_qemu_quit(char *wbuf, int wbuf_len, int argc, char **argv)
     if (argc > 0) {
         if (!strcmp(argv[0], "q") || !strcmp(argv[0], "quit")) {
             aos_cli_printf("quit from qemu.\n");
+#if CONFIG_BOARD_XIAOHUI_EVB
+            *(unsigned long *)0x4c000000 = 0x5555;
+#else
             *(unsigned long *)0x10002000 = 1;
+#endif
             return;
         }
     }
@@ -48,7 +52,5 @@ void board_cli_init()
 {
     aos_cli_init();
     cli_reg_cmd_ps();
-#if CONFIG_QEMU_RUN
     cli_reg_cmd_quit();
-#endif
 }

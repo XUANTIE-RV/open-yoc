@@ -15,6 +15,24 @@ RTOS SDK开源代码遵循Apache License 2.0开源许可协议，可以免费在
 
 ## Release Note
 
+### v2.4.0
+#### 主要特性更新
+1. 增加 E901/E901Plus 系列处理器型号支持
+2. 支持 Codesize 优化的 minilibc 库
+3. 增加非矢量中断中断咬尾示例
+4. 增加 boot from itcm 示例
+
+#### 依赖工具版本
+| **工具** | **版本号** |
+| --- | --- |
+| CDK | V2.24.13 |
+| CDS | V5.2.29 |
+| Debug Server | V5.18.5 |
+| Xuantie-900-gcc-elf-newlib编译工具链 | V3.2.0 |
+| Xuantie-900-llvm-elf-newlib编译工具链 | V2.2.1 |
+| Xuantie QEMU | V5.2.7 |
+
+
 ### v2.3.0
 #### 主要特性更新
 1. freeRTOS升级至V11.2.0版本，支持SMP功能

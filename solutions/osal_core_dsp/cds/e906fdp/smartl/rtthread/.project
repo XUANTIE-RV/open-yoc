@@ -1101,11 +1101,6 @@
       <locationURI>PARENT-6-PROJECT_LOC/solutions/osal_core_dsp/app/src/main.c</locationURI>
     </link>
     <link>
-      <name>components/aos/src/cplusplus/crt.cpp</name>
-      <type>1</type>
-      <locationURI>PARENT-6-PROJECT_LOC/components/aos/src/cplusplus/crt.cpp</locationURI>
-    </link>
-    <link>
       <name>components/rtthread/libcpu/riscv/e906fdp/interrupt_gcc.S</name>
       <type>1</type>
       <locationURI>PARENT-6-PROJECT_LOC/components/rtthread/libcpu/riscv/e906fdp/interrupt_gcc.S</locationURI>

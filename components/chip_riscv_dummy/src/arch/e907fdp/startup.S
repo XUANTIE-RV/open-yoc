@@ -153,7 +153,7 @@ Reset_Handler:
 __exit:
     j      __exit
 
-.section .stack
+.section .stack, "aw", @nobits
     .align  4
     .global g_base_irqstack
     .global g_top_irqstack

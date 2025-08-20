@@ -234,14 +234,15 @@ void do_irq(void)
             g_irq_table[irqn]->irq_handler2(irqn, g_irq_table[irqn]->arg);
         }
         else {
-            printk("undefined interrupt: irqn = 0x%x\n", irqn);
+            printk("undefined interrupt2: irqn = 0x%x\n", irqn);
             /*the interrupt has no registered isr*/
             while(1);
         }
     } else {
+        printk("null irq_handler: irqn = 0x%x\n", irqn);
         while(1);
     }
-    /* clear irq for cxx */
+
     soc_irq_end(irqn);
     CSI_INTRPT_EXIT();
 #if defined(CONFIG_SMP) && CONFIG_SMP

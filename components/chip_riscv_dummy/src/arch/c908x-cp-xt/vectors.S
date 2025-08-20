@@ -22,7 +22,7 @@
 #define CONFIG_NR_CPUS 1
 #endif
 
-.section .stack
+.section .stack, "aw", @nobits
     .align  4
     .global g_trapstackbase
     .global g_top_trapstack

@@ -12,20 +12,23 @@
 
 GCC使用以下命令编译：
 ```bash
-./do_build.sh <cpu> <platform> <kernel>
+./do_build.sh <cpu> <platform> <kernel> <libc>
 ```
 LLVM使用以下命令编译：
 ```bash
-./do_build_llvm.sh <cpu> <platform> <kernel>
+./do_build_llvm.sh <cpu> <platform> <kernel> <libc>
 ```
 
-`cpu`、`platform`、`kernel`支持列表：
+`cpu`、`platform`、`kernel`、`libc`支持列表：
 - cpu: <br />
-        `smartl`平台的cpu参考 [`components/xuantie_cpu_sdk/xt_rtos_sdk.csv`](../../components/xuantie_cpu_sdk/xt_rtos_sdk.csv) 的 `cpu_list`
+        `smartm/smartl`平台的cpu参考 [`components/xuantie_cpu_sdk/xt_rtos_sdk.csv`](../../components/xuantie_cpu_sdk/xt_rtos_sdk.csv) 的 `cpu_list`
 - platform: <br />
-        smartl
+        smartm smartl
 - kernel: <br />
         freertos rtthread
+- libc: <br />
+        newlib minilibc <br />
+        默认使用newlib，E系列处理器可支持minilibc
 
 以玄铁`e907fdp`类型为例，可以使用如下命令编译:
 ```bash

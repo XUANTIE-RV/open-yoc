@@ -832,10 +832,12 @@ __STATIC_INLINE void csi_vic_set_pending_irq(int32_t IRQn)
         IRQn -= PLIC_IRQ_OFFSET;
     } else {
         CLIC->CLICINT[IRQn].IP |= CLIC_INTIP_IP_Msk;
+        __DSB();
         return;
     }
 #endif
     plic->PLIC_IP[IRQn/32] = plic->PLIC_IP[IRQn/32] | (0x1 << (IRQn%32));
+    __DSB();
 }
 
 /**
@@ -851,10 +853,12 @@ __STATIC_INLINE void csi_vic_clear_pending_irq(int32_t IRQn)
         IRQn -= PLIC_IRQ_OFFSET;
     } else {
         CLIC->CLICINT[IRQn].IP &= ~CLIC_INTIP_IP_Msk;
+        __DSB();
         return;
     }
 #endif
     plic->PLIC_H0_SCLAIM = IRQn;
+    __DSB();
 }
 
 /**
@@ -907,12 +911,16 @@ __STATIC_INLINE void csi_vic_set_prio(int32_t IRQn, uint32_t priority)
         IRQn -= PLIC_IRQ_OFFSET;
     } else {
         uint8_t nlbits = (CLIC->CLICINFO & CLIC_INFO_CLICINTCTLBITS_Msk) >> CLIC_INFO_CLICINTCTLBITS_Pos;
-        CLIC->CLICINT[IRQn].CTL = (CLIC->CLICINT[IRQn].CTL & (~CLIC_INTCFG_PRIO_Msk)) | (priority << (8 - nlbits));
+        uint8_t ctl = CLIC->CLICINT[IRQn].CTL;
+        ctl <<= nlbits;
+        ctl >>= nlbits;
+        CLIC->CLICINT[IRQn].CTL = ctl | (priority << (8 - nlbits));
         __DSB();
         return;
     }
 #endif
     plic->PLIC_PRIO[IRQn - 1] = priority;
+    __DSB();
 }
 
 /**

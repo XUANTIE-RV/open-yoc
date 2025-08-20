@@ -35,6 +35,8 @@
                   <listOptionValue builtIn="false" value="CONFIG_HAVE_LONG_LONG=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CSI_V2=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CSI=csi2"/>
+                  <listOptionValue builtIn="false" value="CONFIG_INIT_TASK_STACK_SIZE=32768"/>
+                  <listOptionValue builtIn="false" value="CONFIG_APP_TASK_STACK_SIZE=32768"/>
                   <listOptionValue builtIn="false" value="CONFIG_SUPPORT_TSPEND=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_ARCH_INTERRUPTSTACK=32768"/>
                   <listOptionValue builtIn="false" value="CONFIG_VIC_TSPDR=0x0c000000"/>
@@ -44,9 +46,8 @@
                   <listOptionValue builtIn="false" value="CONFIG_USE_FASTMEM=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_FASTMEM_ADDR=0x50400000"/>
                   <listOptionValue builtIn="false" value="CONFIG_FASTMEM_SIZE=0x200000"/>
-                  <listOptionValue builtIn="false" value="CONFIG_CPU_FREQ_HZ=14810000"/>
-                  <listOptionValue builtIn="false" value="CONFIG_INIT_TASK_STACK_SIZE=8192"/>
-                  <listOptionValue builtIn="false" value="CONFIG_APP_TASK_STACK_SIZE=8192"/>
+                  <listOptionValue builtIn="false" value="STATIC_CSK_CPU_STACK_EXTRAL=32768"/>
+                  <listOptionValue builtIn="false" value="CONFIG_CPU_FREQ_HZ=11000000"/>
                   <listOptionValue builtIn="false" value="CONFIG_SYSTICK_HZ=100"/>
                   <listOptionValue builtIn="false" value="CONFIG_BOARD_XIAOHUI_EVB=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CPU_XUANTIE_C908X_CP=1"/>
@@ -75,6 +76,8 @@
                   <listOptionValue builtIn="false" value="CONFIG_HAVE_LONG_LONG=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CSI_V2=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CSI=csi2"/>
+                  <listOptionValue builtIn="false" value="CONFIG_INIT_TASK_STACK_SIZE=32768"/>
+                  <listOptionValue builtIn="false" value="CONFIG_APP_TASK_STACK_SIZE=32768"/>
                   <listOptionValue builtIn="false" value="CONFIG_SUPPORT_TSPEND=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_ARCH_INTERRUPTSTACK=32768"/>
                   <listOptionValue builtIn="false" value="CONFIG_VIC_TSPDR=0x0c000000"/>
@@ -84,9 +87,8 @@
                   <listOptionValue builtIn="false" value="CONFIG_USE_FASTMEM=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_FASTMEM_ADDR=0x50400000"/>
                   <listOptionValue builtIn="false" value="CONFIG_FASTMEM_SIZE=0x200000"/>
-                  <listOptionValue builtIn="false" value="CONFIG_CPU_FREQ_HZ=14810000"/>
-                  <listOptionValue builtIn="false" value="CONFIG_INIT_TASK_STACK_SIZE=8192"/>
-                  <listOptionValue builtIn="false" value="CONFIG_APP_TASK_STACK_SIZE=8192"/>
+                  <listOptionValue builtIn="false" value="STATIC_CSK_CPU_STACK_EXTRAL=32768"/>
+                  <listOptionValue builtIn="false" value="CONFIG_CPU_FREQ_HZ=11000000"/>
                   <listOptionValue builtIn="false" value="CONFIG_SYSTICK_HZ=100"/>
                   <listOptionValue builtIn="false" value="CONFIG_BOARD_XIAOHUI_EVB=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CPU_XUANTIE_C908X_CP=1"/>
@@ -115,6 +117,8 @@
                   <listOptionValue builtIn="false" value="CONFIG_HAVE_LONG_LONG=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CSI_V2=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CSI=csi2"/>
+                  <listOptionValue builtIn="false" value="CONFIG_INIT_TASK_STACK_SIZE=32768"/>
+                  <listOptionValue builtIn="false" value="CONFIG_APP_TASK_STACK_SIZE=32768"/>
                   <listOptionValue builtIn="false" value="CONFIG_SUPPORT_TSPEND=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_ARCH_INTERRUPTSTACK=32768"/>
                   <listOptionValue builtIn="false" value="CONFIG_VIC_TSPDR=0x0c000000"/>
@@ -124,9 +128,8 @@
                   <listOptionValue builtIn="false" value="CONFIG_USE_FASTMEM=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_FASTMEM_ADDR=0x50400000"/>
                   <listOptionValue builtIn="false" value="CONFIG_FASTMEM_SIZE=0x200000"/>
-                  <listOptionValue builtIn="false" value="CONFIG_CPU_FREQ_HZ=14810000"/>
-                  <listOptionValue builtIn="false" value="CONFIG_INIT_TASK_STACK_SIZE=8192"/>
-                  <listOptionValue builtIn="false" value="CONFIG_APP_TASK_STACK_SIZE=8192"/>
+                  <listOptionValue builtIn="false" value="STATIC_CSK_CPU_STACK_EXTRAL=32768"/>
+                  <listOptionValue builtIn="false" value="CONFIG_CPU_FREQ_HZ=11000000"/>
                   <listOptionValue builtIn="false" value="CONFIG_SYSTICK_HZ=100"/>
                   <listOptionValue builtIn="false" value="CONFIG_BOARD_XIAOHUI_EVB=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CPU_XUANTIE_C908X_CP=1"/>
@@ -214,6 +217,8 @@
                   <listOptionValue builtIn="false" value="CONFIG_HAVE_LONG_LONG=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CSI_V2=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CSI=csi2"/>
+                  <listOptionValue builtIn="false" value="CONFIG_INIT_TASK_STACK_SIZE=32768"/>
+                  <listOptionValue builtIn="false" value="CONFIG_APP_TASK_STACK_SIZE=32768"/>
                   <listOptionValue builtIn="false" value="CONFIG_SUPPORT_TSPEND=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_ARCH_INTERRUPTSTACK=32768"/>
                   <listOptionValue builtIn="false" value="CONFIG_VIC_TSPDR=0x0c000000"/>
@@ -223,9 +228,8 @@
                   <listOptionValue builtIn="false" value="CONFIG_USE_FASTMEM=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_FASTMEM_ADDR=0x50400000"/>
                   <listOptionValue builtIn="false" value="CONFIG_FASTMEM_SIZE=0x200000"/>
-                  <listOptionValue builtIn="false" value="CONFIG_CPU_FREQ_HZ=14810000"/>
-                  <listOptionValue builtIn="false" value="CONFIG_INIT_TASK_STACK_SIZE=8192"/>
-                  <listOptionValue builtIn="false" value="CONFIG_APP_TASK_STACK_SIZE=8192"/>
+                  <listOptionValue builtIn="false" value="STATIC_CSK_CPU_STACK_EXTRAL=32768"/>
+                  <listOptionValue builtIn="false" value="CONFIG_CPU_FREQ_HZ=11000000"/>
                   <listOptionValue builtIn="false" value="CONFIG_SYSTICK_HZ=100"/>
                   <listOptionValue builtIn="false" value="CONFIG_BOARD_XIAOHUI_EVB=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CPU_XUANTIE_C908X_CP=1"/>
@@ -254,6 +258,8 @@
                   <listOptionValue builtIn="false" value="CONFIG_HAVE_LONG_LONG=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CSI_V2=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CSI=csi2"/>
+                  <listOptionValue builtIn="false" value="CONFIG_INIT_TASK_STACK_SIZE=32768"/>
+                  <listOptionValue builtIn="false" value="CONFIG_APP_TASK_STACK_SIZE=32768"/>
                   <listOptionValue builtIn="false" value="CONFIG_SUPPORT_TSPEND=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_ARCH_INTERRUPTSTACK=32768"/>
                   <listOptionValue builtIn="false" value="CONFIG_VIC_TSPDR=0x0c000000"/>
@@ -263,9 +269,8 @@
                   <listOptionValue builtIn="false" value="CONFIG_USE_FASTMEM=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_FASTMEM_ADDR=0x50400000"/>
                   <listOptionValue builtIn="false" value="CONFIG_FASTMEM_SIZE=0x200000"/>
-                  <listOptionValue builtIn="false" value="CONFIG_CPU_FREQ_HZ=14810000"/>
-                  <listOptionValue builtIn="false" value="CONFIG_INIT_TASK_STACK_SIZE=8192"/>
-                  <listOptionValue builtIn="false" value="CONFIG_APP_TASK_STACK_SIZE=8192"/>
+                  <listOptionValue builtIn="false" value="STATIC_CSK_CPU_STACK_EXTRAL=32768"/>
+                  <listOptionValue builtIn="false" value="CONFIG_CPU_FREQ_HZ=11000000"/>
                   <listOptionValue builtIn="false" value="CONFIG_SYSTICK_HZ=100"/>
                   <listOptionValue builtIn="false" value="CONFIG_BOARD_XIAOHUI_EVB=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CPU_XUANTIE_C908X_CP=1"/>
@@ -294,6 +299,8 @@
                   <listOptionValue builtIn="false" value="CONFIG_HAVE_LONG_LONG=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CSI_V2=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CSI=csi2"/>
+                  <listOptionValue builtIn="false" value="CONFIG_INIT_TASK_STACK_SIZE=32768"/>
+                  <listOptionValue builtIn="false" value="CONFIG_APP_TASK_STACK_SIZE=32768"/>
                   <listOptionValue builtIn="false" value="CONFIG_SUPPORT_TSPEND=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_ARCH_INTERRUPTSTACK=32768"/>
                   <listOptionValue builtIn="false" value="CONFIG_VIC_TSPDR=0x0c000000"/>
@@ -303,9 +310,8 @@
                   <listOptionValue builtIn="false" value="CONFIG_USE_FASTMEM=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_FASTMEM_ADDR=0x50400000"/>
                   <listOptionValue builtIn="false" value="CONFIG_FASTMEM_SIZE=0x200000"/>
-                  <listOptionValue builtIn="false" value="CONFIG_CPU_FREQ_HZ=14810000"/>
-                  <listOptionValue builtIn="false" value="CONFIG_INIT_TASK_STACK_SIZE=8192"/>
-                  <listOptionValue builtIn="false" value="CONFIG_APP_TASK_STACK_SIZE=8192"/>
+                  <listOptionValue builtIn="false" value="STATIC_CSK_CPU_STACK_EXTRAL=32768"/>
+                  <listOptionValue builtIn="false" value="CONFIG_CPU_FREQ_HZ=11000000"/>
                   <listOptionValue builtIn="false" value="CONFIG_SYSTICK_HZ=100"/>
                   <listOptionValue builtIn="false" value="CONFIG_BOARD_XIAOHUI_EVB=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CPU_XUANTIE_C908X_CP=1"/>

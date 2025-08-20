@@ -4,3 +4,4 @@ solutions/*/gdbinit.*
 *.fold
 perf_rtos_*.data
 .yoc
+*.ld.post*

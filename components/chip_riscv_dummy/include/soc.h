@@ -250,7 +250,7 @@ typedef enum {
     TIM3_IRQn                      =  21U,      /* timer3 Interrupt */
 } irqn_type_t;
 
-#if CONFIG_CPU_XUANTIE_E901MINI_CP || CONFIG_CPU_XUANTIE_E901MINI_B_CP || CONFIG_CPU_XUANTIE_E901MINI_ZM_CP || CONFIG_CPU_XUANTIE_E901MINI_BZM_CP
+#if CONFIG_BOARD_SMARTM_EVB
 #define DW_UART0_BASE               0x180000UL
 #define DW_TIMER0_BASE              0x181000UL
 #define DW_TIMER1_BASE              0x181014UL
@@ -273,7 +273,7 @@ typedef enum {
 #define FAKE_IRQ_TIMER4             (-1)
 #define DW_TIMER4_BASE              (0x40021000UL)
 #endif
-#endif /* CONFIG_CPU_XUANTIE_E901MINI */
+#endif /* CONFIG_BOARD_SMARTM_EVB */
 
 #else
 

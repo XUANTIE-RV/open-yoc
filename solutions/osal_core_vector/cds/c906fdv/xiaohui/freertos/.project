@@ -1036,11 +1036,6 @@
       <locationURI>PARENT-6-PROJECT_LOC/solutions/osal_core_vector/app/src/main.c</locationURI>
     </link>
     <link>
-      <name>components/aos/src/cplusplus/crt.cpp</name>
-      <type>1</type>
-      <locationURI>PARENT-6-PROJECT_LOC/components/aos/src/cplusplus/crt.cpp</locationURI>
-    </link>
-    <link>
       <name>components/freertos/FreeRTOS/Source/portable/GCC/riscv/c906fdv/tspend/cpu_task_sw.S</name>
       <type>1</type>
       <locationURI>PARENT-6-PROJECT_LOC/components/freertos/FreeRTOS/Source/portable/GCC/riscv/c906fdv/tspend/cpu_task_sw.S</locationURI>

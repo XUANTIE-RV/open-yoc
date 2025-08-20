@@ -22,7 +22,7 @@
 #define CONFIG_NR_CPUS 1
 #endif
 
-.section .stack
+.section .stack, "aw", @nobits
     .align  4
     .global g_trapstackbase
     .global g_top_trapstack
@@ -66,7 +66,11 @@ Default_IRQHandler:
 #endif
     csrw    mscratch, sp
 
+#if CONFIG_SMP
     csrr    t0, mhartid
+#else
+    li      t0, 0
+#endif
     la      sp, g_base_irqstack
     addi    t1, t0, 1
     li      t0, CONFIG_ARCH_INTERRUPTSTACK
@@ -176,7 +180,11 @@ Default_IRQHandler:
     sd      t2, (8+8)(sp)
     sd      t3, (12+12)(sp)
 
+#if CONFIG_SMP
     csrr    t3, mhartid
+#else
+    li      t3, 0
+#endif
 
     la      t0, irq_nested_level
     slli    t2, t3, 3    /* mhartid * 8 */
@@ -271,7 +279,11 @@ Default_IRQHandler:
     csrc    mstatus, 8
 
     /* get mcause from irq_nested_mcause */
+#if CONFIG_SMP
     csrr    t3, mhartid
+#else
+    li      t3, 0
+#endif
     la      t0, irq_nested_level
     slli    t2, t3, 3    /* mhartid * 8 */
     add     t0, t0, t2
@@ -574,7 +586,11 @@ Mcoret_Handler:
     sd      t1, (8)(sp)
     csrw    mscratch, sp
 
+#if CONFIG_SMP
     csrr    t0, mhartid
+#else
+    li      t0, 0
+#endif
     la      sp, g_base_irqstack
     addi    t1, t0, 1
     li      t0, CONFIG_ARCH_INTERRUPTSTACK
@@ -734,7 +750,11 @@ Mirq_Handler:
 #endif
     csrw    mscratch, sp
 
+#if CONFIG_SMP
     csrr    t0, mhartid
+#else
+    li      t0, 0
+#endif
     la      sp, g_base_irqstack
     addi    t1, t0, 1
     li      t0, CONFIG_ARCH_INTERRUPTSTACK
@@ -903,7 +923,11 @@ ECC_L1_Handler:
     sd      t1, (8)(sp)
     csrw    mscratch, sp
 
+#if CONFIG_SMP
     csrr    t0, mhartid
+#else
+    li      t0, 0
+#endif
     la      sp, g_base_irqstack
     addi    t1, t0, 1
     li      t0, CONFIG_ARCH_INTERRUPTSTACK

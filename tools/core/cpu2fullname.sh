@@ -3,14 +3,14 @@
 declare -A key_value_map
 # cpu,cpu_full_name,cpu_macro
 key_value_map=(
-    ["e901-cp"]="e901bm-cp,CONFIG_CPU_XUANTIE_E901_CP"
-    ["e901b-cp"]="e901bm-cp,CONFIG_CPU_XUANTIE_E901_B_CP"
-    ["e901m-cp"]="e901bm-cp,CONFIG_CPU_XUANTIE_E901_M_CP"
-    ["e901bm-cp"]="e901bm-cp,CONFIG_CPU_XUANTIE_E901_BM_CP"
-    ["e901mini-cp"]="e901minibzm-cp,CONFIG_CPU_XUANTIE_E901MINI_CP"
-    ["e901minib-cp"]="e901minibzm-cp,CONFIG_CPU_XUANTIE_E901MINI_B_CP"
-    ["e901minizm-cp"]="e901minibzm-cp,CONFIG_CPU_XUANTIE_E901MINI_ZM_CP"
-    ["e901minibzm-cp"]="e901minibzm-cp,CONFIG_CPU_XUANTIE_E901MINI_BZM_CP"
+    ["e901plus-cp"]="e901plusbm-cp,CONFIG_CPU_XUANTIE_E901PLUS_CP"
+    ["e901plusb-cp"]="e901plusbm-cp,CONFIG_CPU_XUANTIE_E901PLUS_B_CP"
+    ["e901plusm-cp"]="e901plusbm-cp,CONFIG_CPU_XUANTIE_E901PLUS_M_CP"
+    ["e901plusbm-cp"]="e901plusbm-cp,CONFIG_CPU_XUANTIE_E901PLUS_BM_CP"
+    ["e901-cp"]="e901bzm-cp,CONFIG_CPU_XUANTIE_E901_CP"
+    ["e901b-cp"]="e901bzm-cp,CONFIG_CPU_XUANTIE_E901_B_CP"
+    ["e901zm-cp"]="e901bzm-cp,CONFIG_CPU_XUANTIE_E901_ZM_CP"
+    ["e901bzm-cp"]="e901bzm-cp,CONFIG_CPU_XUANTIE_E901_BZM_CP"
     ["e902"]="e902mt,CONFIG_CPU_XUANTIE_E902"
     ["e902m"]="e902mt,CONFIG_CPU_XUANTIE_E902M"
     ["e902t"]="e902mt,CONFIG_CPU_XUANTIE_E902T"

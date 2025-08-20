@@ -36,56 +36,6 @@
       <locationURI>PARENT-6-PROJECT_LOC/components/csi/csi2/src/csi_ringbuf.c</locationURI>
     </link>
     <link>
-      <name>components/libc_stub/lib_msleep.c</name>
-      <type>1</type>
-      <locationURI>PARENT-6-PROJECT_LOC/components/libc_stub/lib_msleep.c</locationURI>
-    </link>
-    <link>
-      <name>components/libc_stub/lib_sleep.c</name>
-      <type>1</type>
-      <locationURI>PARENT-6-PROJECT_LOC/components/libc_stub/lib_sleep.c</locationURI>
-    </link>
-    <link>
-      <name>components/libc_stub/lib_usleep.c</name>
-      <type>1</type>
-      <locationURI>PARENT-6-PROJECT_LOC/components/libc_stub/lib_usleep.c</locationURI>
-    </link>
-    <link>
-      <name>components/libc_stub/mini_printf.c</name>
-      <type>1</type>
-      <locationURI>PARENT-6-PROJECT_LOC/components/libc_stub/mini_printf.c</locationURI>
-    </link>
-    <link>
-      <name>components/libc_stub/newlib_reentry.c</name>
-      <type>1</type>
-      <locationURI>PARENT-6-PROJECT_LOC/components/libc_stub/newlib_reentry.c</locationURI>
-    </link>
-    <link>
-      <name>components/libc_stub/newlib_stub.c</name>
-      <type>1</type>
-      <locationURI>PARENT-6-PROJECT_LOC/components/libc_stub/newlib_stub.c</locationURI>
-    </link>
-    <link>
-      <name>components/libc_stub/random.c</name>
-      <type>1</type>
-      <locationURI>PARENT-6-PROJECT_LOC/components/libc_stub/random.c</locationURI>
-    </link>
-    <link>
-      <name>components/libc_stub/settimeofday.c</name>
-      <type>1</type>
-      <locationURI>PARENT-6-PROJECT_LOC/components/libc_stub/settimeofday.c</locationURI>
-    </link>
-    <link>
-      <name>components/libc_stub/sys/fcntl.c</name>
-      <type>1</type>
-      <locationURI>PARENT-6-PROJECT_LOC/components/libc_stub/sys/fcntl.c</locationURI>
-    </link>
-    <link>
-      <name>components/libc_stub/string/strext.c</name>
-      <type>1</type>
-      <locationURI>PARENT-6-PROJECT_LOC/components/libc_stub/string/strext.c</locationURI>
-    </link>
-    <link>
       <name>components/devices/src/adc.c</name>
       <type>1</type>
       <locationURI>PARENT-6-PROJECT_LOC/components/devices/src/adc.c</locationURI>
@@ -981,6 +931,56 @@
       <locationURI>PARENT-6-PROJECT_LOC/components/rtthread/src/klibc/kstring.c</locationURI>
     </link>
     <link>
+      <name>components/libc_stub/lib_msleep.c</name>
+      <type>1</type>
+      <locationURI>PARENT-6-PROJECT_LOC/components/libc_stub/lib_msleep.c</locationURI>
+    </link>
+    <link>
+      <name>components/libc_stub/lib_sleep.c</name>
+      <type>1</type>
+      <locationURI>PARENT-6-PROJECT_LOC/components/libc_stub/lib_sleep.c</locationURI>
+    </link>
+    <link>
+      <name>components/libc_stub/lib_usleep.c</name>
+      <type>1</type>
+      <locationURI>PARENT-6-PROJECT_LOC/components/libc_stub/lib_usleep.c</locationURI>
+    </link>
+    <link>
+      <name>components/libc_stub/mini_printf.c</name>
+      <type>1</type>
+      <locationURI>PARENT-6-PROJECT_LOC/components/libc_stub/mini_printf.c</locationURI>
+    </link>
+    <link>
+      <name>components/libc_stub/newlib_reentry.c</name>
+      <type>1</type>
+      <locationURI>PARENT-6-PROJECT_LOC/components/libc_stub/newlib_reentry.c</locationURI>
+    </link>
+    <link>
+      <name>components/libc_stub/newlib_stub.c</name>
+      <type>1</type>
+      <locationURI>PARENT-6-PROJECT_LOC/components/libc_stub/newlib_stub.c</locationURI>
+    </link>
+    <link>
+      <name>components/libc_stub/random.c</name>
+      <type>1</type>
+      <locationURI>PARENT-6-PROJECT_LOC/components/libc_stub/random.c</locationURI>
+    </link>
+    <link>
+      <name>components/libc_stub/settimeofday.c</name>
+      <type>1</type>
+      <locationURI>PARENT-6-PROJECT_LOC/components/libc_stub/settimeofday.c</locationURI>
+    </link>
+    <link>
+      <name>components/libc_stub/sys/fcntl.c</name>
+      <type>1</type>
+      <locationURI>PARENT-6-PROJECT_LOC/components/libc_stub/sys/fcntl.c</locationURI>
+    </link>
+    <link>
+      <name>components/libc_stub/string/strext.c</name>
+      <type>1</type>
+      <locationURI>PARENT-6-PROJECT_LOC/components/libc_stub/string/strext.c</locationURI>
+    </link>
+    <link>
       <name>components/chip_riscv_dummy/src/arch/r920/system.c</name>
       <type>1</type>
       <locationURI>PARENT-6-PROJECT_LOC/components/chip_riscv_dummy/src/arch/r920/system.c</locationURI>
@@ -1124,11 +1124,6 @@
       <name>solutions/osal_semihost2/app/src/main.c</name>
       <type>1</type>
       <locationURI>PARENT-6-PROJECT_LOC/solutions/osal_semihost2/app/src/main.c</locationURI>
-    </link>
-    <link>
-      <name>components/aos/src/cplusplus/crt.cpp</name>
-      <type>1</type>
-      <locationURI>PARENT-6-PROJECT_LOC/components/aos/src/cplusplus/crt.cpp</locationURI>
     </link>
     <link>
       <name>components/rtthread/libcpu/riscv/r920/interrupt_gcc.S</name>

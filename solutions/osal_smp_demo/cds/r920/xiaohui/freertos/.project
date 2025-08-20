@@ -966,11 +966,6 @@
       <locationURI>PARENT-6-PROJECT_LOC/solutions/osal_smp_demo/app/src/smp.c</locationURI>
     </link>
     <link>
-      <name>components/aos/src/cplusplus/crt.cpp</name>
-      <type>1</type>
-      <locationURI>PARENT-6-PROJECT_LOC/components/aos/src/cplusplus/crt.cpp</locationURI>
-    </link>
-    <link>
       <name>components/freertos/FreeRTOS/Source/portable/GCC/riscv/r920/tspend/cpu_task_sw.S</name>
       <type>1</type>
       <locationURI>PARENT-6-PROJECT_LOC/components/freertos/FreeRTOS/Source/portable/GCC/riscv/r920/tspend/cpu_task_sw.S</locationURI>

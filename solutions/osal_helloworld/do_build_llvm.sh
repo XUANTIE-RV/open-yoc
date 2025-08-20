@@ -40,7 +40,7 @@ function check_cpu() {
 
 function check_board() {
 	board=$1
-	board_list=('smartl' 'xiaohui')
+	board_list=('smartm' 'smartl' 'xiaohui')
 	#echo "the board is "$board
 	for _board in ${board_list[*]}; do
 		if [ "$board" == "$_board" ]; then
@@ -81,4 +81,4 @@ check_cpu $cpu_name
 check_board $board
 check_rtos $rtos
 
-make -j${nproc} cpu=$1 board=$2 rtos=$3 toolchain=llvm
+make -j${nproc} cpu=$1 board=$2 rtos=$3 toolchain=llvm libc=$4

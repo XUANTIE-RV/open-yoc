@@ -65,14 +65,16 @@ static inline int _csi_vlenb_get_value(void)
 #define STACK_F_EXTRAL_SIZE     0
 #endif /*__riscv_flen*/
 
+#define CSK_CPU_STACK_EXTRAL    (STACK_M_EXTRAL_SIZE + STACK_V_EXTRAL_SIZE + STACK_F_EXTRAL_SIZE)
+
+#ifndef STATIC_CSK_CPU_STACK_EXTRAL
 #if defined(__riscv_matrix) || defined(__riscv_xtheadmatrix) || defined(__riscv_vector)
 /* FIXME: for static allocate stack */
-#define STATIC_CSK_CPU_STACK_EXTRAL       (16384)
+#define STATIC_CSK_CPU_STACK_EXTRAL       (8192)
 #else
 #define STATIC_CSK_CPU_STACK_EXTRAL       (0)
 #endif
-
-#define CSK_CPU_STACK_EXTRAL    (STACK_M_EXTRAL_SIZE + STACK_V_EXTRAL_SIZE + STACK_F_EXTRAL_SIZE)
+#endif /* STATIC_CSK_CPU_STACK_EXTRAL */
 
 #endif /* __ASSEMBLY__ */
 

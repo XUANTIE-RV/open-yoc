@@ -25,12 +25,12 @@
 extern "C" {
 #endif
 
-#define RECORD_STATE_BUF_FULL 			1
-#define RECORD_STATE_TRACE_FINISH 		2
-#define RECORD_STATE_TRACING 			3
-#define RECORD_STATE_FORCE_STOP 		4
-#define RECORD_STATE_BUF_DUMP 			5
-#define RECORD_STATE_BUF_DUMP_END 		6
+#define RECORD_STATE_BUF_FULL           1
+#define RECORD_STATE_TRACE_FINISH       2
+#define RECORD_STATE_TRACING            3
+#define RECORD_STATE_FORCE_STOP         4
+#define RECORD_STATE_BUF_DUMP           5
+#define RECORD_STATE_BUF_DUMP_END       6
 
 typedef enum {
     PERF_OK = 0,

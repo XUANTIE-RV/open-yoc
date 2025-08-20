@@ -296,8 +296,8 @@ typedef struct {
 #define CACHE_MHCR_IE_Msk                      (0x1UL << CACHE_MHCR_IE_Pos)                  /*!< CACHE MHCR: IE Mask */
 
 #if CONFIG_CPU_XUANTIE_E902 || CONFIG_CPU_XUANTIE_E902M || CONFIG_CPU_XUANTIE_E902T || CONFIG_CPU_XUANTIE_E902MT \
-    || CONFIG_CPU_XUANTIE_E901_CP || CONFIG_CPU_XUANTIE_E901_B_CP || CONFIG_CPU_XUANTIE_E901_M_CP || CONFIG_CPU_XUANTIE_E901_BM_CP \
-    || CONFIG_CPU_XUANTIE_E901MINI_CP || CONFIG_CPU_XUANTIE_E901MINI_B_CP || CONFIG_CPU_XUANTIE_E901MINI_ZM_CP || CONFIG_CPU_XUANTIE_E901MINI_BZM_CP
+    || CONFIG_CPU_XUANTIE_E901PLUS_CP || CONFIG_CPU_XUANTIE_E901PLUS_B_CP || CONFIG_CPU_XUANTIE_E901PLUS_M_CP || CONFIG_CPU_XUANTIE_E901PLUS_BM_CP \
+    || CONFIG_CPU_XUANTIE_E901_CP || CONFIG_CPU_XUANTIE_E901_B_CP || CONFIG_CPU_XUANTIE_E901_ZM_CP || CONFIG_CPU_XUANTIE_E901_BZM_CP
 #define CACHE_INV_ADDR_Pos                     4U
 #else
 #define CACHE_INV_ADDR_Pos                     5U
@@ -482,8 +482,8 @@ __STATIC_INLINE int csi_get_cpu_id(void)
 __STATIC_INLINE int csi_get_cache_line_size(void)
 {
 #if CONFIG_CPU_XUANTIE_E902 || CONFIG_CPU_XUANTIE_E902M || CONFIG_CPU_XUANTIE_E902T || CONFIG_CPU_XUANTIE_E902MT \
-    || CONFIG_CPU_XUANTIE_E901_CP || CONFIG_CPU_XUANTIE_E901_B_CP || CONFIG_CPU_XUANTIE_E901_M_CP || CONFIG_CPU_XUANTIE_E901_BM_CP \
-    || CONFIG_CPU_XUANTIE_E901MINI_CP || CONFIG_CPU_XUANTIE_E901MINI_B_CP || CONFIG_CPU_XUANTIE_E901MINI_ZM_CP || CONFIG_CPU_XUANTIE_E901MINI_BZM_CP
+    || CONFIG_CPU_XUANTIE_E901PLUS_CP || CONFIG_CPU_XUANTIE_E901PLUS_B_CP || CONFIG_CPU_XUANTIE_E901PLUS_M_CP || CONFIG_CPU_XUANTIE_E901PLUS_BM_CP \
+    || CONFIG_CPU_XUANTIE_E901_CP || CONFIG_CPU_XUANTIE_E901_B_CP || CONFIG_CPU_XUANTIE_E901_ZM_CP || CONFIG_CPU_XUANTIE_E901_BZM_CP
     return 16;
 #else
     return 32;
@@ -557,6 +557,7 @@ __STATIC_INLINE uint32_t csi_vic_get_pending_irq(int32_t IRQn)
 __STATIC_INLINE void csi_vic_set_pending_irq(int32_t IRQn)
 {
     CLIC->CLICINT[IRQn].IP |= CLIC_INTIP_IP_Msk;
+    __DSB();
 }
 
 /**
@@ -567,6 +568,7 @@ __STATIC_INLINE void csi_vic_set_pending_irq(int32_t IRQn)
 __STATIC_INLINE void csi_vic_clear_pending_irq(int32_t IRQn)
 {
     CLIC->CLICINT[IRQn].IP &= ~CLIC_INTIP_IP_Msk;
+    __DSB();
 }
 
 /**
@@ -579,7 +581,10 @@ __STATIC_INLINE void csi_vic_clear_pending_irq(int32_t IRQn)
 __STATIC_INLINE void csi_vic_set_prio(int32_t IRQn, uint32_t priority)
 {
     uint8_t nlbits = (CLIC->CLICINFO & CLIC_INFO_CLICINTCTLBITS_Msk) >> CLIC_INFO_CLICINTCTLBITS_Pos;
-    CLIC->CLICINT[IRQn].CTL = (CLIC->CLICINT[IRQn].CTL & (~CLIC_INTCFG_PRIO_Msk)) | (priority << (8 - nlbits));
+    uint8_t ctl = CLIC->CLICINT[IRQn].CTL;
+    ctl <<= nlbits;
+    ctl >>= nlbits;
+    CLIC->CLICINT[IRQn].CTL = ctl | (priority << (8 - nlbits));
     __DSB();
 }
 
@@ -625,6 +630,7 @@ __STATIC_INLINE uint32_t csi_vic_set_thresh(uint32_t thresh)
         CLIC->MINTTHRESH = 0xff << 24;
 
     CLIC->MINTTHRESH = thresh << 24;
+    __DSB();
     return temp;
 }
 
@@ -704,7 +710,7 @@ __STATIC_INLINE void csi_mpu_disable_region(uint32_t idx)
 __STATIC_INLINE uint32_t _csi_coret_config(unsigned long coret_base, uint32_t ticks, int32_t IRQn)
 {
     CORET_Type *coret = (CORET_Type *)coret_base;
-    if ((coret->MTIMECMP != 0) && (coret->MTIMECMP != 0xffffffffffffffff)) {
+    if ((coret->MTIMECMP != 0) && (coret->MTIMECMP != 0xFFFFFFFFFFFFFFFFULL)) {
         coret->MTIMECMP = coret->MTIMECMP + ticks;
     } else {
         coret->MTIMECMP = coret->MTIME + ticks;

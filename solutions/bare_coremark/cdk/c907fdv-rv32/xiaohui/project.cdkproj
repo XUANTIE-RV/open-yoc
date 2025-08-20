@@ -669,11 +669,11 @@
         <Tools/>
       </User>
       <Compiler>
-        <Define>CONFIG_SEMIHOST_NATIVE=0;CONFIG_HAVE_LONG_LONG=1;CONFIG_CSI_V2=1;CONFIG_CSI=csi2;CONFIG_SUPPORT_TSPEND=1;CONFIG_ARCH_INTERRUPTSTACK=8192;CONFIG_VIC_TSPDR=0x0c000000;CONFIG_PLIC_BASE=0x08000000;CONFIG_CHECK_FPU_DIRTY=1;CONFIG_CHECK_VECTOR_DIRTY=1;CONFIG_CHECK_MATRIX_DIRTY=1;CONFIG_INIT_TASK_STACK_SIZE=8192;CONFIG_APP_TASK_STACK_SIZE=8192;CONFIG_SYSTICK_HZ=100;CONFIG_BOARD_XIAOHUI_EVB=1;CONFIG_CPU_XUANTIE_C907FDV_RV32=1;CONFIG_KERNEL_NONE=1;CONFIG_DEBUG=1;CONFIG_ARCH_MAINSTACK=8192</Define>
+        <Define>CONFIG_HAVE_LONG_LONG=1;CONFIG_SEMIHOST_NATIVE=0;CONFIG_CSI_V2=1;CONFIG_CSI=csi2;CONFIG_INIT_TASK_STACK_SIZE=8192;CONFIG_APP_TASK_STACK_SIZE=8192;CONFIG_SUPPORT_TSPEND=1;CONFIG_ARCH_INTERRUPTSTACK=8192;CONFIG_VIC_TSPDR=0x0c000000;CONFIG_PLIC_BASE=0x08000000;CONFIG_CHECK_FPU_DIRTY=1;CONFIG_CHECK_VECTOR_DIRTY=1;CONFIG_CHECK_MATRIX_DIRTY=1;CONFIG_SYSTICK_HZ=100;CONFIG_BOARD_XIAOHUI_EVB=1;CONFIG_CPU_XUANTIE_C907FDV_RV32=1;CONFIG_KERNEL_NONE=1;CONFIG_DEBUG=1;CONFIG_ARCH_MAINSTACK=8192</Define>
         <Undefine/>
         <Optim>Default</Optim>
         <DebugLevel>Default (-g)</DebugLevel>
-        <IncludePath>$(ProjectPath);../../../../../components/csi/csi2/include;../../../../../components/libc_bare/include/libc_bare;../../../../../components/mm/include;../../../../../components/chip_riscv_dummy/include;../../../../../components/chip_riscv_dummy/include/asm;../../../../../boards/board_riscv_dummy/include;</IncludePath>
+        <IncludePath>$(ProjectPath);../../../../../components/csi/csi2/include;../../../../../components/mm/include;../../../../../components/libc_bare/include/libc_bare;../../../../../components/chip_riscv_dummy/include;../../../../../components/chip_riscv_dummy/include/asm;../../../../../boards/board_riscv_dummy/include;</IncludePath>
         <OtherFlags>-g -Wall -mcmodel=medany -MP -MMD -Wno-main -g -O3 -funroll-all-loops -finline-limit=500 -fgcse-sm -msignedness-cmpiv -fno-code-hoisting -mno-thread-jumps1 -mno-iv-adjust-addr-cost -mno-expand-split-imm -fselective-scheduling -fgcse-las</OtherFlags>
         <Verbose>no</Verbose>
         <Ansi>no</Ansi>
@@ -688,9 +688,9 @@
         <Fstrict>no</Fstrict>
       </Compiler>
       <Asm>
-        <Define>__ASSEMBLY__;CONFIG_SEMIHOST_NATIVE=0;CONFIG_HAVE_LONG_LONG=1;CONFIG_CSI_V2=1;CONFIG_CSI=csi2;CONFIG_SUPPORT_TSPEND=1;CONFIG_ARCH_INTERRUPTSTACK=8192;CONFIG_VIC_TSPDR=0x0c000000;CONFIG_PLIC_BASE=0x08000000;CONFIG_CHECK_FPU_DIRTY=1;CONFIG_CHECK_VECTOR_DIRTY=1;CONFIG_CHECK_MATRIX_DIRTY=1;CONFIG_INIT_TASK_STACK_SIZE=8192;CONFIG_APP_TASK_STACK_SIZE=8192;CONFIG_SYSTICK_HZ=100;CONFIG_BOARD_XIAOHUI_EVB=1;CONFIG_CPU_XUANTIE_C907FDV_RV32=1;CONFIG_KERNEL_NONE=1;CONFIG_DEBUG=1;CONFIG_ARCH_MAINSTACK=8192</Define>
+        <Define>__ASSEMBLY__;CONFIG_HAVE_LONG_LONG=1;CONFIG_SEMIHOST_NATIVE=0;CONFIG_CSI_V2=1;CONFIG_CSI=csi2;CONFIG_INIT_TASK_STACK_SIZE=8192;CONFIG_APP_TASK_STACK_SIZE=8192;CONFIG_SUPPORT_TSPEND=1;CONFIG_ARCH_INTERRUPTSTACK=8192;CONFIG_VIC_TSPDR=0x0c000000;CONFIG_PLIC_BASE=0x08000000;CONFIG_CHECK_FPU_DIRTY=1;CONFIG_CHECK_VECTOR_DIRTY=1;CONFIG_CHECK_MATRIX_DIRTY=1;CONFIG_SYSTICK_HZ=100;CONFIG_BOARD_XIAOHUI_EVB=1;CONFIG_CPU_XUANTIE_C907FDV_RV32=1;CONFIG_KERNEL_NONE=1;CONFIG_DEBUG=1;CONFIG_ARCH_MAINSTACK=8192</Define>
         <Undefine/>
-        <IncludePath>$(ProjectPath);../../../../../components/csi/csi2/include;../../../../../components/libc_bare/include/libc_bare;../../../../../components/mm/include;../../../../../components/chip_riscv_dummy/include;../../../../../components/chip_riscv_dummy/include/asm;../../../../../boards/board_riscv_dummy/include;</IncludePath>
+        <IncludePath>$(ProjectPath);../../../../../components/csi/csi2/include;../../../../../components/mm/include;../../../../../components/libc_bare/include/libc_bare;../../../../../components/chip_riscv_dummy/include;../../../../../components/chip_riscv_dummy/include/asm;../../../../../boards/board_riscv_dummy/include;</IncludePath>
         <OtherFlags>-g -Wall -mcmodel=medany -MP -MMD -Wno-main -g -O3 -funroll-all-loops -finline-limit=500 -fgcse-sm -msignedness-cmpiv -fno-code-hoisting -mno-thread-jumps1 -mno-iv-adjust-addr-cost -mno-expand-split-imm -fselective-scheduling -fgcse-las</OtherFlags>
         <DebugLevel>none</DebugLevel>
       </Asm>
@@ -890,11 +890,11 @@
         <Tools/>
       </User>
       <Compiler>
-        <Define>CONFIG_SEMIHOST_NATIVE=0;CONFIG_HAVE_LONG_LONG=1;CONFIG_CSI_V2=1;CONFIG_CSI=csi2;CONFIG_SUPPORT_TSPEND=1;CONFIG_ARCH_INTERRUPTSTACK=8192;CONFIG_VIC_TSPDR=0x0c000000;CONFIG_PLIC_BASE=0x08000000;CONFIG_CHECK_FPU_DIRTY=1;CONFIG_CHECK_VECTOR_DIRTY=1;CONFIG_CHECK_MATRIX_DIRTY=1;CONFIG_INIT_TASK_STACK_SIZE=8192;CONFIG_APP_TASK_STACK_SIZE=8192;CONFIG_SYSTICK_HZ=100;CONFIG_BOARD_XIAOHUI_EVB=1;CONFIG_CPU_XUANTIE_C907FDV_RV32=1;CONFIG_KERNEL_NONE=1;CONFIG_DEBUG=1;CONFIG_ARCH_MAINSTACK=8192</Define>
+        <Define>CONFIG_HAVE_LONG_LONG=1;CONFIG_SEMIHOST_NATIVE=0;CONFIG_CSI_V2=1;CONFIG_CSI=csi2;CONFIG_INIT_TASK_STACK_SIZE=8192;CONFIG_APP_TASK_STACK_SIZE=8192;CONFIG_SUPPORT_TSPEND=1;CONFIG_ARCH_INTERRUPTSTACK=8192;CONFIG_VIC_TSPDR=0x0c000000;CONFIG_PLIC_BASE=0x08000000;CONFIG_CHECK_FPU_DIRTY=1;CONFIG_CHECK_VECTOR_DIRTY=1;CONFIG_CHECK_MATRIX_DIRTY=1;CONFIG_SYSTICK_HZ=100;CONFIG_BOARD_XIAOHUI_EVB=1;CONFIG_CPU_XUANTIE_C907FDV_RV32=1;CONFIG_KERNEL_NONE=1;CONFIG_DEBUG=1;CONFIG_ARCH_MAINSTACK=8192</Define>
         <Undefine/>
         <Optim>Default</Optim>
         <DebugLevel>Default (-g)</DebugLevel>
-        <IncludePath>$(ProjectPath);../../../../../components/csi/csi2/include;../../../../../components/libc_bare/include/libc_bare;../../../../../components/mm/include;../../../../../components/chip_riscv_dummy/include;../../../../../components/chip_riscv_dummy/include/asm;../../../../../boards/board_riscv_dummy/include;</IncludePath>
+        <IncludePath>$(ProjectPath);../../../../../components/csi/csi2/include;../../../../../components/mm/include;../../../../../components/libc_bare/include/libc_bare;../../../../../components/chip_riscv_dummy/include;../../../../../components/chip_riscv_dummy/include/asm;../../../../../boards/board_riscv_dummy/include;</IncludePath>
         <OtherFlags>-g -Wall -mcmodel=medany -MP -MMD -Wno-main -g -O3 -mllvm -inline-threshold=500 -mllvm -riscv-default-unroll=false -mllvm -jump-threading-threshold=0 -mllvm -enable-dfa-jump-thread=true -Wno-macro-redefined</OtherFlags>
         <Verbose>no</Verbose>
         <Ansi>no</Ansi>
@@ -909,9 +909,9 @@
         <Fstrict>no</Fstrict>
       </Compiler>
       <Asm>
-        <Define>__ASSEMBLY__;CONFIG_SEMIHOST_NATIVE=0;CONFIG_HAVE_LONG_LONG=1;CONFIG_CSI_V2=1;CONFIG_CSI=csi2;CONFIG_SUPPORT_TSPEND=1;CONFIG_ARCH_INTERRUPTSTACK=8192;CONFIG_VIC_TSPDR=0x0c000000;CONFIG_PLIC_BASE=0x08000000;CONFIG_CHECK_FPU_DIRTY=1;CONFIG_CHECK_VECTOR_DIRTY=1;CONFIG_CHECK_MATRIX_DIRTY=1;CONFIG_INIT_TASK_STACK_SIZE=8192;CONFIG_APP_TASK_STACK_SIZE=8192;CONFIG_SYSTICK_HZ=100;CONFIG_BOARD_XIAOHUI_EVB=1;CONFIG_CPU_XUANTIE_C907FDV_RV32=1;CONFIG_KERNEL_NONE=1;CONFIG_DEBUG=1;CONFIG_ARCH_MAINSTACK=8192</Define>
+        <Define>__ASSEMBLY__;CONFIG_HAVE_LONG_LONG=1;CONFIG_SEMIHOST_NATIVE=0;CONFIG_CSI_V2=1;CONFIG_CSI=csi2;CONFIG_INIT_TASK_STACK_SIZE=8192;CONFIG_APP_TASK_STACK_SIZE=8192;CONFIG_SUPPORT_TSPEND=1;CONFIG_ARCH_INTERRUPTSTACK=8192;CONFIG_VIC_TSPDR=0x0c000000;CONFIG_PLIC_BASE=0x08000000;CONFIG_CHECK_FPU_DIRTY=1;CONFIG_CHECK_VECTOR_DIRTY=1;CONFIG_CHECK_MATRIX_DIRTY=1;CONFIG_SYSTICK_HZ=100;CONFIG_BOARD_XIAOHUI_EVB=1;CONFIG_CPU_XUANTIE_C907FDV_RV32=1;CONFIG_KERNEL_NONE=1;CONFIG_DEBUG=1;CONFIG_ARCH_MAINSTACK=8192</Define>
         <Undefine/>
-        <IncludePath>$(ProjectPath);../../../../../components/csi/csi2/include;../../../../../components/libc_bare/include/libc_bare;../../../../../components/mm/include;../../../../../components/chip_riscv_dummy/include;../../../../../components/chip_riscv_dummy/include/asm;../../../../../boards/board_riscv_dummy/include;</IncludePath>
+        <IncludePath>$(ProjectPath);../../../../../components/csi/csi2/include;../../../../../components/mm/include;../../../../../components/libc_bare/include/libc_bare;../../../../../components/chip_riscv_dummy/include;../../../../../components/chip_riscv_dummy/include/asm;../../../../../boards/board_riscv_dummy/include;</IncludePath>
         <OtherFlags>-g -Wall -mcmodel=medany -MP -MMD -Wno-main -g -O3 -mllvm -inline-threshold=500 -mllvm -riscv-default-unroll=false -mllvm -jump-threading-threshold=0 -mllvm -enable-dfa-jump-thread=true -Wno-macro-redefined</OtherFlags>
         <DebugLevel>none</DebugLevel>
       </Asm>

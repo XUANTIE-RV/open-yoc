@@ -36,31 +36,6 @@
       <locationURI>PARENT-5-PROJECT_LOC/components/csi/csi2/src/csi_ringbuf.c</locationURI>
     </link>
     <link>
-      <name>components/libc_bare/src/clock_gettime.c</name>
-      <type>1</type>
-      <locationURI>PARENT-5-PROJECT_LOC/components/libc_bare/src/clock_gettime.c</locationURI>
-    </link>
-    <link>
-      <name>components/libc_bare/src/_init.c</name>
-      <type>1</type>
-      <locationURI>PARENT-5-PROJECT_LOC/components/libc_bare/src/_init.c</locationURI>
-    </link>
-    <link>
-      <name>components/libc_bare/src/malloc.c</name>
-      <type>1</type>
-      <locationURI>PARENT-5-PROJECT_LOC/components/libc_bare/src/malloc.c</locationURI>
-    </link>
-    <link>
-      <name>components/libc_bare/src/minilibc_port.c</name>
-      <type>1</type>
-      <locationURI>PARENT-5-PROJECT_LOC/components/libc_bare/src/minilibc_port.c</locationURI>
-    </link>
-    <link>
-      <name>components/libc_bare/src/printf.c</name>
-      <type>1</type>
-      <locationURI>PARENT-5-PROJECT_LOC/components/libc_bare/src/printf.c</locationURI>
-    </link>
-    <link>
       <name>components/mm/src/dq_addlast.c</name>
       <type>1</type>
       <locationURI>PARENT-5-PROJECT_LOC/components/mm/src/dq_addlast.c</locationURI>
@@ -109,6 +84,31 @@
       <name>components/mm/src/mm_size2ndx.c</name>
       <type>1</type>
       <locationURI>PARENT-5-PROJECT_LOC/components/mm/src/mm_size2ndx.c</locationURI>
+    </link>
+    <link>
+      <name>components/libc_bare/src/clock_gettime.c</name>
+      <type>1</type>
+      <locationURI>PARENT-5-PROJECT_LOC/components/libc_bare/src/clock_gettime.c</locationURI>
+    </link>
+    <link>
+      <name>components/libc_bare/src/_init.c</name>
+      <type>1</type>
+      <locationURI>PARENT-5-PROJECT_LOC/components/libc_bare/src/_init.c</locationURI>
+    </link>
+    <link>
+      <name>components/libc_bare/src/malloc.c</name>
+      <type>1</type>
+      <locationURI>PARENT-5-PROJECT_LOC/components/libc_bare/src/malloc.c</locationURI>
+    </link>
+    <link>
+      <name>components/libc_bare/src/minilibc_port.c</name>
+      <type>1</type>
+      <locationURI>PARENT-5-PROJECT_LOC/components/libc_bare/src/minilibc_port.c</locationURI>
+    </link>
+    <link>
+      <name>components/libc_bare/src/printf.c</name>
+      <type>1</type>
+      <locationURI>PARENT-5-PROJECT_LOC/components/libc_bare/src/printf.c</locationURI>
     </link>
     <link>
       <name>components/chip_riscv_dummy/src/arch/e902mt/system.c</name>

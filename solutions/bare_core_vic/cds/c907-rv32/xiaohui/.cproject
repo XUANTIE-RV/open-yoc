@@ -31,10 +31,12 @@
               <tool id="cds.managedbuild.tool.ckcoregcc.assembler.base.elf.riscv64.912544459" name="CSky Elf Assembler" superClass="cds.managedbuild.tool.ckcoregcc.assembler.base.elf.riscv64">
                 <option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="ckcoregcc.assembler.option.def.symbols.1326843304" name="Defined symbols (-D)" superClass="ckcoregcc.assembler.option.def.symbols" useByScannerDiscovery="false" valueType="definedSymbols">
                   <listOptionValue builtIn="false" value="__ASSEMBLY__"/>
-                  <listOptionValue builtIn="false" value="CONFIG_SEMIHOST_NATIVE=0"/>
                   <listOptionValue builtIn="false" value="CONFIG_HAVE_LONG_LONG=1"/>
+                  <listOptionValue builtIn="false" value="CONFIG_SEMIHOST_NATIVE=0"/>
                   <listOptionValue builtIn="false" value="CONFIG_CSI_V2=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CSI=csi2"/>
+                  <listOptionValue builtIn="false" value="CONFIG_INIT_TASK_STACK_SIZE=8192"/>
+                  <listOptionValue builtIn="false" value="CONFIG_APP_TASK_STACK_SIZE=8192"/>
                   <listOptionValue builtIn="false" value="CONFIG_SUPPORT_TSPEND=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_ARCH_MAINSTACK=8192"/>
                   <listOptionValue builtIn="false" value="CONFIG_ARCH_INTERRUPTSTACK=8192"/>
@@ -43,8 +45,6 @@
                   <listOptionValue builtIn="false" value="CONFIG_CHECK_FPU_DIRTY=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CHECK_VECTOR_DIRTY=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CHECK_MATRIX_DIRTY=1"/>
-                  <listOptionValue builtIn="false" value="CONFIG_INIT_TASK_STACK_SIZE=8192"/>
-                  <listOptionValue builtIn="false" value="CONFIG_APP_TASK_STACK_SIZE=8192"/>
                   <listOptionValue builtIn="false" value="CONFIG_SYSTICK_HZ=100"/>
                   <listOptionValue builtIn="false" value="CONFIG_BOARD_XIAOHUI_EVB=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CPU_XUANTIE_C907_RV32=1"/>
@@ -53,8 +53,8 @@
                 </option>
                 <option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="ckcoregcc.both.asm.option.include.paths.149232132" name="Include paths (-I)" superClass="ckcoregcc.both.asm.option.include.paths" valueType="includePath">
                   <listOptionValue builtIn="false" value="&quot;../../../../../../components/csi/csi2/include&quot;"/>
-                  <listOptionValue builtIn="false" value="&quot;../../../../../../components/libc_bare/include/libc_bare&quot;"/>
                   <listOptionValue builtIn="false" value="&quot;../../../../../../components/mm/include&quot;"/>
+                  <listOptionValue builtIn="false" value="&quot;../../../../../../components/libc_bare/include/libc_bare&quot;"/>
                   <listOptionValue builtIn="false" value="&quot;../../../../../../components/chip_riscv_dummy/include&quot;"/>
                   <listOptionValue builtIn="false" value="&quot;../../../../../../components/chip_riscv_dummy/include/asm&quot;"/>
                   <listOptionValue builtIn="false" value="&quot;../../../../../../boards/board_riscv_dummy/include&quot;"/>
@@ -68,10 +68,12 @@
                 <option id="ckcoregcc.cpp.compiler.option.optimization.level.2123175793" name="Optimization Level" superClass="ckcoregcc.cpp.compiler.option.optimization.level" value="ckcoregcc.cpp.compiler.optimization.level.default" valueType="enumerated"/>
                 <option id="ckcoregcc.cpp.compiler.option.debugging.level.1289480744" name="Debug Level" superClass="ckcoregcc.cpp.compiler.option.debugging.level" value="ckcoregcc.cpp.compiler.debugging.level.max" valueType="enumerated"/>
                 <option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="ckcoregcc.cpp.compiler.option.preprocessor.def.591104318" name="Defined symbols (-D)" superClass="ckcoregcc.cpp.compiler.option.preprocessor.def" valueType="definedSymbols">
-                  <listOptionValue builtIn="false" value="CONFIG_SEMIHOST_NATIVE=0"/>
                   <listOptionValue builtIn="false" value="CONFIG_HAVE_LONG_LONG=1"/>
+                  <listOptionValue builtIn="false" value="CONFIG_SEMIHOST_NATIVE=0"/>
                   <listOptionValue builtIn="false" value="CONFIG_CSI_V2=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CSI=csi2"/>
+                  <listOptionValue builtIn="false" value="CONFIG_INIT_TASK_STACK_SIZE=8192"/>
+                  <listOptionValue builtIn="false" value="CONFIG_APP_TASK_STACK_SIZE=8192"/>
                   <listOptionValue builtIn="false" value="CONFIG_SUPPORT_TSPEND=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_ARCH_MAINSTACK=8192"/>
                   <listOptionValue builtIn="false" value="CONFIG_ARCH_INTERRUPTSTACK=8192"/>
@@ -80,8 +82,6 @@
                   <listOptionValue builtIn="false" value="CONFIG_CHECK_FPU_DIRTY=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CHECK_VECTOR_DIRTY=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CHECK_MATRIX_DIRTY=1"/>
-                  <listOptionValue builtIn="false" value="CONFIG_INIT_TASK_STACK_SIZE=8192"/>
-                  <listOptionValue builtIn="false" value="CONFIG_APP_TASK_STACK_SIZE=8192"/>
                   <listOptionValue builtIn="false" value="CONFIG_SYSTICK_HZ=100"/>
                   <listOptionValue builtIn="false" value="CONFIG_BOARD_XIAOHUI_EVB=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CPU_XUANTIE_C907_RV32=1"/>
@@ -90,8 +90,8 @@
                 </option>
                 <option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="ckcoregcc.cpp.compiler.option.include.paths.1896233795" name="Include paths (-I)" superClass="ckcoregcc.cpp.compiler.option.include.paths" valueType="includePath">
                   <listOptionValue builtIn="false" value="&quot;../../../../../../components/csi/csi2/include&quot;"/>
-                  <listOptionValue builtIn="false" value="&quot;../../../../../../components/libc_bare/include/libc_bare&quot;"/>
                   <listOptionValue builtIn="false" value="&quot;../../../../../../components/mm/include&quot;"/>
+                  <listOptionValue builtIn="false" value="&quot;../../../../../../components/libc_bare/include/libc_bare&quot;"/>
                   <listOptionValue builtIn="false" value="&quot;../../../../../../components/chip_riscv_dummy/include&quot;"/>
                   <listOptionValue builtIn="false" value="&quot;../../../../../../components/chip_riscv_dummy/include/asm&quot;"/>
                   <listOptionValue builtIn="false" value="&quot;../../../../../../boards/board_riscv_dummy/include&quot;"/>
@@ -105,10 +105,12 @@
                 <option id="ckcoregcc.c.compiler.option.optimization.level.628002517" name="Optimization Level" superClass="ckcoregcc.c.compiler.option.optimization.level" value="ckcoregcc.c.compiler.optimization.level.default" valueType="enumerated"/>
                 <option id="ckcoregcc.c.compiler.option.debugging.level.34746961" name="Debug Level" superClass="ckcoregcc.c.compiler.option.debugging.level" value="ckcoregcc.c.compiler.debugging.level.max" valueType="enumerated"/>
                 <option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="ckcoregcc.c.compiler.option.preprocessor.def.231204495" name="Defined symbols (-D)" superClass="ckcoregcc.c.compiler.option.preprocessor.def" useByScannerDiscovery="false" valueType="definedSymbols">
-                  <listOptionValue builtIn="false" value="CONFIG_SEMIHOST_NATIVE=0"/>
                   <listOptionValue builtIn="false" value="CONFIG_HAVE_LONG_LONG=1"/>
+                  <listOptionValue builtIn="false" value="CONFIG_SEMIHOST_NATIVE=0"/>
                   <listOptionValue builtIn="false" value="CONFIG_CSI_V2=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CSI=csi2"/>
+                  <listOptionValue builtIn="false" value="CONFIG_INIT_TASK_STACK_SIZE=8192"/>
+                  <listOptionValue builtIn="false" value="CONFIG_APP_TASK_STACK_SIZE=8192"/>
                   <listOptionValue builtIn="false" value="CONFIG_SUPPORT_TSPEND=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_ARCH_MAINSTACK=8192"/>
                   <listOptionValue builtIn="false" value="CONFIG_ARCH_INTERRUPTSTACK=8192"/>
@@ -117,8 +119,6 @@
                   <listOptionValue builtIn="false" value="CONFIG_CHECK_FPU_DIRTY=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CHECK_VECTOR_DIRTY=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CHECK_MATRIX_DIRTY=1"/>
-                  <listOptionValue builtIn="false" value="CONFIG_INIT_TASK_STACK_SIZE=8192"/>
-                  <listOptionValue builtIn="false" value="CONFIG_APP_TASK_STACK_SIZE=8192"/>
                   <listOptionValue builtIn="false" value="CONFIG_SYSTICK_HZ=100"/>
                   <listOptionValue builtIn="false" value="CONFIG_BOARD_XIAOHUI_EVB=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CPU_XUANTIE_C907_RV32=1"/>
@@ -127,8 +127,8 @@
                 </option>
                 <option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="ckcoregcc.c.compiler.option.include.paths.117613518" name="Include paths (-I)" superClass="ckcoregcc.c.compiler.option.include.paths" valueType="includePath">
                   <listOptionValue builtIn="false" value="&quot;../../../../../../components/csi/csi2/include&quot;"/>
-                  <listOptionValue builtIn="false" value="&quot;../../../../../../components/libc_bare/include/libc_bare&quot;"/>
                   <listOptionValue builtIn="false" value="&quot;../../../../../../components/mm/include&quot;"/>
+                  <listOptionValue builtIn="false" value="&quot;../../../../../../components/libc_bare/include/libc_bare&quot;"/>
                   <listOptionValue builtIn="false" value="&quot;../../../../../../components/chip_riscv_dummy/include&quot;"/>
                   <listOptionValue builtIn="false" value="&quot;../../../../../../components/chip_riscv_dummy/include/asm&quot;"/>
                   <listOptionValue builtIn="false" value="&quot;../../../../../../boards/board_riscv_dummy/include&quot;"/>
@@ -200,10 +200,12 @@
               <tool id="cds.managedbuild.tool.ckcoregcc.assembler.base.elf.riscv64.912544459" name="CSky Elf Assembler" superClass="cds.managedbuild.tool.ckcoregcc.assembler.base.elf.riscv64">
                 <option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="ckcoregcc.assembler.option.def.symbols.1326843304" name="Defined symbols (-D)" superClass="ckcoregcc.assembler.option.def.symbols" useByScannerDiscovery="false" valueType="definedSymbols">
                   <listOptionValue builtIn="false" value="__ASSEMBLY__"/>
-                  <listOptionValue builtIn="false" value="CONFIG_SEMIHOST_NATIVE=0"/>
                   <listOptionValue builtIn="false" value="CONFIG_HAVE_LONG_LONG=1"/>
+                  <listOptionValue builtIn="false" value="CONFIG_SEMIHOST_NATIVE=0"/>
                   <listOptionValue builtIn="false" value="CONFIG_CSI_V2=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CSI=csi2"/>
+                  <listOptionValue builtIn="false" value="CONFIG_INIT_TASK_STACK_SIZE=8192"/>
+                  <listOptionValue builtIn="false" value="CONFIG_APP_TASK_STACK_SIZE=8192"/>
                   <listOptionValue builtIn="false" value="CONFIG_SUPPORT_TSPEND=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_ARCH_MAINSTACK=8192"/>
                   <listOptionValue builtIn="false" value="CONFIG_ARCH_INTERRUPTSTACK=8192"/>
@@ -212,8 +214,6 @@
                   <listOptionValue builtIn="false" value="CONFIG_CHECK_FPU_DIRTY=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CHECK_VECTOR_DIRTY=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CHECK_MATRIX_DIRTY=1"/>
-                  <listOptionValue builtIn="false" value="CONFIG_INIT_TASK_STACK_SIZE=8192"/>
-                  <listOptionValue builtIn="false" value="CONFIG_APP_TASK_STACK_SIZE=8192"/>
                   <listOptionValue builtIn="false" value="CONFIG_SYSTICK_HZ=100"/>
                   <listOptionValue builtIn="false" value="CONFIG_BOARD_XIAOHUI_EVB=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CPU_XUANTIE_C907_RV32=1"/>
@@ -222,8 +222,8 @@
                 </option>
                 <option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="ckcoregcc.both.asm.option.include.paths.149232132" name="Include paths (-I)" superClass="ckcoregcc.both.asm.option.include.paths" valueType="includePath">
                   <listOptionValue builtIn="false" value="&quot;../../../../../../components/csi/csi2/include&quot;"/>
-                  <listOptionValue builtIn="false" value="&quot;../../../../../../components/libc_bare/include/libc_bare&quot;"/>
                   <listOptionValue builtIn="false" value="&quot;../../../../../../components/mm/include&quot;"/>
+                  <listOptionValue builtIn="false" value="&quot;../../../../../../components/libc_bare/include/libc_bare&quot;"/>
                   <listOptionValue builtIn="false" value="&quot;../../../../../../components/chip_riscv_dummy/include&quot;"/>
                   <listOptionValue builtIn="false" value="&quot;../../../../../../components/chip_riscv_dummy/include/asm&quot;"/>
                   <listOptionValue builtIn="false" value="&quot;../../../../../../boards/board_riscv_dummy/include&quot;"/>
@@ -237,10 +237,12 @@
                 <option id="ckcoregcc.cpp.compiler.option.optimization.level.2123175793" name="Optimization Level" superClass="ckcoregcc.cpp.compiler.option.optimization.level" value="ckcoregcc.cpp.compiler.optimization.level.default" valueType="enumerated"/>
                 <option id="ckcoregcc.cpp.compiler.option.debugging.level.1289480744" name="Debug Level" superClass="ckcoregcc.cpp.compiler.option.debugging.level" value="ckcoregcc.cpp.compiler.debugging.level.max" valueType="enumerated"/>
                 <option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="ckcoregcc.cpp.compiler.option.preprocessor.def.591104318" name="Defined symbols (-D)" superClass="ckcoregcc.cpp.compiler.option.preprocessor.def" valueType="definedSymbols">
-                  <listOptionValue builtIn="false" value="CONFIG_SEMIHOST_NATIVE=0"/>
                   <listOptionValue builtIn="false" value="CONFIG_HAVE_LONG_LONG=1"/>
+                  <listOptionValue builtIn="false" value="CONFIG_SEMIHOST_NATIVE=0"/>
                   <listOptionValue builtIn="false" value="CONFIG_CSI_V2=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CSI=csi2"/>
+                  <listOptionValue builtIn="false" value="CONFIG_INIT_TASK_STACK_SIZE=8192"/>
+                  <listOptionValue builtIn="false" value="CONFIG_APP_TASK_STACK_SIZE=8192"/>
                   <listOptionValue builtIn="false" value="CONFIG_SUPPORT_TSPEND=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_ARCH_MAINSTACK=8192"/>
                   <listOptionValue builtIn="false" value="CONFIG_ARCH_INTERRUPTSTACK=8192"/>
@@ -249,8 +251,6 @@
                   <listOptionValue builtIn="false" value="CONFIG_CHECK_FPU_DIRTY=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CHECK_VECTOR_DIRTY=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CHECK_MATRIX_DIRTY=1"/>
-                  <listOptionValue builtIn="false" value="CONFIG_INIT_TASK_STACK_SIZE=8192"/>
-                  <listOptionValue builtIn="false" value="CONFIG_APP_TASK_STACK_SIZE=8192"/>
                   <listOptionValue builtIn="false" value="CONFIG_SYSTICK_HZ=100"/>
                   <listOptionValue builtIn="false" value="CONFIG_BOARD_XIAOHUI_EVB=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CPU_XUANTIE_C907_RV32=1"/>
@@ -259,8 +259,8 @@
                 </option>
                 <option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="ckcoregcc.cpp.compiler.option.include.paths.1896233795" name="Include paths (-I)" superClass="ckcoregcc.cpp.compiler.option.include.paths" valueType="includePath">
                   <listOptionValue builtIn="false" value="&quot;../../../../../../components/csi/csi2/include&quot;"/>
-                  <listOptionValue builtIn="false" value="&quot;../../../../../../components/libc_bare/include/libc_bare&quot;"/>
                   <listOptionValue builtIn="false" value="&quot;../../../../../../components/mm/include&quot;"/>
+                  <listOptionValue builtIn="false" value="&quot;../../../../../../components/libc_bare/include/libc_bare&quot;"/>
                   <listOptionValue builtIn="false" value="&quot;../../../../../../components/chip_riscv_dummy/include&quot;"/>
                   <listOptionValue builtIn="false" value="&quot;../../../../../../components/chip_riscv_dummy/include/asm&quot;"/>
                   <listOptionValue builtIn="false" value="&quot;../../../../../../boards/board_riscv_dummy/include&quot;"/>
@@ -274,10 +274,12 @@
                 <option id="ckcoregcc.c.compiler.option.optimization.level.628002517" name="Optimization Level" superClass="ckcoregcc.c.compiler.option.optimization.level" value="ckcoregcc.c.compiler.optimization.level.default" valueType="enumerated"/>
                 <option id="ckcoregcc.c.compiler.option.debugging.level.34746961" name="Debug Level" superClass="ckcoregcc.c.compiler.option.debugging.level" value="ckcoregcc.c.compiler.debugging.level.max" valueType="enumerated"/>
                 <option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="ckcoregcc.c.compiler.option.preprocessor.def.231204495" name="Defined symbols (-D)" superClass="ckcoregcc.c.compiler.option.preprocessor.def" useByScannerDiscovery="false" valueType="definedSymbols">
-                  <listOptionValue builtIn="false" value="CONFIG_SEMIHOST_NATIVE=0"/>
                   <listOptionValue builtIn="false" value="CONFIG_HAVE_LONG_LONG=1"/>
+                  <listOptionValue builtIn="false" value="CONFIG_SEMIHOST_NATIVE=0"/>
                   <listOptionValue builtIn="false" value="CONFIG_CSI_V2=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CSI=csi2"/>
+                  <listOptionValue builtIn="false" value="CONFIG_INIT_TASK_STACK_SIZE=8192"/>
+                  <listOptionValue builtIn="false" value="CONFIG_APP_TASK_STACK_SIZE=8192"/>
                   <listOptionValue builtIn="false" value="CONFIG_SUPPORT_TSPEND=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_ARCH_MAINSTACK=8192"/>
                   <listOptionValue builtIn="false" value="CONFIG_ARCH_INTERRUPTSTACK=8192"/>
@@ -286,8 +288,6 @@
                   <listOptionValue builtIn="false" value="CONFIG_CHECK_FPU_DIRTY=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CHECK_VECTOR_DIRTY=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CHECK_MATRIX_DIRTY=1"/>
-                  <listOptionValue builtIn="false" value="CONFIG_INIT_TASK_STACK_SIZE=8192"/>
-                  <listOptionValue builtIn="false" value="CONFIG_APP_TASK_STACK_SIZE=8192"/>
                   <listOptionValue builtIn="false" value="CONFIG_SYSTICK_HZ=100"/>
                   <listOptionValue builtIn="false" value="CONFIG_BOARD_XIAOHUI_EVB=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CPU_XUANTIE_C907_RV32=1"/>
@@ -296,8 +296,8 @@
                 </option>
                 <option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="ckcoregcc.c.compiler.option.include.paths.117613518" name="Include paths (-I)" superClass="ckcoregcc.c.compiler.option.include.paths" valueType="includePath">
                   <listOptionValue builtIn="false" value="&quot;../../../../../../components/csi/csi2/include&quot;"/>
-                  <listOptionValue builtIn="false" value="&quot;../../../../../../components/libc_bare/include/libc_bare&quot;"/>
                   <listOptionValue builtIn="false" value="&quot;../../../../../../components/mm/include&quot;"/>
+                  <listOptionValue builtIn="false" value="&quot;../../../../../../components/libc_bare/include/libc_bare&quot;"/>
                   <listOptionValue builtIn="false" value="&quot;../../../../../../components/chip_riscv_dummy/include&quot;"/>
                   <listOptionValue builtIn="false" value="&quot;../../../../../../components/chip_riscv_dummy/include/asm&quot;"/>
                   <listOptionValue builtIn="false" value="&quot;../../../../../../boards/board_riscv_dummy/include&quot;"/>

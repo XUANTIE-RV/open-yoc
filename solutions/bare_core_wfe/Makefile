@@ -20,13 +20,14 @@ CLEANING := $(filter clean, $(MAKECMDGOALS))
 
 ifneq ($(CLEANING),clean)
 # update .defconfig and get make arguments from .defconfig
-$(shell bash $(TOP_DIR)/tools/core/check_defconfig.sh update_config cpu=$(cpu) board=$(board) rtos=$(rtos) toolchain=$(toolchain))
+$(shell bash $(TOP_DIR)/tools/core/check_defconfig.sh update_config cpu=$(cpu) board=$(board) rtos=$(rtos) toolchain=$(toolchain) libc=$(libc))
 cpu 		:= $(shell bash $(TOP_DIR)/tools/core/check_defconfig.sh read_config cpu)
 board 		:= $(shell bash $(TOP_DIR)/tools/core/check_defconfig.sh read_config board)
 rtos 		:= $(shell bash $(TOP_DIR)/tools/core/check_defconfig.sh read_config rtos)
 toolchain 	:= $(shell bash $(TOP_DIR)/tools/core/check_defconfig.sh read_config toolchain)
+libc 		:= $(shell bash $(TOP_DIR)/tools/core/check_defconfig.sh read_config libc)
 
-$(info [info]: make cpu=$(cpu) board=$(board) rtos=$(rtos) toolchain=$(toolchain))
+$(info [info]: make cpu=$(cpu) board=$(board) rtos=$(rtos) toolchain=$(toolchain) libc=$(libc))
 
 # toolchain
 include $(TOP_DIR)/tools/core/toolchain.mk
@@ -44,10 +45,8 @@ BOARD_PATH := $(TOP_DIR)/boards/board_riscv_dummy
 CHIP_PATH := $(TOP_DIR)/components/chip_riscv_dummy
 endif
 ifeq ($(board), smartl)
-ifneq ($(filter $(CPU_FULL_NAME), e901bm-cp e902mt),)
+ifneq ($(filter $(CPU_FULL_NAME), e901plusbm-cp e902mt),)
 LINKER_SCRIPT := $(TOP_DIR)/components/chip_riscv_dummy/gcc_flash_smartl_lite.ld
-else ifeq ($(CPU_FULL_NAME), e901minibzm-cp)
-LINKER_SCRIPT := $(TOP_DIR)/components/chip_riscv_dummy/gcc_flash_smartl_e901mini.ld
 else
 LINKER_SCRIPT := $(TOP_DIR)/components/chip_riscv_dummy/gcc_flash_smartl.ld
 endif
@@ -67,7 +66,13 @@ endif
 COLLECT_BUILD_FILES=0
 # depend components
 # TODO: the common components for solution
-COMPONENTS := csi libc_bare mm
+COMPONENTS := csi mm
+ifeq ($(libc), minilibc)
+COMPONENTS += minilibc_bare
+LIBC_FLAGS := -specs=minilibc.specs
+else
+COMPONENTS += libc_bare
+endif
 COMPONENTS += $(CHIP_COMP_NAME)
 COMPONENTS_NORMAL := $(COMPONENTS)
 # include xx.mk in componnets dir first
@@ -100,7 +105,7 @@ LIBS := $(foreach mod,$(COMPONENTS),$(BUILD_DIR)/libs/lib$(mod).a)
 
 CPU_FLAGS := -mcpu=$(cpu) -mcmodel=medany
 
-CFLAGS += $(CPU_FLAGS)
+CFLAGS += $(CPU_FLAGS) $(LIBC_FLAGS)
 CFLAGS += -MP -MMD -Wno-main
 CFLAGS += -g -Os \
           -Wpointer-arith -Wno-undef -ffunction-sections \
@@ -108,10 +113,15 @@ CFLAGS += -g -Os \
 CFLAGS += $(addprefix -I, $(ALL_INCS))
 CXXFLAGS += $(CFLAGS)
 ASFLAGS += -D__ASSEMBLY__ $(CFLAGS)
-LDFLAGS := $(CPU_FLAGS) -nostartfiles -Wl,--gc-sections
-LDFLAGS += -Wl,--whole-archive $(LD_LIBS) -Wl,--no-whole-archive
+LDFLAGS := $(CPU_FLAGS) $(LIBC_FLAGS) -nostartfiles -Wl,--gc-sections
+LDFLAGS += -Wl,--whole-archive $(LD_LIBS) -Wl,--no-whole-archive $(LD_EXT_LIBS)
 LDFLAGS += $(addprefix -L, $(LD_PATH))
 LDFLAGS += -T$(LINKER_SCRIPT) -Wl,-zmax-page-size=1024 -Wl,-Map=$(TARGET).map
+ifeq ($(toolchain), llvm)
+ifneq ($(call get_compiler_macro, __riscv_zcmt),)
+LDFLAGS += -fuse-ld=lld -Wl,--relax-gp
+endif
+endif
 
 endif # CLEANING
 
@@ -146,6 +156,12 @@ $(BUILD_DIR)/%.o: %.S
 # static lib
 $(foreach mod,$(COMPONENTS),$(eval $(call lib_rule_template_func,$(mod))))
 
+ifneq ($(LINKER_SCRIPT_ORI),)
+$(LINKER_SCRIPT):
+	@echo "Preprocessing linker script..."
+	$(CPRE) $(CXX) -E $(CFLAGS) -P $(LINKER_SCRIPT_ORI) -o $(LINKER_SCRIPT)
+endif
+
 $(OUTPUT_ELF): $(LIBS) $(LINKER_SCRIPT)
 	@echo "Linking $@"
 	$(CPRE) $(CXX) -o $@ $(LDFLAGS)
@@ -156,6 +172,6 @@ $(OUTPUT_ELF): $(LIBS) $(LINKER_SCRIPT)
 
 .PHONY: clean
 clean:
-	$(CPRE) rm -rf out yoc.* generated
+	$(CPRE) rm -rf out yoc.* generated .defconfig *.ld.post *.ld.d
 	$(CPRE) rm -rf gdbinitflash .gdbinit gdbinit.remote
 	@echo "done cleaning."

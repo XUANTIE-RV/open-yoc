@@ -81,6 +81,8 @@
                   <listOptionValue builtIn="false" value="__RT_KERNEL_SOURCE__=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CSI_V2=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CSI=csi2"/>
+                  <listOptionValue builtIn="false" value="CONFIG_INIT_TASK_STACK_SIZE=8192"/>
+                  <listOptionValue builtIn="false" value="CONFIG_APP_TASK_STACK_SIZE=8192"/>
                   <listOptionValue builtIn="false" value="CONFIG_SUPPORT_TSPEND=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_ARCH_MAINSTACK=8192"/>
                   <listOptionValue builtIn="false" value="CONFIG_ARCH_INTERRUPTSTACK=8192"/>
@@ -88,8 +90,6 @@
                   <listOptionValue builtIn="false" value="CONFIG_PLIC_BASE=0x08000000"/>
                   <listOptionValue builtIn="false" value="CONFIG_CHECK_FPU_DIRTY=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CHECK_VECTOR_DIRTY=1"/>
-                  <listOptionValue builtIn="false" value="CONFIG_INIT_TASK_STACK_SIZE=8192"/>
-                  <listOptionValue builtIn="false" value="CONFIG_APP_TASK_STACK_SIZE=8192"/>
                   <listOptionValue builtIn="false" value="CONFIG_SYSTICK_HZ=100"/>
                   <listOptionValue builtIn="false" value="CONFIG_BOARD_XIAOHUI_EVB=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CPU_XUANTIE_C920V3_CP_XT=1"/>
@@ -186,6 +186,8 @@
                   <listOptionValue builtIn="false" value="__RT_KERNEL_SOURCE__=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CSI_V2=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CSI=csi2"/>
+                  <listOptionValue builtIn="false" value="CONFIG_INIT_TASK_STACK_SIZE=8192"/>
+                  <listOptionValue builtIn="false" value="CONFIG_APP_TASK_STACK_SIZE=8192"/>
                   <listOptionValue builtIn="false" value="CONFIG_SUPPORT_TSPEND=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_ARCH_MAINSTACK=8192"/>
                   <listOptionValue builtIn="false" value="CONFIG_ARCH_INTERRUPTSTACK=8192"/>
@@ -193,8 +195,6 @@
                   <listOptionValue builtIn="false" value="CONFIG_PLIC_BASE=0x08000000"/>
                   <listOptionValue builtIn="false" value="CONFIG_CHECK_FPU_DIRTY=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CHECK_VECTOR_DIRTY=1"/>
-                  <listOptionValue builtIn="false" value="CONFIG_INIT_TASK_STACK_SIZE=8192"/>
-                  <listOptionValue builtIn="false" value="CONFIG_APP_TASK_STACK_SIZE=8192"/>
                   <listOptionValue builtIn="false" value="CONFIG_SYSTICK_HZ=100"/>
                   <listOptionValue builtIn="false" value="CONFIG_BOARD_XIAOHUI_EVB=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CPU_XUANTIE_C920V3_CP_XT=1"/>
@@ -291,6 +291,8 @@
                   <listOptionValue builtIn="false" value="__RT_KERNEL_SOURCE__=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CSI_V2=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CSI=csi2"/>
+                  <listOptionValue builtIn="false" value="CONFIG_INIT_TASK_STACK_SIZE=8192"/>
+                  <listOptionValue builtIn="false" value="CONFIG_APP_TASK_STACK_SIZE=8192"/>
                   <listOptionValue builtIn="false" value="CONFIG_SUPPORT_TSPEND=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_ARCH_MAINSTACK=8192"/>
                   <listOptionValue builtIn="false" value="CONFIG_ARCH_INTERRUPTSTACK=8192"/>
@@ -298,8 +300,6 @@
                   <listOptionValue builtIn="false" value="CONFIG_PLIC_BASE=0x08000000"/>
                   <listOptionValue builtIn="false" value="CONFIG_CHECK_FPU_DIRTY=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CHECK_VECTOR_DIRTY=1"/>
-                  <listOptionValue builtIn="false" value="CONFIG_INIT_TASK_STACK_SIZE=8192"/>
-                  <listOptionValue builtIn="false" value="CONFIG_APP_TASK_STACK_SIZE=8192"/>
                   <listOptionValue builtIn="false" value="CONFIG_SYSTICK_HZ=100"/>
                   <listOptionValue builtIn="false" value="CONFIG_BOARD_XIAOHUI_EVB=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CPU_XUANTIE_C920V3_CP_XT=1"/>
@@ -454,6 +454,8 @@
                   <listOptionValue builtIn="false" value="__RT_KERNEL_SOURCE__=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CSI_V2=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CSI=csi2"/>
+                  <listOptionValue builtIn="false" value="CONFIG_INIT_TASK_STACK_SIZE=8192"/>
+                  <listOptionValue builtIn="false" value="CONFIG_APP_TASK_STACK_SIZE=8192"/>
                   <listOptionValue builtIn="false" value="CONFIG_SUPPORT_TSPEND=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_ARCH_MAINSTACK=8192"/>
                   <listOptionValue builtIn="false" value="CONFIG_ARCH_INTERRUPTSTACK=8192"/>
@@ -461,8 +463,6 @@
                   <listOptionValue builtIn="false" value="CONFIG_PLIC_BASE=0x08000000"/>
                   <listOptionValue builtIn="false" value="CONFIG_CHECK_FPU_DIRTY=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CHECK_VECTOR_DIRTY=1"/>
-                  <listOptionValue builtIn="false" value="CONFIG_INIT_TASK_STACK_SIZE=8192"/>
-                  <listOptionValue builtIn="false" value="CONFIG_APP_TASK_STACK_SIZE=8192"/>
                   <listOptionValue builtIn="false" value="CONFIG_SYSTICK_HZ=100"/>
                   <listOptionValue builtIn="false" value="CONFIG_BOARD_XIAOHUI_EVB=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CPU_XUANTIE_C920V3_CP_XT=1"/>
@@ -559,6 +559,8 @@
                   <listOptionValue builtIn="false" value="__RT_KERNEL_SOURCE__=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CSI_V2=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CSI=csi2"/>
+                  <listOptionValue builtIn="false" value="CONFIG_INIT_TASK_STACK_SIZE=8192"/>
+                  <listOptionValue builtIn="false" value="CONFIG_APP_TASK_STACK_SIZE=8192"/>
                   <listOptionValue builtIn="false" value="CONFIG_SUPPORT_TSPEND=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_ARCH_MAINSTACK=8192"/>
                   <listOptionValue builtIn="false" value="CONFIG_ARCH_INTERRUPTSTACK=8192"/>
@@ -566,8 +568,6 @@
                   <listOptionValue builtIn="false" value="CONFIG_PLIC_BASE=0x08000000"/>
                   <listOptionValue builtIn="false" value="CONFIG_CHECK_FPU_DIRTY=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CHECK_VECTOR_DIRTY=1"/>
-                  <listOptionValue builtIn="false" value="CONFIG_INIT_TASK_STACK_SIZE=8192"/>
-                  <listOptionValue builtIn="false" value="CONFIG_APP_TASK_STACK_SIZE=8192"/>
                   <listOptionValue builtIn="false" value="CONFIG_SYSTICK_HZ=100"/>
                   <listOptionValue builtIn="false" value="CONFIG_BOARD_XIAOHUI_EVB=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CPU_XUANTIE_C920V3_CP_XT=1"/>
@@ -664,6 +664,8 @@
                   <listOptionValue builtIn="false" value="__RT_KERNEL_SOURCE__=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CSI_V2=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CSI=csi2"/>
+                  <listOptionValue builtIn="false" value="CONFIG_INIT_TASK_STACK_SIZE=8192"/>
+                  <listOptionValue builtIn="false" value="CONFIG_APP_TASK_STACK_SIZE=8192"/>
                   <listOptionValue builtIn="false" value="CONFIG_SUPPORT_TSPEND=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_ARCH_MAINSTACK=8192"/>
                   <listOptionValue builtIn="false" value="CONFIG_ARCH_INTERRUPTSTACK=8192"/>
@@ -671,8 +673,6 @@
                   <listOptionValue builtIn="false" value="CONFIG_PLIC_BASE=0x08000000"/>
                   <listOptionValue builtIn="false" value="CONFIG_CHECK_FPU_DIRTY=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CHECK_VECTOR_DIRTY=1"/>
-                  <listOptionValue builtIn="false" value="CONFIG_INIT_TASK_STACK_SIZE=8192"/>
-                  <listOptionValue builtIn="false" value="CONFIG_APP_TASK_STACK_SIZE=8192"/>
                   <listOptionValue builtIn="false" value="CONFIG_SYSTICK_HZ=100"/>
                   <listOptionValue builtIn="false" value="CONFIG_BOARD_XIAOHUI_EVB=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CPU_XUANTIE_C920V3_CP_XT=1"/>

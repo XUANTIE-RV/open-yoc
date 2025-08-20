@@ -19,6 +19,7 @@ function help() {
 	echo "eg:"
 	echo "./do_build.sh c906fd xiaohui"
 	echo "./do_build.sh e906fdp smartl"
+	echo "./do_build.sh e901-cp smartm"
 	echo "./do_build.sh e906fdp wujian300"
 }
 
@@ -47,7 +48,7 @@ function check_cpu() {
 
 function check_board() {
 	board=$1
-	board_list=('smartl' 'xiaohui' 'wujian300')
+	board_list=('smartm' 'smartl' 'xiaohui' 'wujian300')
 	#echo "the board is "$board
 	for _board in ${board_list[*]}; do
 		if [ "$board" == "$_board" ]; then
@@ -72,4 +73,4 @@ rtos=bare
 check_cpu $cpu_name
 check_board $board
 
-make -j${nproc} cpu=$1 board=$2 rtos="" toolchain=llvm
+make -j${nproc} cpu=$1 board=$2 rtos="" toolchain=llvm libc=$3

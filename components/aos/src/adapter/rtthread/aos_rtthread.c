@@ -1965,6 +1965,7 @@ void *aos_realloc_check(void *ptr, size_t size)
 
 int aos_is_sched_disable(void)
 {
+    __DMB();
     if (rt_critical_level() != 0)
     {
         return 1;

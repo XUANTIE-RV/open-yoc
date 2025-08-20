@@ -25,7 +25,15 @@
 extern "C" {
 #endif
 
+#if defined(CONFIG_KERNEL_RTTHREAD)
+#include <rtconfig.h>
+#define PERFDATA_DUMP_TASK_STACK_SIZE (8192 + CSK_CPU_STACK_EXTRAL)
+#elif defined(CONFIG_KERNEL_FREERTOS)
+#include <FreeRTOSConfig.h>
+#define PERFDATA_DUMP_TASK_STACK_SIZE (8192 + CSK_CPU_STACK_EXTRAL)
+#else
 #define PERFDATA_DUMP_TASK_STACK_SIZE 8192
+#endif
 
 /**
  * @brief semaphore handle type

@@ -54,11 +54,13 @@ include $$(COMP_PATH)/sub.mk
 endef
 
 define lib_rule_template_func
-$(1)_OBJS := $$(foreach src, $$($(1)_c_srcs), $$(call get_build_path_func, $$(src:.c=.o))) \
-             $$(foreach src, $$($(1)_cpp_srcs), $$(call get_build_path_func, $$(src:.cpp=.o))) \
-             $$(foreach src, $$($(1)_cxx_srcs), $$(call get_build_path_func, $$(src:.cxx=.o))) \
-             $$(foreach src, $$($(1)_cc_srcs), $$(call get_build_path_func, $$(src:.cc=.o))) \
-             $$(foreach src, $$($(1)_asm_srcs), $$(call get_build_path_func, $$(src:.S=.o)))
+$(1)_OBJS := $$(sort \
+    $$(foreach src, $$($(1)_c_srcs),    $$(call get_build_path_func, $$(src:.c=.o))) \
+    $$(foreach src, $$($(1)_cpp_srcs),  $$(call get_build_path_func, $$(src:.cpp=.o))) \
+    $$(foreach src, $$($(1)_cxx_srcs),  $$(call get_build_path_func, $$(src:.cxx=.o))) \
+    $$(foreach src, $$($(1)_cc_srcs),   $$(call get_build_path_func, $$(src:.cc=.o))) \
+    $$(foreach src, $$($(1)_asm_srcs),  $$(call get_build_path_func, $$(src:.S=.o))) \
+)
 
 $$(BUILD_DIR)/libs/lib$(1).a: $$($(1)_OBJS)
 	@echo "[AR] $$@"
@@ -75,3 +77,7 @@ $(strip \
 endef
 space := $(subst ,, )
 comma := ,
+
+define get_compiler_macro
+$(shell $(CC) -mcpu=$(cpu) -dM -E - < /dev/null | grep -F '#define' | grep -F '$(1)' | cut -d' ' -f3)
+endef

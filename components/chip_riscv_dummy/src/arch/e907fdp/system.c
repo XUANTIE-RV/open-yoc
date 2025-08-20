@@ -60,11 +60,16 @@ static void clic_init(void)
 
     for (i = 0; i < 64; i++) {
         CLIC->CLICINT[i].IP = 0;
+#ifndef CONFIG_SUPPORT_NON_VECTOR_IRQ
         CLIC->CLICINT[i].ATTR = 1; /* use vector interrupt */
+#else
+        CLIC->CLICINT[i].ATTR = 0; /* use non-vector interrupt */
+#endif
+        csi_vic_set_prio(i, 3);
     }
-
-    /* tspend use positive interrupt */
+    /* tspend use vector&positive interrupt */
     CLIC->CLICINT[Machine_Software_IRQn].ATTR = 0x3;
+    csi_vic_set_prio(Machine_Software_IRQn, 1);
     csi_irq_enable(Machine_Software_IRQn);
 }
 

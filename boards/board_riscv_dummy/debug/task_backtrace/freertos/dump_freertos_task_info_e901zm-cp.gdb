@@ -1,0 +1,156 @@
+# dump the task info for FreeRTOS
+set height 0
+
+define tasklist_bt
+  set $gdb_task_list = (List_t*)$arg0
+
+  if ($gdb_task_list)
+    set $gdb_task_num = (unsigned long)$gdb_task_list->uxNumberOfItems
+    set $gdb_list_next = (ListItem_t*)$gdb_task_list->xListEnd->pxNext
+
+    while ($gdb_task_num)
+      # get tcb addr
+      set $gdb_tcb_addr = (TCB_t*)((ListItem_t*)$gdb_list_next->pvOwner)
+      if ($gdb_tcb_addr == 0x0)
+        set $gdb_list_next = (ListItem_t*)$gdb_list_next->pxNext
+        set $gdb_tcb_addr = (TCB_t*)((ListItem_t*)$gdb_list_next->pvOwner)
+      end
+      # get task name
+      set $gdb_task_name = ((TCB_t*)($gdb_tcb_addr))->pcTaskName
+      if (pxCurrentTCB != $gdb_tcb_addr )
+        # print the task info
+        p $gdb_task_name
+        p *$gdb_tcb_addr
+
+        # set register to restore the task
+        set $x1  = *(unsigned long *)((unsigned long)$gdb_tcb_addr->pxTopOfStack + 0)
+        set $x3  = *(unsigned long *)((unsigned long)$gdb_tcb_addr->pxTopOfStack + 4)
+        set $x4  = *(unsigned long *)((unsigned long)$gdb_tcb_addr->pxTopOfStack + 8)
+        set $x5  = *(unsigned long *)((unsigned long)$gdb_tcb_addr->pxTopOfStack + 12)
+        set $x6  = *(unsigned long *)((unsigned long)$gdb_tcb_addr->pxTopOfStack + 16)
+        set $x7  = *(unsigned long *)((unsigned long)$gdb_tcb_addr->pxTopOfStack + 20)
+        set $x8  = *(unsigned long *)((unsigned long)$gdb_tcb_addr->pxTopOfStack + 24)
+        set $x9  = *(unsigned long *)((unsigned long)$gdb_tcb_addr->pxTopOfStack + 28)
+        set $x10 = *(unsigned long *)((unsigned long)$gdb_tcb_addr->pxTopOfStack + 32)
+        set $x11 = *(unsigned long *)((unsigned long)$gdb_tcb_addr->pxTopOfStack + 36)
+        set $x12 = *(unsigned long *)((unsigned long)$gdb_tcb_addr->pxTopOfStack + 40)
+        set $x13 = *(unsigned long *)((unsigned long)$gdb_tcb_addr->pxTopOfStack + 44)
+        set $x14 = *(unsigned long *)((unsigned long)$gdb_tcb_addr->pxTopOfStack + 48)
+        set $x15 = *(unsigned long *)((unsigned long)$gdb_tcb_addr->pxTopOfStack + 52)
+        set $pc  = *(unsigned long *)((unsigned long)$gdb_tcb_addr->pxTopOfStack + 56)
+        set $sp = (unsigned long)($gdb_tcb_addr->pxTopOfStack) + 60
+
+        # print the task stack backtrace
+        bt
+        shell sleep 1
+      end
+
+      set $gdb_task_num = $gdb_task_num - 1
+      # go to next task
+      set $gdb_list_next = (ListItem_t*)$gdb_list_next->pxNext
+    end
+  end
+end
+
+
+define paddr
+  # print current info
+  i r
+  set $current_task_name = ((TCB_t*)(pxCurrentTCB))->pcTaskName
+  p $current_task_name
+  p *(TCB_t*)pxCurrentTCB
+  bt
+
+  # store the register
+  set $gdb_x0  = $x0
+  set $gdb_x1  = $x1
+  set $gdb_x3  = $x3
+  set $gdb_x4  = $x4
+  set $gdb_x5  = $x5
+  set $gdb_x6  = $x6
+  set $gdb_x7  = $x7
+  set $gdb_x8  = $x8
+  set $gdb_x9  = $x9
+  set $gdb_x10 = $x10
+  set $gdb_x11 = $x11
+  set $gdb_x12 = $x12
+  set $gdb_x13 = $x13
+  set $gdb_x14 = $x14
+  set $gdb_x15 = $x15
+  set $gdb_x16 = $x16
+  set $gdb_x17 = $x17
+  set $gdb_x18 = $x18
+  set $gdb_x19 = $x19
+  set $gdb_x20 = $x20
+  set $gdb_x21 = $x21
+  set $gdb_x22 = $x22
+  set $gdb_x23 = $x23
+  set $gdb_x24 = $x24
+  set $gdb_x25 = $x25
+  set $gdb_x26 = $x26
+  set $gdb_x27 = $x27
+  set $gdb_x28 = $x28
+  set $gdb_x29 = $x29
+  set $gdb_x30 = $x30
+  set $gdb_x31 = $x31
+  set $gdb_mcause = $mcause
+  set $gdb_pc  = $pc
+  set $gdb_sp  = $x2
+
+  p "-backtrace for pxReadyTasksLists-"
+  set $gdb_max_priority = sizeof(pxReadyTasksLists)/sizeof(pxReadyTasksLists[0])
+  set $gdb_priority_index = 0
+  while($gdb_max_priority > $gdb_priority_index)
+      set $ready_nums = pxReadyTasksLists[$gdb_priority_index].uxNumberOfItems
+      if($ready_nums != 0)
+        tasklist_bt &pxReadyTasksLists[$gdb_priority_index]
+      end
+      set $gdb_priority_index = $gdb_priority_index + 1
+  end
+  p "-backtrace for pxDelayedTaskList-"
+  tasklist_bt pxDelayedTaskList
+  p "-backtrace for pxOverflowDelayedTaskList-"
+  tasklist_bt pxOverflowDelayedTaskList
+  p "-backtrace for xTasksWaitingTermination-"
+  tasklist_bt &xTasksWaitingTermination
+  p "-backtrace for xSuspendedTaskList-"
+  tasklist_bt &xSuspendedTaskList
+
+  # restore the register
+  set  $x0 = $gdb_x0 
+  set  $x1 = $gdb_x1 
+  set  $x3 = $gdb_x3 
+  set  $x4 = $gdb_x4 
+  set  $x5 = $gdb_x5 
+  set  $x6 = $gdb_x6 
+  set  $x7 = $gdb_x7 
+  set  $x8 = $gdb_x8 
+  set  $x9 = $gdb_x9 
+  set  $x10 = $gdb_x10
+  set  $x11 = $gdb_x11
+  set  $x12 = $gdb_x12
+  set  $x13 = $gdb_x13
+  set  $x14 = $gdb_x14
+  set  $x15 = $gdb_x15
+  set  $x16 = $gdb_x16
+  set  $x17 = $gdb_x17
+  set  $x18 = $gdb_x18
+  set  $x19 = $gdb_x19
+  set  $x20 = $gdb_x20
+  set  $x21 = $gdb_x21
+  set  $x22 = $gdb_x22
+  set  $x23 = $gdb_x23
+  set  $x24 = $gdb_x24
+  set  $x25 = $gdb_x25
+  set  $x26 = $gdb_x26
+  set  $x27 = $gdb_x27
+  set  $x28 = $gdb_x28
+  set  $x29 = $gdb_x29
+  set  $x30 = $gdb_x30
+  set  $x31 = $gdb_x31
+  set  $mcause = $gdb_mcause
+  set  $pc = $gdb_pc 
+  set  $sp = $gdb_sp
+end
+
+paddr

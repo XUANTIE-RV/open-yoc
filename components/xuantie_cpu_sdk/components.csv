@@ -3,6 +3,10 @@ libc_bare,N,N
 libc_stub,N,N
 libc_freertos,N,N
 libc_rtthread,N,N
+minilibc_bare,N,N
+minilibc_stub,N,N
+minilibc_freertos,N,N
+minilibc_rtthread,N,N
 semihost2,N,N
 mm,N,N
 aos,N,N
@@ -33,6 +37,7 @@ bare_coremark,N,N
 bare_core_nmi,N,N
 bare_core_tcm,N,N
 bare_core_vic,N,N
+bare_core_vic2,N,N
 bare_core_wfe,N,N
 bare_core_wfi,N,N
 bare_cpp_demo,N,N
@@ -47,6 +52,7 @@ bare_semihost,N,N
 bare_semihost2,N,N
 bare_profiling_perf,N,N
 bare_pie_demo,N,N
+bare_boot_from_itcm,N,N
 freertos_helloworld,N,N
 freertos_cpp,N,N
 freertos_kernel,N,N
