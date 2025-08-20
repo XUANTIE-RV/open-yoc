@@ -2,134 +2,6 @@
 <Project Name="rtthread_helloworld_r908-cp_xiaohui" Version="1" Language="C">
   <Description>rtthread_helloworld</Description>
   <Dependencies Name="Debug"/>
-  <VirtualDirectory Name="boards">
-    <VirtualDirectory Name="board_riscv_dummy">
-      <VirtualDirectory Name="include">
-        <File Name="../../../../../boards/board_riscv_dummy/include/rtconfig.h">
-          <FileOption/>
-        </File>
-        <File Name="../../../../../boards/board_riscv_dummy/include/FreeRTOSConfig.h">
-          <FileOption/>
-        </File>
-        <File Name="../../../../../boards/board_riscv_dummy/include/board.h">
-          <FileOption/>
-        </File>
-        <File Name="../../../../../boards/board_riscv_dummy/include/csi_config.h">
-          <FileOption/>
-        </File>
-        <File Name="../../../../../boards/board_riscv_dummy/include/k_config.h">
-          <FileOption/>
-        </File>
-        <File Name="../../../../../boards/board_riscv_dummy/include/lwipopts.h">
-          <FileOption/>
-        </File>
-      </VirtualDirectory>
-      <VirtualDirectory Name="src">
-        <VirtualDirectory Name="uart">
-          <File Name="../../../../../boards/board_riscv_dummy/src/uart/board_uart.c">
-            <FileOption/>
-          </File>
-        </VirtualDirectory>
-        <File Name="../../../../../boards/board_riscv_dummy/src/board_init.c">
-          <FileOption/>
-        </File>
-      </VirtualDirectory>
-    </VirtualDirectory>
-  </VirtualDirectory>
-  <VirtualDirectory Name="solutions">
-    <VirtualDirectory Name="rtthread_helloworld">
-      <VirtualDirectory Name="app">
-        <VirtualDirectory Name="include">
-          <File Name="../../../../../solutions/rtthread_helloworld/app/include/app_main.h">
-            <FileOption/>
-          </File>
-          <File Name="../../../../../solutions/rtthread_helloworld/app/include/app_config.h">
-            <FileOption/>
-          </File>
-          <File Name="../../../../../solutions/rtthread_helloworld/app/include/app_init.h">
-            <FileOption/>
-          </File>
-        </VirtualDirectory>
-        <VirtualDirectory Name="src">
-          <VirtualDirectory Name="testcases">
-            <VirtualDirectory Name="utest">
-              <File Name="../../../../../solutions/rtthread_helloworld/app/src/testcases/utest/pass_tc.c">
-                <FileOption/>
-              </File>
-            </VirtualDirectory>
-            <VirtualDirectory Name="kernel">
-              <File Name="../../../../../solutions/rtthread_helloworld/app/src/testcases/kernel/atomic_tc.c">
-                <FileOption/>
-              </File>
-              <File Name="../../../../../solutions/rtthread_helloworld/app/src/testcases/kernel/event_tc.c">
-                <FileOption/>
-              </File>
-              <File Name="../../../../../solutions/rtthread_helloworld/app/src/testcases/kernel/hooklist_tc.c">
-                <FileOption/>
-              </File>
-              <File Name="../../../../../solutions/rtthread_helloworld/app/src/testcases/kernel/irq_tc.c">
-                <FileOption/>
-              </File>
-              <File Name="../../../../../solutions/rtthread_helloworld/app/src/testcases/kernel/mailbox_tc.c">
-                <FileOption/>
-              </File>
-              <File Name="../../../../../solutions/rtthread_helloworld/app/src/testcases/kernel/mem_tc.c">
-                <FileOption/>
-              </File>
-              <File Name="../../../../../solutions/rtthread_helloworld/app/src/testcases/kernel/memheap_tc.c">
-                <FileOption/>
-              </File>
-              <File Name="../../../../../solutions/rtthread_helloworld/app/src/testcases/kernel/messagequeue_tc.c">
-                <FileOption/>
-              </File>
-              <File Name="../../../../../solutions/rtthread_helloworld/app/src/testcases/kernel/mtsafe_kprint_tc.c">
-                <FileOption/>
-              </File>
-              <File Name="../../../../../solutions/rtthread_helloworld/app/src/testcases/kernel/mutex_tc.c">
-                <FileOption/>
-              </File>
-              <File Name="../../../../../solutions/rtthread_helloworld/app/src/testcases/kernel/sched_mtx_tc.c">
-                <FileOption/>
-              </File>
-              <File Name="../../../../../solutions/rtthread_helloworld/app/src/testcases/kernel/sched_sem_tc.c">
-                <FileOption/>
-              </File>
-              <File Name="../../../../../solutions/rtthread_helloworld/app/src/testcases/kernel/sched_thread_tc.c">
-                <FileOption/>
-              </File>
-              <File Name="../../../../../solutions/rtthread_helloworld/app/src/testcases/kernel/sched_timed_mtx_tc.c">
-                <FileOption/>
-              </File>
-              <File Name="../../../../../solutions/rtthread_helloworld/app/src/testcases/kernel/sched_timed_sem_tc.c">
-                <FileOption/>
-              </File>
-              <File Name="../../../../../solutions/rtthread_helloworld/app/src/testcases/kernel/semaphore_tc.c">
-                <FileOption/>
-              </File>
-              <File Name="../../../../../solutions/rtthread_helloworld/app/src/testcases/kernel/signal_tc.c">
-                <FileOption/>
-              </File>
-              <File Name="../../../../../solutions/rtthread_helloworld/app/src/testcases/kernel/slab_tc.c">
-                <FileOption/>
-              </File>
-              <File Name="../../../../../solutions/rtthread_helloworld/app/src/testcases/kernel/thread_tc.c">
-                <FileOption/>
-              </File>
-              <File Name="../../../../../solutions/rtthread_helloworld/app/src/testcases/kernel/timer_tc.c">
-                <FileOption/>
-              </File>
-            </VirtualDirectory>
-          </VirtualDirectory>
-          <File Name="../../../../../solutions/rtthread_helloworld/app/src/main.c">
-            <FileOption/>
-          </File>
-          <File Name="../../../../../solutions/rtthread_helloworld/app/src/pre_main.c">
-            <FileOption/>
-          </File>
-        </VirtualDirectory>
-      </VirtualDirectory>
-    </VirtualDirectory>
-  </VirtualDirectory>
   <VirtualDirectory Name="components">
     <VirtualDirectory Name="chip_riscv_dummy">
       <VirtualDirectory Name="include">
@@ -855,6 +727,134 @@
       </File>
     </VirtualDirectory>
   </VirtualDirectory>
+  <VirtualDirectory Name="boards">
+    <VirtualDirectory Name="board_riscv_dummy">
+      <VirtualDirectory Name="include">
+        <File Name="../../../../../boards/board_riscv_dummy/include/rtconfig.h">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../boards/board_riscv_dummy/include/FreeRTOSConfig.h">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../boards/board_riscv_dummy/include/board.h">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../boards/board_riscv_dummy/include/csi_config.h">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../boards/board_riscv_dummy/include/k_config.h">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../boards/board_riscv_dummy/include/lwipopts.h">
+          <FileOption/>
+        </File>
+      </VirtualDirectory>
+      <VirtualDirectory Name="src">
+        <VirtualDirectory Name="uart">
+          <File Name="../../../../../boards/board_riscv_dummy/src/uart/board_uart.c">
+            <FileOption/>
+          </File>
+        </VirtualDirectory>
+        <File Name="../../../../../boards/board_riscv_dummy/src/board_init.c">
+          <FileOption/>
+        </File>
+      </VirtualDirectory>
+    </VirtualDirectory>
+  </VirtualDirectory>
+  <VirtualDirectory Name="solutions">
+    <VirtualDirectory Name="rtthread_helloworld">
+      <VirtualDirectory Name="app">
+        <VirtualDirectory Name="include">
+          <File Name="../../../../../solutions/rtthread_helloworld/app/include/app_main.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../solutions/rtthread_helloworld/app/include/app_config.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../solutions/rtthread_helloworld/app/include/app_init.h">
+            <FileOption/>
+          </File>
+        </VirtualDirectory>
+        <VirtualDirectory Name="src">
+          <VirtualDirectory Name="testcases">
+            <VirtualDirectory Name="utest">
+              <File Name="../../../../../solutions/rtthread_helloworld/app/src/testcases/utest/pass_tc.c">
+                <FileOption/>
+              </File>
+            </VirtualDirectory>
+            <VirtualDirectory Name="kernel">
+              <File Name="../../../../../solutions/rtthread_helloworld/app/src/testcases/kernel/atomic_tc.c">
+                <FileOption/>
+              </File>
+              <File Name="../../../../../solutions/rtthread_helloworld/app/src/testcases/kernel/event_tc.c">
+                <FileOption/>
+              </File>
+              <File Name="../../../../../solutions/rtthread_helloworld/app/src/testcases/kernel/hooklist_tc.c">
+                <FileOption/>
+              </File>
+              <File Name="../../../../../solutions/rtthread_helloworld/app/src/testcases/kernel/irq_tc.c">
+                <FileOption/>
+              </File>
+              <File Name="../../../../../solutions/rtthread_helloworld/app/src/testcases/kernel/mailbox_tc.c">
+                <FileOption/>
+              </File>
+              <File Name="../../../../../solutions/rtthread_helloworld/app/src/testcases/kernel/mem_tc.c">
+                <FileOption/>
+              </File>
+              <File Name="../../../../../solutions/rtthread_helloworld/app/src/testcases/kernel/memheap_tc.c">
+                <FileOption/>
+              </File>
+              <File Name="../../../../../solutions/rtthread_helloworld/app/src/testcases/kernel/messagequeue_tc.c">
+                <FileOption/>
+              </File>
+              <File Name="../../../../../solutions/rtthread_helloworld/app/src/testcases/kernel/mtsafe_kprint_tc.c">
+                <FileOption/>
+              </File>
+              <File Name="../../../../../solutions/rtthread_helloworld/app/src/testcases/kernel/mutex_tc.c">
+                <FileOption/>
+              </File>
+              <File Name="../../../../../solutions/rtthread_helloworld/app/src/testcases/kernel/sched_mtx_tc.c">
+                <FileOption/>
+              </File>
+              <File Name="../../../../../solutions/rtthread_helloworld/app/src/testcases/kernel/sched_sem_tc.c">
+                <FileOption/>
+              </File>
+              <File Name="../../../../../solutions/rtthread_helloworld/app/src/testcases/kernel/sched_thread_tc.c">
+                <FileOption/>
+              </File>
+              <File Name="../../../../../solutions/rtthread_helloworld/app/src/testcases/kernel/sched_timed_mtx_tc.c">
+                <FileOption/>
+              </File>
+              <File Name="../../../../../solutions/rtthread_helloworld/app/src/testcases/kernel/sched_timed_sem_tc.c">
+                <FileOption/>
+              </File>
+              <File Name="../../../../../solutions/rtthread_helloworld/app/src/testcases/kernel/semaphore_tc.c">
+                <FileOption/>
+              </File>
+              <File Name="../../../../../solutions/rtthread_helloworld/app/src/testcases/kernel/signal_tc.c">
+                <FileOption/>
+              </File>
+              <File Name="../../../../../solutions/rtthread_helloworld/app/src/testcases/kernel/slab_tc.c">
+                <FileOption/>
+              </File>
+              <File Name="../../../../../solutions/rtthread_helloworld/app/src/testcases/kernel/thread_tc.c">
+                <FileOption/>
+              </File>
+              <File Name="../../../../../solutions/rtthread_helloworld/app/src/testcases/kernel/timer_tc.c">
+                <FileOption/>
+              </File>
+            </VirtualDirectory>
+          </VirtualDirectory>
+          <File Name="../../../../../solutions/rtthread_helloworld/app/src/main.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../solutions/rtthread_helloworld/app/src/pre_main.c">
+            <FileOption/>
+          </File>
+        </VirtualDirectory>
+      </VirtualDirectory>
+    </VirtualDirectory>
+  </VirtualDirectory>
   <VendorInfo>
     <VendorName>import_sdk_project</VendorName>
   </VendorInfo>
@@ -975,7 +975,7 @@
         <Tools/>
       </User>
       <Compiler>
-        <Define>CONFIG_KERNEL_RTTHREAD=1;__RT_KERNEL_SOURCE__=1;CONFIG_UTEST;CONFIG_CSI_V2=1;CONFIG_CSI=csi2;CONFIG_INIT_TASK_STACK_SIZE=8192;CONFIG_APP_TASK_STACK_SIZE=8192;CONFIG_SUPPORT_TSPEND=1;CONFIG_ARCH_MAINSTACK=8192;CONFIG_ARCH_INTERRUPTSTACK=8192;CONFIG_VIC_TSPDR=0x0c000000;CONFIG_PLIC_BASE=0x08000000;CONFIG_CLIC_BASE=0x0c010000;CONFIG_INTC_CLIC_PLIC=1;CONFIG_SUPPORT_IRQ_NESTED=1;CONFIG_FPP_ENABLE=0;CONFIG_CHECK_FPU_DIRTY=1;CONFIG_CHECK_VECTOR_DIRTY=1;CONFIG_SYSTICK_HZ=100;CONFIG_BOARD_XIAOHUI_EVB=1;CONFIG_CPU_XUANTIE_R908_CP=1;CONFIG_DEBUG=1;CLI_CONFIG_STACK_SIZE=4096;RT_USING_FINSH</Define>
+        <Define>CONFIG_KERNEL_RTTHREAD=1;__RT_KERNEL_SOURCE__=1;CONFIG_UTEST;CONFIG_CSI_V2=1;CONFIG_CSI=csi2;CONFIG_INIT_TASK_STACK_SIZE=8192;CONFIG_APP_TASK_STACK_SIZE=8192;CONFIG_SUPPORT_TSPEND=1;CONFIG_ARCH_MAINSTACK=8192;CONFIG_ARCH_INTERRUPTSTACK=8192;CONFIG_VIC_TSPDR=0x0c000000;CONFIG_PLIC_BASE=0x08000000;CONFIG_CLIC_BASE=0x0c010000;CONFIG_INTC_CLIC_PLIC=1;CONFIG_SUPPORT_IRQ_NESTED=1;CONFIG_FPP_ENABLE=0;CONFIG_CHECK_FPU_DIRTY=1;CONFIG_CHECK_VECTOR_DIRTY=1;CONFIG_CPU_FREQ_HZ=40000000;CONFIG_SYSTICK_HZ=100;CONFIG_BOARD_XIAOHUI_EVB=1;CONFIG_CPU_XUANTIE_R908_CP=1;CONFIG_DEBUG=1;CLI_CONFIG_STACK_SIZE=4096;RT_USING_FINSH</Define>
         <Undefine/>
         <Optim>Default</Optim>
         <DebugLevel>Default (-g)</DebugLevel>
@@ -994,7 +994,7 @@
         <Fstrict>no</Fstrict>
       </Compiler>
       <Asm>
-        <Define>__ASSEMBLY__;CONFIG_KERNEL_RTTHREAD=1;__RT_KERNEL_SOURCE__=1;CONFIG_UTEST;CONFIG_CSI_V2=1;CONFIG_CSI=csi2;CONFIG_INIT_TASK_STACK_SIZE=8192;CONFIG_APP_TASK_STACK_SIZE=8192;CONFIG_SUPPORT_TSPEND=1;CONFIG_ARCH_MAINSTACK=8192;CONFIG_ARCH_INTERRUPTSTACK=8192;CONFIG_VIC_TSPDR=0x0c000000;CONFIG_PLIC_BASE=0x08000000;CONFIG_CLIC_BASE=0x0c010000;CONFIG_INTC_CLIC_PLIC=1;CONFIG_SUPPORT_IRQ_NESTED=1;CONFIG_FPP_ENABLE=0;CONFIG_CHECK_FPU_DIRTY=1;CONFIG_CHECK_VECTOR_DIRTY=1;CONFIG_SYSTICK_HZ=100;CONFIG_BOARD_XIAOHUI_EVB=1;CONFIG_CPU_XUANTIE_R908_CP=1;CONFIG_DEBUG=1;CLI_CONFIG_STACK_SIZE=4096;RT_USING_FINSH</Define>
+        <Define>__ASSEMBLY__;CONFIG_KERNEL_RTTHREAD=1;__RT_KERNEL_SOURCE__=1;CONFIG_UTEST;CONFIG_CSI_V2=1;CONFIG_CSI=csi2;CONFIG_INIT_TASK_STACK_SIZE=8192;CONFIG_APP_TASK_STACK_SIZE=8192;CONFIG_SUPPORT_TSPEND=1;CONFIG_ARCH_MAINSTACK=8192;CONFIG_ARCH_INTERRUPTSTACK=8192;CONFIG_VIC_TSPDR=0x0c000000;CONFIG_PLIC_BASE=0x08000000;CONFIG_CLIC_BASE=0x0c010000;CONFIG_INTC_CLIC_PLIC=1;CONFIG_SUPPORT_IRQ_NESTED=1;CONFIG_FPP_ENABLE=0;CONFIG_CHECK_FPU_DIRTY=1;CONFIG_CHECK_VECTOR_DIRTY=1;CONFIG_CPU_FREQ_HZ=40000000;CONFIG_SYSTICK_HZ=100;CONFIG_BOARD_XIAOHUI_EVB=1;CONFIG_CPU_XUANTIE_R908_CP=1;CONFIG_DEBUG=1;CLI_CONFIG_STACK_SIZE=4096;RT_USING_FINSH</Define>
         <Undefine/>
         <IncludePath>$(ProjectPath);../../../../../components/csi/csi2/include;../../../../../components/rtthread/include;../../../../../components/rtthread/libcpu/riscv/r908fdv-cp-xt;../../../../../components/utest;../../../../../components/finsh;../../../../../components/libc_rtthread/include;../../../../../components/libc_rtthread/compilers/gcc;../../../../../components/chip_riscv_dummy/include;../../../../../components/chip_riscv_dummy/include/asm;../../../../../boards/board_riscv_dummy/include;../../../../../solutions/rtthread_helloworld/app/include;</IncludePath>
         <OtherFlags>-g -Wall -Wno-unused-function -Wformat -Wformat-security -Warray-bounds -Wuninitialized -Wreturn-type -Wcomment -Wswitch -Wparentheses -g -Wall -mcmodel=medany -MP -MMD -Wno-main -g -Os -Wno-unused-function -Wpointer-arith -Wno-undef -ffunction-sections -fdata-sections -fno-inline-functions -fno-builtin -fno-strict-aliasing -Wno-char-subscripts -Wno-unused-but-set-variable</OtherFlags>
@@ -1196,7 +1196,7 @@
         <Tools/>
       </User>
       <Compiler>
-        <Define>CONFIG_KERNEL_RTTHREAD=1;__RT_KERNEL_SOURCE__=1;CONFIG_UTEST;CONFIG_CSI_V2=1;CONFIG_CSI=csi2;CONFIG_INIT_TASK_STACK_SIZE=8192;CONFIG_APP_TASK_STACK_SIZE=8192;CONFIG_SUPPORT_TSPEND=1;CONFIG_ARCH_MAINSTACK=8192;CONFIG_ARCH_INTERRUPTSTACK=8192;CONFIG_VIC_TSPDR=0x0c000000;CONFIG_PLIC_BASE=0x08000000;CONFIG_CLIC_BASE=0x0c010000;CONFIG_INTC_CLIC_PLIC=1;CONFIG_SUPPORT_IRQ_NESTED=1;CONFIG_FPP_ENABLE=0;CONFIG_CHECK_FPU_DIRTY=1;CONFIG_CHECK_VECTOR_DIRTY=1;CONFIG_SYSTICK_HZ=100;CONFIG_BOARD_XIAOHUI_EVB=1;CONFIG_CPU_XUANTIE_R908_CP=1;CONFIG_DEBUG=1;CLI_CONFIG_STACK_SIZE=4096;RT_USING_FINSH</Define>
+        <Define>CONFIG_KERNEL_RTTHREAD=1;__RT_KERNEL_SOURCE__=1;CONFIG_UTEST;CONFIG_CSI_V2=1;CONFIG_CSI=csi2;CONFIG_INIT_TASK_STACK_SIZE=8192;CONFIG_APP_TASK_STACK_SIZE=8192;CONFIG_SUPPORT_TSPEND=1;CONFIG_ARCH_MAINSTACK=8192;CONFIG_ARCH_INTERRUPTSTACK=8192;CONFIG_VIC_TSPDR=0x0c000000;CONFIG_PLIC_BASE=0x08000000;CONFIG_CLIC_BASE=0x0c010000;CONFIG_INTC_CLIC_PLIC=1;CONFIG_SUPPORT_IRQ_NESTED=1;CONFIG_FPP_ENABLE=0;CONFIG_CHECK_FPU_DIRTY=1;CONFIG_CHECK_VECTOR_DIRTY=1;CONFIG_CPU_FREQ_HZ=40000000;CONFIG_SYSTICK_HZ=100;CONFIG_BOARD_XIAOHUI_EVB=1;CONFIG_CPU_XUANTIE_R908_CP=1;CONFIG_DEBUG=1;CLI_CONFIG_STACK_SIZE=4096;RT_USING_FINSH</Define>
         <Undefine/>
         <Optim>Default</Optim>
         <DebugLevel>Default (-g)</DebugLevel>
@@ -1215,7 +1215,7 @@
         <Fstrict>no</Fstrict>
       </Compiler>
       <Asm>
-        <Define>__ASSEMBLY__;CONFIG_KERNEL_RTTHREAD=1;__RT_KERNEL_SOURCE__=1;CONFIG_UTEST;CONFIG_CSI_V2=1;CONFIG_CSI=csi2;CONFIG_INIT_TASK_STACK_SIZE=8192;CONFIG_APP_TASK_STACK_SIZE=8192;CONFIG_SUPPORT_TSPEND=1;CONFIG_ARCH_MAINSTACK=8192;CONFIG_ARCH_INTERRUPTSTACK=8192;CONFIG_VIC_TSPDR=0x0c000000;CONFIG_PLIC_BASE=0x08000000;CONFIG_CLIC_BASE=0x0c010000;CONFIG_INTC_CLIC_PLIC=1;CONFIG_SUPPORT_IRQ_NESTED=1;CONFIG_FPP_ENABLE=0;CONFIG_CHECK_FPU_DIRTY=1;CONFIG_CHECK_VECTOR_DIRTY=1;CONFIG_SYSTICK_HZ=100;CONFIG_BOARD_XIAOHUI_EVB=1;CONFIG_CPU_XUANTIE_R908_CP=1;CONFIG_DEBUG=1;CLI_CONFIG_STACK_SIZE=4096;RT_USING_FINSH</Define>
+        <Define>__ASSEMBLY__;CONFIG_KERNEL_RTTHREAD=1;__RT_KERNEL_SOURCE__=1;CONFIG_UTEST;CONFIG_CSI_V2=1;CONFIG_CSI=csi2;CONFIG_INIT_TASK_STACK_SIZE=8192;CONFIG_APP_TASK_STACK_SIZE=8192;CONFIG_SUPPORT_TSPEND=1;CONFIG_ARCH_MAINSTACK=8192;CONFIG_ARCH_INTERRUPTSTACK=8192;CONFIG_VIC_TSPDR=0x0c000000;CONFIG_PLIC_BASE=0x08000000;CONFIG_CLIC_BASE=0x0c010000;CONFIG_INTC_CLIC_PLIC=1;CONFIG_SUPPORT_IRQ_NESTED=1;CONFIG_FPP_ENABLE=0;CONFIG_CHECK_FPU_DIRTY=1;CONFIG_CHECK_VECTOR_DIRTY=1;CONFIG_CPU_FREQ_HZ=40000000;CONFIG_SYSTICK_HZ=100;CONFIG_BOARD_XIAOHUI_EVB=1;CONFIG_CPU_XUANTIE_R908_CP=1;CONFIG_DEBUG=1;CLI_CONFIG_STACK_SIZE=4096;RT_USING_FINSH</Define>
         <Undefine/>
         <IncludePath>$(ProjectPath);../../../../../components/csi/csi2/include;../../../../../components/rtthread/include;../../../../../components/rtthread/libcpu/riscv/r908fdv-cp-xt;../../../../../components/utest;../../../../../components/finsh;../../../../../components/libc_rtthread/include;../../../../../components/libc_rtthread/compilers/gcc;../../../../../components/chip_riscv_dummy/include;../../../../../components/chip_riscv_dummy/include/asm;../../../../../boards/board_riscv_dummy/include;../../../../../solutions/rtthread_helloworld/app/include;</IncludePath>
         <OtherFlags>-g -Wall -Wno-unused-function -Wformat -Wformat-security -Warray-bounds -Wuninitialized -Wreturn-type -Wcomment -Wswitch -Wparentheses -g -Wall -mcmodel=medany -MP -MMD -Wno-main -g -Os -Wno-unused-function -Wpointer-arith -Wno-undef -ffunction-sections -fdata-sections -fno-inline-functions -fno-builtin -fno-strict-aliasing -Wno-char-subscripts -Wno-unused-but-set-variable</OtherFlags>

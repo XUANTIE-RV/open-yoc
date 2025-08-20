@@ -2,65 +2,6 @@
 <Project Name="freertos_helloworld_e907fd_smartl" Version="1" Language="C">
   <Description>freertos_helloworld</Description>
   <Dependencies Name="Debug"/>
-  <VirtualDirectory Name="boards">
-    <VirtualDirectory Name="board_riscv_dummy">
-      <VirtualDirectory Name="include">
-        <File Name="../../../../../boards/board_riscv_dummy/include/rtconfig.h">
-          <FileOption/>
-        </File>
-        <File Name="../../../../../boards/board_riscv_dummy/include/FreeRTOSConfig.h">
-          <FileOption/>
-        </File>
-        <File Name="../../../../../boards/board_riscv_dummy/include/board.h">
-          <FileOption/>
-        </File>
-        <File Name="../../../../../boards/board_riscv_dummy/include/csi_config.h">
-          <FileOption/>
-        </File>
-        <File Name="../../../../../boards/board_riscv_dummy/include/k_config.h">
-          <FileOption/>
-        </File>
-        <File Name="../../../../../boards/board_riscv_dummy/include/lwipopts.h">
-          <FileOption/>
-        </File>
-      </VirtualDirectory>
-      <VirtualDirectory Name="src">
-        <VirtualDirectory Name="uart">
-          <File Name="../../../../../boards/board_riscv_dummy/src/uart/board_uart.c">
-            <FileOption/>
-          </File>
-        </VirtualDirectory>
-        <File Name="../../../../../boards/board_riscv_dummy/src/board_init.c">
-          <FileOption/>
-        </File>
-      </VirtualDirectory>
-    </VirtualDirectory>
-  </VirtualDirectory>
-  <VirtualDirectory Name="solutions">
-    <VirtualDirectory Name="freertos_helloworld">
-      <VirtualDirectory Name="app">
-        <VirtualDirectory Name="include">
-          <File Name="../../../../../solutions/freertos_helloworld/app/include/app_main.h">
-            <FileOption/>
-          </File>
-          <File Name="../../../../../solutions/freertos_helloworld/app/include/app_config.h">
-            <FileOption/>
-          </File>
-          <File Name="../../../../../solutions/freertos_helloworld/app/include/app_init.h">
-            <FileOption/>
-          </File>
-        </VirtualDirectory>
-        <VirtualDirectory Name="src">
-          <File Name="../../../../../solutions/freertos_helloworld/app/src/main.c">
-            <FileOption/>
-          </File>
-          <File Name="../../../../../solutions/freertos_helloworld/app/src/pre_main.c">
-            <FileOption/>
-          </File>
-        </VirtualDirectory>
-      </VirtualDirectory>
-    </VirtualDirectory>
-  </VirtualDirectory>
   <VirtualDirectory Name="components">
     <VirtualDirectory Name="chip_riscv_dummy">
       <VirtualDirectory Name="include">
@@ -650,6 +591,65 @@
       <File Name="../../../../../components/libc_freertos/settimeofday.c">
         <FileOption/>
       </File>
+    </VirtualDirectory>
+  </VirtualDirectory>
+  <VirtualDirectory Name="boards">
+    <VirtualDirectory Name="board_riscv_dummy">
+      <VirtualDirectory Name="include">
+        <File Name="../../../../../boards/board_riscv_dummy/include/rtconfig.h">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../boards/board_riscv_dummy/include/FreeRTOSConfig.h">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../boards/board_riscv_dummy/include/board.h">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../boards/board_riscv_dummy/include/csi_config.h">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../boards/board_riscv_dummy/include/k_config.h">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../boards/board_riscv_dummy/include/lwipopts.h">
+          <FileOption/>
+        </File>
+      </VirtualDirectory>
+      <VirtualDirectory Name="src">
+        <VirtualDirectory Name="uart">
+          <File Name="../../../../../boards/board_riscv_dummy/src/uart/board_uart.c">
+            <FileOption/>
+          </File>
+        </VirtualDirectory>
+        <File Name="../../../../../boards/board_riscv_dummy/src/board_init.c">
+          <FileOption/>
+        </File>
+      </VirtualDirectory>
+    </VirtualDirectory>
+  </VirtualDirectory>
+  <VirtualDirectory Name="solutions">
+    <VirtualDirectory Name="freertos_helloworld">
+      <VirtualDirectory Name="app">
+        <VirtualDirectory Name="include">
+          <File Name="../../../../../solutions/freertos_helloworld/app/include/app_main.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../solutions/freertos_helloworld/app/include/app_config.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../solutions/freertos_helloworld/app/include/app_init.h">
+            <FileOption/>
+          </File>
+        </VirtualDirectory>
+        <VirtualDirectory Name="src">
+          <File Name="../../../../../solutions/freertos_helloworld/app/src/main.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../solutions/freertos_helloworld/app/src/pre_main.c">
+            <FileOption/>
+          </File>
+        </VirtualDirectory>
+      </VirtualDirectory>
     </VirtualDirectory>
   </VirtualDirectory>
   <VendorInfo>

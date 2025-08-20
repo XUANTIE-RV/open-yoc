@@ -47,6 +47,7 @@ SECTIONS
   KEEP(*startup.o(*.text))
   KEEP(*startup.o(*.vectors))
   KEEP(*vectors.o(*.text))
+  KEEP(*whetstone.o(*.text))
   KEEP(*(.text.entry))
   *(.text*)
   *(.gnu.warning)

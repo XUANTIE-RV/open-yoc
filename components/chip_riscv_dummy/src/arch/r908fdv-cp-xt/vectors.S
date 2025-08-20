@@ -32,9 +32,6 @@ g_top_trapstack:
 
 #if CONFIG_INTC_CLIC_PLIC
 
-/* Enable interrupts when returning from the handler */
-#define MSTATUS_PRV1 0x1880
-
 #if CONFIG_SUPPORT_IRQ_NESTED
 #define IRQ_NESTED_MAX  (6)
 
@@ -77,20 +74,14 @@ Default_IRQHandler:
     mul     t1, t1, t0
     add     sp, sp, t1 /* sp = (cpuid + 1) * CONFIG_ARCH_INTERRUPTSTACK + g_base_irqstack */
 
-#if CONFIG_CHECK_FPU_DIRTY || CONFIG_CHECK_VECTOR_DIRTY
     addi    sp, sp, -(76+76)
-#else
-    addi    sp, sp, -(72+72)
-#endif
     sd      t0, (4+4)(sp)
     sd      t1, (8+8)(sp)
     csrr    t0, mepc
     sd      t1, (64+64)(sp)
     sd      t0, (68+68)(sp)
-#if CONFIG_CHECK_FPU_DIRTY || CONFIG_CHECK_VECTOR_DIRTY
     csrr    t0, mstatus
     sd      t0, (72+72)(sp)
-#endif
     sd      ra, (0)(sp)
     sd      t2, (12+12)(sp)
     sd      a0, (16+16)(sp)
@@ -128,11 +119,7 @@ Default_IRQHandler:
     and     a5, a4, a3
     sb      a5, 0(a2)
 
-#if CONFIG_CHECK_FPU_DIRTY || CONFIG_CHECK_VECTOR_DIRTY
     RESTORE_MSTATUS
-#endif
-    li      t0, MSTATUS_PRV1
-    csrs    mstatus, t0
 
     RESTORE_VECTOR_REGISTERS
     RESTORE_FLOAT_REGISTERS
@@ -156,11 +143,7 @@ Default_IRQHandler:
     ld      t5, (56+56)(sp)
     ld      t6, (60+60)(sp)
 
-#if CONFIG_CHECK_FPU_DIRTY || CONFIG_CHECK_VECTOR_DIRTY
     addi    sp, sp, (76+76)
-#else
-    addi    sp, sp, (72+72)
-#endif
     csrr    sp, mscratch
 #if CONFIG_PROFILING_PERF && CONFIG_PERF_BACKTRACE_USE_FP
     addi    sp, sp, 8
@@ -236,20 +219,15 @@ Default_IRQHandler:
     ld      t3, (12+12)(sp)
     addi    sp, sp, (8+8+8+8)
 .Lnested2:
-#if CONFIG_CHECK_FPU_DIRTY || CONFIG_CHECK_VECTOR_DIRTY
     addi    sp, sp, -(76+76)
-#else
-    addi    sp, sp, -(72+72)
-#endif
     sd      t0, (4+4)(sp)
     sd      t1, (8+8)(sp)
     csrr    t0, mepc
     sd      t1, (64+64)(sp)
     sd      t0, (68+68)(sp)
-#if CONFIG_CHECK_FPU_DIRTY || CONFIG_CHECK_VECTOR_DIRTY
     csrr    t0, mstatus
     sd      t0, (72+72)(sp)
-#endif
+
     csrs    mstatus, 8
 
     sd      ra, 0(sp)
@@ -317,11 +295,8 @@ Default_IRQHandler:
     sd      t1, (t0)
     bgt     t1, zero, .Lnested3
 
-#if CONFIG_CHECK_FPU_DIRTY || CONFIG_CHECK_VECTOR_DIRTY
     RESTORE_MSTATUS
-#endif
-    li      t0, MSTATUS_PRV1
-    csrs    mstatus, t0
+
     csrw    mcause, a1
 
     RESTORE_VECTOR_REGISTERS
@@ -346,11 +321,7 @@ Default_IRQHandler:
     ld      t5, (56+56)(sp)
     ld      t6, (60+60)(sp)
 
-#if CONFIG_CHECK_FPU_DIRTY || CONFIG_CHECK_VECTOR_DIRTY
     addi    sp, sp, (76+76)
-#else
-    addi    sp, sp, (72+72)
-#endif
     csrr    sp, mscratch
 #if CONFIG_PROFILING_PERF && CONFIG_PERF_BACKTRACE_USE_FP
     addi    sp, sp, 16
@@ -380,17 +351,13 @@ Default_IRQHandler:
     or      t0, a0, t0
     csrw    mcause, t0
 
-#if CONFIG_CHECK_FPU_DIRTY || CONFIG_CHECK_VECTOR_DIRTY
     RESTORE_MSTATUS
-#endif
+
     RESTORE_VECTOR_REGISTERS
     RESTORE_FLOAT_REGISTERS
 
     ld      t0, (68+68)(sp)
     csrw    mepc, t0
-
-    li      t0, MSTATUS_PRV1
-    csrs    mstatus, t0
 
     ld      ra, 0(sp)
     ld      t0, (4+4)(sp)
@@ -409,11 +376,7 @@ Default_IRQHandler:
     ld      t5, (56+56)(sp)
     ld      t6, (60+60)(sp)
 
-#if CONFIG_CHECK_FPU_DIRTY || CONFIG_CHECK_VECTOR_DIRTY
     addi    sp, sp, (76+76)
-#else
-    addi    sp, sp, (72+72)
-#endif
     mret
 #endif /* CONFIG_SUPPORT_IRQ_NESTED */
 

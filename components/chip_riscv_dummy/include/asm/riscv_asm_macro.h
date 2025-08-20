@@ -28,7 +28,6 @@
 
 #include "riscv_csr.h"
 
-#if CONFIG_CHECK_FPU_DIRTY || CONFIG_CHECK_VECTOR_DIRTY || CONFIG_CHECK_MATRIX_DIRTY
 .macro RESTORE_MSTATUS
     /* t0 and t1 are not restored before using */
     /* now, sp is at the top of the stack (the lowest address)*/
@@ -130,8 +129,6 @@
     load_x   t3, (0)(t1)
     csrw     sstatus, t3
 .endm
-
-#endif /* CONFIG_CHECK_FPU_DIRTY || CONFIG_CHECK_VECTOR_DIRTY || CONFIG_CHECK_MATRIX_DIRTY */
 
 .macro SAVE_VECTOR_REGISTERS
     /* t0,t1 saved before using */

@@ -253,6 +253,7 @@ SECTIONS
   __sbss = ALIGN(0x4) ;
   __bss_start__ = . ;
   KEEP(*dhry_1.o(*.bss))
+  KEEP(*linpack.o(*.bss))
   *(.dynsbss)
   *(.sbss)
   *(.sbss.*)

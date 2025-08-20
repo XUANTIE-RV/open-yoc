@@ -93,6 +93,7 @@
                   <listOptionValue builtIn="false" value="CONFIG_FPP_ENABLE=0"/>
                   <listOptionValue builtIn="false" value="CONFIG_CHECK_FPU_DIRTY=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CHECK_VECTOR_DIRTY=1"/>
+                  <listOptionValue builtIn="false" value="CONFIG_CPU_FREQ_HZ=40000000"/>
                   <listOptionValue builtIn="false" value="CONFIG_SYSTICK_HZ=100"/>
                   <listOptionValue builtIn="false" value="CONFIG_BOARD_XIAOHUI_EVB=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CPU_XUANTIE_R908FDV_CP=1"/>
@@ -200,6 +201,7 @@
                   <listOptionValue builtIn="false" value="CONFIG_FPP_ENABLE=0"/>
                   <listOptionValue builtIn="false" value="CONFIG_CHECK_FPU_DIRTY=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CHECK_VECTOR_DIRTY=1"/>
+                  <listOptionValue builtIn="false" value="CONFIG_CPU_FREQ_HZ=40000000"/>
                   <listOptionValue builtIn="false" value="CONFIG_SYSTICK_HZ=100"/>
                   <listOptionValue builtIn="false" value="CONFIG_BOARD_XIAOHUI_EVB=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CPU_XUANTIE_R908FDV_CP=1"/>
@@ -307,6 +309,7 @@
                   <listOptionValue builtIn="false" value="CONFIG_FPP_ENABLE=0"/>
                   <listOptionValue builtIn="false" value="CONFIG_CHECK_FPU_DIRTY=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CHECK_VECTOR_DIRTY=1"/>
+                  <listOptionValue builtIn="false" value="CONFIG_CPU_FREQ_HZ=40000000"/>
                   <listOptionValue builtIn="false" value="CONFIG_SYSTICK_HZ=100"/>
                   <listOptionValue builtIn="false" value="CONFIG_BOARD_XIAOHUI_EVB=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CPU_XUANTIE_R908FDV_CP=1"/>
@@ -472,6 +475,7 @@
                   <listOptionValue builtIn="false" value="CONFIG_FPP_ENABLE=0"/>
                   <listOptionValue builtIn="false" value="CONFIG_CHECK_FPU_DIRTY=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CHECK_VECTOR_DIRTY=1"/>
+                  <listOptionValue builtIn="false" value="CONFIG_CPU_FREQ_HZ=40000000"/>
                   <listOptionValue builtIn="false" value="CONFIG_SYSTICK_HZ=100"/>
                   <listOptionValue builtIn="false" value="CONFIG_BOARD_XIAOHUI_EVB=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CPU_XUANTIE_R908FDV_CP=1"/>
@@ -579,6 +583,7 @@
                   <listOptionValue builtIn="false" value="CONFIG_FPP_ENABLE=0"/>
                   <listOptionValue builtIn="false" value="CONFIG_CHECK_FPU_DIRTY=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CHECK_VECTOR_DIRTY=1"/>
+                  <listOptionValue builtIn="false" value="CONFIG_CPU_FREQ_HZ=40000000"/>
                   <listOptionValue builtIn="false" value="CONFIG_SYSTICK_HZ=100"/>
                   <listOptionValue builtIn="false" value="CONFIG_BOARD_XIAOHUI_EVB=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CPU_XUANTIE_R908FDV_CP=1"/>
@@ -686,6 +691,7 @@
                   <listOptionValue builtIn="false" value="CONFIG_FPP_ENABLE=0"/>
                   <listOptionValue builtIn="false" value="CONFIG_CHECK_FPU_DIRTY=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CHECK_VECTOR_DIRTY=1"/>
+                  <listOptionValue builtIn="false" value="CONFIG_CPU_FREQ_HZ=40000000"/>
                   <listOptionValue builtIn="false" value="CONFIG_SYSTICK_HZ=100"/>
                   <listOptionValue builtIn="false" value="CONFIG_BOARD_XIAOHUI_EVB=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CPU_XUANTIE_R908FDV_CP=1"/>

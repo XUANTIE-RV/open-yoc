@@ -14,11 +14,7 @@
 #include <stdlib.h>
 #include "utest.h"
 
-#ifdef ARCH_CPU_64BIT
-#define THREAD_STACKSIZE 8192
-#else
-#define THREAD_STACKSIZE 4096
-#endif
+#define THREAD_STACKSIZE UTEST_THR_STACK_SIZE
 
 static struct rt_mutex static_mutex;
 

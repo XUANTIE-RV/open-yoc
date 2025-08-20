@@ -2,73 +2,6 @@
 <Project Name="osal_cpp_demo_c910v2_xiaohui_rtthread" Version="1" Language="C">
   <Description>osal_cpp_demo</Description>
   <Dependencies Name="Debug"/>
-  <VirtualDirectory Name="boards">
-    <VirtualDirectory Name="board_riscv_dummy">
-      <VirtualDirectory Name="include">
-        <File Name="../../../../../../boards/board_riscv_dummy/include/rtconfig.h">
-          <FileOption/>
-        </File>
-        <File Name="../../../../../../boards/board_riscv_dummy/include/FreeRTOSConfig.h">
-          <FileOption/>
-        </File>
-        <File Name="../../../../../../boards/board_riscv_dummy/include/board.h">
-          <FileOption/>
-        </File>
-        <File Name="../../../../../../boards/board_riscv_dummy/include/csi_config.h">
-          <FileOption/>
-        </File>
-        <File Name="../../../../../../boards/board_riscv_dummy/include/k_config.h">
-          <FileOption/>
-        </File>
-        <File Name="../../../../../../boards/board_riscv_dummy/include/lwipopts.h">
-          <FileOption/>
-        </File>
-      </VirtualDirectory>
-      <VirtualDirectory Name="src">
-        <VirtualDirectory Name="uart">
-          <File Name="../../../../../../boards/board_riscv_dummy/src/uart/board_uart.c">
-            <FileOption/>
-          </File>
-        </VirtualDirectory>
-        <File Name="../../../../../../boards/board_riscv_dummy/src/board_init.c">
-          <FileOption/>
-        </File>
-      </VirtualDirectory>
-    </VirtualDirectory>
-  </VirtualDirectory>
-  <VirtualDirectory Name="solutions">
-    <VirtualDirectory Name="osal_cpp_demo">
-      <VirtualDirectory Name="app">
-        <VirtualDirectory Name="include">
-          <File Name="../../../../../../solutions/osal_cpp_demo/app/include/app_main.h">
-            <FileOption/>
-          </File>
-          <File Name="../../../../../../solutions/osal_cpp_demo/app/include/app_config.h">
-            <FileOption/>
-          </File>
-          <File Name="../../../../../../solutions/osal_cpp_demo/app/include/app_init.h">
-            <FileOption/>
-          </File>
-        </VirtualDirectory>
-        <VirtualDirectory Name="src">
-          <VirtualDirectory Name="init">
-            <File Name="../../../../../../solutions/osal_cpp_demo/app/src/init/cli_cmd.c">
-              <FileOption/>
-            </File>
-            <File Name="../../../../../../solutions/osal_cpp_demo/app/src/init/init.c">
-              <FileOption/>
-            </File>
-          </VirtualDirectory>
-          <File Name="../../../../../../solutions/osal_cpp_demo/app/src/main.c">
-            <FileOption/>
-          </File>
-          <File Name="../../../../../../solutions/osal_cpp_demo/app/src/cpp_example.cpp">
-            <FileOption/>
-          </File>
-        </VirtualDirectory>
-      </VirtualDirectory>
-    </VirtualDirectory>
-  </VirtualDirectory>
   <VirtualDirectory Name="components">
     <VirtualDirectory Name="aos">
       <VirtualDirectory Name="include">
@@ -1773,6 +1706,73 @@
         <File Name="../../../../../../components/uservice/src/utask.c">
           <FileOption/>
         </File>
+      </VirtualDirectory>
+    </VirtualDirectory>
+  </VirtualDirectory>
+  <VirtualDirectory Name="boards">
+    <VirtualDirectory Name="board_riscv_dummy">
+      <VirtualDirectory Name="include">
+        <File Name="../../../../../../boards/board_riscv_dummy/include/rtconfig.h">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../boards/board_riscv_dummy/include/FreeRTOSConfig.h">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../boards/board_riscv_dummy/include/board.h">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../boards/board_riscv_dummy/include/csi_config.h">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../boards/board_riscv_dummy/include/k_config.h">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../../boards/board_riscv_dummy/include/lwipopts.h">
+          <FileOption/>
+        </File>
+      </VirtualDirectory>
+      <VirtualDirectory Name="src">
+        <VirtualDirectory Name="uart">
+          <File Name="../../../../../../boards/board_riscv_dummy/src/uart/board_uart.c">
+            <FileOption/>
+          </File>
+        </VirtualDirectory>
+        <File Name="../../../../../../boards/board_riscv_dummy/src/board_init.c">
+          <FileOption/>
+        </File>
+      </VirtualDirectory>
+    </VirtualDirectory>
+  </VirtualDirectory>
+  <VirtualDirectory Name="solutions">
+    <VirtualDirectory Name="osal_cpp_demo">
+      <VirtualDirectory Name="app">
+        <VirtualDirectory Name="include">
+          <File Name="../../../../../../solutions/osal_cpp_demo/app/include/app_main.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../solutions/osal_cpp_demo/app/include/app_config.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../solutions/osal_cpp_demo/app/include/app_init.h">
+            <FileOption/>
+          </File>
+        </VirtualDirectory>
+        <VirtualDirectory Name="src">
+          <VirtualDirectory Name="init">
+            <File Name="../../../../../../solutions/osal_cpp_demo/app/src/init/cli_cmd.c">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../../solutions/osal_cpp_demo/app/src/init/init.c">
+              <FileOption/>
+            </File>
+          </VirtualDirectory>
+          <File Name="../../../../../../solutions/osal_cpp_demo/app/src/main.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../../solutions/osal_cpp_demo/app/src/cpp_example.cpp">
+            <FileOption/>
+          </File>
+        </VirtualDirectory>
       </VirtualDirectory>
     </VirtualDirectory>
   </VirtualDirectory>

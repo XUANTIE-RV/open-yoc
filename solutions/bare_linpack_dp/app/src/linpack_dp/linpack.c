@@ -730,7 +730,7 @@ void benchmark_linpack_dp_main()
 	lda = 201;
 	ldaa = 200;
 	cray = .056; 
-	n = 200;
+	n = 100;
 
 	fprintf(stdout,ROLLING);fprintf(stdout,PREC);fprintf(stdout,"Precision Linpack\n\n");
 	fprintf(stderr,ROLLING);fprintf(stderr,PREC);fprintf(stderr,"Precision Linpack\n\n");

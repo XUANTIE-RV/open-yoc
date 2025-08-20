@@ -65,8 +65,6 @@ static void clic_init(void)
 #endif
         csi_vic_set_prio(i, 3);
     }
-    /* coretime use positive interrupt */
-    CLIC->CLICINT[CORET_IRQn].ATTR |= 1 << 1;
     /* tspend use vector&positive interrupt */
     CLIC->CLICINT[Machine_Software_IRQn].ATTR = 0x3;
     csi_vic_set_prio(Machine_Software_IRQn, 1);

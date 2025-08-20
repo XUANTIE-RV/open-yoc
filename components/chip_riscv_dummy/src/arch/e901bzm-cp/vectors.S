@@ -18,9 +18,6 @@
 
 #include "riscv_asm_macro.h"
 
-/* Enable interrupts when returning from the handler */
-#define MSTATUS_PRV1 0x1880
-
 .section .stack, "aw", @nobits
     .align  2
     .global g_trapstackbase
@@ -40,16 +37,18 @@ Default_IRQHandler:
 #endif
     csrw    mscratch, sp
     la      sp, g_top_irqstack
-    addi    sp, sp, -48
+    addi    sp, sp, -52
     sw      t0, 4(sp)
     sw      t1, 8(sp)
+    sw      t2, 12(sp)
     csrr    t0, mepc
     csrr    t1, mcause
+    csrr    t2, mstatus
     sw      t1, 40(sp)
     sw      t0, 44(sp)
+    sw      t2, 48(sp)
 
     sw      ra, 0(sp)
-    sw      t2, 12(sp)
     sw      a0, 16(sp)
     sw      a1, 20(sp)
     sw      a2, 24(sp)
@@ -73,12 +72,12 @@ Default_IRQHandler:
     and     a5, a4, a3
     sb      a5, 0(a2)
 
-    li      t0, MSTATUS_PRV1
-    csrs    mstatus, t0
     csrw    mcause, a1
 
     lw      t0, 44(sp)
+    lw      t1, 48(sp)
     csrw    mepc, t0
+    csrw    mstatus, t1
     lw      ra, 0(sp)
     lw      t0, 4(sp)
     lw      t1, 8(sp)
@@ -90,7 +89,7 @@ Default_IRQHandler:
     lw      a4, 32(sp)
     lw      a5, 36(sp)
 
-    addi    sp, sp, 48
+    addi    sp, sp, 52
     csrr    sp, mscratch
 
 #if CONFIG_PROFILING_PERF && CONFIG_PERF_BACKTRACE_USE_FP

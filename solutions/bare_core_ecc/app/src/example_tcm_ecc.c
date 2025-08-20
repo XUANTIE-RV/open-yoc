@@ -175,6 +175,16 @@ static int itcm_ecc(void)
     /* inject 2bit error for ITCM */
     __set_MEICR(0xe0000003);
 
+    // FIXME:
+    __NOP();
+    __NOP();
+    __NOP();
+    __NOP();
+    __NOP();
+    __NOP();
+    __NOP();
+    __NOP();
+
     /* trigger ITCM ECC */
     test_tcm();
     // TODO:goto Exception

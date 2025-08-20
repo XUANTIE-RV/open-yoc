@@ -2,134 +2,6 @@
 <Project Name="rtthread_helloworld_r920_xiaohui" Version="1" Language="C">
   <Description>rtthread_helloworld</Description>
   <Dependencies Name="Debug"/>
-  <VirtualDirectory Name="boards">
-    <VirtualDirectory Name="board_riscv_dummy">
-      <VirtualDirectory Name="include">
-        <File Name="../../../../../boards/board_riscv_dummy/include/rtconfig.h">
-          <FileOption/>
-        </File>
-        <File Name="../../../../../boards/board_riscv_dummy/include/FreeRTOSConfig.h">
-          <FileOption/>
-        </File>
-        <File Name="../../../../../boards/board_riscv_dummy/include/board.h">
-          <FileOption/>
-        </File>
-        <File Name="../../../../../boards/board_riscv_dummy/include/csi_config.h">
-          <FileOption/>
-        </File>
-        <File Name="../../../../../boards/board_riscv_dummy/include/k_config.h">
-          <FileOption/>
-        </File>
-        <File Name="../../../../../boards/board_riscv_dummy/include/lwipopts.h">
-          <FileOption/>
-        </File>
-      </VirtualDirectory>
-      <VirtualDirectory Name="src">
-        <VirtualDirectory Name="uart">
-          <File Name="../../../../../boards/board_riscv_dummy/src/uart/board_uart.c">
-            <FileOption/>
-          </File>
-        </VirtualDirectory>
-        <File Name="../../../../../boards/board_riscv_dummy/src/board_init.c">
-          <FileOption/>
-        </File>
-      </VirtualDirectory>
-    </VirtualDirectory>
-  </VirtualDirectory>
-  <VirtualDirectory Name="solutions">
-    <VirtualDirectory Name="rtthread_helloworld">
-      <VirtualDirectory Name="app">
-        <VirtualDirectory Name="include">
-          <File Name="../../../../../solutions/rtthread_helloworld/app/include/app_main.h">
-            <FileOption/>
-          </File>
-          <File Name="../../../../../solutions/rtthread_helloworld/app/include/app_config.h">
-            <FileOption/>
-          </File>
-          <File Name="../../../../../solutions/rtthread_helloworld/app/include/app_init.h">
-            <FileOption/>
-          </File>
-        </VirtualDirectory>
-        <VirtualDirectory Name="src">
-          <VirtualDirectory Name="testcases">
-            <VirtualDirectory Name="utest">
-              <File Name="../../../../../solutions/rtthread_helloworld/app/src/testcases/utest/pass_tc.c">
-                <FileOption/>
-              </File>
-            </VirtualDirectory>
-            <VirtualDirectory Name="kernel">
-              <File Name="../../../../../solutions/rtthread_helloworld/app/src/testcases/kernel/atomic_tc.c">
-                <FileOption/>
-              </File>
-              <File Name="../../../../../solutions/rtthread_helloworld/app/src/testcases/kernel/event_tc.c">
-                <FileOption/>
-              </File>
-              <File Name="../../../../../solutions/rtthread_helloworld/app/src/testcases/kernel/hooklist_tc.c">
-                <FileOption/>
-              </File>
-              <File Name="../../../../../solutions/rtthread_helloworld/app/src/testcases/kernel/irq_tc.c">
-                <FileOption/>
-              </File>
-              <File Name="../../../../../solutions/rtthread_helloworld/app/src/testcases/kernel/mailbox_tc.c">
-                <FileOption/>
-              </File>
-              <File Name="../../../../../solutions/rtthread_helloworld/app/src/testcases/kernel/mem_tc.c">
-                <FileOption/>
-              </File>
-              <File Name="../../../../../solutions/rtthread_helloworld/app/src/testcases/kernel/memheap_tc.c">
-                <FileOption/>
-              </File>
-              <File Name="../../../../../solutions/rtthread_helloworld/app/src/testcases/kernel/messagequeue_tc.c">
-                <FileOption/>
-              </File>
-              <File Name="../../../../../solutions/rtthread_helloworld/app/src/testcases/kernel/mtsafe_kprint_tc.c">
-                <FileOption/>
-              </File>
-              <File Name="../../../../../solutions/rtthread_helloworld/app/src/testcases/kernel/mutex_tc.c">
-                <FileOption/>
-              </File>
-              <File Name="../../../../../solutions/rtthread_helloworld/app/src/testcases/kernel/sched_mtx_tc.c">
-                <FileOption/>
-              </File>
-              <File Name="../../../../../solutions/rtthread_helloworld/app/src/testcases/kernel/sched_sem_tc.c">
-                <FileOption/>
-              </File>
-              <File Name="../../../../../solutions/rtthread_helloworld/app/src/testcases/kernel/sched_thread_tc.c">
-                <FileOption/>
-              </File>
-              <File Name="../../../../../solutions/rtthread_helloworld/app/src/testcases/kernel/sched_timed_mtx_tc.c">
-                <FileOption/>
-              </File>
-              <File Name="../../../../../solutions/rtthread_helloworld/app/src/testcases/kernel/sched_timed_sem_tc.c">
-                <FileOption/>
-              </File>
-              <File Name="../../../../../solutions/rtthread_helloworld/app/src/testcases/kernel/semaphore_tc.c">
-                <FileOption/>
-              </File>
-              <File Name="../../../../../solutions/rtthread_helloworld/app/src/testcases/kernel/signal_tc.c">
-                <FileOption/>
-              </File>
-              <File Name="../../../../../solutions/rtthread_helloworld/app/src/testcases/kernel/slab_tc.c">
-                <FileOption/>
-              </File>
-              <File Name="../../../../../solutions/rtthread_helloworld/app/src/testcases/kernel/thread_tc.c">
-                <FileOption/>
-              </File>
-              <File Name="../../../../../solutions/rtthread_helloworld/app/src/testcases/kernel/timer_tc.c">
-                <FileOption/>
-              </File>
-            </VirtualDirectory>
-          </VirtualDirectory>
-          <File Name="../../../../../solutions/rtthread_helloworld/app/src/main.c">
-            <FileOption/>
-          </File>
-          <File Name="../../../../../solutions/rtthread_helloworld/app/src/pre_main.c">
-            <FileOption/>
-          </File>
-        </VirtualDirectory>
-      </VirtualDirectory>
-    </VirtualDirectory>
-  </VirtualDirectory>
   <VirtualDirectory Name="components">
     <VirtualDirectory Name="chip_riscv_dummy">
       <VirtualDirectory Name="include">
@@ -853,6 +725,134 @@
       <File Name="../../../../../components/utest/utest.c">
         <FileOption/>
       </File>
+    </VirtualDirectory>
+  </VirtualDirectory>
+  <VirtualDirectory Name="boards">
+    <VirtualDirectory Name="board_riscv_dummy">
+      <VirtualDirectory Name="include">
+        <File Name="../../../../../boards/board_riscv_dummy/include/rtconfig.h">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../boards/board_riscv_dummy/include/FreeRTOSConfig.h">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../boards/board_riscv_dummy/include/board.h">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../boards/board_riscv_dummy/include/csi_config.h">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../boards/board_riscv_dummy/include/k_config.h">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../boards/board_riscv_dummy/include/lwipopts.h">
+          <FileOption/>
+        </File>
+      </VirtualDirectory>
+      <VirtualDirectory Name="src">
+        <VirtualDirectory Name="uart">
+          <File Name="../../../../../boards/board_riscv_dummy/src/uart/board_uart.c">
+            <FileOption/>
+          </File>
+        </VirtualDirectory>
+        <File Name="../../../../../boards/board_riscv_dummy/src/board_init.c">
+          <FileOption/>
+        </File>
+      </VirtualDirectory>
+    </VirtualDirectory>
+  </VirtualDirectory>
+  <VirtualDirectory Name="solutions">
+    <VirtualDirectory Name="rtthread_helloworld">
+      <VirtualDirectory Name="app">
+        <VirtualDirectory Name="include">
+          <File Name="../../../../../solutions/rtthread_helloworld/app/include/app_main.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../solutions/rtthread_helloworld/app/include/app_config.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../solutions/rtthread_helloworld/app/include/app_init.h">
+            <FileOption/>
+          </File>
+        </VirtualDirectory>
+        <VirtualDirectory Name="src">
+          <VirtualDirectory Name="testcases">
+            <VirtualDirectory Name="utest">
+              <File Name="../../../../../solutions/rtthread_helloworld/app/src/testcases/utest/pass_tc.c">
+                <FileOption/>
+              </File>
+            </VirtualDirectory>
+            <VirtualDirectory Name="kernel">
+              <File Name="../../../../../solutions/rtthread_helloworld/app/src/testcases/kernel/atomic_tc.c">
+                <FileOption/>
+              </File>
+              <File Name="../../../../../solutions/rtthread_helloworld/app/src/testcases/kernel/event_tc.c">
+                <FileOption/>
+              </File>
+              <File Name="../../../../../solutions/rtthread_helloworld/app/src/testcases/kernel/hooklist_tc.c">
+                <FileOption/>
+              </File>
+              <File Name="../../../../../solutions/rtthread_helloworld/app/src/testcases/kernel/irq_tc.c">
+                <FileOption/>
+              </File>
+              <File Name="../../../../../solutions/rtthread_helloworld/app/src/testcases/kernel/mailbox_tc.c">
+                <FileOption/>
+              </File>
+              <File Name="../../../../../solutions/rtthread_helloworld/app/src/testcases/kernel/mem_tc.c">
+                <FileOption/>
+              </File>
+              <File Name="../../../../../solutions/rtthread_helloworld/app/src/testcases/kernel/memheap_tc.c">
+                <FileOption/>
+              </File>
+              <File Name="../../../../../solutions/rtthread_helloworld/app/src/testcases/kernel/messagequeue_tc.c">
+                <FileOption/>
+              </File>
+              <File Name="../../../../../solutions/rtthread_helloworld/app/src/testcases/kernel/mtsafe_kprint_tc.c">
+                <FileOption/>
+              </File>
+              <File Name="../../../../../solutions/rtthread_helloworld/app/src/testcases/kernel/mutex_tc.c">
+                <FileOption/>
+              </File>
+              <File Name="../../../../../solutions/rtthread_helloworld/app/src/testcases/kernel/sched_mtx_tc.c">
+                <FileOption/>
+              </File>
+              <File Name="../../../../../solutions/rtthread_helloworld/app/src/testcases/kernel/sched_sem_tc.c">
+                <FileOption/>
+              </File>
+              <File Name="../../../../../solutions/rtthread_helloworld/app/src/testcases/kernel/sched_thread_tc.c">
+                <FileOption/>
+              </File>
+              <File Name="../../../../../solutions/rtthread_helloworld/app/src/testcases/kernel/sched_timed_mtx_tc.c">
+                <FileOption/>
+              </File>
+              <File Name="../../../../../solutions/rtthread_helloworld/app/src/testcases/kernel/sched_timed_sem_tc.c">
+                <FileOption/>
+              </File>
+              <File Name="../../../../../solutions/rtthread_helloworld/app/src/testcases/kernel/semaphore_tc.c">
+                <FileOption/>
+              </File>
+              <File Name="../../../../../solutions/rtthread_helloworld/app/src/testcases/kernel/signal_tc.c">
+                <FileOption/>
+              </File>
+              <File Name="../../../../../solutions/rtthread_helloworld/app/src/testcases/kernel/slab_tc.c">
+                <FileOption/>
+              </File>
+              <File Name="../../../../../solutions/rtthread_helloworld/app/src/testcases/kernel/thread_tc.c">
+                <FileOption/>
+              </File>
+              <File Name="../../../../../solutions/rtthread_helloworld/app/src/testcases/kernel/timer_tc.c">
+                <FileOption/>
+              </File>
+            </VirtualDirectory>
+          </VirtualDirectory>
+          <File Name="../../../../../solutions/rtthread_helloworld/app/src/main.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../solutions/rtthread_helloworld/app/src/pre_main.c">
+            <FileOption/>
+          </File>
+        </VirtualDirectory>
+      </VirtualDirectory>
     </VirtualDirectory>
   </VirtualDirectory>
   <VendorInfo>

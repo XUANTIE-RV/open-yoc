@@ -15,6 +15,22 @@ RTOS SDK开源代码遵循Apache License 2.0开源许可协议，可以免费在
 
 ## Release Note
 
+### v2.4.1
+#### 主要特性更新
+1. 解决 E 系列处理器在频繁中断嵌套下会出现异常的问题
+2. 解决 E902 系列处理器运行 perf record 功能时会卡住的问题
+
+#### 依赖工具版本
+| **工具** | **版本号** |
+| --- | --- |
+| CDK | V2.24.14 |
+| CDS | V5.2.31 |
+| Debug Server | V5.18.5 |
+| Xuantie-900-gcc-elf-newlib编译工具链 | V3.2.0 |
+| Xuantie-900-llvm-elf-newlib编译工具链 | V2.2.1 |
+| Xuantie QEMU | V5.2.8 |
+
+
 ### v2.4.0
 #### 主要特性更新
 1. 增加 E901/E901Plus 系列处理器型号支持

@@ -2,71 +2,6 @@
 <Project Name="rtthread_cpp_e906fp_smartl" Version="1" Language="C">
   <Description>rtthread_cpp</Description>
   <Dependencies Name="Debug"/>
-  <VirtualDirectory Name="boards">
-    <VirtualDirectory Name="board_riscv_dummy">
-      <VirtualDirectory Name="include">
-        <File Name="../../../../../boards/board_riscv_dummy/include/rtconfig.h">
-          <FileOption/>
-        </File>
-        <File Name="../../../../../boards/board_riscv_dummy/include/FreeRTOSConfig.h">
-          <FileOption/>
-        </File>
-        <File Name="../../../../../boards/board_riscv_dummy/include/board.h">
-          <FileOption/>
-        </File>
-        <File Name="../../../../../boards/board_riscv_dummy/include/csi_config.h">
-          <FileOption/>
-        </File>
-        <File Name="../../../../../boards/board_riscv_dummy/include/k_config.h">
-          <FileOption/>
-        </File>
-        <File Name="../../../../../boards/board_riscv_dummy/include/lwipopts.h">
-          <FileOption/>
-        </File>
-      </VirtualDirectory>
-      <VirtualDirectory Name="src">
-        <VirtualDirectory Name="uart">
-          <File Name="../../../../../boards/board_riscv_dummy/src/uart/board_uart.c">
-            <FileOption/>
-          </File>
-        </VirtualDirectory>
-        <File Name="../../../../../boards/board_riscv_dummy/src/board_init.c">
-          <FileOption/>
-        </File>
-      </VirtualDirectory>
-    </VirtualDirectory>
-  </VirtualDirectory>
-  <VirtualDirectory Name="solutions">
-    <VirtualDirectory Name="rtthread_cpp">
-      <VirtualDirectory Name="app">
-        <VirtualDirectory Name="include">
-          <File Name="../../../../../solutions/rtthread_cpp/app/include/app_main.h">
-            <FileOption/>
-          </File>
-          <File Name="../../../../../solutions/rtthread_cpp/app/include/app_config.h">
-            <FileOption/>
-          </File>
-          <File Name="../../../../../solutions/rtthread_cpp/app/include/app_init.h">
-            <FileOption/>
-          </File>
-        </VirtualDirectory>
-        <VirtualDirectory Name="src">
-          <File Name="../../../../../solutions/rtthread_cpp/app/src/crt_init.c">
-            <FileOption/>
-          </File>
-          <File Name="../../../../../solutions/rtthread_cpp/app/src/main.c">
-            <FileOption/>
-          </File>
-          <File Name="../../../../../solutions/rtthread_cpp/app/src/pre_main.c">
-            <FileOption/>
-          </File>
-          <File Name="../../../../../solutions/rtthread_cpp/app/src/cpp_smaple.cpp">
-            <FileOption/>
-          </File>
-        </VirtualDirectory>
-      </VirtualDirectory>
-    </VirtualDirectory>
-  </VirtualDirectory>
   <VirtualDirectory Name="components">
     <VirtualDirectory Name="chip_riscv_dummy">
       <VirtualDirectory Name="include">
@@ -740,6 +675,71 @@
         <File Name="../../../../../components/rtthread/src/timer.c">
           <FileOption/>
         </File>
+      </VirtualDirectory>
+    </VirtualDirectory>
+  </VirtualDirectory>
+  <VirtualDirectory Name="boards">
+    <VirtualDirectory Name="board_riscv_dummy">
+      <VirtualDirectory Name="include">
+        <File Name="../../../../../boards/board_riscv_dummy/include/rtconfig.h">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../boards/board_riscv_dummy/include/FreeRTOSConfig.h">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../boards/board_riscv_dummy/include/board.h">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../boards/board_riscv_dummy/include/csi_config.h">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../boards/board_riscv_dummy/include/k_config.h">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../boards/board_riscv_dummy/include/lwipopts.h">
+          <FileOption/>
+        </File>
+      </VirtualDirectory>
+      <VirtualDirectory Name="src">
+        <VirtualDirectory Name="uart">
+          <File Name="../../../../../boards/board_riscv_dummy/src/uart/board_uart.c">
+            <FileOption/>
+          </File>
+        </VirtualDirectory>
+        <File Name="../../../../../boards/board_riscv_dummy/src/board_init.c">
+          <FileOption/>
+        </File>
+      </VirtualDirectory>
+    </VirtualDirectory>
+  </VirtualDirectory>
+  <VirtualDirectory Name="solutions">
+    <VirtualDirectory Name="rtthread_cpp">
+      <VirtualDirectory Name="app">
+        <VirtualDirectory Name="include">
+          <File Name="../../../../../solutions/rtthread_cpp/app/include/app_main.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../solutions/rtthread_cpp/app/include/app_config.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../solutions/rtthread_cpp/app/include/app_init.h">
+            <FileOption/>
+          </File>
+        </VirtualDirectory>
+        <VirtualDirectory Name="src">
+          <File Name="../../../../../solutions/rtthread_cpp/app/src/crt_init.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../solutions/rtthread_cpp/app/src/main.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../solutions/rtthread_cpp/app/src/pre_main.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../solutions/rtthread_cpp/app/src/cpp_smaple.cpp">
+            <FileOption/>
+          </File>
+        </VirtualDirectory>
       </VirtualDirectory>
     </VirtualDirectory>
   </VirtualDirectory>

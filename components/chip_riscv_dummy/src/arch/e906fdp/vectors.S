@@ -18,9 +18,6 @@
 
 #include "riscv_asm_macro.h"
 
-/* Enable interrupts when returning from the handler */
-#define MSTATUS_PRV1 0x1880
-
 .section .stack, "aw", @nobits
     .align  4
     .global g_trapstackbase
@@ -53,21 +50,15 @@ Default_IRQHandler:
 #endif
     csrw    mscratch, sp
     la      sp, g_top_irqstack
-#if CONFIG_CHECK_FPU_DIRTY
     addi    sp, sp, -76
-#else
-    addi    sp, sp, -72
-#endif
     sw      t0, 4(sp)
     sw      t1, 8(sp)
     csrr    t0, mepc
     csrr    t1, mcause
     sw      t1, 64(sp)
     sw      t0, 68(sp)
-#if CONFIG_CHECK_FPU_DIRTY
     csrr    t1, mstatus
     sw      t1, 72(sp)
-#endif
     sw      ra, 0(sp)
     sw      t2, 12(sp)
     sw      a0, 16(sp)
@@ -120,11 +111,8 @@ Default_IRQHandler:
     and     a5, a4, a3
     sb      a5, 0(a2)
 
-#if CONFIG_CHECK_FPU_DIRTY
     RESTORE_MSTATUS
-#endif
-    li      t0, MSTATUS_PRV1
-    csrs    mstatus, t0
+
     csrw    mcause, a1
 
     RESTORE_FLOAT_REGISTERS
@@ -154,11 +142,7 @@ Default_IRQHandler:
     lw      t5, 56(sp)
     lw      t6, 60(sp)
 
-#if CONFIG_CHECK_FPU_DIRTY
     addi    sp, sp, 76
-#else
-    addi    sp, sp, 72
-#endif
     csrr    sp, mscratch
 
 #if CONFIG_PROFILING_PERF && CONFIG_PERF_BACKTRACE_USE_FP
@@ -211,21 +195,16 @@ Default_IRQHandler:
     lw      t1, 4(sp)
     addi    sp, sp, 8
 .Lnested2:
-#if CONFIG_CHECK_FPU_DIRTY
     addi    sp, sp, -76
-#else
-    addi    sp, sp, -72
-#endif
     sw      t0, 4(sp)
     sw      t1, 8(sp)
     csrr    t0, mepc
     csrr    t1, mcause
     sw      t1, 64(sp)
     sw      t0, 68(sp)
-#if CONFIG_CHECK_FPU_DIRTY
     csrr    t1, mstatus
     sw      t1, 72(sp)
-#endif
+
     csrs    mstatus, 8
 
     sw      ra, 0(sp)
@@ -288,12 +267,8 @@ Default_IRQHandler:
     sw      t1, (t0)
     bgt     t1, zero, .Lnested3
 
-#if CONFIG_CHECK_FPU_DIRTY
     RESTORE_MSTATUS
-#endif
 
-    li      t0, MSTATUS_PRV1
-    csrs    mstatus, t0
     csrw    mcause, a1
 
     RESTORE_FLOAT_REGISTERS
@@ -323,11 +298,7 @@ Default_IRQHandler:
     lw      t5, 56(sp)
     lw      t6, 60(sp)
 
-#if CONFIG_CHECK_FPU_DIRTY
     addi    sp, sp, 76
-#else
-    addi    sp, sp, 72
-#endif
     csrr    sp, mscratch
 #if CONFIG_PROFILING_PERF && CONFIG_PERF_BACKTRACE_USE_FP
     addi    sp, sp, 8
@@ -349,9 +320,8 @@ Default_IRQHandler:
     or      t0, a0, t0
     csrw    mcause, t0
 
-#if CONFIG_CHECK_FPU_DIRTY
     RESTORE_MSTATUS
-#endif
+
     RESTORE_FLOAT_REGISTERS
 
 #if __riscv_dsp
@@ -362,9 +332,6 @@ Default_IRQHandler:
 
     lw      t0, 68(sp)
     csrw    mepc, t0
-
-    li      t0, MSTATUS_PRV1
-    csrs    mstatus, t0
 
     lw      ra, 0(sp)
     lw      t0, 4(sp)
@@ -383,11 +350,7 @@ Default_IRQHandler:
     lw      t5, 56(sp)
     lw      t6, 60(sp)
 
-#if CONFIG_CHECK_FPU_DIRTY
     addi    sp, sp, 76
-#else
-    addi    sp, sp, 72
-#endif
     mret
 #endif
 
@@ -473,21 +436,15 @@ Default_Handler:
 
     csrw    mscratch, sp
     la      sp, g_top_trapstack
-#if CONFIG_CHECK_FPU_DIRTY
     addi    sp, sp, -76
-#else
-    addi    sp, sp, -72
-#endif
     sw      t0, 4(sp)
     sw      t1, 8(sp)
     csrr    t0, mepc
     csrr    t1, mcause
     sw      t1, 64(sp)
     sw      t0, 68(sp)
-#if CONFIG_CHECK_FPU_DIRTY
     csrr    t1, mstatus
     sw      t1, 72(sp)
-#endif
 
     sw      ra, 0(sp)
     sw      t2, 12(sp)
@@ -541,11 +498,8 @@ Default_Handler:
     and     a5, a4, a3
     sb      a5, 0(a2)
 
-#if CONFIG_CHECK_FPU_DIRTY
     RESTORE_MSTATUS
-#endif
-    li      t0, MSTATUS_PRV1
-    csrs    mstatus, t0
+
     csrw    mcause, a1
 
     RESTORE_FLOAT_REGISTERS
@@ -558,10 +512,9 @@ Default_Handler:
 
     lw      t0, 68(sp)
     csrw    mepc, t0
-#if CONFIG_CHECK_FPU_DIRTY
     lw      t0, 72(sp)
     csrw    mstatus, t0
-#endif
+
     lw      ra, 0(sp)
     lw      t0, 4(sp)
     lw      t1, 8(sp)
@@ -579,11 +532,7 @@ Default_Handler:
     lw      t5, 56(sp)
     lw      t6, 60(sp)
 
-#if CONFIG_CHECK_FPU_DIRTY
     addi    sp, sp, 76
-#else
-    addi    sp, sp, 72
-#endif
     csrr    sp, mscratch
 
     /* restore mscratch */

@@ -2,54 +2,6 @@
 <Project Name="bare_core_vic_r908fd-cp-xt_xiaohui" Version="1" Language="C">
   <Description>bare_core_vic</Description>
   <Dependencies Name="Debug"/>
-  <VirtualDirectory Name="boards">
-    <VirtualDirectory Name="board_riscv_dummy">
-      <VirtualDirectory Name="include">
-        <File Name="../../../../../boards/board_riscv_dummy/include/rtconfig.h">
-          <FileOption/>
-        </File>
-        <File Name="../../../../../boards/board_riscv_dummy/include/FreeRTOSConfig.h">
-          <FileOption/>
-        </File>
-        <File Name="../../../../../boards/board_riscv_dummy/include/board.h">
-          <FileOption/>
-        </File>
-        <File Name="../../../../../boards/board_riscv_dummy/include/csi_config.h">
-          <FileOption/>
-        </File>
-        <File Name="../../../../../boards/board_riscv_dummy/include/k_config.h">
-          <FileOption/>
-        </File>
-        <File Name="../../../../../boards/board_riscv_dummy/include/lwipopts.h">
-          <FileOption/>
-        </File>
-      </VirtualDirectory>
-      <VirtualDirectory Name="src">
-        <VirtualDirectory Name="uart">
-          <File Name="../../../../../boards/board_riscv_dummy/src/uart/board_uart.c">
-            <FileOption/>
-          </File>
-        </VirtualDirectory>
-        <File Name="../../../../../boards/board_riscv_dummy/src/board_init.c">
-          <FileOption/>
-        </File>
-      </VirtualDirectory>
-    </VirtualDirectory>
-  </VirtualDirectory>
-  <VirtualDirectory Name="solutions">
-    <VirtualDirectory Name="bare_core_vic">
-      <VirtualDirectory Name="app">
-        <VirtualDirectory Name="src">
-          <File Name="../../../../../solutions/bare_core_vic/app/src/main.c">
-            <FileOption/>
-          </File>
-          <File Name="../../../../../solutions/bare_core_vic/app/src/example_vic.c">
-            <FileOption/>
-          </File>
-        </VirtualDirectory>
-      </VirtualDirectory>
-    </VirtualDirectory>
-  </VirtualDirectory>
   <VirtualDirectory Name="components">
     <VirtualDirectory Name="chip_riscv_dummy">
       <VirtualDirectory Name="include">
@@ -532,6 +484,54 @@
       </VirtualDirectory>
     </VirtualDirectory>
   </VirtualDirectory>
+  <VirtualDirectory Name="boards">
+    <VirtualDirectory Name="board_riscv_dummy">
+      <VirtualDirectory Name="include">
+        <File Name="../../../../../boards/board_riscv_dummy/include/rtconfig.h">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../boards/board_riscv_dummy/include/FreeRTOSConfig.h">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../boards/board_riscv_dummy/include/board.h">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../boards/board_riscv_dummy/include/csi_config.h">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../boards/board_riscv_dummy/include/k_config.h">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../boards/board_riscv_dummy/include/lwipopts.h">
+          <FileOption/>
+        </File>
+      </VirtualDirectory>
+      <VirtualDirectory Name="src">
+        <VirtualDirectory Name="uart">
+          <File Name="../../../../../boards/board_riscv_dummy/src/uart/board_uart.c">
+            <FileOption/>
+          </File>
+        </VirtualDirectory>
+        <File Name="../../../../../boards/board_riscv_dummy/src/board_init.c">
+          <FileOption/>
+        </File>
+      </VirtualDirectory>
+    </VirtualDirectory>
+  </VirtualDirectory>
+  <VirtualDirectory Name="solutions">
+    <VirtualDirectory Name="bare_core_vic">
+      <VirtualDirectory Name="app">
+        <VirtualDirectory Name="src">
+          <File Name="../../../../../solutions/bare_core_vic/app/src/main.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../solutions/bare_core_vic/app/src/example_vic.c">
+            <FileOption/>
+          </File>
+        </VirtualDirectory>
+      </VirtualDirectory>
+    </VirtualDirectory>
+  </VirtualDirectory>
   <VendorInfo>
     <VendorName>import_sdk_project</VendorName>
   </VendorInfo>
@@ -652,7 +652,7 @@
         <Tools/>
       </User>
       <Compiler>
-        <Define>CONFIG_HAVE_LONG_LONG=1;CONFIG_SEMIHOST_NATIVE=0;CONFIG_CSI_V2=1;CONFIG_CSI=csi2;CONFIG_INIT_TASK_STACK_SIZE=8192;CONFIG_APP_TASK_STACK_SIZE=8192;CONFIG_SUPPORT_TSPEND=1;CONFIG_ARCH_MAINSTACK=8192;CONFIG_ARCH_INTERRUPTSTACK=8192;CONFIG_VIC_TSPDR=0x0c000000;CONFIG_PLIC_BASE=0x08000000;CONFIG_CLIC_BASE=0x0c010000;CONFIG_INTC_CLIC_PLIC=1;CONFIG_SUPPORT_IRQ_NESTED=1;CONFIG_FPP_ENABLE=0;CONFIG_CHECK_FPU_DIRTY=1;CONFIG_CHECK_VECTOR_DIRTY=1;CONFIG_SYSTICK_HZ=100;CONFIG_BOARD_XIAOHUI_EVB=1;CONFIG_CPU_XUANTIE_R908FD_CP_XT=1;CONFIG_KERNEL_NONE=1;CONFIG_DEBUG=1</Define>
+        <Define>CONFIG_HAVE_LONG_LONG=1;CONFIG_SEMIHOST_NATIVE=0;CONFIG_CSI_V2=1;CONFIG_CSI=csi2;CONFIG_INIT_TASK_STACK_SIZE=8192;CONFIG_APP_TASK_STACK_SIZE=8192;CONFIG_SUPPORT_TSPEND=1;CONFIG_ARCH_MAINSTACK=8192;CONFIG_ARCH_INTERRUPTSTACK=8192;CONFIG_VIC_TSPDR=0x0c000000;CONFIG_PLIC_BASE=0x08000000;CONFIG_CLIC_BASE=0x0c010000;CONFIG_INTC_CLIC_PLIC=1;CONFIG_SUPPORT_IRQ_NESTED=1;CONFIG_FPP_ENABLE=0;CONFIG_CHECK_FPU_DIRTY=1;CONFIG_CHECK_VECTOR_DIRTY=1;CONFIG_CPU_FREQ_HZ=40000000;CONFIG_SYSTICK_HZ=100;CONFIG_BOARD_XIAOHUI_EVB=1;CONFIG_CPU_XUANTIE_R908FD_CP_XT=1;CONFIG_KERNEL_NONE=1;CONFIG_DEBUG=1</Define>
         <Undefine/>
         <Optim>Default</Optim>
         <DebugLevel>Default (-g)</DebugLevel>
@@ -671,7 +671,7 @@
         <Fstrict>no</Fstrict>
       </Compiler>
       <Asm>
-        <Define>__ASSEMBLY__;CONFIG_HAVE_LONG_LONG=1;CONFIG_SEMIHOST_NATIVE=0;CONFIG_CSI_V2=1;CONFIG_CSI=csi2;CONFIG_INIT_TASK_STACK_SIZE=8192;CONFIG_APP_TASK_STACK_SIZE=8192;CONFIG_SUPPORT_TSPEND=1;CONFIG_ARCH_MAINSTACK=8192;CONFIG_ARCH_INTERRUPTSTACK=8192;CONFIG_VIC_TSPDR=0x0c000000;CONFIG_PLIC_BASE=0x08000000;CONFIG_CLIC_BASE=0x0c010000;CONFIG_INTC_CLIC_PLIC=1;CONFIG_SUPPORT_IRQ_NESTED=1;CONFIG_FPP_ENABLE=0;CONFIG_CHECK_FPU_DIRTY=1;CONFIG_CHECK_VECTOR_DIRTY=1;CONFIG_SYSTICK_HZ=100;CONFIG_BOARD_XIAOHUI_EVB=1;CONFIG_CPU_XUANTIE_R908FD_CP_XT=1;CONFIG_KERNEL_NONE=1;CONFIG_DEBUG=1</Define>
+        <Define>__ASSEMBLY__;CONFIG_HAVE_LONG_LONG=1;CONFIG_SEMIHOST_NATIVE=0;CONFIG_CSI_V2=1;CONFIG_CSI=csi2;CONFIG_INIT_TASK_STACK_SIZE=8192;CONFIG_APP_TASK_STACK_SIZE=8192;CONFIG_SUPPORT_TSPEND=1;CONFIG_ARCH_MAINSTACK=8192;CONFIG_ARCH_INTERRUPTSTACK=8192;CONFIG_VIC_TSPDR=0x0c000000;CONFIG_PLIC_BASE=0x08000000;CONFIG_CLIC_BASE=0x0c010000;CONFIG_INTC_CLIC_PLIC=1;CONFIG_SUPPORT_IRQ_NESTED=1;CONFIG_FPP_ENABLE=0;CONFIG_CHECK_FPU_DIRTY=1;CONFIG_CHECK_VECTOR_DIRTY=1;CONFIG_CPU_FREQ_HZ=40000000;CONFIG_SYSTICK_HZ=100;CONFIG_BOARD_XIAOHUI_EVB=1;CONFIG_CPU_XUANTIE_R908FD_CP_XT=1;CONFIG_KERNEL_NONE=1;CONFIG_DEBUG=1</Define>
         <Undefine/>
         <IncludePath>$(ProjectPath);../../../../../components/csi/csi2/include;../../../../../components/mm/include;../../../../../components/libc_bare/include/libc_bare;../../../../../components/chip_riscv_dummy/include;../../../../../components/chip_riscv_dummy/include/asm;../../../../../boards/board_riscv_dummy/include;</IncludePath>
         <OtherFlags>-g -Wall -mcmodel=medany -MP -MMD -Wno-main -g -Os -Wpointer-arith -Wno-undef -ffunction-sections -fdata-sections -fno-inline-functions -fno-builtin -fno-strict-aliasing</OtherFlags>
@@ -873,7 +873,7 @@
         <Tools/>
       </User>
       <Compiler>
-        <Define>CONFIG_HAVE_LONG_LONG=1;CONFIG_SEMIHOST_NATIVE=0;CONFIG_CSI_V2=1;CONFIG_CSI=csi2;CONFIG_INIT_TASK_STACK_SIZE=8192;CONFIG_APP_TASK_STACK_SIZE=8192;CONFIG_SUPPORT_TSPEND=1;CONFIG_ARCH_MAINSTACK=8192;CONFIG_ARCH_INTERRUPTSTACK=8192;CONFIG_VIC_TSPDR=0x0c000000;CONFIG_PLIC_BASE=0x08000000;CONFIG_CLIC_BASE=0x0c010000;CONFIG_INTC_CLIC_PLIC=1;CONFIG_SUPPORT_IRQ_NESTED=1;CONFIG_FPP_ENABLE=0;CONFIG_CHECK_FPU_DIRTY=1;CONFIG_CHECK_VECTOR_DIRTY=1;CONFIG_SYSTICK_HZ=100;CONFIG_BOARD_XIAOHUI_EVB=1;CONFIG_CPU_XUANTIE_R908FD_CP_XT=1;CONFIG_KERNEL_NONE=1;CONFIG_DEBUG=1</Define>
+        <Define>CONFIG_HAVE_LONG_LONG=1;CONFIG_SEMIHOST_NATIVE=0;CONFIG_CSI_V2=1;CONFIG_CSI=csi2;CONFIG_INIT_TASK_STACK_SIZE=8192;CONFIG_APP_TASK_STACK_SIZE=8192;CONFIG_SUPPORT_TSPEND=1;CONFIG_ARCH_MAINSTACK=8192;CONFIG_ARCH_INTERRUPTSTACK=8192;CONFIG_VIC_TSPDR=0x0c000000;CONFIG_PLIC_BASE=0x08000000;CONFIG_CLIC_BASE=0x0c010000;CONFIG_INTC_CLIC_PLIC=1;CONFIG_SUPPORT_IRQ_NESTED=1;CONFIG_FPP_ENABLE=0;CONFIG_CHECK_FPU_DIRTY=1;CONFIG_CHECK_VECTOR_DIRTY=1;CONFIG_CPU_FREQ_HZ=40000000;CONFIG_SYSTICK_HZ=100;CONFIG_BOARD_XIAOHUI_EVB=1;CONFIG_CPU_XUANTIE_R908FD_CP_XT=1;CONFIG_KERNEL_NONE=1;CONFIG_DEBUG=1</Define>
         <Undefine/>
         <Optim>Default</Optim>
         <DebugLevel>Default (-g)</DebugLevel>
@@ -892,7 +892,7 @@
         <Fstrict>no</Fstrict>
       </Compiler>
       <Asm>
-        <Define>__ASSEMBLY__;CONFIG_HAVE_LONG_LONG=1;CONFIG_SEMIHOST_NATIVE=0;CONFIG_CSI_V2=1;CONFIG_CSI=csi2;CONFIG_INIT_TASK_STACK_SIZE=8192;CONFIG_APP_TASK_STACK_SIZE=8192;CONFIG_SUPPORT_TSPEND=1;CONFIG_ARCH_MAINSTACK=8192;CONFIG_ARCH_INTERRUPTSTACK=8192;CONFIG_VIC_TSPDR=0x0c000000;CONFIG_PLIC_BASE=0x08000000;CONFIG_CLIC_BASE=0x0c010000;CONFIG_INTC_CLIC_PLIC=1;CONFIG_SUPPORT_IRQ_NESTED=1;CONFIG_FPP_ENABLE=0;CONFIG_CHECK_FPU_DIRTY=1;CONFIG_CHECK_VECTOR_DIRTY=1;CONFIG_SYSTICK_HZ=100;CONFIG_BOARD_XIAOHUI_EVB=1;CONFIG_CPU_XUANTIE_R908FD_CP_XT=1;CONFIG_KERNEL_NONE=1;CONFIG_DEBUG=1</Define>
+        <Define>__ASSEMBLY__;CONFIG_HAVE_LONG_LONG=1;CONFIG_SEMIHOST_NATIVE=0;CONFIG_CSI_V2=1;CONFIG_CSI=csi2;CONFIG_INIT_TASK_STACK_SIZE=8192;CONFIG_APP_TASK_STACK_SIZE=8192;CONFIG_SUPPORT_TSPEND=1;CONFIG_ARCH_MAINSTACK=8192;CONFIG_ARCH_INTERRUPTSTACK=8192;CONFIG_VIC_TSPDR=0x0c000000;CONFIG_PLIC_BASE=0x08000000;CONFIG_CLIC_BASE=0x0c010000;CONFIG_INTC_CLIC_PLIC=1;CONFIG_SUPPORT_IRQ_NESTED=1;CONFIG_FPP_ENABLE=0;CONFIG_CHECK_FPU_DIRTY=1;CONFIG_CHECK_VECTOR_DIRTY=1;CONFIG_CPU_FREQ_HZ=40000000;CONFIG_SYSTICK_HZ=100;CONFIG_BOARD_XIAOHUI_EVB=1;CONFIG_CPU_XUANTIE_R908FD_CP_XT=1;CONFIG_KERNEL_NONE=1;CONFIG_DEBUG=1</Define>
         <Undefine/>
         <IncludePath>$(ProjectPath);../../../../../components/csi/csi2/include;../../../../../components/mm/include;../../../../../components/libc_bare/include/libc_bare;../../../../../components/chip_riscv_dummy/include;../../../../../components/chip_riscv_dummy/include/asm;../../../../../boards/board_riscv_dummy/include;</IncludePath>
         <OtherFlags>-g -Wall -mcmodel=medany -MP -MMD -Wno-main -g -Os -Wpointer-arith -Wno-undef -ffunction-sections -fdata-sections -fno-inline-functions -fno-builtin -fno-strict-aliasing</OtherFlags>
