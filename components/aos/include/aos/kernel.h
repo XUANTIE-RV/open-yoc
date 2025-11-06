@@ -1208,6 +1208,24 @@ unsigned long aos_spin_lock_irqsave(aos_spinlock_t *lock);
  */
 void aos_spin_lock_irqrestore(aos_spinlock_t *lock, unsigned long flags);
 
+/**
+ * Set the task affinity
+ *
+ * @param[in]   cpu_id      the cpu id
+ *
+ * @return  0 is success, others is fail
+ */
+int aos_task_setaffinity(int cpu_id);
+
+/**
+ * Get the task affinity
+ *
+ * @param[in]   cpu_id      the cpu id
+ *
+ * @return  0 is cpu off, 1 is cpu on
+ */
+int aos_task_getaffinity(int cpu_id);
+
 #if defined(CONFIG_SMP) && CONFIG_SMP
 /**
  * boot secondary cpu

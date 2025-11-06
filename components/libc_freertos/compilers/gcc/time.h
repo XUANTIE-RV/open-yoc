@@ -37,8 +37,8 @@
  *
  * The default value is 100Hz
  */
-# define CLK_TCK           (100)
-# define CLOCKS_PER_SEC    (100)
+# define CLK_TCK           (1000000)
+# define CLOCKS_PER_SEC    (1000000)
 
 #define NSEC_PER_SEC        1000000000
 #define USEC_PER_SEC        1000000

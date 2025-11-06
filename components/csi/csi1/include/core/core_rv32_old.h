@@ -252,7 +252,7 @@ typedef struct {
     address_matching_e a: 2; /* address matching mode */
     uint32_t reserved: 2;    /* reserved */
     uint32_t l: 1;           /* lock enable */
-} mpu_region_attr_t;
+} pmp_region_attr_t;
 
 /*@} end of group CSI_PMP */
 
@@ -658,16 +658,16 @@ __STATIC_INLINE uint32_t csi_vic_get_vector(int32_t IRQn)
  */
 
 /**
-  \brief  configure memory protected region.
+  \brief  configure physical memory protection region.
   \details
-  \param [in]  idx        memory protected region (0, 1, 2, ..., 15).
+  \param [in]  idx        memory protection region (0, 1, 2, ..., 15).
   \param [in]  base_addr  base address must be aligned with page size.
-  \param [in]  size       \ref region_size_e. memory protected region size.
-  \param [in]  attr       \ref region_size_t. memory protected region attribute.
-  \param [in]  enable     enable or disable memory protected region.
+  \param [in]  size       \ref region_size_e. memory protection region size.
+  \param [in]  attr       \ref pmp_region_attr_t. memory protection region attribute.
+  \param [in]  enable     enable or disable memory protection region.
   */
-__STATIC_INLINE void csi_mpu_config_region(uint32_t idx, uint32_t base_addr, region_size_e size,
-                                           mpu_region_attr_t attr, uint32_t enable)
+__STATIC_INLINE void csi_pmp_config_region(uint32_t idx, unsigned long base_addr, region_size_e size,
+        pmp_region_attr_t attr, uint32_t enable)
 {
     uint8_t  pmpxcfg = 0;
     uint32_t addr = 0;
@@ -677,7 +677,7 @@ __STATIC_INLINE void csi_mpu_config_region(uint32_t idx, uint32_t base_addr, reg
     }
 
     if (!enable) {
-        attr.a = 0;
+        attr.a = (address_matching_e)0;
     }
 
     if (attr.a == ADDRESS_MATCHING_TOR) {
@@ -685,7 +685,7 @@ __STATIC_INLINE void csi_mpu_config_region(uint32_t idx, uint32_t base_addr, reg
     } else {
         if (size == REGION_SIZE_4B) {
             addr = base_addr >> 2;
-            attr.a = 2;
+            attr.a = (address_matching_e)2;
         } else {
             addr = ((base_addr >> 2) & (0xFFFFFFFFU - ((1 << (size + 1)) - 1))) | ((1 << size) - 1);
         }
@@ -701,11 +701,11 @@ __STATIC_INLINE void csi_mpu_config_region(uint32_t idx, uint32_t base_addr, reg
 }
 
 /**
-  \brief  disable mpu region by idx.
+  \brief  disable physical memory protection region by idx.
   \details
-  \param [in]  idx        memory protected region (0, 1, 2, ..., 15).
+  \param [in]  idx        memory protection region (0, 1, 2, ..., 15).
   */
-__STATIC_INLINE void csi_mpu_disable_region(uint32_t idx)
+__STATIC_INLINE void csi_pmp_disable_region(uint32_t idx)
 {
     __set_PMPxCFG(idx, __get_PMPxCFG(idx) & (~PMP_PMPCFG_A_Msk));
 }

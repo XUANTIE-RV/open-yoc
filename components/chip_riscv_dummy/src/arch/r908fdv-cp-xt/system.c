@@ -220,7 +220,7 @@ static void clic_init(void)
 
 static void interrupt_init(void)
 {
-    int i;
+    uint32_t i;
 
 #if CONFIG_INTC_CLIC_PLIC
     clic_init();

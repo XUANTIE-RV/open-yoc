@@ -31,102 +31,165 @@ extern "C"
 {
 #endif
 
-void check_result_fp32(float *ref, float *out, int32_t size);
-void check_result_int32(int32_t *ref, int32_t *out, int32_t size);
-void check_infer_shape(int32_t *shape, int32_t dim, int32_t *infer_shape,
-						int32_t infer_dim);
-void xt_rvv_convert_fp32_to_fp16(float *src, __fp16 *dst, int32_t size);
-void xt_rvv_convert_fp16_to_fp32(__fp16 *src, float *dst, int32_t size);
+    void check_result_fp32(float *ref, float *out, int32_t size);
+    void check_result_int32(int32_t *ref, int32_t *out, int32_t size);
+    void check_infer_shape(int32_t *shape, int32_t dim, int32_t *infer_shape,
+                           int32_t infer_dim);
+    void xt_rvv_convert_fp32_to_fp16(float *src, __fp16 *dst, int32_t size);
+    void xt_rvv_convert_fp16_to_fp32(__fp16 *src, float *dst, int32_t size);
 
-void test_unary_op_fp32(float *input, float *ref, int32_t size,
-						int (*unary_op)(float *, float *, int32_t));
-void test_unary_op_fp16(float *input, float *ref, int32_t size,
-						int (*unary_op)(__fp16 *, __fp16 *, int32_t));
+    void test_unary_op_fp32(float *input, float *ref, int32_t size,
+                            int (*unary_op)(float *, float *, int32_t));
+    void test_unary_op_fp16(float *input, float *ref, int32_t size,
+                            int (*unary_op)(__fp16 *, __fp16 *, int32_t));
 
-void test_softmax_op_fp32(float *input, float *ref, int32_t *shape, int32_t dim,
-							int32_t axis,
-							int (*softmax)(float *, float *, int32_t *, int32_t,
-											int32_t));
-void test_softmax_op_fp16(float *input, float *ref, int32_t *shape, int32_t dim,
-							int32_t axis,
-							int (*softmax)(__fp16 *, __fp16 *, int32_t *, int32_t,
-											int32_t));
+    void test_softmax_op_fp32(float *input, float *ref, int32_t *shape, int32_t dim,
+                              int32_t axis,
+                              int (*softmax)(float *, float *, int32_t *, int32_t,
+                                             int32_t));
+    void test_softmax_op_fp16(float *input, float *ref, int32_t *shape, int32_t dim,
+                              int32_t axis,
+                              int (*softmax)(__fp16 *, __fp16 *, int32_t *, int32_t,
+                                             int32_t));
 
-void test_binary_op_fp32(float *input0, float *input1, float *ref,
-							int32_t *shape_in0, int32_t dim_in0,
-							int32_t *shape_in1, int32_t dim_in1,
-							int32_t *shape_out, int32_t dim_out,
-							int (*binary_op)(float *, float *, float *, int32_t *,
-											int32_t, int32_t *, int32_t,
-											int32_t *, int32_t));
-void test_binary_op_fp16(float *input0, float *input1, float *ref,
-							int32_t *shape_in0, int32_t dim_in0,
-							int32_t *shape_in1, int32_t dim_in1,
-							int32_t *shape_out, int32_t dim_out,
-							int (*binary_op)(__fp16 *, __fp16 *, __fp16 *,
-											int32_t *, int32_t, int32_t *,
-											int32_t, int32_t *, int32_t));
+    void test_binary_op_fp32(float *input0, float *input1, float *ref,
+                             int32_t *shape_in0, int32_t dim_in0,
+                             int32_t *shape_in1, int32_t dim_in1,
+                             int32_t *shape_out, int32_t dim_out,
+                             int (*binary_op)(float *, float *, float *, int32_t *,
+                                              int32_t, int32_t *, int32_t,
+                                              int32_t *, int32_t));
+    void test_binary_op_fp16(float *input0, float *input1, float *ref,
+                             int32_t *shape_in0, int32_t dim_in0,
+                             int32_t *shape_in1, int32_t dim_in1,
+                             int32_t *shape_out, int32_t dim_out,
+                             int (*binary_op)(__fp16 *, __fp16 *, __fp16 *,
+                                              int32_t *, int32_t, int32_t *,
+                                              int32_t, int32_t *, int32_t));
 
-void test_layer_norm_op_fp32(float *input, float *ref, int32_t *shape,
-								int32_t dim, float *gamma, float *beta,
-								int32_t axis, float *epsilon,
-								int (*layer_norm)(float *, float *, int32_t *,
-												int32_t, float *, float *,
-												int32_t, float *));
-void test_layer_norm_op_fp16(float *input, float *ref, int32_t *shape,
-								int32_t dim, float *gamma, float *beta,
-								int32_t axis, float *epsilon,
-								int (*layer_norm)(__fp16 *, __fp16 *, int32_t *,
-												int32_t, __fp16 *, __fp16 *,
-												int32_t, float *));
+    void test_layer_norm_op_fp32(float *input, float *ref, int32_t *shape,
+                                 int32_t dim, float *gamma, float *beta,
+                                 int32_t axis, float *epsilon,
+                                 int (*layer_norm)(float *, float *, int32_t *,
+                                                   int32_t, float *, float *,
+                                                   int32_t, float *));
+    void test_layer_norm_op_fp16(float *input, float *ref, int32_t *shape,
+                                 int32_t dim, float *gamma, float *beta,
+                                 int32_t axis, float *epsilon,
+                                 int (*layer_norm)(__fp16 *, __fp16 *, int32_t *,
+                                                   int32_t, __fp16 *, __fp16 *,
+                                                   int32_t, float *));
 
-void test_matmul_fp32(float *A, float *B, float *ref, int32_t *shape_a,
-					  int32_t dim_a, int32_t *shape_b, int32_t dim_b,
-					  int32_t *shape_c, int32_t dim_c, bool trans_a,
-					  bool trans_b,
-					  int (*matmul)(float *, float *, float *, int32_t *,
-									int32_t, int32_t *, int32_t, int32_t *,
-									int32_t, bool, bool, void *));
-void test_matmul_fp16(float *A, float *B, float *ref, int32_t *shape_a,
-					  int32_t dim_a, int32_t *shape_b, int32_t dim_b,
-					  int32_t *shape_c, int32_t dim_c, bool trans_a,
-					  bool trans_b,
-					  int (*matmul)(__fp16 *, __fp16 *, __fp16 *, int32_t *,
-									int32_t, int32_t *, int32_t, int32_t *,
-									int32_t, bool, bool, void *));
+    void test_matmul_fp32(float *A, float *B, float *ref, int32_t *shape_a,
+                          int32_t dim_a, int32_t *shape_b, int32_t dim_b,
+                          int32_t *shape_c, int32_t dim_c, bool trans_a,
+                          bool trans_b,
+                          int (*matmul)(float *, float *, float *, int32_t *,
+                                        int32_t, int32_t *, int32_t, int32_t *,
+                                        int32_t, bool, bool, void *));
+    void test_matmul_fp16(float *A, float *B, float *ref, int32_t *shape_a,
+                          int32_t dim_a, int32_t *shape_b, int32_t dim_b,
+                          int32_t *shape_c, int32_t dim_c, bool trans_a,
+                          bool trans_b,
+                          int (*matmul)(__fp16 *, __fp16 *, __fp16 *, int32_t *,
+                                        int32_t, int32_t *, int32_t, int32_t *,
+                                        int32_t, bool, bool, void *));
 
-void test_gather_op_fp32(float *input, float *ref, int32_t *index, int32_t *shape_in, int32_t dim_in,
-							int32_t *shape_idx, int32_t dim_idx, int32_t axis,
-							int (*gather)(float *, float *, int32_t *, int32_t *, int32_t, int32_t *,
-										int32_t, int32_t));
-void test_gather_op_fp16(float *input, float *ref, int32_t *index, int32_t *shape_in, int32_t dim_in,
-							int32_t *shape_idx, int32_t dim_idx, int32_t axis,
-							int (*gather)(__fp16 *, __fp16 *, int32_t *, int32_t *, int32_t, int32_t *,
-										int32_t, int32_t));
+    void test_gather_op_fp32(float *input, float *ref, int32_t *index,
+                             int32_t *shape_in, int32_t dim_in, int32_t *shape_idx,
+                             int32_t dim_idx, int32_t axis,
+                             int (*gather)(float *, float *, int32_t *, int32_t *,
+                                           int32_t, int32_t *, int32_t, int32_t));
+    void test_gather_op_fp16(float *input, float *ref, int32_t *index,
+                             int32_t *shape_in, int32_t dim_in, int32_t *shape_idx,
+                             int32_t dim_idx, int32_t axis,
+                             int (*gather)(__fp16 *, __fp16 *, int32_t *, int32_t *,
+                                           int32_t, int32_t *, int32_t, int32_t));
 
-void test_slice_op_fp32(float *input, float *ref, int32_t *shape_i, int32_t *shape_o, int32_t dim_i, int32_t *starts,
-						int32_t *ends, int32_t *steps,
-						int (*slice)(float *, float *, int32_t *, int32_t *, int32_t, int32_t *, int32_t *,
-										int32_t *));
-void test_slice_op_fp16(float *input, float *ref, int32_t *shape_i, int32_t *shape_o, int32_t dim_i, int32_t *starts,
-						int32_t *ends, int32_t *steps,
-						int (*slice)(__fp16 *, __fp16 *, int32_t *, int32_t *, int32_t, int32_t *, int32_t *,
-										int32_t *));
+    void test_slice_op_fp32(float *input, float *ref, int32_t *shape_i,
+                            int32_t *shape_o, int32_t dim_i, int32_t *starts,
+                            int32_t *ends, int32_t *steps,
+                            int (*slice)(float *, float *, int32_t *, int32_t *,
+                                         int32_t, int32_t *, int32_t *, int32_t *));
+    void test_slice_op_fp16(float *input, float *ref, int32_t *shape_i,
+                            int32_t *shape_o, int32_t dim_i, int32_t *starts,
+                            int32_t *ends, int32_t *steps,
+                            int (*slice)(__fp16 *, __fp16 *, int32_t *, int32_t *,
+                                         int32_t, int32_t *, int32_t *, int32_t *));
 
-void test_where_op_fp32(float *condition, float *x, float *y, float *ref,
-						int32_t *shape_c, int32_t dim_c, int32_t *shape_x,
-						int32_t dim_x, int32_t *shape_y, int32_t dim_y,
-						int32_t *shape_o, int32_t dim_o,
-						int (*where)(float *, float *, float *, float *,
-										int32_t *, int32_t, int32_t *, int32_t,
-										int32_t *, int32_t, int32_t *, int32_t));
-void test_where_op_fp16(float *condition, float *x, float *y, float *ref,
-						int32_t *shape_c, int32_t dim_c, int32_t *shape_x,
-						int32_t dim_x, int32_t *shape_y, int32_t dim_y,
-						int32_t *shape_o, int32_t dim_o,
-						int (*where)(__fp16 *, __fp16 *, __fp16 *, __fp16 *,
-										int32_t *, int32_t, int32_t *, int32_t,
-										int32_t *, int32_t, int32_t *, int32_t));
+    void test_where_op_fp32(float *condition, float *x, float *y, float *ref,
+                            int32_t *shape_c, int32_t dim_c, int32_t *shape_x,
+                            int32_t dim_x, int32_t *shape_y, int32_t dim_y,
+                            int32_t *shape_o, int32_t dim_o,
+                            int (*where)(float *, float *, float *, float *,
+                                         int32_t *, int32_t, int32_t *, int32_t,
+                                         int32_t *, int32_t, int32_t *, int32_t));
+    void test_where_op_fp16(float *condition, float *x, float *y, float *ref,
+                            int32_t *shape_c, int32_t dim_c, int32_t *shape_x,
+                            int32_t dim_x, int32_t *shape_y, int32_t dim_y,
+                            int32_t *shape_o, int32_t dim_o,
+                            int (*where)(__fp16 *, __fp16 *, __fp16 *, __fp16 *,
+                                         int32_t *, int32_t, int32_t *, int32_t,
+                                         int32_t *, int32_t, int32_t *, int32_t));
+
+    void test_transpose_fp32(float *input, float *ref, int32_t *shape_i,
+                             int32_t *shape_o, int32_t dim, int32_t *permute,
+                             int (*transpose)(float *, float *, int32_t *,
+                                              int32_t *, int32_t, int32_t *));
+
+    void test_transpose_fp16(float *input, float *ref, int32_t *shape_i,
+                             int32_t *shape_o, int32_t dim, int32_t *permute,
+                             int (*transpose)(__fp16 *, __fp16 *, int32_t *,
+                                              int32_t *, int32_t, int32_t *));
+
+    void test_mean_op_fp32(float *input, float *ref, int32_t *shape, int32_t dim, int32_t *axes,
+                           int32_t dim_a,
+                           int (*mean)(float *, float *, int32_t *, int32_t, int32_t *, int32_t));
+    void test_mean_op_fp16(float *input, float *ref, int32_t *shape, int32_t dim, int32_t *axes,
+                           int32_t dim_a,
+                           int (*mean)(__fp16 *, __fp16 *, int32_t *, int32_t, int32_t *, int32_t));
+
+    void test_expand_op_fp32(float *input, float *ref, int32_t *shape_in, int32_t dim_in,
+                             int32_t *shape_out, int32_t dim_out,
+                             int (*expand)(float *, float *, int32_t *, int32_t, int32_t *, int32_t));
+    void test_expand_op_fp16(float *input, float *ref, int32_t *shape_in, int32_t dim_in,
+                             int32_t *shape_out, int32_t dim_out,
+                             int (*expand_fp16)(__fp16 *, __fp16 *, int32_t *, int32_t, int32_t *,
+                                                int32_t));
+
+    void test_cast_int_to_float_op_fp32(int32_t *input, float *ref, int32_t size,
+                                        int (*cast_op)(int32_t *, float *, int32_t));
+
+    void test_compare_op_fp32(float *input0, float *input1, float *ref, int32_t *shape_in0,
+                              int32_t dim_in0, int32_t *shape_in1, int32_t dim_in1, int32_t *shape_out,
+                              int32_t dim_out, int32_t type,
+                              int (*compare)(float *, float *, float *, int32_t *, int32_t, int32_t *,
+                                             int32_t, int32_t *, int32_t, int32_t));
+    void test_compare_op_fp16(float *input0, float *input1, float *ref, int32_t *shape_in0,
+                              int32_t dim_in0, int32_t *shape_in1, int32_t dim_in1, int32_t *shape_out,
+                              int32_t dim_out, int32_t type,
+                              int (*compare)(__fp16 *, __fp16 *, __fp16 *, int32_t *, int32_t,
+                                             int32_t *, int32_t, int32_t *, int32_t, int32_t));
+
+    void test_scatter_nd_op_fp32(float *input, int32_t *indices, float *updates, float *ref,
+                                 int32_t *shape_in, int32_t dim_in, int32_t *shape_indices,
+                                 int32_t dim_indices, int32_t *shape_updates, int32_t dim_updates,
+                                 int (*scatter_nd)(float *, int32_t *, float *, float *, int32_t *,
+                                                   int32_t, int32_t *, int32_t, int32_t *, int32_t));
+    void test_scatter_nd_op_fp16(float *input, int32_t *indices, float *updates, float *ref,
+                                 int32_t *shape_in, int32_t dim_in, int32_t *shape_indices,
+                                 int32_t dim_indices, int32_t *shape_updates, int32_t dim_updates,
+                                 int (*scatter_nd)(__fp16 *, int32_t *, __fp16 *, __fp16 *, int32_t *,
+                                                   int32_t, int32_t *, int32_t, int32_t *, int32_t));
+
+    void test_norm_op_fp32(float *input, float *ref, int32_t *shape, int32_t dim, float *mean,
+                           float *variance, float *gamma, float *beta, float *epsilon,
+                           int (*batch_norm)(float *, float *, int32_t *, int32_t, float *, float *,
+                                             float *, float *, float *));
+    void test_norm_op_fp16(float *input, float *ref, int32_t *shape, int32_t dim, float *mean,
+                           float *variance, float *gamma, float *beta, float *epsilon,
+                           int (*batch_norm)(__fp16 *, __fp16 *, int32_t *, int32_t, __fp16 *, __fp16 *,
+                                             __fp16 *, __fp16 *, float *));
 
 #ifdef __cplusplus
 }

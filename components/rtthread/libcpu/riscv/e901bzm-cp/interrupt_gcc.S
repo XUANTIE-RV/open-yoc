@@ -20,6 +20,8 @@
 
   .global tspend_handler
   .global Mtspend_Handler
+  .type tspend_handler, %function
+  .type Mtspend_Handler, %function
 tspend_handler:
 Mtspend_Handler:
     SAVE_ALL
@@ -49,21 +51,31 @@ tspend_exit:
 
 .global cpu_intrpt_restore
 .global rt_hw_interrupt_enable
+.type cpu_intrpt_restore, %function
+.type rt_hw_interrupt_enable, %function
 cpu_intrpt_restore:
 rt_hw_interrupt_enable:
     csrw    mstatus, a0
     ret
+    .size   cpu_intrpt_restore, . - cpu_intrpt_restore
+    .size   rt_hw_interrupt_enable, . - rt_hw_interrupt_enable
 
 .global cpu_intrpt_save
 .global rt_hw_interrupt_disable
+.type cpu_intrpt_save, %function
+.type rt_hw_interrupt_disable, %function
 cpu_intrpt_save:
 rt_hw_interrupt_disable:
     csrr    a0, mstatus
     csrc    mstatus, 8
     ret
+    .size   cpu_intrpt_save, . - cpu_intrpt_save
+    .size   rt_hw_interrupt_disable, . - rt_hw_interrupt_disable
 
 .global cpu_is_irq_enable
+.type   cpu_is_irq_enable, %function
 cpu_is_irq_enable:
     csrr a0, mstatus
     andi a0, a0, RISCV_MSTATUS_MIE
     ret
+    .size   cpu_is_irq_enable, . - cpu_is_irq_enable

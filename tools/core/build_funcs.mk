@@ -54,18 +54,31 @@ include $$(COMP_PATH)/sub.mk
 endef
 
 define lib_rule_template_func
-$(1)_OBJS := $$(sort \
-    $$(foreach src, $$($(1)_c_srcs),    $$(call get_build_path_func, $$(src:.c=.o))) \
-    $$(foreach src, $$($(1)_cpp_srcs),  $$(call get_build_path_func, $$(src:.cpp=.o))) \
-    $$(foreach src, $$($(1)_cxx_srcs),  $$(call get_build_path_func, $$(src:.cxx=.o))) \
-    $$(foreach src, $$($(1)_cc_srcs),   $$(call get_build_path_func, $$(src:.cc=.o))) \
-    $$(foreach src, $$($(1)_asm_srcs),  $$(call get_build_path_func, $$(src:.S=.o))) \
+$(1)_ALL_OBJS := $$(sort \
+	$$(foreach src, $$($(1)_c_srcs),    $$(call get_build_path_func, $$(src:.c=.o))) \
+	$$(foreach src, $$($(1)_cpp_srcs),  $$(call get_build_path_func, $$(src:.cpp=.o))) \
+	$$(foreach src, $$($(1)_cxx_srcs),  $$(call get_build_path_func, $$(src:.cxx=.o))) \
+	$$(foreach src, $$($(1)_cc_srcs),   $$(call get_build_path_func, $$(src:.cc=.o))) \
+	$$(foreach src, $$($(1)_asm_srcs),  $$(call get_build_path_func, $$(src:.S=.o))) \
 )
+$(1)_OBJS_1 := $$(wordlist 1,1500,$$($(1)_ALL_OBJS))
+$(1)_OBJS_2 := $$(wordlist 1501,3000,$$($(1)_ALL_OBJS))
+$(1)_OBJS_3 := $$(wordlist 3001,4500,$$($(1)_ALL_OBJS))
+$(1)_OBJS_4 := $$(wordlist 4501,6000,$$($(1)_ALL_OBJS))
+$(1)_OBJS_5 := $$(wordlist 6001,7500,$$($(1)_ALL_OBJS))
+$(1)_OBJS_6 := $$(wordlist 7501,9000,$$($(1)_ALL_OBJS))
 
-$$(BUILD_DIR)/libs/lib$(1).a: $$($(1)_OBJS)
+$$(BUILD_DIR)/libs/lib$(1).a: $$($(1)_OBJS_1) $$($(1)_OBJS_2) $$($(1)_OBJS_3) $$($(1)_OBJS_4) $$($(1)_OBJS_5) $$($(1)_OBJS_6)
 	@echo "[AR] $$@"
 	@mkdir -p $$(dir $$@)
-	$$(CPRE)$$(AR) rcs $$@ $$^
+	$$(CPRE)$$(AR) rcs $$@ $$($(1)_OBJS_1)
+	$$(CPRE)$$(AR) rs $$@ $$($(1)_OBJS_2)
+	$$(CPRE)$$(AR) rs $$@ $$($(1)_OBJS_3)
+	$$(CPRE)$$(AR) rs $$@ $$($(1)_OBJS_4)
+	$$(CPRE)$$(AR) rs $$@ $$($(1)_OBJS_5)
+	$$(CPRE)$$(AR) rs $$@ $$($(1)_OBJS_6)
+	$$(CPRE)$$(AR) s  $$@ 
+
 endef
 
 define check_cflag_exact_func

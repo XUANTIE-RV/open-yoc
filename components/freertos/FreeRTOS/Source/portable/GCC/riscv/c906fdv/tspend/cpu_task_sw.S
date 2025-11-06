@@ -52,28 +52,38 @@
 #endif
 
 #if defined(CONFIG_RISCV_SMODE) && CONFIG_RISCV_SMODE
+.type   cpu_intrpt_save, %function
 cpu_intrpt_save:
     csrrci a0, MODE_PREFIX(status), RISCV_SSTATUS_SIE
     ret
+    .size   cpu_intrpt_save, . - cpu_intrpt_save
 
+.type   cpu_is_irq_enable, %function
 cpu_is_irq_enable:
     csrr a0, MODE_PREFIX(status)
     andi a0, a0, RISCV_SSTATUS_SIE
     ret
+    .size   cpu_is_irq_enable, . - cpu_is_irq_enable
 #else
+.type   cpu_intrpt_save, %function
 cpu_intrpt_save:
     csrrci a0, MODE_PREFIX(status), RISCV_MSTATUS_MIE
     ret
+    .size   cpu_intrpt_save, . - cpu_intrpt_save
 
+.type   cpu_is_irq_enable, %function
 cpu_is_irq_enable:
     csrr a0, MODE_PREFIX(status)
     andi a0, a0, RISCV_MSTATUS_MIE
     ret
+    .size   cpu_is_irq_enable, . - cpu_is_irq_enable
 #endif
 
+.type   cpu_intrpt_restore, %function
 cpu_intrpt_restore:
     csrw MODE_PREFIX(status), a0
     ret
+    .size   cpu_intrpt_restore, . - cpu_intrpt_restore
 
 #if CONFIG_CHECK_FPU_DIRTY || CONFIG_CHECK_VECTOR_DIRTY
 .macro FREERTOS_RESTORE_MSTATUS
@@ -135,12 +145,19 @@ __loop:
     add     t2, t3, t1
     beqz    t2, __loop
     ret
+    .size vPortYield, . - vPortYield
 
-
+.global vPortStartTask
+.type   vPortStartTask, %function
 .align 8
 vPortStartTask:
     j       __vPortFistTask
+    .size vPortStartTask, . - vPortStartTask
 
+.global Stspend_Handler
+.global Mtspend_Handler
+.type   Stspend_Handler, %function
+.type   Mtspend_Handler, %function
 .align 8
 Stspend_Handler:
 Mtspend_Handler:

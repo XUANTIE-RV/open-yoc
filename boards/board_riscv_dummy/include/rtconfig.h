@@ -144,10 +144,10 @@ static inline int _csi_vlenb_get_value(void)
 #define FINSH_USING_HISTORY
 #define FINSH_HISTORY_LINES 5
 #define FINSH_USING_SYMTAB
-#define FINSH_CMD_SIZE 80
+#define FINSH_CMD_SIZE 255
 #define MSH_USING_BUILT_IN_COMMANDS
 #define FINSH_USING_DESCRIPTION
-#define FINSH_ARG_MAX 10
+#define FINSH_ARG_MAX 50
 
 /* Device Drivers */
 

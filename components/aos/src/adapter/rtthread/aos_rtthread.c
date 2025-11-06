@@ -23,6 +23,7 @@
 
 #include <rtthread.h>
 #include <rthw.h>
+#include <rtdef.h>
 #include <rtt_ipc/workqueue.h>
 #include <aos/aos.h>
 #include <drv/irq.h>
@@ -216,6 +217,8 @@ static rt_list_t *list_get_next(rt_list_t *current, list_get_next_t *arg)
     return node;
 }
 
+/* Avoid function redefinition errors of aos components and finsh components */
+#if !defined(RT_USING_FINSH)
 long list_thread(void)
 {
     rt_base_t level;
@@ -330,6 +333,7 @@ long list_thread(void)
 
     return 0;
 }
+#endif
 
 int aos_kernel_status_get(void)
 {
@@ -2129,6 +2133,22 @@ uint32_t aos_sched_get_priority_max(uint32_t policy)
 int aos_get_cur_cpu_id(void)
 {
     return rt_hw_cpu_id();
+}
+
+int aos_task_setaffinity(int cpu_id)
+{
+    rt_thread_t self = rt_thread_self();
+    return rt_thread_control(self, RT_THREAD_CTRL_BIND_CPU,
+                            (void*)(rt_ubase_t)cpu_id);
+}
+
+int aos_task_getaffinity(int cpu_id)
+{
+#ifdef RT_USING_SMP
+    return RT_CPU_MASK & (1 << cpu_id);
+#else
+    return 0;
+#endif
 }
 
 #if defined(CONFIG_SMP) && CONFIG_SMP

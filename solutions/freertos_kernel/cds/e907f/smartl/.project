@@ -76,24 +76,24 @@
       <locationURI>PARENT-5-PROJECT_LOC/components/freertos/freertos_native.c</locationURI>
     </link>
     <link>
-      <name>components/libc_freertos/lib_msleep.c</name>
-      <type>1</type>
-      <locationURI>PARENT-5-PROJECT_LOC/components/libc_freertos/lib_msleep.c</locationURI>
-    </link>
-    <link>
       <name>components/libc_freertos/lib_sleep.c</name>
       <type>1</type>
       <locationURI>PARENT-5-PROJECT_LOC/components/libc_freertos/lib_sleep.c</locationURI>
     </link>
     <link>
-      <name>components/libc_freertos/lib_usleep.c</name>
+      <name>components/libc_freertos/lib_msleep.c</name>
       <type>1</type>
-      <locationURI>PARENT-5-PROJECT_LOC/components/libc_freertos/lib_usleep.c</locationURI>
+      <locationURI>PARENT-5-PROJECT_LOC/components/libc_freertos/lib_msleep.c</locationURI>
     </link>
     <link>
       <name>components/libc_freertos/mini_printf.c</name>
       <type>1</type>
       <locationURI>PARENT-5-PROJECT_LOC/components/libc_freertos/mini_printf.c</locationURI>
+    </link>
+    <link>
+      <name>components/libc_freertos/settimeofday.c</name>
+      <type>1</type>
+      <locationURI>PARENT-5-PROJECT_LOC/components/libc_freertos/settimeofday.c</locationURI>
     </link>
     <link>
       <name>components/libc_freertos/newlib_stub.c</name>
@@ -106,9 +106,9 @@
       <locationURI>PARENT-5-PROJECT_LOC/components/libc_freertos/random.c</locationURI>
     </link>
     <link>
-      <name>components/libc_freertos/settimeofday.c</name>
+      <name>components/libc_freertos/lib_usleep.c</name>
       <type>1</type>
-      <locationURI>PARENT-5-PROJECT_LOC/components/libc_freertos/settimeofday.c</locationURI>
+      <locationURI>PARENT-5-PROJECT_LOC/components/libc_freertos/lib_usleep.c</locationURI>
     </link>
     <link>
       <name>components/libc_freertos/string/strext.c</name>
@@ -116,14 +116,19 @@
       <locationURI>PARENT-5-PROJECT_LOC/components/libc_freertos/string/strext.c</locationURI>
     </link>
     <link>
+      <name>components/chip_riscv_dummy/src/arch/e907fdp/trap_c.c</name>
+      <type>1</type>
+      <locationURI>PARENT-5-PROJECT_LOC/components/chip_riscv_dummy/src/arch/e907fdp/trap_c.c</locationURI>
+    </link>
+    <link>
       <name>components/chip_riscv_dummy/src/arch/e907fdp/system.c</name>
       <type>1</type>
       <locationURI>PARENT-5-PROJECT_LOC/components/chip_riscv_dummy/src/arch/e907fdp/system.c</locationURI>
     </link>
     <link>
-      <name>components/chip_riscv_dummy/src/arch/e907fdp/trap_c.c</name>
+      <name>components/chip_riscv_dummy/src/sys/weak.c</name>
       <type>1</type>
-      <locationURI>PARENT-5-PROJECT_LOC/components/chip_riscv_dummy/src/arch/e907fdp/trap_c.c</locationURI>
+      <locationURI>PARENT-5-PROJECT_LOC/components/chip_riscv_dummy/src/sys/weak.c</locationURI>
     </link>
     <link>
       <name>components/chip_riscv_dummy/src/sys/devices.c</name>
@@ -131,9 +136,9 @@
       <locationURI>PARENT-5-PROJECT_LOC/components/chip_riscv_dummy/src/sys/devices.c</locationURI>
     </link>
     <link>
-      <name>components/chip_riscv_dummy/src/sys/feature.c</name>
+      <name>components/chip_riscv_dummy/src/sys/irq.c</name>
       <type>1</type>
-      <locationURI>PARENT-5-PROJECT_LOC/components/chip_riscv_dummy/src/sys/feature.c</locationURI>
+      <locationURI>PARENT-5-PROJECT_LOC/components/chip_riscv_dummy/src/sys/irq.c</locationURI>
     </link>
     <link>
       <name>components/chip_riscv_dummy/src/sys/got_init.c</name>
@@ -141,34 +146,9 @@
       <locationURI>PARENT-5-PROJECT_LOC/components/chip_riscv_dummy/src/sys/got_init.c</locationURI>
     </link>
     <link>
-      <name>components/chip_riscv_dummy/src/sys/irq.c</name>
-      <type>1</type>
-      <locationURI>PARENT-5-PROJECT_LOC/components/chip_riscv_dummy/src/sys/irq.c</locationURI>
-    </link>
-    <link>
-      <name>components/chip_riscv_dummy/src/sys/irq_port.c</name>
-      <type>1</type>
-      <locationURI>PARENT-5-PROJECT_LOC/components/chip_riscv_dummy/src/sys/irq_port.c</locationURI>
-    </link>
-    <link>
-      <name>components/chip_riscv_dummy/src/sys/os_port.c</name>
-      <type>1</type>
-      <locationURI>PARENT-5-PROJECT_LOC/components/chip_riscv_dummy/src/sys/os_port.c</locationURI>
-    </link>
-    <link>
       <name>components/chip_riscv_dummy/src/sys/pre_main.c</name>
       <type>1</type>
       <locationURI>PARENT-5-PROJECT_LOC/components/chip_riscv_dummy/src/sys/pre_main.c</locationURI>
-    </link>
-    <link>
-      <name>components/chip_riscv_dummy/src/sys/reboot.c</name>
-      <type>1</type>
-      <locationURI>PARENT-5-PROJECT_LOC/components/chip_riscv_dummy/src/sys/reboot.c</locationURI>
-    </link>
-    <link>
-      <name>components/chip_riscv_dummy/src/sys/sys_clk.c</name>
-      <type>1</type>
-      <locationURI>PARENT-5-PROJECT_LOC/components/chip_riscv_dummy/src/sys/sys_clk.c</locationURI>
     </link>
     <link>
       <name>components/chip_riscv_dummy/src/sys/target_get.c</name>
@@ -181,9 +161,29 @@
       <locationURI>PARENT-5-PROJECT_LOC/components/chip_riscv_dummy/src/sys/tick.c</locationURI>
     </link>
     <link>
-      <name>components/chip_riscv_dummy/src/sys/weak.c</name>
+      <name>components/chip_riscv_dummy/src/sys/reboot.c</name>
       <type>1</type>
-      <locationURI>PARENT-5-PROJECT_LOC/components/chip_riscv_dummy/src/sys/weak.c</locationURI>
+      <locationURI>PARENT-5-PROJECT_LOC/components/chip_riscv_dummy/src/sys/reboot.c</locationURI>
+    </link>
+    <link>
+      <name>components/chip_riscv_dummy/src/sys/irq_port.c</name>
+      <type>1</type>
+      <locationURI>PARENT-5-PROJECT_LOC/components/chip_riscv_dummy/src/sys/irq_port.c</locationURI>
+    </link>
+    <link>
+      <name>components/chip_riscv_dummy/src/sys/sys_clk.c</name>
+      <type>1</type>
+      <locationURI>PARENT-5-PROJECT_LOC/components/chip_riscv_dummy/src/sys/sys_clk.c</locationURI>
+    </link>
+    <link>
+      <name>components/chip_riscv_dummy/src/sys/os_port.c</name>
+      <type>1</type>
+      <locationURI>PARENT-5-PROJECT_LOC/components/chip_riscv_dummy/src/sys/os_port.c</locationURI>
+    </link>
+    <link>
+      <name>components/chip_riscv_dummy/src/sys/feature.c</name>
+      <type>1</type>
+      <locationURI>PARENT-5-PROJECT_LOC/components/chip_riscv_dummy/src/sys/feature.c</locationURI>
     </link>
     <link>
       <name>components/chip_riscv_dummy/src/drivers/clk.c</name>
@@ -241,34 +241,14 @@
       <locationURI>PARENT-5-PROJECT_LOC/boards/board_riscv_dummy/src/uart/board_uart.c</locationURI>
     </link>
     <link>
-      <name>solutions/freertos_kernel/app/src/event_example.c</name>
-      <type>1</type>
-      <locationURI>PARENT-5-PROJECT_LOC/solutions/freertos_kernel/app/src/event_example.c</locationURI>
-    </link>
-    <link>
-      <name>solutions/freertos_kernel/app/src/main.c</name>
-      <type>1</type>
-      <locationURI>PARENT-5-PROJECT_LOC/solutions/freertos_kernel/app/src/main.c</locationURI>
-    </link>
-    <link>
       <name>solutions/freertos_kernel/app/src/message_q_example.c</name>
       <type>1</type>
       <locationURI>PARENT-5-PROJECT_LOC/solutions/freertos_kernel/app/src/message_q_example.c</locationURI>
     </link>
     <link>
-      <name>solutions/freertos_kernel/app/src/mutex_example.c</name>
+      <name>solutions/freertos_kernel/app/src/event_example.c</name>
       <type>1</type>
-      <locationURI>PARENT-5-PROJECT_LOC/solutions/freertos_kernel/app/src/mutex_example.c</locationURI>
-    </link>
-    <link>
-      <name>solutions/freertos_kernel/app/src/pre_main.c</name>
-      <type>1</type>
-      <locationURI>PARENT-5-PROJECT_LOC/solutions/freertos_kernel/app/src/pre_main.c</locationURI>
-    </link>
-    <link>
-      <name>solutions/freertos_kernel/app/src/sem_example.c</name>
-      <type>1</type>
-      <locationURI>PARENT-5-PROJECT_LOC/solutions/freertos_kernel/app/src/sem_example.c</locationURI>
+      <locationURI>PARENT-5-PROJECT_LOC/solutions/freertos_kernel/app/src/event_example.c</locationURI>
     </link>
     <link>
       <name>solutions/freertos_kernel/app/src/task_example.c</name>
@@ -276,14 +256,34 @@
       <locationURI>PARENT-5-PROJECT_LOC/solutions/freertos_kernel/app/src/task_example.c</locationURI>
     </link>
     <link>
-      <name>solutions/freertos_kernel/app/src/time_example.c</name>
+      <name>solutions/freertos_kernel/app/src/main.c</name>
       <type>1</type>
-      <locationURI>PARENT-5-PROJECT_LOC/solutions/freertos_kernel/app/src/time_example.c</locationURI>
+      <locationURI>PARENT-5-PROJECT_LOC/solutions/freertos_kernel/app/src/main.c</locationURI>
+    </link>
+    <link>
+      <name>solutions/freertos_kernel/app/src/sem_example.c</name>
+      <type>1</type>
+      <locationURI>PARENT-5-PROJECT_LOC/solutions/freertos_kernel/app/src/sem_example.c</locationURI>
     </link>
     <link>
       <name>solutions/freertos_kernel/app/src/timer_example.c</name>
       <type>1</type>
       <locationURI>PARENT-5-PROJECT_LOC/solutions/freertos_kernel/app/src/timer_example.c</locationURI>
+    </link>
+    <link>
+      <name>solutions/freertos_kernel/app/src/time_example.c</name>
+      <type>1</type>
+      <locationURI>PARENT-5-PROJECT_LOC/solutions/freertos_kernel/app/src/time_example.c</locationURI>
+    </link>
+    <link>
+      <name>solutions/freertos_kernel/app/src/pre_main.c</name>
+      <type>1</type>
+      <locationURI>PARENT-5-PROJECT_LOC/solutions/freertos_kernel/app/src/pre_main.c</locationURI>
+    </link>
+    <link>
+      <name>solutions/freertos_kernel/app/src/mutex_example.c</name>
+      <type>1</type>
+      <locationURI>PARENT-5-PROJECT_LOC/solutions/freertos_kernel/app/src/mutex_example.c</locationURI>
     </link>
     <link>
       <name>components/freertos/FreeRTOS/Source/portable/GCC/riscv/e907fdp/tspend/cpu_task_sw.S</name>

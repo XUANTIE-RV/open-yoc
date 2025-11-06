@@ -143,5 +143,65 @@ int example_ai_main(void)
     layer_norm_main(0, NULL);
     printf("--------- layer_norm end ---------\n");
 
+    printf("--------- div start ---------\n");
+    div_main(0, NULL);
+    printf("--------- div end ---------\n");
+
+    printf("--------- square start ---------\n");
+    square_main(0, NULL);
+    printf("--------- square end ---------\n");
+
+    printf("--------- sqrt start ---------\n");
+    sqrt_main(0, NULL);
+    printf("--------- sqrt end ---------\n");
+
+    printf("--------- rsqrt start ---------\n");
+    rsqrt_main(0, NULL);
+    printf("--------- rsqrt end ---------\n");
+
+    printf("--------- sin start ---------\n");
+    sin_main(0, NULL);
+    printf("--------- sin end ---------\n");
+
+    printf("--------- cos start ---------\n");
+    cos_main(0, NULL);
+    printf("--------- cos end ---------\n");
+
+    printf("--------- neg start ---------\n");
+    neg_main(0, NULL);
+    printf("--------- neg end ---------\n");
+
+    printf("--------- transpose start ---------\n");
+    transpose_main(0, NULL);
+    printf("--------- transpose end ---------\n");
+
+    printf("--------- mean start ---------\n");
+    mean_main(0, NULL);
+    printf("--------- mean end ---------\n");
+
+    printf("--------- sum start ---------\n");
+    sum_main(0, NULL);
+    printf("--------- sum end ---------\n");
+
+    printf("--------- expand start ---------\n");
+    expand_main(0, NULL);
+    printf("--------- expand end ---------\n");
+
+    printf("--------- cast start ---------\n");
+    cast_int_to_float_main(0, NULL);
+    printf("--------- cast end ---------\n");
+
+    printf("--------- compare start ---------\n");
+    compare_main(0, NULL);
+    printf("--------- compare end ---------\n");
+
+    printf("--------- scatter_nd start ---------\n");
+    scatter_nd_main(0, NULL);
+    printf("--------- scatter_nd end ---------\n");
+
+    printf("--------- batch_norm start ---------\n");
+    batch_norm_main(0, NULL);
+    printf("--------- batch_norm end ---------\n");
+
     return 0;
 }

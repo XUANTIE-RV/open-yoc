@@ -61,9 +61,14 @@
       <locationURI>PARENT-5-PROJECT_LOC/components/libc_bare/src/printf.c</locationURI>
     </link>
     <link>
-      <name>components/mm/src/dq_addlast.c</name>
+      <name>components/mm/src/mm_size2ndx.c</name>
       <type>1</type>
-      <locationURI>PARENT-5-PROJECT_LOC/components/mm/src/dq_addlast.c</locationURI>
+      <locationURI>PARENT-5-PROJECT_LOC/components/mm/src/mm_size2ndx.c</locationURI>
+    </link>
+    <link>
+      <name>components/mm/src/mm_initialize.c</name>
+      <type>1</type>
+      <locationURI>PARENT-5-PROJECT_LOC/components/mm/src/mm_initialize.c</locationURI>
     </link>
     <link>
       <name>components/mm/src/dq_rem.c</name>
@@ -76,24 +81,9 @@
       <locationURI>PARENT-5-PROJECT_LOC/components/mm/src/lib_mallinfo.c</locationURI>
     </link>
     <link>
-      <name>components/mm/src/mm_addfreechunk.c</name>
+      <name>components/mm/src/dq_addlast.c</name>
       <type>1</type>
-      <locationURI>PARENT-5-PROJECT_LOC/components/mm/src/mm_addfreechunk.c</locationURI>
-    </link>
-    <link>
-      <name>components/mm/src/mm_free.c</name>
-      <type>1</type>
-      <locationURI>PARENT-5-PROJECT_LOC/components/mm/src/mm_free.c</locationURI>
-    </link>
-    <link>
-      <name>components/mm/src/mm_initialize.c</name>
-      <type>1</type>
-      <locationURI>PARENT-5-PROJECT_LOC/components/mm/src/mm_initialize.c</locationURI>
-    </link>
-    <link>
-      <name>components/mm/src/mm_leak.c</name>
-      <type>1</type>
-      <locationURI>PARENT-5-PROJECT_LOC/components/mm/src/mm_leak.c</locationURI>
+      <locationURI>PARENT-5-PROJECT_LOC/components/mm/src/dq_addlast.c</locationURI>
     </link>
     <link>
       <name>components/mm/src/mm_mallinfo.c</name>
@@ -106,14 +96,19 @@
       <locationURI>PARENT-5-PROJECT_LOC/components/mm/src/mm_malloc.c</locationURI>
     </link>
     <link>
-      <name>components/mm/src/mm_size2ndx.c</name>
+      <name>components/mm/src/mm_leak.c</name>
       <type>1</type>
-      <locationURI>PARENT-5-PROJECT_LOC/components/mm/src/mm_size2ndx.c</locationURI>
+      <locationURI>PARENT-5-PROJECT_LOC/components/mm/src/mm_leak.c</locationURI>
     </link>
     <link>
-      <name>components/chip_riscv_dummy/src/arch/c908x-cp-xt/system.c</name>
+      <name>components/mm/src/mm_free.c</name>
       <type>1</type>
-      <locationURI>PARENT-5-PROJECT_LOC/components/chip_riscv_dummy/src/arch/c908x-cp-xt/system.c</locationURI>
+      <locationURI>PARENT-5-PROJECT_LOC/components/mm/src/mm_free.c</locationURI>
+    </link>
+    <link>
+      <name>components/mm/src/mm_addfreechunk.c</name>
+      <type>1</type>
+      <locationURI>PARENT-5-PROJECT_LOC/components/mm/src/mm_addfreechunk.c</locationURI>
     </link>
     <link>
       <name>components/chip_riscv_dummy/src/arch/c908x-cp-xt/trap_c.c</name>
@@ -121,19 +116,19 @@
       <locationURI>PARENT-5-PROJECT_LOC/components/chip_riscv_dummy/src/arch/c908x-cp-xt/trap_c.c</locationURI>
     </link>
     <link>
+      <name>components/chip_riscv_dummy/src/arch/c908x-cp-xt/system.c</name>
+      <type>1</type>
+      <locationURI>PARENT-5-PROJECT_LOC/components/chip_riscv_dummy/src/arch/c908x-cp-xt/system.c</locationURI>
+    </link>
+    <link>
+      <name>components/chip_riscv_dummy/src/sys/weak.c</name>
+      <type>1</type>
+      <locationURI>PARENT-5-PROJECT_LOC/components/chip_riscv_dummy/src/sys/weak.c</locationURI>
+    </link>
+    <link>
       <name>components/chip_riscv_dummy/src/sys/devices.c</name>
       <type>1</type>
       <locationURI>PARENT-5-PROJECT_LOC/components/chip_riscv_dummy/src/sys/devices.c</locationURI>
-    </link>
-    <link>
-      <name>components/chip_riscv_dummy/src/sys/feature.c</name>
-      <type>1</type>
-      <locationURI>PARENT-5-PROJECT_LOC/components/chip_riscv_dummy/src/sys/feature.c</locationURI>
-    </link>
-    <link>
-      <name>components/chip_riscv_dummy/src/sys/got_init.c</name>
-      <type>1</type>
-      <locationURI>PARENT-5-PROJECT_LOC/components/chip_riscv_dummy/src/sys/got_init.c</locationURI>
     </link>
     <link>
       <name>components/chip_riscv_dummy/src/sys/irq.c</name>
@@ -141,29 +136,14 @@
       <locationURI>PARENT-5-PROJECT_LOC/components/chip_riscv_dummy/src/sys/irq.c</locationURI>
     </link>
     <link>
-      <name>components/chip_riscv_dummy/src/sys/irq_port.c</name>
+      <name>components/chip_riscv_dummy/src/sys/got_init.c</name>
       <type>1</type>
-      <locationURI>PARENT-5-PROJECT_LOC/components/chip_riscv_dummy/src/sys/irq_port.c</locationURI>
-    </link>
-    <link>
-      <name>components/chip_riscv_dummy/src/sys/os_port.c</name>
-      <type>1</type>
-      <locationURI>PARENT-5-PROJECT_LOC/components/chip_riscv_dummy/src/sys/os_port.c</locationURI>
+      <locationURI>PARENT-5-PROJECT_LOC/components/chip_riscv_dummy/src/sys/got_init.c</locationURI>
     </link>
     <link>
       <name>components/chip_riscv_dummy/src/sys/pre_main.c</name>
       <type>1</type>
       <locationURI>PARENT-5-PROJECT_LOC/components/chip_riscv_dummy/src/sys/pre_main.c</locationURI>
-    </link>
-    <link>
-      <name>components/chip_riscv_dummy/src/sys/reboot.c</name>
-      <type>1</type>
-      <locationURI>PARENT-5-PROJECT_LOC/components/chip_riscv_dummy/src/sys/reboot.c</locationURI>
-    </link>
-    <link>
-      <name>components/chip_riscv_dummy/src/sys/sys_clk.c</name>
-      <type>1</type>
-      <locationURI>PARENT-5-PROJECT_LOC/components/chip_riscv_dummy/src/sys/sys_clk.c</locationURI>
     </link>
     <link>
       <name>components/chip_riscv_dummy/src/sys/target_get.c</name>
@@ -176,9 +156,29 @@
       <locationURI>PARENT-5-PROJECT_LOC/components/chip_riscv_dummy/src/sys/tick.c</locationURI>
     </link>
     <link>
-      <name>components/chip_riscv_dummy/src/sys/weak.c</name>
+      <name>components/chip_riscv_dummy/src/sys/reboot.c</name>
       <type>1</type>
-      <locationURI>PARENT-5-PROJECT_LOC/components/chip_riscv_dummy/src/sys/weak.c</locationURI>
+      <locationURI>PARENT-5-PROJECT_LOC/components/chip_riscv_dummy/src/sys/reboot.c</locationURI>
+    </link>
+    <link>
+      <name>components/chip_riscv_dummy/src/sys/irq_port.c</name>
+      <type>1</type>
+      <locationURI>PARENT-5-PROJECT_LOC/components/chip_riscv_dummy/src/sys/irq_port.c</locationURI>
+    </link>
+    <link>
+      <name>components/chip_riscv_dummy/src/sys/sys_clk.c</name>
+      <type>1</type>
+      <locationURI>PARENT-5-PROJECT_LOC/components/chip_riscv_dummy/src/sys/sys_clk.c</locationURI>
+    </link>
+    <link>
+      <name>components/chip_riscv_dummy/src/sys/os_port.c</name>
+      <type>1</type>
+      <locationURI>PARENT-5-PROJECT_LOC/components/chip_riscv_dummy/src/sys/os_port.c</locationURI>
+    </link>
+    <link>
+      <name>components/chip_riscv_dummy/src/sys/feature.c</name>
+      <type>1</type>
+      <locationURI>PARENT-5-PROJECT_LOC/components/chip_riscv_dummy/src/sys/feature.c</locationURI>
     </link>
     <link>
       <name>components/chip_riscv_dummy/src/drivers/clk.c</name>
@@ -241,14 +241,64 @@
       <locationURI>PARENT-5-PROJECT_LOC/solutions/bare_core_ai/app/src/main.c</locationURI>
     </link>
     <link>
-      <name>solutions/bare_core_ai/app/src/samples/add.c</name>
-      <type>1</type>
-      <locationURI>PARENT-5-PROJECT_LOC/solutions/bare_core_ai/app/src/samples/add.c</locationURI>
-    </link>
-    <link>
       <name>solutions/bare_core_ai/app/src/samples/ai_main.c</name>
       <type>1</type>
       <locationURI>PARENT-5-PROJECT_LOC/solutions/bare_core_ai/app/src/samples/ai_main.c</locationURI>
+    </link>
+    <link>
+      <name>solutions/bare_core_ai/app/src/samples/slice.c</name>
+      <type>1</type>
+      <locationURI>PARENT-5-PROJECT_LOC/solutions/bare_core_ai/app/src/samples/slice.c</locationURI>
+    </link>
+    <link>
+      <name>solutions/bare_core_ai/app/src/samples/scatter_nd.c</name>
+      <type>1</type>
+      <locationURI>PARENT-5-PROJECT_LOC/solutions/bare_core_ai/app/src/samples/scatter_nd.c</locationURI>
+    </link>
+    <link>
+      <name>solutions/bare_core_ai/app/src/samples/mul.c</name>
+      <type>1</type>
+      <locationURI>PARENT-5-PROJECT_LOC/solutions/bare_core_ai/app/src/samples/mul.c</locationURI>
+    </link>
+    <link>
+      <name>solutions/bare_core_ai/app/src/samples/div.c</name>
+      <type>1</type>
+      <locationURI>PARENT-5-PROJECT_LOC/solutions/bare_core_ai/app/src/samples/div.c</locationURI>
+    </link>
+    <link>
+      <name>solutions/bare_core_ai/app/src/samples/compare.c</name>
+      <type>1</type>
+      <locationURI>PARENT-5-PROJECT_LOC/solutions/bare_core_ai/app/src/samples/compare.c</locationURI>
+    </link>
+    <link>
+      <name>solutions/bare_core_ai/app/src/samples/matmul.c</name>
+      <type>1</type>
+      <locationURI>PARENT-5-PROJECT_LOC/solutions/bare_core_ai/app/src/samples/matmul.c</locationURI>
+    </link>
+    <link>
+      <name>solutions/bare_core_ai/app/src/samples/cos.c</name>
+      <type>1</type>
+      <locationURI>PARENT-5-PROJECT_LOC/solutions/bare_core_ai/app/src/samples/cos.c</locationURI>
+    </link>
+    <link>
+      <name>solutions/bare_core_ai/app/src/samples/sin.c</name>
+      <type>1</type>
+      <locationURI>PARENT-5-PROJECT_LOC/solutions/bare_core_ai/app/src/samples/sin.c</locationURI>
+    </link>
+    <link>
+      <name>solutions/bare_core_ai/app/src/samples/cast_int_to_float.c</name>
+      <type>1</type>
+      <locationURI>PARENT-5-PROJECT_LOC/solutions/bare_core_ai/app/src/samples/cast_int_to_float.c</locationURI>
+    </link>
+    <link>
+      <name>solutions/bare_core_ai/app/src/samples/square.c</name>
+      <type>1</type>
+      <locationURI>PARENT-5-PROJECT_LOC/solutions/bare_core_ai/app/src/samples/square.c</locationURI>
+    </link>
+    <link>
+      <name>solutions/bare_core_ai/app/src/samples/softmax.c</name>
+      <type>1</type>
+      <locationURI>PARENT-5-PROJECT_LOC/solutions/bare_core_ai/app/src/samples/softmax.c</locationURI>
     </link>
     <link>
       <name>solutions/bare_core_ai/app/src/samples/exp.c</name>
@@ -261,29 +311,54 @@
       <locationURI>PARENT-5-PROJECT_LOC/solutions/bare_core_ai/app/src/samples/gather.c</locationURI>
     </link>
     <link>
+      <name>solutions/bare_core_ai/app/src/samples/transpose.c</name>
+      <type>1</type>
+      <locationURI>PARENT-5-PROJECT_LOC/solutions/bare_core_ai/app/src/samples/transpose.c</locationURI>
+    </link>
+    <link>
+      <name>solutions/bare_core_ai/app/src/samples/mean.c</name>
+      <type>1</type>
+      <locationURI>PARENT-5-PROJECT_LOC/solutions/bare_core_ai/app/src/samples/mean.c</locationURI>
+    </link>
+    <link>
+      <name>solutions/bare_core_ai/app/src/samples/sum.c</name>
+      <type>1</type>
+      <locationURI>PARENT-5-PROJECT_LOC/solutions/bare_core_ai/app/src/samples/sum.c</locationURI>
+    </link>
+    <link>
+      <name>solutions/bare_core_ai/app/src/samples/rsqrt.c</name>
+      <type>1</type>
+      <locationURI>PARENT-5-PROJECT_LOC/solutions/bare_core_ai/app/src/samples/rsqrt.c</locationURI>
+    </link>
+    <link>
+      <name>solutions/bare_core_ai/app/src/samples/where.c</name>
+      <type>1</type>
+      <locationURI>PARENT-5-PROJECT_LOC/solutions/bare_core_ai/app/src/samples/where.c</locationURI>
+    </link>
+    <link>
+      <name>solutions/bare_core_ai/app/src/samples/add.c</name>
+      <type>1</type>
+      <locationURI>PARENT-5-PROJECT_LOC/solutions/bare_core_ai/app/src/samples/add.c</locationURI>
+    </link>
+    <link>
+      <name>solutions/bare_core_ai/app/src/samples/sqrt.c</name>
+      <type>1</type>
+      <locationURI>PARENT-5-PROJECT_LOC/solutions/bare_core_ai/app/src/samples/sqrt.c</locationURI>
+    </link>
+    <link>
       <name>solutions/bare_core_ai/app/src/samples/layer_norm.c</name>
       <type>1</type>
       <locationURI>PARENT-5-PROJECT_LOC/solutions/bare_core_ai/app/src/samples/layer_norm.c</locationURI>
     </link>
     <link>
-      <name>solutions/bare_core_ai/app/src/samples/matmul.c</name>
+      <name>solutions/bare_core_ai/app/src/samples/neg.c</name>
       <type>1</type>
-      <locationURI>PARENT-5-PROJECT_LOC/solutions/bare_core_ai/app/src/samples/matmul.c</locationURI>
+      <locationURI>PARENT-5-PROJECT_LOC/solutions/bare_core_ai/app/src/samples/neg.c</locationURI>
     </link>
     <link>
-      <name>solutions/bare_core_ai/app/src/samples/mul.c</name>
+      <name>solutions/bare_core_ai/app/src/samples/expand.c</name>
       <type>1</type>
-      <locationURI>PARENT-5-PROJECT_LOC/solutions/bare_core_ai/app/src/samples/mul.c</locationURI>
-    </link>
-    <link>
-      <name>solutions/bare_core_ai/app/src/samples/slice.c</name>
-      <type>1</type>
-      <locationURI>PARENT-5-PROJECT_LOC/solutions/bare_core_ai/app/src/samples/slice.c</locationURI>
-    </link>
-    <link>
-      <name>solutions/bare_core_ai/app/src/samples/softmax.c</name>
-      <type>1</type>
-      <locationURI>PARENT-5-PROJECT_LOC/solutions/bare_core_ai/app/src/samples/softmax.c</locationURI>
+      <locationURI>PARENT-5-PROJECT_LOC/solutions/bare_core_ai/app/src/samples/expand.c</locationURI>
     </link>
     <link>
       <name>solutions/bare_core_ai/app/src/samples/sub.c</name>
@@ -291,9 +366,9 @@
       <locationURI>PARENT-5-PROJECT_LOC/solutions/bare_core_ai/app/src/samples/sub.c</locationURI>
     </link>
     <link>
-      <name>solutions/bare_core_ai/app/src/samples/where.c</name>
+      <name>solutions/bare_core_ai/app/src/samples/batch_norm.c</name>
       <type>1</type>
-      <locationURI>PARENT-5-PROJECT_LOC/solutions/bare_core_ai/app/src/samples/where.c</locationURI>
+      <locationURI>PARENT-5-PROJECT_LOC/solutions/bare_core_ai/app/src/samples/batch_norm.c</locationURI>
     </link>
     <link>
       <name>solutions/bare_core_ai/app/src/utils/test_utils.c</name>

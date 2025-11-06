@@ -370,7 +370,7 @@ typedef struct {
     address_matching_e a: 2; /* address matching mode */
     uint32_t reserved: 2;    /* reserved */
     uint32_t l: 1;           /* lock enable */
-} mpu_region_attr_t;
+} pmp_region_attr_t;
 
 /*@} end of group CSI_PMP */
 
@@ -677,7 +677,7 @@ __STATIC_INLINE void csi_vic_enable_irq(int32_t IRQn)
     PLIC_Type *plic = (PLIC_Type *)CONFIG_PLIC_BASE;
 
 #if CONFIG_INTC_CLIC_PLIC
-    if (IRQn > PLIC_IRQ_OFFSET) {
+    if ((uint32_t)IRQn > PLIC_IRQ_OFFSET) {
         IRQn -= PLIC_IRQ_OFFSET;
     } else {
         CLIC->CLICINT[IRQn].IE |= CLIC_INTIE_IE_Msk;
@@ -721,7 +721,7 @@ __STATIC_INLINE void csi_vic_disable_irq(int32_t IRQn)
     PLIC_Type *plic = (PLIC_Type *)CONFIG_PLIC_BASE;
 
 #if CONFIG_INTC_CLIC_PLIC
-    if (IRQn > PLIC_IRQ_OFFSET) {
+    if ((uint32_t)IRQn > PLIC_IRQ_OFFSET) {
         IRQn -= PLIC_IRQ_OFFSET;
     } else {
         CLIC->CLICINT[IRQn].IE &= ~CLIC_INTIE_IE_Msk;
@@ -767,7 +767,7 @@ __STATIC_INLINE uint32_t csi_vic_get_enabled_irq(int32_t IRQn)
     PLIC_Type *plic = (PLIC_Type *)CONFIG_PLIC_BASE;
 
 #if CONFIG_INTC_CLIC_PLIC
-    if (IRQn > PLIC_IRQ_OFFSET) {
+    if ((uint32_t)IRQn > PLIC_IRQ_OFFSET) {
         IRQn -= PLIC_IRQ_OFFSET;
     } else {
         return (uint32_t)(CLIC->CLICINT[IRQn].IE & CLIC_INTIE_IE_Msk);
@@ -810,7 +810,7 @@ __STATIC_INLINE uint32_t csi_vic_get_pending_irq(int32_t IRQn)
 {
     PLIC_Type *plic = (PLIC_Type *)CONFIG_PLIC_BASE;
 #if CONFIG_INTC_CLIC_PLIC
-    if (IRQn > PLIC_IRQ_OFFSET) {
+    if ((uint32_t)IRQn > PLIC_IRQ_OFFSET) {
         IRQn -= PLIC_IRQ_OFFSET;
     } else {
         return (uint32_t)(CLIC->CLICINT[IRQn].IP & CLIC_INTIP_IP_Msk);
@@ -828,7 +828,7 @@ __STATIC_INLINE void csi_vic_set_pending_irq(int32_t IRQn)
 {
     PLIC_Type *plic = (PLIC_Type *)CONFIG_PLIC_BASE;
 #if CONFIG_INTC_CLIC_PLIC
-    if (IRQn > PLIC_IRQ_OFFSET) {
+    if ((uint32_t)IRQn > PLIC_IRQ_OFFSET) {
         IRQn -= PLIC_IRQ_OFFSET;
     } else {
         CLIC->CLICINT[IRQn].IP |= CLIC_INTIP_IP_Msk;
@@ -849,7 +849,7 @@ __STATIC_INLINE void csi_vic_clear_pending_irq(int32_t IRQn)
 {
     PLIC_Type *plic = (PLIC_Type *)CONFIG_PLIC_BASE;
 #if CONFIG_INTC_CLIC_PLIC
-    if (IRQn > PLIC_IRQ_OFFSET) {
+    if ((uint32_t)IRQn > PLIC_IRQ_OFFSET) {
         IRQn -= PLIC_IRQ_OFFSET;
     } else {
         CLIC->CLICINT[IRQn].IP &= ~CLIC_INTIP_IP_Msk;
@@ -907,7 +907,7 @@ __STATIC_INLINE void csi_vic_set_prio(int32_t IRQn, uint32_t priority)
 {
     PLIC_Type *plic = (PLIC_Type *)CONFIG_PLIC_BASE;
 #if CONFIG_INTC_CLIC_PLIC
-    if (IRQn > PLIC_IRQ_OFFSET) {
+    if ((uint32_t)IRQn > PLIC_IRQ_OFFSET) {
         IRQn -= PLIC_IRQ_OFFSET;
     } else {
         uint8_t nlbits = (CLIC->CLICINFO & CLIC_INFO_CLICINTCTLBITS_Msk) >> CLIC_INFO_CLICINTCTLBITS_Pos;
@@ -936,7 +936,7 @@ __STATIC_INLINE uint32_t csi_vic_get_prio(int32_t IRQn)
 {
     PLIC_Type *plic = (PLIC_Type *)CONFIG_PLIC_BASE;
 #if CONFIG_INTC_CLIC_PLIC
-    if (IRQn > PLIC_IRQ_OFFSET) {
+    if ((uint32_t)IRQn > PLIC_IRQ_OFFSET) {
         IRQn -= PLIC_IRQ_OFFSET;
     } else {
         uint8_t nlbits = (CLIC->CLICINFO & CLIC_INFO_CLICINTCTLBITS_Msk) >> CLIC_INFO_CLICINTCTLBITS_Pos;
@@ -987,16 +987,16 @@ __STATIC_INLINE uint32_t csi_plic_get_prio(unsigned long plic_base, int32_t IRQn
  */
 
 /**
-  \brief  configure memory protected region.
+  \brief  configure physical memory protection region.
   \details
-  \param [in]  idx        memory protected region (0, 1, 2, ..., 15).
+  \param [in]  idx        memory protection region (0, 1, 2, ..., 15).
   \param [in]  base_addr  base address must be aligned with page size.
-  \param [in]  size       \ref region_size_e. memory protected region size.
-  \param [in]  attr       \ref region_size_t. memory protected region attribute.
-  \param [in]  enable     enable or disable memory protected region.
+  \param [in]  size       \ref region_size_e. memory protection region size.
+  \param [in]  attr       \ref pmp_region_attr_t. memory protection region attribute.
+  \param [in]  enable     enable or disable memory protection region.
   */
-__STATIC_INLINE void csi_mpu_config_region(uint32_t idx, uint32_t base_addr, region_size_e size,
-        mpu_region_attr_t attr, uint32_t enable)
+__STATIC_INLINE void csi_pmp_config_region(uint32_t idx, unsigned long base_addr, region_size_e size,
+        pmp_region_attr_t attr, uint32_t enable)
 {
     uint8_t  pmpxcfg = 0;
     uint32_t addr = 0;
@@ -1016,7 +1016,7 @@ __STATIC_INLINE void csi_mpu_config_region(uint32_t idx, uint32_t base_addr, reg
             addr = base_addr >> 2;
             attr.a = (address_matching_e)2;
         } else {
-            addr = ((base_addr >> 2) & (0xFFFFFFFFU - ((1 << (size + 1)) - 1))) | ((1 << size) - 1);
+            addr = ((base_addr >> 2) & (0xFFFFFFFFFFFFFFFFUL - ((1 << (size + 1)) - 1))) | ((1 << size) - 1);
         }
     }
 
@@ -1030,11 +1030,11 @@ __STATIC_INLINE void csi_mpu_config_region(uint32_t idx, uint32_t base_addr, reg
 }
 
 /**
-  \brief  disable mpu region by idx.
+  \brief  disable physical memory protection region by idx.
   \details
-  \param [in]  idx        memory protected region (0, 1, 2, ..., 15).
+  \param [in]  idx        memory protection region (0, 1, 2, ..., 15).
   */
-__STATIC_INLINE void csi_mpu_disable_region(uint32_t idx)
+__STATIC_INLINE void csi_pmp_disable_region(uint32_t idx)
 {
     __set_PMPxCFG(idx, __get_PMPxCFG(idx) & (~PMP_PMPCFG_A_Msk));
 }
@@ -1052,7 +1052,7 @@ __STATIC_INLINE void csi_mpu_disable_region(uint32_t idx)
 #define CLINT_TIMECMPn_ADDR(time_cmp_base, hartid)  ((unsigned long)(time_cmp_base) + 8 * (hartid))
 #define CLINT_TIMECMPn_VAL(time_cmp_base, hartid)   (*(__IOM uint32_t *)(CLINT_TIMECMPn_ADDR(time_cmp_base, hartid)))
 
-__STATIC_INLINE uint32_t _csi_clint_config2(unsigned long coret_base, uint16_t hartid, uint32_t ticks, int32_t IRQn)
+__STATIC_INLINE uint32_t _csi_clint_config2(unsigned long coret_base, uint16_t hartid, uint64_t ticks, int32_t IRQn)
 {
     CLINT_Type *clint = (CLINT_Type *)coret_base;
 #if defined(CONFIG_RISCV_SMODE) && CONFIG_RISCV_SMODE
@@ -1197,7 +1197,7 @@ __STATIC_INLINE uint32_t csi_clint_get_valueh(void)
            function <b>SysTick_Config</b> is not included. In this case, the file <b><i>device</i>.h</b>
            must contain a vendor-specific implementation of this function.
  */
-__STATIC_INLINE uint32_t csi_coret_config(uint32_t ticks, int32_t IRQn)
+__STATIC_INLINE uint32_t csi_coret_config(uint64_t ticks, int32_t IRQn)
 {
     return _csi_clint_config2(CORET_BASE, csi_get_cpu_id(), ticks, IRQn);
 }
@@ -1704,6 +1704,7 @@ __STATIC_INLINE void csi_mmu_invalid_tlb_all(void)
 #if CONFIG_CPU_XUANTIE_C907 || CONFIG_CPU_XUANTIE_C907FD || CONFIG_CPU_XUANTIE_C907FDV || CONFIG_CPU_XUANTIE_C907FDVM \
     || CONFIG_CPU_XUANTIE_C908 || CONFIG_CPU_XUANTIE_C908V || CONFIG_CPU_XUANTIE_C908I \
     || CONFIG_CPU_XUANTIE_C908X || CONFIG_CPU_XUANTIE_C908X_CP || CONFIG_CPU_XUANTIE_C908X_CP_XT \
+    || CONFIG_CPU_XUANTIE_C910 || CONFIG_CPU_XUANTIE_C920 \
     || CONFIG_CPU_XUANTIE_C910V2 || CONFIG_CPU_XUANTIE_C920V2 \
     || CONFIG_CPU_XUANTIE_C910V3 || CONFIG_CPU_XUANTIE_C920V3 \
     || CONFIG_CPU_XUANTIE_C910V3_CP || CONFIG_CPU_XUANTIE_C920V3_CP \

@@ -18,6 +18,9 @@
 
 #include "riscv_asm_macro.h"
 
+#define RISCV_MCAUSE_IRQ_POS 31
+#define MSTATUS_IEN 8
+
 .section .stack, "aw", @nobits
     .align  4
     .global g_trapstackbase
@@ -35,6 +38,13 @@ g_top_trapstack:
 
     irq_nested_mcause:
     .long 0, 0, 0, 0, 0, 0
+#endif
+
+/* for interrupt tail-chaining debug */
+#if CONFIG_DEBUG_TAIL_CHAINING
+.global g_irq_tailchain_loops
+g_irq_tailchain_loops:
+.long 0
 #endif
 
 .text
@@ -421,6 +431,10 @@ Default_Handler:
     sw      t0, 0x0(sp)
     sw      t1, 0x4(sp)
     csrr    t0, mcause
+#if (CONFIG_SUPPORT_NON_VECTOR_IRQ) && (!CONFIG_SUPPORT_IRQ_NESTED)
+    srli    t1, t0, RISCV_MCAUSE_IRQ_POS
+    bnez    t1, is_interrupt
+#endif
     andi    t0, t0, 0x3FF
     li      t1, 24
     beq     t0, t1, .NMI_Handler
@@ -428,6 +442,114 @@ Default_Handler:
     lw      t1, 0x4(sp)
     addi    sp, sp, 8
     j      trap
+#if (CONFIG_SUPPORT_NON_VECTOR_IRQ) && (!CONFIG_SUPPORT_IRQ_NESTED)
+is_interrupt:
+    lw      t0, 0x0(sp)
+    lw      t1, 0x4(sp)
+    addi    sp, sp, 8
+    csrw    mscratch, sp
+    la      sp, g_top_irqstack
+    addi    sp, sp, -76
+    sw      t0, 4(sp)
+    sw      t1, 8(sp)
+    csrr    t0, mepc
+    csrr    t1, mcause
+    sw      t1, 64(sp)
+    sw      t0, 68(sp)
+    csrr    t1, mstatus
+    sw      t1, 72(sp)
+
+    sw      ra, 0(sp)
+    sw      t2, 12(sp)
+    sw      a0, 16(sp)
+    sw      a1, 20(sp)
+    sw      a2, 24(sp)
+    sw      a3, 28(sp)
+    sw      a4, 32(sp)
+    sw      a5, 36(sp)
+    sw      a6, 40(sp)
+    sw      a7, 44(sp)
+    sw      t3, 48(sp)
+    sw      t4, 52(sp)
+    sw      t5, 56(sp)
+    sw      t6, 60(sp)
+
+#if __riscv_dsp
+    addi    sp, sp, -4
+    csrr    t0, vxsat
+    sw      t0, 0(sp)
+#endif /*__riscv_dsp */
+
+#if CONFIG_CHECK_FPU_DIRTY
+    mv      t3, t1
+#endif
+    SAVE_FLOAT_REGISTERS
+
+#if CONFIG_DEBUG_TAIL_CHAINING
+    li       t2, 0
+    la       t1, g_irq_tailchain_loops
+    sw       t2, 0(t1)
+#endif
+
+    csrrsi   t0, mnxti, MSTATUS_IEN
+    beqz     t0, irq_done
+
+irq_loop:
+#if CONFIG_DEBUG_TAIL_CHAINING
+    la       t2, g_irq_tailchain_loops
+    lw       t1, 0(t2)
+    addi     t1, t1, 1
+    sw       t1, 0(t2)
+#endif
+    lw       t1, 0(t0)
+    jalr     t1
+    csrrsi   t0, mnxti, MSTATUS_IEN
+    bnez     t0, irq_loop
+
+#if CONFIG_DEBUG_TAIL_CHAINING
+    li       t2, 0
+    la       a1, g_irq_tailchain_loops
+    sw       t2, 0(a1)
+#endif
+
+irq_done:
+    RESTORE_MSTATUS
+
+    RESTORE_FLOAT_REGISTERS
+
+#if __riscv_dsp
+    lw      t0, 0(sp)
+    csrw    vxsat, t0
+    addi    sp, sp, 4
+#endif /*__riscv_dsp */
+
+    lw      a1, 64(sp)
+    csrw    mcause, a1
+
+    lw      t0, 68(sp)
+    csrw    mepc, t0
+
+    lw      ra, 0(sp)
+    lw      t0, 4(sp)
+    lw      t1, 8(sp)
+    lw      t2, 12(sp)
+    lw      a0, 16(sp)
+    lw      a1, 20(sp)
+    lw      a2, 24(sp)
+    lw      a3, 28(sp)
+    lw      a4, 32(sp)
+    lw      a5, 36(sp)
+    lw      a6, 40(sp)
+    lw      a7, 44(sp)
+    lw      t3, 48(sp)
+    lw      t4, 52(sp)
+    lw      t5, 56(sp)
+    lw      t6, 60(sp)
+
+    addi    sp, sp, 76
+    csrr    sp, mscratch
+    mret
+#endif /* (CONFIG_SUPPORT_NON_VECTOR_IRQ) && (!CONFIG_SUPPORT_IRQ_NESTED) */
 .NMI_Handler:
     /* mscratch may be used before */
     addi    sp, sp, -4

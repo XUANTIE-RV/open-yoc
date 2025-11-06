@@ -84,6 +84,11 @@ void rt_hw_board_init(void)
 
 #if RT_DEBUG_INIT
     board_uart_init();
+/* After adding the aos component, the console init needs to be done here */
+#if CONFIG_AOS_OSAL
+    extern void console_init(int idx, uint32_t baud, uint16_t buf_size);
+    console_init(CONSOLE_UART_IDX, CONFIG_CLI_USART_BAUD, CONFIG_CONSOLE_UART_BUFSIZE);
+#endif
 #endif
 
 #ifdef RT_USING_COMPONENTS_INIT
@@ -98,7 +103,7 @@ void rt_hw_board_init(void)
 extern int32_t aos_debug_printf(const char *fmt, ...);
 void rt_hw_console_output(const char *str)
 {
-    aos_debug_printf("\r%s", str);
+    aos_debug_printf("%s", str);
 }
 
 char rt_hw_console_getchar(void)
@@ -181,7 +186,7 @@ static void c9xx_csr_copy(void)
         c9xx_regs.mie      = rv_csr_read(CSR_MIE);
         c9xx_regs.mxstatus = rv_csr_read(CSR_MXSTATUS);
 
-        c9xx_regs.plic_base_addr = rv_csr_read(CSR_PLIC_BASE);
+        c9xx_regs.plic_base_addr = rv_csr_read(CSR_MAPBADDR);
         c9xx_regs.clint_base_addr = c9xx_regs.plic_base_addr + C9xx_PLIC_CLINT_OFFSET;
     } else {
         /* Store to other core */

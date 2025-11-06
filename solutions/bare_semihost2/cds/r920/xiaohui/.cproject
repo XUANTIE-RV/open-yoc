@@ -37,7 +37,7 @@
                   <listOptionValue builtIn="false" value="CONFIG_KERNEL_NONE=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_SEMIHOST_NATIVE=0"/>
                   <listOptionValue builtIn="false" value="CONFIG_CSI_V2=1"/>
-                  <listOptionValue builtIn="false" value="CONFIG_CSI=csi2"/>
+                  <listOptionValue builtIn="false" value="CONFIG_CSI=&quot;csi2&quot;"/>
                   <listOptionValue builtIn="false" value="CONFIG_INIT_TASK_STACK_SIZE=8192"/>
                   <listOptionValue builtIn="false" value="CONFIG_APP_TASK_STACK_SIZE=8192"/>
                   <listOptionValue builtIn="false" value="CONFIG_SUPPORT_TSPEND=1"/>
@@ -76,7 +76,7 @@
                   <listOptionValue builtIn="false" value="CONFIG_KERNEL_NONE=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_SEMIHOST_NATIVE=0"/>
                   <listOptionValue builtIn="false" value="CONFIG_CSI_V2=1"/>
-                  <listOptionValue builtIn="false" value="CONFIG_CSI=csi2"/>
+                  <listOptionValue builtIn="false" value="CONFIG_CSI=&quot;csi2&quot;"/>
                   <listOptionValue builtIn="false" value="CONFIG_INIT_TASK_STACK_SIZE=8192"/>
                   <listOptionValue builtIn="false" value="CONFIG_APP_TASK_STACK_SIZE=8192"/>
                   <listOptionValue builtIn="false" value="CONFIG_SUPPORT_TSPEND=1"/>
@@ -115,7 +115,7 @@
                   <listOptionValue builtIn="false" value="CONFIG_KERNEL_NONE=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_SEMIHOST_NATIVE=0"/>
                   <listOptionValue builtIn="false" value="CONFIG_CSI_V2=1"/>
-                  <listOptionValue builtIn="false" value="CONFIG_CSI=csi2"/>
+                  <listOptionValue builtIn="false" value="CONFIG_CSI=&quot;csi2&quot;"/>
                   <listOptionValue builtIn="false" value="CONFIG_INIT_TASK_STACK_SIZE=8192"/>
                   <listOptionValue builtIn="false" value="CONFIG_APP_TASK_STACK_SIZE=8192"/>
                   <listOptionValue builtIn="false" value="CONFIG_SUPPORT_TSPEND=1"/>
@@ -212,7 +212,7 @@
                   <listOptionValue builtIn="false" value="CONFIG_KERNEL_NONE=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_SEMIHOST_NATIVE=0"/>
                   <listOptionValue builtIn="false" value="CONFIG_CSI_V2=1"/>
-                  <listOptionValue builtIn="false" value="CONFIG_CSI=csi2"/>
+                  <listOptionValue builtIn="false" value="CONFIG_CSI=&quot;csi2&quot;"/>
                   <listOptionValue builtIn="false" value="CONFIG_INIT_TASK_STACK_SIZE=8192"/>
                   <listOptionValue builtIn="false" value="CONFIG_APP_TASK_STACK_SIZE=8192"/>
                   <listOptionValue builtIn="false" value="CONFIG_SUPPORT_TSPEND=1"/>
@@ -251,7 +251,7 @@
                   <listOptionValue builtIn="false" value="CONFIG_KERNEL_NONE=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_SEMIHOST_NATIVE=0"/>
                   <listOptionValue builtIn="false" value="CONFIG_CSI_V2=1"/>
-                  <listOptionValue builtIn="false" value="CONFIG_CSI=csi2"/>
+                  <listOptionValue builtIn="false" value="CONFIG_CSI=&quot;csi2&quot;"/>
                   <listOptionValue builtIn="false" value="CONFIG_INIT_TASK_STACK_SIZE=8192"/>
                   <listOptionValue builtIn="false" value="CONFIG_APP_TASK_STACK_SIZE=8192"/>
                   <listOptionValue builtIn="false" value="CONFIG_SUPPORT_TSPEND=1"/>
@@ -290,7 +290,7 @@
                   <listOptionValue builtIn="false" value="CONFIG_KERNEL_NONE=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_SEMIHOST_NATIVE=0"/>
                   <listOptionValue builtIn="false" value="CONFIG_CSI_V2=1"/>
-                  <listOptionValue builtIn="false" value="CONFIG_CSI=csi2"/>
+                  <listOptionValue builtIn="false" value="CONFIG_CSI=&quot;csi2&quot;"/>
                   <listOptionValue builtIn="false" value="CONFIG_INIT_TASK_STACK_SIZE=8192"/>
                   <listOptionValue builtIn="false" value="CONFIG_APP_TASK_STACK_SIZE=8192"/>
                   <listOptionValue builtIn="false" value="CONFIG_SUPPORT_TSPEND=1"/>

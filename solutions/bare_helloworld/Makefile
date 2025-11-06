@@ -126,8 +126,8 @@ CFLAGS += -g -Os \
 		  -Wno-unused-function -Wpointer-arith -Wno-undef -ffunction-sections -fdata-sections \
 		  -fno-inline-functions -fno-builtin -fno-strict-aliasing
 CFLAGS += $(addprefix -I, $(ALL_INCS))
-CXXFLAGS += $(CFLAGS)
-ASFLAGS += -D__ASSEMBLY__ $(CFLAGS)
+CXXFLAGS := $(CXXFLAGS) $(CFLAGS)
+ASFLAGS := -D__ASSEMBLY__ $(ASFLAGS ) $(CFLAGS)
 LDFLAGS := $(CPU_FLAGS) $(LIBC_FLAGS) -nostartfiles -Wl,--gc-sections
 LDFLAGS += -Wl,--whole-archive $(LD_LIBS) -Wl,--no-whole-archive $(LD_EXT_LIBS)
 LDFLAGS += $(addprefix -L, $(LD_PATH))

@@ -161,7 +161,7 @@ uint32_t csi_ringbuf_move(csi_ringbuf_t *fifo_in, csi_ringbuf_t *fifo_out)
     if(csi_ringbuf_is_empty(fifo_out))
         return 0;
 
-    int len = csi_ringbuf_avail(fifo_in);
+    uint32_t len = csi_ringbuf_avail(fifo_in);
 
     uint32_t data_len = fifo_out->data_len;
     readlen = len > data_len ? data_len : len;

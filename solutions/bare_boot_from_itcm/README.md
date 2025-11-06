@@ -2,10 +2,15 @@
 
 `bare_boot_from_itcm` 是一个玄铁RTOS SDK中面向baremetal领域的从ITCM启动的使用示例。
 
+## R908系列处理器
 该示例分为CORE0和CORE1的可执行程序。具体流程是CORE0运行之后把CORE1的固件搬运到CORE1的ITCM空间，然后再配置寄存器触发CORE1从ITCM的首地址运行。
 当前目录下有`Makefile`和`Makefile1`两个文件，其中`Makefile`是给CORE0编译用的，`Makefile1`是给CORE1编译使用的，主要区别是他们的`LINKER_SCRIPT`文件不同。
 CORE1的固件可以通过`make clean && make cpu=r908 board=xiaohui -f Makefile1`进行编译。CORE1固件编译完成之后，通过`xxd -i yoc.bin 1.h`将bin文件转换成数组，将内容更新到`app/include/cpu1_firmware.h`即可。
 CORE0的编译参考下面的`编译`章节进行编译即可。
+
+## E系列处理器
+E系列采用一个单独的CORE来实现`boot from itcm`功能。先使用`make clean && make cpu=e907 board=smartl -f Makefile1`来编译出在ITCM里面运行的固件。通过`xxd -i yoc.bin 1.h`将bin文件转换成数组，将内容更新到`app/include/e907_firmware.h`即可。再参考下面的`编译`章节进行编译即可。
+
 
 # 基于Linux编译运行
 
@@ -42,12 +47,31 @@ LLVM使用以下命令编译：
 
 如何基于FPGA平台运行请参考《玄铁RTOS SDK用户手册》
 
+注意：
+使用DebugServer连接的时候需要额外增加`-setresethaltreq-always-off`选项来禁止CPU复位时被DebugServer截获导致PC停止不自动往下走的问题。
+```bash
+DebugServerConsole -prereset -setresethaltreq-always-off
+```
+
 ### 运行结果
-正常运行串口输出内容参考如下
+
+R908正常运行串口输出内容参考如下：
 ```
 [cpuid: 0] start to copy itcm code to core1.
 [cpuid: 0] finish copy itcm code to core1.
+[cpuid: 1] start to run in itcm.
+[cpuid: 1] malloc 100B success.
 [cpuid: 1] run in itcm success.
+```
+
+E907正常运行串口输出内容参考如下：
+```
+copy itcm code to itcm region.
+finish copy itcm code to itcm region.
+will reset current core.
+start to run in itcm.
+malloc 100B success.
+run in itcm success.
 ```
 
 # 基于Windows IDE(CDS/CDK)编译运行

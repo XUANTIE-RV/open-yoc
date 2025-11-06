@@ -163,7 +163,7 @@ int _write(int fd, const void* buffer, size_t count)
 {
     char *s = (char *)buffer;
     if (_isatty(fd)) {
-        for (int i = 0; i < count; i++) {
+        for (size_t i = 0; i < count; i++) {
             fputc(*s, (void *)-1);
             return count;
         }
@@ -210,7 +210,7 @@ _ssize_t _write_r(struct _reent *ptr, int fd, const void *buf, size_t nbytes)
         return 0;
     }
 
-    for (int i = 0; i < nbytes; i++)
+    for (size_t i = 0; i < nbytes; i++)
         _putchar((*((char*)buf + i)));
 
     return nbytes;

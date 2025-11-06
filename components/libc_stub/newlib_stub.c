@@ -22,6 +22,7 @@
 #include <sys/unistd.h>
 #include <time.h>
 #include <sys/time.h>
+#include <drv/tick.h>
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
@@ -371,9 +372,9 @@ int _gettimeofday_r(struct _reent *ptr, struct timeval *tv, void *__tzp)
     struct timezone *tz = __tzp;
 
     if (tv) {
-        t = aos_calendar_time_get();
-        tv->tv_sec  = t / 1000;
-        tv->tv_usec = (t % 1000) * 1000;
+        t = csi_get_calendar_us();
+        tv->tv_sec  = t / 1000000;
+        tv->tv_usec = t % 1000000;
     }
 
     if (tz) {

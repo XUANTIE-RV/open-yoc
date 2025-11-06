@@ -179,7 +179,7 @@ static void pmp_init(void)
 
 static void interrupt_init(void)
 {
-    int i;
+    uint32_t i;
 
     for (i = 0; i < CONFIG_IRQ_NUM - 1; i++) {
         PLIC->PLIC_PRIO[i] = 31;

@@ -68,6 +68,19 @@ uint32_t csi_tick_get_ms(void);
 uint64_t csi_tick_get_us(void);
 
 /**
+  \brief       Get the calendar time in microseconds
+  \return      The absolute timestamp in microseconds since Unix epoch (1970-01-01 00:00:00 UTC)
+*/
+uint64_t csi_get_calendar_us(void);
+
+/**
+  \brief       Set the calendar time in microseconds
+  \param[in]   timestamp  The absolute timestamp in microseconds since Unix epoch (1970-01-01 00:00:00 UTC)
+  \return      None
+*/
+void csi_set_calendar_us(uint64_t timestamp);
+
+/**
   \brief       Increase the sys-tick
 */
 void csi_tick_increase(void);

@@ -269,7 +269,7 @@ typedef struct {
     address_matching_e a: 2; /* address matching mode */
     uint32_t reserved: 2;    /* reserved */
     uint32_t l: 1;           /* lock enable */
-} mpu_region_attr_t;
+} pmp_region_attr_t;
 
 /*@} end of group CSI_PMP */
 
@@ -645,16 +645,16 @@ __STATIC_INLINE uint32_t csi_vic_set_thresh(uint32_t thresh)
  */
 
 /**
-  \brief  configure memory protected region.
+  \brief  configure physical memory protection region.
   \details
-  \param [in]  idx        memory protected region (0, 1, 2, ..., 15).
+  \param [in]  idx        memory protection region (0, 1, 2, ..., 15).
   \param [in]  base_addr  base address must be aligned with page size.
-  \param [in]  size       \ref region_size_e. memory protected region size.
-  \param [in]  attr       \ref region_size_t. memory protected region attribute.
-  \param [in]  enable     enable or disable memory protected region.
+  \param [in]  size       \ref region_size_e. memory protection region size.
+  \param [in]  attr       \ref pmp_region_attr_t. memory protection region attribute.
+  \param [in]  enable     enable or disable memory protection region.
   */
-__STATIC_INLINE void csi_mpu_config_region(uint32_t idx, uint32_t base_addr, region_size_e size,
-        mpu_region_attr_t attr, uint32_t enable)
+__STATIC_INLINE void csi_pmp_config_region(uint32_t idx, unsigned long base_addr, region_size_e size,
+        pmp_region_attr_t attr, uint32_t enable)
 {
     uint8_t  pmpxcfg = 0;
     uint32_t addr = 0;
@@ -688,11 +688,11 @@ __STATIC_INLINE void csi_mpu_config_region(uint32_t idx, uint32_t base_addr, reg
 }
 
 /**
-  \brief  disable mpu region by idx.
+  \brief  disable physical memory protection region by idx.
   \details
-  \param [in]  idx        memory protected region (0, 1, 2, ..., 15).
+  \param [in]  idx        memory protection region (0, 1, 2, ..., 15).
   */
-__STATIC_INLINE void csi_mpu_disable_region(uint32_t idx)
+__STATIC_INLINE void csi_pmp_disable_region(uint32_t idx)
 {
     __set_PMPxCFG(idx, __get_PMPxCFG(idx) & (~PMP_PMPCFG_A_Msk));
 }
@@ -707,7 +707,7 @@ __STATIC_INLINE void csi_mpu_disable_region(uint32_t idx)
   @{
  */
 
-__STATIC_INLINE uint32_t _csi_coret_config(unsigned long coret_base, uint32_t ticks, int32_t IRQn)
+__STATIC_INLINE uint32_t _csi_coret_config(unsigned long coret_base, uint64_t ticks, int32_t IRQn)
 {
     CORET_Type *coret = (CORET_Type *)coret_base;
     if ((coret->MTIMECMP != 0) && (coret->MTIMECMP != 0xFFFFFFFFFFFFFFFFULL)) {
@@ -730,7 +730,7 @@ __STATIC_INLINE uint32_t _csi_coret_config(unsigned long coret_base, uint32_t ti
            function <b>SysTick_Config</b> is not included. In this case, the file <b><i>device</i>.h</b>
            must contain a vendor-specific implementation of this function.
  */
-__STATIC_INLINE uint32_t csi_coret_config(uint32_t ticks, int32_t IRQn)
+__STATIC_INLINE uint32_t csi_coret_config(uint64_t ticks, int32_t IRQn)
 {
     return _csi_coret_config(CORET_BASE, ticks, IRQn);
 }

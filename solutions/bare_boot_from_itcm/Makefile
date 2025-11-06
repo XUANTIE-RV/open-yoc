@@ -44,6 +44,14 @@ BOARD_PATH := $(TOP_DIR)/boards/board_riscv_dummy
 CHIP_PATH := $(TOP_DIR)/components/chip_riscv_dummy
 endif
 
+ifeq ($(board), smartl)
+LINKER_SCRIPT := $(TOP_DIR)/components/chip_riscv_dummy/gcc_flash_smartl.ld
+BOARD_COMP_NAME := board_riscv_dummy
+CHIP_COMP_NAME := chip_riscv_dummy
+BOARD_PATH := $(TOP_DIR)/boards/board_riscv_dummy
+CHIP_PATH := $(TOP_DIR)/components/chip_riscv_dummy
+endif
+
 COLLECT_BUILD_FILES=0
 # depend components
 # TODO: the common components for solution
@@ -87,8 +95,8 @@ CFLAGS += -g -Os \
           -Wpointer-arith -Wno-undef -ffunction-sections \
           -fdata-sections -fno-inline-functions -fno-builtin -fno-strict-aliasing
 CFLAGS += $(addprefix -I, $(ALL_INCS))
-CXXFLAGS += $(CFLAGS)
-ASFLAGS += -D__ASSEMBLY__ $(CFLAGS)
+CXXFLAGS := $(CXXFLAGS) $(CFLAGS)
+ASFLAGS := -D__ASSEMBLY__ $(ASFLAGS ) $(CFLAGS)
 LDFLAGS := $(CPU_FLAGS) -nostartfiles -Wl,--gc-sections
 LDFLAGS += -Wl,--whole-archive $(LD_LIBS) -Wl,--no-whole-archive $(LD_EXT_LIBS)
 LDFLAGS += $(addprefix -L, $(LD_PATH))

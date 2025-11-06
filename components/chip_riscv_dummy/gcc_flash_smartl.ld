@@ -238,10 +238,10 @@ SECTIONS
   . = ALIGN(0x4) ;
   __ram_code_end__ = .;
  } > REGION_DATA AT > REGION_RODATA
- .bss : {
-  . = ALIGN(0x4) ;
-  __sbss = ALIGN(0x4) ;
+ .bss : ALIGN(0x20) {
+  __sbss = . ;
   __bss_start__ = . ;
+  KEEP(*linpack.o(*.bss*))
   *(.dynsbss)
   *(.sbss)
   *(.sbss.*)

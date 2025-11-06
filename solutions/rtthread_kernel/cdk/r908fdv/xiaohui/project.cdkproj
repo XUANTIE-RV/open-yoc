@@ -6,10 +6,10 @@
     <VirtualDirectory Name="chip_riscv_dummy">
       <VirtualDirectory Name="include">
         <VirtualDirectory Name="asm">
-          <File Name="../../../../../components/chip_riscv_dummy/include/asm/riscv_csr.h">
+          <File Name="../../../../../components/chip_riscv_dummy/include/asm/riscv_asm_macro.h">
             <FileOption/>
           </File>
-          <File Name="../../../../../components/chip_riscv_dummy/include/asm/riscv_asm_macro.h">
+          <File Name="../../../../../components/chip_riscv_dummy/include/asm/riscv_csr.h">
             <FileOption/>
           </File>
         </VirtualDirectory>
@@ -18,10 +18,10 @@
             <FileOption/>
           </File>
         </VirtualDirectory>
-        <File Name="../../../../../components/chip_riscv_dummy/include/dw_timer_ll.h">
+        <File Name="../../../../../components/chip_riscv_dummy/include/dw_uart_ll.h">
           <FileOption/>
         </File>
-        <File Name="../../../../../components/chip_riscv_dummy/include/dw_uart_ll.h">
+        <File Name="../../../../../components/chip_riscv_dummy/include/sys_clk.h">
           <FileOption/>
         </File>
         <File Name="../../../../../components/chip_riscv_dummy/include/dw_uart.h">
@@ -30,17 +30,17 @@
         <File Name="../../../../../components/chip_riscv_dummy/include/soc.h">
           <FileOption/>
         </File>
-        <File Name="../../../../../components/chip_riscv_dummy/include/sys_clk.h">
+        <File Name="../../../../../components/chip_riscv_dummy/include/dw_timer_ll.h">
           <FileOption/>
         </File>
       </VirtualDirectory>
       <VirtualDirectory Name="src">
         <VirtualDirectory Name="arch">
           <VirtualDirectory Name="r908fdv-cp-xt">
-            <File Name="../../../../../components/chip_riscv_dummy/src/arch/r908fdv-cp-xt/system.c">
+            <File Name="../../../../../components/chip_riscv_dummy/src/arch/r908fdv-cp-xt/trap_c.c">
               <FileOption/>
             </File>
-            <File Name="../../../../../components/chip_riscv_dummy/src/arch/r908fdv-cp-xt/trap_c.c">
+            <File Name="../../../../../components/chip_riscv_dummy/src/arch/r908fdv-cp-xt/system.c">
               <FileOption/>
             </File>
             <File Name="../../../../../components/chip_riscv_dummy/src/arch/r908fdv-cp-xt/startup.S">
@@ -52,31 +52,19 @@
           </VirtualDirectory>
         </VirtualDirectory>
         <VirtualDirectory Name="sys">
+          <File Name="../../../../../components/chip_riscv_dummy/src/sys/weak.c">
+            <FileOption/>
+          </File>
           <File Name="../../../../../components/chip_riscv_dummy/src/sys/devices.c">
-            <FileOption/>
-          </File>
-          <File Name="../../../../../components/chip_riscv_dummy/src/sys/feature.c">
-            <FileOption/>
-          </File>
-          <File Name="../../../../../components/chip_riscv_dummy/src/sys/got_init.c">
             <FileOption/>
           </File>
           <File Name="../../../../../components/chip_riscv_dummy/src/sys/irq.c">
             <FileOption/>
           </File>
-          <File Name="../../../../../components/chip_riscv_dummy/src/sys/irq_port.c">
-            <FileOption/>
-          </File>
-          <File Name="../../../../../components/chip_riscv_dummy/src/sys/os_port.c">
+          <File Name="../../../../../components/chip_riscv_dummy/src/sys/got_init.c">
             <FileOption/>
           </File>
           <File Name="../../../../../components/chip_riscv_dummy/src/sys/pre_main.c">
-            <FileOption/>
-          </File>
-          <File Name="../../../../../components/chip_riscv_dummy/src/sys/reboot.c">
-            <FileOption/>
-          </File>
-          <File Name="../../../../../components/chip_riscv_dummy/src/sys/sys_clk.c">
             <FileOption/>
           </File>
           <File Name="../../../../../components/chip_riscv_dummy/src/sys/target_get.c">
@@ -85,7 +73,19 @@
           <File Name="../../../../../components/chip_riscv_dummy/src/sys/tick.c">
             <FileOption/>
           </File>
-          <File Name="../../../../../components/chip_riscv_dummy/src/sys/weak.c">
+          <File Name="../../../../../components/chip_riscv_dummy/src/sys/reboot.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../components/chip_riscv_dummy/src/sys/irq_port.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../components/chip_riscv_dummy/src/sys/sys_clk.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../components/chip_riscv_dummy/src/sys/os_port.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../components/chip_riscv_dummy/src/sys/feature.c">
             <FileOption/>
           </File>
         </VirtualDirectory>
@@ -123,32 +123,249 @@
     <VirtualDirectory Name="csi">
       <VirtualDirectory Name="csi2">
         <VirtualDirectory Name="include">
+          <VirtualDirectory Name="dsp">
+            <File Name="../../../../../components/csi/csi2/include/dsp/csky_vdsp2_const_structs.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/dsp/csky_const_structs.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/dsp/csky_vdsp2_math.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/dsp/csi_math.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/dsp/csky_common_tables.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/dsp/csi_instance.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/dsp/csi_const_structs.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/dsp/csi_common_tables.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/dsp/csky_math.h">
+              <FileOption/>
+            </File>
+          </VirtualDirectory>
+          <VirtualDirectory Name="drv">
+            <File Name="../../../../../components/csi/csi2/include/drv/des.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/iso7816.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/efuse.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/iic.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/timer.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/drv_fft.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/gpio.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/pmu.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/usi_usart.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/dma.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/tipc.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/ecdsa.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/rtc.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/spiflash.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/io.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/rng.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/common.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/i2s.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/aes.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/etb.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/uart.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/usi_spi.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/eth_mac.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/porting.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/mbox.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/ringbuf.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/eth.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/irq.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/usi_iic.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/list.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/sensor.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/pin.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/sha.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/pm.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/fft.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/usi.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/ecdh.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/clk.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/rsa.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/adc.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/codec.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/eflash.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/eth_phy.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/tick.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/sasc.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/tee.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/hmac.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/pwm.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/intc.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/baud_calc.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/qspi.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/crc.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/spinand.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/gpio_pin.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/wdt.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/sdif.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/drv/spi.h">
+              <FileOption/>
+            </File>
+          </VirtualDirectory>
           <VirtualDirectory Name="core">
-            <File Name="../../../../../components/csi/csi2/include/core/core_ck802.h">
+            <File Name="../../../../../components/csi/csi2/include/core/csi_rv32_gcc.h">
               <FileOption/>
             </File>
-            <File Name="../../../../../components/csi/csi2/include/core/core_ck807.h">
+            <File Name="../../../../../components/csi/csi2/include/core/core_ck810.h">
               <FileOption/>
             </File>
-            <File Name="../../../../../components/csi/csi2/include/core/core_ck610.h">
-              <FileOption/>
-            </File>
-            <File Name="../../../../../components/csi/csi2/include/core/core_807.h">
-              <FileOption/>
-            </File>
-            <File Name="../../../../../components/csi/csi2/include/core/core_801.h">
+            <File Name="../../../../../components/csi/csi2/include/core/core_ck803.h">
               <FileOption/>
             </File>
             <File Name="../../../../../components/csi/csi2/include/core/csi_rv64_gcc.h">
               <FileOption/>
             </File>
-            <File Name="../../../../../components/csi/csi2/include/core/core_810.h">
-              <FileOption/>
-            </File>
             <File Name="../../../../../components/csi/csi2/include/core/core_805.h">
               <FileOption/>
             </File>
+            <File Name="../../../../../components/csi/csi2/include/core/core_810.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/core/core_rv64.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/core/core_ck610.h">
+              <FileOption/>
+            </File>
             <File Name="../../../../../components/csi/csi2/include/core/core_803.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/core/core_807.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/core/csi_gcc.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/core/core_ck807.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/core/core_801.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/csi/csi2/include/core/csi_rv_common.h">
               <FileOption/>
             </File>
             <File Name="../../../../../components/csi/csi2/include/core/core_804.h">
@@ -157,240 +374,26 @@
             <File Name="../../../../../components/csi/csi2/include/core/core_ck801.h">
               <FileOption/>
             </File>
-            <File Name="../../../../../components/csi/csi2/include/core/core_ck803.h">
-              <FileOption/>
-            </File>
-            <File Name="../../../../../components/csi/csi2/include/core/csi_gcc.h">
+            <File Name="../../../../../components/csi/csi2/include/core/core_802.h">
               <FileOption/>
             </File>
             <File Name="../../../../../components/csi/csi2/include/core/csi_arm64_gcc.h">
               <FileOption/>
             </File>
-            <File Name="../../../../../components/csi/csi2/include/core/core_ck810.h">
+            <File Name="../../../../../components/csi/csi2/include/core/csi_rv_encoding.h">
               <FileOption/>
             </File>
-            <File Name="../../../../../components/csi/csi2/include/core/csi_rv_common.h">
-              <FileOption/>
-            </File>
-            <File Name="../../../../../components/csi/csi2/include/core/core_802.h">
-              <FileOption/>
-            </File>
-            <File Name="../../../../../components/csi/csi2/include/core/csi_rv32_gcc.h">
+            <File Name="../../../../../components/csi/csi2/include/core/core_ck802.h">
               <FileOption/>
             </File>
             <File Name="../../../../../components/csi/csi2/include/core/core_rv32.h">
               <FileOption/>
             </File>
-            <File Name="../../../../../components/csi/csi2/include/core/core_rv64.h">
-              <FileOption/>
-            </File>
           </VirtualDirectory>
-          <VirtualDirectory Name="drv">
-            <File Name="../../../../../components/csi/csi2/include/drv/gpio.h">
-              <FileOption/>
-            </File>
-            <File Name="../../../../../components/csi/csi2/include/drv/sha.h">
-              <FileOption/>
-            </File>
-            <File Name="../../../../../components/csi/csi2/include/drv/spinand.h">
-              <FileOption/>
-            </File>
-            <File Name="../../../../../components/csi/csi2/include/drv/ecdsa.h">
-              <FileOption/>
-            </File>
-            <File Name="../../../../../components/csi/csi2/include/drv/fft.h">
-              <FileOption/>
-            </File>
-            <File Name="../../../../../components/csi/csi2/include/drv/eth_mac.h">
-              <FileOption/>
-            </File>
-            <File Name="../../../../../components/csi/csi2/include/drv/tipc.h">
-              <FileOption/>
-            </File>
-            <File Name="../../../../../components/csi/csi2/include/drv/clk.h">
-              <FileOption/>
-            </File>
-            <File Name="../../../../../components/csi/csi2/include/drv/hmac.h">
-              <FileOption/>
-            </File>
-            <File Name="../../../../../components/csi/csi2/include/drv/mbox.h">
-              <FileOption/>
-            </File>
-            <File Name="../../../../../components/csi/csi2/include/drv/eth_phy.h">
-              <FileOption/>
-            </File>
-            <File Name="../../../../../components/csi/csi2/include/drv/eflash.h">
-              <FileOption/>
-            </File>
-            <File Name="../../../../../components/csi/csi2/include/drv/sensor.h">
-              <FileOption/>
-            </File>
-            <File Name="../../../../../components/csi/csi2/include/drv/pmu.h">
-              <FileOption/>
-            </File>
-            <File Name="../../../../../components/csi/csi2/include/drv/drv_fft.h">
-              <FileOption/>
-            </File>
-            <File Name="../../../../../components/csi/csi2/include/drv/eth.h">
-              <FileOption/>
-            </File>
-            <File Name="../../../../../components/csi/csi2/include/drv/qspi.h">
-              <FileOption/>
-            </File>
-            <File Name="../../../../../components/csi/csi2/include/drv/list.h">
-              <FileOption/>
-            </File>
-            <File Name="../../../../../components/csi/csi2/include/drv/gpio_pin.h">
-              <FileOption/>
-            </File>
-            <File Name="../../../../../components/csi/csi2/include/drv/baud_calc.h">
-              <FileOption/>
-            </File>
-            <File Name="../../../../../components/csi/csi2/include/drv/irq.h">
-              <FileOption/>
-            </File>
-            <File Name="../../../../../components/csi/csi2/include/drv/porting.h">
-              <FileOption/>
-            </File>
-            <File Name="../../../../../components/csi/csi2/include/drv/aes.h">
-              <FileOption/>
-            </File>
-            <File Name="../../../../../components/csi/csi2/include/drv/sdif.h">
-              <FileOption/>
-            </File>
-            <File Name="../../../../../components/csi/csi2/include/drv/etb.h">
-              <FileOption/>
-            </File>
-            <File Name="../../../../../components/csi/csi2/include/drv/dma.h">
-              <FileOption/>
-            </File>
-            <File Name="../../../../../components/csi/csi2/include/drv/tee.h">
-              <FileOption/>
-            </File>
-            <File Name="../../../../../components/csi/csi2/include/drv/i2s.h">
-              <FileOption/>
-            </File>
-            <File Name="../../../../../components/csi/csi2/include/drv/common.h">
-              <FileOption/>
-            </File>
-            <File Name="../../../../../components/csi/csi2/include/drv/uart.h">
-              <FileOption/>
-            </File>
-            <File Name="../../../../../components/csi/csi2/include/drv/usi_iic.h">
-              <FileOption/>
-            </File>
-            <File Name="../../../../../components/csi/csi2/include/drv/pwm.h">
-              <FileOption/>
-            </File>
-            <File Name="../../../../../components/csi/csi2/include/drv/rng.h">
-              <FileOption/>
-            </File>
-            <File Name="../../../../../components/csi/csi2/include/drv/iso7816.h">
-              <FileOption/>
-            </File>
-            <File Name="../../../../../components/csi/csi2/include/drv/spiflash.h">
-              <FileOption/>
-            </File>
-            <File Name="../../../../../components/csi/csi2/include/drv/usi.h">
-              <FileOption/>
-            </File>
-            <File Name="../../../../../components/csi/csi2/include/drv/intc.h">
-              <FileOption/>
-            </File>
-            <File Name="../../../../../components/csi/csi2/include/drv/timer.h">
-              <FileOption/>
-            </File>
-            <File Name="../../../../../components/csi/csi2/include/drv/pin.h">
-              <FileOption/>
-            </File>
-            <File Name="../../../../../components/csi/csi2/include/drv/iic.h">
-              <FileOption/>
-            </File>
-            <File Name="../../../../../components/csi/csi2/include/drv/adc.h">
-              <FileOption/>
-            </File>
-            <File Name="../../../../../components/csi/csi2/include/drv/usi_usart.h">
-              <FileOption/>
-            </File>
-            <File Name="../../../../../components/csi/csi2/include/drv/des.h">
-              <FileOption/>
-            </File>
-            <File Name="../../../../../components/csi/csi2/include/drv/wdt.h">
-              <FileOption/>
-            </File>
-            <File Name="../../../../../components/csi/csi2/include/drv/io.h">
-              <FileOption/>
-            </File>
-            <File Name="../../../../../components/csi/csi2/include/drv/usi_spi.h">
-              <FileOption/>
-            </File>
-            <File Name="../../../../../components/csi/csi2/include/drv/ecdh.h">
-              <FileOption/>
-            </File>
-            <File Name="../../../../../components/csi/csi2/include/drv/sasc.h">
-              <FileOption/>
-            </File>
-            <File Name="../../../../../components/csi/csi2/include/drv/rtc.h">
-              <FileOption/>
-            </File>
-            <File Name="../../../../../components/csi/csi2/include/drv/rsa.h">
-              <FileOption/>
-            </File>
-            <File Name="../../../../../components/csi/csi2/include/drv/pm.h">
-              <FileOption/>
-            </File>
-            <File Name="../../../../../components/csi/csi2/include/drv/codec.h">
-              <FileOption/>
-            </File>
-            <File Name="../../../../../components/csi/csi2/include/drv/tick.h">
-              <FileOption/>
-            </File>
-            <File Name="../../../../../components/csi/csi2/include/drv/efuse.h">
-              <FileOption/>
-            </File>
-            <File Name="../../../../../components/csi/csi2/include/drv/crc.h">
-              <FileOption/>
-            </File>
-            <File Name="../../../../../components/csi/csi2/include/drv/spi.h">
-              <FileOption/>
-            </File>
-            <File Name="../../../../../components/csi/csi2/include/drv/ringbuf.h">
-              <FileOption/>
-            </File>
-          </VirtualDirectory>
-          <VirtualDirectory Name="dsp">
-            <File Name="../../../../../components/csi/csi2/include/dsp/csi_const_structs.h">
-              <FileOption/>
-            </File>
-            <File Name="../../../../../components/csi/csi2/include/dsp/csi_common_tables.h">
-              <FileOption/>
-            </File>
-            <File Name="../../../../../components/csi/csi2/include/dsp/csi_instance.h">
-              <FileOption/>
-            </File>
-            <File Name="../../../../../components/csi/csi2/include/dsp/csi_math.h">
-              <FileOption/>
-            </File>
-            <File Name="../../../../../components/csi/csi2/include/dsp/csky_const_structs.h">
-              <FileOption/>
-            </File>
-            <File Name="../../../../../components/csi/csi2/include/dsp/csky_vdsp2_const_structs.h">
-              <FileOption/>
-            </File>
-            <File Name="../../../../../components/csi/csi2/include/dsp/csky_math.h">
-              <FileOption/>
-            </File>
-            <File Name="../../../../../components/csi/csi2/include/dsp/csky_common_tables.h">
-              <FileOption/>
-            </File>
-            <File Name="../../../../../components/csi/csi2/include/dsp/csky_vdsp2_math.h">
-              <FileOption/>
-            </File>
-          </VirtualDirectory>
-          <File Name="../../../../../components/csi/csi2/include/syslog.h">
+          <File Name="../../../../../components/csi/csi2/include/csi_core.h">
             <FileOption/>
           </File>
-          <File Name="../../../../../components/csi/csi2/include/csi_core.h">
+          <File Name="../../../../../components/csi/csi2/include/syslog.h">
             <FileOption/>
           </File>
         </VirtualDirectory>
@@ -408,10 +411,10 @@
       <VirtualDirectory Name="compilers">
         <VirtualDirectory Name="gcc">
           <VirtualDirectory Name="sys">
-            <File Name="../../../../../components/libc_rtthread/compilers/gcc/sys/termios.h">
+            <File Name="../../../../../components/libc_rtthread/compilers/gcc/sys/ioctl.h">
               <FileOption/>
             </File>
-            <File Name="../../../../../components/libc_rtthread/compilers/gcc/sys/ioctl.h">
+            <File Name="../../../../../components/libc_rtthread/compilers/gcc/sys/termios.h">
               <FileOption/>
             </File>
           </VirtualDirectory>
@@ -421,22 +424,22 @@
         </VirtualDirectory>
       </VirtualDirectory>
       <VirtualDirectory Name="include">
-        <VirtualDirectory Name="sys">
-          <File Name="../../../../../components/libc_rtthread/include/sys/select.h">
+        <VirtualDirectory Name="serf">
+          <File Name="../../../../../components/libc_rtthread/include/serf/minilibc_stdio.h">
             <FileOption/>
           </File>
-          <File Name="../../../../../components/libc_rtthread/include/sys/random.h">
+        </VirtualDirectory>
+        <VirtualDirectory Name="sys">
+          <File Name="../../../../../components/libc_rtthread/include/sys/time.h">
             <FileOption/>
           </File>
           <File Name="../../../../../components/libc_rtthread/include/sys/_stdint.h">
             <FileOption/>
           </File>
-          <File Name="../../../../../components/libc_rtthread/include/sys/time.h">
+          <File Name="../../../../../components/libc_rtthread/include/sys/random.h">
             <FileOption/>
           </File>
-        </VirtualDirectory>
-        <VirtualDirectory Name="serf">
-          <File Name="../../../../../components/libc_rtthread/include/serf/minilibc_stdio.h">
+          <File Name="../../../../../components/libc_rtthread/include/sys/select.h">
             <FileOption/>
           </File>
         </VirtualDirectory>
@@ -452,16 +455,16 @@
           <FileOption/>
         </File>
       </VirtualDirectory>
-      <File Name="../../../../../components/libc_rtthread/lib_msleep.c">
-        <FileOption/>
-      </File>
       <File Name="../../../../../components/libc_rtthread/lib_sleep.c">
         <FileOption/>
       </File>
-      <File Name="../../../../../components/libc_rtthread/lib_usleep.c">
+      <File Name="../../../../../components/libc_rtthread/lib_msleep.c">
         <FileOption/>
       </File>
       <File Name="../../../../../components/libc_rtthread/mini_printf.c">
+        <FileOption/>
+      </File>
+      <File Name="../../../../../components/libc_rtthread/settimeofday.c">
         <FileOption/>
       </File>
       <File Name="../../../../../components/libc_rtthread/newlib_stub.c">
@@ -470,7 +473,7 @@
       <File Name="../../../../../components/libc_rtthread/random.c">
         <FileOption/>
       </File>
-      <File Name="../../../../../components/libc_rtthread/settimeofday.c">
+      <File Name="../../../../../components/libc_rtthread/lib_usleep.c">
         <FileOption/>
       </File>
     </VirtualDirectory>
@@ -478,31 +481,31 @@
       <VirtualDirectory Name="libcpu">
         <VirtualDirectory Name="riscv">
           <VirtualDirectory Name="r908fdv-cp-xt">
-            <File Name="../../../../../components/rtthread/libcpu/riscv/r908fdv-cp-xt/cpuport.h">
+            <File Name="../../../../../components/rtthread/libcpu/riscv/r908fdv-cp-xt/rt_interrupt.h">
               <FileOption/>
             </File>
-            <File Name="../../../../../components/rtthread/libcpu/riscv/r908fdv-cp-xt/stackframe.h">
+            <File Name="../../../../../components/rtthread/libcpu/riscv/r908fdv-cp-xt/cpuport.h">
               <FileOption/>
             </File>
             <File Name="../../../../../components/rtthread/libcpu/riscv/r908fdv-cp-xt/stack.h">
               <FileOption/>
             </File>
-            <File Name="../../../../../components/rtthread/libcpu/riscv/r908fdv-cp-xt/rt_interrupt.h">
+            <File Name="../../../../../components/rtthread/libcpu/riscv/r908fdv-cp-xt/stackframe.h">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/rtthread/libcpu/riscv/r908fdv-cp-xt/cpuport_smp.c">
               <FileOption/>
             </File>
             <File Name="../../../../../components/rtthread/libcpu/riscv/r908fdv-cp-xt/atomic_riscv.c">
+              <FileOption/>
+            </File>
+            <File Name="../../../../../components/rtthread/libcpu/riscv/r908fdv-cp-xt/interrupt.c">
               <FileOption/>
             </File>
             <File Name="../../../../../components/rtthread/libcpu/riscv/r908fdv-cp-xt/clint.c">
               <FileOption/>
             </File>
             <File Name="../../../../../components/rtthread/libcpu/riscv/r908fdv-cp-xt/cpuport.c">
-              <FileOption/>
-            </File>
-            <File Name="../../../../../components/rtthread/libcpu/riscv/r908fdv-cp-xt/cpuport_smp.c">
-              <FileOption/>
-            </File>
-            <File Name="../../../../../components/rtthread/libcpu/riscv/r908fdv-cp-xt/interrupt.c">
               <FileOption/>
             </File>
             <File Name="../../../../../components/rtthread/libcpu/riscv/r908fdv-cp-xt/interrupt_gcc.S">
@@ -521,164 +524,164 @@
       </VirtualDirectory>
       <VirtualDirectory Name="include">
         <VirtualDirectory Name="rtt_ipc">
-          <File Name="../../../../../components/rtthread/include/rtt_ipc/poll.h">
-            <FileOption/>
-          </File>
-          <File Name="../../../../../components/rtthread/include/rtt_ipc/completion.h">
-            <FileOption/>
-          </File>
-          <File Name="../../../../../components/rtthread/include/rtt_ipc/dataqueue.h">
-            <FileOption/>
-          </File>
-          <File Name="../../../../../components/rtthread/include/rtt_ipc/ringblk_buf.h">
+          <File Name="../../../../../components/rtthread/include/rtt_ipc/ringbuffer.h">
             <FileOption/>
           </File>
           <File Name="../../../../../components/rtthread/include/rtt_ipc/waitqueue.h">
             <FileOption/>
           </File>
+          <File Name="../../../../../components/rtthread/include/rtt_ipc/condvar.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../components/rtthread/include/rtt_ipc/ringblk_buf.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../components/rtthread/include/rtt_ipc/completion.h">
+            <FileOption/>
+          </File>
           <File Name="../../../../../components/rtthread/include/rtt_ipc/workqueue.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../components/rtthread/include/rtt_ipc/dataqueue.h">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../components/rtthread/include/rtt_ipc/poll.h">
             <FileOption/>
           </File>
           <File Name="../../../../../components/rtthread/include/rtt_ipc/pipe.h">
             <FileOption/>
           </File>
-          <File Name="../../../../../components/rtthread/include/rtt_ipc/condvar.h">
-            <FileOption/>
-          </File>
-          <File Name="../../../../../components/rtthread/include/rtt_ipc/ringbuffer.h">
-            <FileOption/>
-          </File>
         </VirtualDirectory>
-        <File Name="../../../../../components/rtthread/include/rtservice.h">
-          <FileOption/>
-        </File>
-        <File Name="../../../../../components/rtthread/include/rtthread.h">
-          <FileOption/>
-        </File>
-        <File Name="../../../../../components/rtthread/include/rtm.h">
-          <FileOption/>
-        </File>
-        <File Name="../../../../../components/rtthread/include/rtsched.h">
-          <FileOption/>
-        </File>
         <File Name="../../../../../components/rtthread/include/rtatomic.h">
           <FileOption/>
         </File>
         <File Name="../../../../../components/rtthread/include/rthw.h">
           <FileOption/>
         </File>
-        <File Name="../../../../../components/rtthread/include/rtdef.h">
-          <FileOption/>
-        </File>
-        <File Name="../../../../../components/rtthread/include/rtcompiler.h">
+        <File Name="../../../../../components/rtthread/include/rtklibc.h">
           <FileOption/>
         </File>
         <File Name="../../../../../components/rtthread/include/rttypes.h">
           <FileOption/>
         </File>
+        <File Name="../../../../../components/rtthread/include/rtservice.h">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../components/rtthread/include/rtthread.h">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../components/rtthread/include/rtcompiler.h">
+          <FileOption/>
+        </File>
         <File Name="../../../../../components/rtthread/include/rtdevice.h">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../components/rtthread/include/rtdef.h">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../components/rtthread/include/rtm.h">
           <FileOption/>
         </File>
         <File Name="../../../../../components/rtthread/include/rtdbg.h">
           <FileOption/>
         </File>
-        <File Name="../../../../../components/rtthread/include/rtklibc.h">
+        <File Name="../../../../../components/rtthread/include/rtsched.h">
           <FileOption/>
         </File>
       </VirtualDirectory>
       <VirtualDirectory Name="src">
         <VirtualDirectory Name="rtt_ipc">
-          <File Name="../../../../../components/rtthread/src/rtt_ipc/completion.c">
-            <FileOption/>
-          </File>
-          <File Name="../../../../../components/rtthread/src/rtt_ipc/condvar.c">
-            <FileOption/>
-          </File>
-          <File Name="../../../../../components/rtthread/src/rtt_ipc/dataqueue.c">
-            <FileOption/>
-          </File>
-          <File Name="../../../../../components/rtthread/src/rtt_ipc/pipe.c">
-            <FileOption/>
-          </File>
           <File Name="../../../../../components/rtthread/src/rtt_ipc/ringblk_buf.c">
-            <FileOption/>
-          </File>
-          <File Name="../../../../../components/rtthread/src/rtt_ipc/ringbuffer.c">
-            <FileOption/>
-          </File>
-          <File Name="../../../../../components/rtthread/src/rtt_ipc/waitqueue.c">
             <FileOption/>
           </File>
           <File Name="../../../../../components/rtthread/src/rtt_ipc/workqueue.c">
             <FileOption/>
           </File>
-        </VirtualDirectory>
-        <VirtualDirectory Name="klibc">
-          <File Name="../../../../../components/rtthread/src/klibc/kstdio.c">
+          <File Name="../../../../../components/rtthread/src/rtt_ipc/dataqueue.c">
             <FileOption/>
           </File>
+          <File Name="../../../../../components/rtthread/src/rtt_ipc/ringbuffer.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../components/rtthread/src/rtt_ipc/pipe.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../components/rtthread/src/rtt_ipc/waitqueue.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../components/rtthread/src/rtt_ipc/condvar.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../components/rtthread/src/rtt_ipc/completion.c">
+            <FileOption/>
+          </File>
+        </VirtualDirectory>
+        <VirtualDirectory Name="klibc">
           <File Name="../../../../../components/rtthread/src/klibc/kstring.c">
             <FileOption/>
           </File>
+          <File Name="../../../../../components/rtthread/src/klibc/kstdio.c">
+            <FileOption/>
+          </File>
         </VirtualDirectory>
-        <File Name="../../../../../components/rtthread/src/clock.c">
-          <FileOption/>
-        </File>
-        <File Name="../../../../../components/rtthread/src/components.c">
-          <FileOption/>
-        </File>
-        <File Name="../../../../../components/rtthread/src/cpu.c">
-          <FileOption/>
-        </File>
-        <File Name="../../../../../components/rtthread/src/device.c">
-          <FileOption/>
-        </File>
-        <File Name="../../../../../components/rtthread/src/idle.c">
-          <FileOption/>
-        </File>
-        <File Name="../../../../../components/rtthread/src/ipc.c">
-          <FileOption/>
-        </File>
-        <File Name="../../../../../components/rtthread/src/irq.c">
-          <FileOption/>
-        </File>
-        <File Name="../../../../../components/rtthread/src/kservice.c">
-          <FileOption/>
-        </File>
         <File Name="../../../../../components/rtthread/src/mem.c">
-          <FileOption/>
-        </File>
-        <File Name="../../../../../components/rtthread/src/memheap.c">
-          <FileOption/>
-        </File>
-        <File Name="../../../../../components/rtthread/src/mempool.c">
-          <FileOption/>
-        </File>
-        <File Name="../../../../../components/rtthread/src/object.c">
-          <FileOption/>
-        </File>
-        <File Name="../../../../../components/rtthread/src/scheduler_comm.c">
-          <FileOption/>
-        </File>
-        <File Name="../../../../../components/rtthread/src/scheduler_mp.c">
-          <FileOption/>
-        </File>
-        <File Name="../../../../../components/rtthread/src/scheduler_up.c">
-          <FileOption/>
-        </File>
-        <File Name="../../../../../components/rtthread/src/signal.c">
-          <FileOption/>
-        </File>
-        <File Name="../../../../../components/rtthread/src/slab.c">
-          <FileOption/>
-        </File>
-        <File Name="../../../../../components/rtthread/src/thread.c">
           <FileOption/>
         </File>
         <File Name="../../../../../components/rtthread/src/thread_sem.c">
           <FileOption/>
         </File>
+        <File Name="../../../../../components/rtthread/src/idle.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../components/rtthread/src/mempool.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../components/rtthread/src/irq.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../components/rtthread/src/clock.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../components/rtthread/src/scheduler_comm.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../components/rtthread/src/ipc.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../components/rtthread/src/device.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../components/rtthread/src/kservice.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../components/rtthread/src/cpu.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../components/rtthread/src/slab.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../components/rtthread/src/object.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../components/rtthread/src/scheduler_up.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../components/rtthread/src/memheap.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../components/rtthread/src/signal.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../components/rtthread/src/thread.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../components/rtthread/src/scheduler_mp.c">
+          <FileOption/>
+        </File>
         <File Name="../../../../../components/rtthread/src/timer.c">
+          <FileOption/>
+        </File>
+        <File Name="../../../../../components/rtthread/src/components.c">
           <FileOption/>
         </File>
       </VirtualDirectory>
@@ -687,22 +690,22 @@
   <VirtualDirectory Name="boards">
     <VirtualDirectory Name="board_riscv_dummy">
       <VirtualDirectory Name="include">
-        <File Name="../../../../../boards/board_riscv_dummy/include/rtconfig.h">
+        <File Name="../../../../../boards/board_riscv_dummy/include/csi_config.h">
           <FileOption/>
         </File>
         <File Name="../../../../../boards/board_riscv_dummy/include/FreeRTOSConfig.h">
           <FileOption/>
         </File>
+        <File Name="../../../../../boards/board_riscv_dummy/include/rtconfig.h">
+          <FileOption/>
+        </File>
         <File Name="../../../../../boards/board_riscv_dummy/include/board.h">
           <FileOption/>
         </File>
-        <File Name="../../../../../boards/board_riscv_dummy/include/csi_config.h">
+        <File Name="../../../../../boards/board_riscv_dummy/include/lwipopts.h">
           <FileOption/>
         </File>
         <File Name="../../../../../boards/board_riscv_dummy/include/k_config.h">
-          <FileOption/>
-        </File>
-        <File Name="../../../../../boards/board_riscv_dummy/include/lwipopts.h">
           <FileOption/>
         </File>
       </VirtualDirectory>
@@ -722,42 +725,42 @@
     <VirtualDirectory Name="rtthread_kernel">
       <VirtualDirectory Name="app">
         <VirtualDirectory Name="include">
-          <File Name="../../../../../solutions/rtthread_kernel/app/include/app_main.h">
+          <File Name="../../../../../solutions/rtthread_kernel/app/include/app_init.h">
             <FileOption/>
           </File>
           <File Name="../../../../../solutions/rtthread_kernel/app/include/app_config.h">
             <FileOption/>
           </File>
-          <File Name="../../../../../solutions/rtthread_kernel/app/include/app_init.h">
+          <File Name="../../../../../solutions/rtthread_kernel/app/include/app_main.h">
             <FileOption/>
           </File>
         </VirtualDirectory>
         <VirtualDirectory Name="src">
-          <File Name="../../../../../solutions/rtthread_kernel/app/src/event_sample.c">
+          <File Name="../../../../../solutions/rtthread_kernel/app/src/sem_sample.c">
             <FileOption/>
           </File>
           <File Name="../../../../../solutions/rtthread_kernel/app/src/main.c">
             <FileOption/>
           </File>
-          <File Name="../../../../../solutions/rtthread_kernel/app/src/message_q_sample.c">
-            <FileOption/>
-          </File>
-          <File Name="../../../../../solutions/rtthread_kernel/app/src/mutex_sample.c">
-            <FileOption/>
-          </File>
-          <File Name="../../../../../solutions/rtthread_kernel/app/src/pre_main.c">
-            <FileOption/>
-          </File>
-          <File Name="../../../../../solutions/rtthread_kernel/app/src/sem_sample.c">
-            <FileOption/>
-          </File>
-          <File Name="../../../../../solutions/rtthread_kernel/app/src/task_sample.c">
+          <File Name="../../../../../solutions/rtthread_kernel/app/src/timer_sample.c">
             <FileOption/>
           </File>
           <File Name="../../../../../solutions/rtthread_kernel/app/src/time_sample.c">
             <FileOption/>
           </File>
-          <File Name="../../../../../solutions/rtthread_kernel/app/src/timer_sample.c">
+          <File Name="../../../../../solutions/rtthread_kernel/app/src/pre_main.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../solutions/rtthread_kernel/app/src/event_sample.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../solutions/rtthread_kernel/app/src/task_sample.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../solutions/rtthread_kernel/app/src/mutex_sample.c">
+            <FileOption/>
+          </File>
+          <File Name="../../../../../solutions/rtthread_kernel/app/src/message_q_sample.c">
             <FileOption/>
           </File>
         </VirtualDirectory>
@@ -884,7 +887,7 @@
         <Tools/>
       </User>
       <Compiler>
-        <Define>CONFIG_KERNEL_RTTHREAD=1;__RT_KERNEL_SOURCE__=1;CONFIG_CSI_V2=1;CONFIG_CSI=csi2;CONFIG_INIT_TASK_STACK_SIZE=8192;CONFIG_APP_TASK_STACK_SIZE=8192;CONFIG_SUPPORT_TSPEND=1;CONFIG_ARCH_MAINSTACK=8192;CONFIG_ARCH_INTERRUPTSTACK=8192;CONFIG_VIC_TSPDR=0x0c000000;CONFIG_PLIC_BASE=0x08000000;CONFIG_CLIC_BASE=0x0c010000;CONFIG_INTC_CLIC_PLIC=1;CONFIG_SUPPORT_IRQ_NESTED=1;CONFIG_FPP_ENABLE=0;CONFIG_CHECK_FPU_DIRTY=1;CONFIG_CHECK_VECTOR_DIRTY=1;CONFIG_CPU_FREQ_HZ=40000000;CONFIG_SYSTICK_HZ=100;CONFIG_BOARD_XIAOHUI_EVB=1;CONFIG_CPU_XUANTIE_R908FDV=1;CONFIG_DEBUG=1;CLI_CONFIG_STACK_SIZE=4096</Define>
+        <Define>CONFIG_KERNEL_RTTHREAD=1;__RT_KERNEL_SOURCE__=1;CONFIG_CSI_V2=1;CONFIG_CSI=&quot;csi2&quot;;CONFIG_INIT_TASK_STACK_SIZE=8192;CONFIG_APP_TASK_STACK_SIZE=8192;CONFIG_SUPPORT_TSPEND=1;CONFIG_ARCH_MAINSTACK=8192;CONFIG_ARCH_INTERRUPTSTACK=8192;CONFIG_VIC_TSPDR=0x0c000000;CONFIG_PLIC_BASE=0x08000000;CONFIG_CLIC_BASE=0x0c010000;CONFIG_INTC_CLIC_PLIC=1;CONFIG_SUPPORT_IRQ_NESTED=1;CONFIG_FPP_ENABLE=0;CONFIG_CHECK_FPU_DIRTY=1;CONFIG_CHECK_VECTOR_DIRTY=1;CONFIG_CPU_FREQ_HZ=40000000;CONFIG_SYSTICK_HZ=100;CONFIG_BOARD_XIAOHUI_EVB=1;CONFIG_CPU_XUANTIE_R908FDV=1;CONFIG_DEBUG=1;CLI_CONFIG_STACK_SIZE=4096</Define>
         <Undefine/>
         <Optim>Default</Optim>
         <DebugLevel>Default (-g)</DebugLevel>
@@ -903,7 +906,7 @@
         <Fstrict>no</Fstrict>
       </Compiler>
       <Asm>
-        <Define>__ASSEMBLY__;CONFIG_KERNEL_RTTHREAD=1;__RT_KERNEL_SOURCE__=1;CONFIG_CSI_V2=1;CONFIG_CSI=csi2;CONFIG_INIT_TASK_STACK_SIZE=8192;CONFIG_APP_TASK_STACK_SIZE=8192;CONFIG_SUPPORT_TSPEND=1;CONFIG_ARCH_MAINSTACK=8192;CONFIG_ARCH_INTERRUPTSTACK=8192;CONFIG_VIC_TSPDR=0x0c000000;CONFIG_PLIC_BASE=0x08000000;CONFIG_CLIC_BASE=0x0c010000;CONFIG_INTC_CLIC_PLIC=1;CONFIG_SUPPORT_IRQ_NESTED=1;CONFIG_FPP_ENABLE=0;CONFIG_CHECK_FPU_DIRTY=1;CONFIG_CHECK_VECTOR_DIRTY=1;CONFIG_CPU_FREQ_HZ=40000000;CONFIG_SYSTICK_HZ=100;CONFIG_BOARD_XIAOHUI_EVB=1;CONFIG_CPU_XUANTIE_R908FDV=1;CONFIG_DEBUG=1;CLI_CONFIG_STACK_SIZE=4096</Define>
+        <Define>__ASSEMBLY__;CONFIG_KERNEL_RTTHREAD=1;__RT_KERNEL_SOURCE__=1;CONFIG_CSI_V2=1;CONFIG_CSI=&quot;csi2&quot;;CONFIG_INIT_TASK_STACK_SIZE=8192;CONFIG_APP_TASK_STACK_SIZE=8192;CONFIG_SUPPORT_TSPEND=1;CONFIG_ARCH_MAINSTACK=8192;CONFIG_ARCH_INTERRUPTSTACK=8192;CONFIG_VIC_TSPDR=0x0c000000;CONFIG_PLIC_BASE=0x08000000;CONFIG_CLIC_BASE=0x0c010000;CONFIG_INTC_CLIC_PLIC=1;CONFIG_SUPPORT_IRQ_NESTED=1;CONFIG_FPP_ENABLE=0;CONFIG_CHECK_FPU_DIRTY=1;CONFIG_CHECK_VECTOR_DIRTY=1;CONFIG_CPU_FREQ_HZ=40000000;CONFIG_SYSTICK_HZ=100;CONFIG_BOARD_XIAOHUI_EVB=1;CONFIG_CPU_XUANTIE_R908FDV=1;CONFIG_DEBUG=1;CLI_CONFIG_STACK_SIZE=4096</Define>
         <Undefine/>
         <IncludePath>$(ProjectPath);../../../../../components/csi/csi2/include;../../../../../components/rtthread/include;../../../../../components/rtthread/libcpu/riscv/r908fdv-cp-xt;../../../../../components/libc_rtthread/include;../../../../../components/libc_rtthread/compilers/gcc;../../../../../components/chip_riscv_dummy/include;../../../../../components/chip_riscv_dummy/include/asm;../../../../../boards/board_riscv_dummy/include;../../../../../solutions/rtthread_kernel/app/include;</IncludePath>
         <OtherFlags>-g -Wall -Wno-unused-function -Wformat -Wformat-security -Warray-bounds -Wuninitialized -Wreturn-type -Wcomment -Wswitch -Wparentheses -g -Wall -mcmodel=medany -MP -MMD -Wno-main -g -Os -Wpointer-arith -Wno-undef -ffunction-sections -fdata-sections -fno-inline-functions -fno-builtin -fno-strict-aliasing</OtherFlags>
@@ -1105,7 +1108,7 @@
         <Tools/>
       </User>
       <Compiler>
-        <Define>CONFIG_KERNEL_RTTHREAD=1;__RT_KERNEL_SOURCE__=1;CONFIG_CSI_V2=1;CONFIG_CSI=csi2;CONFIG_INIT_TASK_STACK_SIZE=8192;CONFIG_APP_TASK_STACK_SIZE=8192;CONFIG_SUPPORT_TSPEND=1;CONFIG_ARCH_MAINSTACK=8192;CONFIG_ARCH_INTERRUPTSTACK=8192;CONFIG_VIC_TSPDR=0x0c000000;CONFIG_PLIC_BASE=0x08000000;CONFIG_CLIC_BASE=0x0c010000;CONFIG_INTC_CLIC_PLIC=1;CONFIG_SUPPORT_IRQ_NESTED=1;CONFIG_FPP_ENABLE=0;CONFIG_CHECK_FPU_DIRTY=1;CONFIG_CHECK_VECTOR_DIRTY=1;CONFIG_CPU_FREQ_HZ=40000000;CONFIG_SYSTICK_HZ=100;CONFIG_BOARD_XIAOHUI_EVB=1;CONFIG_CPU_XUANTIE_R908FDV=1;CONFIG_DEBUG=1;CLI_CONFIG_STACK_SIZE=4096</Define>
+        <Define>CONFIG_KERNEL_RTTHREAD=1;__RT_KERNEL_SOURCE__=1;CONFIG_CSI_V2=1;CONFIG_CSI=&quot;csi2&quot;;CONFIG_INIT_TASK_STACK_SIZE=8192;CONFIG_APP_TASK_STACK_SIZE=8192;CONFIG_SUPPORT_TSPEND=1;CONFIG_ARCH_MAINSTACK=8192;CONFIG_ARCH_INTERRUPTSTACK=8192;CONFIG_VIC_TSPDR=0x0c000000;CONFIG_PLIC_BASE=0x08000000;CONFIG_CLIC_BASE=0x0c010000;CONFIG_INTC_CLIC_PLIC=1;CONFIG_SUPPORT_IRQ_NESTED=1;CONFIG_FPP_ENABLE=0;CONFIG_CHECK_FPU_DIRTY=1;CONFIG_CHECK_VECTOR_DIRTY=1;CONFIG_CPU_FREQ_HZ=40000000;CONFIG_SYSTICK_HZ=100;CONFIG_BOARD_XIAOHUI_EVB=1;CONFIG_CPU_XUANTIE_R908FDV=1;CONFIG_DEBUG=1;CLI_CONFIG_STACK_SIZE=4096</Define>
         <Undefine/>
         <Optim>Default</Optim>
         <DebugLevel>Default (-g)</DebugLevel>
@@ -1124,7 +1127,7 @@
         <Fstrict>no</Fstrict>
       </Compiler>
       <Asm>
-        <Define>__ASSEMBLY__;CONFIG_KERNEL_RTTHREAD=1;__RT_KERNEL_SOURCE__=1;CONFIG_CSI_V2=1;CONFIG_CSI=csi2;CONFIG_INIT_TASK_STACK_SIZE=8192;CONFIG_APP_TASK_STACK_SIZE=8192;CONFIG_SUPPORT_TSPEND=1;CONFIG_ARCH_MAINSTACK=8192;CONFIG_ARCH_INTERRUPTSTACK=8192;CONFIG_VIC_TSPDR=0x0c000000;CONFIG_PLIC_BASE=0x08000000;CONFIG_CLIC_BASE=0x0c010000;CONFIG_INTC_CLIC_PLIC=1;CONFIG_SUPPORT_IRQ_NESTED=1;CONFIG_FPP_ENABLE=0;CONFIG_CHECK_FPU_DIRTY=1;CONFIG_CHECK_VECTOR_DIRTY=1;CONFIG_CPU_FREQ_HZ=40000000;CONFIG_SYSTICK_HZ=100;CONFIG_BOARD_XIAOHUI_EVB=1;CONFIG_CPU_XUANTIE_R908FDV=1;CONFIG_DEBUG=1;CLI_CONFIG_STACK_SIZE=4096</Define>
+        <Define>__ASSEMBLY__;CONFIG_KERNEL_RTTHREAD=1;__RT_KERNEL_SOURCE__=1;CONFIG_CSI_V2=1;CONFIG_CSI=&quot;csi2&quot;;CONFIG_INIT_TASK_STACK_SIZE=8192;CONFIG_APP_TASK_STACK_SIZE=8192;CONFIG_SUPPORT_TSPEND=1;CONFIG_ARCH_MAINSTACK=8192;CONFIG_ARCH_INTERRUPTSTACK=8192;CONFIG_VIC_TSPDR=0x0c000000;CONFIG_PLIC_BASE=0x08000000;CONFIG_CLIC_BASE=0x0c010000;CONFIG_INTC_CLIC_PLIC=1;CONFIG_SUPPORT_IRQ_NESTED=1;CONFIG_FPP_ENABLE=0;CONFIG_CHECK_FPU_DIRTY=1;CONFIG_CHECK_VECTOR_DIRTY=1;CONFIG_CPU_FREQ_HZ=40000000;CONFIG_SYSTICK_HZ=100;CONFIG_BOARD_XIAOHUI_EVB=1;CONFIG_CPU_XUANTIE_R908FDV=1;CONFIG_DEBUG=1;CLI_CONFIG_STACK_SIZE=4096</Define>
         <Undefine/>
         <IncludePath>$(ProjectPath);../../../../../components/csi/csi2/include;../../../../../components/rtthread/include;../../../../../components/rtthread/libcpu/riscv/r908fdv-cp-xt;../../../../../components/libc_rtthread/include;../../../../../components/libc_rtthread/compilers/gcc;../../../../../components/chip_riscv_dummy/include;../../../../../components/chip_riscv_dummy/include/asm;../../../../../boards/board_riscv_dummy/include;../../../../../solutions/rtthread_kernel/app/include;</IncludePath>
         <OtherFlags>-g -Wall -Wno-unused-function -Wformat -Wformat-security -Warray-bounds -Wuninitialized -Wreturn-type -Wcomment -Wswitch -Wparentheses -g -Wall -mcmodel=medany -MP -MMD -Wno-main -g -Os -Wpointer-arith -Wno-undef -ffunction-sections -fdata-sections -fno-inline-functions -fno-builtin -fno-strict-aliasing</OtherFlags>

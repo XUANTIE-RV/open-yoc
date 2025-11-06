@@ -1,0 +1,31 @@
+/*
+ * Copyright (C) 2017-2024 Alibaba Group Holding Limited
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#ifndef CAST_TEST_DATA_F32_H
+#define CAST_TEST_DATA_F32_H
+
+unsigned char cast_int_to_float_test_data_f32[] = {
+    0x0F, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00,
+    0x0B, 0x00, 0x00, 0x00, 0x43, 0x00, 0x00, 0x00, 0x2C, 0x00, 0x00, 0x00, 0xD0, 0xFF, 0xFF, 0xFF,
+    0x1F, 0x00, 0x00, 0x00, 0x55, 0x00, 0x00, 0x00, 0x00, 0x00, 0x30, 0x41, 0x00, 0x00, 0x86, 0x42,
+    0x00, 0x00, 0x30, 0x42, 0x00, 0x00, 0x40, 0xC2, 0x00, 0x00, 0xF8, 0x41, 0x00, 0x00, 0xAA, 0x42,
+};
+
+unsigned int cast_int_to_float_test_data_f32_len = 64;
+
+#endif // end of include guard

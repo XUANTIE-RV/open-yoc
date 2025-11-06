@@ -53,6 +53,17 @@ int32_t xnnl_softmax_infer_shape(int32_t **shape_o, int32_t *dim_o, int32_t *sha
                                  int32_t dim_i);
 
 /**
+ * @brief       Silu output shape infer function
+ *
+ * @param[out]  shape_o     Shape of the output
+ * @param[out]  dim_o       Number of dimensions of output
+ * @param[in]   shape_i     Shape of the input
+ * @param[in]   dim_i       Number of dimensions of input
+ * @return      Number of elements in the output
+ */
+int32_t xnnl_silu_infer_shape(int32_t **shape_o, int32_t *dim_o, int32_t *shape_i, int32_t dim_i);
+
+/**
  * @}
  */
 
@@ -106,6 +117,19 @@ int32_t xnnl_mul_infer_shape(int32_t **shape_o, int32_t *dim_o, int32_t *shape_i
                              int32_t *shape_in1, int32_t dim_in1);
 
 /**
+ * @brief       Div output shape infer function
+ *
+ * @param[out]  shape_o     Shape of the output
+ * @param[out]  dim_o       Number of dimensions of output
+ * @param[in]   shape_in0   Shape of the input0
+ * @param[in]   dim_in0     Number of dimensions of input0
+ * @param[in]   shape_in1   Shape of the input1
+ * @param[in]   dim_in1     Number of dimensions of input1
+ * @return      Number of elements in the output
+ */
+int32_t xnnl_div_infer_shape(int32_t **shape_o, int32_t *dim_o, int32_t *shape_in0, int32_t dim_in0,
+                             int32_t *shape_in1, int32_t dim_in1);
+/**
  * @}
  */
 
@@ -145,11 +169,98 @@ int32_t xnnl_batch_gemm_infer_shape(int32_t **shape_o, int32_t *dim_o, int32_t M
  */
 
 /**
+ * @defgroup OTHERS Others Functions
+ * @{
+ */
+
+/*********************************** others *********************************/
+
+/**
+ * @brief       Cast output shape infer function
+ *
+ * @param[out]  shape_o     Shape of the output
+ * @param[out]  dim_o       Number of dimensions of output
+ * @param[in]   shape_i     Shape of the input
+ * @param[in]   dim_i       Number of dimensions of input
+ * @return      Number of elements in the output
+ */
+int32_t xnnl_cast_infer_shape(int32_t **shape_o, int32_t *dim_o, int32_t *shape_i, int32_t dim_i);
+
+/**
+ * @brief       Compare output shape infer function
+ *
+ * @param[out]  shape_o     Shape of the output
+ * @param[out]  dim_o       Number of dimensions of output
+ * @param[in]   shape_in0   Shape of the input0
+ * @param[in]   dim_in0     Number of dimensions of input0
+ * @param[in]   shape_in1   Shape of the input1
+ * @param[in]   dim_in1     Number of dimensions of input1
+ * @return      Number of elements in the output
+ */
+int32_t xnnl_compare_infer_shape(int32_t **shape_o, int32_t *dim_o, int32_t *shape_in0,
+                                 int32_t dim_in0, int32_t *shape_in1, int32_t dim_in1);
+
+/**
+ * @brief       Expand output shape infer function
+ *
+ * @param[out]  shape_o     Shape of the output
+ * @param[out]  dim_o       Number of dimensions of output
+ * @param[in]   shape_tar   Shape of the target
+ * @param[in]   dim_tar     Number of dimensions of target
+ * @return      Number of elements in the output
+ */
+int32_t xnnl_expand_infer_shape(int32_t **shape_o, int32_t *dim_o, int32_t *shape_tar,
+                                int32_t dim_tar);
+
+/**
+ * @brief       Scatter_nd output shape infer function
+ *
+ * @param[out]  shape_o     Shape of the output
+ * @param[out]  dim_o       Number of dimensions of output
+ * @param[in]   shape_in    Shape of the input
+ * @param[in]   dim_in      Number of dimensions of input
+ * @return      Number of elements in the output
+ */
+int32_t xnnl_scatter_nd_infer_shape(int32_t **shape_o, int32_t *dim_o, int32_t *shape_in,
+                                    int32_t dim_in);
+/**
+ * @}
+ */
+
+/**
  * @defgroup INFER_SHAPE_INDEXING Indexing Functions
  * @{
  */
 
 /*********************************** indexing *********************************/
+
+/**
+ * @brief       Transpose output shape infer function
+ *
+ * @param[out]  shape_o     Shape of the output
+ * @param[out]  dim_o       Number of dimensions of output
+ * @param[in]   shape_i     Shape of the input
+ * @param[in]   dim_i       Number of dimensions of input
+ * @param[in]   permute     Describe how to transpose
+ * @return      Number of elements in the output
+ */
+int32_t xnnl_transpose_infer_shape(int32_t **shape_o, int32_t *dim_o, int32_t *shape_i,
+                                   int32_t dim_i, int32_t *permute);
+
+/**
+ * @brief       Split output shape infer function
+ *
+ * @param[out]  shape_o     Shape of the output
+ * @param[out]  dim_o       Number of dimensions of output
+ * @param[in]   shape_i     Shape of the input
+ * @param[in]   dim_i       Number of dimensions of input
+ * @param[in]   split_index Pointer to the split data
+ * @param[in]   split_num   Number of split
+ * @param[in]   axis        Used to specify which dimension the operation is performed along
+ * @return      Number of elements in the output
+ */
+int32_t xnnl_split_infer_shape(int32_t ***shape_o, int32_t *dim_o, int32_t *shape_i, int32_t dim_i,
+                               int32_t *split_index, int32_t split_num, int32_t axis);
 
 /**
  * @brief       Slice output shape infer function
@@ -241,6 +352,71 @@ int32_t xnnl_matmul_infer_shape(int32_t **shape_c, int32_t *dim_c, int32_t *shap
 int32_t xnnl_exp_infer_shape(int32_t **shape_o, int32_t *dim_o, int32_t *shape_i, int32_t dim_i);
 
 /**
+ * @brief       Square output shape infer function
+ *
+ * @param[out]  shape_o     Shape of the output
+ * @param[out]  dim_o       Number of dimensions of output
+ * @param[in]   shape_i     Shape of the input
+ * @param[in]   dim_i       Number of dimensions of input
+ * @return      Number of elements in the output
+ */
+int32_t xnnl_square_infer_shape(int32_t **shape_o, int32_t *dim_o, int32_t *shape_i, int32_t dim_i);
+
+/**
+ * @brief       Sqrt output shape infer function
+ *
+ * @param[out]  shape_o     Shape of the output
+ * @param[out]  dim_o       Number of dimensions of output
+ * @param[in]   shape_i     Shape of the input
+ * @param[in]   dim_i       Number of dimensions of input
+ * @return      Number of elements in the output
+ */
+int32_t xnnl_sqrt_infer_shape(int32_t **shape_o, int32_t *dim_o, int32_t *shape_i, int32_t dim_i);
+
+/**
+ * @brief       Sin output shape infer function
+ *
+ * @param[out]  shape_o     Shape of the output
+ * @param[out]  dim_o       Number of dimensions of output
+ * @param[in]   shape_i     Shape of the input
+ * @param[in]   dim_i       Number of dimensions of input
+ * @return      Number of elements in the output
+ */
+int32_t xnnl_sin_infer_shape(int32_t **shape_o, int32_t *dim_o, int32_t *shape_i, int32_t dim_i);
+
+/**
+ * @brief       Cos output shape infer function
+ *
+ * @param[out]  shape_o     Shape of the output
+ * @param[out]  dim_o       Number of dimensions of output
+ * @param[in]   shape_i     Shape of the input
+ * @param[in]   dim_i       Number of dimensions of input
+ * @return      Number of elements in the output
+ */
+int32_t xnnl_cos_infer_shape(int32_t **shape_o, int32_t *dim_o, int32_t *shape_i, int32_t dim_i);
+
+/**
+ * @brief       Neg output shape infer function
+ *
+ * @param[out]  shape_o     Shape of the output
+ * @param[out]  dim_o       Number of dimensions of output
+ * @param[in]   shape_i     Shape of the input
+ * @param[in]   dim_i       Number of dimensions of input
+ * @return      Number of elements in the output
+ */
+int32_t xnnl_neg_infer_shape(int32_t **shape_o, int32_t *dim_o, int32_t *shape_i, int32_t dim_i);
+
+/**
+ * @brief       Rsqrt output shape infer function
+ *
+ * @param[out]  shape_o     Shape of the output
+ * @param[out]  dim_o       Number of dimensions of output
+ * @param[in]   shape_i     Shape of the input
+ * @param[in]   dim_i       Number of dimensions of input
+ * @return      Number of elements in the output
+ */
+int32_t xnnl_rsqrt_infer_shape(int32_t **shape_o, int32_t *dim_o, int32_t *shape_i, int32_t dim_i);
+/**
  * @}
  */
 
@@ -250,6 +426,18 @@ int32_t xnnl_exp_infer_shape(int32_t **shape_o, int32_t *dim_o, int32_t *shape_i
  */
 
 /*********************************** normalization *********************************/
+
+/**
+ * @brief       Batch_norm output shape infer function
+ *
+ * @param[out]  shape_o     Shape of the output
+ * @param[out]  dim_o       Number of dimensions of output
+ * @param[in]   shape_i     Shape of the input
+ * @param[in]   dim_i       Number of dimensions of input
+ * @return      Number of elements in the output
+ */
+int32_t xnnl_batch_norm_infer_shape(int32_t **shape_o, int32_t *dim_o, int32_t *shape_i,
+                                    int32_t dim_i);
 
 /**
  * @brief       Layer_norm output shape infer function
@@ -263,6 +451,60 @@ int32_t xnnl_exp_infer_shape(int32_t **shape_o, int32_t *dim_o, int32_t *shape_i
 int32_t xnnl_layer_norm_infer_shape(int32_t **shape_o, int32_t *dim_o, int32_t *shape_i,
                                     int32_t dim_i);
 
+/**
+ * @brief       Group_norm output shape infer function
+ *
+ * @param[out]  shape_o     Shape of the output
+ * @param[out]  dim_o       Number of dimensions of output
+ * @param[in]   shape_i     Shape of the input
+ * @param[in]   dim_i       Number of dimensions of input
+ * @return      Number of elements in the output
+ */
+int32_t xnnl_group_norm_infer_shape(int32_t **shape_o, int32_t *dim_o, int32_t *shape_i,
+                                    int32_t dim_i);
+
+/**
+ * @}
+ */
+
+/**
+ * @defgroup INFER_SHAPE_REDUCTION Reduction Functions
+ * @{
+ */
+
+/*************************************** reduction *************************************/
+
+/**
+ * @brief       Mean output shape infer function
+ *
+ * @param[out]  shape_o     Shape of the output
+ * @param[out]  dim_o       Number of dimensions of output
+ * @param[in]   shape_i     Shape of the input
+ * @param[in]   dim_i       Number of dimensions of input
+ * @param[in]   keepdims    The keepdims parameter indicates whether to retain the original
+ *                          dimensions
+ * @param[in]   axes        Shape of the axes
+ * @param[in]   dim_a       Number of dimensions of axes
+ * @return      Number of elements in the output
+ */
+int32_t xnnl_mean_infer_shape(int32_t **shape_o, int32_t *dim_o, int32_t *shape_i, int32_t dim_i,
+                              int32_t keepdims, int32_t *axes, int32_t dim_a);
+
+/**
+ * @brief       Sum output shape infer function
+ *
+ * @param[out]  shape_o     Shape of the output
+ * @param[out]  dim_o       Number of dimensions of output
+ * @param[in]   shape_i     Shape of the input
+ * @param[in]   dim_i       Number of dimensions of input
+ * @param[in]   keepdims    The keepdims parameter indicates whether to retain the original
+ *                          dimensions
+ * @param[in]   axes        Shape of the axes
+ * @param[in]   dim_a       Number of dimensions of axes
+ * @return      Number of elements in the output
+ */
+int32_t xnnl_sum_infer_shape(int32_t **shape_o, int32_t *dim_o, int32_t *shape_i, int32_t dim_i,
+                             int32_t keepdims, int32_t *axes, int32_t dim_a);
 /**
  * @}
  */

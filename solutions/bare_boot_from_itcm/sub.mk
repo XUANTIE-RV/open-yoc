@@ -22,3 +22,4 @@ CUR_COMP_DIR := $(shell pwd)
 $(CUR_COMP_NAME)_incs := $(CUR_COMP_DIR)/app/include
 
 $(CUR_COMP_NAME)_c_srcs := $(CUR_COMP_DIR)/app/src/main.c
+$(CUR_COMP_NAME)_c_srcs += $(CUR_COMP_DIR)/app/src/main_exx.c

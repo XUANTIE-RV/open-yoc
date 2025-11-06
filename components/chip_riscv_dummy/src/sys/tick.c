@@ -28,6 +28,9 @@
 
 #define __WEAK         __attribute__((weak))
 
+// from 1970-01-01 00:00:00 UTC
+static volatile uint64_t timestamp_us_offset;
+
 #if defined(CONFIG_SMP) && CONFIG_SMP
 static volatile uint32_t csi_tick[CONFIG_NR_CPUS] = {0U};
 #else
@@ -294,6 +297,16 @@ static void _10udelay(void)
     }
 }
 #endif
+
+void csi_set_calendar_us(uint64_t timestamp)
+{
+    timestamp_us_offset = timestamp;
+}
+
+uint64_t csi_get_calendar_us(void)
+{
+    return csi_tick_get_us() + timestamp_us_offset;
+}
 
 __WEAK void mdelay(uint32_t ms)
 {

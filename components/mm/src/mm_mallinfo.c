@@ -152,7 +152,7 @@ int mm_max_usedsize_update(struct mm_heap_s *heap)
     if(info.uordblks > g_max_used_size)
     {
         g_max_used_size = info.uordblks;
-        if(g_max_used_size >= (uint32_t)((unsigned long)(g_heap_end) - (unsigned long)(g_heap_start) - 2048))
+        if(g_max_used_size >= (int)((unsigned long)(g_heap_end) - (unsigned long)(g_heap_start) - 2048))
         {
             printf("<mem space warning> peak value %d \n", g_max_used_size);
 #if defined(CONFIG_MM_DETECT_ERROR)

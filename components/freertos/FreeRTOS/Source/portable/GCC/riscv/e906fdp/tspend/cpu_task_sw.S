@@ -36,12 +36,14 @@ cpu_intrpt_save:
     csrr    a0, mstatus
     csrc    mstatus, 8
     ret
+.size   cpu_intrpt_save, . - cpu_intrpt_save
 
 .global cpu_intrpt_restore
 .type cpu_intrpt_restore, %function
 cpu_intrpt_restore:
     csrw    mstatus, a0
     ret
+.size   cpu_intrpt_restore, . - cpu_intrpt_restore
 
 .global cpu_is_irq_enable
 .type cpu_is_irq_enable, %function
@@ -49,6 +51,7 @@ cpu_is_irq_enable:
     csrr a0, mstatus
     andi a0, a0, RISCV_MSTATUS_MIE
     ret
+.size   cpu_is_irq_enable, . - cpu_is_irq_enable
 
 #if CONFIG_CHECK_FPU_DIRTY
 .macro FREERTOS_RESTORE_MSTATUS
@@ -91,6 +94,7 @@ vPortYield:
     nop
 
     ret
+.size   vPortYield, . - vPortYield
 
 /********************************************************************
  * Functions: vPortStartTask
@@ -100,6 +104,7 @@ vPortYield:
 .type   vPortStartTask, %function
 vPortStartTask:
     j       __vPortFistTask
+.size   vPortStartTask, . - vPortStartTask
 
 /********************************************************************
  * Functions: tspend_handler

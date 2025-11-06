@@ -127,6 +127,13 @@ extern void *pvPortRealloc( uint8_t *srcaddr,size_t xWantedSize );
 #define portTASK_FUNCTION( vFunction, pvParameters ) void vFunction( void *pvParameters )
 /*-----------------------------------------------------------*/
 
+/* Tickless idle/low power functionality. */
+#ifndef portSUPPRESS_TICKS_AND_SLEEP
+extern void vPortSuppressTicksAndSleep(TickType_t xExpectedIdleTime);
+#define portSUPPRESS_TICKS_AND_SLEEP( xExpectedIdleTime )       vPortSuppressTicksAndSleep( xExpectedIdleTime )
+#endif
+/*-----------------------------------------------------------*/
+
 #define portEND_SWITCHING_ISR( xSwitchRequired )    do {    \
                                                             if( xSwitchRequired != pdFALSE )    \
                                                             {   \

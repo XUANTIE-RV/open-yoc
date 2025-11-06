@@ -248,9 +248,8 @@ SECTIONS
   *(.rela.dyn)
   __rela_dyn_end = .;
  } > REGION_DATA
- .bss : {
-  . = ALIGN(0x4) ;
-  __sbss = ALIGN(0x4) ;
+ .bss : ALIGN(0x40) {
+  __sbss = . ;
   __bss_start__ = . ;
   KEEP(*dhry_1.o(*.bss))
   KEEP(*linpack.o(*.bss))

@@ -51,10 +51,10 @@
                   <listOptionValue builtIn="false" value="CLI_UAGENT_ENABLE=0"/>
                   <listOptionValue builtIn="false" value="CLI_SEPRATED_CONSOLE=0"/>
                   <listOptionValue builtIn="false" value="CLI_IOBOX_ENABLE=0"/>
-                  <listOptionValue builtIn="false" value="CONFIG_LFS_MOUNTPOINT=/"/>
+                  <listOptionValue builtIn="false" value="CONFIG_LFS_MOUNTPOINT=&quot;/&quot;"/>
                   <listOptionValue builtIn="false" value="AOS_COMP_ULOG=y"/>
                   <listOptionValue builtIn="false" value="ULOG_TAG_USE_SHORT_FILE=1"/>
-                  <listOptionValue builtIn="false" value="ULOG_CONFIG_POP_FS_PATH=/fatfs/"/>
+                  <listOptionValue builtIn="false" value="ULOG_CONFIG_POP_FS_PATH=&quot;/fatfs/&quot;"/>
                   <listOptionValue builtIn="false" value="CONFIG_KV_ENABLE_CACHE=0"/>
                   <listOptionValue builtIn="false" value="CONFIG_KV_START_OPT=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_KV_HASH_BUCKET=16"/>
@@ -64,21 +64,21 @@
                   <listOptionValue builtIn="false" value="DEBUG_PANIC_PRT_INT=1"/>
                   <listOptionValue builtIn="false" value="DEBUG_CPUUSAGE_RECODE_TO_FILE_ENABLE=0"/>
                   <listOptionValue builtIn="false" value="DEBUG_CPUUSAGE_MAX_TASK=80"/>
-                  <listOptionValue builtIn="false" value="DEBUG_CPUUSAGE_FILE_NAME=/data/cpuusage"/>
+                  <listOptionValue builtIn="false" value="DEBUG_CPUUSAGE_FILE_NAME=&quot;/data/cpuusage&quot;"/>
                   <listOptionValue builtIn="false" value="DEBUG_LAST_WORD_ENABLE=0"/>
                   <listOptionValue builtIn="false" value="DEBUG_LOG_FILE_NUM=10"/>
                   <listOptionValue builtIn="false" value="DEBUG_LASTWORD_RAM_ADDR=0"/>
                   <listOptionValue builtIn="false" value="DEBUG_LASTWORD_REGION_LEN=0x4000"/>
-                  <listOptionValue builtIn="false" value="DEBUG_LOG_DIR_NAME=/data/crash_reports"/>
-                  <listOptionValue builtIn="false" value="DEBUG_CONFIG_LOG_FILE_NAME=/data/crash_reports/crash_report"/>
-                  <listOptionValue builtIn="false" value="DEBUG_CONFIG_LOG_FILE_INDEX=/data/crash_reports/log_file_index"/>
+                  <listOptionValue builtIn="false" value="DEBUG_LOG_DIR_NAME=&quot;/data/crash_reports&quot;"/>
+                  <listOptionValue builtIn="false" value="DEBUG_CONFIG_LOG_FILE_NAME=&quot;/data/crash_reports/crash_report&quot;"/>
+                  <listOptionValue builtIn="false" value="DEBUG_CONFIG_LOG_FILE_INDEX=&quot;/data/crash_reports/log_file_index&quot;"/>
                   <listOptionValue builtIn="false" value="DEBUG_ULOG_FLUSH=0"/>
                   <listOptionValue builtIn="false" value="DEBUG_TEST_CMDS_ENABLE=0"/>
                   <listOptionValue builtIn="false" value="CONFIG_KERNEL_RTTHREAD=1"/>
                   <listOptionValue builtIn="false" value="__RT_KERNEL_SOURCE__=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_MEMALIGN_SUPPORT=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CSI_V2=1"/>
-                  <listOptionValue builtIn="false" value="CONFIG_CSI=csi2"/>
+                  <listOptionValue builtIn="false" value="CONFIG_CSI=&quot;csi2&quot;"/>
                   <listOptionValue builtIn="false" value="CONFIG_INIT_TASK_STACK_SIZE=4096"/>
                   <listOptionValue builtIn="false" value="CONFIG_APP_TASK_STACK_SIZE=8192"/>
                   <listOptionValue builtIn="false" value="CONFIG_SUPPORT_TSPEND=1"/>
@@ -151,10 +151,10 @@
                   <listOptionValue builtIn="false" value="CLI_UAGENT_ENABLE=0"/>
                   <listOptionValue builtIn="false" value="CLI_SEPRATED_CONSOLE=0"/>
                   <listOptionValue builtIn="false" value="CLI_IOBOX_ENABLE=0"/>
-                  <listOptionValue builtIn="false" value="CONFIG_LFS_MOUNTPOINT=/"/>
+                  <listOptionValue builtIn="false" value="CONFIG_LFS_MOUNTPOINT=&quot;/&quot;"/>
                   <listOptionValue builtIn="false" value="AOS_COMP_ULOG=y"/>
                   <listOptionValue builtIn="false" value="ULOG_TAG_USE_SHORT_FILE=1"/>
-                  <listOptionValue builtIn="false" value="ULOG_CONFIG_POP_FS_PATH=/fatfs/"/>
+                  <listOptionValue builtIn="false" value="ULOG_CONFIG_POP_FS_PATH=&quot;/fatfs/&quot;"/>
                   <listOptionValue builtIn="false" value="CONFIG_KV_ENABLE_CACHE=0"/>
                   <listOptionValue builtIn="false" value="CONFIG_KV_START_OPT=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_KV_HASH_BUCKET=16"/>
@@ -164,21 +164,21 @@
                   <listOptionValue builtIn="false" value="DEBUG_PANIC_PRT_INT=1"/>
                   <listOptionValue builtIn="false" value="DEBUG_CPUUSAGE_RECODE_TO_FILE_ENABLE=0"/>
                   <listOptionValue builtIn="false" value="DEBUG_CPUUSAGE_MAX_TASK=80"/>
-                  <listOptionValue builtIn="false" value="DEBUG_CPUUSAGE_FILE_NAME=/data/cpuusage"/>
+                  <listOptionValue builtIn="false" value="DEBUG_CPUUSAGE_FILE_NAME=&quot;/data/cpuusage&quot;"/>
                   <listOptionValue builtIn="false" value="DEBUG_LAST_WORD_ENABLE=0"/>
                   <listOptionValue builtIn="false" value="DEBUG_LOG_FILE_NUM=10"/>
                   <listOptionValue builtIn="false" value="DEBUG_LASTWORD_RAM_ADDR=0"/>
                   <listOptionValue builtIn="false" value="DEBUG_LASTWORD_REGION_LEN=0x4000"/>
-                  <listOptionValue builtIn="false" value="DEBUG_LOG_DIR_NAME=/data/crash_reports"/>
-                  <listOptionValue builtIn="false" value="DEBUG_CONFIG_LOG_FILE_NAME=/data/crash_reports/crash_report"/>
-                  <listOptionValue builtIn="false" value="DEBUG_CONFIG_LOG_FILE_INDEX=/data/crash_reports/log_file_index"/>
+                  <listOptionValue builtIn="false" value="DEBUG_LOG_DIR_NAME=&quot;/data/crash_reports&quot;"/>
+                  <listOptionValue builtIn="false" value="DEBUG_CONFIG_LOG_FILE_NAME=&quot;/data/crash_reports/crash_report&quot;"/>
+                  <listOptionValue builtIn="false" value="DEBUG_CONFIG_LOG_FILE_INDEX=&quot;/data/crash_reports/log_file_index&quot;"/>
                   <listOptionValue builtIn="false" value="DEBUG_ULOG_FLUSH=0"/>
                   <listOptionValue builtIn="false" value="DEBUG_TEST_CMDS_ENABLE=0"/>
                   <listOptionValue builtIn="false" value="CONFIG_KERNEL_RTTHREAD=1"/>
                   <listOptionValue builtIn="false" value="__RT_KERNEL_SOURCE__=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_MEMALIGN_SUPPORT=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CSI_V2=1"/>
-                  <listOptionValue builtIn="false" value="CONFIG_CSI=csi2"/>
+                  <listOptionValue builtIn="false" value="CONFIG_CSI=&quot;csi2&quot;"/>
                   <listOptionValue builtIn="false" value="CONFIG_INIT_TASK_STACK_SIZE=4096"/>
                   <listOptionValue builtIn="false" value="CONFIG_APP_TASK_STACK_SIZE=8192"/>
                   <listOptionValue builtIn="false" value="CONFIG_SUPPORT_TSPEND=1"/>
@@ -251,10 +251,10 @@
                   <listOptionValue builtIn="false" value="CLI_UAGENT_ENABLE=0"/>
                   <listOptionValue builtIn="false" value="CLI_SEPRATED_CONSOLE=0"/>
                   <listOptionValue builtIn="false" value="CLI_IOBOX_ENABLE=0"/>
-                  <listOptionValue builtIn="false" value="CONFIG_LFS_MOUNTPOINT=/"/>
+                  <listOptionValue builtIn="false" value="CONFIG_LFS_MOUNTPOINT=&quot;/&quot;"/>
                   <listOptionValue builtIn="false" value="AOS_COMP_ULOG=y"/>
                   <listOptionValue builtIn="false" value="ULOG_TAG_USE_SHORT_FILE=1"/>
-                  <listOptionValue builtIn="false" value="ULOG_CONFIG_POP_FS_PATH=/fatfs/"/>
+                  <listOptionValue builtIn="false" value="ULOG_CONFIG_POP_FS_PATH=&quot;/fatfs/&quot;"/>
                   <listOptionValue builtIn="false" value="CONFIG_KV_ENABLE_CACHE=0"/>
                   <listOptionValue builtIn="false" value="CONFIG_KV_START_OPT=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_KV_HASH_BUCKET=16"/>
@@ -264,21 +264,21 @@
                   <listOptionValue builtIn="false" value="DEBUG_PANIC_PRT_INT=1"/>
                   <listOptionValue builtIn="false" value="DEBUG_CPUUSAGE_RECODE_TO_FILE_ENABLE=0"/>
                   <listOptionValue builtIn="false" value="DEBUG_CPUUSAGE_MAX_TASK=80"/>
-                  <listOptionValue builtIn="false" value="DEBUG_CPUUSAGE_FILE_NAME=/data/cpuusage"/>
+                  <listOptionValue builtIn="false" value="DEBUG_CPUUSAGE_FILE_NAME=&quot;/data/cpuusage&quot;"/>
                   <listOptionValue builtIn="false" value="DEBUG_LAST_WORD_ENABLE=0"/>
                   <listOptionValue builtIn="false" value="DEBUG_LOG_FILE_NUM=10"/>
                   <listOptionValue builtIn="false" value="DEBUG_LASTWORD_RAM_ADDR=0"/>
                   <listOptionValue builtIn="false" value="DEBUG_LASTWORD_REGION_LEN=0x4000"/>
-                  <listOptionValue builtIn="false" value="DEBUG_LOG_DIR_NAME=/data/crash_reports"/>
-                  <listOptionValue builtIn="false" value="DEBUG_CONFIG_LOG_FILE_NAME=/data/crash_reports/crash_report"/>
-                  <listOptionValue builtIn="false" value="DEBUG_CONFIG_LOG_FILE_INDEX=/data/crash_reports/log_file_index"/>
+                  <listOptionValue builtIn="false" value="DEBUG_LOG_DIR_NAME=&quot;/data/crash_reports&quot;"/>
+                  <listOptionValue builtIn="false" value="DEBUG_CONFIG_LOG_FILE_NAME=&quot;/data/crash_reports/crash_report&quot;"/>
+                  <listOptionValue builtIn="false" value="DEBUG_CONFIG_LOG_FILE_INDEX=&quot;/data/crash_reports/log_file_index&quot;"/>
                   <listOptionValue builtIn="false" value="DEBUG_ULOG_FLUSH=0"/>
                   <listOptionValue builtIn="false" value="DEBUG_TEST_CMDS_ENABLE=0"/>
                   <listOptionValue builtIn="false" value="CONFIG_KERNEL_RTTHREAD=1"/>
                   <listOptionValue builtIn="false" value="__RT_KERNEL_SOURCE__=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_MEMALIGN_SUPPORT=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CSI_V2=1"/>
-                  <listOptionValue builtIn="false" value="CONFIG_CSI=csi2"/>
+                  <listOptionValue builtIn="false" value="CONFIG_CSI=&quot;csi2&quot;"/>
                   <listOptionValue builtIn="false" value="CONFIG_INIT_TASK_STACK_SIZE=4096"/>
                   <listOptionValue builtIn="false" value="CONFIG_APP_TASK_STACK_SIZE=8192"/>
                   <listOptionValue builtIn="false" value="CONFIG_SUPPORT_TSPEND=1"/>
@@ -409,10 +409,10 @@
                   <listOptionValue builtIn="false" value="CLI_UAGENT_ENABLE=0"/>
                   <listOptionValue builtIn="false" value="CLI_SEPRATED_CONSOLE=0"/>
                   <listOptionValue builtIn="false" value="CLI_IOBOX_ENABLE=0"/>
-                  <listOptionValue builtIn="false" value="CONFIG_LFS_MOUNTPOINT=/"/>
+                  <listOptionValue builtIn="false" value="CONFIG_LFS_MOUNTPOINT=&quot;/&quot;"/>
                   <listOptionValue builtIn="false" value="AOS_COMP_ULOG=y"/>
                   <listOptionValue builtIn="false" value="ULOG_TAG_USE_SHORT_FILE=1"/>
-                  <listOptionValue builtIn="false" value="ULOG_CONFIG_POP_FS_PATH=/fatfs/"/>
+                  <listOptionValue builtIn="false" value="ULOG_CONFIG_POP_FS_PATH=&quot;/fatfs/&quot;"/>
                   <listOptionValue builtIn="false" value="CONFIG_KV_ENABLE_CACHE=0"/>
                   <listOptionValue builtIn="false" value="CONFIG_KV_START_OPT=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_KV_HASH_BUCKET=16"/>
@@ -422,21 +422,21 @@
                   <listOptionValue builtIn="false" value="DEBUG_PANIC_PRT_INT=1"/>
                   <listOptionValue builtIn="false" value="DEBUG_CPUUSAGE_RECODE_TO_FILE_ENABLE=0"/>
                   <listOptionValue builtIn="false" value="DEBUG_CPUUSAGE_MAX_TASK=80"/>
-                  <listOptionValue builtIn="false" value="DEBUG_CPUUSAGE_FILE_NAME=/data/cpuusage"/>
+                  <listOptionValue builtIn="false" value="DEBUG_CPUUSAGE_FILE_NAME=&quot;/data/cpuusage&quot;"/>
                   <listOptionValue builtIn="false" value="DEBUG_LAST_WORD_ENABLE=0"/>
                   <listOptionValue builtIn="false" value="DEBUG_LOG_FILE_NUM=10"/>
                   <listOptionValue builtIn="false" value="DEBUG_LASTWORD_RAM_ADDR=0"/>
                   <listOptionValue builtIn="false" value="DEBUG_LASTWORD_REGION_LEN=0x4000"/>
-                  <listOptionValue builtIn="false" value="DEBUG_LOG_DIR_NAME=/data/crash_reports"/>
-                  <listOptionValue builtIn="false" value="DEBUG_CONFIG_LOG_FILE_NAME=/data/crash_reports/crash_report"/>
-                  <listOptionValue builtIn="false" value="DEBUG_CONFIG_LOG_FILE_INDEX=/data/crash_reports/log_file_index"/>
+                  <listOptionValue builtIn="false" value="DEBUG_LOG_DIR_NAME=&quot;/data/crash_reports&quot;"/>
+                  <listOptionValue builtIn="false" value="DEBUG_CONFIG_LOG_FILE_NAME=&quot;/data/crash_reports/crash_report&quot;"/>
+                  <listOptionValue builtIn="false" value="DEBUG_CONFIG_LOG_FILE_INDEX=&quot;/data/crash_reports/log_file_index&quot;"/>
                   <listOptionValue builtIn="false" value="DEBUG_ULOG_FLUSH=0"/>
                   <listOptionValue builtIn="false" value="DEBUG_TEST_CMDS_ENABLE=0"/>
                   <listOptionValue builtIn="false" value="CONFIG_KERNEL_RTTHREAD=1"/>
                   <listOptionValue builtIn="false" value="__RT_KERNEL_SOURCE__=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_MEMALIGN_SUPPORT=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CSI_V2=1"/>
-                  <listOptionValue builtIn="false" value="CONFIG_CSI=csi2"/>
+                  <listOptionValue builtIn="false" value="CONFIG_CSI=&quot;csi2&quot;"/>
                   <listOptionValue builtIn="false" value="CONFIG_INIT_TASK_STACK_SIZE=4096"/>
                   <listOptionValue builtIn="false" value="CONFIG_APP_TASK_STACK_SIZE=8192"/>
                   <listOptionValue builtIn="false" value="CONFIG_SUPPORT_TSPEND=1"/>
@@ -509,10 +509,10 @@
                   <listOptionValue builtIn="false" value="CLI_UAGENT_ENABLE=0"/>
                   <listOptionValue builtIn="false" value="CLI_SEPRATED_CONSOLE=0"/>
                   <listOptionValue builtIn="false" value="CLI_IOBOX_ENABLE=0"/>
-                  <listOptionValue builtIn="false" value="CONFIG_LFS_MOUNTPOINT=/"/>
+                  <listOptionValue builtIn="false" value="CONFIG_LFS_MOUNTPOINT=&quot;/&quot;"/>
                   <listOptionValue builtIn="false" value="AOS_COMP_ULOG=y"/>
                   <listOptionValue builtIn="false" value="ULOG_TAG_USE_SHORT_FILE=1"/>
-                  <listOptionValue builtIn="false" value="ULOG_CONFIG_POP_FS_PATH=/fatfs/"/>
+                  <listOptionValue builtIn="false" value="ULOG_CONFIG_POP_FS_PATH=&quot;/fatfs/&quot;"/>
                   <listOptionValue builtIn="false" value="CONFIG_KV_ENABLE_CACHE=0"/>
                   <listOptionValue builtIn="false" value="CONFIG_KV_START_OPT=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_KV_HASH_BUCKET=16"/>
@@ -522,21 +522,21 @@
                   <listOptionValue builtIn="false" value="DEBUG_PANIC_PRT_INT=1"/>
                   <listOptionValue builtIn="false" value="DEBUG_CPUUSAGE_RECODE_TO_FILE_ENABLE=0"/>
                   <listOptionValue builtIn="false" value="DEBUG_CPUUSAGE_MAX_TASK=80"/>
-                  <listOptionValue builtIn="false" value="DEBUG_CPUUSAGE_FILE_NAME=/data/cpuusage"/>
+                  <listOptionValue builtIn="false" value="DEBUG_CPUUSAGE_FILE_NAME=&quot;/data/cpuusage&quot;"/>
                   <listOptionValue builtIn="false" value="DEBUG_LAST_WORD_ENABLE=0"/>
                   <listOptionValue builtIn="false" value="DEBUG_LOG_FILE_NUM=10"/>
                   <listOptionValue builtIn="false" value="DEBUG_LASTWORD_RAM_ADDR=0"/>
                   <listOptionValue builtIn="false" value="DEBUG_LASTWORD_REGION_LEN=0x4000"/>
-                  <listOptionValue builtIn="false" value="DEBUG_LOG_DIR_NAME=/data/crash_reports"/>
-                  <listOptionValue builtIn="false" value="DEBUG_CONFIG_LOG_FILE_NAME=/data/crash_reports/crash_report"/>
-                  <listOptionValue builtIn="false" value="DEBUG_CONFIG_LOG_FILE_INDEX=/data/crash_reports/log_file_index"/>
+                  <listOptionValue builtIn="false" value="DEBUG_LOG_DIR_NAME=&quot;/data/crash_reports&quot;"/>
+                  <listOptionValue builtIn="false" value="DEBUG_CONFIG_LOG_FILE_NAME=&quot;/data/crash_reports/crash_report&quot;"/>
+                  <listOptionValue builtIn="false" value="DEBUG_CONFIG_LOG_FILE_INDEX=&quot;/data/crash_reports/log_file_index&quot;"/>
                   <listOptionValue builtIn="false" value="DEBUG_ULOG_FLUSH=0"/>
                   <listOptionValue builtIn="false" value="DEBUG_TEST_CMDS_ENABLE=0"/>
                   <listOptionValue builtIn="false" value="CONFIG_KERNEL_RTTHREAD=1"/>
                   <listOptionValue builtIn="false" value="__RT_KERNEL_SOURCE__=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_MEMALIGN_SUPPORT=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CSI_V2=1"/>
-                  <listOptionValue builtIn="false" value="CONFIG_CSI=csi2"/>
+                  <listOptionValue builtIn="false" value="CONFIG_CSI=&quot;csi2&quot;"/>
                   <listOptionValue builtIn="false" value="CONFIG_INIT_TASK_STACK_SIZE=4096"/>
                   <listOptionValue builtIn="false" value="CONFIG_APP_TASK_STACK_SIZE=8192"/>
                   <listOptionValue builtIn="false" value="CONFIG_SUPPORT_TSPEND=1"/>
@@ -609,10 +609,10 @@
                   <listOptionValue builtIn="false" value="CLI_UAGENT_ENABLE=0"/>
                   <listOptionValue builtIn="false" value="CLI_SEPRATED_CONSOLE=0"/>
                   <listOptionValue builtIn="false" value="CLI_IOBOX_ENABLE=0"/>
-                  <listOptionValue builtIn="false" value="CONFIG_LFS_MOUNTPOINT=/"/>
+                  <listOptionValue builtIn="false" value="CONFIG_LFS_MOUNTPOINT=&quot;/&quot;"/>
                   <listOptionValue builtIn="false" value="AOS_COMP_ULOG=y"/>
                   <listOptionValue builtIn="false" value="ULOG_TAG_USE_SHORT_FILE=1"/>
-                  <listOptionValue builtIn="false" value="ULOG_CONFIG_POP_FS_PATH=/fatfs/"/>
+                  <listOptionValue builtIn="false" value="ULOG_CONFIG_POP_FS_PATH=&quot;/fatfs/&quot;"/>
                   <listOptionValue builtIn="false" value="CONFIG_KV_ENABLE_CACHE=0"/>
                   <listOptionValue builtIn="false" value="CONFIG_KV_START_OPT=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_KV_HASH_BUCKET=16"/>
@@ -622,21 +622,21 @@
                   <listOptionValue builtIn="false" value="DEBUG_PANIC_PRT_INT=1"/>
                   <listOptionValue builtIn="false" value="DEBUG_CPUUSAGE_RECODE_TO_FILE_ENABLE=0"/>
                   <listOptionValue builtIn="false" value="DEBUG_CPUUSAGE_MAX_TASK=80"/>
-                  <listOptionValue builtIn="false" value="DEBUG_CPUUSAGE_FILE_NAME=/data/cpuusage"/>
+                  <listOptionValue builtIn="false" value="DEBUG_CPUUSAGE_FILE_NAME=&quot;/data/cpuusage&quot;"/>
                   <listOptionValue builtIn="false" value="DEBUG_LAST_WORD_ENABLE=0"/>
                   <listOptionValue builtIn="false" value="DEBUG_LOG_FILE_NUM=10"/>
                   <listOptionValue builtIn="false" value="DEBUG_LASTWORD_RAM_ADDR=0"/>
                   <listOptionValue builtIn="false" value="DEBUG_LASTWORD_REGION_LEN=0x4000"/>
-                  <listOptionValue builtIn="false" value="DEBUG_LOG_DIR_NAME=/data/crash_reports"/>
-                  <listOptionValue builtIn="false" value="DEBUG_CONFIG_LOG_FILE_NAME=/data/crash_reports/crash_report"/>
-                  <listOptionValue builtIn="false" value="DEBUG_CONFIG_LOG_FILE_INDEX=/data/crash_reports/log_file_index"/>
+                  <listOptionValue builtIn="false" value="DEBUG_LOG_DIR_NAME=&quot;/data/crash_reports&quot;"/>
+                  <listOptionValue builtIn="false" value="DEBUG_CONFIG_LOG_FILE_NAME=&quot;/data/crash_reports/crash_report&quot;"/>
+                  <listOptionValue builtIn="false" value="DEBUG_CONFIG_LOG_FILE_INDEX=&quot;/data/crash_reports/log_file_index&quot;"/>
                   <listOptionValue builtIn="false" value="DEBUG_ULOG_FLUSH=0"/>
                   <listOptionValue builtIn="false" value="DEBUG_TEST_CMDS_ENABLE=0"/>
                   <listOptionValue builtIn="false" value="CONFIG_KERNEL_RTTHREAD=1"/>
                   <listOptionValue builtIn="false" value="__RT_KERNEL_SOURCE__=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_MEMALIGN_SUPPORT=1"/>
                   <listOptionValue builtIn="false" value="CONFIG_CSI_V2=1"/>
-                  <listOptionValue builtIn="false" value="CONFIG_CSI=csi2"/>
+                  <listOptionValue builtIn="false" value="CONFIG_CSI=&quot;csi2&quot;"/>
                   <listOptionValue builtIn="false" value="CONFIG_INIT_TASK_STACK_SIZE=4096"/>
                   <listOptionValue builtIn="false" value="CONFIG_APP_TASK_STACK_SIZE=8192"/>
                   <listOptionValue builtIn="false" value="CONFIG_SUPPORT_TSPEND=1"/>

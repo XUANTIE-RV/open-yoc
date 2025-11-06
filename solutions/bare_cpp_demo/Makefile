@@ -113,8 +113,8 @@ CFLAGS += -g -O2 \
 		  -Wno-unused-function -Wpointer-arith -Wno-undef -ffunction-sections -fdata-sections \
 		  -fno-inline-functions -fno-builtin -fno-strict-aliasing
 CFLAGS += $(addprefix -I, $(ALL_INCS))
-CXXFLAGS += $(CFLAGS)
-ASFLAGS += -D__ASSEMBLY__ $(CFLAGS)
+CXXFLAGS := $(CXXFLAGS) $(CFLAGS)
+ASFLAGS := -D__ASSEMBLY__ $(ASFLAGS ) $(CFLAGS)
 LDFLAGS := $(CPU_FLAGS) -nostartfiles -Wl,--gc-sections
 # LDFLAGS += -fuse-ld=lld -Wl,-pie -Wl,-z,notext -Wl,--no-dynamic-linker #CONFIG_PIE_ENABLE
 LDFLAGS += -Wl,--whole-archive $(LD_LIBS) -Wl,--no-whole-archive $(LD_EXT_LIBS)

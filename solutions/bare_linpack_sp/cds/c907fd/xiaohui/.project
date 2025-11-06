@@ -61,9 +61,14 @@
       <locationURI>PARENT-5-PROJECT_LOC/components/libc_bare/src/printf.c</locationURI>
     </link>
     <link>
-      <name>components/mm/src/dq_addlast.c</name>
+      <name>components/mm/src/mm_size2ndx.c</name>
       <type>1</type>
-      <locationURI>PARENT-5-PROJECT_LOC/components/mm/src/dq_addlast.c</locationURI>
+      <locationURI>PARENT-5-PROJECT_LOC/components/mm/src/mm_size2ndx.c</locationURI>
+    </link>
+    <link>
+      <name>components/mm/src/mm_initialize.c</name>
+      <type>1</type>
+      <locationURI>PARENT-5-PROJECT_LOC/components/mm/src/mm_initialize.c</locationURI>
     </link>
     <link>
       <name>components/mm/src/dq_rem.c</name>
@@ -76,24 +81,9 @@
       <locationURI>PARENT-5-PROJECT_LOC/components/mm/src/lib_mallinfo.c</locationURI>
     </link>
     <link>
-      <name>components/mm/src/mm_addfreechunk.c</name>
+      <name>components/mm/src/dq_addlast.c</name>
       <type>1</type>
-      <locationURI>PARENT-5-PROJECT_LOC/components/mm/src/mm_addfreechunk.c</locationURI>
-    </link>
-    <link>
-      <name>components/mm/src/mm_free.c</name>
-      <type>1</type>
-      <locationURI>PARENT-5-PROJECT_LOC/components/mm/src/mm_free.c</locationURI>
-    </link>
-    <link>
-      <name>components/mm/src/mm_initialize.c</name>
-      <type>1</type>
-      <locationURI>PARENT-5-PROJECT_LOC/components/mm/src/mm_initialize.c</locationURI>
-    </link>
-    <link>
-      <name>components/mm/src/mm_leak.c</name>
-      <type>1</type>
-      <locationURI>PARENT-5-PROJECT_LOC/components/mm/src/mm_leak.c</locationURI>
+      <locationURI>PARENT-5-PROJECT_LOC/components/mm/src/dq_addlast.c</locationURI>
     </link>
     <link>
       <name>components/mm/src/mm_mallinfo.c</name>
@@ -106,14 +96,19 @@
       <locationURI>PARENT-5-PROJECT_LOC/components/mm/src/mm_malloc.c</locationURI>
     </link>
     <link>
-      <name>components/mm/src/mm_size2ndx.c</name>
+      <name>components/mm/src/mm_leak.c</name>
       <type>1</type>
-      <locationURI>PARENT-5-PROJECT_LOC/components/mm/src/mm_size2ndx.c</locationURI>
+      <locationURI>PARENT-5-PROJECT_LOC/components/mm/src/mm_leak.c</locationURI>
     </link>
     <link>
-      <name>components/chip_riscv_dummy/src/arch/c907fdvm/system.c</name>
+      <name>components/mm/src/mm_free.c</name>
       <type>1</type>
-      <locationURI>PARENT-5-PROJECT_LOC/components/chip_riscv_dummy/src/arch/c907fdvm/system.c</locationURI>
+      <locationURI>PARENT-5-PROJECT_LOC/components/mm/src/mm_free.c</locationURI>
+    </link>
+    <link>
+      <name>components/mm/src/mm_addfreechunk.c</name>
+      <type>1</type>
+      <locationURI>PARENT-5-PROJECT_LOC/components/mm/src/mm_addfreechunk.c</locationURI>
     </link>
     <link>
       <name>components/chip_riscv_dummy/src/arch/c907fdvm/trap_c.c</name>
@@ -121,19 +116,19 @@
       <locationURI>PARENT-5-PROJECT_LOC/components/chip_riscv_dummy/src/arch/c907fdvm/trap_c.c</locationURI>
     </link>
     <link>
+      <name>components/chip_riscv_dummy/src/arch/c907fdvm/system.c</name>
+      <type>1</type>
+      <locationURI>PARENT-5-PROJECT_LOC/components/chip_riscv_dummy/src/arch/c907fdvm/system.c</locationURI>
+    </link>
+    <link>
+      <name>components/chip_riscv_dummy/src/sys/weak.c</name>
+      <type>1</type>
+      <locationURI>PARENT-5-PROJECT_LOC/components/chip_riscv_dummy/src/sys/weak.c</locationURI>
+    </link>
+    <link>
       <name>components/chip_riscv_dummy/src/sys/devices.c</name>
       <type>1</type>
       <locationURI>PARENT-5-PROJECT_LOC/components/chip_riscv_dummy/src/sys/devices.c</locationURI>
-    </link>
-    <link>
-      <name>components/chip_riscv_dummy/src/sys/feature.c</name>
-      <type>1</type>
-      <locationURI>PARENT-5-PROJECT_LOC/components/chip_riscv_dummy/src/sys/feature.c</locationURI>
-    </link>
-    <link>
-      <name>components/chip_riscv_dummy/src/sys/got_init.c</name>
-      <type>1</type>
-      <locationURI>PARENT-5-PROJECT_LOC/components/chip_riscv_dummy/src/sys/got_init.c</locationURI>
     </link>
     <link>
       <name>components/chip_riscv_dummy/src/sys/irq.c</name>
@@ -141,29 +136,14 @@
       <locationURI>PARENT-5-PROJECT_LOC/components/chip_riscv_dummy/src/sys/irq.c</locationURI>
     </link>
     <link>
-      <name>components/chip_riscv_dummy/src/sys/irq_port.c</name>
+      <name>components/chip_riscv_dummy/src/sys/got_init.c</name>
       <type>1</type>
-      <locationURI>PARENT-5-PROJECT_LOC/components/chip_riscv_dummy/src/sys/irq_port.c</locationURI>
-    </link>
-    <link>
-      <name>components/chip_riscv_dummy/src/sys/os_port.c</name>
-      <type>1</type>
-      <locationURI>PARENT-5-PROJECT_LOC/components/chip_riscv_dummy/src/sys/os_port.c</locationURI>
+      <locationURI>PARENT-5-PROJECT_LOC/components/chip_riscv_dummy/src/sys/got_init.c</locationURI>
     </link>
     <link>
       <name>components/chip_riscv_dummy/src/sys/pre_main.c</name>
       <type>1</type>
       <locationURI>PARENT-5-PROJECT_LOC/components/chip_riscv_dummy/src/sys/pre_main.c</locationURI>
-    </link>
-    <link>
-      <name>components/chip_riscv_dummy/src/sys/reboot.c</name>
-      <type>1</type>
-      <locationURI>PARENT-5-PROJECT_LOC/components/chip_riscv_dummy/src/sys/reboot.c</locationURI>
-    </link>
-    <link>
-      <name>components/chip_riscv_dummy/src/sys/sys_clk.c</name>
-      <type>1</type>
-      <locationURI>PARENT-5-PROJECT_LOC/components/chip_riscv_dummy/src/sys/sys_clk.c</locationURI>
     </link>
     <link>
       <name>components/chip_riscv_dummy/src/sys/target_get.c</name>
@@ -176,9 +156,29 @@
       <locationURI>PARENT-5-PROJECT_LOC/components/chip_riscv_dummy/src/sys/tick.c</locationURI>
     </link>
     <link>
-      <name>components/chip_riscv_dummy/src/sys/weak.c</name>
+      <name>components/chip_riscv_dummy/src/sys/reboot.c</name>
       <type>1</type>
-      <locationURI>PARENT-5-PROJECT_LOC/components/chip_riscv_dummy/src/sys/weak.c</locationURI>
+      <locationURI>PARENT-5-PROJECT_LOC/components/chip_riscv_dummy/src/sys/reboot.c</locationURI>
+    </link>
+    <link>
+      <name>components/chip_riscv_dummy/src/sys/irq_port.c</name>
+      <type>1</type>
+      <locationURI>PARENT-5-PROJECT_LOC/components/chip_riscv_dummy/src/sys/irq_port.c</locationURI>
+    </link>
+    <link>
+      <name>components/chip_riscv_dummy/src/sys/sys_clk.c</name>
+      <type>1</type>
+      <locationURI>PARENT-5-PROJECT_LOC/components/chip_riscv_dummy/src/sys/sys_clk.c</locationURI>
+    </link>
+    <link>
+      <name>components/chip_riscv_dummy/src/sys/os_port.c</name>
+      <type>1</type>
+      <locationURI>PARENT-5-PROJECT_LOC/components/chip_riscv_dummy/src/sys/os_port.c</locationURI>
+    </link>
+    <link>
+      <name>components/chip_riscv_dummy/src/sys/feature.c</name>
+      <type>1</type>
+      <locationURI>PARENT-5-PROJECT_LOC/components/chip_riscv_dummy/src/sys/feature.c</locationURI>
     </link>
     <link>
       <name>components/chip_riscv_dummy/src/drivers/clk.c</name>

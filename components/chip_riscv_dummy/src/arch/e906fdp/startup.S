@@ -18,6 +18,7 @@
 
 #include <csi_config.h>
 
+#ifndef CONFIG_SUPPORT_NON_VECTOR_IRQ
 .section .vectors, "aw", @progbits
     .align  6
     .globl  __Vectors
@@ -105,6 +106,62 @@ __Vectors:
     .long   Default_IRQHandler
     .long   Default_IRQHandler
     .long   Default_IRQHandler
+#else
+.section .vectors, "aw", @progbits
+    .align  6
+    .globl  __Vectors
+    .type   __Vectors, @object
+__Vectors:
+    .long   do_irq
+    .long   do_irq
+    .long   do_irq
+    .long   tspend_handler
+    .long   do_irq
+    .long   do_irq
+    .long   do_irq
+    .long   do_irq
+    .long   do_irq
+    .long   do_irq
+    .long   do_irq
+    .long   do_irq
+    .long   do_irq
+    .long   do_irq
+    .long   do_irq
+
+    /* External interrupts */
+    .long   do_irq
+    .long   do_irq
+    .long   do_irq
+    .long   do_irq
+    .long   do_irq
+    .long   do_irq
+    .long   do_irq
+    .long   do_irq
+    .long   do_irq
+    .long   do_irq
+    .long   do_irq
+    .long   do_irq
+    .long   do_irq
+    .long   do_irq
+    .long   do_irq
+    .long   do_irq
+    .long   do_irq
+    .long   do_irq
+    .long   do_irq
+    .long   do_irq
+    .long   do_irq
+    .long   do_irq
+    .long   do_irq
+    .long   do_irq
+    .long   do_irq
+    .long   do_irq
+    .long   do_irq
+    .long   do_irq
+    .long   do_irq
+    .long   do_irq
+    .long   do_irq
+    .long   do_irq
+#endif
 
     .size   __Vectors, . - __Vectors
 
