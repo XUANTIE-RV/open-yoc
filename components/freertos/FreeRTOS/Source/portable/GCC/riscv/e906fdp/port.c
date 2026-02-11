@@ -20,6 +20,7 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include <sys_clk.h>
+#include "riscv_csr.h"
 
 // #define ENABLE_KERNEL_DEBUG
 
@@ -79,7 +80,10 @@ StackType_t *pxPortInitialiseStack( StackType_t *pxTopOfStack, TaskFunction_t px
     extern int __global_pointer$;
     StackType_t *stk  = NULL;
     uint32_t temp = (uint32_t)pxTopOfStack;
-    uint32_t status = __get_MSTATUS();
+    uint32_t status = SR_MPP_M | SR_MPIE;
+#ifdef __riscv_flen
+    status |= SR_FS_INITIAL;
+#endif
 
     temp &= 0xFFFFFFF8UL;
     stk = (StackType_t *)temp;

@@ -15,6 +15,21 @@ RTOS SDK开源代码遵循Apache License 2.0开源许可协议，可以免费在
 
 ## Release Note
 
+### v2.4.3
+#### 主要特性更新
+1. 修复 E906/E907 运行 FreeRTOS 时偶现卡住的问题
+
+#### 依赖工具版本
+| **工具** | **版本号** |
+| --- | --- |
+| CDK | V2.24.14 |
+| CDS | V5.2.31 |
+| Debug Server | V5.18.5 |
+| Xuantie-900-gcc-elf-newlib编译工具链 | V3.2.0 |
+| Xuantie-900-llvm-elf-newlib编译工具链 | V2.2.1 |
+| Xuantie QEMU | V5.2.8 |
+
+
 ### v2.4.2
 #### 主要特性更新
 1. C908X VLEN512/1024/4096支持

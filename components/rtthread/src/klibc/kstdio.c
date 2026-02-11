@@ -288,6 +288,17 @@ static char *print_number(char *buf,
     return buf;
 }
 
+#if RT_KPRINTF_USING_FLOAT
+static int rt_pow_10(int n)
+{
+    int result = 1;
+    while (n-- > 0) {
+        result *= 10;
+    }
+    return result;
+}
+#endif
+
 #if defined(__GNUC__) && !defined(__ARMCC_VERSION) /* GCC */
 #pragma GCC diagnostic push
 /* ignore warning: this statement may fall through */
@@ -531,13 +542,44 @@ rt_weak int rt_vsnprintf(char *buf, rt_size_t size, const char *fmt, va_list arg
             flags |= SIGN;
         case 'u':
             break;
+#if RT_KPRINTF_USING_FLOAT
+        case 'f':
+        case 'F':
+            {
+                double fval = va_arg(args, double);
+                int integer_part = (int)fval;
+                int decimal_part;
 
+                if (precision < 0) precision = 2;
+
+                if (fval < 0) {
+                    decimal_part = (int)((-fval - (-integer_part)) * rt_pow_10(precision) + 0.5);
+                } else {
+                    decimal_part = (int)((fval - integer_part) * rt_pow_10(precision) + 0.5);
+                }
+
+                if (fval < 0 && integer_part == 0) {
+                    if (str < end) *str = '-';
+                    str++;
+                }
+
+                str = print_number(str, end, integer_part, 10, 0, -1, -1, (fval < 0) ? SIGN : 0);
+
+                if (str < end) *str = '.';
+                str++;
+
+                str = print_number(str, end, decimal_part, 10, 0, precision, precision, ZEROPAD);
+
+                continue;
+            }
+#else
+        case 'f':
+        case 'F':
+#endif
         case 'e':
         case 'E':
         case 'G':
         case 'g':
-        case 'f':
-        case 'F':
             va_arg(args, double);
         default:
             if (str < end)
