@@ -51,3 +51,6 @@ Then go to the `solutions` directory, all the demos are presented there, and you
 - RVM-CSI Hardware Abstraction Layer Standard Interface Manual: [RVM-CSI Manual](https://www.xrvm.cn/document?temp=csi&slug=csi-chn)
 
 - RVB2601 technical blog post: [RVB2601](https://www.xrvm.cn/community/post?spm=a2cl5.27297580.0.0.33a0LX8fLX8fv8)
+## Related Resources
+
+- Software resources, tools, and documentation for XuanTie RISC-V processors: [XuanTie Software Resources](https://www.xrvm.cn/overview/software)
